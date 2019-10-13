@@ -1312,8 +1312,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public DelegateProfileParams checkForProfile(
       String accountId, String delegateId, String profileId, long lastUpdatedAt) {
-    logger.info("Checking delegate profile for account {}, delegate [{}]. Previous profile [{}] updated at {}",
-        accountId, delegateId, profileId, lastUpdatedAt);
+    logger.info("Checking delegate profile. Previous profile [{}] updated at {}", profileId, lastUpdatedAt);
     Delegate delegate = get(accountId, delegateId, true);
 
     if (delegate == null) {

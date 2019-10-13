@@ -39,9 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Created by anubhaw on 10/27/17.
- */
 @Slf4j
 public class GitCommandCallback implements NotifyCallback {
   private String accountId;
@@ -68,7 +65,7 @@ public class GitCommandCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    logger.info("Git command response [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
+    logger.info("Git command response [{}] for changeSetId [{}]", response, changeSetId);
     ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof GitCommandExecutionResponse) {
       GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
@@ -76,8 +73,8 @@ public class GitCommandCallback implements NotifyCallback {
 
       if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
         if (changeSetId != null) {
-          logger.warn("Git Command failed [{}] for changeSetId [{}] for account {}",
-              gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
+          logger.warn("Git Command failed [{}] for changeSetId [{}]", gitCommandExecutionResponse.getErrorMessage(),
+              changeSetId);
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
         }
         // raise alert if GitConnectionErrorAlert is not already open (changeSetId will be null for webhook request, so
@@ -92,8 +89,8 @@ public class GitCommandCallback implements NotifyCallback {
       yamlGitService.closeAlertForGitFailureIfOpen(accountId, GLOBAL_APP_ID, AlertType.GitConnectionError,
           GitConnectionErrorAlert.builder().accountId(accountId).build());
 
-      logger.info("Git command [type: {}] request completed with status [{}] for account {}",
-          gitCommandResult.getGitCommandType(), gitCommandExecutionResponse.getGitCommandStatus(), accountId);
+      logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
+          gitCommandExecutionResponse.getGitCommandStatus());
 
       if (gitCommandResult.getGitCommandType().equals(COMMIT_AND_PUSH)) {
         GitCommitAndPushResult gitCommitAndPushResult = (GitCommitAndPushResult) gitCommandResult;
@@ -116,13 +113,12 @@ public class GitCommandCallback implements NotifyCallback {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
         gitChangeSetProcesser.processGitChangeSet(accountId, gitDiffResult);
       } else {
-        logger.warn("Unexpected commandType result: [{}] for changeSetId [{}] for account {}",
-            gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
+        logger.warn("Unexpected commandType result: [{}] for changeSetId [{}]",
+            gitCommandExecutionResponse.getErrorMessage(), changeSetId);
         yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
       }
     } else {
-      logger.warn("Unexpected notify response data: [{}] for changeSetId [{}] for account {}", notifyResponseData,
-          changeSetId, accountId);
+      logger.warn("Unexpected notify response data: [{}] for changeSetId [{}]", notifyResponseData, changeSetId);
       updateChangeSetFailureStatusSafely();
     }
   }

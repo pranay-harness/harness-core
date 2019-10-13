@@ -412,9 +412,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
     String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
     String appId = deploymentSummaries.iterator().next().getAppId();
-    String workflowExecutionId = deploymentSummaries.iterator().next().getWorkflowExecutionId();
-    logger.info("Handling new container deployment for executionId [{}], inframappingId [{}], appId [{}]",
-        workflowExecutionId, infraMappingId, appId);
+    logger.info("Handling new container deployment for inframappingId [{}]", infraMappingId);
     validateDeploymentInfos(deploymentSummaries);
 
     if (deploymentSummaries.iterator().next().getDeploymentInfo() instanceof ContainerDeploymentInfoWithNames) {

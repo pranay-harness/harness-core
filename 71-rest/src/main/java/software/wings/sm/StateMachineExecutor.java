@@ -821,11 +821,10 @@ public class StateMachineExecutor implements StateInspectionListener {
     State nextState =
         sm.getSuccessTransition(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (nextState == null) {
-      logger.info("nextSuccessState is null.. ending execution  - currentState : "
-          + stateExecutionInstance.getStateName() + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
+      logger.info(
+          "nextSuccessState is null.. ending execution  - currentState : {}", stateExecutionInstance.getStateName());
 
-      logger.info("State Machine execution ended for the stateMachine: {}, executionUuid: {}", sm.getName(),
-          stateExecutionInstance.getExecutionUuid());
+      logger.info("State Machine execution ended for the stateMachine: {}", sm.getName());
 
       endTransition(context, stateExecutionInstance, SUCCESS, null);
     } else {

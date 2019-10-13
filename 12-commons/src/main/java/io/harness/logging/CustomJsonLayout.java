@@ -2,6 +2,7 @@ package io.harness.logging;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.pattern.ThrowableHandlingConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -65,7 +66,7 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
     addMap(HARNESS, true, event.getMDCPropertyMap(), map);
     addThrowableInfo(event, map);
 
-    if (logger.isDebugEnabled()) {
+    if (logger.isDebugEnabled() && event.getLevel().toInt() >= Level.INFO.toInt()) {
       for (Entry<String, String> entry : event.getMDCPropertyMap().entrySet()) {
         if (formattedMessage.contains(entry.getValue())) {
           logger.debug("Logging message '{}' incorporates variable {} that is already in the MDC table with key {}",

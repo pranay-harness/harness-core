@@ -110,10 +110,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     String delegateTaskId = null;
     try {
       renderedQuery = executionContext.renderExpression(query);
-      getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
+      getLogger().info("Executing {}", getStateType());
       cleanUpForRetry(executionContext);
       AnalysisContext analysisContext = getLogAnalysisContext(executionContext, correlationId);
-      getLogger().info("id: {} context: {}", executionContext.getStateExecutionInstanceId(), analysisContext);
+      getLogger().info("context: {}", analysisContext);
 
       if (!checkLicense(appService.getAccountIdByAppId(executionContext.getAppId()), StateType.valueOf(getStateType()),
               executionContext.getStateExecutionInstanceId())) {
@@ -138,23 +138,20 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
 
       if (isEmpty(canaryNewHostNames)) {
-        getLogger().warn(
-            "id: {}, Could not find test nodes to compare the data", executionContext.getStateExecutionInstanceId());
+        getLogger().warn("Could not find test nodes to compare the data");
         return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
       }
 
       Set<String> lastExecutionNodes = analysisContext.getControlNodes().keySet();
       if (isEmpty(lastExecutionNodes)) {
         if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
-          getLogger().info("id: {}, No nodes with older version found to compare the logs. Skipping analysis",
-              executionContext.getStateExecutionInstanceId());
+          getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
           return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
               "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
         }
 
         getLogger().warn(
-            "id: {}, It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run",
-            executionContext.getStateExecutionInstanceId());
+            "It seems that there is no successful run for this workflow yet. Log data will be collected to be analyzed for next deployment run");
       }
 
       String responseMessage = "Log Verification running.";
@@ -166,20 +163,19 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             analysisContext.getServiceId());
         if (isEmpty(baselineWorkflowExecutionId)) {
           responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
-          getLogger().info("id: {}, {}", executionContext.getStateExecutionInstanceId(), responseMessage);
+          getLogger().info("{}", responseMessage);
           baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
               analysisContext.getStateExecutionId(), analysisContext.getStateType(), analysisContext.getAppId(),
               analysisContext.getServiceId(), analysisContext.getWorkflowId(), analysisContext.getQuery(),
               getPhaseInfraMappingId(executionContext), workflowStandardParams.getEnvId());
         } else {
           responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
-          getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: ",
+          getLogger().info("Baseline is pinned for stateExecution: {}, baselineId: {}",
               analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
         }
         if (baselineWorkflowExecutionId == null) {
           responseMessage += " No previous execution found. This will be the baseline run.";
-          getLogger().warn("id: {}, No previous execution found. This will be the baseline run",
-              executionContext.getStateExecutionInstanceId());
+          getLogger().warn("No previous execution found. This will be the baseline run");
         }
         getLogger().info(
             "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
@@ -212,8 +208,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       hostsToBeCollected.addAll(canaryNewHostNames);
       hostsToBeCollected.remove(null);
-      getLogger().info("triggering data collection for {} state, id: {} ", getStateType(),
-          executionContext.getStateExecutionInstanceId());
+      getLogger().info("triggering data collection for {} state", getStateType());
 
       if (isCVTaskEnqueuingEnabled(executionContext.getAccountId())) {
         getLogger().info("Data collection will be done with cv tasks.");
@@ -224,8 +219,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
-        getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
-            executionContext.getStateExecutionInstanceId(), delegateTaskId);
+        getLogger().info("triggered data collection for {} state, delgateTaskId: {}", getStateType(), delegateTaskId);
       }
       logDataCollectionTriggeredMessage(activityLogger);
       // Set the rendered query into the analysis context which will be used during task analysis.
@@ -301,8 +295,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         (VerificationDataAnalysisResponse) response.values().iterator().next();
 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
-      getLogger().info(
-          "for {} got failed execution response {}", executionContext.getStateExecutionInstanceId(), executionResponse);
+      getLogger().info("got failed execution response {}", executionResponse);
       continuousVerificationService.setMetaDataExecutionStatus(
           executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
       return ExecutionResponse.builder()
@@ -321,8 +314,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
 
         if (analysisSummary == null) {
-          getLogger().info("for {} No analysis summary. This can happen if there is no data with the given queries",
-              context.getStateExecutionId());
+          getLogger().info("No analysis summary. This can happen if there is no data with the given queries");
           continuousVerificationService.setMetaDataExecutionStatus(
               executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true);
           return isQAVerificationPath(context.getAccountId(), context.getAppId())
@@ -332,13 +324,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         }
 
         if (analysisSummary.getAnalysisMinute() < analysisMinute) {
-          getLogger().info("for {} analysis for minute {} hasn't been found yet. Analysis found so far {}",
-              context.getStateExecutionId(), analysisMinute, analysisSummary);
+          getLogger().info("analysis for minute {} hasn't been found yet. Analysis found so far {}", analysisMinute,
+              analysisSummary);
           sleep(ofMillis(5000));
           continue;
         }
-        getLogger().info("for {} found analysisSummary with message {}", context.getStateExecutionId(),
-            analysisSummary.getAnalysisSummaryMessage());
+        getLogger().info("found analysisSummary with message {}", analysisSummary.getAnalysisSummaryMessage());
 
         ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
         if (analysisSummary.getRiskLevel() == RiskLevel.HIGH) {
@@ -354,7 +345,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           executionStatus = ExecutionStatus.FAILED;
         }
 
-        getLogger().info("for {} the final status is {}", context.getStateExecutionId(), executionStatus);
+        getLogger().info("the final status is {}", executionStatus);
         executionResponse.getStateExecutionData().setStatus(executionStatus);
         continuousVerificationService.setMetaDataExecutionStatus(
             executionContext.getStateExecutionInstanceId(), executionStatus, false);

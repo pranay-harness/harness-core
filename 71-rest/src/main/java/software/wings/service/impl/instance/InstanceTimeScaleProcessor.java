@@ -23,8 +23,6 @@ import java.util.Set;
 /**
  * Both the normal instance and container instance are handled here.
  * Once it finds the deployment is of type container, it hands off the request to ContainerInstanceHelper.
- *
- * @author rktummala on 09/11/17
  */
 @Singleton
 @Slf4j
@@ -32,10 +30,11 @@ public class InstanceTimeScaleProcessor {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private DataFetcherUtils utils;
 
-  private String insertQuery =
-      "INSERT INTO INSTANCE (CREATEDAT, DELETEDAT, ISDELETED, INSTANCEID, ACCOUNTID, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, INSTANCETYPE, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+  private String insertQuery = "INSERT INTO INSTANCE (CREATEDAT, DELETEDAT, ISDELETED, INSTANCEID, ACCOUNTID, "
+      + "APPID, SERVICEID, ENVID, CLOUDPROVIDERID, INSTANCETYPE, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
   private String updateQuery =
-      "UPDATE INSTANCE SET CREATEDAT = ?, DELETEDAT = ?, ISDELETED = ?, APPID = ?, SERVICEID = ?, ENVID = ?, CLOUDPROVIDERID = ?, INSTANCETYPE = ?, ARTIFACTID = ? WHERE ACCOUNTID = ? AND INSTANCEID = ?";
+      "UPDATE INSTANCE SET CREATEDAT = ?, DELETEDAT = ?, ISDELETED = ?, APPID = ?, SERVICEID = ?, "
+      + "ENVID = ?, CLOUDPROVIDERID = ?, INSTANCETYPE = ?, ARTIFACTID = ? WHERE ACCOUNTID = ? AND INSTANCEID = ?";
   private String deleteQuery = "UPDATE INSTANCE SET DELETEDAT = ?, ISDELETED = ? WHERE INSTANCEID = ?";
   private String getQuery = "SELECT COUNT(INSTANCEID) FROM INSTANCE WHERE INSTANCEID = ?";
 
@@ -59,16 +58,15 @@ public class InstanceTimeScaleProcessor {
       return;
     }
 
-    String accountId = instanceEvent.getAccountId();
     try {
       handleInstanceDeletions(instanceEvent.getDeletions(), instanceEvent.getDeletionTimestamp());
-      handleInstanceInsertions(accountId, instanceEvent.getInsertions());
+      handleInstanceInsertions(instanceEvent.getInsertions());
     } catch (Exception ex) {
-      logger.error("Error while processing instance event for account {}", accountId, ex);
+      logger.error("Error while processing instance event", ex);
     }
   }
 
-  public void handleInstanceInsertions(String accountId, Set<Instance> instanceSet) {
+  public void handleInstanceInsertions(Set<Instance> instanceSet) {
     if (isEmpty(instanceSet)) {
       return;
     }
@@ -83,9 +81,9 @@ public class InstanceTimeScaleProcessor {
           break;
         } catch (SQLException e) {
           if (retryCount >= MAX_RETRY) {
-            logger.error("Create instance query failed for accountId {}", accountId, e);
+            logger.error("Create instance query failed", e);
           } else {
-            logger.error("Create instance query failed for accountId {}, retry {}", accountId, retryCount, e);
+            logger.error("Create instance query failed for iteration {}", retryCount, e);
           }
           retryCount++;
         }
