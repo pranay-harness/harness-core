@@ -5,9 +5,9 @@ import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
+import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
@@ -36,7 +36,7 @@ public class RemoveServiceInfraFolder implements Migration {
     final List<Application> applications = appService.getAppsByAccountId(accountId);
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     for (Application app : applications) {
-      logger.info(Joiner.on(StringUtils.SPACE).join(DEBUG_LINE, "Starting migration for app", app.getUuid()));
+      logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Starting migration for app", app.getUuid()));
       try {
         List<Environment> environments = environmentService.getEnvByApp(app.getUuid());
 
@@ -46,15 +46,15 @@ public class RemoveServiceInfraFolder implements Migration {
           GitFileChange gitFileChange =
               generateGitFileChangeForInfraMappingDelete(accountId, app.getName(), environment.getName());
           gitFileChanges.add(gitFileChange);
-          logger.info(Joiner.on(StringUtils.SPACE)
-                          .join(DEBUG_LINE, "Adding to git file changeSet", gitFileChange.getFilePath()));
+          logger.info(HarnessStringUtils.join(
+              StringUtils.SPACE, DEBUG_LINE, "Adding to git file changeSet", gitFileChange.getFilePath()));
         });
         yamlChangeSetService.saveChangeSet(accountId, gitFileChanges, app);
       } catch (Exception ex) {
-        logger.error(
-            Joiner.on(StringUtils.SPACE).join(DEBUG_LINE, ExceptionUtils.getMessage(ex), "app", app.getUuid()));
+        logger.error(HarnessStringUtils.join(
+            StringUtils.SPACE, DEBUG_LINE, ExceptionUtils.getMessage(ex), "app", app.getUuid()));
       }
-      logger.info(Joiner.on(StringUtils.SPACE).join(DEBUG_LINE, "Finished migration for app", app.getUuid()));
+      logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE, "Finished migration for app", app.getUuid()));
     }
   }
 
@@ -62,8 +62,8 @@ public class RemoveServiceInfraFolder implements Migration {
     return Builder.aGitFileChange()
         .withAccountId(accountId)
         .withChangeType(ChangeType.DELETE)
-        .withFilePath(Joiner.on("/").join(
-            SETUP_FOLDER, APPLICATIONS_FOLDER, appName, ENVIRONMENTS_FOLDER, envName, INFRA_MAPPING_FOLDER))
+        .withFilePath(HarnessStringUtils.join(
+            "/", SETUP_FOLDER, APPLICATIONS_FOLDER, appName, ENVIRONMENTS_FOLDER, envName, INFRA_MAPPING_FOLDER))
         .build();
   }
 }

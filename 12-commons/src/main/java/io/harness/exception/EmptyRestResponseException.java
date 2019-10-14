@@ -1,7 +1,6 @@
 package io.harness.exception;
 
-import com.google.common.base.Joiner;
-
+import io.harness.data.structure.HarnessStringUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import org.apache.commons.lang3.StringUtils;
@@ -13,9 +12,9 @@ public class EmptyRestResponseException extends WingsException {
   public EmptyRestResponseException(@NotEmpty String uri, String message) {
     super(null, null, ErrorCode.UNKNOWN_ERROR, Level.ERROR, null, null);
     super.param(MESSAGE_KEY,
-        Joiner.on(StringUtils.SPACE)
-            .join("Received empty rest response for"
-                    + " call to",
-                uri, message));
+        HarnessStringUtils.join(StringUtils.SPACE,
+            "Received empty rest response for"
+                + " call to",
+            uri, message));
   }
 }
