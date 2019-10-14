@@ -1,11 +1,16 @@
 package software.wings.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 
+import io.harness.logging.AccessTokenBean;
+import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.service.impl.AccountLogContext;
 import software.wings.service.impl.infra.InfraDownloadService;
 
 import javax.ws.rs.DefaultValue;
@@ -42,7 +47,9 @@ public class HarnessInfraDownloadResource {
   @Produces(MediaType.APPLICATION_JSON)
   public RestResponse<String> getWatcherDownloadUrlFromDefaultAuth(@PathParam("version") String version,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
-    return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version, env));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(infraDownloadService.getDownloadUrlForWatcher(version, env));
+    }
   }
 
   @GET
@@ -50,6 +57,19 @@ public class HarnessInfraDownloadResource {
   @Produces(MediaType.APPLICATION_JSON)
   public RestResponse<String> getDelegateDownloadUrlFromDefaultAuth(@PathParam("version") String version,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("env") @DefaultValue("") String env) {
-    return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version, env));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(infraDownloadService.getDownloadUrlForDelegate(version, env));
+    }
+  }
+
+  @GET
+  @Path("delegate-auth/delegate/logging-token")
+  @Produces(MediaType.APPLICATION_JSON)
+  @DelegateAuth
+  public RestResponse<AccessTokenBean> getDelegateLoggingTokenFromDelegate(
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(infraDownloadService.getStackdriverLoggingToken());
+    }
   }
 }

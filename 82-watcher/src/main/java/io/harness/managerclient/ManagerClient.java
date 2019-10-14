@@ -2,6 +2,7 @@ package io.harness.managerclient;
 
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -25,4 +26,7 @@ public interface ManagerClient {
       @Path("version") String version, @Query("accountId") String accountId);
 
   @GET("account/{accountId}/status") Call<RestResponse<String>> getAccountStatus(@Path("accountId") String accountId);
+
+  @GET("infra-download/delegate-auth/delegate/logging-token")
+  Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 }

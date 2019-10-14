@@ -507,6 +507,11 @@
                 <version>v1-rev131-1.22.0</version>
             </dependency>
             <dependency>
+                <groupId>com.google.auth</groupId>
+                <artifactId>google-auth-library-credentials</artifactId>
+                <version>0.18.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>google-cloud-core-grpc</artifactId>
                 <version>1.79.0</version>
@@ -515,6 +520,11 @@
                 <groupId>com.google.cloud</groupId>
                 <artifactId>google-cloud-datastore</artifactId>
                 <version>1.79.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>google-cloud-logging</artifactId>
+                <version>1.93.0</version>
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>

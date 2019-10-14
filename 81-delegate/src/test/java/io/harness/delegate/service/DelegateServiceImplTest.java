@@ -1,12 +1,11 @@
 package io.harness.delegate.service;
 
-import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Injector;
+import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
@@ -33,32 +32,25 @@ import software.wings.security.encryption.EncryptedData;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 public class DelegateServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock ManagerClient managerClient;
-  @Mock Call<DelegatePackage> delegatePackageCall;
-  @Mock private Injector injector;
-  @Mock private ExecutorService asyncExecutorService;
+  @Mock private ManagerClient managerClient;
+  @Mock private Call<DelegatePackage> delegatePackageCall;
   @Mock private DelegateDecryptionService delegateDecryptionService;
 
-  @InjectMocks DelegateServiceImpl delegateService = new DelegateServiceImpl();
+  @InjectMocks @Inject DelegateServiceImpl delegateService;
 
   @Before
   public void setUp() {
-    on(delegateService).set("managerClient", managerClient);
-    on(delegateService).set("injector", injector);
-    on(delegateService).set("asyncExecutorService", asyncExecutorService);
-    on(delegateService).set("delegateDecryptionService", delegateDecryptionService);
     when(managerClient.acquireTask(Matchers.anyString(), Matchers.anyString(), Matchers.anyString()))
         .thenReturn(delegatePackageCall);
   }
 
   @Test
   @Category(UnitTests.class)
-  public void shouldNotApplyFunctorIfNoSecrets() throws Exception {
+  public void shouldNotApplyFunctorIfNoSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();
 
     final DelegatePackage delegatePackage = DelegatePackage.builder()
@@ -75,7 +67,7 @@ public class DelegateServiceImplTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldApplyFunctorForSecrets() throws Exception {
+  public void shouldApplyFunctorForSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();
 
     Map<String, EncryptionConfig> encryptionConfigMap = new HashMap<>();

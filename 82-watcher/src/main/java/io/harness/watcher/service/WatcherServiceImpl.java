@@ -85,6 +85,7 @@ import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.watcher.app.WatcherApplication;
 import io.harness.watcher.app.WatcherConfiguration;
+import io.harness.watcher.logging.WatcherStackdriverLogAppender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -134,6 +135,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
   private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
+  private static final String USER_DIR = "user.dir";
 
   private static final boolean multiVersion;
 
@@ -164,51 +166,57 @@ public class WatcherServiceImpl implements WatcherService {
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   @Override
   public void run(boolean upgrade) {
-    try {
-      logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
-      messageService.writeMessage(WATCHER_STARTED);
-      startInputCheck();
+    synchronized (this) {
+      WatcherStackdriverLogAppender.setTimeLimiter(timeLimiter);
+      WatcherStackdriverLogAppender.setManagerClient(managerClient);
 
-      generateEcsDelegateSequenceConfigFile();
-      if (upgrade) {
-        Message message = messageService.waitForMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
-        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
-                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
-      }
+      try {
+        logger.info(
+            upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
+        messageService.writeMessage(WATCHER_STARTED);
+        startInputCheck();
 
-      messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
-
-      logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
-
-      String proxyHost = System.getProperty("https.proxyHost");
-
-      if (isNotBlank(proxyHost)) {
-        String proxyScheme = System.getProperty("proxyScheme");
-        String proxyPort = System.getProperty("https.proxyPort");
-        logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-        String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
-        if (isNotBlank(nonProxyHostsString)) {
-          String[] suffixes = nonProxyHostsString.split("\\|");
-          List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
-          logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
+        generateEcsDelegateSequenceConfigFile();
+        if (upgrade) {
+          Message message = messageService.waitForMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
+          logger.info(message != null ? "[New] Got go-ahead. Proceeding"
+                                      : "[New] Timed out waiting for go-ahead. Proceeding anyway");
         }
-      } else {
-        logger.info("No proxy settings. Configure in proxy.config if needed");
+
+        messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
+
+        logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
+
+        String proxyHost = System.getProperty("https.proxyHost");
+
+        if (isNotBlank(proxyHost)) {
+          String proxyScheme = System.getProperty("proxyScheme");
+          String proxyPort = System.getProperty("https.proxyPort");
+          logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
+          String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
+          if (isNotBlank(nonProxyHostsString)) {
+            String[] suffixes = nonProxyHostsString.split("\\|");
+            List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+            logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
+          }
+        } else {
+          logger.info("No proxy settings. Configure in proxy.config if needed");
+        }
+
+        checkAccountStatus();
+        startUpgradeCheck();
+        startCommandCheck();
+        startWatching();
+
+        synchronized (waiter) {
+          waiter.wait();
+        }
+
+        messageService.closeChannel(WATCHER, getProcessId());
+
+      } catch (InterruptedException e) {
+        logger.error("Interrupted while running watcher", e);
       }
-
-      checkAccountStatus();
-      startUpgradeCheck();
-      startCommandCheck();
-      startWatching();
-
-      synchronized (waiter) {
-        waiter.wait();
-      }
-
-      messageService.closeChannel(WATCHER, getProcessId());
-
-    } catch (InterruptedException e) {
-      logger.error("Interrupted while running watcher", e);
     }
   }
 
@@ -366,9 +374,9 @@ public class WatcherServiceImpl implements WatcherService {
             } else {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               runningVersions.put(delegateVersion, delegateProcess);
-              Integer delegateMinorVersion = getMinorVersion(delegateVersion);
-              boolean delegateMinorVersionMismatch = delegateMinorVersion != null
-                  && (delegateMinorVersion < minMinorVersion.get() || illegalVersions.contains(delegateMinorVersion));
+              int delegateMinorVersion = getMinorVersion(delegateVersion);
+              boolean delegateMinorVersionMismatch =
+                  delegateMinorVersion < minMinorVersion.get() || illegalVersions.contains(delegateMinorVersion);
               if (!delegateVersionMatchedAt.containsKey(delegateProcess)
                   || expectedVersions.contains(delegateVersion)) {
                 delegateVersionMatchedAt.put(delegateProcess, now);
@@ -567,16 +575,15 @@ public class WatcherServiceImpl implements WatcherService {
     throw new WingsException(ErrorCode.GENERAL_ERROR, "Couldn't get delegate versions.");
   }
 
-  private Integer getMinorVersion(String delegateVersion) {
-    Integer delegateVersionNumber = null;
+  private int getMinorVersion(String delegateVersion) {
     if (isNotBlank(delegateVersion)) {
       try {
-        delegateVersionNumber = Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1));
+        return Integer.parseInt(delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1));
       } catch (NumberFormatException e) {
         // Leave it null
       }
     }
-    return delegateVersionNumber;
+    return 0;
   }
 
   private void downloadRunScripts(String version) throws Exception {
@@ -621,7 +628,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void downloadDelegateJar(String version) throws Exception {
-    String minorVersion = getMinorVersion(version).toString();
+    String minorVersion = Integer.toString(getMinorVersion(version));
     RestResponse<String> restResponse = timeLimiter.callWithTimeout(
         ()
             -> SafeHttpCall.execute(
@@ -886,10 +893,9 @@ public class WatcherServiceImpl implements WatcherService {
         process.getProcess().destroy();
         process.getProcess().waitFor();
       }
-    } catch (RuntimeException | InterruptedException e) {
-      if (e instanceof InterruptedException) {
-        Thread.currentThread().interrupt();
-      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (IOException | RuntimeException e) {
       logger.error("[Old] Exception while upgrading", e);
       if (process != null) {
         try {
@@ -909,8 +915,6 @@ public class WatcherServiceImpl implements WatcherService {
           logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
         }
       }
-    } catch (IOException e) {
-      e.printStackTrace();
     } finally {
       working.set(false);
     }
@@ -918,7 +922,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void cleanupOldWatcherVersionFromBackup(String version, String newVersion) {
     try {
-      cleanup(new File(System.getProperty("user.dir")), newHashSet(version, newVersion), "watcherBackup.");
+      cleanup(new File(System.getProperty(USER_DIR)), newHashSet(version, newVersion), "watcherBackup.");
     } catch (Exception ex) {
       logger.error("Failed to clean watcher version from Backup", ex);
     }
@@ -934,8 +938,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void cleanupOldDelegateVersions(Set<String> keepVersions) {
     try {
-      cleanupVersionFolders(new File(System.getProperty("user.dir")), keepVersions);
-      cleanup(new File(System.getProperty("user.dir")), keepVersions, "backup.");
+      cleanupVersionFolders(new File(System.getProperty(USER_DIR)), keepVersions);
+      cleanup(new File(System.getProperty(USER_DIR)), keepVersions, "backup.");
     } catch (Exception ex) {
       logger.error("Failed to clean delegate version from Backup", ex);
     }
@@ -1050,7 +1054,7 @@ public class WatcherServiceImpl implements WatcherService {
     });
 
     try {
-      File workingDir = new File(System.getProperty("user.dir"));
+      File workingDir = new File(System.getProperty(USER_DIR));
       logger.info("Cleaning {}", workingDir.getCanonicalPath());
       logger.info("Goodbye");
 

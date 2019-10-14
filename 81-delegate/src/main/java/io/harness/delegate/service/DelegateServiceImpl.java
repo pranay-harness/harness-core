@@ -80,6 +80,7 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
+import io.harness.delegate.logging.DelegateStackdriverLogAppender;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.task.DelegateRunnableTask;
@@ -282,236 +283,240 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
-    try {
-      accountId = delegateConfiguration.getAccountId();
-      startTime = clock.millis();
+    synchronized (this) {
+      try {
+        accountId = delegateConfiguration.getAccountId();
+        startTime = clock.millis();
+        DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
+        DelegateStackdriverLogAppender.setManagerClient(managerClient);
 
-      logProxyConfiguration();
+        logProxyConfiguration();
 
-      connectionHeartbeat = DelegateConnectionHeartbeat.builder()
-                                .delegateConnectionId(delegateConnectionId)
-                                .version(getVersion())
-                                .alive(true)
-                                .build();
+        connectionHeartbeat = DelegateConnectionHeartbeat.builder()
+                                  .delegateConnectionId(delegateConnectionId)
+                                  .version(getVersion())
+                                  .alive(true)
+                                  .build();
 
-      if (watched) {
-        logger.info("[New] Delegate process started. Sending confirmation");
-        messageService.writeMessage(DELEGATE_STARTED);
-        startInputCheck();
-        logger.info("[New] Waiting for go ahead from watcher");
-        Message message = messageService.waitForMessage(DELEGATE_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
-        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
-                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
-        messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
-        startLocalHeartbeat();
-      } else {
-        logger.info("Delegate process started");
-      }
-
-      boolean kubectlInstalled = installKubectl(delegateConfiguration);
-      boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
-      boolean helmInstalled = installHelm(delegateConfiguration);
-      boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
-      boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
-
-      long start = clock.millis();
-      String description = "description here".equals(delegateConfiguration.getDescription())
-          ? ""
-          : delegateConfiguration.getDescription();
-
-      String delegateName = System.getenv().get("DELEGATE_NAME");
-      if (isNotBlank(delegateName)) {
-        logger.info("Registering delegate with delegate name: {}", delegateName);
-      } else {
-        delegateName = "";
-      }
-
-      String delegateProfile = System.getenv().get("DELEGATE_PROFILE");
-      if (isNotBlank(delegateProfile)) {
-        logger.info("Registering delegate with delegate profile: {}", delegateProfile);
-      } else {
-        delegateProfile = "";
-      }
-
-      boolean isSample = "true".equals(System.getenv().get("SAMPLE_DELEGATE"));
-
-      logger.info("DELEGATE_TYPE is: " + DELEGATE_TYPE);
-      if (isNotBlank(DELEGATE_TYPE)) {
-        logger.info(
-            "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
-      }
-
-      DelegateBuilder builder = Delegate.builder()
-                                    .ip(getLocalHostAddress())
-                                    .accountId(accountId)
-                                    .hostName(HOST_NAME)
-                                    .delegateName(delegateName)
-                                    .delegateGroupName(DELEGATE_GROUP_NAME)
-                                    .delegateProfileId(delegateProfile)
-                                    .description(description)
-                                    .version(getVersion())
-                                    .delegateType(DELEGATE_TYPE)
-                                    .sampleDelegate(isSample);
-
-      delegateId = registerDelegate(builder);
-      logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
-
-      SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
-      sslContext.init(null, TRUST_ALL_CERTS.toArray(new TrustManager[1]), new java.security.SecureRandom());
-
-      if (isPollingForTasksEnabled()) {
-        logger.info("Polling is enabled for Delegate");
-        pollingForTasks.set(true);
-      } else {
-        Client client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
-
-        // Stream the request body
-        RequestBuilder reqBuilder =
-            client.newRequestBuilder()
-                .method(METHOD.GET)
-                .uri(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
-                .queryString("delegateId", delegateId)
-                .queryString("delegateConnectionId", delegateConnectionId)
-                .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
-                .queryString("sequenceNum", getSequenceNumForEcsDelegate())
-                .queryString("delegateToken", getRandomTokenForEcsDelegate())
-                .header("Version", getVersion());
-        if (delegateConfiguration.isProxy()) {
-          reqBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
+        if (watched) {
+          logger.info("[New] Delegate process started. Sending confirmation");
+          messageService.writeMessage(DELEGATE_STARTED);
+          startInputCheck();
+          logger.info("[New] Waiting for go ahead from watcher");
+          Message message = messageService.waitForMessage(DELEGATE_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
+          logger.info(message != null ? "[New] Got go-ahead. Proceeding"
+                                      : "[New] Timed out waiting for go-ahead. Proceeding anyway");
+          messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
+          startLocalHeartbeat();
+        } else {
+          logger.info("Delegate process started");
         }
 
-        request = reqBuilder
-                      .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
-                        @Override
-                        public Reader encode(Delegate s) {
-                          return new StringReader(JsonUtils.asJson(s));
-                        }
-                      })
-                      .transport(TRANSPORT.WEBSOCKET);
+        boolean kubectlInstalled = installKubectl(delegateConfiguration);
+        boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
+        boolean helmInstalled = installHelm(delegateConfiguration);
+        boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
+        boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
 
-        Options clientOptions =
-            client.newOptionsBuilder()
-                .runtime(asyncHttpClient, true)
-                .reconnect(true)
-                .reconnectAttempts(new File(START_SH).exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
-                .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
-                .build();
-        socket = client.create(clientOptions);
-        socket
-            .on(Event.MESSAGE,
-                new Function<String>() { // Do not change this, wasync doesn't like lambdas
-                  @Override
-                  public void on(String message) {
-                    handleMessageSubmit(message);
-                  }
-                })
-            .on(Event.ERROR,
-                new Function<Exception>() { // Do not change this, wasync doesn't like lambdas
-                  @Override
-                  public void on(Exception e) {
-                    handleError(e);
-                  }
-                })
-            .on(Event.REOPENED,
-                new Function<Object>() { // Do not change this, wasync doesn't like lambdas
-                  @Override
-                  public void on(Object o) {
-                    handleReopened(o, builder);
-                  }
-                })
-            .on(Event.CLOSE, new Function<Object>() { // Do not change this, wasync doesn't like lambdas
-              @Override
-              public void on(Object o) {
-                handleClose(o);
+        long start = clock.millis();
+        String description = "description here".equals(delegateConfiguration.getDescription())
+            ? ""
+            : delegateConfiguration.getDescription();
+
+        String delegateName = System.getenv().get("DELEGATE_NAME");
+        if (isNotBlank(delegateName)) {
+          logger.info("Registering delegate with delegate name: {}", delegateName);
+        } else {
+          delegateName = "";
+        }
+
+        String delegateProfile = System.getenv().get("DELEGATE_PROFILE");
+        if (isNotBlank(delegateProfile)) {
+          logger.info("Registering delegate with delegate profile: {}", delegateProfile);
+        } else {
+          delegateProfile = "";
+        }
+
+        boolean isSample = "true".equals(System.getenv().get("SAMPLE_DELEGATE"));
+
+        logger.info("DELEGATE_TYPE is: " + DELEGATE_TYPE);
+        if (isNotBlank(DELEGATE_TYPE)) {
+          logger.info(
+              "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
+        }
+
+        DelegateBuilder builder = Delegate.builder()
+                                      .ip(getLocalHostAddress())
+                                      .accountId(accountId)
+                                      .hostName(HOST_NAME)
+                                      .delegateName(delegateName)
+                                      .delegateGroupName(DELEGATE_GROUP_NAME)
+                                      .delegateProfileId(delegateProfile)
+                                      .description(description)
+                                      .version(getVersion())
+                                      .delegateType(DELEGATE_TYPE)
+                                      .sampleDelegate(isSample);
+
+        delegateId = registerDelegate(builder);
+        logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
+
+        SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
+        sslContext.init(null, TRUST_ALL_CERTS.toArray(new TrustManager[1]), new java.security.SecureRandom());
+
+        if (isPollingForTasksEnabled()) {
+          logger.info("Polling is enabled for Delegate");
+          pollingForTasks.set(true);
+        } else {
+          Client client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
+
+          // Stream the request body
+          RequestBuilder reqBuilder =
+              client.newRequestBuilder()
+                  .method(METHOD.GET)
+                  .uri(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
+                  .queryString("delegateId", delegateId)
+                  .queryString("delegateConnectionId", delegateConnectionId)
+                  .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
+                  .queryString("sequenceNum", getSequenceNumForEcsDelegate())
+                  .queryString("delegateToken", getRandomTokenForEcsDelegate())
+                  .header("Version", getVersion());
+          if (delegateConfiguration.isProxy()) {
+            reqBuilder.header("X-Atmosphere-WebSocket-Proxy", "true");
+          }
+
+          request = reqBuilder
+                        .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
+                          @Override
+                          public Reader encode(Delegate s) {
+                            return new StringReader(JsonUtils.asJson(s));
+                          }
+                        })
+                        .transport(TRANSPORT.WEBSOCKET);
+
+          Options clientOptions =
+              client.newOptionsBuilder()
+                  .runtime(asyncHttpClient, true)
+                  .reconnect(true)
+                  .reconnectAttempts(new File(START_SH).exists() ? MAX_CONNECT_ATTEMPTS : Integer.MAX_VALUE)
+                  .pauseBeforeReconnectInSeconds(RECONNECT_INTERVAL_SECONDS)
+                  .build();
+          socket = client.create(clientOptions);
+          socket
+              .on(Event.MESSAGE,
+                  new Function<String>() { // Do not change this, wasync doesn't like lambdas
+                    @Override
+                    public void on(String message) {
+                      handleMessageSubmit(message);
+                    }
+                  })
+              .on(Event.ERROR,
+                  new Function<Exception>() { // Do not change this, wasync doesn't like lambdas
+                    @Override
+                    public void on(Exception e) {
+                      handleError(e);
+                    }
+                  })
+              .on(Event.REOPENED,
+                  new Function<Object>() { // Do not change this, wasync doesn't like lambdas
+                    @Override
+                    public void on(Object o) {
+                      handleReopened(o, builder);
+                    }
+                  })
+              .on(Event.CLOSE, new Function<Object>() { // Do not change this, wasync doesn't like lambdas
+                @Override
+                public void on(Object o) {
+                  handleClose(o);
+                }
+              });
+
+          socket.open(request.build());
+
+          startHeartbeat(builder, socket);
+          startKeepAlivePacket(builder, socket);
+        }
+
+        startTaskPolling();
+        startHeartbeatWhenPollingEnabled(builder);
+        startKeepAliveRequestWhenPollingEnabled(builder);
+
+        if (!multiVersion) {
+          startUpgradeCheck(getVersion());
+        }
+
+        logger.info("Delegate started");
+
+        startProfileCheck();
+
+        if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
+            || !tfConfigInspectInstalled) {
+          systemExecutorService.submit(() -> {
+            boolean kubectl = kubectlInstalled;
+            boolean goTemplate = goTemplateInstalled;
+            boolean helm = helmInstalled;
+            boolean chartMuseum = chartMuseumInstalled;
+            boolean tfConfigInspect = tfConfigInspectInstalled;
+
+            int retries = CLIENT_TOOL_RETRIES;
+            while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect) && retries > 0) {
+              sleep(ofSeconds(15L));
+              if (!kubectl) {
+                kubectl = installKubectl(delegateConfiguration);
               }
-            });
+              if (!goTemplate) {
+                goTemplate = installGoTemplateTool(delegateConfiguration);
+              }
+              if (!helm) {
+                helm = installHelm(delegateConfiguration);
+              }
+              if (!chartMuseum) {
+                chartMuseum = installChartMuseum(delegateConfiguration);
+              }
+              if (!tfConfigInspect) {
+                tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+              }
 
-        socket.open(request.build());
+              retries--;
+            }
 
-        startHeartbeat(builder, socket);
-        startKeepAlivePacket(builder, socket);
-      }
-
-      startTaskPolling();
-      startHeartbeatWhenPollingEnabled(builder);
-      startKeepAliveRequestWhenPollingEnabled(builder);
-
-      if (!multiVersion) {
-        startUpgradeCheck(getVersion());
-      }
-
-      logger.info("Delegate started");
-
-      startProfileCheck();
-
-      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
-          || !tfConfigInspectInstalled) {
-        systemExecutorService.submit(() -> {
-          boolean kubectl = kubectlInstalled;
-          boolean goTemplate = goTemplateInstalled;
-          boolean helm = helmInstalled;
-          boolean chartMuseum = chartMuseumInstalled;
-          boolean tfConfigInspect = tfConfigInspectInstalled;
-
-          int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect) && retries > 0) {
-            sleep(ofSeconds(15L));
             if (!kubectl) {
-              kubectl = installKubectl(delegateConfiguration);
+              logger.error("Failed to install kubectl after {} retries", CLIENT_TOOL_RETRIES);
             }
             if (!goTemplate) {
-              goTemplate = installGoTemplateTool(delegateConfiguration);
+              logger.error("Failed to install go-template after {} retries", CLIENT_TOOL_RETRIES);
             }
             if (!helm) {
-              helm = installHelm(delegateConfiguration);
+              logger.error("Failed to install helm after {} retries", CLIENT_TOOL_RETRIES);
             }
             if (!chartMuseum) {
-              chartMuseum = installChartMuseum(delegateConfiguration);
+              logger.error("Failed to install chartMuseum after {} retries", CLIENT_TOOL_RETRIES);
             }
             if (!tfConfigInspect) {
-              tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+              logger.error("Failed to install tf-config-inspect after {} retries", CLIENT_TOOL_RETRIES);
             }
-
-            retries--;
-          }
-
-          if (!kubectl) {
-            logger.error("Failed to install kubectl after {} retries", CLIENT_TOOL_RETRIES);
-          }
-          if (!goTemplate) {
-            logger.error("Failed to install go-template after {} retries", CLIENT_TOOL_RETRIES);
-          }
-          if (!helm) {
-            logger.error("Failed to install helm after {} retries", CLIENT_TOOL_RETRIES);
-          }
-          if (!chartMuseum) {
-            logger.error("Failed to install chartMuseum after {} retries", CLIENT_TOOL_RETRIES);
-          }
-          if (!tfConfigInspect) {
-            logger.error("Failed to install tf-config-inspect after {} retries", CLIENT_TOOL_RETRIES);
-          }
-        });
-      }
-
-      synchronized (waiter) {
-        while (waiter.get()) {
-          waiter.wait();
+          });
         }
+
+        synchronized (waiter) {
+          while (waiter.get()) {
+            waiter.wait();
+          }
+        }
+
+        messageService.closeData(DELEGATE_DASH + getProcessId());
+        messageService.closeChannel(DELEGATE, getProcessId());
+
+        if (upgradePending.get()) {
+          removeDelegateVersionFromCapsule();
+          cleanupOldDelegateVersionFromBackup();
+        }
+
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        logger.error("Exception while starting/running delegate", e);
+      } catch (RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException e) {
+        logger.error("Exception while starting/running delegate", e);
       }
-
-      messageService.closeData(DELEGATE_DASH + getProcessId());
-      messageService.closeChannel(DELEGATE, getProcessId());
-
-      if (upgradePending.get()) {
-        removeDelegateVersionFromCapsule();
-        cleanupOldDelegateVersionFromBackup();
-      }
-
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      logger.error("Exception while starting/running delegate", e);
-    } catch (RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException e) {
-      logger.error("Exception while starting/running delegate", e);
     }
   }
 
@@ -561,41 +566,50 @@ public class DelegateServiceImpl implements DelegateService {
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(false);
     try {
-      Delegate delegate = builder.build();
-      delegate.setLastHeartBeat(clock.millis());
-      delegate.setStatus(Status.ENABLED);
-      delegate.setConnected(true);
-      socket.fire(delegate);
+      synchronized (this) {
+        Delegate delegate = builder.build();
+        delegate.setLastHeartBeat(clock.millis());
+        delegate.setStatus(Status.ENABLED);
+        delegate.setConnected(true);
+        socket.fire(delegate);
+      }
     } catch (IOException e) {
       logger.error("Error connecting", e);
     }
   }
 
   private void handleError(Exception e) {
-    logger.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
-    if (e instanceof SSLException) {
-      logger.info("Reopening connection to manager");
-      try {
-        socket.close();
-      } catch (Exception ex) {
-        // Ignore
+    synchronized (this) {
+      logger.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
+      if (e instanceof SSLException) {
+        logger.info("Reopening connection to manager");
+        try {
+          socket.close();
+        } catch (Exception ex) {
+          // Ignore
+        }
+        try {
+          FibonacciBackOff.executeForEver(() -> {
+            boolean forCodeFormattingOnly; // This line is here for clang-format
+            synchronized (this) {
+              return socket.open(request.build());
+            }
+          });
+        } catch (IOException ex) {
+          logger.error("Unable to open socket", e);
+        }
+      } else if (e instanceof ConnectException) {
+        logger.warn("Failed to connect after {} attempts.", MAX_CONNECT_ATTEMPTS);
+        restartNeeded.set(true);
+      } else {
+        logger.error("Exception: " + e.getMessage(), e);
+        try {
+          socket.close();
+        } catch (Exception ex) {
+          // Ignore
+        }
+        restartNeeded.set(true);
       }
-      try {
-        FibonacciBackOff.executeForEver(() -> socket.open(request.build()));
-      } catch (IOException ex) {
-        logger.error("Unable to open socket", e);
-      }
-    } else if (e instanceof ConnectException) {
-      logger.warn("Failed to connect after {} attempts.", MAX_CONNECT_ATTEMPTS);
-      restartNeeded.set(true);
-    } else {
-      logger.error("Exception: " + e.getMessage(), e);
-      try {
-        socket.close();
-      } catch (Exception ex) {
-        // Ignore
-      }
-      restartNeeded.set(true);
     }
   }
 
@@ -651,15 +665,22 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void pause() {
-    if (!delegateConfiguration.isPollForTasks()) {
-      socket.close();
+    synchronized (this) {
+      if (!delegateConfiguration.isPollForTasks()) {
+        socket.close();
+      }
     }
   }
 
   private void resume() {
     try {
       if (!delegateConfiguration.isPollForTasks()) {
-        FibonacciBackOff.executeForEver(() -> socket.open(request.build()));
+        FibonacciBackOff.executeForEver(() -> {
+          boolean forCodeFormattingOnly; // This line is here for clang-format
+          synchronized (this) {
+            return socket.open(request.build());
+          }
+        });
       }
       upgradePending.set(false);
       upgradeNeeded.set(false);
@@ -1109,56 +1130,60 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void watchWatcher() {
-    long watcherHeartbeat =
-        Optional.ofNullable(messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class)).orElse(clock.millis());
-    boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
-    if (heartbeatTimedOut) {
-      logger.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
-    }
-    String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
-    String expectedVersion = findExpectedWatcherVersion();
-    if (StringUtils.equals(expectedVersion, watcherVersion)) {
-      watcherVersionMatchedAt = clock.millis();
-    }
-    boolean versionMatchTimedOut = clock.millis() - watcherVersionMatchedAt > WATCHER_VERSION_MATCH_TIMEOUT;
-    if (versionMatchTimedOut) {
-      logger.warn("Watcher version mismatched for {} seconds. Version is {} but should be {}",
-          WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
-    }
+    synchronized (this) {
+      long watcherHeartbeat = Optional.ofNullable(messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class))
+                                  .orElse(clock.millis());
+      boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
+      if (heartbeatTimedOut) {
+        logger.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
+      }
+      String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
+      String expectedVersion = findExpectedWatcherVersion();
+      if (StringUtils.equals(expectedVersion, watcherVersion)) {
+        watcherVersionMatchedAt = clock.millis();
+      }
+      boolean versionMatchTimedOut = clock.millis() - watcherVersionMatchedAt > WATCHER_VERSION_MATCH_TIMEOUT;
+      if (versionMatchTimedOut) {
+        logger.warn("Watcher version mismatched for {} seconds. Version is {} but should be {}",
+            WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
+      }
 
-    boolean multiVersionRestartNeeded =
-        multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
+      boolean multiVersionRestartNeeded = multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT
+          && !new File(getVersion()).exists();
 
-    if (heartbeatTimedOut || versionMatchTimedOut
-        || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
-      String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
-      logger.warn("Watcher process {} needs restart", watcherProcess);
-      systemExecutorService.submit(() -> {
-        try {
-          new ProcessExecutor().command("kill", "-9", watcherProcess).start();
-          messageService.closeChannel(WATCHER, watcherProcess);
-          sleep(ofSeconds(2));
-          // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
-          // resetting version matched timestamp
-          messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
-          watcherVersionMatchedAt = clock.millis();
-          StartedProcess newWatcher = new ProcessExecutor()
-                                          .command("nohup", "./start.sh")
-                                          .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
-                                          .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())
-                                          .readOutput(true)
-                                          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-                                          .start();
-          if (multiVersionRestartNeeded && newWatcher.getProcess().isAlive()) {
-            sleep(ofSeconds(20L));
-            FileUtils.forceDelete(new File("delegate.sh"));
-            FileUtils.forceDelete(new File("delegate.jar"));
-            restartNeeded.set(true);
+      if (heartbeatTimedOut || versionMatchTimedOut
+          || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
+        String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
+        logger.warn("Watcher process {} needs restart", watcherProcess);
+        systemExecutorService.submit(() -> {
+          try {
+            synchronized (this) {
+              new ProcessExecutor().command("kill", "-9", watcherProcess).start();
+              messageService.closeChannel(WATCHER, watcherProcess);
+              sleep(ofSeconds(2));
+              // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
+              // resetting version matched timestamp
+              messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
+              watcherVersionMatchedAt = clock.millis();
+              StartedProcess newWatcher = new ProcessExecutor()
+                                              .command("nohup", "./start.sh")
+                                              .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
+                                              .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())
+                                              .readOutput(true)
+                                              .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                                              .start();
+              if (multiVersionRestartNeeded && newWatcher.getProcess().isAlive()) {
+                sleep(ofSeconds(20L));
+                FileUtils.forceDelete(new File("delegate.sh"));
+                FileUtils.forceDelete(new File("delegate.jar"));
+                restartNeeded.set(true);
+              }
+            }
+          } catch (Exception e) {
+            logger.error(format("Error restarting watcher %s", watcherProcess), e);
           }
-        } catch (Exception e) {
-          logger.error(format("Error restarting watcher %s", watcherProcess), e);
-        }
-      });
+        });
+      }
     }
   }
 
@@ -1256,12 +1281,13 @@ public class DelegateServiceImpl implements DelegateService {
         updateTokenAndSeqNumFromPollingResponse(delegateReceived);
       }
 
-      timeLimiter.callWithTimeout(
-          ()
-              -> execute(managerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)),
-          15L, TimeUnit.SECONDS, true);
+      timeLimiter.callWithTimeout(() -> {
+        boolean forCodeFormattingOnly; // This line is here for clang-format
+        synchronized (this) {
+          return execute(managerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat));
+        }
+      }, 15L, TimeUnit.SECONDS, true);
       lastHeartbeatSentAt.set(clock.millis());
-
     } catch (UncheckedTimeoutException ex) {
       logger.warn("Timed out sending heartbeat");
     } catch (Exception e) {
