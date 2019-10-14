@@ -171,7 +171,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
     File tfVariablesFile = null, tfBackendConfigsFile = null;
 
-    try {
+    try (ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters);
+         PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>())) {
       ensureLocalCleanup(scriptDirectory);
       String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitOperationContext);
 
@@ -230,8 +231,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
 
       int code;
-      ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters);
-      PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>());
       switch (parameters.getCommand()) {
         case APPLY: {
           String command = format("terraform init %s",

@@ -169,7 +169,9 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    // nothing to do
+  }
 
   private String createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();

@@ -67,7 +67,7 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfrastructureProvisioner.Yaml {
+  public static final class Yaml extends InfraProvisionerYaml {
     private String sourceType;
     private String templateBody;
     private String templateFilePath;

@@ -1188,7 +1188,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId) {}
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId) {
+    // no descending entity for infra definition
+  }
 
   @Override
   public void ensureSafeToDelete(@NotEmpty String appId, InfrastructureDefinition infrastructureDefinition) {
