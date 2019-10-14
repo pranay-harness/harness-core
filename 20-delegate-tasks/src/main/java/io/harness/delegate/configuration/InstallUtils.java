@@ -1,13 +1,13 @@
 package io.harness.delegate.configuration;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import io.harness.data.structure.HarnessStringUtils;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -47,8 +47,8 @@ public class InstallUtils {
   // version provided by Hashicorp because currently they do not maintain releases as such
 
   public static String getTerraformConfigInspectPath() {
-    return HarnessStringUtils.join("/", terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(),
-        "amd64", terraformConfigInspectBinary);
+    return join("/", terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(), "amd64",
+        terraformConfigInspectBinary);
   }
 
   public static String getKubectlPath() {
@@ -525,15 +525,14 @@ public class InstallUtils {
   }
 
   private static String getTerraformConfigInspectDownloadUrl(String managerBaseUrl) {
-    return HarnessStringUtils.join("/", managerBaseUrl,
+    return join("/", managerBaseUrl,
         "storage/harness-download/harness-terraform-config"
             + "-inspect",
         terraformConfigInspectVersion, getOsPath(), "amd64", terraformConfigInspectBinary);
   }
 
   private static boolean validateTerraformConfigInspectExists(String terraformConfigInspectVersionedDirectory) {
-    if (Files.exists(Paths.get(
-            HarnessStringUtils.join("/", terraformConfigInspectVersionedDirectory, terraformConfigInspectBinary)))) {
+    if (Files.exists(Paths.get(join("/", terraformConfigInspectVersionedDirectory, terraformConfigInspectBinary)))) {
       return true;
     }
     return false;

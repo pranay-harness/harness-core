@@ -27,14 +27,12 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.GitUtilsDelegate;
 
 import java.util.List;
 
 @Singleton
 public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase implements AwsCFHelperServiceDelegate {
-  @Inject private EncryptionService encryptionService;
   @Inject private GitUtilsDelegate gitUtilsDelegate;
 
   @VisibleForTesting
