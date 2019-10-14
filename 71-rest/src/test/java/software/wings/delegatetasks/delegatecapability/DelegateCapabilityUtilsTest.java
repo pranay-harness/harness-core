@@ -3,6 +3,8 @@ package software.wings.delegatetasks.delegatecapability;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.CapabilityUtils;
@@ -11,13 +13,12 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.TaskType;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class DelegateCapabilityUtilsTest extends CategoryTest {
   private static Set<String> taskGroupsMoved =
-      new HashSet<>(Arrays.asList("JENKINS", "BAMBOO", "GCS", "DOCKER", "NEXUS", "ARTIFACTORY"));
+      ImmutableSet.of("JENKINS", "BAMBOO", "GCS", "DOCKER", "NEXUS", "ARTIFACTORY");
 
   @Test
   @Category(UnitTests.class)

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,23 +67,43 @@ public class Http {
     return false;
   }
 
+  private static int getResponseCodeForValidation(String url) throws IOException {
+    // Create a trust manager that does not validate certificate chains
+    // Install the all-trusting trust manager
+    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+    // Create all-trusting host name verifier
+    HostnameVerifier allHostsValid = (s, sslSession) -> true;
+    // Install the all-trusting host verifier
+    HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+    HttpURLConnection connection = getHttpsURLConnection(url);
+    // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
+    connection.setRequestMethod("GET");
+    connection.setConnectTimeout(15000);
+    connection.setReadTimeout(15000);
+    return connection.getResponseCode();
+  }
+
+  /**
+   * tests whether the http server can be connected or not for this url
+   * this takes care of proxy as well. simple socket connectivity does not take care of the
+   * http proxies.
+   */
+  public static boolean isHttpServerConnectable(String url) {
+    logger.info("Testing http server connectivity for url {}", url);
+    try {
+      final int responseCode = getResponseCodeForValidation(url);
+      logger.info("Able to connect http server with response code= [{}] , Url= [{}]", responseCode, url);
+      return true;
+    } catch (Exception e) {
+      logger.info("Could not connect http server for url {}: {}", url, e.getMessage());
+    }
+    return false;
+  }
+
   public static boolean connectableHttpUrl(String url) {
     logger.info("Testing connectivity to url {}", url);
-    // Create a trust manager that does not validate certificate chains
     try {
-      // Install the all-trusting trust manager
-      HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-      // Create all-trusting host name verifier
-      HostnameVerifier allHostsValid = (s, sslSession) -> true;
-      // Install the all-trusting host verifier
-      HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-      HttpURLConnection connection = getHttpsURLConnection(url);
-      // Changed to GET as some providers like artifactory SAAS is not accepting HEAD requests
-      connection.setRequestMethod("GET");
-      connection.setConnectTimeout(15000);
-      connection.setReadTimeout(15000);
-
-      int responseCode = connection.getResponseCode();
+      final int responseCode = getResponseCodeForValidation(url);
       if (responseCode != 400) {
         logger.info("Url {} is connectable", url);
         return true;
@@ -95,7 +116,8 @@ public class Http {
     return false;
   }
 
-  private static HttpURLConnection getHttpsURLConnection(String url) throws IOException {
+  @VisibleForTesting
+  static HttpURLConnection getHttpsURLConnection(String url) throws IOException {
     HttpURLConnection connection;
     if (shouldUseNonProxy(url)) {
       connection = (HttpURLConnection) new URL(url).openConnection(Proxy.NO_PROXY);
