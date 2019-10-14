@@ -31,6 +31,8 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
@@ -43,6 +45,8 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
+  @Mock private AppService mockAppService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
 
   @InjectMocks @Inject private CloudFormationInfrastructureProvisionerYamlHandler handler;
 
