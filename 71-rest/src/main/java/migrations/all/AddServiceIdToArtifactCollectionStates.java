@@ -76,80 +76,84 @@ public class AddServiceIdToArtifactCollectionStates implements Migration {
                                                                      .project(WorkflowKeys.appId, true)
                                                                      .fetch())) {
       for (Workflow initialWorkflow : workflowHIterator) {
-        // Read the workflow.
-        Workflow workflow;
-        try {
-          workflow = workflowService.readWorkflow(initialWorkflow.getAppId(), initialWorkflow.getUuid());
-        } catch (Exception e) {
-          logger.error(format("Migration Error - could not read workflow: [%s]", initialWorkflow.getUuid()), e);
-          continue;
-        }
-        // Skip if the workflow is not a BUILD workflow.
-        if (workflow == null || workflow.getOrchestrationWorkflow() == null
-            || !OrchestrationWorkflowType.BUILD.equals(
-                   workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+        migrateWorkflow(initialWorkflow, artifactStreamIdToServiceId);
+      }
+    }
+  }
+
+  private void migrateWorkflow(Workflow initialWorkflow, Map<String, String> artifactStreamIdToServiceId) {
+    // Read the workflow.
+    Workflow workflow;
+    try {
+      workflow = workflowService.readWorkflow(initialWorkflow.getAppId(), initialWorkflow.getUuid());
+    } catch (Exception e) {
+      logger.error(format("Migration Error - could not read workflow: [%s]", initialWorkflow.getUuid()), e);
+      return;
+    }
+    // Skip if the workflow is not a BUILD workflow.
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null
+        || !OrchestrationWorkflowType.BUILD.equals(
+               workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+      return;
+    }
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    // Skip if orchestration workflow has no workflow phases.
+    if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+      return;
+    }
+
+    for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+      // Skip if workflow phase has no phase steps.
+      if (isEmpty(workflowPhase.getPhaseSteps())) {
+        continue;
+      }
+
+      // We are updating at the workflow phase level. The updated variable tracks if there is any artifact
+      // collection step inside this workflow phase whose properties need to be updated with the service id.
+      boolean updated = false;
+      for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+        // Skip if phase step is not of type COLLECT_ARTIFACT or has no workflow steps.
+        if (!PhaseStepType.COLLECT_ARTIFACT.equals(phaseStep.getPhaseStepType()) || isEmpty(phaseStep.getSteps())) {
           continue;
         }
 
-        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-            (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-        // Skip if orchestration workflow has no workflow phases.
-        if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-          continue;
-        }
-
-        for (WorkflowPhase workflowPhase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
-          // Skip if workflow phase has no phase steps.
-          if (isEmpty(workflowPhase.getPhaseSteps())) {
+        for (GraphNode step : phaseStep.getSteps()) {
+          // Skip if step is not of type ARTIFACT_COLLECTION or has no properties.
+          if (!StateType.ARTIFACT_COLLECTION.name().equals(step.getType()) || isEmpty(step.getProperties())) {
             continue;
           }
 
-          // We are updating at the workflow phase level. The updated variable tracks if there is any artifact
-          // collection step inside this workflow phase whose properties need to be updated with the service id.
-          boolean updated = false;
-          for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-            // Skip if phase step is not of type COLLECT_ARTIFACT or has no workflow steps.
-            if (!PhaseStepType.COLLECT_ARTIFACT.equals(phaseStep.getPhaseStepType()) || isEmpty(phaseStep.getSteps())) {
-              continue;
-            }
-
-            for (GraphNode step : phaseStep.getSteps()) {
-              // Skip if step is not of type ARTIFACT_COLLECTION or has no properties.
-              if (!StateType.ARTIFACT_COLLECTION.name().equals(step.getType()) || isEmpty(step.getProperties())) {
-                continue;
-              }
-
-              Map<String, Object> properties = step.getProperties();
-              String artifactStreamId = (String) properties.getOrDefault("artifactStreamId", null);
-              // Skip if properties doesn't contain an artifact stream id.
-              if (artifactStreamId == null) {
-                continue;
-              }
-
-              String serviceId = artifactStreamIdToServiceId.getOrDefault(artifactStreamId, null);
-              if (serviceId == null) {
-                // NOTE: zombie artifact stream
-                continue;
-              }
-
-              String propertiesServiceId = (String) properties.getOrDefault("serviceId", null);
-              // Skip is properties already contains the required serviceId.
-              if (propertiesServiceId != null && propertiesServiceId.equals(serviceId)) {
-                continue;
-              }
-
-              properties.put("serviceId", serviceId);
-              updated = true;
-            }
+          Map<String, Object> properties = step.getProperties();
+          String artifactStreamId = (String) properties.getOrDefault("artifactStreamId", null);
+          // Skip if properties doesn't contain an artifact stream id.
+          if (artifactStreamId == null) {
+            continue;
           }
 
-          if (updated) {
-            try {
-              workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
-            } catch (Exception e) {
-              logger.error(format("Migration Error - could not migrate workflow: [%s]", workflow.getUuid()), e);
-            }
+          String serviceId = artifactStreamIdToServiceId.getOrDefault(artifactStreamId, null);
+          if (serviceId == null) {
+            // NOTE: zombie artifact stream
+            continue;
           }
+
+          String propertiesServiceId = (String) properties.getOrDefault("serviceId", null);
+          // Skip is properties already contains the required serviceId.
+          if (propertiesServiceId != null && propertiesServiceId.equals(serviceId)) {
+            continue;
+          }
+
+          properties.put("serviceId", serviceId);
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        try {
+          workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
+        } catch (Exception e) {
+          logger.error(format("Migration Error - could not migrate workflow: [%s]", workflow.getUuid()), e);
         }
       }
     }

@@ -595,72 +595,68 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void setPipelineDetails(List<Pipeline> pipelines, boolean withFinalValuesOnly) {
     for (Pipeline pipeline : pipelines) {
-      boolean hasSshInfraMapping = false;
-      boolean templatized = false;
-      boolean pipelineParameterized = false;
-      boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
-      List<String> invalidWorkflows = new ArrayList<>();
-      List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
-      List<Variable> pipelineVariables = new ArrayList<>();
-      List<DeploymentType> deploymentTypes = new ArrayList<>();
-      Map<String, Workflow> workflowCache = new HashMap<>();
-      for (PipelineStage pipelineStage : pipelineStages) {
-        List<String> invalidStageWorkflows = new ArrayList<>();
-        for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
-          if (pse.isDisable()) {
-            continue;
-          }
-          if (ENV_STATE.name().equals(pse.getType())) {
-            try {
-              String workflowId = (String) pse.getProperties().get("workflowId");
-              Workflow workflow;
-              if (workflowCache.containsKey(workflowId)) {
-                workflow = workflowCache.get(workflowId);
-              } else {
-                workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
-                Validator.notNullCheck("Workflow does not exist", workflow, USER);
-                Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
-                workflowCache.put(workflowId, workflow);
-              }
-
-              if (!hasSshInfraMapping) {
-                hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
-                    (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
-              }
-              deploymentTypes.addAll(workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow()));
-              if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
-                templatized = true;
-              }
-              validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
-              setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
-              if (!pipelineParameterized) {
-                pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
-              }
-            } catch (Exception ex) {
-              logger.warn(format("Exception occurred while reading workflow associated to the pipeline %s",
-                              pipeline.toString()),
-                  ex);
-            }
-          }
-        }
-        if (!invalidStageWorkflows.isEmpty()) {
-          pipelineStage.setValid(false);
-          pipelineStage.setValidationMessage(
-              format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStageWorkflows.toString()));
-        }
-        invalidWorkflows.addAll(invalidStageWorkflows);
-      }
-      if (!invalidWorkflows.isEmpty()) {
-        pipeline.setValid(false);
-        pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
-      }
-
-      pipeline.setPipelineVariables(reorderPipelineVariables(pipelineVariables));
-      pipeline.setHasSshInfraMapping(hasSshInfraMapping);
-      pipeline.setEnvParameterized(pipelineParameterized);
-      pipeline.setTemplatized(templatized);
-      pipeline.setDeploymentTypes(deploymentTypes.stream().distinct().collect(toList()));
+      setSinglePipelineDetails(pipeline, withFinalValuesOnly);
     }
+  }
+
+  private void setSinglePipelineDetails(Pipeline pipeline, boolean withFinalValuesOnly) {
+    boolean hasSshInfraMapping = false;
+    boolean templatized = false;
+    boolean pipelineParameterized = false;
+    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
+    List<String> invalidWorkflows = new ArrayList<>();
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    List<Variable> pipelineVariables = new ArrayList<>();
+    List<DeploymentType> deploymentTypes = new ArrayList<>();
+    Map<String, Workflow> workflowCache = new HashMap<>();
+    for (PipelineStage pipelineStage : pipelineStages) {
+      for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
+        if (!ENV_STATE.name().equals(pse.getType()) || pse.isDisable()) {
+          continue;
+        }
+
+        try {
+          String workflowId = (String) pse.getProperties().get("workflowId");
+          Workflow workflow;
+          if (workflowCache.containsKey(workflowId)) {
+            workflow = workflowCache.get(workflowId);
+          } else {
+            workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+            Validator.notNullCheck("Workflow does not exist", workflow, USER);
+            Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+            workflowCache.put(workflowId, workflow);
+          }
+
+          if (!hasSshInfraMapping) {
+            hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
+                (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
+          }
+          deploymentTypes.addAll(workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow()));
+          if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
+            templatized = true;
+          }
+          validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
+          setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
+          if (!pipelineParameterized) {
+            pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
+          }
+        } catch (Exception ex) {
+          logger.warn(
+              format("Exception occurred while reading workflow associated to the pipeline %s", pipeline.toString()),
+              ex);
+        }
+      }
+    }
+    if (!invalidWorkflows.isEmpty()) {
+      pipeline.setValid(false);
+      pipeline.setValidationMessage(format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
+    }
+
+    pipeline.setPipelineVariables(reorderPipelineVariables(pipelineVariables));
+    pipeline.setHasSshInfraMapping(hasSshInfraMapping);
+    pipeline.setEnvParameterized(pipelineParameterized);
+    pipeline.setTemplatized(templatized);
+    pipeline.setDeploymentTypes(deploymentTypes.stream().distinct().collect(toList()));
   }
 
   private List<Variable> reorderPipelineVariables(List<Variable> pipelineVariables) {
@@ -1174,61 +1170,64 @@ public class PipelineServiceImpl implements PipelineService {
     }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
-        if (ENV_STATE.name().equals(pse.getType())) {
-          if (pse.isDisable()) {
-            continue;
-          }
-
-          String workflowId = (String) pse.getProperties().get("workflowId");
-          Workflow workflow;
-          if (workflowCache.containsKey(workflowId)) {
-            workflow = workflowCache.get(workflowId);
-          } else {
-            workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
-            Validator.notNullCheck("Workflow does not exist", workflow, USER);
-            Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
-            workflowCache.put(workflowId, workflow);
-          }
-
-          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-          DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
-              appId, workflow, pse.getWorkflowVariables(), null, null, includeList);
-          if (deploymentMetadata == null) {
-            continue;
-          }
-
-          if (!isBuildPipeline && BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
-            // If pipeline is a build pipeline, don't get artifact variable metadata.
-            isBuildPipeline = true;
-
-            // Remove any existing artifact variables.
-            finalDeploymentMetadata.setArtifactVariables(new ArrayList<>());
-
-            // Remove ARTIFACT_SERVICE from includeList.
-            Stream<Include> includeStream =
-                isEmpty(includeList) ? Arrays.stream(Include.values()) : Arrays.stream(includeList);
-            includeList =
-                includeStream.filter(include -> !Include.ARTIFACT_SERVICE.equals(include)).toArray(Include[] ::new);
-          }
-
-          mergeLists(finalDeploymentMetadata.getArtifactRequiredServiceIds(),
-              deploymentMetadata.getArtifactRequiredServiceIds());
-          mergeLists(finalDeploymentMetadata.getEnvIds(), deploymentMetadata.getEnvIds());
-          mergeLists(finalDeploymentMetadata.getDeploymentTypes(), deploymentMetadata.getDeploymentTypes());
-
-          if (isEmpty(deploymentMetadata.getArtifactVariables())) {
-            continue;
-          }
-
-          List<ArtifactVariable> finalArtifactVariables = finalDeploymentMetadata.getArtifactVariables();
-          for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
-            mergeArtifactVariable(finalArtifactVariables, artifactVariable, workflow.getUuid());
-          }
+        if (!ENV_STATE.name().equals(pse.getType()) || pse.isDisable()) {
+          continue;
         }
+
+        String workflowId = (String) pse.getProperties().get("workflowId");
+        Workflow workflow;
+        if (workflowCache.containsKey(workflowId)) {
+          workflow = workflowCache.get(workflowId);
+        } else {
+          workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
+          Validator.notNullCheck("Workflow does not exist", workflow, USER);
+          Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+          workflowCache.put(workflowId, workflow);
+        }
+
+        OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+        DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
+            appId, workflow, pse.getWorkflowVariables(), null, null, includeList);
+        if (deploymentMetadata == null) {
+          continue;
+        }
+
+        if (!isBuildPipeline && BUILD.equals(orchestrationWorkflow.getOrchestrationWorkflowType())) {
+          // If pipeline is a build pipeline, don't get artifact variable metadata.
+          isBuildPipeline = true;
+
+          // Remove any existing artifact variables.
+          finalDeploymentMetadata.setArtifactVariables(new ArrayList<>());
+
+          // Remove ARTIFACT_SERVICE from includeList.
+          Stream<Include> includeStream =
+              isEmpty(includeList) ? Arrays.stream(Include.values()) : Arrays.stream(includeList);
+          includeList =
+              includeStream.filter(include -> !Include.ARTIFACT_SERVICE.equals(include)).toArray(Include[] ::new);
+        }
+
+        mergeDeploymentMetadata(workflow, finalDeploymentMetadata, deploymentMetadata);
       }
     }
 
     return finalDeploymentMetadata;
+  }
+
+  private void mergeDeploymentMetadata(
+      Workflow workflow, DeploymentMetadata finalDeploymentMetadata, DeploymentMetadata deploymentMetadata) {
+    mergeLists(
+        finalDeploymentMetadata.getArtifactRequiredServiceIds(), deploymentMetadata.getArtifactRequiredServiceIds());
+    mergeLists(finalDeploymentMetadata.getEnvIds(), deploymentMetadata.getEnvIds());
+    mergeLists(finalDeploymentMetadata.getDeploymentTypes(), deploymentMetadata.getDeploymentTypes());
+
+    if (isEmpty(deploymentMetadata.getArtifactVariables())) {
+      return;
+    }
+
+    List<ArtifactVariable> finalArtifactVariables = finalDeploymentMetadata.getArtifactVariables();
+    for (ArtifactVariable artifactVariable : deploymentMetadata.getArtifactVariables()) {
+      mergeArtifactVariable(finalArtifactVariables, artifactVariable, workflow.getUuid());
+    }
   }
 
   private void mergeArtifactVariable(
