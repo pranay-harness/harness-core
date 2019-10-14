@@ -263,22 +263,23 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     Query<LearningEngineExperimentalAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
             .filter(LearningEngineExperimentalAnalysisTaskKeys.version, serviceApiVersion)
-            .filter("experiment_name", experimentName)
-            .field("retry")
+            .filter(LearningEngineExperimentalAnalysisTaskKeys.experiment_name, experimentName)
+            .field(LearningEngineExperimentalAnalysisTaskKeys.retry)
             .lessThan(LearningEngineExperimentalAnalysisTask.RETRIES);
 
     if (taskTypes.isPresent() && isNotEmpty(taskTypes.get())) {
       query.field(LearningEngineAnalysisTaskKeys.ml_analysis_type).in(taskTypes.get());
     }
 
-    query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
-        query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
+    query.or(query.criteria(LearningEngineExperimentalAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.QUEUED),
+        query.and(
+            query.criteria(LearningEngineExperimentalAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY)
                 .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineExperimentalAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineExperimentalAnalysisTask.class)
-            .set("executionStatus", ExecutionStatus.RUNNING)
-            .inc("retry")
+            .set(LearningEngineExperimentalAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
+            .inc(LearningEngineExperimentalAnalysisTaskKeys.retry)
             .set(LearningEngineExperimentalAnalysisTask.LAST_UPDATED_AT_KEY, System.currentTimeMillis());
     return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
@@ -286,9 +287,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Override
   public boolean hasAnalysisTimedOut(String appId, String workflowExecutionId, String stateExecutionId) {
     Query<LearningEngineAnalysisTask> query =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter("appId", appId)
-            .filter(LearningEngineAnalysisTaskKeys.workflow_execution_id, workflowExecutionId)
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
             .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
             .filter(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)
             .field(LearningEngineAnalysisTaskKeys.retry)
