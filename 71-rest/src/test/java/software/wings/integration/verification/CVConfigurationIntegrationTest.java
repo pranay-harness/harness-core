@@ -2,7 +2,9 @@ package software.wings.integration.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static javax.ws.rs.client.Entity.entity;
@@ -570,6 +572,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = VAIBHAV_TULSYAN, intermittent = true)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testDatadogConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -987,6 +990,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testStackdriverConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
