@@ -31,6 +31,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.InfrastructureProvisioner.InfraProvisionerYaml;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
@@ -326,8 +327,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     String accountId = appService.getAccountIdByAppId(appId);
     Validator.notNullCheck("No account found for appId:" + appId, accountId);
     InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerService.get(appId, provisionerId);
-    InfrastructureProvisioner.Yaml provisionerYaml =
-        (InfrastructureProvisioner.Yaml) yamlHandlerFactory
+    InfraProvisionerYaml provisionerYaml =
+        (InfraProvisionerYaml) yamlHandlerFactory
             .getYamlHandler(YamlType.PROVISIONER, infrastructureProvisioner.getInfrastructureProvisionerType())
             .toYaml(infrastructureProvisioner, appId);
 

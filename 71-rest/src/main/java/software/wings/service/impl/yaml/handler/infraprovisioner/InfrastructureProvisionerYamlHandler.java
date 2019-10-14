@@ -14,7 +14,7 @@ import software.wings.beans.BlueprintProperty;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.InfrastructureProvisioner.Yaml;
+import software.wings.beans.InfrastructureProvisioner.InfraProvisionerYaml;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;
@@ -34,7 +34,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B extends InfrastructureProvisioner>
+public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvisionerYaml, B
+                                                               extends InfrastructureProvisioner>
     extends BaseYamlHandler<Y, B> {
   @Inject YamlHelper yamlHelper;
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
@@ -81,7 +82,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     return yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
   }
 
-  public Yaml toYaml(InfrastructureProvisioner.Yaml yaml, InfrastructureProvisioner bean) {
+  public InfraProvisionerYaml toYaml(InfraProvisionerYaml yaml, InfrastructureProvisioner bean) {
     yaml.setName(bean.getName());
     yaml.setDescription(bean.getDescription());
     yaml.setHarnessApiVersion(getHarnessApiVersion());
@@ -164,7 +165,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
 
   @Override
   public Class getYamlClass() {
-    return InfrastructureProvisioner.Yaml.class;
+    return InfraProvisionerYaml.class;
   }
 
   public void toBean(ChangeContext<Y> changeContext, B bean, String appId, String yamlPath) {

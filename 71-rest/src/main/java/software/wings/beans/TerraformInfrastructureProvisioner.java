@@ -66,7 +66,7 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfrastructureProvisioner.Yaml {
+  public static final class Yaml extends InfraProvisionerYaml {
     private String sourceRepoSettingName;
     private String sourceRepoBranch;
     private String path;

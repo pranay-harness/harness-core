@@ -45,7 +45,7 @@ public class ShellScriptInfrastructureProvisioner extends InfrastructureProvisio
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfrastructureProvisioner.Yaml {
+  public static final class Yaml extends InfraProvisionerYaml {
     private String scriptBody;
 
     @Builder

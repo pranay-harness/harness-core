@@ -105,7 +105,9 @@ public class AuditYamlHelperForFailedChanges {
   public static class InfraMappingWithOnlyAuditNeededData extends InfrastructureMapping {
     @Override
     public void applyProvisionerVariables(
-        Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {}
+        Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
+      // Unsupported
+    }
     @Override
     public String getDefaultName() {
       return null;
