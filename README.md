@@ -51,6 +51,8 @@ sudo apt install oracle-java8-unlimited-jce-policy
 ```
 
 8. Download and install protoc
+Complete this step only if you actively working with the protocol buffer files. Maintaining the generated code in the repo allows us to eliminate protoc dependency for developers and project that do not use it.
+
 Go to https://github.com/protocolbuffers/protobuf/releases and find the protoc library for your platform. For macOS its at https://github.com/protocolbuffers/protobuf/releases/download/v3.7.1/protoc-3.7.1-osx-x86_64.zip
 Unzip the protoc file and add the bin directory to your path. Below is an example
 
@@ -98,10 +100,13 @@ NOTE: the data from it is used for every git operation github does on you behave
 
    (Optional) Follow https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
    to setup your SSH keys. You can then use SSH to interact with git
-
+   
 2. Go to `portal` directory and run
 
-   `mvn clean install`
+    (Optional) this is needed only if there is a change in the protobuf files
+    `mvn -P protobuf clean generate-sources`
+    
+    `mvn clean install`
 
 3. If Global Search is not required:
 

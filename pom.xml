@@ -51,6 +51,7 @@
         <excludedCategories />
         <extensions-version>2.4.3</extensions-version>
         <fastxml.version>2.7.9</fastxml.version>
+        <generated.repo.code>${basedir}/src/generated/java</generated.repo.code>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
         <grpc.version>1.21.0</grpc.version>
@@ -1525,7 +1526,7 @@
                         <configLocation>${checkStyleFile}</configLocation>
                         <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        <excludes>**/generated/**/*, **/generated-sources/**/*</excludes>
+                        <excludes>**/generated/**/*</excludes>
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -1578,6 +1579,24 @@
                         </compilerArgs>
                         <fork>true</fork>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>add-source</goal>
+                            </goals>
+                            <phase>generate-sources</phase>
+                            <configuration>
+                                <sources>
+                                    <source>src/main/another-src</source>
+                                </sources>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1661,10 +1680,10 @@
                         <rulesets>harness_pmd_ruleset.xml</rulesets>
                         <analysisCache>true</analysisCache>
                         <analysisCacheLocation>${project.build.directory}/pmd/pmd.cache</analysisCacheLocation>
-                        <excludes>**/generated/**/*</excludes>
                         <excludeRoots>
-                            <excludeRoot>target/generated-sources</excludeRoot>
+                            <excludeRoot>${generated.repo.code}</excludeRoot>
                         </excludeRoots>
+
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -1775,22 +1794,19 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>${protobuf.plugin.version}</version>
-                <configuration>
-                    <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
-                    <!-- this is a hack to allow adding arguments to the protoc -->
-                    <protocExecutable>${basedir}/../scripts/protobuf/protoc.sh</protocExecutable>
-                </configuration>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>compile</goal>
-                            <goal>test-compile</goal>
-                            <goal>compile-custom</goal>
+                            <goal>add-source</goal>
                         </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <sources>
+                                <source>${generated.repo.code}</source>
+                            </sources>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -1835,7 +1851,7 @@
                     <configLocation>${basedir}/codeStyle/google_checks.xml</configLocation>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
-                    <excludes>**/generated/**/*, **/generated-sources/**/*</excludes>
+                    <excludes>**/generated/**/*</excludes>
                 </configuration>
                 <reportSets>
                     <reportSet>
@@ -1869,11 +1885,8 @@
                     <sourceEncoding>utf-8</sourceEncoding>
                     <minimumTokens>100</minimumTokens>
                     <targetJdk>1.8</targetJdk>
-                    <excludes>
-                        <exclude>**/generated/*.java</exclude>
-                    </excludes>
                     <excludeRoots>
-                        <excludeRoot>target/generated-sources</excludeRoot>
+                        <excludeRoot>${generated.repo.code}</excludeRoot>
                     </excludeRoots>
                 </configuration>
             </plugin>
@@ -1896,4 +1909,50 @@
             </plugin>
         </plugins>
     </reporting>
+    <profiles>
+        <profile>
+            <id>protobuf</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${generated.repo.code}</directory>
+                                    <includes>
+                                        <include>**/*.*</include>
+                                    </includes>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.xolstice.maven.plugins</groupId>
+                        <artifactId>protobuf-maven-plugin</artifactId>
+                        <version>${protobuf.plugin.version}</version>
+                        <configuration>
+                            <pluginId>grpc-java</pluginId>
+                            <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                            <!-- this is a hack to allow adding arguments to the protoc -->
+                            <protocExecutable>${basedir}/../scripts/protobuf/protoc.sh</protocExecutable>
+                            <clearOutputDirectory>false</clearOutputDirectory>
+                            <outputDirectory>${generated.repo.code}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>compile</goal>
+                                    <goal>test-compile</goal>
+                                    <goal>compile-custom</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
