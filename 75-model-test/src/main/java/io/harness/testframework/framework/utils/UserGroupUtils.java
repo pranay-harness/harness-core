@@ -27,10 +27,11 @@ public class UserGroupUtils {
   public static UserGroup getUserGroup(Account account, String bearerToken, String groupName) {
     List<UserGroup> userGroupList = UserGroupRestUtils.getUserGroups(account, bearerToken);
     assertThat(userGroupList != null && userGroupList.size() > 0).isTrue();
-
-    for (UserGroup elemUserGroup : userGroupList) {
-      if (elemUserGroup.getName().equals(groupName)) {
-        return elemUserGroup;
+    if (userGroupList != null) {
+      for (UserGroup elemUserGroup : userGroupList) {
+        if (elemUserGroup.getName().equals(groupName)) {
+          return elemUserGroup;
+        }
       }
     }
     return null;
@@ -38,7 +39,10 @@ public class UserGroupUtils {
 
   public static boolean hasUsersInUserGroup(Account account, String bearerToken, String groupName) {
     UserGroup userGroup = getUserGroup(account, bearerToken, groupName);
-    return userGroup.getMemberIds() != null && userGroup.getMemberIds().size() > 0;
+    if (userGroup != null) {
+      return userGroup.getMemberIds() != null && userGroup.getMemberIds().size() > 0;
+    }
+    return false;
   }
 
   public static UserGroup createUserGroup(Account account, String bearerToken, JsonObject jsonObject) {
@@ -62,17 +66,24 @@ public class UserGroupUtils {
     groupInfoAsJson.addProperty("name", name);
     groupInfoAsJson.addProperty("description", "Test Description - " + System.currentTimeMillis());
     UserGroup userGroup = UserGroupUtils.createUserGroup(account, bearerToken, groupInfoAsJson);
-    userGroup.setMemberIds(memberIds);
-    assertThat(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK).isTrue();
-    userGroup = getUserGroup(account, bearerToken, userGroup.getName());
     assertThat(userGroup).isNotNull();
-    assertThat(userGroup.getMemberIds()).isNotNull();
-    userGroup.setAccountPermissions(accountPermissions);
-    assertThat(UserGroupRestUtils.updateAccountPermissions(account, bearerToken, userGroup) == HttpStatus.SC_OK)
-        .isTrue();
-    userGroup = getUserGroup(account, bearerToken, userGroup.getName());
+    if (userGroup != null) {
+      userGroup.setMemberIds(memberIds);
+      assertThat(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK).isTrue();
+      userGroup = getUserGroup(account, bearerToken, userGroup.getName());
+    }
     assertThat(userGroup).isNotNull();
-    assertThat(userGroup.getAccountPermissions()).isNotNull();
+    if (userGroup != null) {
+      assertThat(userGroup.getMemberIds()).isNotNull();
+      userGroup.setAccountPermissions(accountPermissions);
+      assertThat(UserGroupRestUtils.updateAccountPermissions(account, bearerToken, userGroup) == HttpStatus.SC_OK)
+          .isTrue();
+      userGroup = getUserGroup(account, bearerToken, userGroup.getName());
+    }
+    assertThat(userGroup).isNotNull();
+    if (userGroup != null) {
+      assertThat(userGroup.getAccountPermissions()).isNotNull();
+    }
     return userGroup;
   }
 
@@ -125,7 +136,10 @@ public class UserGroupUtils {
     userGroup.setMemberIds(emptyList);
     assertThat(UserGroupRestUtils.updateMembers(account, bearerToken, userGroup) == HttpStatus.SC_OK).isTrue();
     userGroup = UserGroupUtils.getUserGroup(account, bearerToken, userGroup.getName());
-    assertThat(userGroup.getMemberIds() == null || userGroup.getMemberIds().size() == 0).isTrue();
+    assertThat(userGroup).isNotNull();
+    if (userGroup != null) {
+      assertThat(userGroup.getMemberIds() == null || userGroup.getMemberIds().size() == 0).isTrue();
+    }
   }
 
   public static UserGroup createUserGroup(
@@ -164,11 +178,15 @@ public class UserGroupUtils {
     String emailId = TestUtils.generateRandomUUID() + "@harness.mailinator.com";
     String slackWebHook = new ScmSecret().decryptToString(new SecretName("slack_webhook_for_alert"));
     NotificationSettings notificationSettings = UserGroupUtils.createNotificationSettings(emailId, slackWebHook);
-    userGroup.setNotificationSettings(notificationSettings);
-    logger.info("Update user group with notification settings");
-    userGroup = UserGroupRestUtils.updateNotificationSettings(account, bearerToken, userGroup);
+    if (userGroup != null) {
+      userGroup.setNotificationSettings(notificationSettings);
+      logger.info("Update user group with notification settings");
+      userGroup = UserGroupRestUtils.updateNotificationSettings(account, bearerToken, userGroup);
+    }
     assertThat(userGroup).isNotNull();
-    assertThat(userGroup.getNotificationSettings()).isNotNull();
+    if (userGroup != null) {
+      assertThat(userGroup.getNotificationSettings()).isNotNull();
+    }
     return userGroup;
   }
 }
