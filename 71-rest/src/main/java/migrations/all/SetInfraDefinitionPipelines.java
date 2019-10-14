@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -31,7 +32,10 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Singleton
 public class SetInfraDefinitionPipelines {
@@ -83,6 +87,7 @@ public class SetInfraDefinitionPipelines {
     boolean modified = false;
     // Migrate each stage
 
+    Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage stage : pipeline.getPipelineStages()) {
       PipelineStageElement stageElement = stage.getPipelineStageElements().get(0);
 
@@ -99,7 +104,7 @@ public class SetInfraDefinitionPipelines {
 
       boolean modifiedCurrentPhase;
       try {
-        modifiedCurrentPhase = migrateWorkflowVariables(pipeline, stageElement);
+        modifiedCurrentPhase = migrateWorkflowVariables(pipeline, stageElement, workflowCache);
       } catch (Exception e) {
         logger.error(
             "[INFRA_MIGRATION_ERROR] Skipping migration.Exception in migrating workflowVariables for Pipeline: "
@@ -121,12 +126,18 @@ public class SetInfraDefinitionPipelines {
     }
   }
 
-  private boolean migrateWorkflowVariables(Pipeline pipeline, PipelineStageElement stageElement) {
+  private boolean migrateWorkflowVariables(
+      Pipeline pipeline, PipelineStageElement stageElement, Map<String, Workflow> workflowCache) {
     String workflowId = String.valueOf(stageElement.getProperties().get("workflowId"));
-    Workflow workflow = workflowService.readWorkflow(pipeline.getAppId(), workflowId);
-
-    notNullCheck("workflow is null, workflowId: " + workflowId, workflow);
-    notNullCheck("orchestrationWorkflow is null in workflow: " + workflowId, workflow.getOrchestrationWorkflow());
+    Workflow workflow;
+    if (workflowCache.containsKey(workflowId)) {
+      workflow = workflowCache.get(workflowId);
+    } else {
+      workflow = workflowService.readWorkflow(pipeline.getAppId(), workflowId);
+      notNullCheck("workflow is null, workflowId: " + workflowId, workflow);
+      notNullCheck("orchestrationWorkflow is null in workflow: " + workflowId, workflow.getOrchestrationWorkflow());
+      workflowCache.put(workflowId, workflow);
+    }
 
     if (isEmpty(workflow.getOrchestrationWorkflow().getUserVariables())) {
       logger.info(
@@ -166,7 +177,7 @@ public class SetInfraDefinitionPipelines {
           WorkflowServiceTemplateHelper.getInfraDefVariableNameFromInfraMappingVariableName(infraMappingVariableName);
       boolean varNameIsSame = infraDefVariableName.equals(infraMappingVariableName);
       String infraMappingId = stageElement.getWorkflowVariables().get(infraMappingVariableName);
-      if (pipeline.isEnvParameterized()) {
+      if (matchesVariablePattern(infraMappingId)) {
         stageElement.getWorkflowVariables().put(infraDefVariableName, infraMappingId);
         if (!varNameIsSame) {
           stageElement.getWorkflowVariables().remove(infraMappingVariableName);
