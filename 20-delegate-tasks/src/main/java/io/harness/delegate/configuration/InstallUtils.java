@@ -6,8 +6,8 @@ import static io.harness.network.Http.getBaseUrl;
 import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 
+import io.harness.data.structure.HarnessStringUtils;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -40,8 +40,6 @@ public class InstallUtils {
   private static String helmPath = "helm";
   private static String chartMuseumPath = "chartmuseum";
 
-  private static final Joiner pathJoiner = Joiner.on("/");
-
   private static final String terraformConfigInspectBaseDir = "./client-tools/tf-config"
       + "-inspect";
   private static final String terraformConfigInspectBinary = "terraform-config-inspect";
@@ -49,8 +47,8 @@ public class InstallUtils {
   // version provided by Hashicorp because currently they do not maintain releases as such
 
   public static String getTerraformConfigInspectPath() {
-    return pathJoiner.join(terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(), "amd64",
-        terraformConfigInspectBinary);
+    return HarnessStringUtils.join("/", terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(),
+        "amd64", terraformConfigInspectBinary);
   }
 
   public static String getKubectlPath() {
@@ -527,15 +525,15 @@ public class InstallUtils {
   }
 
   private static String getTerraformConfigInspectDownloadUrl(String managerBaseUrl) {
-    return pathJoiner.join(managerBaseUrl,
+    return HarnessStringUtils.join("/", managerBaseUrl,
         "storage/harness-download/harness-terraform-config"
             + "-inspect",
         terraformConfigInspectVersion, getOsPath(), "amd64", terraformConfigInspectBinary);
   }
 
   private static boolean validateTerraformConfigInspectExists(String terraformConfigInspectVersionedDirectory) {
-    if (Files.exists(
-            Paths.get(pathJoiner.join(terraformConfigInspectVersionedDirectory, terraformConfigInspectBinary)))) {
+    if (Files.exists(Paths.get(
+            HarnessStringUtils.join("/", terraformConfigInspectVersionedDirectory, terraformConfigInspectBinary)))) {
       return true;
     }
     return false;

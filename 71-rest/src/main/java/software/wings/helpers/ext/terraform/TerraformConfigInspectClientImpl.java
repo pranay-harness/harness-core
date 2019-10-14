@@ -2,9 +2,9 @@ package software.wings.helpers.ext.terraform;
 
 import static java.lang.String.format;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -29,7 +29,7 @@ public final class TerraformConfigInspectClientImpl implements TerraformConfigIn
   public List<String> parseFieldsUnderBlock(String directory, String category) {
     try {
       String cmd = InstallUtils.getTerraformConfigInspectPath();
-      String config = executeShellCommand(Joiner.on(StringUtils.SPACE).join(cmd, jsonArg, directory));
+      String config = executeShellCommand(HarnessStringUtils.join(StringUtils.SPACE, cmd, jsonArg, directory));
       JSONObject parsedConfig = new JSONObject(config);
       JSONObject blockVariables = parsedConfig.getJSONObject(category);
       List<String> fields = new ArrayList<>(blockVariables.keySet());

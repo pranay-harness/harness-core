@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.atteo.evo.inflector.English.plural;
@@ -23,6 +22,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -337,7 +337,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             plural("Infrastructure "
                     + "Definition",
                 infraDefinitionNames.size()),
-            join(", ", infraDefinitionNames)));
+            HarnessStringUtils.join(", ", infraDefinitionNames)));
       }
     } else {
       List<Key<InfrastructureMapping>> keys =
