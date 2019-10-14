@@ -3,6 +3,7 @@ package io.harness.managerclient;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
@@ -124,4 +125,7 @@ public interface ManagerClient {
 
   @POST("delegates/heartbeat-with-polling")
   Call<RestResponse<Delegate>> delegateHeartbeat(@Query("accountId") String accountId, @Body Delegate delegate);
+
+  @GET("infra-download/delegate-auth/delegate/logging-token")
+  Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 }

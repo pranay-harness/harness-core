@@ -43,9 +43,14 @@ import java.util.logging.Level;
 @Slf4j
 public class WatcherApplication {
   private static String processId;
+  private static WatcherConfiguration configuration;
 
   public static String getProcessId() {
     return processId;
+  }
+
+  public static WatcherConfiguration getConfiguration() {
+    return configuration;
   }
 
   public static void main(String... args) throws Exception {
@@ -62,6 +67,9 @@ public class WatcherApplication {
       System.setProperty("https.proxyPassword", proxyPassword);
     }
 
+    File configFile = new File(args[0]);
+    configuration = new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), WatcherConfiguration.class);
+
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
 
@@ -71,7 +79,7 @@ public class WatcherApplication {
 
     // Set logging level
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
-    File configFile = new File(args[0]);
+
     boolean upgrade = false;
     String previousWatcherProcess = null;
     if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
@@ -82,8 +90,6 @@ public class WatcherApplication {
     logger.info("Starting Watcher");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     WatcherApplication watcherApplication = new WatcherApplication();
-    final WatcherConfiguration configuration =
-        new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), WatcherConfiguration.class);
     watcherApplication.run(configuration, upgrade, previousWatcherProcess);
   }
 

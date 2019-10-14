@@ -31,6 +31,10 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
 
   private final ThrowableHandlingConverter throwableProxyConverter;
 
+  CustomJsonLayout() {
+    this(null);
+  }
+
   CustomJsonLayout(LoggerContext context) {
     this.context = context;
     timestampFormat = "yyyy-MM-dd HH:mm:ss.SSS Z";
@@ -52,7 +56,7 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
   }
 
   @Override
-  protected Map toJsonMap(ILoggingEvent event) {
+  protected Map<String, Object> toJsonMap(ILoggingEvent event) {
     Map<String, Object> map = new HashMap<>();
 
     final String formattedMessage = event.getFormattedMessage();

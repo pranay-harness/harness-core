@@ -61,9 +61,14 @@ import java.util.logging.Level;
 @Slf4j
 public class DelegateApplication {
   private static String processId;
+  private static DelegateConfiguration configuration;
 
   public static String getProcessId() {
     return processId;
+  }
+
+  public static DelegateConfiguration getConfiguration() {
+    return configuration;
   }
 
   public static void main(String... args) throws IOException {
@@ -80,6 +85,14 @@ public class DelegateApplication {
       System.setProperty("https.proxyPassword", proxyPassword);
     }
 
+    File configFile = new File(args[0]);
+    configuration = new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), DelegateConfiguration.class);
+
+    String watcherProcess = null;
+    if (args.length > 1 && StringUtils.equals(args[1], "watched")) {
+      watcherProcess = args[2];
+    }
+
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
 
@@ -91,18 +104,9 @@ public class DelegateApplication {
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
 
     initializeLogging();
-
-    File configFile = new File(args[0]);
-
-    String watcherProcess = null;
-    if (args.length > 1 && StringUtils.equals(args[1], "watched")) {
-      watcherProcess = args[2];
-    }
     logger.info("Starting Delegate");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
-    final DelegateConfiguration configuration =
-        new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), DelegateConfiguration.class);
     delegateApplication.run(configuration, watcherProcess);
   }
 
