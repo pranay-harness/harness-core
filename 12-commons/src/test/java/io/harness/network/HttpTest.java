@@ -1,6 +1,9 @@
 package io.harness.network;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -8,7 +11,19 @@ import io.harness.threading.Concurrent;
 import okhttp3.OkHttpClient;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.SocketException;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(Http.class)
+@PowerMockIgnore({"javax.net.ssl.*", "javax.security.*"})
 public class HttpTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
@@ -90,5 +105,63 @@ public class HttpTest extends CategoryTest {
   @Category(UnitTests.class)
   public void concurrencyTest() {
     Concurrent.test(5, i -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testIsHttpServerConnectable() throws IOException {
+    PowerMockito.spy(Http.class);
+    final HttpURLConnection httpURLConnectionMock = getHttpURLConnectionMock();
+
+    doReturn(400).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.isHttpServerConnectable("http://localhost:8080")).isTrue();
+
+    doReturn(200).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.isHttpServerConnectable("http://localhost:8080")).isTrue();
+
+    doReturn(500).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.isHttpServerConnectable("http://localhost:8080")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testIsHttpServerConnectable_error() throws IOException {
+    PowerMockito.spy(Http.class);
+    final HttpURLConnection httpURLConnectionMock = getHttpURLConnectionMock();
+
+    doThrow(new SocketException("socket exception")).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.isHttpServerConnectable("http://localhost:8080")).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testConnectableHttpUrl() throws IOException {
+    PowerMockito.spy(Http.class);
+    final HttpURLConnection httpURLConnectionMock = getHttpURLConnectionMock();
+
+    doReturn(400).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isFalse();
+
+    doReturn(200).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isTrue();
+
+    doReturn(500).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testConnectableHttpUrl_error() throws IOException {
+    PowerMockito.spy(Http.class);
+    final HttpURLConnection httpURLConnectionMock = getHttpURLConnectionMock();
+
+    doThrow(new SocketException("socket exception")).when(httpURLConnectionMock).getResponseCode();
+    assertThat(Http.connectableHttpUrl("http://localhost:8080")).isFalse();
+  }
+
+  private HttpURLConnection getHttpURLConnectionMock() throws IOException {
+    final HttpURLConnection httpURLConnectionMock = mock(HttpURLConnection.class);
+    PowerMockito.when(Http.getHttpsURLConnection("http://localhost:8080")).thenReturn(httpURLConnectionMock);
+    return httpURLConnectionMock;
   }
 }
