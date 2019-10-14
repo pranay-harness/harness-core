@@ -1,7 +1,6 @@
 package io.harness.service;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -55,7 +54,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
@@ -70,12 +68,11 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisStatus;
-import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskKeys;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster.MessageFrequency;
 import software.wings.service.intfc.DataStoreService;
@@ -838,76 +835,14 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public boolean reQueueExperimentalTask(String appId, String stateExecutionId) {
     final Query<LearningEngineExperimentalAnalysisTask> tasks =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class, excludeAuthority)
-            .filter("state_execution_id", stateExecutionId)
-            .filter("appId", appId);
+            .filter(LearningEngineExperimentalAnalysisTaskKeys.state_execution_id, stateExecutionId);
     return wingsPersistence
                .update(tasks,
                    wingsPersistence.createUpdateOperations(LearningEngineExperimentalAnalysisTask.class)
-                       .set("executionStatus", ExecutionStatus.QUEUED)
-                       .set("retry", 0))
+                       .set(LearningEngineExperimentalAnalysisTaskKeys.executionStatus, ExecutionStatus.QUEUED)
+                       .set(LearningEngineExperimentalAnalysisTaskKeys.retry, 0))
                .getUpdatedCount()
         > 0;
-  }
-
-  private Map<AnalysisServiceImpl.CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> getMLUserFeedbacks(
-      String stateExecutionId, String appId) {
-    Map<AnalysisServiceImpl.CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> userFeedbackMap = new HashMap<>();
-    userFeedbackMap.put(AnalysisServiceImpl.CLUSTER_TYPE.CONTROL, new HashMap<>());
-    userFeedbackMap.put(AnalysisServiceImpl.CLUSTER_TYPE.TEST, new HashMap<>());
-    userFeedbackMap.put(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN, new HashMap<>());
-
-    PageRequest<LogMLFeedbackRecord> feedbackPageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter("stateExecutionId", Operator.EQ, stateExecutionId)
-            .addFilter("appId", Operator.EQ, appId)
-            .build();
-    List<LogMLFeedbackRecord> logMLFeedbackRecords =
-        dataStoreService.list(LogMLFeedbackRecord.class, feedbackPageRequest);
-
-    if (logMLFeedbackRecords == null) {
-      return userFeedbackMap;
-    }
-
-    for (LogMLFeedbackRecord logMLFeedbackRecord : logMLFeedbackRecords) {
-      userFeedbackMap.get(logMLFeedbackRecord.getClusterType())
-          .put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
-    }
-
-    return userFeedbackMap;
-  }
-
-  private void assignUserFeedback(LogMLAnalysisSummary analysisSummary,
-      Map<AnalysisServiceImpl.CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks) {
-    for (LogMLClusterSummary summary : analysisSummary.getControlClusters()) {
-      if (mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.CONTROL).containsKey(summary.getClusterLabel())) {
-        summary.setLogMLFeedbackType(mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.CONTROL)
-                                         .get(summary.getClusterLabel())
-                                         .getLogMLFeedbackType());
-        summary.setLogMLFeedbackId(
-            mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.CONTROL).get(summary.getClusterLabel()).getUuid());
-      }
-    }
-
-    for (LogMLClusterSummary summary : analysisSummary.getTestClusters()) {
-      if (mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.TEST).containsKey(summary.getClusterLabel())) {
-        summary.setLogMLFeedbackType(mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.TEST)
-                                         .get(summary.getClusterLabel())
-                                         .getLogMLFeedbackType());
-        summary.setLogMLFeedbackId(
-            mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.TEST).get(summary.getClusterLabel()).getUuid());
-      }
-    }
-
-    for (LogMLClusterSummary summary : analysisSummary.getUnknownClusters()) {
-      if (mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN).containsKey(summary.getClusterLabel())) {
-        summary.setLogMLFeedbackType(mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
-                                         .get(summary.getClusterLabel())
-                                         .getLogMLFeedbackType());
-        summary.setLogMLFeedbackId(
-            mlUserFeedbacks.get(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN).get(summary.getClusterLabel()).getUuid());
-      }
-    }
   }
 
   @Override

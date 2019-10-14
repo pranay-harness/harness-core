@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.beans.Base;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -34,11 +35,24 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 1/8/18.
  */
 @Indexes({
-  @Index(fields = {
-    @Field("workflow_execution_id")
-    , @Field("state_execution_id"), @Field("executionStatus"), @Field("analysis_minute"), @Field("cluster_level"),
-        @Field("ml_analysis_type"), @Field("control_nodes")
-  }, options = @IndexOptions(unique = true, name = "taskUniqueIdx"))
+  @Index(fields =
+      {
+        @Field("state_execution_id")
+        , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus"),
+            @Field("ml_analysis_type"), @Field("cluster_level"), @Field("group_name"), @Field("version"),
+            @Field(value = "createdAt", type = IndexType.DESC)
+      },
+      options = @IndexOptions(name = "taskQueueIdx"))
+  ,
+      @Index(fields = {
+        @Field("cvConfigId"), @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus")
+      }, options = @IndexOptions(name = "cvConfigStatusIdx")), @Index(fields = {
+        @Field("executionStatus")
+        , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "usageMetricsIndex")), @Index(fields = {
+        @Field("experiment_name")
+        , @Field("executionStatus"), @Field(value = "retry"), @Field(value = "createdAt", type = IndexType.DESC)
+      }, options = @IndexOptions(name = "taskFetchIdx"))
 })
 @Data
 @Builder
@@ -51,7 +65,6 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(2);
   public static final int RETRIES = 3;
 
-  private String ml_shell_file_name;
   private String workflow_id;
   private String workflow_execution_id;
   @Indexed private String state_execution_id;
