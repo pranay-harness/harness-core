@@ -11,6 +11,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.HarnessException;
 import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisioner.Yaml;
@@ -22,6 +23,8 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Utils;
@@ -37,6 +40,8 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject YamlHandlerFactory yamlHandlerFactory;
+  @Inject private AppService appService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private InfrastructureMappingBlueprint.Yaml mapBluePrintBeanToYaml(
       InfrastructureMappingBlueprint blueprint, String appId) {
@@ -51,7 +56,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
                                                                  .build();
               NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
 
-              List<NameValuePair.Yaml> fieldsYamls = Collections.EMPTY_LIST;
+              List<NameValuePair.Yaml> fieldsYamls = Collections.emptyList();
               if (EmptyPredicate.isNotEmpty(blueprintProperty.getFields())) {
                 fieldsYamls = blueprintProperty.getFields()
                                   .stream()
@@ -81,7 +86,9 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     yaml.setDescription(bean.getDescription());
     yaml.setHarnessApiVersion(getHarnessApiVersion());
 
-    if (isNotEmpty(bean.getMappingBlueprints())) {
+    String accountId = appService.getAccountIdByAppId(bean.getAppId());
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)
+        && isNotEmpty(bean.getMappingBlueprints())) {
       yaml.setMappingBlueprints(bean.getMappingBlueprints()
                                     .stream()
                                     .map(blueprint -> mapBluePrintBeanToYaml(blueprint, bean.getAppId()))
@@ -168,7 +175,9 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     bean.setName(name);
     bean.setDescription(yaml.getDescription());
 
-    if (isNotEmpty(yaml.getMappingBlueprints())) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (!featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)
+        && isNotEmpty(yaml.getMappingBlueprints())) {
       List<InfrastructureMappingBlueprint> infrastructureMappingBlueprints =
           yaml.getMappingBlueprints()
               .stream()
