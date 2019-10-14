@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.AccountGenerator.adminUserEmail;
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static software.wings.sm.StateType.APPROVAL;
 
 import com.google.common.collect.ImmutableMap;
@@ -19,6 +20,8 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.testframework.restutils.UserGroupRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.Duration;
+import org.hamcrest.CoreMatchers;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -174,12 +177,7 @@ public class HarnesscliHelper {
     }
   }
 
-  public String getApprovalID(String executionName) {
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
-      logger.info("Got an interrupt while sleeping for get approvals");
-    }
+  public String getApproval(String executionName) {
     String command = "harness get approvals";
     logger.info("Running command {}", command);
     List<String> cliOutput = null;
@@ -202,6 +200,13 @@ public class HarnesscliHelper {
       }
     }
     return "";
+  }
+
+  public String getApprovalID(String executionName) {
+    String approvalId;
+    await().atMost(Duration.FIVE_SECONDS).until(() -> { return getApproval(executionName); }, CoreMatchers.not(""));
+    approvalId = getApproval(executionName);
+    return approvalId;
   }
 
   public void deleteWorkflow(String bearerToken, Workflow savedWorkflow, Application application) {
