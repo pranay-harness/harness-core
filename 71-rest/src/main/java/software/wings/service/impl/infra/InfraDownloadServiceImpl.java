@@ -4,10 +4,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.nio.charset.Charset.defaultCharset;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.services.logging.v2.LoggingScopes;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -22,6 +26,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -37,12 +42,43 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
 
   static final String DEFAULT_ERROR_STRING = "ERROR_GETTING_DATA";
   private static final String ENV_ENV_VAR = "ENV";
-  private static final String PROJECT_ID_FIELD = "project_id";
 
   @Inject private GcsUtils gcsUtil;
   @Inject private SystemEnvironment sysenv;
 
   private final Map<String, String> serviceAccountCache = new HashMap<>();
+
+  private LoadingCache<String, AccessTokenBean> accessTokenCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(1)
+          .expireAfterWrite(50, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, AccessTokenBean>() {
+            public AccessTokenBean load(String key) {
+              String serviceAccountJson = getServiceAccountJson(key);
+              if (isEmpty(serviceAccountJson)) {
+                throw new InvalidInfraException("No logging service account available");
+              }
+
+              try {
+                GoogleCredential credential =
+                    GoogleCredential.fromStream(IOUtils.toInputStream(serviceAccountJson, defaultCharset()))
+                        .createScoped(singletonList(LoggingScopes.LOGGING_WRITE));
+
+                if (!credential.refreshToken()) {
+                  throw new InvalidInfraException("Failed to refresh token");
+                }
+
+                return AccessTokenBean.builder()
+                    .projectId(credential.getServiceAccountProjectId())
+                    .tokenValue(credential.getAccessToken())
+                    .expirationTimeMillis(credential.getExpirationTimeMilliseconds())
+                    .build();
+
+              } catch (Exception e) {
+                throw new InvalidInfraException("Error getting logging token", e);
+              }
+            }
+          });
 
   @Override
   public String getDownloadUrlForDelegate(String version, String envString) {
@@ -95,25 +131,12 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
 
   @Override
   public AccessTokenBean getStackdriverLoggingToken() {
-    String serviceAccountJson = getServiceAccountJson(LOGGING_SERVICE_ACCOUNT_ENV_VAR);
-    if (isEmpty(serviceAccountJson)) {
+    if (isBlank(sysenv.get(LOGGING_SERVICE_ACCOUNT_ENV_VAR))) {
       return null;
     }
 
     try {
-      GoogleCredential credential =
-          GoogleCredential.fromStream(IOUtils.toInputStream(serviceAccountJson, defaultCharset()))
-              .createScoped(singletonList(LoggingScopes.LOGGING_WRITE));
-
-      if (credential.refreshToken()) {
-        return AccessTokenBean.builder()
-            .projectId(credential.getServiceAccountProjectId())
-            .tokenValue(credential.getAccessToken())
-            .expirationTimeMillis(credential.getExpirationTimeMilliseconds())
-            .build();
-      } else {
-        logger.error("Failed to refresh token");
-      }
+      return accessTokenCache.get(LOGGING_SERVICE_ACCOUNT_ENV_VAR);
     } catch (Exception e) {
       logger.error("Failed to get logging token", e);
     }

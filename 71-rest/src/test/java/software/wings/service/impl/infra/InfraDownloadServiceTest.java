@@ -33,6 +33,7 @@ import software.wings.utils.GcsUtils;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({GoogleCredential.class})
@@ -119,6 +120,30 @@ public class InfraDownloadServiceTest extends CategoryTest {
       assertThat(token.getProjectId()).isEqualTo("project-id");
       assertThat(token.getTokenValue()).isEqualTo("access-token");
       assertThat(token.getExpirationTimeMillis()).isEqualTo(1234L);
+    } finally {
+      FileUtils.deleteQuietly(serviceAccFile);
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testStackdriverLoggingTokenCached() throws Exception {
+    String path = "tmp.json";
+    File serviceAccFile = new File(path);
+    try {
+      FileUtils.writeStringToFile(serviceAccFile, prodTestKey, StandardCharsets.UTF_8);
+      when(sysenv.get("LOGGING_SERVICE_ACC")).thenReturn(path);
+      PowerMockito.stub(credential.getClass().getMethod("refreshToken")).toReturn(true);
+      PowerMockito.stub(credential.getClass().getMethod("getAccessToken")).toReturn("access-token");
+      PowerMockito.stub(credential.getClass().getMethod("getExpirationTimeMilliseconds"))
+          .toReturn(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1));
+      PowerMockito.stub(credential.getClass().getMethod("getServiceAccountProjectId")).toReturn("project-id");
+
+      AccessTokenBean token1 = infraDownloadService.getStackdriverLoggingToken();
+      assertThat(token1).isNotNull();
+      AccessTokenBean token2 = infraDownloadService.getStackdriverLoggingToken();
+      assertThat(token2).isNotNull();
+      assertThat(token2 == token1).isTrue();
     } finally {
       FileUtils.deleteQuietly(serviceAccFile);
     }
