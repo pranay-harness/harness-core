@@ -81,7 +81,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String WORKSPACE_STATE_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/%s/terraform.tfstate";
   private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
-  private static final String TERRAFORM_SCRIPT_FILE_EXTENSION = "tf";
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
   private static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";
   private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
@@ -474,15 +473,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return workspaces;
   }
 
-  private void cleanup(String workingDirectory) {
-    try {
-      logger.info("Cleaning up directory " + workingDirectory);
-      deleteDirectoryAndItsContentIfExists(workingDirectory);
-    } catch (Exception ex) {
-      logger.warn("Exception in directory cleanup.", ex);
-    }
-  }
-
   private int executeShellCommand(String command, String directory, TerraformProvisionParameters parameters,
       LogOutputStream logOutputStream) throws RuntimeException, IOException, InterruptedException, TimeoutException {
     String joinedCommands = format("cd \"%s\" && %s", directory, command);
@@ -508,7 +498,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   @VisibleForTesting
   public String getTargetArgs(List<String> targets) {
-    StringBuffer targetArgs = new StringBuffer();
+    StringBuilder targetArgs = new StringBuilder();
     if (isNotEmpty(targets)) {
       for (String target : targets) {
         targetArgs.append("-target=" + target + " ");

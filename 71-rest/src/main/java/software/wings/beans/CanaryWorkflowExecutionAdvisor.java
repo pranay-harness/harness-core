@@ -142,9 +142,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             return null;
           }
 
-          List<ServiceInstance> hostExclusionList =
-              stateExecutionService.getHostExclusionList(((ExecutionContextImpl) context).getStateExecutionInstance(),
-                  phaseElement, context.fetchInfraMappingId());
+          List<ServiceInstance> hostExclusionList = stateExecutionService.getHostExclusionList(
+              context.getStateExecutionInstance(), phaseElement, context.fetchInfraMappingId());
 
           String infraMappingId;
           if (context.fetchInfraMappingId() == null) {

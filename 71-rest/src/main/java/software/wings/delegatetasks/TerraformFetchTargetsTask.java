@@ -7,6 +7,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.TerraformExecutionData;
@@ -33,7 +34,7 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private GitUtilsDelegate gitUtilsDelegate;
   @Inject private TerraformConfigInspectService terraformConfigInspectService;
-  private static final String TERRAFORM_FILE_EXTENSION = ".tf";
+
   public TerraformFetchTargetsTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
@@ -56,12 +57,10 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
       List<String> targets = terraformConfigInspectService.parseFieldsUnderCategory(
           absoluteModulePath, BLOCK_TYPE.MANAGED_RESOURCES.name().toLowerCase());
       return TerraformExecutionData.builder().targets(targets).build();
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
-      if (e instanceof WingsException) {
-        throw e;
-      } else {
-        throw new WingsException(e);
-      }
+      throw new UnexpectedException("Unknown failure while fetching targets", e);
     }
   }
 
