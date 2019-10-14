@@ -1,10 +1,13 @@
 package io.harness.testframework.framework.utils;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.testframework.restutils.PipelineRestUtils;
 import software.wings.beans.Account;
+import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
@@ -26,7 +29,7 @@ public class PipelineUtils {
     approvalStage.setParallel(false);
     List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
     PipelineStageElement pipelineStageElement = new PipelineStageElement();
-    pipelineStageElement.setName(TestUtils.generateRandomUUID());
+    pipelineStageElement.setName("APPROVAL 0");
     pipelineStageElement.setType(StateType.APPROVAL.getType());
     Map<String, Object> properties = new HashMap<>();
     properties.put("approvalStateType", ApprovalStateType.USER_GROUP.name());
@@ -35,7 +38,9 @@ public class PipelineUtils {
     properties.put("timeoutInMills", 1000 * 60 * 60);
     properties.put("groupName", userGroupName);
     List<String> userGroups = new ArrayList<>();
-    userGroups.add(userGroup.getUuid());
+    if (userGroup != null) {
+      userGroups.add(userGroup.getUuid());
+    }
     properties.put("userGroups", userGroups);
     pipelineStageElement.setProperties(properties);
     pipelineStageElement.setUuid(TestUtils.generateRandomUUID());
@@ -76,5 +81,18 @@ public class PipelineUtils {
                                                  .workflowVariables(workflowVariables)
                                                  .build()))
         .build();
+  }
+
+  public static Pipeline createApprovalPipeline(
+      String pipelineName, Account account, String bearerToken, String appId) {
+    Pipeline pipeline = new Pipeline();
+    pipeline.setName(pipelineName);
+    pipeline.setDescription("description");
+    List<PipelineStage> pipelineStages = new ArrayList<>();
+    PipelineStage approvalStep = PipelineUtils.prepareApprovalStage(account, bearerToken, generateUuid());
+    pipelineStages.add(approvalStep);
+    pipeline.setPipelineStages(pipelineStages);
+    Pipeline approvalPipeline = PipelineRestUtils.createPipeline(appId, pipeline, account.getUuid(), bearerToken);
+    return approvalPipeline;
   }
 }
