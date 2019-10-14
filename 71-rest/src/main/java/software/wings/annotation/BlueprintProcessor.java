@@ -3,6 +3,7 @@ package software.wings.annotation;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
+import lombok.experimental.UtilityClass;
 import software.wings.beans.InfrastructureMapping;
 
 import java.lang.annotation.Annotation;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@UtilityClass
 public class BlueprintProcessor {
   public static void validateKeys(InfrastructureMapping infraStructureMapping, Map<String, Object> blueprints) {
     if (isEmpty(blueprints)) {
