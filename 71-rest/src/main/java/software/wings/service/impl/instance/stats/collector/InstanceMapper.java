@@ -31,10 +31,9 @@ class InstanceMapper implements Mapper<Collection<Instance>, InstanceStatsSnapsh
     // key = appId
     Map<String, AggregateCount> appCounts = new HashMap<>();
 
-    for (Instance instance : instances) {
-      appCounts.putIfAbsent(instance.getAppId(),
-          new AggregateCount(EntityType.APPLICATION, instance.getAppName(), instance.getAppId(), 0));
-      AggregateCount appCount = appCounts.get(instance.getAppId());
+    for (final Instance instance : instances) {
+      AggregateCount appCount = appCounts.computeIfAbsent(instance.getAppId(),
+          appId -> new AggregateCount(EntityType.APPLICATION, instance.getAppName(), instance.getAppId(), 0));
       appCount.incrementCount(1);
     }
 
