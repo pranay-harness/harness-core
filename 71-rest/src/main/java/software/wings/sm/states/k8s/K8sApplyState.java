@@ -31,6 +31,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
   @Inject private K8sStateHelper k8sStateHelper;
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
+  @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   public static final String K8S_APPLY_STATE = "Apply";
   public static String SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT = "harness.io/skip-file-for-deploy";
@@ -56,6 +58,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
   @DefaultValue("10")
   private String stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
+  @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
 
   @Override
   public String commandName() {
@@ -94,7 +97,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
   @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-        k8sStateHelper.applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
     renderStateVariables(context);
@@ -110,6 +113,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
+            .skipDryRun(skipDryRun)
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);

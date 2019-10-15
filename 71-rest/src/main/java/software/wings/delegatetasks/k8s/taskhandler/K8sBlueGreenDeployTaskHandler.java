@@ -15,6 +15,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.Blue;
 import static software.wings.beans.Log.LogColor.Green;
 import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
@@ -27,6 +28,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyStat
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -165,7 +167,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         SUCCESS);
   }
 
-  private boolean init(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
+  @VisibleForTesting
+  boolean init(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
@@ -200,6 +203,12 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
 
     executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
+
+    if (k8sBlueGreenDeployTaskParameters.isSkipDryRun()) {
+      executionLogCallback.saveExecutionLog(color("\nSkipping Dry Run", Yellow, Bold), INFO);
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return true;
+    }
 
     return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
