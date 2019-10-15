@@ -97,12 +97,12 @@ public class PipelineChangeHandler implements ChangeHandler {
     if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)) {
       DBObject changes = changeEvent.getChanges();
       if (changes.containsField(WorkflowExecutionKeys.status)) {
-        String entityType = WorkflowViewKeys.deployments;
+        String type = WorkflowViewKeys.deployments;
         String newNameValue = workflowExecution.getStatus().toString();
         String documentToUpdate = changeEvent.getUuid();
         String fieldToUpdate = DeploymentRelatedEntityViewKeys.status;
         return searchDao.updateListInMultipleDocuments(
-            PipelineSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
+            PipelineSearchEntity.TYPE, type, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return true;

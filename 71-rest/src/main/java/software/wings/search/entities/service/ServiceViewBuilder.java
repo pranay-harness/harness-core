@@ -1,6 +1,7 @@
 package software.wings.search.entities.service;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
 import io.harness.persistence.HIterator;
@@ -26,6 +27,7 @@ import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
 import software.wings.search.entities.service.ServiceView.ServiceViewKeys;
 import software.wings.search.framework.EntityInfo;
+import software.wings.search.framework.SearchEntityUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +36,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Builder class to build Materialized View of
+ * Service to be stored in ELK
+ *
+ * @author ujjawal
+ */
+
+@Singleton
 public class ServiceViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
@@ -75,7 +85,7 @@ public class ServiceViewBuilder {
   }
 
   private void setAuditsAndAuditTimestamps(Service service) {
-    long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
+    long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
     try (HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)
@@ -109,7 +119,7 @@ public class ServiceViewBuilder {
   }
 
   private void setDeploymentsAndDeploymentTimestamps(Service service) {
-    long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
+    long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<Long> deploymentTimestamps = new ArrayList<>();
     List<RelatedDeploymentView> deployments = new ArrayList<>();
     try (HIterator<WorkflowExecution> iterator =

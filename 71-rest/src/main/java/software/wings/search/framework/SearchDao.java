@@ -7,7 +7,7 @@ import java.util.Map;
  * The search DAO interface that has
  * to be implemented for CRUD operations.
  *
- * @author utkarsh
+ * @author ujjawal
  */
 public interface SearchDao {
   // Inserts the document to Elasticsearch

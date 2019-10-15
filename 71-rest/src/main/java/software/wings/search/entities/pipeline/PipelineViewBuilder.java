@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import com.mongodb.DBObject;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.HIterator;
-import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Sort;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -26,6 +25,7 @@ import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
 import software.wings.search.framework.EntityInfo;
+import software.wings.search.framework.SearchEntityUtils;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.ArrayList;
@@ -35,8 +35,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Builder class to build Materialized View of
+ * Pipeline to be stored in ELK
+ *
+ * @author ujjawal
+ */
+
 @Singleton
-@FieldNameConstants(innerTypeName = "PipelineViewBuilderKeys")
 class PipelineViewBuilder {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WingsPersistence wingsPersistence;
@@ -58,7 +64,7 @@ class PipelineViewBuilder {
   }
 
   private void setAuditsAndAuditTimestamps(Pipeline pipeline) {
-    long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
+    long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
     try (HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)
@@ -91,7 +97,7 @@ class PipelineViewBuilder {
   }
 
   private void setDeploymentsAndDeploymentTimestamps(Pipeline pipeline) {
-    long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
+    long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<Long> deploymentTimestamps = new ArrayList<>();
     List<RelatedDeploymentView> deployments = new ArrayList<>();
     try (HIterator<WorkflowExecution> iterator =

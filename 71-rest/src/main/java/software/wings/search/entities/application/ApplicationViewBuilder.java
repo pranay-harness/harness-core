@@ -25,6 +25,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
 import software.wings.search.framework.EntityInfo;
+import software.wings.search.framework.SearchEntityUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +33,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+/**
+ * Builder class to build Materialized View of
+ * Application to be stored in ELK
+ *
+ * @author ujjawal
+ */
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -110,7 +118,7 @@ class ApplicationViewBuilder {
   }
 
   private void setAuditsAndAuditTimestamps(Application application) {
-    long startTimestamp = System.currentTimeMillis() - DAYS_TO_RETAIN * 86400 * 1000;
+    long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
     try (HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)

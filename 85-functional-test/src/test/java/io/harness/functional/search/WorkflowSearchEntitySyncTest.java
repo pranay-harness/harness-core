@@ -26,11 +26,10 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Workflow;
-import software.wings.search.entities.workflow.WorkflowView;
-import software.wings.search.framework.SearchResponse;
+import software.wings.search.entities.workflow.WorkflowSearchEntity;
+import software.wings.search.framework.SearchResult;
+import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.List;
 
 @Slf4j
 public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -107,14 +106,11 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
   private boolean isWorkflowInSearchResponse() {
     boolean worklfowFound = false;
 
-    SearchResponse searchResponse = SearchRestUtils.search(bearerToken, application.getAccountId(), workflow.getName());
+    SearchResults searchResults = SearchRestUtils.search(bearerToken, application.getAccountId(), workflow.getName());
 
-    List<WorkflowView> workflowViews = searchResponse.getWorkflows();
-
-    for (WorkflowView workflowView : workflowViews) {
-      if (workflowView.getId().equals(workflow.getUuid()) && workflowView.getName().equals(workflow.getName())
-          && workflowView.getAppId().equals(workflow.getAppId())
-          && workflowView.getAppName().equals(application.getName())) {
+    for (SearchResult workflowSearchResult : searchResults.getSearchResults().get(WorkflowSearchEntity.TYPE)) {
+      if (workflowSearchResult.getId().equals(workflow.getUuid())
+          && workflowSearchResult.getName().equals(workflow.getName())) {
         worklfowFound = true;
         break;
       }

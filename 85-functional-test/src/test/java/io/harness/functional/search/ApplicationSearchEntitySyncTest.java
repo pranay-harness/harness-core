@@ -20,11 +20,10 @@ import org.junit.experimental.categories.Category;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
-import software.wings.search.entities.application.ApplicationView;
-import software.wings.search.framework.SearchResponse;
+import software.wings.search.entities.application.ApplicationSearchEntity;
+import software.wings.search.framework.SearchResult;
+import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.List;
 
 @Slf4j
 public class ApplicationSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -82,18 +81,17 @@ public class ApplicationSearchEntitySyncTest extends AbstractFunctionalTest {
   private boolean isApplicationInSearchResponse() {
     boolean applicationFound = false;
 
-    SearchResponse searchResponse =
+    SearchResults searchResults =
         SearchRestUtils.search(bearerToken, application.getAccountId(), application.getName());
 
-    List<ApplicationView> applicationViews = searchResponse.getApplications();
-
-    for (ApplicationView applicationView : applicationViews) {
-      if (applicationView.getId().equals(application.getUuid())
-          && applicationView.getName().equals(application.getName())) {
+    for (SearchResult applicationSearchResult : searchResults.getSearchResults().get(ApplicationSearchEntity.TYPE)) {
+      if (applicationSearchResult.getId().equals(application.getUuid())
+          && applicationSearchResult.getName().equals(application.getName())) {
         applicationFound = true;
         break;
       }
     }
+
     return applicationFound;
   }
 }

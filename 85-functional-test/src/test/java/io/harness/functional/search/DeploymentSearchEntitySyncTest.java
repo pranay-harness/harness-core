@@ -28,11 +28,10 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.search.entities.deployment.DeploymentView;
-import software.wings.search.framework.SearchResponse;
+import software.wings.search.entities.deployment.DeploymentSearchEntity;
+import software.wings.search.framework.SearchResult;
+import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.List;
 
 @Slf4j
 public class DeploymentSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -108,14 +107,11 @@ public class DeploymentSearchEntitySyncTest extends AbstractFunctionalTest {
   private boolean isDeploymentInSearchResponse() {
     boolean worklfowExecutionFound = false;
 
-    SearchResponse searchResponse = SearchRestUtils.search(bearerToken, application.getAccountId(), workflow.getName());
+    SearchResults searchResults = SearchRestUtils.search(bearerToken, application.getAccountId(), workflow.getName());
 
-    List<DeploymentView> deploymentViews = searchResponse.getDeployments();
-
-    for (DeploymentView deploymentView : deploymentViews) {
-      if (deploymentView.getId().equals(workflowExecution.getUuid())
-          && deploymentView.getName().equals(workflowExecution.getName())
-          && deploymentView.getAppId().equals(workflowExecution.getAppId())) {
+    for (SearchResult deploymentSearchResult : searchResults.getSearchResults().get(DeploymentSearchEntity.TYPE)) {
+      if (deploymentSearchResult.getId().equals(workflowExecution.getUuid())
+          && deploymentSearchResult.getName().equals(workflowExecution.getName())) {
         worklfowExecutionFound = true;
         break;
       }

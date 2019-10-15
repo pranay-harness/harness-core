@@ -23,11 +23,10 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
-import software.wings.search.entities.environment.EnvironmentView;
-import software.wings.search.framework.SearchResponse;
+import software.wings.search.entities.environment.EnvironmentSearchEntity;
+import software.wings.search.framework.SearchResult;
+import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.List;
 
 @Slf4j
 public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -96,17 +95,12 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
 
   private boolean isEnvironmentInSearchResponse() {
     boolean environmentFound = false;
-
-    SearchResponse searchResponse =
+    SearchResults searchResults =
         SearchRestUtils.search(bearerToken, application.getAccountId(), environment.getName());
 
-    List<EnvironmentView> environmentViews = searchResponse.getEnvironments();
-
-    for (EnvironmentView environmentView : environmentViews) {
-      if (environmentView.getId().equals(environment.getUuid())
-          && environmentView.getName().equals(environment.getName())
-          && environmentView.getAppId().equals(environment.getAppId())
-          && environmentView.getAppName().equals(application.getName())) {
+    for (SearchResult environmentSearchResult : searchResults.getSearchResults().get(EnvironmentSearchEntity.TYPE)) {
+      if (environmentSearchResult.getId().equals(environment.getUuid())
+          && environmentSearchResult.getName().equals(environment.getName())) {
         environmentFound = true;
         break;
       }

@@ -12,7 +12,7 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureName;
-import software.wings.search.framework.SearchResponse;
+import software.wings.search.framework.SearchResults;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.FeatureFlagService;
@@ -38,12 +38,12 @@ public class SearchResource {
   @Timed
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   @ExceptionMetered
-  public RestResponse<SearchResponse> getSearchResults(@QueryParam("query") @NotBlank String searchQuery,
+  public RestResponse<SearchResults> getSearchResults(@QueryParam("query") @NotBlank String searchQuery,
       @QueryParam("accountId") @NotBlank String accountId) throws IOException {
     if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
       throw new HintException(String.format("Feature not allowed for account: %s ", accountId));
     } else if (!configuration.isSearchEnabled()) {
-      throw new HintException("Search is not enabled for your deployment");
+      throw new HintException("Search is not enabled for your account");
     }
     return new RestResponse<>(searchService.getSearchResults(searchQuery, accountId));
   }
