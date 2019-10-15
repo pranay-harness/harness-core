@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-if [[ -v "LOGGING_LEVEL" ]]; then
-    sed -i "s|level: INFO|level: ${LOGGING_LEVEL}|" /opt/harness/event-service-config.yml
+CONFIG_FILE=/opt/harness/event-service-config.yml
+
+if [[ "" != "$LOGGING_LEVEL" ]]; then
+    yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
 fi
-if [[ -v "MONGO_URI" ]]; then
-    sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" /opt/harness/event-service-config.yml
+
+if [[ "" != "$MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE mongo.uri "$MONGO_URI"
 fi
