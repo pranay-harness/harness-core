@@ -1,5 +1,6 @@
 package io.harness.grpc.pingpong;
 
+import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -19,7 +20,6 @@ import io.harness.event.PingPongServiceGrpc;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.TokenAuthenticator;
 import io.harness.security.TokenGenerator;
@@ -69,7 +69,7 @@ public class PingPongTest implements MockableTestMixin {
   }
 
   @Test
-  @Owner(emails = OwnerRule.AVMOHAN)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldLogPingSuccessOnClient() throws Exception {
     pingPongClient.runOneIteration();
@@ -79,7 +79,7 @@ public class PingPongTest implements MockableTestMixin {
   }
 
   @Test
-  @Owner(emails = OwnerRule.AVMOHAN)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldLogPingSuccessOnServer() throws Exception {
     pingPongClient.runOneIteration();
@@ -89,7 +89,7 @@ public class PingPongTest implements MockableTestMixin {
   }
 
   @Test
-  @Owner(emails = OwnerRule.AVMOHAN)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldLogPingFailure() throws Exception {
     server.shutdownNow().awaitTermination();
