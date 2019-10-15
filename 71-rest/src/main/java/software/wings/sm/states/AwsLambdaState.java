@@ -229,10 +229,11 @@ public class AwsLambdaState extends State {
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
-    Application app = workflowStandardParams.getApp();
+    Application app = workflowStandardParams.fetchRequiredApp();
     Environment env = workflowStandardParams.getEnv();
+    notNullCheck("env", env, USER);
 
-    String envId = env.getUuid();
+    final String envId = env.getUuid();
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, envId, getCommandName()).getCommand();
