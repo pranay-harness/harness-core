@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerservice.OSType;
 import io.harness.category.element.IntegrationTests;
+import io.harness.ccm.CCMConfig;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -213,7 +214,8 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   private AzureConfig getAzureConfig() {
-    return new AzureConfig(clientId, tenantId, key.toCharArray(), "", "");
+    CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(false).build();
+    return new AzureConfig(clientId, tenantId, key.toCharArray(), "", ccmConfig, "");
   }
 
   private Map<String, String> listSubscriptions(AzureConfig config) {

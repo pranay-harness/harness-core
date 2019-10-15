@@ -11,6 +11,8 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.harness.OrchestrationModule;
+import io.harness.ccm.CCMSettingService;
+import io.harness.ccm.CCMSettingServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -737,6 +739,7 @@ public class WingsModule extends DependencyModule {
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
 
     bind(LoginSettingsService.class).to(LoginSettingsServiceImpl.class);
+    bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 

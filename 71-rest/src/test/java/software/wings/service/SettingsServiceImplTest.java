@@ -58,6 +58,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.CCMSettingService;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -100,6 +101,7 @@ import software.wings.security.WorkflowFilter;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -135,6 +137,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private SettingValidationService settingValidationService;
   @Mock private UserGroupService userGroupService;
+  @Mock private CCMSettingService ccmSettingService;
+  @Mock private AccountService accountService;
 
   @InjectMocks @Inject private SettingsService settingsService;
 

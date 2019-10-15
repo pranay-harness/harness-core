@@ -81,7 +81,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     assertThat(fetchedSettingAttribute).isNotNull();
     verify(settingValueYamlConfig.getSettingAttributeSaved(), fetchedSettingAttribute);
 
-    // 2. update and get Yalm String from SettingAttribute
+    // 2. update and get Yaml String from SettingAttribute
     if (!StringUtils.isEmpty(settingValueYamlConfig.getCurrentFieldValue())) {
       updateSettingAttribute(settingValueYamlConfig);
     }

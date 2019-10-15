@@ -9,18 +9,23 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.CCMSettingService;
 import io.harness.exception.HarnessException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
+import software.wings.service.intfc.AccountService;
 
 import java.io.IOException;
 
 public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
+  @Mock AccountService accountService;
+  @Mock CCMSettingService ccmSettingService;
   @InjectMocks @Inject private AzureConfigYamlHandler yamlHandler;
   public static final String clientId = "dummyClientId";
   public static final String tenantId = "dummyTenantId";

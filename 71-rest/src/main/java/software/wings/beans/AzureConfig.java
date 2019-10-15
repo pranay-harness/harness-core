@@ -1,9 +1,13 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.ccm.CCMConfig;
+import io.harness.ccm.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -28,7 +32,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = "key")
 @EqualsAndHashCode(callSuper = false)
-public class AzureConfig extends SettingValue implements EncryptableSetting {
+public class AzureConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AZURE_URL = "https://azure.microsoft.com/";
   @Attributes(title = "Client ID [Application ID]", required = true) @NotEmpty private String clientId;
 
@@ -37,7 +41,7 @@ public class AzureConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Key", required = true) @Encrypted private char[] key;
 
   @SchemaIgnore @NotEmpty private String accountId;
-
+  @JsonInclude(Include.NON_NULL) private CCMConfig ccmConfig;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKey;
 
   /**
@@ -47,12 +51,14 @@ public class AzureConfig extends SettingValue implements EncryptableSetting {
     super(SettingVariableTypes.AZURE.name());
   }
 
-  public AzureConfig(String clientId, String tenantId, char[] key, String accountId, String encryptedKey) {
+  public AzureConfig(
+      String clientId, String tenantId, char[] key, String accountId, CCMConfig ccmConfig, String encryptedKey) {
     this();
     this.clientId = clientId;
     this.tenantId = tenantId;
     this.key = key == null ? null : key.clone();
     this.accountId = accountId;
+    this.ccmConfig = ccmConfig;
     this.encryptedKey = encryptedKey;
   }
 

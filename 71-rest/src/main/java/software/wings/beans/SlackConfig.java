@@ -110,17 +110,6 @@ public class SlackConfig extends SettingValue implements SlackNotificationConfig
     public Builder but() {
       return aSlackConfig().withOutgoingWebhookUrl(outgoingWebhookUrl);
     }
-
-    /**
-     * Build slack config.
-     *
-     * @return the slack config
-     */
-    public SlackConfig build() {
-      SlackConfig slackConfig = new SlackConfig();
-      slackConfig.setOutgoingWebhookUrl(outgoingWebhookUrl);
-      return slackConfig;
-    }
   }
 
   @Data
