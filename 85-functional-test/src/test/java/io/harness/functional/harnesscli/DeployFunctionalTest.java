@@ -281,7 +281,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution completedWorkflowExecution =
         workflowExecutionService.getExecutionDetails(appId, executionId, true, null);
     logger.info("Execution Status : " + completedWorkflowExecution.getStatus());
-    assertThat(ExecutionStatus.SUCCESS.equals(completedWorkflowExecution.getStatus()));
+    assertThat(ExecutionStatus.SUCCESS).isEqualTo(completedWorkflowExecution.getStatus());
 
     return true;
   }
