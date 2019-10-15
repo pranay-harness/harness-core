@@ -91,6 +91,20 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
             labels_.getMutableMap().put(labels__.getKey(), labels__.getValue());
             break;
           }
+          case 58: {
+            io.harness.perpetualtask.k8s.watch.Resource.Builder subBuilder = null;
+            if (allocatableResource_ != null) {
+              subBuilder = allocatableResource_.toBuilder();
+            }
+            allocatableResource_ =
+                input.readMessage(io.harness.perpetualtask.k8s.watch.Resource.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(allocatableResource_);
+              allocatableResource_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -345,6 +359,28 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     return map.get(key);
   }
 
+  public static final int ALLOCATABLE_RESOURCE_FIELD_NUMBER = 7;
+  private io.harness.perpetualtask.k8s.watch.Resource allocatableResource_;
+  /**
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   */
+  public boolean hasAllocatableResource() {
+    return allocatableResource_ != null;
+  }
+  /**
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   */
+  public io.harness.perpetualtask.k8s.watch.Resource getAllocatableResource() {
+    return allocatableResource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance()
+                                        : allocatableResource_;
+  }
+  /**
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   */
+  public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getAllocatableResourceOrBuilder() {
+    return getAllocatableResource();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -377,6 +413,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
     com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
         output, internalGetLabels(), LabelsDefaultEntryHolder.defaultEntry, 6);
+    if (allocatableResource_ != null) {
+      output.writeMessage(7, getAllocatableResource());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -410,6 +449,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
               .build();
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(6, labels__);
     }
+    if (allocatableResource_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(7, getAllocatableResource());
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -441,6 +483,12 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     }
     if (!internalGetLabels().equals(other.internalGetLabels()))
       return false;
+    if (hasAllocatableResource() != other.hasAllocatableResource())
+      return false;
+    if (hasAllocatableResource()) {
+      if (!getAllocatableResource().equals(other.getAllocatableResource()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -468,6 +516,10 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     if (!internalGetLabels().getMap().isEmpty()) {
       hash = (37 * hash) + LABELS_FIELD_NUMBER;
       hash = (53 * hash) + internalGetLabels().hashCode();
+    }
+    if (hasAllocatableResource()) {
+      hash = (37 * hash) + ALLOCATABLE_RESOURCE_FIELD_NUMBER;
+      hash = (53 * hash) + getAllocatableResource().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -615,6 +667,12 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
         creationTimeBuilder_ = null;
       }
       internalGetMutableLabels().clear();
+      if (allocatableResourceBuilder_ == null) {
+        allocatableResource_ = null;
+      } else {
+        allocatableResource_ = null;
+        allocatableResourceBuilder_ = null;
+      }
       return this;
     }
 
@@ -658,6 +716,11 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
       }
       result.labels_ = internalGetLabels();
       result.labels_.makeImmutable();
+      if (allocatableResourceBuilder_ == null) {
+        result.allocatableResource_ = allocatableResource_;
+      } else {
+        result.allocatableResource_ = allocatableResourceBuilder_.build();
+      }
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -721,6 +784,9 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
         mergeCreationTime(other.getCreationTime());
       }
       internalGetMutableLabels().mergeFrom(other.internalGetLabels());
+      if (other.hasAllocatableResource()) {
+        mergeAllocatableResource(other.getAllocatableResource());
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -1224,6 +1290,124 @@ public final class NodeInfo extends com.google.protobuf.GeneratedMessageV3 imple
     public Builder putAllLabels(java.util.Map<java.lang.String, java.lang.String> values) {
       internalGetMutableLabels().getMutableMap().putAll(values);
       return this;
+    }
+
+    private io.harness.perpetualtask.k8s.watch.Resource allocatableResource_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
+        io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>
+        allocatableResourceBuilder_;
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public boolean hasAllocatableResource() {
+      return allocatableResourceBuilder_ != null || allocatableResource_ != null;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public io.harness.perpetualtask.k8s.watch.Resource getAllocatableResource() {
+      if (allocatableResourceBuilder_ == null) {
+        return allocatableResource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance()
+                                            : allocatableResource_;
+      } else {
+        return allocatableResourceBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public Builder setAllocatableResource(io.harness.perpetualtask.k8s.watch.Resource value) {
+      if (allocatableResourceBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        allocatableResource_ = value;
+        onChanged();
+      } else {
+        allocatableResourceBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public Builder setAllocatableResource(io.harness.perpetualtask.k8s.watch.Resource.Builder builderForValue) {
+      if (allocatableResourceBuilder_ == null) {
+        allocatableResource_ = builderForValue.build();
+        onChanged();
+      } else {
+        allocatableResourceBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public Builder mergeAllocatableResource(io.harness.perpetualtask.k8s.watch.Resource value) {
+      if (allocatableResourceBuilder_ == null) {
+        if (allocatableResource_ != null) {
+          allocatableResource_ = io.harness.perpetualtask.k8s.watch.Resource.newBuilder(allocatableResource_)
+                                     .mergeFrom(value)
+                                     .buildPartial();
+        } else {
+          allocatableResource_ = value;
+        }
+        onChanged();
+      } else {
+        allocatableResourceBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public Builder clearAllocatableResource() {
+      if (allocatableResourceBuilder_ == null) {
+        allocatableResource_ = null;
+        onChanged();
+      } else {
+        allocatableResource_ = null;
+        allocatableResourceBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public io.harness.perpetualtask.k8s.watch.Resource.Builder getAllocatableResourceBuilder() {
+      onChanged();
+      return getAllocatableResourceFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    public io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getAllocatableResourceOrBuilder() {
+      if (allocatableResourceBuilder_ != null) {
+        return allocatableResourceBuilder_.getMessageOrBuilder();
+      } else {
+        return allocatableResource_ == null ? io.harness.perpetualtask.k8s.watch.Resource.getDefaultInstance()
+                                            : allocatableResource_;
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
+        io.harness.perpetualtask.k8s.watch.Resource.Builder, io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>
+    getAllocatableResourceFieldBuilder() {
+      if (allocatableResourceBuilder_ == null) {
+        allocatableResourceBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.k8s.watch.Resource,
+                io.harness.perpetualtask.k8s.watch.Resource.Builder,
+                io.harness.perpetualtask.k8s.watch.ResourceOrBuilder>(
+                getAllocatableResource(), getParentForChildren(), isClean());
+        allocatableResource_ = null;
+      }
+      return allocatableResourceBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

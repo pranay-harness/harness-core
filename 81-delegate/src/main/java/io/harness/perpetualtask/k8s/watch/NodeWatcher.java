@@ -81,6 +81,8 @@ public class NodeWatcher implements Watcher<Node> {
                               .setNodeName(node.getMetadata().getName())
                               .setCreationTime(timestamp)
                               .putAllLabels(node.getMetadata().getLabels())
+                              .setAllocatableResource(K8sResourceUtils.getResource(
+                                  node.getMetadata().getName(), node.getStatus().getAllocatable()))
                               .build();
       eventPublisher.publishMessage(nodeInfo, timestamp);
       publishedNodes.add(node.getMetadata().getUid());

@@ -117,7 +117,6 @@ public class K8sResourceUtils {
 
   // for now, only resource request is taken into consideration
   public static Resource getTotalResourceRequest(List<Container> k8sContainerList) {
-    io.harness.perpetualtask.k8s.watch.Resource.Builder totalResourceBuilder = Resource.newBuilder();
     float totalCpuRequestAmount = 0; // in cpu unit
     String totalCpuRequestUnit = "";
     float totalMemoryRequestAmount = 0;
@@ -128,10 +127,26 @@ public class K8sResourceUtils {
       if (isNull(resourceRequestsMap)) {
         logger.warn("The resource request for the container with name={} is missing.", k8sContainer.getName());
       } else {
-        totalCpuRequestAmount += K8sResourceUtils.getCpuResourceRequest(k8sContainer);
-        totalMemoryRequestAmount += K8sResourceUtils.getMemResourceRequest(k8sContainer);
+        totalCpuRequestAmount +=
+            K8sResourceUtils.getCpuResourceRequest(k8sContainer.getName(), k8sContainer.getResources().getRequests());
+        totalMemoryRequestAmount +=
+            K8sResourceUtils.getMemResourceRequest(k8sContainer.getName(), k8sContainer.getResources().getRequests());
       }
     }
+    return getResource(totalCpuRequestAmount, totalCpuRequestUnit, totalMemoryRequestAmount, totalMemoryRequestUnit);
+  }
+
+  public static Resource getResource(String resourceContainer, Map<String, Quantity> allocatableResource) {
+    float totalCpuRequestAmount = getCpuResourceRequest(resourceContainer, allocatableResource);
+    String totalCpuRequestUnit = "";
+    float totalMemoryRequestAmount = getMemResourceRequest(resourceContainer, allocatableResource);
+    String totalMemoryRequestUnit = "M"; // TODO: check this.
+    return getResource(totalCpuRequestAmount, totalCpuRequestUnit, totalMemoryRequestAmount, totalMemoryRequestUnit);
+  }
+
+  public static Resource getResource(float totalCpuRequestAmount, String totalCpuRequestUnit,
+      float totalMemoryRequestAmount, String totalMemoryRequestUnit) {
+    io.harness.perpetualtask.k8s.watch.Resource.Builder totalResourceBuilder = Resource.newBuilder();
 
     Builder cpuRequestBuilder = Resource.Quantity.newBuilder();
     cpuRequestBuilder.setAmount(Float.toString(totalCpuRequestAmount));
@@ -146,13 +161,12 @@ public class K8sResourceUtils {
     return totalResourceBuilder.build();
   }
 
-  public static float getCpuResourceRequest(io.fabric8.kubernetes.api.model.Container k8sContainer) {
+  public static float getCpuResourceRequest(String resourceContainer, Map<String, Quantity> resourceRequestsMap) {
     float cpuRequestValue = 0;
     String cpuRequestUnit = "";
-    Map<String, Quantity> resourceRequestsMap = k8sContainer.getResources().getRequests();
-    io.fabric8.kubernetes.api.model.Quantity cpuResourceRequest = resourceRequestsMap.get("cpu");
+    Quantity cpuResourceRequest = resourceRequestsMap.get(K8S_CPU_RESOURCE);
     if (isNull(cpuResourceRequest)) {
-      logger.error("The cpu resource request for the container with name={} is missing.", k8sContainer.getName());
+      logger.error("The cpu resource request for the container with name={} is missing.", resourceContainer);
     } else {
       String cpuRequestAmount = cpuResourceRequest.getAmount();
       if (!StringUtils.isBlank(cpuRequestAmount)) {
@@ -172,14 +186,12 @@ public class K8sResourceUtils {
     return cpuRequestValue;
   }
 
-  public static float getMemResourceRequest(io.fabric8.kubernetes.api.model.Container k8sContainer) {
+  public static float getMemResourceRequest(String resourceContainer, Map<String, Quantity> resourceRequestsMap) {
     float memRequestValue = 0;
     String memRequestUnit = "";
-    Map<String, io.fabric8.kubernetes.api.model.Quantity> resourceRequestsMap =
-        k8sContainer.getResources().getRequests();
-    io.fabric8.kubernetes.api.model.Quantity memResourceRequest = resourceRequestsMap.get(K8S_MEMORY_RESOURCE);
+    Quantity memResourceRequest = resourceRequestsMap.get(K8S_MEMORY_RESOURCE);
     if (isNull(memResourceRequest)) {
-      logger.error("The memory resource request for the container with name={} is missing.", k8sContainer.getName());
+      logger.error("The memory resource request for the container with name={} is missing.", resourceContainer);
     } else {
       String memRequestAmount = memResourceRequest.getAmount();
       if (!StringUtils.isBlank(memRequestAmount)) {

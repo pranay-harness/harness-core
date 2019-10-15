@@ -5,6 +5,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.google.inject.Inject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SplunkConfig;
@@ -29,6 +30,8 @@ public class DataCollectionInfoServiceImpl implements DataCollectionInfoService 
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private FeatureFlagService featureFlagService;
+
+  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   @Override
   public DataCollectionInfoV2 create(CVConfiguration config, Instant startTime, Instant endTime) {
     DataCollectionInfoV2 dataCollectionInfo = null;

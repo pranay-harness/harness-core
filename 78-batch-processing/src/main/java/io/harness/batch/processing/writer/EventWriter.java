@@ -11,6 +11,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class EventWriter {
   @Autowired protected InstanceDataService instanceDataService;
+  @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
 
   protected InstanceData fetchActiveInstanceData(String accountId, String instanceId) {
     List<InstanceState> instanceStates =
@@ -65,7 +67,7 @@ public abstract class EventWriter {
   }
 
   protected void handleLifecycleEvent(String accountId, Lifecycle lifecycle) {
-    String instanceId = lifecycle.getInstanceId();
+    String instanceId = getIdFromArn(lifecycle.getInstanceId());
     updateInstanceDataLifecycle(accountId, instanceId, lifecycle);
   }
 
@@ -73,5 +75,9 @@ public abstract class EventWriter {
     List<InstanceData> activeInstances =
         instanceDataService.fetchClusterActiveInstanceData(accountId, clusterId, startTime);
     return activeInstances.stream().map(InstanceData::getInstanceId).collect(Collectors.toSet());
+  }
+
+  protected String getIdFromArn(String arn) {
+    return arn.substring(arn.lastIndexOf('/') + 1);
   }
 }

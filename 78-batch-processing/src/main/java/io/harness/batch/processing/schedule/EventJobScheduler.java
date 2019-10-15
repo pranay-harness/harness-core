@@ -14,9 +14,10 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 @Configuration
 @EnableScheduling
-public class EcsEventJobScheduler {
+public class EventJobScheduler {
   @Autowired @Qualifier("ecsJob") private Job ecsJob;
   @Autowired @Qualifier("k8sJob") private Job k8sJob;
+  @Autowired @Qualifier("instanceBillingJob") private Job instanceBillingJob;
 
   @Autowired private BatchJobRunner batchJobRunner;
 
@@ -25,7 +26,16 @@ public class EcsEventJobScheduler {
     try {
       batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
     } catch (Exception ex) {
-      logger.error("Exception while running job ", ex);
+      logger.error("Exception while running runEcsEventJob job ", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 */1 * * * ?")
+  public void runBillingBatchJob() {
+    try {
+      batchJobRunner.runJob(instanceBillingJob, BatchJobType.INSTANCE_BILLING, 1, ChronoUnit.DAYS);
+    } catch (Exception ex) {
+      logger.error("Exception while running runBillingBatchJob job ", ex);
     }
   }
 
@@ -34,7 +44,7 @@ public class EcsEventJobScheduler {
     try {
       batchJobRunner.runJob(k8sJob, BatchJobType.K8S_EVENT, 1, ChronoUnit.DAYS); // TODO: change to DAYS
     } catch (Exception ex) {
-      logger.error("Exception while running job ", ex);
+      logger.error("Exception while running runK8sEventJob job ", ex);
     }
   }
 }

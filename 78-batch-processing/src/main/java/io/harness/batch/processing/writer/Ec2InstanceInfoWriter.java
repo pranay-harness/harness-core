@@ -1,24 +1,24 @@
 package io.harness.batch.processing.writer;
 
+import com.google.inject.Singleton;
+
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.writer.constants.EcsCCMConstants;
+import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Ec2InstanceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Service
-@Qualifier("ec2InstanceInfoWriter")
+@Singleton
 public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {
@@ -36,12 +36,13 @@ public class Ec2InstanceInfoWriter extends EventWriter implements ItemWriter<Pub
           if (null == instanceData) {
             String instanceFamily = ec2InstanceInfo.getInstanceType();
             Map<String, String> metaData = new HashMap<>();
-            metaData.put(EcsCCMConstants.INSTANCE_FAMILY, instanceFamily);
-            metaData.put(EcsCCMConstants.REGION, ec2InstanceInfo.getRegion());
+            metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, instanceFamily);
+            metaData.put(InstanceMetaDataConstants.REGION, ec2InstanceInfo.getRegion());
+            metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
             instanceData = InstanceData.builder()
                                .accountId(accountId)
                                .instanceId(instanceId)
-                               .clusterName(clusterArn)
+                               .clusterName(getIdFromArn(clusterArn))
                                .instanceType(InstanceType.EC2_INSTANCE)
                                .instanceState(InstanceState.INITIALIZING)
                                .metaData(metaData)

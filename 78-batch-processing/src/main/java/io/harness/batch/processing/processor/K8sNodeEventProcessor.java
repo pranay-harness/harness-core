@@ -5,8 +5,10 @@ import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 
+@Slf4j
 public class K8sNodeEventProcessor implements ItemProcessor<PublishedMessage, InstanceEvent> {
   @Override
   public InstanceEvent process(PublishedMessage publishedMessage) throws Exception {
@@ -24,7 +26,7 @@ public class K8sNodeEventProcessor implements ItemProcessor<PublishedMessage, In
     }
 
     return InstanceEvent.builder()
-        .accountId(nodeEvent.getAccountId())
+        .accountId(publishedMessage.getAccountId())
         .cloudProviderId(nodeEvent.getCloudProviderId())
         .instanceId(nodeEvent.getNodeUid())
         .type(type)

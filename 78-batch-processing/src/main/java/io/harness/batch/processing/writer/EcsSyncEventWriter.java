@@ -2,6 +2,7 @@ package io.harness.batch.processing.writer;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.inject.Singleton;
 import com.google.protobuf.Timestamp;
 
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
@@ -12,16 +13,14 @@ import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.grpc.utils.HTimestamps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
-@Service
-@Qualifier("ecsSyncEventWriter")
+@Singleton
 public class EcsSyncEventWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {
@@ -32,7 +31,7 @@ public class EcsSyncEventWriter extends EventWriter implements ItemWriter<Publis
           EcsSyncEvent ecsSyncEvent = (EcsSyncEvent) publishedMessage.getMessage();
           logger.debug("ECS sync event {} ", ecsSyncEvent);
           String accountId = publishedMessage.getAccountId();
-          String clusterId = ecsSyncEvent.getClusterArn();
+          String clusterId = getIdFromArn(ecsSyncEvent.getClusterArn());
           Timestamp lastProcessedTimestamp = ecsSyncEvent.getLastProcessedTimestamp();
           Set<String> activeInstanceIds =
               fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
@@ -40,14 +39,17 @@ public class EcsSyncEventWriter extends EventWriter implements ItemWriter<Publis
 
           Set<String> activeInstanceArns = new HashSet<>();
           activeInstanceArns.addAll(ecsSyncEvent.getActiveEc2InstanceArnsList());
-          activeInstanceArns.addAll(ecsSyncEvent.getActiveTaskArnsList());
-          activeInstanceArns.addAll(ecsSyncEvent.getActiveContainerInstanceArnsList());
+          activeInstanceArns.addAll(
+              ecsSyncEvent.getActiveTaskArnsList().stream().map(this ::getIdFromArn).collect(Collectors.toList()));
+          activeInstanceArns.addAll(ecsSyncEvent.getActiveContainerInstanceArnsList()
+                                        .stream()
+                                        .map(this ::getIdFromArn)
+                                        .collect(Collectors.toList()));
           SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
           logger.info("Inactive instance arns {}", inactiveInstanceArns.toString());
 
-          inactiveInstanceArns.forEach(inactiveInstanceArn -> {
-            handleLifecycleEvent(accountId, createLifecycle(inactiveInstanceArn, lastProcessedTimestamp));
-          });
+          inactiveInstanceArns.forEach(inactiveInstanceArn
+              -> handleLifecycleEvent(accountId, createLifecycle(inactiveInstanceArn, lastProcessedTimestamp)));
         });
   }
 

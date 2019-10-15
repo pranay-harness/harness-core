@@ -20,7 +20,9 @@ import com.google.protobuf.Timestamp;
 import io.fabric8.kubernetes.api.model.DoneableNode;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.NodeList;
+import io.fabric8.kubernetes.api.model.NodeStatus;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher.Action;
@@ -67,7 +69,7 @@ public class NodeWatcherTest {
   @Category(UnitTests.class)
   public void shouldPublishNodeStartedEvent() throws Exception {
     Instant creationTime = now().minus(5, ChronoUnit.MINUTES);
-    Node node = node(UID, NAME, creationTime.toString(), new HashMap<>());
+    Node node = node(UID, NAME, creationTime.toString(), new HashMap<>(), nodeStatus());
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
@@ -83,7 +85,7 @@ public class NodeWatcherTest {
   @Category(UnitTests.class)
   public void shouldPublishNodeStoppedEvent() throws Exception {
     String creationTimestamp = now().minus(5, ChronoUnit.MINUTES).toString();
-    Node node = node(UID, NAME, creationTimestamp, new HashMap<>());
+    Node node = node(UID, NAME, creationTimestamp, new HashMap<>(), nodeStatus());
     nodeWatcher.eventReceived(Action.DELETED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
@@ -101,7 +103,7 @@ public class NodeWatcherTest {
   public void shouldPublishNodeInfoOnlyOnce() throws Exception {
     Instant creationTime = now().minus(5, ChronoUnit.MINUTES);
     Map<String, String> labels = ImmutableMap.of("k1", "v1", "k2", "v2");
-    Node node = node(UID, NAME, creationTime.toString(), labels);
+    Node node = node(UID, NAME, creationTime.toString(), labels, nodeStatus());
     nodeWatcher.eventReceived(Action.ADDED, node);
     ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
@@ -126,7 +128,15 @@ public class NodeWatcherTest {
     verify(watch).close();
   }
 
-  private Node node(String uid, String name, String creationTimestamp, Map<String, String> labels) {
+  private NodeStatus nodeStatus() {
+    Map<String, Quantity> allocatable = new HashMap<>();
+    NodeStatus nodeStatus = new NodeStatus();
+    nodeStatus.setAllocatable(allocatable);
+    return nodeStatus;
+  }
+
+  private Node node(
+      String uid, String name, String creationTimestamp, Map<String, String> labels, NodeStatus nodeStatus) {
     Node node = new Node();
     ObjectMeta nodeMeta = new ObjectMeta();
     nodeMeta.setUid(uid);
@@ -134,6 +144,7 @@ public class NodeWatcherTest {
     nodeMeta.setCreationTimestamp(creationTimestamp);
     nodeMeta.setLabels(labels);
     node.setMetadata(nodeMeta);
+    node.setStatus(nodeStatus);
     return node;
   }
 }

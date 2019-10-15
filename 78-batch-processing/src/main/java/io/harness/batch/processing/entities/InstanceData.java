@@ -20,6 +20,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
 import java.util.List;
@@ -47,7 +48,6 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   String cloudProviderId;
   String instanceId;
   String clusterName;
-  String serviceName;
   InstanceType instanceType;
   Resource totalResource;
   List<Container> containerList;
@@ -59,4 +59,6 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
 
   long createdAt;
   long lastUpdatedAt;
+
+  HarnessServiceInfo harnessServiceInfo;
 }
