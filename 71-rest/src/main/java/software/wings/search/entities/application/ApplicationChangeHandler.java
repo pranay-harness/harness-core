@@ -49,7 +49,8 @@ public class ApplicationChangeHandler implements ChangeHandler {
   private static final int DAYS_TO_RETAIN = 7;
 
   private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null
+        && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
@@ -65,6 +66,7 @@ public class ApplicationChangeHandler implements ChangeHandler {
                 searchDao.addTimestamp(ApplicationSearchEntity.TYPE, auditTimestampField, filterId, DAYS_TO_RETAIN);
             result &= searchDao.appendToListInSingleDocument(
                 ApplicationSearchEntity.TYPE, fieldToUpdate, filterId, auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+            break;
           }
         }
       }
