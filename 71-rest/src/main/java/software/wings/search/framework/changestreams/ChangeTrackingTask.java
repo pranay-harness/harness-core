@@ -3,8 +3,8 @@ package software.wings.search.framework.changestreams;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoInterruptedException;
+import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import lombok.Value;
@@ -13,6 +13,8 @@ import org.bson.BsonDocument;
 import org.bson.Document;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * The change tracking task collection class which handles
@@ -47,32 +49,22 @@ public class ChangeTrackingTask implements Runnable {
     changeStreamSubscriber.onChange(changeStreamDocument);
   }
 
-  private MongoCursor<ChangeStreamDocument<DBObject>> openChangeStream() {
-    MongoCursor<ChangeStreamDocument<DBObject>> cursor;
+  private void openChangeStream(Consumer<ChangeStreamDocument<DBObject>> changeStreamDocumentConsumer) {
+    ChangeStreamIterable<DBObject> changeStreamIterable =
+        collection.watch().fullDocument(FullDocument.UPDATE_LOOKUP).maxAwaitTime(1, TimeUnit.MINUTES);
     if (resumeToken == null) {
       logger.info("Opening changeStream without resumeToken");
-      cursor = collection.watch().fullDocument(FullDocument.UPDATE_LOOKUP).iterator();
+      changeStreamIterable.forEach(changeStreamDocumentConsumer);
     } else {
       logger.info("Opening changeStream with resumeToken");
-      cursor = collection.watch().resumeAfter(resumeToken).fullDocument(FullDocument.UPDATE_LOOKUP).iterator();
-    }
-    return cursor;
-  }
-
-  private void closeChangeStream(MongoCursor<ChangeStreamDocument<DBObject>> cursor) {
-    if (cursor != null) {
-      cursor.close();
+      changeStreamIterable.resumeAfter(resumeToken).forEach(changeStreamDocumentConsumer);
     }
   }
 
   public void run() {
-    MongoCursor<ChangeStreamDocument<DBObject>> cursor = null;
     try {
-      cursor = openChangeStream();
       logger.info(String.format("changeStream opened on %s", collection.getNamespace()));
-      while (!Thread.interrupted()) {
-        handleChange(cursor.next());
-      }
+      openChangeStream(this ::handleChange);
     } catch (MongoInterruptedException e) {
       logger.warn(String.format("Changestream on %s interrupted", collection.getNamespace()), e);
       Thread.currentThread().interrupt();
@@ -80,7 +72,6 @@ public class ChangeTrackingTask implements Runnable {
       logger.error(String.format("Unexpectedly %s changeStream shutting down", collection.getNamespace()), e);
     } finally {
       logger.warn(String.format("%s changeStream shutting down.", collection.getNamespace()));
-      closeChangeStream(cursor);
       latch.countDown();
     }
   }
