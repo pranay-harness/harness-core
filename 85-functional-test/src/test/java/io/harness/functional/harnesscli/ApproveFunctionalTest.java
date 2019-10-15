@@ -119,7 +119,7 @@ public class ApproveFunctionalTest extends AbstractFunctionalTest {
       assertThat(false).isTrue();
     }
     verifyApproval(cliOutput);
-    PipelineRestUtils.deletePipeline(application.getAppId(), approvalPipeline, bearerToken);
+    PipelineRestUtils.deletePipeline(application.getAppId(), approvalPipeline.getUuid(), bearerToken);
   }
 
   public void verifyApproval(List<String> cliOutput) {

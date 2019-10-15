@@ -70,7 +70,7 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
     String userGroupId = userGroupLists.get(0).getUuid();
     String userGroupIdNew = userGroupLists.get(1).getUuid();
 
-    String workflowName = "Test Approval";
+    String workflowName = "Test Approval" + System.currentTimeMillis();
     Workflow uiWorkflow = workflowUtils.buildCanaryWorkflowPostDeploymentStep(
         workflowName, environment.getUuid(), getApprovalNode(userGroupId));
 
@@ -84,7 +84,7 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
                            .getSteps()
                            .get(0)
                            .getName();
-    assertThat(phaseName).isEqualToIgnoringCase(workflowName);
+    assertThat(phaseName).isEqualToIgnoringCase("Test Approval");
 
     // Update Workflow's Approve Stage
     logger.info("Updating the graph node");
