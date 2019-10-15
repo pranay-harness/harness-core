@@ -287,7 +287,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Splunk V2 state type.
    */
-  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 8, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 8, "SPLUNK", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
