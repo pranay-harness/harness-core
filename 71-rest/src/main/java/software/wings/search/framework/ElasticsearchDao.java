@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Elasticsearch Dao
  *
- * @author utkarsh
+ * @author ujjawal
  */
 @Slf4j
 public class ElasticsearchDao implements SearchDao {
@@ -90,6 +90,13 @@ public class ElasticsearchDao implements SearchDao {
     params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
 
     request.setRefresh(true);
+    String key = listToUpdate + "." + EntityInfoKeys.id;
+    request.setQuery(
+        QueryBuilders.boolQuery()
+            .must(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds))
+            .mustNot(QueryBuilders.nestedQuery(listToUpdate,
+                QueryBuilders.boolQuery().filter(QueryBuilders.termQuery(key, newElement.get(EntityInfoKeys.id))),
+                ScoreMode.Max)));
     request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
     request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if(ctx._source[params.fieldToUpdate]!=null){ctx._source[params.fieldToUpdate].add(params.newList);} "
@@ -110,7 +117,13 @@ public class ElasticsearchDao implements SearchDao {
     params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
     params.put("maxElementsInList", maxElementsInList);
 
-    request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
+    String key = listToUpdate + "." + EntityInfoKeys.id;
+    request.setQuery(
+        QueryBuilders.boolQuery()
+            .must(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds))
+            .mustNot(QueryBuilders.nestedQuery(listToUpdate,
+                QueryBuilders.boolQuery().filter(QueryBuilders.termQuery(key, newElement.get(EntityInfoKeys.id))),
+                ScoreMode.Max)));
     request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.fieldToUpdate] != null) {if (ctx._source[params.fieldToUpdate].length == params.maxElementsInList) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().skip(1).collect(Collectors.toList());} ctx._source[params.fieldToUpdate].add(params.newList);} else {ctx._source[params.fieldToUpdate] = [params.newList];}",
         params));

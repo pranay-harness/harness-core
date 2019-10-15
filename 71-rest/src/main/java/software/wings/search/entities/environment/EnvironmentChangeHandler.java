@@ -155,7 +155,7 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     return result;
   }
 
-  private boolean handlePiplineDelete(ChangeEvent<?> changeEvent) {
+  private boolean handlePipelineDelete(ChangeEvent<?> changeEvent) {
     String fieldToUpdate = EnvironmentViewKeys.pipelines;
     List<String> toBeDeletedPipelineIds =
         searchDao.nestedQuery(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.pipelines, changeEvent.getUuid());
@@ -168,7 +168,7 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       case UPDATE:
         return handlePipelineUpdate(changeEvent);
       case DELETE:
-        return handlePiplineDelete(changeEvent);
+        return handlePipelineDelete(changeEvent);
       default:
         return true;
     }

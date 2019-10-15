@@ -23,7 +23,6 @@ public class ApplicationView extends EntityBaseView {
   private Set<EntityInfo> workflows;
   private Set<EntityInfo> pipelines;
   private List<RelatedAuditView> audits;
-  private List<Long> deploymentTimestamps;
   private List<Long> auditTimestamps;
 
   ApplicationView(String uuid, String name, String description, String accountId, long createdAt, long lastUpdatedAt,

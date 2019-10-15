@@ -17,6 +17,13 @@ import software.wings.search.framework.EntityInfo;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Builder class to build Materialized View of
+ * Deployment to be stored in ELK
+ *
+ * @author ujjawal
+ */
+
 @Singleton
 class DeploymentViewBuilder {
   @Inject private WingsPersistence wingsPersistence;

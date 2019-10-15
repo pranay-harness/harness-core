@@ -22,11 +22,10 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
-import software.wings.search.entities.pipeline.PipelineView;
-import software.wings.search.framework.SearchResponse;
+import software.wings.search.entities.pipeline.PipelineSearchEntity;
+import software.wings.search.framework.SearchResult;
+import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.List;
 
 @Slf4j
 public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -93,14 +92,11 @@ public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
   private boolean isPipelineInSearchResponse() {
     boolean pipelineFound = false;
 
-    SearchResponse searchResponse = SearchRestUtils.search(bearerToken, application.getAccountId(), pipeline.getName());
+    SearchResults searchResults = SearchRestUtils.search(bearerToken, application.getAccountId(), pipeline.getName());
 
-    List<PipelineView> pipelineViews = searchResponse.getPipelines();
-
-    for (PipelineView pipelineView : pipelineViews) {
-      if (pipelineView.getId().equals(pipeline.getUuid()) && pipelineView.getName().equals(pipeline.getName())
-          && pipelineView.getAppId().equals(pipeline.getAppId())
-          && pipelineView.getAppName().equals(application.getName())) {
+    for (SearchResult pipelineSearchResult : searchResults.getSearchResults().get(PipelineSearchEntity.TYPE)) {
+      if (pipelineSearchResult.getId().equals(pipeline.getUuid())
+          && pipelineSearchResult.getName().equals(pipeline.getName())) {
         pipelineFound = true;
         break;
       }

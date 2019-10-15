@@ -24,6 +24,13 @@ import software.wings.search.framework.changestreams.ChangeType;
 
 import java.util.Optional;
 
+/**
+ * The handler which will maintain the deployment document
+ * in the search engine database.
+ *
+ * @author ujjawal
+ */
+
 @Slf4j
 @Singleton
 public class DeploymentChangeHandler implements ChangeHandler {

@@ -22,11 +22,10 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
-import software.wings.search.entities.service.ServiceView;
-import software.wings.search.framework.SearchResponse;
+import software.wings.search.entities.service.ServiceSearchEntity;
+import software.wings.search.framework.SearchResult;
+import software.wings.search.framework.SearchResults;
 import software.wings.service.intfc.FeatureFlagService;
-
-import java.util.List;
 
 @Slf4j
 public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
@@ -95,14 +94,11 @@ public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
   private boolean isServiceInSearchResponse() {
     boolean serviceFound = false;
 
-    SearchResponse searchResponse = SearchRestUtils.search(bearerToken, application.getAccountId(), service.getName());
+    SearchResults searchResults = SearchRestUtils.search(bearerToken, application.getAccountId(), service.getName());
 
-    List<ServiceView> serviceViews = searchResponse.getServices();
-
-    for (ServiceView serviceView : serviceViews) {
-      if (serviceView.getId().equals(service.getUuid()) && serviceView.getName().equals(service.getName())
-          && serviceView.getAppId().equals(service.getAppId())
-          && serviceView.getAppName().equals(application.getName())) {
+    for (SearchResult serviceSearchResult : searchResults.getSearchResults().get(ServiceSearchEntity.TYPE)) {
+      if (serviceSearchResult.getId().equals(service.getUuid())
+          && serviceSearchResult.getName().equals(service.getName())) {
         serviceFound = true;
         break;
       }

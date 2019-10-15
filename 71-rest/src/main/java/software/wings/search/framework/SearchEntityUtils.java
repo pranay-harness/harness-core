@@ -14,10 +14,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.mapping.cache.EntityCache;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utils class for common operations
@@ -25,6 +30,7 @@ import java.util.Set;
  *
  * @author utkarsh
  */
+
 @Slf4j
 @UtilityClass
 public final class SearchEntityUtils {
@@ -68,6 +74,24 @@ public final class SearchEntityUtils {
       logger.error("Could not convert view to json", e);
       return Optional.empty();
     }
+  }
+
+  public static List<Long> truncateList(List<Long> list, long value) {
+    if (list.isEmpty() || list.size() == 1) {
+      return list;
+    }
+    Collections.reverse(list);
+    int index = Collections.binarySearch(list, value, Collections.reverseOrder());
+    index = Math.abs(index + 1);
+    return list.subList(0, index);
+  }
+
+  public static long getTimestampNdaysBackInMillis(int daysToRetain) {
+    return Instant.now().minus(daysToRetain, ChronoUnit.DAYS).toEpochMilli();
+  }
+
+  public static long getTimestampNdaysBackInSeconds(int daysToRetain) {
+    return TimeUnit.MILLISECONDS.toSeconds(Instant.now().minus(daysToRetain, ChronoUnit.DAYS).toEpochMilli());
   }
 
   public static Map<String, Object> convertToMap(Object object) {
