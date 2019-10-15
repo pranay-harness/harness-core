@@ -1,7 +1,11 @@
 package software.wings.service.impl.infrastructuredefinition;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
@@ -14,10 +18,16 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 
 public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private ExecutionContext executionContext;
+  @Mock private WorkflowService workflowService;
+  @Mock private PipelineService pipelineService;
+  @Mock private TriggerService triggerService;
 
   @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
@@ -99,5 +109,55 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     assertThat(((GoogleKubernetesEngine) infrastructureDefinition.getInfrastructure()).getReleaseName())
         .isEqualTo(releaseName);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void testEnsureSafeToDelete_error() {
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().uuid("infraid").name("infra_name").build();
+
+    doReturn(singletonList("workflow1"))
+        .when(workflowService)
+        .obtainWorkflowNamesReferencedByInfrastructureDefinition(anyString(), anyString());
+    infrastructureDefinitionService.ensureSafeToDelete("appid", infrastructureDefinition);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void testEnsureSafeToDelete_error1() {
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().uuid("infraid").name("infra_name").build();
+
+    doReturn(emptyList())
+        .when(workflowService)
+        .obtainWorkflowNamesReferencedByInfrastructureDefinition(anyString(), anyString());
+
+    doReturn(singletonList("pipeline1"))
+        .when(pipelineService)
+        .obtainPipelineNamesReferencedByTemplatedEntity(anyString(), anyString());
+
+    infrastructureDefinitionService.ensureSafeToDelete("appid", infrastructureDefinition);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void testEnsureSafeToDelete_error2() {
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().uuid("infraid").name("infra_name").build();
+
+    doReturn(emptyList())
+        .when(workflowService)
+        .obtainWorkflowNamesReferencedByInfrastructureDefinition(anyString(), anyString());
+
+    doReturn(emptyList())
+        .when(pipelineService)
+        .obtainPipelineNamesReferencedByTemplatedEntity(anyString(), anyString());
+
+    doReturn(singletonList("triggerid"))
+        .when(triggerService)
+        .obtainTriggerNamesReferencedByTemplatedEntityId(anyString(), anyString());
+
+    infrastructureDefinitionService.ensureSafeToDelete("appid", infrastructureDefinition);
   }
 }
