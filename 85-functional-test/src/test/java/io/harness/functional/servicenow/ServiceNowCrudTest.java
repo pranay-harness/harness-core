@@ -38,7 +38,6 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.api.ExecutionDataValue;
@@ -99,7 +98,6 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
   @Test
   @Owner(emails = POOJA)
   @Category(FunctionalTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateSnowTicket() throws Exception {
     Workflow snowFTWorkflow =
         aWorkflow()
