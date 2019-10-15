@@ -13,6 +13,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
+import io.harness.ccm.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
@@ -187,7 +188,6 @@ import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
-import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
@@ -900,7 +900,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SettingAttribute.class, 5008);
     kryo.register(SftpConfig.class, 5560);
     kryo.register(SmbConfig.class, 5551);
-    kryo.register(SlackConfig.class, 5573);
     kryo.register(SplunkConfig.class, 5177);
     kryo.register(SSHExecutionCredential.class, 5022);
     kryo.register(LdapConnectionSettings.class, 5496);
@@ -1366,5 +1365,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
     kryo.register(HelmChartInfo.class, 7246);
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
+    kryo.register(CCMConfig.class, 7248);
   }
 }

@@ -363,6 +363,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private Set<String> whitelistedDomains;
     private long lastLicenseExpiryReminderSentAt;
     private boolean oauthEnabled;
+    private boolean cloudCostEnabled;
 
     private Builder() {}
 
@@ -457,6 +458,11 @@ public class Account extends Base implements PersistentRegularIterable {
 
     public Builder withOauthEnabled(boolean oauthEnabled) {
       this.oauthEnabled = oauthEnabled;
+      return this;
+    }
+
+    public Builder withCloudCostEnabled(boolean cloudCostEnabled) {
+      this.cloudCostEnabled = cloudCostEnabled;
       return this;
     }
 

@@ -50,6 +50,8 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.ccm.CCMSettingService;
+import io.harness.ccm.CloudCostAware;
 import io.harness.data.parser.CsvParser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
@@ -164,6 +166,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AccountService accountService;
   @Inject private ArtifactService artifactService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private CCMSettingService ccmSettingService;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheManager cacheManager;
@@ -689,7 +692,7 @@ public class SettingsServiceImpl implements SettingsService {
           settingAttribute.getAccountId(), existingSetting, updatedSettingAttribute, Type.UPDATE);
     }
 
-    // Need to mask the privatey key field value before the value is returned.
+    // Need to mask the private key field value before the value is returned.
     // This will avoid confusing the user that the key field is empty when it's not.
     SettingValue updatedSettingValue = updatedSettingAttribute.getValue();
     if (updatedSettingValue instanceof HostConnectionAttributes) {
@@ -706,6 +709,9 @@ public class SettingsServiceImpl implements SettingsService {
     }
     cacheManager.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
 
+    if (updatedSettingAttribute.getValue() instanceof CloudCostAware) {
+      ccmSettingService.maskCCMConfig(updatedSettingAttribute);
+    }
     return updatedSettingAttribute;
   }
 

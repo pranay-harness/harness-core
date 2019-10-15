@@ -12,6 +12,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.ccm.CCMConfig;
+import io.harness.ccm.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -39,7 +41,7 @@ import java.util.List;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting {
+public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private boolean useKubernetesDelegate;
   private String delegateName;
   private String masterUrl;
@@ -62,6 +64,8 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
 
   @NotEmpty private String accountId;
 
+  private CCMConfig ccmConfig;
+
   @Transient private boolean decrypted;
 
   public KubernetesClusterConfig() {
@@ -72,7 +76,8 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
       char[] password, char[] caCert, char[] clientCert, char[] clientKey, char[] clientKeyPassphrase,
       char[] serviceAccountToken, String clientKeyAlgo, boolean skipValidation, String encryptedPassword,
       String encryptedCaCert, String encryptedClientCert, String encryptedClientKey,
-      String encryptedClientKeyPassphrase, String encryptedServiceAccountToken, String accountId, boolean decrypted) {
+      String encryptedClientKeyPassphrase, String encryptedServiceAccountToken, String accountId, CCMConfig ccmConfig,
+      boolean decrypted) {
     this();
     this.useKubernetesDelegate = useKubernetesDelegate;
     this.delegateName = delegateName;
@@ -93,6 +98,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.encryptedClientKeyPassphrase = encryptedClientKeyPassphrase;
     this.encryptedServiceAccountToken = encryptedServiceAccountToken;
     this.accountId = accountId;
+    this.ccmConfig = ccmConfig;
     this.decrypted = decrypted;
   }
 

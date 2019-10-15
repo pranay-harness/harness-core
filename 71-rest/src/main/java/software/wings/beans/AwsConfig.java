@@ -1,9 +1,13 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.ccm.CCMConfig;
+import io.harness.ccm.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -28,7 +32,7 @@ import java.util.List;
 @Builder
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
-public class AwsConfig extends SettingValue implements EncryptableSetting {
+public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") private String accessKey;
   @Attributes(title = "Secret Key") @Encrypted private char[] secretKey;
@@ -37,7 +41,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
 
   @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
   @Attributes(title = "Ec2 Iam role tags") private String tag;
-
+  @JsonInclude(Include.NON_NULL) private CCMConfig ccmConfig;
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
 
@@ -46,7 +50,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
   }
 
   public AwsConfig(String accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
-      boolean useEc2IamCredentials, String tag, boolean assumeCrossAccountRole,
+      boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
       AwsCrossAccountAttributes crossAccountAttributes) {
     this();
     this.accessKey = accessKey;
@@ -55,6 +59,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
     this.encryptedSecretKey = encryptedSecretKey;
     this.useEc2IamCredentials = useEc2IamCredentials;
     this.tag = tag;
+    this.ccmConfig = ccmConfig;
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
   }
