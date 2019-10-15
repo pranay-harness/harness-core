@@ -50,18 +50,23 @@ public class EventPublisherTest extends CategoryTest {
   private static final String SERVER_NAME = InProcessServerBuilder.generateName();
   private final AtomicInteger messagesPublished = new AtomicInteger();
 
-  private Injector injector = Guice.createInjector(
-      Modules.override(new PublisherModule(Config.builder().queueFilePath(QUEUE_FILE_PATH).build()))
-          .with(new AbstractModule() {
-            @Override
-            protected void configure() {}
+  private Injector injector = Guice.createInjector(Modules
+                                                       .override(new PublisherModule(Config.builder()
+                                                                                         .publishTarget("NOT_USED")
+                                                                                         .publishAuthority("NOT_USED")
+                                                                                         .queueFilePath(QUEUE_FILE_PATH)
+                                                                                         .build()))
+                                                       .with(new AbstractModule() {
+                                                         @Override
+                                                         protected void configure() {}
 
-            @Provides
-            @Singleton
-            EventPublisherBlockingStub eventPublisherBlockingStub() {
-              return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName(SERVER_NAME).build());
-            }
-          }));
+                                                         @Provides
+                                                         @Singleton
+                                                         EventPublisherBlockingStub eventPublisherBlockingStub() {
+                                                           return EventPublisherGrpc.newBlockingStub(
+                                                               InProcessChannelBuilder.forName(SERVER_NAME).build());
+                                                         }
+                                                       }));
   @Inject private EventPublisherBlockingStub blockingStub;
   @Inject private RollingChronicleQueue chronicleQueue;
   @Inject private FileDeletionManager fileDeletionManager;
@@ -107,7 +112,7 @@ public class EventPublisherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, intermittent = true)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testNoMessageLossWithErrorProneServer() throws Exception {
     fakeService.setErrorProne(true);
@@ -119,7 +124,7 @@ public class EventPublisherTest extends CategoryTest {
     CountDownLatch latch = new CountDownLatch(numThreads);
     Concurrent.test(numThreads, x -> {
       try {
-        int numMessages = 10000;
+        int numMessages = 1000;
         for (int i = 0; i < numMessages; i++) {
           eventPublisher.publishMessage(Lifecycle.newBuilder()
                                             .setInstanceId("instanceId-123")
@@ -136,8 +141,9 @@ public class EventPublisherTest extends CategoryTest {
     latch.await();
     Awaitility.await()
         .atMost(10, TimeUnit.SECONDS)
-        .pollInterval(1, TimeUnit.SECONDS)
-        .until(() -> assertThat(fakeService.getMessageCount()).isEqualTo(messagesPublished.get()));
+        .pollInterval(100, TimeUnit.MILLISECONDS)
+        // >= because "at-least"-once delivery semantics - i.e. duplicate delivery is allowed.
+        .until(() -> assertThat(fakeService.getMessageCount()).isGreaterThanOrEqualTo(messagesPublished.get()));
   }
 
   @Test
@@ -155,7 +161,7 @@ public class EventPublisherTest extends CategoryTest {
     Awaitility.await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(100, TimeUnit.MILLISECONDS)
-        .until(() -> assertThat(fakeService.getReceivedMessages().contains(publishMessage)).isTrue());
+        .until(() -> assertThat(fakeService.getReceivedMessages()).contains(publishMessage));
   }
 
   @Test
@@ -176,7 +182,7 @@ public class EventPublisherTest extends CategoryTest {
     Awaitility.await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(100, TimeUnit.MILLISECONDS)
-        .until(() -> assertThat(fakeService.getReceivedMessages().contains(publishMessage)).isTrue());
+        .until(() -> assertThat(fakeService.getReceivedMessages()).contains(publishMessage));
   }
 
   private Lifecycle ecsLifecycleEvent(String instanceId, Instant eventTime, EventType eventType) {
