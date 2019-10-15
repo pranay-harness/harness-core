@@ -160,7 +160,7 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(ServiceNowConfig.builder()
                            .accountId(account.getUuid())
-                           .baseUrl("https://dev76919.service-now.com")
+                           .baseUrl("https://ven03171.service-now.com")
                            .username("admin")
                            .password(scmSecret.decryptToCharArray(new SecretName("snow_connector")))
                            .build())
