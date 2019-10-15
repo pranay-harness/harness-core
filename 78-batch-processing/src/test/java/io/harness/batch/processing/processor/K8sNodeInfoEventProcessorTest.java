@@ -61,6 +61,17 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Test
   @Owner(emails = HITESH)
   @Category(UnitTests.class)
+  public void shouldCreateInvalidInstanceNodeEvent() throws Exception {
+    PublishedMessage k8sNodeEventMessage =
+        getK8sNodeEventMessage(NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_INVALID, START_TIMESTAMP);
+    InstanceEvent instanceEvent = k8sNodeEventProcessor.process(k8sNodeEventMessage);
+    assertThat(instanceEvent).isNotNull();
+    assertThat(instanceEvent.getType()).isNull();
+  }
+
+  @Test
+  @Owner(emails = HITESH)
+  @Category(UnitTests.class)
   public void shouldCreateInstanceStopNodeEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
         getK8sNodeEventMessage(NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_STOP, START_TIMESTAMP);

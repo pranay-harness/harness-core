@@ -10,7 +10,6 @@ import org.springframework.batch.item.data.MongoItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 @Slf4j
@@ -26,7 +25,6 @@ public class InstanceDataMongoEventReader implements InstanceDataEventReader {
     reader.setTemplate(mongoTemplate);
     reader.setTargetType(InstanceData.class);
     Query query = new Query();
-    query.addCriteria(Criteria.where(InstanceDataKeys.instanceType).is("K8S_POD"));
     query.with(new Sort(Sort.Direction.ASC, InstanceDataKeys.usageStartTime));
     reader.setQuery(query);
     reader.setPageSize(READER_BATCH_SIZE);

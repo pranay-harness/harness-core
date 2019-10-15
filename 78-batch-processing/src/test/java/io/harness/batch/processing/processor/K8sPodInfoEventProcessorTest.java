@@ -72,6 +72,17 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Test
   @Owner(emails = HITESH)
   @Category(UnitTests.class)
+  public void shouldCreateInvalidInstancePodEvent() throws Exception {
+    PublishedMessage k8sNodeEventMessage =
+        getK8sPodEventMessage(POD_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_INVALID, START_TIMESTAMP);
+    InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
+    assertThat(instanceEvent).isNotNull();
+    assertThat(instanceEvent.getType()).isNull();
+  }
+
+  @Test
+  @Owner(emails = HITESH)
+  @Category(UnitTests.class)
   public void shouldCreateInstanceStopPodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
         getK8sPodEventMessage(POD_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_DELETED, START_TIMESTAMP);
