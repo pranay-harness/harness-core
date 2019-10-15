@@ -7,11 +7,11 @@ import com.google.inject.Singleton;
 import com.mongodb.DBObject;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
-import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Service;
@@ -222,24 +222,23 @@ public class ServiceChangeHandler implements ChangeHandler {
   }
 
   private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE)) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
       boolean result = true;
-      if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
-        AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
-        for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getAffectedResourceType().equals(EntityType.SERVICE.name())) {
-            String fieldToUpdate = ServiceViewKeys.audits;
-            String documentToUpdate = entityAuditRecord.getAffectedResourceId();
-            String auditTimestampField = ServiceViewKeys.auditTimestamps;
-            Map<String, Object> auditRelatedEntityViewMap =
-                relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-            result = result
-                && searchDao.addTimestamp(
-                       ServiceSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
-            result = result
-                && searchDao.appendToListInSingleDocument(ServiceSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
-                       auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-          }
+      AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
+      for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
+        if (entityAuditRecord.getAffectedResourceType().equals(EntityType.SERVICE.name())
+            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
+          String fieldToUpdate = ServiceViewKeys.audits;
+          String documentToUpdate = entityAuditRecord.getAffectedResourceId();
+          String auditTimestampField = ServiceViewKeys.auditTimestamps;
+          Map<String, Object> auditRelatedEntityViewMap =
+              relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
+          result = result
+              && searchDao.addTimestamp(
+                     ServiceSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+          result = result
+              && searchDao.appendToListInSingleDocument(ServiceSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
+                     auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
         }
       }
       return result;

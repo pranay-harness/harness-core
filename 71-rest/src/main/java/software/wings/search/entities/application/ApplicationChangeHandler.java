@@ -12,6 +12,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Service;
@@ -48,23 +49,22 @@ public class ApplicationChangeHandler implements ChangeHandler {
   private static final int DAYS_TO_RETAIN = 7;
 
   private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE)) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
       boolean result = true;
-      if (changeEvent.getChanges() != null) {
-        AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
-        if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
-          for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-            if (entityAuditRecord.getAffectedResourceType().equals(EntityType.APPLICATION.name())) {
-              String fieldToUpdate = ApplicationViewKeys.audits;
-              String filterId = entityAuditRecord.getAffectedResourceId();
-              Map<String, Object> auditRelatedEntityViewMap =
-                  relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-              String auditTimestampField = ApplicationViewKeys.auditTimestamps;
-              result &=
-                  searchDao.addTimestamp(ApplicationSearchEntity.TYPE, auditTimestampField, filterId, DAYS_TO_RETAIN);
-              result &= searchDao.appendToListInSingleDocument(ApplicationSearchEntity.TYPE, fieldToUpdate, filterId,
-                  auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-            }
+      AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
+      if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
+        for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
+          if (entityAuditRecord.getEntityType().equals(EntityType.APPLICATION.name())
+              && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
+            String fieldToUpdate = ApplicationViewKeys.audits;
+            String filterId = entityAuditRecord.getAffectedResourceId();
+            Map<String, Object> auditRelatedEntityViewMap =
+                relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
+            String auditTimestampField = ApplicationViewKeys.auditTimestamps;
+            result &=
+                searchDao.addTimestamp(ApplicationSearchEntity.TYPE, auditTimestampField, filterId, DAYS_TO_RETAIN);
+            result &= searchDao.appendToListInSingleDocument(
+                ApplicationSearchEntity.TYPE, fieldToUpdate, filterId, auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
           }
         }
       }

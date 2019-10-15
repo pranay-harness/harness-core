@@ -3,6 +3,9 @@ package software.wings.search.entities.application;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Sort;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -30,6 +33,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@Data
+@EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ApplicationViewBuilderKeys")
 class ApplicationViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;

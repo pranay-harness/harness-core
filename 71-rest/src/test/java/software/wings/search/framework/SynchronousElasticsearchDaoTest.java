@@ -39,7 +39,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpsertDocuemnt() {
+  public void testUpsertDocument() {
     String entityJson = "entity_json";
     when(elasticsearchDao.upsertDocument(ENTITY_TYPE, ENTITY_ID, entityJson)).thenReturn(true);
     boolean isSuccessful = synchronousElasticsearchDao.upsertDocument(ENTITY_TYPE, ENTITY_ID, entityJson);

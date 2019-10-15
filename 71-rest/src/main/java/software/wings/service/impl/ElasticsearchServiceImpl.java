@@ -43,7 +43,6 @@ public class ElasticsearchServiceImpl implements SearchService {
 
   public SearchResponse getSearchResults(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
     SearchHits hits = search(searchString, accountId);
-
     List<ApplicationView> applicationViewList = new ArrayList<>();
     List<PipelineView> pipelineViewList = new ArrayList<>();
     List<WorkflowView> workflowViewList = new ArrayList<>();
