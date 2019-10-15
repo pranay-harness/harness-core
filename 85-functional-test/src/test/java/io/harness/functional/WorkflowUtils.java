@@ -331,6 +331,20 @@ public class WorkflowUtils {
     return workflow;
   }
 
+  public Workflow createRollingWorkflow(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    Workflow workflow = aWorkflow()
+                            .name(name + System.currentTimeMillis())
+                            .appId(service.getAppId())
+                            .envId(infrastructureDefinition.getEnvId())
+                            .infraDefinitionId(infrastructureDefinition.getUuid())
+                            .serviceId(service.getUuid())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
+                            .build();
+    return workflow;
+  }
+
   // Unique name of the workflow is ensured here
   public Workflow createBuildWorkflow(@NotEmpty String name, String appId, @NotEmpty List<String> artifactStreamIds) {
     List<PhaseStep> phaseSteps = new ArrayList<>();

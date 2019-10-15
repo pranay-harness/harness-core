@@ -62,7 +62,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     logger.info("Creating the workflow");
 
-    String workflowName = "SERVICE NOW APPROVAL";
+    String workflowName = "SERVICE NOW APPROVAL" + System.currentTimeMillis();
     Workflow snowWorkflow =
         workflowUtils.buildCanaryWorkflowPostDeploymentStep(workflowName, environment.getUuid(), getSnowApprovalNode());
 

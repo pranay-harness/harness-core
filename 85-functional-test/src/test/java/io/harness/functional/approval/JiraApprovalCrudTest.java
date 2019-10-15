@@ -67,7 +67,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
     assertThat(environment).isNotNull();
     logger.info("Creating the workflow");
     Workflow uiWorkflow = workflowUtils.buildCanaryWorkflowPostDeploymentStep(
-        "JIRA APPROVAL", environment.getUuid(), getJiraApprovalNode());
+        "JIRA APPROVAL" + System.currentTimeMillis(), environment.getUuid(), getJiraApprovalNode());
 
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), uiWorkflow);

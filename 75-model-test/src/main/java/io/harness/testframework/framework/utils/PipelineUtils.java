@@ -49,7 +49,7 @@ public class PipelineUtils {
     return approvalStage;
   }
 
-  public static PipelineStage prepareExecutionStage(String envId, String workflowId, String pipelineId) {
+  public static PipelineStage prepareExecutionStage(String envId, String workflowId, Map<String, String> variables) {
     PipelineStage executionStage = new PipelineStage();
     executionStage.setName(TestUtils.generateRandomUUID());
     executionStage.setParallel(false);
@@ -62,6 +62,7 @@ public class PipelineUtils {
     properties.put("envId", envId);
     properties.put("workflowId", workflowId);
     pipelineStageElement.setProperties(properties);
+    pipelineStageElement.setWorkflowVariables(variables);
     pipelineStageElements.add(pipelineStageElement);
     executionStage.setPipelineStageElements(pipelineStageElements);
     return executionStage;

@@ -57,6 +57,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -161,7 +162,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     logger.info("Creating pipeline stages now");
     List<PipelineStage> pipelineStages = new ArrayList<>();
     PipelineStage executionStage = PipelineUtils.prepareExecutionStage(
-        infrastructureMapping.getEnvId(), savedWorkflow.getUuid(), verifyCreatedPipeline.getUuid());
+        infrastructureMapping.getEnvId(), savedWorkflow.getUuid(), Collections.emptyMap());
     pipelineStages.add(executionStage);
     verifyCreatedPipeline.setPipelineStages(pipelineStages);
 
