@@ -53,6 +53,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
               .instanceId(instanceData.getInstanceId())
               .clusterName(instanceData.getClusterName())
               .appId(harnessServiceInfo.getAppId())
+              .serviceId(harnessServiceInfo.getServiceId())
               .cloudProviderId(harnessServiceInfo.getCloudProviderId())
               .envId(harnessServiceInfo.getEnvId())
               .cpuUnitSeconds(billingData.getCpuUnitSeconds())
