@@ -262,7 +262,10 @@ public class PageController {
 
   private static void assertOne(Object[] values) {
     int length = values == null ? 0 : values.length;
-    if (length != 1) {
+    if (length < 1) {
+      throw new InvalidRequestException("Not enough arguments provided");
+    }
+    if (length > 1) {
       logger.error("Unexpected number of arguments {} in expression when 1 is expected", length, new Exception(""));
     }
   }

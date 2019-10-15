@@ -114,8 +114,8 @@ public class ShellScriptProvisionerTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = YOGESH_CHAUHAN)
-  @Category(FunctionalTests.class)
+  @Owner(emails = YOGESH_CHAUHAN, intermittent = true)
+  @Category({FunctionalTests.class})
   public void shouldRunShellScriptWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution =

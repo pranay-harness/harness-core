@@ -79,24 +79,23 @@ public class IndexManager {
       Map<String, Accesses> accessesPrimary, Map<String, Accesses> accessesSecondary) {
     Map<String, Accesses> accessesMap = new HashMap<>();
 
-    Set<String> indexes = new HashSet<>();
-    indexes.addAll(accessesPrimary.keySet());
-    indexes.addAll(accessesSecondary.keySet());
-
-    for (String index : indexes) {
-      if (!accessesPrimary.containsKey(index)) {
-        accessesMap.put(index, accessesSecondary.get(index));
-      } else if (!accessesSecondary.containsKey(index)) {
-        accessesMap.put(index, accessesPrimary.get(index));
+    for (Entry<String, Accesses> entry : accessesPrimary.entrySet()) {
+      final String index = entry.getKey();
+      final Accesses primary = entry.getValue();
+      final Accesses secondary = accessesSecondary.get(entry.getKey());
+      if (secondary == null) {
+        accessesMap.put(index, primary);
       } else {
-        Accesses primary = accessesPrimary.get(index);
-        Accesses secondary = accessesSecondary.get(index);
-
         accessesMap.put(index,
             new Accesses(primary.getOperations() + secondary.getOperations(),
                 primary.getSince().before(secondary.getSince()) ? primary.getSince() : secondary.getSince()));
       }
     }
+
+    for (Entry<String, Accesses> entry : accessesSecondary.entrySet()) {
+      accessesMap.putIfAbsent(entry.getKey(), entry.getValue());
+    }
+
     return accessesMap;
   }
 
