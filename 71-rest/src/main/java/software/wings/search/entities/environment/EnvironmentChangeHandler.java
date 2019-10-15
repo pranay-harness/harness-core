@@ -7,12 +7,12 @@ import com.google.inject.Singleton;
 import com.mongodb.DBObject;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
-import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Workflow;
@@ -217,25 +217,24 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     }
   }
 
-  private boolean handleAuditRelatedChangeHandler(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE)) {
+  private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
       boolean result = true;
-      if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
-        AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
-        for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())) {
-            String fieldToUpdate = EnvironmentViewKeys.audits;
-            String documentToUpdate = entityAuditRecord.getAffectedResourceId();
-            String auditTimestampField = EnvironmentViewKeys.auditTimestamps;
-            Map<String, Object> auditRelatedEntityViewMap =
-                relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-            result = result
-                && searchDao.addTimestamp(
-                       EnvironmentSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
-            result = result
-                && searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
-                       auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-          }
+      AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
+      for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
+        if (entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())
+            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
+          String fieldToUpdate = EnvironmentViewKeys.audits;
+          String documentToUpdate = entityAuditRecord.getAffectedResourceId();
+          String auditTimestampField = EnvironmentViewKeys.auditTimestamps;
+          Map<String, Object> auditRelatedEntityViewMap =
+              relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
+          result = result
+              && searchDao.addTimestamp(
+                     EnvironmentSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+          result = result
+              && searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
+                     auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
         }
       }
       return result;
@@ -258,12 +257,14 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     return true;
   }
 
-  private boolean handleEnvironmnetInsert(ChangeEvent<?> changeEvent) {
+  private boolean handleEnvironmentInsert(ChangeEvent<?> changeEvent) {
     Environment environment = (Environment) changeEvent.getFullDocument();
     EnvironmentView environmentView = environmentViewBuilder.createEnvironmentView(environment);
-    Optional<String> jsonString = SearchEntityUtils.convertToJson(environmentView);
-    if (jsonString.isPresent()) {
-      return searchDao.upsertDocument(EnvironmentSearchEntity.TYPE, environmentView.getId(), jsonString.get());
+    if (environmentView != null) {
+      Optional<String> jsonString = SearchEntityUtils.convertToJson(environmentView);
+      if (jsonString.isPresent()) {
+        return searchDao.upsertDocument(EnvironmentSearchEntity.TYPE, environmentView.getId(), jsonString.get());
+      }
     }
     return false;
   }
@@ -272,9 +273,11 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     Environment environment = (Environment) changeEvent.getFullDocument();
     EnvironmentView environmentView =
         environmentViewBuilder.createEnvironmentView(environment, changeEvent.getChanges());
-    Optional<String> jsonString = SearchEntityUtils.convertToJson(environmentView);
-    if (jsonString.isPresent()) {
-      return searchDao.upsertDocument(EnvironmentSearchEntity.TYPE, environmentView.getId(), jsonString.get());
+    if (environmentView != null) {
+      Optional<String> jsonString = SearchEntityUtils.convertToJson(environmentView);
+      if (jsonString.isPresent()) {
+        return searchDao.upsertDocument(EnvironmentSearchEntity.TYPE, environmentView.getId(), jsonString.get());
+      }
     }
     return false;
   }
@@ -282,7 +285,7 @@ public class EnvironmentChangeHandler implements ChangeHandler {
   private boolean handleEnvironmentChange(ChangeEvent<?> changeEvent) {
     switch (changeEvent.getChangeType()) {
       case INSERT:
-        return handleEnvironmnetInsert(changeEvent);
+        return handleEnvironmentInsert(changeEvent);
       case UPDATE:
         return handleEnvironmentUpdate(changeEvent);
       case DELETE:
@@ -301,7 +304,7 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       isChangeHandled = handleApplicationChange(changeEvent);
     }
     if (changeEvent.isChangeFor(AuditHeader.class)) {
-      isChangeHandled = handleAuditRelatedChangeHandler(changeEvent);
+      isChangeHandled = handleAuditRelatedChange(changeEvent);
     }
     if (changeEvent.isChangeFor(WorkflowExecution.class)) {
       isChangeHandled = handleWorkflowExecutionChange(changeEvent);

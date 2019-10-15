@@ -8,13 +8,13 @@ import com.mongodb.DBObject;
 import io.harness.beans.WorkflowType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
-import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Service;
@@ -119,24 +119,23 @@ public class WorkflowChangeHandler implements ChangeHandler {
   }
 
   private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE)) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
-      if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
-        for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getAffectedResourceType().equals(EntityType.WORKFLOW.name())) {
-            String fieldToUpdate = WorkflowViewKeys.audits;
-            String documentToUpdate = entityAuditRecord.getAffectedResourceId();
-            String auditTimestampField = WorkflowViewKeys.auditTimestamps;
-            Map<String, Object> auditRelatedEntityViewMap =
-                relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-            result = result
-                && searchDao.addTimestamp(
-                       WorkflowSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
-            result = result
-                && searchDao.appendToListInSingleDocument(WorkflowSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
-                       auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-          }
+      for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
+        if (entityAuditRecord.getAffectedResourceType().equals(EntityType.WORKFLOW.name())
+            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
+          String fieldToUpdate = WorkflowViewKeys.audits;
+          String documentToUpdate = entityAuditRecord.getAffectedResourceId();
+          String auditTimestampField = WorkflowViewKeys.auditTimestamps;
+          Map<String, Object> auditRelatedEntityViewMap =
+              relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
+          result = result
+              && searchDao.addTimestamp(
+                     WorkflowSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+          result = result
+              && searchDao.appendToListInSingleDocument(WorkflowSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
+                     auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
         }
       }
       return result;

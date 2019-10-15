@@ -7,11 +7,11 @@ import com.mongodb.DBObject;
 import io.harness.beans.WorkflowType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
-import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
@@ -51,22 +51,21 @@ public class PipelineChangeHandler implements ChangeHandler {
   private static final int DAYS_TO_RETAIN = 7;
 
   private boolean handleAuditRelatedChange(ChangeEvent<?> changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE)) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
       boolean result = true;
-      if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
-        AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
-        for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())) {
-            String fieldToUpdate = PipelineViewKeys.audits;
-            String documentToUpdate = entityAuditRecord.getAffectedResourceId();
-            String auditTimestampField = PipelineViewKeys.auditTimestamps;
-            Map<String, Object> auditRelatedEntityViewMap =
-                relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-            result &= searchDao.addTimestamp(
-                PipelineSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
-            result &= searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
-                auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-          }
+      AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
+      for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
+        if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())
+            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
+          String fieldToUpdate = PipelineViewKeys.audits;
+          String documentToUpdate = entityAuditRecord.getAffectedResourceId();
+          String auditTimestampField = PipelineViewKeys.auditTimestamps;
+          Map<String, Object> auditRelatedEntityViewMap =
+              relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
+          result &=
+              searchDao.addTimestamp(PipelineSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+          result &= searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
+              auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
         }
       }
       return result;
