@@ -1,3 +1,27 @@
 package io.harness.batch.processing.ccm;
 
-public enum InstanceType { ECS_TASK_FARGATE, ECS_TASK_EC2, ECS_CONTAINER_INSTANCE, EC2_INSTANCE, K8S_POD, K8S_NODE }
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public enum InstanceType {
+  ECS_TASK_FARGATE(PricingGroup.ECS_FARGATE, 60, CostAttribution.COMPLETE),
+  ECS_TASK_EC2(PricingGroup.COMPUTE, 1, CostAttribution.PARTIAL),
+  ECS_CONTAINER_INSTANCE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE),
+  EC2_INSTANCE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE),
+  K8S_POD(PricingGroup.COMPUTE, 1, CostAttribution.PARTIAL),
+  K8S_NODE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE);
+
+  private final PricingGroup pricingGroup;
+  private final double minChargeableSeconds;
+  private final CostAttribution costAttribution;
+
+  public PricingGroup getPricingGroup() {
+    return pricingGroup;
+  }
+  public double getMinChargeableSeconds() {
+    return minChargeableSeconds;
+  }
+  public CostAttribution getCostAttribution() {
+    return costAttribution;
+  }
+}

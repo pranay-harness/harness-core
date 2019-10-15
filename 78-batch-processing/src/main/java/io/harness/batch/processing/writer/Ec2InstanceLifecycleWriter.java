@@ -1,19 +1,18 @@
 package io.harness.batch.processing.writer;
 
+import com.google.inject.Singleton;
+
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Ec2Lifecycle;
 import io.harness.event.payloads.Lifecycle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
-@Service
-@Qualifier("ec2InstanceLifecycleWriter")
+@Singleton
 public class Ec2InstanceLifecycleWriter extends EventWriter implements ItemWriter<PublishedMessage> {
   @Override
   public void write(List<? extends PublishedMessage> publishedMessages) throws Exception {

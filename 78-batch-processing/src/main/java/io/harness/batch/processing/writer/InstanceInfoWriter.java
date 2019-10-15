@@ -12,12 +12,12 @@ import java.util.List;
 
 @Slf4j
 @Service
-@Qualifier("instanceDataWriter")
+@Qualifier("instanceInfoWriter")
 public class InstanceInfoWriter implements ItemWriter<InstanceInfo> {
   @Autowired protected InstanceDataDao instanceDataDao;
 
   @Override
   public void write(List<? extends InstanceInfo> instanceInfoList) throws Exception {
-    instanceInfoList.forEach(instanceInfo -> { instanceDataDao.upsert(instanceInfo); });
+    instanceInfoList.forEach(instanceInfo -> instanceDataDao.upsert(instanceInfo));
   }
 }

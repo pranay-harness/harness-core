@@ -12,6 +12,7 @@ public interface InstanceDataDao {
   boolean create(InstanceData instanceData);
 
   InstanceData upsert(InstanceEvent instanceEvent);
+
   InstanceData upsert(InstanceInfo instanceInfo);
 
   boolean updateInstanceState(

@@ -4,6 +4,11 @@ import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
 
+import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.entities.InstanceData;
+import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Ec2InstanceInfo;
 import io.harness.event.payloads.Ec2Lifecycle;
@@ -22,7 +27,9 @@ import io.harness.event.payloads.ReservedResource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public interface EcsEventGenerator {
   double INSTANCE_CPU = 512;
@@ -41,6 +48,7 @@ public interface EcsEventGenerator {
                                           .setInstanceId(instanceId)
                                           .setClusterArn(clusterId)
                                           .setInstanceType(INSTANCE_TYPE)
+                                          .setRegion(DEFAULT_AWS_REGION)
                                           .setInstanceState(instanceState)
                                           .build();
     return getPublishedMessage(accountId, ec2InstanceInfo);
@@ -122,6 +130,52 @@ public interface EcsEventGenerator {
                                     .setLastProcessedTimestamp(lastProcessedTimestamp)
                                     .build();
     return getPublishedMessage(accountId, ecsSyncEvent);
+  }
+
+  default InstanceData createEc2InstanceData(
+      String instanceId, String accountId, io.harness.batch.processing.ccm.InstanceState instanceState) {
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, INSTANCE_TYPE);
+    metaData.put(InstanceMetaDataConstants.REGION, DEFAULT_AWS_REGION);
+    return InstanceData.builder()
+        .instanceId(instanceId)
+        .accountId(accountId)
+        .instanceType(InstanceType.EC2_INSTANCE)
+        .metaData(metaData)
+        .build();
+  }
+
+  default InstanceData createContainerInstanceData(
+      String instanceId, String accountId, io.harness.batch.processing.ccm.InstanceState instanceState) {
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, INSTANCE_TYPE);
+    metaData.put(InstanceMetaDataConstants.REGION, DEFAULT_AWS_REGION);
+    Resource resource = Resource.builder().cpuUnits(INSTANCE_CPU).memoryMb(INSTANCE_MEMORY).build();
+    return InstanceData.builder()
+        .instanceId(instanceId)
+        .accountId(accountId)
+        .totalResource(resource)
+        .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
+        .metaData(metaData)
+        .build();
+  }
+
+  default InstanceData createTaskInstanceData(
+      String instanceId, String accountId, io.harness.batch.processing.ccm.InstanceState instanceState) {
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.REGION, DEFAULT_AWS_REGION);
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+    Resource resource = Resource.builder().cpuUnits(INSTANCE_CPU).memoryMb(INSTANCE_MEMORY).build();
+    return InstanceData.builder()
+        .instanceId(instanceId)
+        .totalResource(resource)
+        .accountId(accountId)
+        .instanceState(instanceState)
+        .metaData(metaData)
+        .instanceType(InstanceType.ECS_TASK_FARGATE)
+        .build();
   }
 
   default PublishedMessage getPublishedMessage(String accountId, Message message) {

@@ -82,4 +82,17 @@ public interface NodeInfoOrBuilder extends
    */
 
   java.lang.String getLabelsOrThrow(java.lang.String key);
+
+  /**
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   */
+  boolean hasAllocatableResource();
+  /**
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   */
+  io.harness.perpetualtask.k8s.watch.Resource getAllocatableResource();
+  /**
+   * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
+   */
+  io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getAllocatableResourceOrBuilder();
 }

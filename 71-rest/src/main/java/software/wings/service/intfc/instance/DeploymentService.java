@@ -34,4 +34,6 @@ public interface DeploymentService extends OwnedByApplication {
 
   Optional<DeploymentSummary> get(@Valid DeploymentSummary deploymentSummary);
   // DeploymentSummary saveOrUpdate(@Valid DeploymentSummary deploymentSummary);
+
+  Optional<DeploymentSummary> getWithAccountId(DeploymentSummary deploymentSummary);
 }

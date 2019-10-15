@@ -75,6 +75,10 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
       updateOperations.set(InstanceDataKeys.labels, instanceInfo.getLabels());
     }
 
+    if (instanceInfo.getMetaData() != null) {
+      updateOperations.set(InstanceDataKeys.metaData, instanceInfo.getMetaData());
+    }
+
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
 
     return hPersistence.upsert(query, updateOperations, findAndModifyOptions);

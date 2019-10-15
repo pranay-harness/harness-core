@@ -1,15 +1,29 @@
 package io.harness.batch.processing.writer.constants;
 
-public interface EventTypeConstants {
-  String EC2_INSTANCE_INFO = "io.harness.event.payloads.Ec2InstanceInfo";
-  String EC2_INSTANCE_LIFECYCLE = "io.harness.event.payloads.Ec2Lifecycle";
-  String ECS_CONTAINER_INSTANCE_INFO = "io.harness.event.payloads.EcsContainerInstanceInfo";
-  String ECS_CONTAINER_INSTANCE_LIFECYCLE = "io.harness.event.payloads.EcsContainerInstanceLifecycle";
-  String ECS_TASK_INFO = "io.harness.event.payloads.EcsTaskInfo";
-  String ECS_TASK_LIFECYCLE = "io.harness.event.payloads.EcsTaskLifecycle";
-  String ECS_SYNC_EVENT = "io.harness.event.payloads.EcsSyncEvent";
-  String K8S_POD_INFO = "io.harness.perpetualtask.k8s.watch.PodInfo";
-  String K8S_POD_EVENT = "io.harness.perpetualtask.k8s.watch.PodEvent";
-  String K8S_NODE_INFO = "io.harness.perpetualtask.k8s.watch.NodeInfo";
-  String K8S_NODE_EVENT = "io.harness.perpetualtask.k8s.watch.NodeEvent";
+import io.harness.event.payloads.Ec2InstanceInfo;
+import io.harness.event.payloads.Ec2Lifecycle;
+import io.harness.event.payloads.EcsContainerInstanceInfo;
+import io.harness.event.payloads.EcsContainerInstanceLifecycle;
+import io.harness.event.payloads.EcsSyncEvent;
+import io.harness.event.payloads.EcsTaskInfo;
+import io.harness.event.payloads.EcsTaskLifecycle;
+import io.harness.perpetualtask.k8s.watch.NodeEvent;
+import io.harness.perpetualtask.k8s.watch.NodeInfo;
+import io.harness.perpetualtask.k8s.watch.PodEvent;
+import io.harness.perpetualtask.k8s.watch.PodInfo;
+
+public class EventTypeConstants {
+  public static final String K8S_POD_INFO = PodInfo.class.getName();
+  public static final String K8S_NODE_INFO = NodeInfo.class.getName();
+  public static final String K8S_POD_EVENT = PodEvent.class.getName();
+  public static final String K8S_NODE_EVENT = NodeEvent.class.getName();
+  public static final String ECS_TASK_INFO = EcsTaskInfo.class.getName();
+  public static final String ECS_SYNC_EVENT = EcsSyncEvent.class.getName();
+  public static final String EC2_INSTANCE_INFO = Ec2InstanceInfo.class.getName();
+  public static final String EC2_INSTANCE_LIFECYCLE = Ec2Lifecycle.class.getName();
+  public static final String ECS_TASK_LIFECYCLE = EcsTaskLifecycle.class.getName();
+  public static final String ECS_CONTAINER_INSTANCE_INFO = EcsContainerInstanceInfo.class.getName();
+  public static final String ECS_CONTAINER_INSTANCE_LIFECYCLE = EcsContainerInstanceLifecycle.class.getName();
+
+  private EventTypeConstants() {}
 }

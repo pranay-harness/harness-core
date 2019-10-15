@@ -11,7 +11,7 @@ import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.batch.processing.writer.constants.EcsCCMConstants;
+import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.IntegrationTests;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
@@ -115,7 +115,7 @@ public class TaskInfoLifecycleWriterIntegrationTest implements EcsEventGenerator
     assertThat(stoppedTaskInstanceData.getClusterName()).isEqualTo(TEST_CLUSTER_ARN);
 
     Map<String, String> metaData = stoppedTaskInstanceData.getMetaData();
-    assertThat(metaData.get(EcsCCMConstants.CONTAINER_INSTANCE_ARN)).isEqualTo(TEST_CONTAINER_ARN);
+    assertThat(metaData.get(InstanceMetaDataConstants.CONTAINER_INSTANCE_ARN)).isEqualTo(TEST_CONTAINER_ARN);
   }
 
   @After

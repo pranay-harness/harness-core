@@ -6,16 +6,17 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.batch.processing.entities.BatchProcessingMorphiaClasses;
-import io.harness.event.app.EventServiceConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.guice.annotation.EnableGuiceModules;
 
 import java.util.Set;
 
+@Slf4j
 @Configuration
 @EnableGuiceModules
 public class BatchPortalConfiguration {
@@ -33,7 +34,7 @@ public class BatchPortalConfiguration {
   }
 
   @Bean
-  public ProviderModule morphiaClasses(EventServiceConfig eventServiceConfig) {
+  public ProviderModule morphiaClasses(BatchMainConfig batchMainConfig) {
     return new ProviderModule() {
       @Provides
       @Named("morphiaClasses")
@@ -44,8 +45,13 @@ public class BatchPortalConfiguration {
       @Provides
       @Singleton
       MongoConfig mongoConfig() {
-        return eventServiceConfig.getMongoConnectionFactory();
+        return batchMainConfig.getMongoConnectionFactory();
       }
     };
+  }
+
+  @Bean
+  public BatchProcessingTimescaleModule batchProcessingTimescaleModule(BatchMainConfig batchMainConfig) {
+    return new BatchProcessingTimescaleModule(batchMainConfig.getTimeScaleDBConfig());
   }
 }

@@ -104,20 +104,22 @@ public final class K8SMessages {
         + "\030\005 \001(\0132\032.google.protobuf.Timestamp\"U\n\tEv"
         + "entType\022\026\n\022EVENT_TYPE_INVALID\020\000\022\030\n\024EVENT"
         + "_TYPE_SCHEDULED\020\001\022\026\n\022EVENT_TYPE_DELETED\020"
-        + "\002\"\212\002\n\010NodeInfo\022\022\n\naccount_id\030\001 \001(\t\022\031\n\021cl"
+        + "\002\"\326\002\n\010NodeInfo\022\022\n\naccount_id\030\001 \001(\t\022\031\n\021cl"
         + "oud_provider_id\030\002 \001(\t\022\020\n\010node_uid\030\003 \001(\t\022"
         + "\021\n\tnode_name\030\004 \001(\t\0221\n\rcreation_time\030\005 \001("
         + "\0132\032.google.protobuf.Timestamp\022H\n\006labels\030"
         + "\006 \003(\01328.io.harness.perpetualtask.k8s.wat"
-        + "ch.NodeInfo.LabelsEntry\032-\n\013LabelsEntry\022\013"
-        + "\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\222\002\n\tNodeE"
-        + "vent\022\022\n\naccount_id\030\001 \001(\t\022\031\n\021cloud_provid"
-        + "er_id\030\002 \001(\t\022\020\n\010node_uid\030\003 \001(\t\022E\n\004type\030\004 "
-        + "\001(\01627.io.harness.perpetualtask.k8s.watch"
-        + ".NodeEvent.EventType\022-\n\ttimestamp\030\005 \001(\0132"
-        + "\032.google.protobuf.Timestamp\"N\n\tEventType"
-        + "\022\026\n\022EVENT_TYPE_INVALID\020\000\022\024\n\020EVENT_TYPE_S"
-        + "TART\020\001\022\023\n\017EVENT_TYPE_STOP\020\002B\002P\001b\006proto3"};
+        + "ch.NodeInfo.LabelsEntry\022J\n\024allocatable_r"
+        + "esource\030\007 \001(\0132,.io.harness.perpetualtask"
+        + ".k8s.watch.Resource\032-\n\013LabelsEntry\022\013\n\003ke"
+        + "y\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"\222\002\n\tNodeEvent"
+        + "\022\022\n\naccount_id\030\001 \001(\t\022\031\n\021cloud_provider_i"
+        + "d\030\002 \001(\t\022\020\n\010node_uid\030\003 \001(\t\022E\n\004type\030\004 \001(\0162"
+        + "7.io.harness.perpetualtask.k8s.watch.Nod"
+        + "eEvent.EventType\022-\n\ttimestamp\030\005 \001(\0132\032.go"
+        + "ogle.protobuf.Timestamp\"N\n\tEventType\022\026\n\022"
+        + "EVENT_TYPE_INVALID\020\000\022\024\n\020EVENT_TYPE_START"
+        + "\020\001\022\023\n\017EVENT_TYPE_STOP\020\002B\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -234,6 +236,7 @@ public final class K8SMessages {
                 "NodeName",
                 "CreationTime",
                 "Labels",
+                "AllocatableResource",
             });
     internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_LabelsEntry_descriptor =
         internal_static_io_harness_perpetualtask_k8s_watch_NodeInfo_descriptor.getNestedTypes().get(0);

@@ -1,6 +1,13 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.writer.Ec2InstanceInfoWriter;
+import io.harness.batch.processing.writer.Ec2InstanceLifecycleWriter;
+import io.harness.batch.processing.writer.EcsContainerInstanceInfoWriter;
+import io.harness.batch.processing.writer.EcsContainerInstanceLifecycleWriter;
+import io.harness.batch.processing.writer.EcsSyncEventWriter;
+import io.harness.batch.processing.writer.EcsTaskInfoWriter;
+import io.harness.batch.processing.writer.EcsTaskLifecycleWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -32,21 +39,42 @@ public class EcsBatchConfiguration {
 
   @Autowired private SkipListener ecsStepSkipListener;
 
-  @Autowired @Qualifier("ec2InstanceInfoWriter") private ItemWriter ec2InstanceInfoWriter;
-
-  @Autowired @Qualifier("ec2InstanceLifecycleWriter") private ItemWriter ec2InstanceLifecycleWriter;
-
-  @Autowired @Qualifier("ecsContainerInstanceInfoWriter") private ItemWriter ecsContainerInstanceInfoWriter;
-
-  @Autowired @Qualifier("ecsContainerInstanceLifecycleWriter") private ItemWriter ecsContainerInstanceLifecycleWriter;
-
-  @Autowired @Qualifier("ecsTaskInfoWriter") private ItemWriter ecsTaskInfoWriter;
-
-  @Autowired @Qualifier("ecsTaskLifecycleWriter") private ItemWriter ecsTaskLifecycleWriter;
-
-  @Autowired @Qualifier("ecsSyncEventWriter") private ItemWriter ecsSyncEventWriter;
-
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory mongoEventReader;
+
+  @Bean
+  public ItemWriter<PublishedMessage> ecsContainerInstanceLifecycleWriter() {
+    return new EcsContainerInstanceLifecycleWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> ec2InstanceInfoWriter() {
+    return new Ec2InstanceInfoWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> ec2InstanceLifecycleWriter() {
+    return new Ec2InstanceLifecycleWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> ecsContainerInstanceInfoWriter() {
+    return new EcsContainerInstanceInfoWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> ecsTaskInfoWriter() {
+    return new EcsTaskInfoWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> ecsTaskLifecycleWriter() {
+    return new EcsTaskLifecycleWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> ecsSyncEventWriter() {
+    return new EcsSyncEventWriter();
+  }
 
   @Bean
   @StepScope
@@ -160,7 +188,7 @@ public class EcsBatchConfiguration {
     return stepBuilderFactory.get("ec2InstanceInfoStep")
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ec2InstanceInfoMessageReader(null, null))
-        .writer(ec2InstanceInfoWriter)
+        .writer(ec2InstanceInfoWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
@@ -175,7 +203,7 @@ public class EcsBatchConfiguration {
     return stepBuilderFactory.get("ec2InstanceLifecycleStep")
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ec2InstanceLifecycleMessageReader(null, null))
-        .writer(ec2InstanceLifecycleWriter)
+        .writer(ec2InstanceLifecycleWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
@@ -190,7 +218,7 @@ public class EcsBatchConfiguration {
     return stepBuilderFactory.get("ecsContainerInstanceInfoStep")
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ecsContainerInstanceInfoMessageReader(null, null))
-        .writer(ecsContainerInstanceInfoWriter)
+        .writer(ecsContainerInstanceInfoWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
@@ -205,7 +233,7 @@ public class EcsBatchConfiguration {
     return stepBuilderFactory.get("ecsContainerInstanceLifecycleStep")
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ecsContainerInstanceLifecycleMessageReader(null, null))
-        .writer(ecsContainerInstanceLifecycleWriter)
+        .writer(ecsContainerInstanceLifecycleWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
@@ -220,7 +248,7 @@ public class EcsBatchConfiguration {
     return stepBuilderFactory.get("ecsTaskInfoStep")
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ecsTaskInfoMessageReader(null, null))
-        .writer(ecsTaskInfoWriter)
+        .writer(ecsTaskInfoWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
@@ -235,7 +263,7 @@ public class EcsBatchConfiguration {
     return stepBuilderFactory.get("ecsTaskLifecycleStep")
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ecsTaskLifecycleMessageReader(null, null))
-        .writer(ecsTaskLifecycleWriter)
+        .writer(ecsTaskLifecycleWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
@@ -250,7 +278,7 @@ public class EcsBatchConfiguration {
     return stepBuilderFactory.get("ecsSyncEventStep")
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ecsSyncEventMessageReader(null, null))
-        .writer(ecsSyncEventWriter)
+        .writer(ecsSyncEventWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)

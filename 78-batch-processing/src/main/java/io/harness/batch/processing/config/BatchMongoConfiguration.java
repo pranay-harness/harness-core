@@ -2,7 +2,6 @@ package io.harness.batch.processing.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,10 +12,8 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 @Configuration
 @Slf4j
 public class BatchMongoConfiguration {
-  @Autowired @Qualifier("primaryDatastore") private AdvancedDatastore primaryDatastore;
-
   @Bean
-  public MongoDbFactory mongoDbFactory() {
+  public MongoDbFactory mongoDbFactory(@Qualifier("primaryDatastore") AdvancedDatastore primaryDatastore) {
     return new SimpleMongoDbFactory(primaryDatastore.getMongo(), primaryDatastore.getDB().getName());
   }
 

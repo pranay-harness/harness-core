@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeValidate;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,7 +12,10 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.DeploymentSummary.DeploymentSummaryKeys;
+import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
@@ -20,7 +24,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.K8sDeployment
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.DeploymentService;
 
 import java.util.Optional;
@@ -31,7 +34,6 @@ import javax.validation.Valid;
 @Slf4j
 public class DeploymentServiceImpl implements DeploymentService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private AppService appService;
 
   @Override
   public DeploymentSummary save(@Valid DeploymentSummary deploymentSummary) {
@@ -64,6 +66,32 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
 
     return Optional.of(summary);
+  }
+
+  @Override
+  public Optional<DeploymentSummary> getWithAccountId(DeploymentSummary deploymentSummary) {
+    Query<DeploymentSummary> query = wingsPersistence.createQuery(DeploymentSummary.class, excludeValidate);
+    query.filter(DeploymentSummaryKeys.accountId, deploymentSummary.getAccountId());
+    addDeploymentInfoFilterToQuery(query, deploymentSummary);
+    query.order(Sort.descending(DeploymentSummary.CREATED_AT_KEY));
+    DeploymentSummary summary = query.get();
+    return Optional.ofNullable(summary);
+  }
+
+  private void addDeploymentInfoFilterToQuery(Query<DeploymentSummary> query, DeploymentSummary deploymentSummary) {
+    if (deploymentSummary.getContainerDeploymentKey() != null) {
+      ContainerDeploymentInfoWithNames deploymentInfo =
+          (ContainerDeploymentInfoWithNames) deploymentSummary.getDeploymentInfo();
+      if (deploymentInfo.getContainerSvcName() != null) {
+        query.filter(
+            DeploymentSummaryKeys.CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES, deploymentInfo.getClusterName());
+        query.filter(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES,
+            deploymentInfo.getContainerSvcName());
+      }
+    } else if (deploymentSummary.getK8sDeploymentKey() != null) {
+      K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
+      query.filter(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO, deploymentInfo.getReleaseName());
+    }
   }
 
   private DeploymentKey addDeploymentKeyFilterToQuery(

@@ -287,6 +287,7 @@ import software.wings.service.impl.expression.ExpressionBuilderServiceImpl;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.impl.infra.InfraDownloadServiceImpl;
 import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
+import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
@@ -474,6 +475,7 @@ import software.wings.service.intfc.deployment.ServiceInstanceUsage;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -803,6 +805,7 @@ public class WingsModule extends DependencyModule {
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);
+    bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);

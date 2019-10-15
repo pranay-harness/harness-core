@@ -18,6 +18,6 @@ public class InstanceEventWriter implements ItemWriter<InstanceEvent> {
 
   @Override
   public void write(List<? extends InstanceEvent> instanceEvents) throws Exception {
-    instanceEvents.forEach(instanceEvent -> { instanceDataDao.upsert(instanceEvent); });
+    instanceEvents.forEach(instanceEvent -> instanceDataDao.upsert(instanceEvent));
   }
 }
