@@ -43,6 +43,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
+  @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   public static final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
 
@@ -70,6 +72,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
   @Getter @Setter @Attributes(title = "Instances") private String instances;
   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
+  @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
 
   @Override
   public String commandName() {
@@ -93,7 +96,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
 
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-        k8sStateHelper.applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
     K8sTaskParameters k8sTaskParameters =
@@ -108,6 +111,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
             .k8sDelegateManifestConfig(
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
+            .skipDryRun(skipDryRun)
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);

@@ -21,6 +21,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyStat
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -125,7 +126,8 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
         .build();
   }
 
-  private boolean init(K8sApplyTaskParameters k8sApplyTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
+  @VisibleForTesting
+  boolean init(K8sApplyTaskParameters k8sApplyTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
       ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
@@ -167,6 +169,12 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
+
+      if (k8sApplyTaskParameters.isSkipDryRun()) {
+        executionLogCallback.saveExecutionLog(color("\nSkipping Dry Run", Yellow, Bold), INFO);
+        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+        return true;
+      }
 
       return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
     } catch (Exception e) {

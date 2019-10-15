@@ -17,12 +17,13 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters {
   private Integer instances;
   private InstanceUnitType instanceUnitType;
   private Optional<Integer> maxInstances;
+  private boolean skipDryRun;
 
   @Builder
   public K8sCanaryDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
-      Integer instances, InstanceUnitType instanceUnitType, Integer maxInstances) {
+      Integer instances, InstanceUnitType instanceUnitType, Integer maxInstances, boolean skipDryRun) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
@@ -30,5 +31,6 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters {
     this.instances = instances;
     this.instanceUnitType = instanceUnitType;
     this.maxInstances = Optional.ofNullable(maxInstances);
+    this.skipDryRun = skipDryRun;
   }
 }

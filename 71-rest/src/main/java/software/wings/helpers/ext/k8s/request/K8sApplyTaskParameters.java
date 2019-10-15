@@ -15,12 +15,13 @@ public class K8sApplyTaskParameters extends K8sTaskParameters {
 
   private String filePaths;
   private boolean skipSteadyStateCheck;
+  private boolean skipDryRun;
 
   @Builder
   public K8sApplyTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
-      String filePaths, boolean skipSteadyStateCheck) {
+      String filePaths, boolean skipSteadyStateCheck, boolean skipDryRun) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType);
 
@@ -28,5 +29,6 @@ public class K8sApplyTaskParameters extends K8sTaskParameters {
     this.valuesYamlList = valuesYamlList;
     this.filePaths = filePaths;
     this.skipSteadyStateCheck = skipSteadyStateCheck;
+    this.skipDryRun = skipDryRun;
   }
 }

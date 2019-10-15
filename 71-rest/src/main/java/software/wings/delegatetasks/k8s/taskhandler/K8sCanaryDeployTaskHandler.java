@@ -7,6 +7,7 @@ import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogColor.Yellow;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
@@ -19,6 +20,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyStat
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -164,8 +166,9 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), commandUnit);
   }
 
-  private boolean init(K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters,
-      K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws IOException {
+  @VisibleForTesting
+  boolean init(K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
+      ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
     kubernetesConfig =
@@ -203,6 +206,12 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
 
     executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
+
+    if (k8sCanaryDeployTaskParameters.isSkipDryRun()) {
+      executionLogCallback.saveExecutionLog(color("\nSkipping Dry Run", Yellow, Bold), INFO);
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return true;
+    }
 
     return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
