@@ -7,6 +7,7 @@ import com.mongodb.DBObject;
 import io.harness.beans.WorkflowType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -51,7 +52,8 @@ public class PipelineChangeHandler implements ChangeHandler {
   private static final int DAYS_TO_RETAIN = 7;
 
   private boolean handleAuditRelatedChange(ChangeEvent<?> changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null
+        && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
@@ -66,6 +68,7 @@ public class PipelineChangeHandler implements ChangeHandler {
               searchDao.addTimestamp(PipelineSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
           result &= searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
               auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+          break;
         }
       }
       return result;

@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DBObject;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
@@ -222,7 +223,8 @@ public class ServiceChangeHandler implements ChangeHandler {
   }
 
   private boolean handleAuditRelatedChange(ChangeEvent changeEvent) {
-    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null) {
+    if (changeEvent.getChangeType().equals(ChangeType.UPDATE) && changeEvent.getChanges() != null
+        && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
@@ -239,6 +241,7 @@ public class ServiceChangeHandler implements ChangeHandler {
           result = result
               && searchDao.appendToListInSingleDocument(ServiceSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                      auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
+          break;
         }
       }
       return result;
