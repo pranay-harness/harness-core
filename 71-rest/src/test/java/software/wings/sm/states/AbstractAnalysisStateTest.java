@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -28,6 +29,7 @@ import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
@@ -46,11 +48,13 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.InstanceStatusSummary;
@@ -58,9 +62,11 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.verification.CVTask;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -101,8 +107,54 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetLastExecutionNodes()
-      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
+  public void testCreateCVTasksPerMinute() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    DataCollectionInfoV2 dataCollectionInfo = mock(DataCollectionInfoV2.class);
+    when(executionContext.getAccountId()).thenReturn(UUID.randomUUID().toString());
+    when(executionContext.getStateExecutionInstanceId()).thenReturn(UUID.randomUUID().toString());
+    when(dataCollectionInfo.deepCopy()).thenReturn(dataCollectionInfo);
+    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
+    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
+    String correlationId = UUID.randomUUID().toString();
+    CVTaskService cvTaskService = mock(CVTaskService.class);
+    FieldUtils.writeField(abstractAnalysisState, "cvTaskService", cvTaskService, true);
+    abstractAnalysisState.createCVTasks(executionContext, dataCollectionInfo, correlationId);
+    ArgumentCaptor<List> cvTasksCapture = ArgumentCaptor.forClass(List.class);
+    verify(cvTaskService).enqueueSequentialTasks(cvTasksCapture.capture());
+    List<CVTask> enqueuedTasks = cvTasksCapture.getValue();
+    assertThat(enqueuedTasks.size()).isEqualTo(15);
+    enqueuedTasks.forEach(cvTask -> {
+      assertThat(cvTask.getAccountId()).isEqualTo(executionContext.getAccountId());
+      assertThat(cvTask.getStateExecutionId()).isEqualTo(executionContext.getStateExecutionInstanceId());
+      assertThat(cvTask.getDataCollectionInfo()).isEqualTo(dataCollectionInfo);
+    });
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateCVTasksForTaskDuration() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    DataCollectionInfoV2 dataCollectionInfo = mock(DataCollectionInfoV2.class);
+    when(executionContext.getAccountId()).thenReturn(UUID.randomUUID().toString());
+    when(executionContext.getStateExecutionInstanceId()).thenReturn(UUID.randomUUID().toString());
+    when(dataCollectionInfo.deepCopy()).thenReturn(dataCollectionInfo);
+    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(4));
+    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
+    String correlationId = UUID.randomUUID().toString();
+    CVTaskService cvTaskService = mock(CVTaskService.class);
+    FieldUtils.writeField(abstractAnalysisState, "cvTaskService", cvTaskService, true);
+    abstractAnalysisState.createCVTasks(executionContext, dataCollectionInfo, correlationId);
+    ArgumentCaptor<List> cvTasksCapture = ArgumentCaptor.forClass(List.class);
+    verify(cvTaskService).enqueueSequentialTasks(cvTasksCapture.capture());
+    List<CVTask> enqueuedTasks = cvTasksCapture.getValue();
+    assertThat(enqueuedTasks.size()).isEqualTo(4);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLastExecutionNodes() throws IllegalAccessException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
       List<InstanceStatusSummary> instanceStatusSummaryList = new ArrayList<>();
@@ -174,8 +226,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetLastExecutionNodesWithPhase()
-      throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
+  public void testGetLastExecutionNodesWithPhase() throws IllegalAccessException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
       List<InstanceStatusSummary> instanceStatusSummaryList = new ArrayList<>();

@@ -31,6 +31,7 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.DataCollectionInfo;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -217,7 +218,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
 
-      if (isEligibleForPerMinuteTask(context.getAccountId())) {
+      if (isCVTaskEnqueuingEnabled(context.getAccountId())) {
+        getLogger().info("Data collection will be done with cv tasks.");
+        createCVTasks(context, hostsToCollect, corelationId);
+      } else if (isEligibleForPerMinuteTask(context.getAccountId())) {
         getLogger().info("Per Minute data collection will be done for triggering delegate task");
       } else {
         delegateTaskId = triggerAnalysisDataCollection(context, analysisContext, executionData, hostsToCollect);
@@ -263,6 +267,17 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                   .build())
           .build();
     }
+  }
+
+  private void createCVTasks(ExecutionContext context, Map<String, String> hostsToCollect, String correlationId) {
+    DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo(context, hostsToCollect);
+    super.createCVTasks(context, dataCollectionInfo, correlationId);
+  }
+
+  protected DataCollectionInfoV2 createDataCollectionInfo(
+      ExecutionContext context, Map<String, String> hostsToCollect) {
+    throw new RuntimeException(
+        "Not implemented. Designed to override."); // TODO: this method needs to be abstract eventually.
   }
 
   protected void createAndSaveMetricGroups(ExecutionContext context, Map<String, String> hostsToCollect) {

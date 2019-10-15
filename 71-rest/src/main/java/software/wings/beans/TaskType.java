@@ -58,6 +58,7 @@ import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
+import software.wings.delegatetasks.cv.MetricsDataCollectionTask;
 import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.helm.HelmValuesFetchTask;
@@ -212,6 +213,7 @@ public enum TaskType {
   NEWRELIC_RESOLVE_APP_ID_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_APP_INSTANCES_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_COLLECT_METRIC_DATA(TaskGroup.NEWRELIC, NewRelicDataCollectionTask.class, NewRelicValidation.class),
+  NEWRELIC_COLLECT_METRIC_DATAV2(TaskGroup.NEWRELIC, MetricsDataCollectionTask.class, DataCollectionValidator.class),
   NEWRELIC_COLLECT_24_7_METRIC_DATA(TaskGroup.GUARD_24x7, NewRelicDataCollectionTask.class, NewRelicValidation.class),
   NEWRELIC_GET_TXNS_WITH_DATA(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),
   NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),

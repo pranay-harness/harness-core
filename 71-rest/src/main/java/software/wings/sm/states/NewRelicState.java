@@ -30,10 +30,12 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.FeatureFlagService;
@@ -236,6 +238,66 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   }
 
   @Override
+  protected DataCollectionInfoV2 createDataCollectionInfo(
+      ExecutionContext context, Map<String, String> hostsToCollect) {
+    NewRelicConfig newRelicConfig;
+    String envId;
+    String finalNewRelicApplicationId = applicationId;
+    final Collection<Metric> metricNameToObjectMap =
+        newRelicService.getMetricsCorrespondingToMetricNames(metrics).values();
+    final Map<String, TimeSeriesMetricDefinition> metricTemplate =
+        newRelicService.metricDefinitions(metricNameToObjectMap);
+    metricAnalysisService.saveMetricTemplates(
+        context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), null, metricTemplate);
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    SettingAttribute settingAttribute = null;
+    String finalServerConfigId = analysisServerConfigId;
+
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        finalServerConfigId = settingAttribute.getUuid();
+      }
+      TemplateExpression appIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
+      if (appIdExpression != null) {
+        finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+        final boolean triggerBasedDeployment = workflowExecutionService.isTriggerBasedDeployment(context);
+        if (triggerBasedDeployment) {
+          try {
+            newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
+          } catch (WingsException e) {
+            // see if we can resolve the application by name
+            final NewRelicApplication newRelicApplication =
+                newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
+            finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
+          }
+        }
+      }
+    }
+    settingAttribute = settingsService.get(analysisServerConfigId);
+    newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
+    String finalNewRelicApplicationIdTmp = finalNewRelicApplicationId;
+    return NewRelicDataCollectionInfoV2.builder()
+        .newRelicConfig(newRelicConfig)
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .stateExecutionId(context.getStateExecutionInstanceId())
+        .workflowId(context.getWorkflowId())
+        .accountId(appService.get(context.getAppId()).getAccountId())
+        .envId(envId)
+        .applicationId(context.getAppId())
+        .hosts(hostsToCollect.keySet())
+        .encryptedDataDetails(
+            secretManager.getEncryptionDetails(newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
+        .newRelicAppId(Long.parseLong(finalNewRelicApplicationIdTmp))
+        .hostsToGroupNameMap(hostsToCollect)
+        .serviceId(getPhaseServiceId(context))
+        .build();
+  }
+  @Override
   protected void createAndSaveMetricGroups(ExecutionContext context, Map<String, String> hostsToCollect) {
     Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
     Set<String> hostGroups = new HashSet<>(hostsToCollect.values());
@@ -311,6 +373,10 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     this.metrics = metrics;
   }
 
+  @Override
+  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.NEW_RELIC_CV_TASK, accountId);
+  }
   @Data
   @Builder
   public static class Metric {

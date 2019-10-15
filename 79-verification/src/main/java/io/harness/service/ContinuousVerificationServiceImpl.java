@@ -84,6 +84,7 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
+import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -133,9 +134,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           if (endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES / 3)) {
             logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
                 cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endTime, endMinute);
-            verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
-                cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
-            totalDataCollectionTasks.getAndIncrement();
+            if (isCVTaskBasedCollectionEnabled(cvConfiguration)) {
+              createCVTask(cvConfiguration, startTime, endTime);
+            } else {
+              verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerCVDataCollection(
+                  cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
+              totalDataCollectionTasks.getAndIncrement();
+            }
           }
         });
     metricRegistry.recordGaugeValue(DATA_COLLECTION_TASKS_PER_MINUTE, null, totalDataCollectionTasks.get());
@@ -614,8 +619,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private boolean isCVTaskBasedCollectionEnabled(CVConfiguration cvConfiguration) {
-    return cvConfiguration instanceof SplunkCVConfiguration
-        && isFeatureFlagEnabled(FeatureName.SPLUNK_24_7_CV_TASK, cvConfiguration.getAccountId());
+    boolean isEnabled = false;
+    if (cvConfiguration instanceof SplunkCVConfiguration) {
+      isEnabled = isFeatureFlagEnabled(FeatureName.SPLUNK_24_7_CV_TASK, cvConfiguration.getAccountId());
+    } else if (cvConfiguration instanceof NewRelicCVServiceConfiguration) {
+      isEnabled = isFeatureFlagEnabled(FeatureName.NEWRELIC_24_7_CV_TASK, cvConfiguration.getAccountId());
+    }
+    // TODO: add here once new provider is added. This is only needed till we completely migrate to the new framework.
+    return isEnabled;
   }
 
   private void createCVTask(CVConfiguration cvConfiguration, long startTime, long endTime) {

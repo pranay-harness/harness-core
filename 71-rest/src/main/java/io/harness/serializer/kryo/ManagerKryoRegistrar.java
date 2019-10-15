@@ -584,6 +584,7 @@ import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicMarkerExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
@@ -1364,5 +1365,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppManifestKind.class, 7243);
     kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
     kryo.register(HelmChartInfo.class, 7246);
+    kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
   }
 }

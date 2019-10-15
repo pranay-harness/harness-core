@@ -1,5 +1,9 @@
 package software.wings.delegatetasks.cv;
 
+import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
+import static software.wings.common.VerificationConstants.URL_STRING;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -11,18 +15,28 @@ import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
+import retrofit2.Call;
+import retrofit2.Response;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 @Slf4j
@@ -36,7 +50,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   @Inject private DelegateCVActivityLogService cvActivityLogService;
   private DataCollectionInfoV2 dataCollectionInfo;
   private DataCollector<T> dataCollector;
-  private DataCollectionCallback dataCollectionCallback;
+  private DataCollectionExecutionContext dataCollectionExecutionContext;
   private Logger activityLogger;
 
   public AbstractDataCollectionTask(String delegateId, DelegateTask delegateTask,
@@ -57,9 +71,8 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
                                               .status(DataCollectionTaskStatus.SUCCESS)
                                               .stateType(dataCollectionInfo.getStateType())
                                               .build();
+    initializeActivityLogger();
     try {
-      initializeDataCollector();
-      dataCollectionCallback = createDataCollectionCallback();
       RetryPolicy<Object> retryPolicy =
           new RetryPolicy<>()
               .handle(Exception.class)
@@ -79,7 +92,9 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
       activityLogger.info("Starting data collection.");
 
       Failsafe.with(retryPolicy).run(() -> {
-        dataCollector.init(dataCollectionCallback, (T) dataCollectionInfo);
+        initializeDataCollector();
+        dataCollectionExecutionContext = createDataCollectionExecutionContext();
+        dataCollector.init(dataCollectionExecutionContext, (T) dataCollectionInfo);
         collectAndSaveData((T) dataCollectionInfo);
       });
     } catch (Exception e) {
@@ -100,10 +115,6 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   }
 
   private void initializeDataCollector() {
-    activityLogger = cvActivityLogService.getLogger(dataCollectionInfo.getAccountId(),
-        dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getEndTime().toEpochMilli(),
-        dataCollectionInfo.getStateExecutionId(), " Time range %t to %t",
-        dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli() + 1);
     try {
       this.dataCollector =
           (DataCollector<T>) dataCollectorFactory.newInstance(dataCollectionInfo.getDataCollectorImplClass());
@@ -113,8 +124,16 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
     }
   }
 
-  private DataCollectionCallback createDataCollectionCallback() {
-    return new DataCollectionCallback() {
+  private void initializeActivityLogger() {
+    activityLogger =
+        cvActivityLogService.getLogger(dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvConfigId(),
+            TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime().toEpochMilli()),
+            dataCollectionInfo.getStateExecutionId(), " Time range %t to %t",
+            dataCollectionInfo.getStartTime().toEpochMilli(), dataCollectionInfo.getEndTime().toEpochMilli() + 1);
+  }
+
+  private DataCollectionExecutionContext createDataCollectionExecutionContext() {
+    return new DataCollectionExecutionContext() {
       @Override
       public ThirdPartyApiCallLog createApiCallLog() {
         return AbstractDataCollectionTask.this.createApiCallLog();
@@ -128,6 +147,73 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
       @Override
       public Logger getActivityLogger() {
         return activityLogger;
+      }
+
+      @Override
+      public <U> U executeRequest(String thirdPartyApiCallTitle, Call<U> request) {
+        int retryCount = 0;
+        while (true) {
+          try {
+            return executeRequest(thirdPartyApiCallTitle, request, retryCount);
+          } catch (RateLimitExceededException e) {
+            int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
+            logger.info("Encountered Rate limiting. Sleeping {} seconds for stateExecutionId {}",
+                RETRY_SLEEP_DURATION.getSeconds() + randomNum, dataCollectionInfo.getStateExecutionId());
+            sleep(RETRY_SLEEP_DURATION.plus(Duration.ofSeconds(randomNum)));
+            if (retryCount == MAX_RETRIES) {
+              logger.error("Request did not succeed after " + MAX_RETRIES + "  retries stateExecutionId {}",
+                  dataCollectionInfo.getStateExecutionId());
+              throw new DataCollectionException(e);
+            }
+          } catch (Exception e) {
+            if (retryCount == MAX_RETRIES) {
+              logger.error("Request did not succeed after " + MAX_RETRIES + "  retries");
+              throw new DataCollectionException(e);
+            }
+          }
+          retryCount++;
+        }
+      }
+
+      private <U> U executeRequest(String thirdPartyApiCallTitle, Call<U> request, int retryCount) {
+        ThirdPartyApiCallLog apiCallLog = createApiCallLog();
+        apiCallLog.setTitle(thirdPartyApiCallTitle);
+        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        try {
+          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                           .name(URL_STRING)
+                                           .value(request.request().url().toString())
+                                           .type(FieldType.URL)
+                                           .build());
+          if (retryCount != 0) {
+            apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                             .name("RETRY")
+                                             .value(String.valueOf(retryCount))
+                                             .type(FieldType.NUMBER)
+                                             .build());
+          }
+          Response<U> response = request.clone().execute(); // TODO: add retry logic and rate limit exceeded logic here.
+          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          if (response.isSuccessful()) {
+            apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+
+          } else if (response.code() == RATE_LIMIT_STATUS) {
+            apiCallLog.addFieldToResponse(response.code(), response.toString(), FieldType.TEXT);
+            throw new RateLimitExceededException(
+                "Response code: " + response.code() + " Error: " + response.errorBody().string());
+          } else {
+            apiCallLog.addFieldToResponse(response.code(), response.toString(), FieldType.TEXT);
+            throw new DataCollectionException(
+                "Response code: " + response.code() + " Error: " + response.errorBody().string());
+          }
+          return response.body();
+        } catch (IOException e) {
+          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+          throw new DataCollectionException(e);
+        } finally {
+          saveThirdPartyApiCallLog(apiCallLog);
+        }
       }
     };
   }

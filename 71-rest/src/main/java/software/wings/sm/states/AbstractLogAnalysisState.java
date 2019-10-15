@@ -49,13 +49,10 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.verification.CVTask;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,7 +62,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -259,27 +255,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  private List<String> createCVTasks(ExecutionContext context, Set<String> hosts, String correlationId) {
-    long startTime = dataCollectionStartTimestampMillis();
-    List<CVTask> cvTasks = new ArrayList<>();
-    for (int minute = 0; minute < Integer.parseInt(getTimeDuration()); minute++) {
-      long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
-      DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo(context, hosts);
-      dataCollectionInfo.setStartTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute));
-      dataCollectionInfo.setEndTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute + Duration.ofMinutes(1).toMillis()
-          - 1)); // both times are inclusive so making sure we don't collect duplicate logs.
-      CVTask cvTask = CVTask.builder()
-                          .accountId(context.getAccountId())
-                          .stateExecutionId(context.getStateExecutionInstanceId())
-                          .dataCollectionInfo(dataCollectionInfo)
-                          .correlationId(correlationId)
-                          .status(ExecutionStatus.WAITING)
-                          .validAfter(startTimeMSForCurrentMinute)
-                          .build();
-      cvTasks.add(cvTask);
-    }
-    cvTaskService.enqueueSequentialTasks(cvTasks);
-    return cvTasks.stream().map(cvTask -> cvTask.getUuid()).collect(Collectors.toList());
+  private void createCVTasks(ExecutionContext context, Set<String> hosts, String correlationId) {
+    DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo(context, hosts);
+    createCVTasks(context, dataCollectionInfo, correlationId);
   }
 
   protected DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
