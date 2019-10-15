@@ -1,5 +1,6 @@
 {
   "settings" : {
+    "index" : { "number_of_replicas": 1, "number_of_shards": 1},
     "analysis" : {
       "analyzer" : {"custom_analyzer" : {"tokenizer" : "custom_tokenizer"}},
       "tokenizer" : {
