@@ -49,6 +49,10 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
 
   @Override
   protected AccessTokenBean getLoggingToken() {
+    if (timeLimiter == null || managerClient == null) {
+      return null;
+    }
+
     try {
       RestResponse<AccessTokenBean> response = timeLimiter.callWithTimeout(
           () -> execute(managerClient.getLoggingToken(getAccountId())), 15L, TimeUnit.SECONDS, true);
@@ -60,6 +64,7 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
     } catch (Exception e) {
       logger.error("Error getting logging token", e);
     }
+
     return null;
   }
 
