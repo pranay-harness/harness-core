@@ -5,6 +5,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollector;
@@ -12,24 +13,26 @@ import software.wings.sm.StateType;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public abstract class DataCollectionInfoV2 implements TaskParameters {
-  private final String accountId;
-  private final String applicationId;
-  private final String envId;
+  private String accountId;
+  private String applicationId;
+  private String envId;
   private Instant startTime;
   private Instant endTime;
   private Set<String> hosts;
-  private final String cvConfigId;
-  private final String stateExecutionId;
-  private final String workflowId;
-  private final String workflowExecutionId;
-  private final String serviceId;
+  private String cvConfigId;
+  private String stateExecutionId;
+  private String workflowId;
+  private String workflowExecutionId;
+  private String serviceId;
 
   public Set<String> getHosts() {
     // morphia converts empty objects to null while saving to database so making sure it's always returns empty set if
@@ -53,4 +56,20 @@ public abstract class DataCollectionInfoV2 implements TaskParameters {
   public abstract Optional<EncryptableSetting> getEncryptableSetting();
 
   public abstract List<EncryptedDataDetail> getEncryptedDataDetails();
+
+  public abstract DataCollectionInfoV2 deepCopy();
+
+  protected void copy(DataCollectionInfoV2 dataCollectionInfo) {
+    dataCollectionInfo.setAccountId(this.accountId);
+    dataCollectionInfo.setApplicationId(this.applicationId);
+    dataCollectionInfo.setEnvId(this.envId);
+    dataCollectionInfo.setStartTime(this.startTime);
+    dataCollectionInfo.setEndTime(this.endTime);
+    dataCollectionInfo.setHosts(new HashSet<>(this.hosts));
+    dataCollectionInfo.setCvConfigId(this.cvConfigId);
+    dataCollectionInfo.setStateExecutionId(this.stateExecutionId);
+    dataCollectionInfo.setWorkflowId(this.workflowId);
+    dataCollectionInfo.setWorkflowExecutionId(this.workflowExecutionId);
+    dataCollectionInfo.setServiceId(this.serviceId);
+  }
 }

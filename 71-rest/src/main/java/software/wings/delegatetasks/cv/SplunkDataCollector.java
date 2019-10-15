@@ -48,20 +48,36 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
 
   private SplunkDataCollectionInfoV2 splunkDataCollectionInfo;
-  private DataCollectionCallback dataCollectionCallback;
+  private DataCollectionExecutionContext dataCollectionExecutionContext;
 
   @Override
-  public void init(DataCollectionCallback dataCollectionCallback, SplunkDataCollectionInfoV2 splunkDataCollectionInfo) {
+  public void init(DataCollectionExecutionContext dataCollectionExecutionContext,
+      SplunkDataCollectionInfoV2 splunkDataCollectionInfo) {
     this.splunkDataCollectionInfo = splunkDataCollectionInfo;
-    this.dataCollectionCallback = dataCollectionCallback;
+    this.dataCollectionExecutionContext = dataCollectionExecutionContext;
     initSplunkService(splunkDataCollectionInfo.getSplunkConfig());
   }
+
   @Override
+  public int getHostBatchSize() {
+    return 1;
+  }
+  @Override
+  public List<LogElement> fetchLogs(List<String> hostBatch) throws DataCollectionException {
+    assert hostBatch.size() == 1;
+    return fetchLogs(Optional.of(hostBatch.get(0)));
+  }
+
+  @Override
+  public List<LogElement> fetchLogs() throws DataCollectionException {
+    return fetchLogs(Optional.empty());
+  }
+
   public List<LogElement> fetchLogs(Optional<String> host) {
     Service splunkService = initSplunkService(splunkDataCollectionInfo.getSplunkConfig());
     String splunkQuery = getSplunkQuery(splunkDataCollectionInfo.getQuery(),
         splunkDataCollectionInfo.getHostnameField(), host, splunkDataCollectionInfo.isAdvancedQuery());
-    ThirdPartyApiCallLog apiCallLog = dataCollectionCallback.createApiCallLog();
+    ThirdPartyApiCallLog apiCallLog = dataCollectionExecutionContext.createApiCallLog();
     addThirdPartyAPILogRequestFields(apiCallLog, splunkDataCollectionInfo.getSplunkConfig().getSplunkUrl(), splunkQuery,
         splunkDataCollectionInfo.getStartTime(), splunkDataCollectionInfo.getEndTime());
     logger.info("triggering splunk query startTime: " + splunkDataCollectionInfo.getStartTime()
@@ -75,12 +91,12 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
           fetchSearchResults(job, splunkDataCollectionInfo.getQuery(), splunkDataCollectionInfo.getHostnameField());
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_OK, createJSONBodyForThirdPartyAPILogs(logElements), FieldType.JSON);
-      dataCollectionCallback.saveThirdPartyApiCallLog(apiCallLog);
+      dataCollectionExecutionContext.saveThirdPartyApiCallLog(apiCallLog);
       return logElements;
     } catch (Exception e) {
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      dataCollectionCallback.saveThirdPartyApiCallLog(apiCallLog);
+      dataCollectionExecutionContext.saveThirdPartyApiCallLog(apiCallLog);
       throw new DataCollectionException(e);
     }
   }

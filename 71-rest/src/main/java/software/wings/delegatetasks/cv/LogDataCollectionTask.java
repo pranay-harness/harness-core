@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.cv;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -35,12 +36,11 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
     final List<Callable<List<LogElement>>> callables = new ArrayList<>();
     if (dataCollectionInfo.getHosts().isEmpty()) {
       addHeartbeats(Optional.empty(), dataCollectionInfo, logElements);
-      callables.add(() -> logDataCollector.fetchLogs(Optional.empty()));
+      callables.add(() -> logDataCollector.fetchLogs());
     } else {
-      for (String host : dataCollectionInfo.getHosts()) {
-        addHeartbeats(Optional.of(host), dataCollectionInfo, logElements);
-        callables.add(() -> logDataCollector.fetchLogs(Optional.of(host)));
-      }
+      Iterables.partition(dataCollectionInfo.getHosts(), logDataCollector.getHostBatchSize())
+          .forEach(batch -> callables.add(() -> logDataCollector.fetchLogs(batch)));
+      dataCollectionInfo.getHosts().forEach(host -> addHeartbeats(Optional.of(host), dataCollectionInfo, logElements));
     }
     List<Optional<List<LogElement>>> results = execute(callables);
     results.forEach(result -> {
@@ -68,7 +68,7 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
 
   private List<Optional<List<LogElement>>> execute(List<Callable<List<LogElement>>> callables)
       throws DataCollectionException {
-    List<Optional<List<LogElement>>> results = null;
+    List<Optional<List<LogElement>>> results;
     try {
       results = executeParallel(callables);
     } catch (IOException e) {
@@ -79,8 +79,9 @@ public class LogDataCollectionTask<T extends LogDataCollectionInfoV2> extends Ab
 
   protected void addHeartbeats(
       Optional<String> host, LogDataCollectionInfoV2 logDataCollectionInfo, List<LogElement> logElements) {
+    // end time is excluded for heartbeat creation.
     for (long heartbeatMin = TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getStartTime().toEpochMilli());
-         heartbeatMin <= TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getEndTime().toEpochMilli());
+         heartbeatMin <= TimeUnit.MILLISECONDS.toMinutes(logDataCollectionInfo.getEndTime().toEpochMilli() - 1);
          heartbeatMin++) {
       logElements.add(
           LogElement.builder()

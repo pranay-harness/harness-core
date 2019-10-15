@@ -11,9 +11,9 @@ import lombok.ToString;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
-import software.wings.delegatetasks.cv.DataCollector;
 import software.wings.delegatetasks.cv.SplunkDataCollector;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.LogDataCollectionInfoV2;
 import software.wings.sm.StateType;
 
@@ -55,7 +55,7 @@ public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 implemen
   }
 
   @Override
-  public Class<? extends DataCollector<?>> getDataCollectorImplClass() {
+  public Class<SplunkDataCollector> getDataCollectorImplClass() {
     return SplunkDataCollector.class;
   }
 
@@ -72,5 +72,13 @@ public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 implemen
   @Override
   public Optional<EncryptableSetting> getEncryptableSetting() {
     return Optional.of(splunkConfig);
+  }
+
+  @Override
+  public DataCollectionInfoV2 deepCopy() {
+    SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 =
+        SplunkDataCollectionInfoV2.builder().isAdvancedQuery(this.isAdvancedQuery).splunkConfig(splunkConfig).build();
+    super.copy(splunkDataCollectionInfoV2);
+    return splunkDataCollectionInfoV2;
   }
 }

@@ -47,26 +47,26 @@ public class SplunkDataCollectorTest {
   @Test
   @Category(UnitTests.class)
   public void testInitSplunkService() {
-    DataCollectionCallback dataCollectionCallback = mock(DataCollectionCallback.class);
+    DataCollectionExecutionContext dataCollectionExecutionContext = mock(DataCollectionExecutionContext.class);
     SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 = createDataCollectionInfo();
-    splunkDataCollector.init(dataCollectionCallback, splunkDataCollectionInfoV2);
+    splunkDataCollector.init(dataCollectionExecutionContext, splunkDataCollectionInfoV2);
   }
   // TODO: test creating job object with right arguments
 
   @Test
   @Category(UnitTests.class)
   public void testFetchLogsWithoutHost() {
-    DataCollectionCallback dataCollectionCallback = mock(DataCollectionCallback.class);
-    when(dataCollectionCallback.getActivityLogger()).thenReturn(mock(Logger.class));
+    DataCollectionExecutionContext dataCollectionExecutionContext = mock(DataCollectionExecutionContext.class);
+    when(dataCollectionExecutionContext.getActivityLogger()).thenReturn(mock(Logger.class));
     SplunkDataCollectionInfoV2 splunkDataCollectionInfoV2 = createDataCollectionInfo();
-    splunkDataCollector.init(dataCollectionCallback, splunkDataCollectionInfoV2);
+    splunkDataCollector.init(dataCollectionExecutionContext, splunkDataCollectionInfoV2);
     Service service = mock(Service.class);
     doReturn(service).when(splunkDataCollector).initSplunkServiceWithToken(config);
     Job job = mock(Job.class);
     doReturn(job).when(splunkDataCollector).createSearchJob(any(), any(), any(), any());
     when(job.getResults(any())).thenReturn(getSplunkJsonResponseInputStream());
     ThirdPartyApiCallLog thirdPartyApiCallLog = mock(ThirdPartyApiCallLog.class);
-    when(dataCollectionCallback.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
+    when(dataCollectionExecutionContext.createApiCallLog()).thenReturn(thirdPartyApiCallLog);
     List<LogElement> logElements = splunkDataCollector.fetchLogs(Optional.empty());
     assertThat(logElements.size()).isEqualTo(2);
     assertThat(logElements.get(0).getHost()).isEqualTo("todo-app-with-verification-todo-app-qa-3-5b7d99ccf9-2mr9x");

@@ -1741,7 +1741,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                         .dataCollectionInfo(dataCollectionInfo)
                         .build();
     cvTaskService.saveCVTask(cvTask);
-    return false;
+    return true;
   }
 
   private StateExecutionData getExecutionData(CVConfiguration cvConfiguration, String waitId, int timeDuration) {
