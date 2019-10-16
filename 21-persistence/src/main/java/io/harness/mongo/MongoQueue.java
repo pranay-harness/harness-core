@@ -96,9 +96,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       Query<T> query = createQuery();
       query.or(query.criteria(QueuableKeys.running).equal(false),
           query.criteria(QueuableKeys.resetTimestamp).lessThanOrEq(now));
-      query.field(QueuableKeys.earliestGet)
-          .lessThanOrEq(now)
-          .order(Sort.descending(QueuableKeys.priority), Sort.ascending(QueuableKeys.created));
+      query.field(QueuableKeys.earliestGet).lessThanOrEq(now).order(Sort.ascending(QueuableKeys.created));
 
       UpdateOperations<T> updateOperations =
           datastore.createUpdateOperations(klass)

@@ -1,8 +1,6 @@
 package io.harness.queue;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.threading.Morpheus.sleep;
-import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -60,30 +58,6 @@ public class MongoQueueTest extends PersistenceTest {
 
     // try get message we already have before ack
     assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
-  }
-
-  /**
-   * Should return message based on priority.
-   */
-  @Test
-  @Category(UnitTests.class)
-  public void shouldReturnMessageBasedOnPriority() {
-    TestQueuableObject messageTwo = new TestQueuableObject(2);
-    messageTwo.setPriority(0.4);
-    TestQueuableObject messageOne = new TestQueuableObject(1);
-    messageOne.setPriority(0.5);
-    TestQueuableObject messageThree = new TestQueuableObject(3);
-    messageThree.setPriority(0.3);
-
-    queue.send(messageTwo);
-    sleep(ofMillis(2));
-    queue.send(messageOne);
-    sleep(ofMillis(2));
-    queue.send(messageThree);
-
-    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageOne);
-    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageTwo);
-    assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageThree);
   }
 
   /**
@@ -347,9 +321,7 @@ public class MongoQueueTest extends PersistenceTest {
     TestQueuableObject message = new TestQueuableObject(1);
 
     Date expectedEarliestGet = new Date();
-    double expectedPriority = 0.8;
     Date timeBeforeSend = new Date();
-    message.setPriority(expectedPriority);
     message.setEarliestGet(expectedEarliestGet);
     queue.send(message);
 
@@ -363,7 +335,6 @@ public class MongoQueueTest extends PersistenceTest {
     TestQueuableObject expected = new TestQueuableObject(1);
     expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
-    expected.setPriority(expectedPriority);
     expected.setCreated(actualCreated);
 
     assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");

@@ -48,7 +48,7 @@ public class StressTest extends PersistenceTest {
       persistence.ensureIndex(TestQueuableObject.class);
 
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-        for (int i = 0; i < 10000; ++i) {
+        for (int i = 0; i < 100000; ++i) {
           queue.send(new TestQueuableObject(i));
           if (i % 100 == 0) {
             logger.info("{} , {}", i, queue.count(ALL));

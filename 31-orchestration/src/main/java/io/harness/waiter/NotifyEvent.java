@@ -42,7 +42,6 @@ public class NotifyEvent extends Queuable {
     private boolean running;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
     private Date earliestGet = new Date();
-    private double priority;
     private Date created = new Date();
     private int retries;
 
@@ -87,11 +86,6 @@ public class NotifyEvent extends Queuable {
       return this;
     }
 
-    public Builder priority(double priority) {
-      this.priority = priority;
-      return this;
-    }
-
     public Builder created(Date created) {
       this.created = created == null ? null : (Date) created.clone();
       return this;
@@ -111,7 +105,6 @@ public class NotifyEvent extends Queuable {
           .running(running)
           .resetTimestamp(resetTimestamp)
           .earliestGet(earliestGet)
-          .priority(priority)
           .created(created)
           .retries(retries);
     }
@@ -125,7 +118,6 @@ public class NotifyEvent extends Queuable {
       notifyEvent.setRunning(running);
       notifyEvent.setResetTimestamp(resetTimestamp);
       notifyEvent.setEarliestGet(earliestGet);
-      notifyEvent.setPriority(priority);
       notifyEvent.setCreated(created);
       notifyEvent.setRetries(retries);
       return notifyEvent;

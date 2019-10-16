@@ -6,6 +6,7 @@ import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.PersistentEntity;
+import io.harness.queue.Queuable.Keys;
 import io.harness.queue.Queuable.QueuableKeys;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,23 +17,22 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
-import org.mongodb.morphia.utils.IndexType;
 
 import java.util.Date;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "versioned"),
+  @Index(options = @IndexOptions(name = "next"),
       fields =
       {
-        @Field(QueuableKeys.version)
-        , @Field(QueuableKeys.earliestGet), @Field(QueuableKeys.running), @Field(QueuableKeys.resetTimestamp),
-            @Field(value = QueuableKeys.priority, type = IndexType.DESC), @Field(QueuableKeys.created)
+        @Field(QueuableKeys.created)
+        , @Field(QueuableKeys.version), @Field(QueuableKeys.earliestGet), @Field(QueuableKeys.running),
+            @Field(QueuableKeys.resetTimestamp)
       })
   ,
-      @Index(options = @IndexOptions(name = "unversioned"), fields = {
-        @Field(QueuableKeys.earliestGet)
-        , @Field(QueuableKeys.running), @Field(QueuableKeys.resetTimestamp),
-            @Field(value = QueuableKeys.priority, type = IndexType.DESC), @Field(QueuableKeys.created)
+      @Index(options = @IndexOptions(name = "versioned_extra1"), fields = {
+        @Field(Keys.version), @Field(Keys.earliestGet), @Field(Keys.resetTimestamp)
+      }), @Index(options = @IndexOptions(name = "versioned_extra2"), fields = {
+        @Field(Keys.version), @Field(Keys.running), @Field(Keys.earliestGet)
       })
 })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
@@ -41,7 +41,6 @@ public abstract class Queuable implements PersistentEntity {
   private boolean running;
   private Date resetTimestamp = new Date(Long.MAX_VALUE);
   private Date earliestGet = new Date();
-  private double priority;
   private Date created = new Date();
   private int retries;
   private String version;
@@ -126,24 +125,6 @@ public abstract class Queuable implements PersistentEntity {
    */
   public void setEarliestGet(Date earliestGet) {
     this.earliestGet = new Date(earliestGet.getTime());
-  }
-
-  /**
-   * Gets priority.
-   *
-   * @return the priority
-   */
-  public double getPriority() {
-    return priority;
-  }
-
-  /**
-   * Sets priority.
-   *
-   * @param priority the priority
-   */
-  public void setPriority(double priority) {
-    this.priority = priority;
   }
 
   /**
