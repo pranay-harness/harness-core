@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
@@ -16,23 +18,53 @@ import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.limits.LimitCheckerFactory;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mongodb.morphia.query.Query;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.sm.StateMachine;
+import software.wings.sm.StateType;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(PipelineServiceImpl.class)
 public class PipelineServiceImplTest extends WingsBaseTest {
+  @Mock AppService mockAppService;
+  @Mock WingsPersistence mockWingsPersistence;
+  @Mock YamlPushService mockYamlPushService;
+  @Mock WorkflowService mockWorkflowService;
+  @Mock private LimitCheckerFactory mockLimitCheckerFactory;
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
 
   @Test
@@ -241,5 +273,40 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pipelineServiceImpl.populateParentFields(
         newRelicMarkerPipelineVar, NEWRELIC_MARKER_APPID, null, "NewRelicMarkerAppId", pseWorkflowVariables);
     assertThat(newRelicMarkerPipelineVar.getMetadata().get(Variable.PARENT_FIELDS)).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidatePipelineApprovalState() throws Exception {
+    Pipeline pipeline =
+        Pipeline.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .name("test")
+            .pipelineStages(asList(
+                PipelineStage.builder()
+                    .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                      .name("approval_state")
+                                                      .type(StateType.APPROVAL.name())
+                                                      .properties(ImmutableMap.<String, Object>of("timeoutMillis", 000))
+                                                      .build()))
+                    .build()))
+            .build();
+
+    PowerMockito.doReturn(ACCOUNT_ID).when(mockAppService).getAccountIdByAppId(APP_ID);
+    Query mockQuery = PowerMockito.mock(Query.class);
+    PowerMockito.doReturn(mockChecker()).when(mockLimitCheckerFactory).getInstance(Mockito.any());
+    PowerMockito.doReturn(null).when(mockWingsPersistence).save(any(Pipeline.class));
+    PowerMockito.doReturn(mockQuery).when(mockWingsPersistence).createQuery(Pipeline.class);
+    PowerMockito.doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
+    PowerMockito.doReturn(mockQuery).when(mockQuery).filter(anyString(), any());
+    PowerMockito.doReturn(Collections.emptyMap()).when(mockWorkflowService).stencilMap(anyString());
+    PowerMockito.whenNew(StateMachine.class).withAnyArguments().thenReturn(null);
+    pipelineServiceImpl.save(pipeline);
+
+    pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).setProperties(
+        ImmutableMap.<String, Object>of("timeoutMillis", (double) Integer.MAX_VALUE + 1));
+    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> pipelineServiceImpl.save(pipeline));
   }
 }

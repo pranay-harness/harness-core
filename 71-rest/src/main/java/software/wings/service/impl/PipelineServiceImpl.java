@@ -30,6 +30,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
+import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -99,6 +100,7 @@ import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
+import software.wings.sm.states.ApprovalState;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -769,7 +771,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
     List<Variable> nonEntityVariables =
         workflowVariables.stream()
-            .filter(variable -> (variable.obtainEntityType() == null) & !variable.isFixed())
+            .filter(variable -> (variable.obtainEntityType() == null) && !variable.isFixed())
             .collect(toList());
 
     if (isEmpty(pseWorkflowVariables)) {
@@ -783,6 +785,7 @@ public class PipelineServiceImpl implements PipelineService {
       return;
     }
     for (Variable variable : workflowVariables) {
+      Validator.notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
         // Non-entity variables.
@@ -1294,6 +1297,9 @@ public class PipelineServiceImpl implements PipelineService {
           if (!isValidPipelineStageName(stageElement.getName())) {
             throw new WingsException(INVALID_ARGUMENT, USER)
                 .addParam("args", "Pipeline stage name can only have a-z, A-Z, 0-9, -, (, ) and _");
+          }
+          if (APPROVAL.name().equals(stageElement.getType())) {
+            ApprovalState.preValidatePropertyMap(stageElement.getProperties());
           }
           if (!ENV_STATE.name().equals(stageElement.getType())) {
             continue;

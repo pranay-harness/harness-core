@@ -15,6 +15,7 @@ import static io.harness.event.model.EventConstants.ENVIRONMENT_ID;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -114,6 +115,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -147,6 +149,8 @@ public class ApprovalState extends State {
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private static int MAX_TIMEOUT_MINUTES = 30000;
+  private static int MAX_TIMEOUT_MILLIS = MAX_TIMEOUT_MINUTES * 60 * 1000;
   private String SCRIPT_APPROVAL_COMMAND = "Execute Approval Script";
   private String SCRIPT_APPROVAL_JOB_GROUP = "SHELL_SCRIPT_APPROVAL_JOB";
   public static final String APPROVAL_STATE_TYPE_VARIABLE = "approvalStateType";
@@ -347,7 +351,7 @@ public class ApprovalState extends State {
     JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
 
-    if (jiraExecutionData.getExecutionStatus().equals(FAILED)) {
+    if (FAILED.equals(jiraExecutionData.getExecutionStatus())) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage(jiraExecutionData.getErrorMessage())
@@ -842,6 +846,17 @@ public class ApprovalState extends State {
     return super.getTimeoutMillis();
   }
 
+  /*
+  To validate property map before state Object is constructed. This can prevent
+  stateTransformationErrors.
+   */
+  public static void preValidatePropertyMap(Map<String, Object> propertyMap) {
+    final double timeoutMillis = Double.valueOf(propertyMap.getOrDefault(StateKeys.timeoutMillis, 0).toString());
+    if (timeoutMillis > MAX_TIMEOUT_MILLIS) {
+      throw new InvalidRequestException(format("Timeout value cannot be greater than %s minutes", MAX_TIMEOUT_MINUTES));
+    }
+  }
+
   private static String getStatusMessage(ExecutionStatus status) {
     switch (status) {
       case SUCCESS:
@@ -861,8 +876,9 @@ public class ApprovalState extends State {
   }
 
   Map<String, String> getPlaceholderValues(ExecutionContext context, String userName, ExecutionStatus status) {
+    Application app = Objects.requireNonNull(context.getApp());
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getWorkflowExecution(context.getApp().getUuid(), context.getWorkflowExecutionId());
+        workflowExecutionService.getWorkflowExecution(app.getUuid(), context.getWorkflowExecutionId());
 
     String statusMsg = getStatusMessage(status);
     long startTs = (status == PAUSED) ? workflowExecution.getCreatedAt() : context.getStateExecutionData().getStartTs();

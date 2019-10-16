@@ -64,6 +64,7 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.PhaseSubWorkflow;
+import software.wings.utils.Validator;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -296,6 +297,7 @@ public class WorkflowNotificationHelper {
   }
 
   private void renderUserGroups(ExecutionContext context, NotificationRule notificationRule) {
+    Validator.notNullCheck("Invalid notificationRule", notificationRule);
     if (!notificationRule.isUserGroupAsExpression()) {
       return;
     }

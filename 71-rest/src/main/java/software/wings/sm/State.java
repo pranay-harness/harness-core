@@ -9,6 +9,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionReflectionUtils;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
@@ -24,6 +25,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@FieldNameConstants(innerTypeName = "StateKeys")
 public abstract class State {
   protected static final Integer INFINITE_TIMEOUT = -1;
 
