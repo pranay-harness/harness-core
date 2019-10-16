@@ -58,6 +58,7 @@ public class PipelineChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
         if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())
+            && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
           String fieldToUpdate = PipelineViewKeys.audits;
           String documentToUpdate = entityAuditRecord.getAffectedResourceId();
