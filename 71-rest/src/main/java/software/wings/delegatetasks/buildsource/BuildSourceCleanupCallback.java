@@ -58,8 +58,13 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
           logger.warn(
               "ASYNC_ARTIFACT_CLEANUP: null BuildSourceResponse in buildSourceExecutionResponse:[{}] for artifactStreamId [{}]",
               buildSourceExecutionResponse, artifactStreamId);
+          return;
         }
         try {
+          if (isEmpty(builds)) {
+            // Do not do cleanup in case of empty builds.
+            return;
+          }
           List<Artifact> artifacts = processBuilds(artifactStream);
           if (isNotEmpty(artifacts)) {
             logger.info("[{}] artifacts deleted for artifactStreamId {}",
@@ -110,7 +115,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
         : builds.parallelStream().map(BuildDetails::getNumber).collect(Collectors.toSet());
     List<Artifact> deletedArtifactsNew = new ArrayList<>();
     try (HIterator<Artifact> artifacts =
-             new HIterator<Artifact>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+             new HIterator<>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
       for (Artifact artifact : artifacts) {
         if (!buildNumbers.contains(artifact.getBuildNo())) {
           deletedArtifactsNew.add(artifact);
