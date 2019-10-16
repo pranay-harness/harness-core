@@ -33,6 +33,7 @@ import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -47,6 +48,7 @@ import io.harness.event.model.EventType;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Account;
@@ -76,6 +78,12 @@ public class SegmentHandler implements EventHandler {
   @Inject private UserService userService;
   @Inject private Utils utils;
   @Inject private PersistentLocker persistentLocker;
+  @UtilityClass
+  public static final class Keys {
+    public static final String NATERO = "Natero";
+    public static final String SALESFORCE = "Salesforce";
+    public static final String GROUP_ID = "groupId";
+  }
 
   @Inject
   public SegmentHandler(SegmentConfig segmentConfig, EventListener eventListener) {
@@ -186,19 +194,19 @@ public class SegmentHandler implements EventHandler {
           // In case of sso based signup, we only send complete user registration.
           // But we have a special requirement for sending NEW_TRIAL_SIGNUP to segment for easier tracking.
           if (isNotEmpty(user.getOauthProvider())) {
-            reportTrackEvent(account, EventType.NEW_TRIAL_SIGNUP.name(), user);
+            reportTrackEvent(account, EventType.NEW_TRIAL_SIGNUP.name(), user, null);
           }
-          reportTrackEvent(account, eventType.name(), user);
+          reportTrackEvent(account, eventType.name(), user, null);
           break;
         case CUSTOM:
-          reportTrackEvent(account, properties.get(CUSTOM_EVENT_NAME), user, properties);
+          reportTrackEvent(account, properties.get(CUSTOM_EVENT_NAME), user, properties, null);
           break;
         case TECH_STACK:
           properties.put(ORIGINAL_TIMESTAMP_NAME, String.valueOf(System.currentTimeMillis()));
-          reportTrackEvent(account, eventType.name(), user, properties);
+          reportTrackEvent(account, eventType.name(), user, properties, null);
           break;
         default:
-          reportTrackEvent(account, eventType.name(), user);
+          reportTrackEvent(account, eventType.name(), user, null);
           break;
       }
 
@@ -273,7 +281,8 @@ public class SegmentHandler implements EventHandler {
     }
   }
 
-  private User updateUserIdentity(User user, String segmentIdentity) {
+  @VisibleForTesting
+  public User updateUserIdentity(User user, String segmentIdentity) {
     if (isEmpty(segmentIdentity)) {
       return user;
     }
@@ -303,12 +312,13 @@ public class SegmentHandler implements EventHandler {
     return true;
   }
 
-  public void reportTrackEvent(Account account, String event, User user) throws IOException, URISyntaxException {
-    reportTrackEvent(account, event, user, null);
+  public void reportTrackEvent(Account account, String event, User user, Map<String, Boolean> integrations)
+      throws IOException, URISyntaxException {
+    reportTrackEvent(account, event, user, null, integrations);
   }
 
-  public void reportTrackEvent(Account account, String event, User user, Map<String, String> properties)
-      throws IOException, URISyntaxException {
+  public void reportTrackEvent(Account account, String event, User user, Map<String, String> properties,
+      Map<String, Boolean> integrations) throws IOException, URISyntaxException {
     String userId = user.getUuid();
     String identity = user.getSegmentIdentity();
     logger.info("Reporting track for event {} with lead {}", event, userId);
@@ -328,10 +338,48 @@ public class SegmentHandler implements EventHandler {
       properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
     }
 
-    boolean reported = segmentHelper.reportTrackEvent(apiKey, identity, event, properties);
+    boolean reported = segmentHelper.reportTrackEvent(apiKey, identity, event, properties, integrations);
     if (reported) {
       updateUserEvents(user, event);
     }
     logger.info("Reported track for event {} with lead {}", event, userId);
+  }
+
+  public void reportTrackEvent(Account account, String event, String userId, Map<String, String> properties,
+      Map<String, Boolean> integrations) throws IOException, URISyntaxException {
+    String identity;
+    User user = null;
+    if (isNotEmpty(userId)) {
+      user = userService.get(userId);
+      if (user == null) {
+        logger.warn("User is null. Skipping reporting of track event {}", event);
+        return;
+      }
+      identity = user.getSegmentIdentity();
+      logger.info("Reporting track for event {} with lead {}", event, userId);
+      if (isEmpty(identity) || !identity.equals(userId)) {
+        identity = reportIdentity(account, user, true);
+        if (isEmpty(identity)) {
+          logger.error("Invalid identity id reported for user {}", userId);
+          return;
+        }
+
+        // Getting the latest copy since we had a sleep of 10 seconds.
+        user = userService.getUserFromCacheOrDB(userId);
+      }
+    } else {
+      identity = "system-" + account.getUuid();
+    }
+
+    if (properties == null) {
+      properties = new HashMap<>();
+      properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
+    }
+
+    boolean reported = segmentHelper.reportTrackEvent(apiKey, identity, event, properties, integrations);
+    if (user != null && reported) {
+      updateUserEvents(user, event);
+    }
+    logger.info("Reported track for event {} with lead {}", event, identity);
   }
 }

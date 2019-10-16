@@ -54,7 +54,8 @@ public class SegmentHelper {
 
     Map<String, String> traits = new HashMap<>();
     traits.put("email", email);
-    traits.put(FIRST_NAME, utils.getFirstName(userName, email));
+    String firstName = utils.getFirstName(userName, email);
+    traits.put(FIRST_NAME, isNotEmpty(firstName) ? firstName : email);
     String lastName = utils.getLastName(userName, email);
     traits.put(LAST_NAME, isNotEmpty(lastName) ? lastName : "");
 
@@ -85,15 +86,24 @@ public class SegmentHelper {
     return identity;
   }
 
-  public boolean reportTrackEvent(String apiKey, String identity, String event, Map<String, String> properties) {
+  public boolean reportTrackEvent(
+      String apiKey, String identity, String event, Map<String, String> properties, Map<String, Boolean> integrations) {
     Analytics analytics = Analytics.builder(apiKey).build();
-
     TrackMessage.Builder track = TrackMessage.builder(event).properties(properties).userId(identity);
+    if (integrations != null) {
+      integrations.forEach((k, v) -> {
+        boolean value = false;
+        if (v != null) {
+          value = v.booleanValue();
+        }
+        track.enableIntegration(k, value);
+      });
+    }
     analytics.enqueue(track);
     return true;
   }
 
   public void reportTrackEvent(String apiKey, List<String> userIds, String event, Map<String, String> properties) {
-    userIds.forEach(userId -> reportTrackEvent(apiKey, userId, event, properties));
+    userIds.forEach(userId -> reportTrackEvent(apiKey, userId, event, properties, null));
   }
 }

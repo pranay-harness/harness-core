@@ -188,7 +188,6 @@ public class AuthServiceImpl implements AuthService {
   public static final class Keys {
     public static final String HARNESS_EMAIL = "@harness.io";
     public static final String LOGIN_EVENT = "User Authenticated";
-    public static final String GROUP_ID = "groupId";
   }
 
   @Override
@@ -464,6 +463,9 @@ public class AuthServiceImpl implements AuthService {
 
   private boolean authorizeAccessType(String accountId, String appId, String envId, EnvironmentType envType,
       PermissionAttribute permissionAttribute, List<Role> roles, UserRequestInfo userRequestInfo) {
+    if (isEmpty(roles)) {
+      return false;
+    }
     return roles.stream()
         .filter(role
             -> roleAuthorizedWithAccessType(
@@ -627,7 +629,11 @@ public class AuthServiceImpl implements AuthService {
             return;
           }
 
-          User user = cacheManager.getUserCache().get(userId);
+          Cache<String, User> userCache = cacheManager.getUserCache();
+          if (userCache == null) {
+            return;
+          }
+          User user = userCache.get(userId);
           if (user == null) {
             return;
           }
@@ -647,7 +653,10 @@ public class AuthServiceImpl implements AuthService {
             UserRestrictionInfo userRestrictionInfo = getUserRestrictionInfo(accountId, user, userPermissionInfo, true);
             if (userRestrictionInfo == null) {
               userRestrictionInfo = getUserRestrictionInfoFromDB(accountId, userPermissionInfo, userGroups);
-              cacheManager.getUserRestrictionInfoCache().put(key, userRestrictionInfo);
+              Cache<String, UserRestrictionInfo> userRestrictionInfoCache = cacheManager.getUserRestrictionInfoCache();
+              if (userRestrictionInfoCache != null) {
+                userRestrictionInfoCache.put(key, userRestrictionInfo);
+              }
             }
           }
         }));
@@ -909,8 +918,13 @@ public class AuthServiceImpl implements AuthService {
         }
         try {
           Map<String, String> properties = new HashMap<>();
-          properties.put(Keys.GROUP_ID, accountId);
-          segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties);
+          properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
+
+          Map<String, Boolean> integrations = new HashMap<>();
+          integrations.put(SegmentHandler.Keys.NATERO, true);
+          integrations.put(SegmentHandler.Keys.SALESFORCE, false);
+
+          segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
         } catch (Exception e) {
           logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
         }

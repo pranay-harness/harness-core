@@ -10,17 +10,22 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static java.util.Collections.emptySet;
 import static software.wings.sm.StateType.PHASE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -50,6 +55,8 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -81,6 +88,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private UsageMetricsEventPublisher usageMetricsEventPublisher;
   @Inject private AccountService accountService;
   @Inject private UsageMetricsHelper usageMetricsHelper;
+  @Inject @Named("SegmentHandlerAnnotation") private SegmentHandler segmentHandler;
 
   /**
    * Instantiates a new workflow execution update.
@@ -96,6 +104,17 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   public WorkflowExecutionUpdate(String appId, String workflowExecutionId) {
     this.appId = appId;
     this.workflowExecutionId = workflowExecutionId;
+  }
+
+  @UtilityClass
+  public static final class Keys {
+    public static final String SUCCESS = "Deployment Succeeded";
+    public static final String REJECTED = "Deployment Rejected";
+    public static final String EXPIRED = "Deployment Expired";
+    public static final String ABORTED = "Deployment Aborted";
+    public static final String FAILED = "Deployment Failed";
+    public static final String MODULE = "module";
+    public static final String DEPLOYMENT = "Deployment";
   }
 
   /**
@@ -249,10 +268,62 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           }
         }
 
+        reportDeploymentEventToSegment(workflowExecution);
       } catch (Exception e) {
         logger.error(
             "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
       }
+    }
+  }
+
+  @VisibleForTesting
+  public void reportDeploymentEventToSegment(WorkflowExecution workflowExecution) {
+    try {
+      String accountId = workflowExecution.getAccountId();
+      Map<String, String> properties = new HashMap<>();
+      properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
+      properties.put(Keys.MODULE, Keys.DEPLOYMENT);
+
+      Map<String, Boolean> integrations = new HashMap<>();
+      integrations.put(SegmentHandler.Keys.NATERO, true);
+      integrations.put(SegmentHandler.Keys.SALESFORCE, false);
+      Account account = accountService.getFromCacheWithFallback(accountId);
+      EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
+      String userId = null;
+      if (triggeredBy != null) {
+        userId = triggeredBy.getUuid() != null ? triggeredBy.getUuid() : null;
+      }
+
+      String deploymentEvent = getSegmentDeploymentEvent(workflowExecution);
+      if (deploymentEvent != null) {
+        segmentHandler.reportTrackEvent(account, deploymentEvent, userId, properties, integrations);
+      } else {
+        logger.info("Skipping the deployment track event since the status {} doesn't need to be reported",
+            workflowExecution.getStatus());
+      }
+    } catch (Exception e) {
+      logger.error("Exception while reporting track event for deployment {}", workflowExecutionId, e);
+    }
+  }
+
+  private String getSegmentDeploymentEvent(WorkflowExecution workflowExecution) {
+    if (workflowExecution == null || workflowExecution.getStatus() == null) {
+      return null;
+    }
+
+    switch (workflowExecution.getStatus()) {
+      case REJECTED:
+        return Keys.REJECTED;
+      case FAILED:
+        return Keys.FAILED;
+      case ABORTED:
+        return Keys.ABORTED;
+      case EXPIRED:
+        return Keys.EXPIRED;
+      case SUCCESS:
+        return Keys.SUCCESS;
+      default:
+        return null;
     }
   }
 

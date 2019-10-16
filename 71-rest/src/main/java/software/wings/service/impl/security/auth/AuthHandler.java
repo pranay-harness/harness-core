@@ -659,14 +659,26 @@ public class AuthHandler {
       });
     });
 
+    Set<String> appIdSetForWorkflowPermission = permissionTypeAppIdSetMap.get(WORKFLOW);
+    if (appIdSetForWorkflowPermission == null) {
+      appIdSetForWorkflowPermission = new HashSet<>();
+      permissionTypeAppIdSetMap.put(WORKFLOW, appIdSetForWorkflowPermission);
+    }
+
     // pipeline will need workflow
-    permissionTypeAppIdSetMap.get(WORKFLOW).addAll(permissionTypeAppIdSetMap.get(PIPELINE));
+    appIdSetForWorkflowPermission.addAll(permissionTypeAppIdSetMap.get(PIPELINE));
+
+    Set<String> appIdSetForEnvPermission = permissionTypeAppIdSetMap.get(ENV);
+    if (appIdSetForEnvPermission == null) {
+      appIdSetForEnvPermission = new HashSet<>();
+      permissionTypeAppIdSetMap.put(ENV, appIdSetForEnvPermission);
+    }
 
     // workflow will need env
-    permissionTypeAppIdSetMap.get(ENV).addAll(permissionTypeAppIdSetMap.get(WORKFLOW));
+    appIdSetForEnvPermission.addAll(appIdSetForWorkflowPermission);
 
     // DEPLOYMENT will need env
-    permissionTypeAppIdSetMap.get(ENV).addAll(permissionTypeAppIdSetMap.get(DEPLOYMENT));
+    appIdSetForEnvPermission.addAll(permissionTypeAppIdSetMap.get(DEPLOYMENT));
 
     return permissionTypeAppIdSetMap;
   }

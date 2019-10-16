@@ -384,7 +384,8 @@ public class AccountServiceImpl implements AccountService {
     accounts.forEach(account -> licenseService.decryptLicenseInfo(account, false));
   }
 
-  private Account getFromCacheWithFallback(String accountId) {
+  @Override
+  public Account getFromCacheWithFallback(String accountId) {
     Account account = dbCache.get(Account.class, accountId);
     if (account == null) {
       // Some false nulls have been observed. Verify by querying directly from db.

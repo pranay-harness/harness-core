@@ -41,6 +41,8 @@ public interface AccountService {
 
   String getAccountStatus(String accountId);
 
+  Account getFromCacheWithFallback(String accountId);
+
   boolean delete(String accountId);
 
   boolean getTwoFactorEnforceInfo(String accountId);
