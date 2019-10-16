@@ -337,7 +337,8 @@ public class AuthServiceTest extends WingsBaseTest {
     authService.generateBearerTokenForUser(mockUser);
     try {
       Thread.sleep(10000);
-      verify(segmentHandler, times(1)).reportTrackEvent(any(Account.class), anyString(), any(User.class), anyMap());
+      verify(segmentHandler, times(1))
+          .reportTrackEvent(any(Account.class), anyString(), any(User.class), anyMap(), anyMap());
     } catch (InterruptedException | IOException | URISyntaxException e) {
       throw new InvalidRequestException(e.getMessage());
     }
