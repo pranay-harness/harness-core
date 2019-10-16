@@ -229,7 +229,6 @@ public class ServiceChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
         if (entityAuditRecord.getAffectedResourceType().equals(EntityType.SERVICE.name())
-            && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
           String fieldToUpdate = ServiceViewKeys.audits;
           String documentToUpdate = entityAuditRecord.getAffectedResourceId();

@@ -92,7 +92,6 @@ class EnvironmentViewBuilder {
         final AuditHeader auditHeader = iterator.next();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())
-              && entityAuditRecord.getAffectedResourceId() != null
               && entityAuditRecord.getAffectedResourceId().equals(environment.getUuid())) {
             if (audits.size() < MAX_RELATED_ENTITIES_COUNT) {
               audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader, entityAuditRecord));

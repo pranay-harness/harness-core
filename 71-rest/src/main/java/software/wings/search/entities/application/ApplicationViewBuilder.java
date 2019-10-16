@@ -134,7 +134,6 @@ class ApplicationViewBuilder {
         final AuditHeader auditHeader = iterator.next();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.APPLICATION.name())
-              && entityAuditRecord.getAffectedResourceId() != null
               && entityAuditRecord.getAffectedResourceId().equals(application.getUuid())) {
             if (audits.size() < MAX_RELATED_ENTITIES_COUNT) {
               audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader, entityAuditRecord));
