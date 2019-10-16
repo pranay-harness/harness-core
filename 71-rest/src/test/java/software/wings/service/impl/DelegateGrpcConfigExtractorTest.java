@@ -3,12 +3,13 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DelegateGrpcConfigExtractorTest {
+public class DelegateGrpcConfigExtractorTest extends CategoryTest {
   @Test
   @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)

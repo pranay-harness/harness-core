@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Timestamp;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
@@ -36,7 +37,7 @@ import java.util.Map;
 @SpringBootTest
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
-public class TaskInfoLifecycleWriterIntegrationTest implements EcsEventGenerator {
+public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest implements EcsEventGenerator {
   private final String LAUNCH_TYPE = "EC2";
   private final String TEST_TASK_ARN = "TASK_ARN_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();

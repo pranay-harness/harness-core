@@ -3,6 +3,7 @@ package io.harness.delegate.configuration;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -10,7 +11,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class InstallUtilsTest implements MockableTestMixin {
+public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   @Test
   @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)

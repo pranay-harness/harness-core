@@ -8,6 +8,7 @@ import static software.wings.infra.InfraDefinitionTestConstants.STAGE_CLASSIC_LO
 import static software.wings.infra.InfraDefinitionTestConstants.STAGE_TARGET_GROUP_ARNS;
 import static software.wings.infra.InfraDefinitionTestConstants.TARGET_GROUP_ARNS;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -17,7 +18,7 @@ import software.wings.utils.WingsTestConstants;
 
 import java.util.Map;
 
-public class AwsAmiInfrastructureTest {
+public class AwsAmiInfrastructureTest extends CategoryTest {
   private final AwsAmiInfrastructure awsAmiInfrastructure =
       AwsAmiInfrastructure.builder()
           .autoScalingGroupName(WingsTestConstants.AUTO_SCALING_GROUP_NAME)

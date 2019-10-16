@@ -19,6 +19,7 @@ import io.grpc.Context;
 import io.grpc.Status.Code;
 import io.grpc.StatusException;
 import io.grpc.stub.StreamObserver;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
@@ -44,7 +45,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EventPublisherServerImplTest {
+public class EventPublisherServerImplTest extends CategoryTest {
   private static final String TEST_ACC_ID = UUID.randomUUID().toString();
 
   @Mock private HPersistence hPersistence;

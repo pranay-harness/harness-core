@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import com.google.inject.Inject;
 
 import com.bettercloud.vault.VaultException;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.BypassRuleMixin.Bypass;
@@ -27,7 +28,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Slf4j
-public class ScmSecretTest {
+public class ScmSecretTest extends CategoryTest {
   @Rule public CommonsMethodRule commonsMethodRule = new CommonsMethodRule();
   @Inject ScmSecret scmSecret;
 

@@ -13,6 +13,7 @@ import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
+import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.service.DelegateServiceImpl;
@@ -36,7 +37,7 @@ import org.slf4j.Logger;
 import java.time.Instant;
 
 @RunWith(MockitoJUnitRunner.class)
-public class PingPongTest implements MockableTestMixin {
+public class PingPongTest extends CategoryTest implements MockableTestMixin {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   private PingPongClient pingPongClient;

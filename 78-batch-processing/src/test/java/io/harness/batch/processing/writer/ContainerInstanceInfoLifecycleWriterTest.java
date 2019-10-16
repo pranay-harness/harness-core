@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.protobuf.Timestamp;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
@@ -33,7 +34,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ContainerInstanceInfoLifecycleWriterTest implements EcsEventGenerator {
+public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest implements EcsEventGenerator {
   @InjectMocks private EcsContainerInstanceInfoWriter ecsContainerInstanceInfoWriter;
   @InjectMocks private EcsContainerInstanceLifecycleWriter ecsContainerInstanceLifecycleWriter;
   @Mock private InstanceDataService instanceDataService;

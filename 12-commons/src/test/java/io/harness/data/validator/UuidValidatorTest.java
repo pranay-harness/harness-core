@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.utils.UuidUtils.base64StrToUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.utils.UuidUtils;
 import lombok.Builder;
@@ -17,7 +18,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class UuidValidatorTest {
+public class UuidValidatorTest extends CategoryTest {
   @Builder
   static class UuidValidatorTestStructure {
     @Uuid String str;
