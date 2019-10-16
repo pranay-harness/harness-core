@@ -1,5 +1,7 @@
 package software.wings;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.openpojo.reflection.PojoClassFilter;
 import com.openpojo.reflection.filters.FilterClassName;
 import com.openpojo.reflection.filters.FilterEnum;
@@ -17,6 +19,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.ServiceSecretKey;
+import software.wings.utils.Misc;
 import software.wings.utils.NoFieldShadowingRule;
 import software.wings.utils.ToStringTester;
 
@@ -88,5 +92,18 @@ public class MiscellaneousTest extends CategoryTest {
     Validator validator = ValidatorBuilder.create().with(new TestClassMustBeProperlyNamedRule()).build();
 
     validator.validateRecursively("software.wings", TEST_ONLY_FILTER, new FilterClassName("^((?!Utils$).)*$"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testParseApisVersion() {
+    ServiceSecretKey.ServiceApiVersion latestVersion =
+        ServiceSecretKey.ServiceApiVersion.values()[ServiceSecretKey.ServiceApiVersion.values().length - 1];
+    assertThat(Misc.parseApisVersion("application/json")).isEqualTo(latestVersion);
+
+    for (ServiceSecretKey.ServiceApiVersion serviceApiVersion : ServiceSecretKey.ServiceApiVersion.values()) {
+      String headerString = "application/" + serviceApiVersion.name().toLowerCase() + "+json, application/json";
+      assertThat(Misc.parseApisVersion(headerString)).isEqualTo(serviceApiVersion);
+    }
   }
 }
