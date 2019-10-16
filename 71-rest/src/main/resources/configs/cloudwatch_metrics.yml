@@ -230,7 +230,7 @@ LAMBDA:
       displayName: Duration Average
       dimension: FunctionName
       dimensionDisplay: Lambda Function Name
-      metricType: THROUGHPUT
+      metricType: RESP_TIME
       enabledDefault: true
       statistics: Average
       unit: Milliseconds
