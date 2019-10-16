@@ -42,7 +42,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   @JsonIgnore @Encrypted private char[] serviceAccountKeyFileContent;
 
   @SchemaIgnore @NotEmpty private String accountId;
-  @JsonInclude(Include.NON_NULL) private CCMConfig ccmConfig;
+  @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedServiceAccountKeyFileContent;
 

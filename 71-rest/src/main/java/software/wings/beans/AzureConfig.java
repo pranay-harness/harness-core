@@ -41,7 +41,7 @@ public class AzureConfig extends SettingValue implements EncryptableSetting, Clo
   @Attributes(title = "Key", required = true) @Encrypted private char[] key;
 
   @SchemaIgnore @NotEmpty private String accountId;
-  @JsonInclude(Include.NON_NULL) private CCMConfig ccmConfig;
+  @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKey;
 
   /**
