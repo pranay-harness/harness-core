@@ -7,7 +7,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.graphql.schema.type.instance.QLInstanceType.PHYSICAL_HOST_INSTANCE;
 
 import com.google.inject.Inject;
@@ -22,22 +21,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
-import software.wings.WingsBaseTest;
-import software.wings.beans.Account;
-import software.wings.beans.Application;
-import software.wings.beans.Application.Builder;
-import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.HarnessTagLink;
-import software.wings.beans.PhysicalDataCenterConfig;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
-import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.beans.infrastructure.instance.InstanceType;
-import software.wings.events.TestUtils;
+import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
@@ -62,15 +48,6 @@ import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilt
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HarnessTagService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.instance.InstanceService;
-import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -81,18 +58,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @FieldNameConstants(innerTypeName = "InstanceStatsDataFetcherTestKeys")
-public class InstanceStatsDataFetcherTest extends WingsBaseTest {
+public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Inject @InjectMocks InstanceTimeSeriesDataHelper instanceTimeSeriesDataHelper;
   @Inject @InjectMocks InstanceStatsDataFetcher dataFetcher;
-  @Inject AccountService accountService;
-  @Inject AppService appService;
-  @Inject ServiceResourceService serviceResourceService;
-  @Inject EnvironmentService environmentService;
-  @Inject InstanceService instanceService;
-  @Inject SettingsService settingsService;
-  @Inject HarnessTagService harnessTagService;
-  @Inject private TestUtils testUtils;
 
   @Mock Statement statement;
   @Mock ResultSet resultSet;
@@ -103,74 +72,13 @@ public class InstanceStatsDataFetcherTest extends WingsBaseTest {
   final long currentTime = System.currentTimeMillis();
   final long[] calendar = {currentTime};
 
-  private static final String TAG_TEAM = "TEAM";
-  private static final String TAG_VALUE_TEAM1 = "TEAM1";
-  private static final String TAG_VALUE_TEAM2 = "TEAM2";
-  private static final String TAG_TEAM1 = "TEAM:TEAM1";
-  private static final String TAG_TEAM2 = "TEAM:TEAM2";
-
-  private static final String TAG_MODULE = "MODULE";
-  private static final String TAG_VALUE_MODULE1 = "MODULE1";
-  private static final String TAG_VALUE_MODULE2 = "MODULE2";
-  private static final String TAG_MODULE1 = "MODULE:MODULE1";
-  private static final String TAG_MODULE2 = "MODULE:MODULE2";
-
-  private static final String TAG_ENVTYPE = "ENVTYPE";
-  private static final String TAG_VALUE_PROD = "PROD";
-  private static final String TAG_VALUE_NON_PROD = "NON_PROD";
-  private static final String TAG_PROD = "ENVTYPE:PROD";
-  private static final String TAG_NON_PROD = "ENVTYPE:NON_PROD";
-
-  private static final String ACCOUNT1_ID = "ACCOUNT1_ID";
-  private static final String APP1_ID_ACCOUNT1 = "APP1_ID_ACCOUNT1";
-  private static final String SERVICE1_ID_APP1_ACCOUNT1 = "SERVICE1_ID_APP1_ACCOUNT1";
-  private static final String SERVICE2_ID_APP1_ACCOUNT1 = "SERVICE2_ID_APP1_ACCOUNT1";
-  private static final String ENV1_ID_APP1_ACCOUNT1 = "ENV1_ID_APP1_ACCOUNT1";
-  private static final String ENV2_ID_APP1_ACCOUNT1 = "ENV2_ID_APP1_ACCOUNT1";
-  private static final String INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1 = "INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1";
-  private static final String INSTANCE2_SERVICE1_ENV1_APP1_ACCOUNT1 = "INSTANCE2_SERVICE1_ENV1_APP1_ACCOUNT1";
-  private static final String INSTANCE3_SERVICE1_ENV2_APP1_ACCOUNT1 = "INSTANCE3_SERVICE1_ENV2_APP1_ACCOUNT1";
-  private static final String INSTANCE4_SERVICE2_ENV2_APP1_ACCOUNT1 = "INSTANCE4_SERVICE2_ENV2_APP1_ACCOUNT1";
-
-  private static final String APP2_ID_ACCOUNT1 = "APP2_ID_ACCOUNT1";
-  private static final String SERVICE3_ID_APP2_ACCOUNT1 = "SERVICE3_ID_APP2_ACCOUNT1";
-  private static final String ENV3_ID_APP2_ACCOUNT1 = "ENV3_ID_APP2_ACCOUNT1";
-  private static final String ENV4_ID_APP2_ACCOUNT1 = "ENV4_ID_APP2_ACCOUNT1";
-  private static final String INSTANCE5_SERVICE3_ENV3_APP2_ACCOUNT1 = "INSTANCE5_SERVICE3_ENV3_APP2_ACCOUNT1";
-  private static final String INSTANCE6_SERVICE3_ENV4_APP2_ACCOUNT1 = "INSTANCE6_SERVICE3_ENV4_APP2_ACCOUNT1";
-
-  private static final String CLOUD_PROVIDER1_ID_ACCOUNT1 = "CLOUD_PROVIDER1_ID_ACCOUNT1";
-  private static final String CLOUD_PROVIDER2_ID_ACCOUNT1 = "CLOUD_PROVIDER2_ID_ACCOUNT1";
-  private static final String CLOUD_PROVIDER3_ID_ACCOUNT2 = "CLOUD_PROVIDER3_ID_ACCOUNT2";
-
-  private static final String ACCOUNT2_ID = "ACCOUNT2_ID";
-  private static final String APP3_ID_ACCOUNT2 = "APP3_ID_ACCOUNT2";
-  private static final String SERVICE4_ID_APP3_ACCOUNT2 = "SERVICE4_ID_APP3_ACCOUNT2";
-  private static final String ENV5_ID_APP3_ACCOUNT2 = "ENV5_ID_APP3_ACCOUNT2";
-  private static final String ENV6_ID_APP3_ACCOUNT2 = "ENV6_ID_APP3_ACCOUNT2";
-  private static final String INSTANCE7_SERVICE4_ENV5_APP3_ACCOUNT2 = "INSTANCE7_SERVICE4_ENV5_APP3_ACCOUNT2";
-  private static final String INSTANCE8_SERVICE4_ENV6_APP3_ACCOUNT2 = "INSTANCE8_SERVICE4_ENV6_APP3_ACCOUNT2";
-
-  private static final String QUERY1 =
-      "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 hours',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME FROM (SELECT REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY REPORTEDAT) INSTANCE_STATS GROUP BY GRP_BY_TIME ORDER BY GRP_BY_TIME";
-  private static final String QUERY2 =
-      "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 hours',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME, ENTITY_ID FROM (SELECT APPID AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  APPID  = 'APP1_ID_ACCOUNT1' AND  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY ENTITY_ID, REPORTEDAT) INSTANCE_STATS GROUP BY ENTITY_ID, GRP_BY_TIME ORDER BY GRP_BY_TIME";
-  private static final String QUERY3 =
-      "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 days',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME, ENTITY_ID FROM (SELECT SERVICEID AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  SERVICEID  IN ('SERVICE1_ID_APP1_ACCOUNT1','SERVICE2_ID_APP1_ACCOUNT1') AND  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY ENTITY_ID, REPORTEDAT) INSTANCE_STATS GROUP BY ENTITY_ID, GRP_BY_TIME ORDER BY GRP_BY_TIME";
-  private static final String QUERY4 =
-      "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 days',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME, ENTITY_ID FROM (SELECT CLOUDPROVIDERID AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  CLOUDPROVIDERID  IN ('CLOUD_PROVIDER1_ID_ACCOUNT1','CLOUD_PROVIDER2_ID_ACCOUNT1') AND  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY ENTITY_ID, REPORTEDAT) INSTANCE_STATS GROUP BY ENTITY_ID, GRP_BY_TIME ORDER BY GRP_BY_TIME";
-  private static final String QUERY5 =
-      "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 days',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME, ENTITY_ID FROM (SELECT ENVID AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  ENVID  = 'ENV1_ID_APP1_ACCOUNT1' AND  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY ENTITY_ID, REPORTEDAT) INSTANCE_STATS GROUP BY ENTITY_ID, GRP_BY_TIME ORDER BY GRP_BY_TIME";
-  private static final String QUERY6 =
-      "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 days',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME, ENTITY_ID FROM (SELECT APPID AS ENTITY_ID, REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  ENVID  IN ('ENV1_ID_APP1_ACCOUNT1','ENV3_ID_APP2_ACCOUNT1') AND  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY ENTITY_ID, REPORTEDAT) INSTANCE_STATS GROUP BY ENTITY_ID, GRP_BY_TIME ORDER BY GRP_BY_TIME";
-
   @Before
   public void setup() throws SQLException {
     User user = testUtils.createUser(testUtils.createAccount());
     UserThreadLocal.set(user);
 
     // Account1
-    createAccount(ACCOUNT1_ID);
+    createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
     createService(ACCOUNT1_ID, APP1_ID_ACCOUNT1, SERVICE1_ID_APP1_ACCOUNT1, SERVICE1_ID_APP1_ACCOUNT1, TAG_MODULE,
         TAG_VALUE_MODULE1);
@@ -204,7 +112,7 @@ public class InstanceStatsDataFetcherTest extends WingsBaseTest {
         EnvironmentType.PROD, INSTANCE6_SERVICE3_ENV4_APP2_ACCOUNT1, CLOUD_PROVIDER2_ID_ACCOUNT1);
 
     // Account2
-    createAccount(ACCOUNT2_ID);
+    createAccount(ACCOUNT2_ID, getLicenseInfo());
     createApp(ACCOUNT2_ID, APP3_ID_ACCOUNT2, APP3_ID_ACCOUNT2, TAG_TEAM, TAG_VALUE_TEAM1);
     createService(ACCOUNT2_ID, APP3_ID_ACCOUNT2, SERVICE4_ID_APP3_ACCOUNT2, SERVICE4_ID_APP3_ACCOUNT2, TAG_MODULE,
         TAG_VALUE_MODULE2);
@@ -244,85 +152,6 @@ public class InstanceStatsDataFetcherTest extends WingsBaseTest {
     when(resultSet.getLong(anyString())).thenReturn(20L);
 
     resetValues();
-  }
-
-  private void createCloudProvider(String accountId, String appId, String uuid, String name) {
-    SettingValue settingValue = PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
-                                    .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-                                    .build();
-    SettingAttribute cloudProvider = SettingAttribute.Builder.aSettingAttribute()
-                                         .withName(name)
-                                         .withValue(settingValue)
-                                         .withUuid(uuid)
-                                         .withAccountId(accountId)
-                                         .withAppId(appId)
-                                         .withCategory(SettingCategory.CLOUD_PROVIDER)
-                                         .build();
-    settingsService.save(cloudProvider, false);
-  }
-
-  private Account createAccount(String accountId) {
-    return accountService.save(anAccount()
-                                   .withCompanyName(accountId)
-                                   .withAccountName(accountId)
-                                   .withAccountKey("ACCOUNT_KEY")
-                                   .withLicenseInfo(getLicenseInfo())
-                                   .withUuid(accountId)
-                                   .build());
-  }
-
-  private Application createApp(String accountId, String appId, String appName, String tagKey, String tagValue) {
-    Application application =
-        appService.save(Builder.anApplication().name(appName).accountId(accountId).uuid(appId).build());
-    setTagToEntity(tagKey, tagValue, accountId, appId, appId, EntityType.APPLICATION);
-    return application;
-  }
-
-  private Service createService(
-      String accountId, String appId, String serviceId, String serviceName, String tagKey, String tagValue) {
-    Service service = serviceResourceService.save(
-        Service.builder().name(serviceName).uuid(serviceId).appId(appId).accountId(accountId).build());
-    setTagToEntity(tagKey, tagValue, accountId, appId, serviceId, EntityType.SERVICE);
-    return service;
-  }
-
-  private Environment createEnv(
-      String accountId, String appId, String envId, String envName, String tagKey, String tagValue) {
-    Environment environment = environmentService.save(
-        Environment.Builder.anEnvironment().name(envName).uuid(envId).appId(appId).accountId(accountId).build());
-    setTagToEntity(tagKey, tagValue, accountId, appId, envId, EntityType.ENVIRONMENT);
-    return environment;
-  }
-
-  private void setTagToEntity(
-      String tagKey, String tagValue, String accountId, String appId, String entityId, EntityType entityType) {
-    harnessTagService.attachTagWithoutGitPush(HarnessTagLink.builder()
-                                                  .key(tagKey)
-                                                  .value(tagValue)
-                                                  .entityId(entityId)
-                                                  .entityType(entityType)
-                                                  .accountId(accountId)
-                                                  .appId(appId)
-                                                  .build());
-  }
-
-  private Instance createInstance(String accountId, String appId, String envId, String serviceId,
-      EnvironmentType envType, String instanceId, String cloudProviderId) {
-    return instanceService.save(Instance.builder()
-                                    .accountId(accountId)
-                                    .appId(appId)
-                                    .appName(appId)
-                                    .serviceId(serviceId)
-                                    .serviceName(serviceId)
-                                    .envId(envId)
-                                    .envType(envType)
-                                    .envName(envId)
-                                    .instanceType(InstanceType.PHYSICAL_HOST_INSTANCE)
-                                    .computeProviderId(cloudProviderId)
-                                    .computeProviderName(cloudProviderId)
-                                    .createdAt(System.currentTimeMillis() - 100000L)
-                                    .uuid(instanceId)
-                                    .build());
   }
 
   @Test
