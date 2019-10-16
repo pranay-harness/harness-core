@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
@@ -37,7 +38,7 @@ import java.util.Map;
 
 @ActiveProfiles("test")
 @RunWith(MockitoJUnitRunner.class)
-public class InstanceBillingDataWriterTest {
+public class InstanceBillingDataWriterTest extends CategoryTest {
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
   private static final String ACCOUNT_ID = "account_id";
   private static final String INSTANCE_ID = "instance_id";

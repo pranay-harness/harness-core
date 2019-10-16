@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.protobuf.Timestamp;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EcsSyncEventWriterTest implements EcsEventGenerator {
+public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGenerator {
   @InjectMocks private EcsSyncEventWriter ecsSyncEventWriter;
   @Mock private InstanceDataService instanceDataService;
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;

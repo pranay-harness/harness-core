@@ -1653,6 +1653,12 @@
                         </excludes>
                         <forkCount>6</forkCount>
                         <reuseForks>true</reuseForks>
+                        <properties>
+                            <property>
+                                <name>listener</name>
+                                <value>io.harness.ExtendsCategoryEnforcer</value>
+                            </property>
+                        </properties>
                     </configuration>
                     <executions>
                         <execution>
@@ -1738,6 +1744,12 @@
                         <reuseForks>true</reuseForks>
                         <groups>${categories}</groups>
                         <excludedGroups>${excludedCategories}</excludedGroups>
+                        <properties>
+                            <property>
+                                <name>listener</name>
+                                <value>io.harness.ExtendsCategoryEnforcer</value>
+                            </property>
+                        </properties>
                     </configuration>
                 </plugin>
                 <plugin>

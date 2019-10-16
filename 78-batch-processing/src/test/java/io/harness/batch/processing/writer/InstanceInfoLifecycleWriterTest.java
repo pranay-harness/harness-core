@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -24,7 +25,7 @@ import java.time.Instant;
 import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InstanceInfoLifecycleWriterTest implements EcsEventGenerator {
+public class InstanceInfoLifecycleWriterTest extends CategoryTest implements EcsEventGenerator {
   @InjectMocks private InstanceEventWriter instanceEventWriter;
   @InjectMocks private InstanceInfoWriter instanceInfoWriter;
   @Mock private InstanceDataDao instanceDataDao;

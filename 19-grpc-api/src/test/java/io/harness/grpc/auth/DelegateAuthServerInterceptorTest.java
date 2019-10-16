@@ -27,6 +27,7 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.services.HealthStatusManager;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.PublishMessage;
@@ -41,7 +42,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DelegateAuthServerInterceptorTest {
+public class DelegateAuthServerInterceptorTest extends CategoryTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String TOKEN = "TOKEN";
   private ContextRecordingInterceptor contextRecordingInterceptor;

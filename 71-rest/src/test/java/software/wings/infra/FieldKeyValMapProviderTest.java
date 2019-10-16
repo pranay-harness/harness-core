@@ -2,6 +2,7 @@ package software.wings.infra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -9,7 +10,7 @@ import software.wings.infra.data.DummyPerson;
 
 import java.util.Map;
 
-public class FieldKeyValMapProviderTest {
+public class FieldKeyValMapProviderTest extends CategoryTest {
   public static final String ID = "id";
   public static final String NAME = "name";
   public static final String OCCUPATION = "occupation";

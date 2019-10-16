@@ -15,6 +15,7 @@ import io.grpc.CallCredentials.MetadataApplier;
 import io.grpc.CallCredentials.RequestInfo;
 import io.grpc.Metadata;
 import io.grpc.SecurityLevel;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.TokenGenerator;
@@ -24,7 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
-public class DelegateAuthCallCredentialsTest {
+public class DelegateAuthCallCredentialsTest extends CategoryTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String TOKEN = "TOKEN";
 

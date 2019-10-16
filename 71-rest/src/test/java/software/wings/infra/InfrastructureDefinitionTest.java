@@ -3,6 +3,7 @@ package software.wings.infra;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.infra.InfraDefinitionTestConstants.RELEASE_NAME;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.After;
 import org.junit.Before;
@@ -14,7 +15,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.utils.WingsTestConstants;
 
-public class InfrastructureDefinitionTest {
+public class InfrastructureDefinitionTest extends CategoryTest {
   private InfraMappingInfrastructureProvider mappingProvider;
 
   private InfrastructureDefinition infrastructureDefinition;

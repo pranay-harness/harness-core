@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.google.protobuf.Timestamp;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
@@ -17,7 +18,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 
-public class HTimestampsTest {
+public class HTimestampsTest extends CategoryTest {
   @Test
   @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)

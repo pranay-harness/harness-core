@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher.Action;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.rule.OwnerRule.Owner;
@@ -43,7 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class NodeWatcherTest {
+public class NodeWatcherTest extends CategoryTest {
   private static final String UID = UUID.randomUUID().toString();
   private static final String NAME = "test-node";
 

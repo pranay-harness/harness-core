@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.HANTANG;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
 @RunWith(JUnit4.class)
 @Slf4j
-public class PerpetualTaskWorkerTest {
+public class PerpetualTaskWorkerTest extends CategoryTest {
   private PerpetualTaskWorker worker;
 
   @Before

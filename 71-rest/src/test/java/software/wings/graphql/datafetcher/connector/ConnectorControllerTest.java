@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.connector;
 
 import static junit.framework.TestCase.fail;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -13,7 +14,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 
-public class ConnectorControllerTest {
+public class ConnectorControllerTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testConnectorImplementations() {

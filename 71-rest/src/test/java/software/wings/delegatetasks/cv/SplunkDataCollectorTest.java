@@ -10,6 +10,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.splunk.Job;
 import com.splunk.Service;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.apache.commons.io.IOUtils;
 import org.intellij.lang.annotations.Language;
@@ -28,7 +29,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-public class SplunkDataCollectorTest {
+public class SplunkDataCollectorTest extends CategoryTest {
   private SplunkConfig config;
   private SplunkDataCollector splunkDataCollector;
 

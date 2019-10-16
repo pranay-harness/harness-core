@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import com.google.protobuf.ByteString;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
@@ -26,7 +27,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import java.util.UUID;
 
 @Slf4j
-public class K8sWatchServiceDelegateTest {
+public class K8sWatchServiceDelegateTest extends CategoryTest {
   private static final String RESOURCE_KIND_POD = "Pod";
   private static final String RESOURCE_KIND_NODE = "Node";
 

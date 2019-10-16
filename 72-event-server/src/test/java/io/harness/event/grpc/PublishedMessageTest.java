@@ -6,13 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.protobuf.Any;
 import com.google.protobuf.util.Timestamps;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.payloads.EcsTaskLifecycle;
 import io.harness.event.payloads.Lifecycle;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PublishedMessageTest {
+public class PublishedMessageTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void testPostLoad() {

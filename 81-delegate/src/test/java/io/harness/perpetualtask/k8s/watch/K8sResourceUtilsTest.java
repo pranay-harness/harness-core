@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +13,7 @@ import org.junit.experimental.categories.Category;
 import java.util.ArrayList;
 import java.util.List;
 
-public class K8sResourceUtilsTest {
+public class K8sResourceUtilsTest extends CategoryTest {
   private ResourceRequirements resourceRequirements = new ResourceRequirements();
   private Container k8sContainer;
   private List<Container> k8sContainers = new ArrayList<>();

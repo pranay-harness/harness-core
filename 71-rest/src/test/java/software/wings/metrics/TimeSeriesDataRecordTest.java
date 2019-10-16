@@ -6,6 +6,7 @@ import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import com.google.common.collect.TreeBasedTable;
 
 import io.fabric8.utils.Lists;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -20,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TimeSeriesDataRecordTest {
+public class TimeSeriesDataRecordTest extends CategoryTest {
   String stateExecutionId = "stateExecutionId";
   String workflowExecutionId = "workflowExecutionId";
   String workflowId = "workflowId";
