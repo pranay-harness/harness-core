@@ -1,11 +1,13 @@
 package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -14,6 +16,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
@@ -34,6 +37,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import io.harness.VerificationBaseTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -50,6 +55,7 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -116,6 +122,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1889,5 +1896,33 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(tasks).isNotEmpty();
     assertThat(tasks.size()).isEqualTo(1);
     assertThat(tasks.get(0).getAnalysis_minute()).isEqualTo(record.getLogCollectionMinute());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testLockCleanup() {
+    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_locks");
+    BasicDBObject lockObject = new BasicDBObject();
+    lockObject.put(ID_KEY, new ObjectId());
+    lockObject.put("type", "t");
+    lockObject.put("keyGroup", generateUUID());
+    lockObject.put("keyName", generateUUID());
+    lockObject.put("instanceId", generateUUID());
+    lockObject.put("time", new Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(6)));
+    collection.insert(lockObject);
+
+    assertThat(collection.find().size()).isEqualTo(1);
+
+    continuousVerificationService.cleanupStuckLocks();
+    assertThat(collection.find().size()).isEqualTo(0);
+
+    // insert and see its not deleted
+    lockObject.put(ID_KEY, new ObjectId());
+    lockObject.put("time", new Date(System.currentTimeMillis()));
+    collection.insert(lockObject);
+    assertThat(collection.find().size()).isEqualTo(1);
+
+    continuousVerificationService.cleanupStuckLocks();
+    assertThat(collection.find().size()).isEqualTo(1);
   }
 }
