@@ -8,17 +8,17 @@ import static software.wings.sm.StateType.SPLUNKV2;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import software.wings.WingsBaseTest;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
-import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
@@ -33,7 +33,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.UUID;
 
-public class DataCollectionInfoServiceTest extends BaseIntegrationTest {
+public class DataCollectionInfoServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   @Inject private DataCollectionInfoService dataCollectionInfoService;
@@ -44,7 +44,7 @@ public class DataCollectionInfoServiceTest extends BaseIntegrationTest {
     FieldUtils.writeField(dataCollectionInfoService, "secretManager", secretManager, true);
   }
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testSplunkDataCollectionInfoCreation() {
     SplunkCVConfiguration splunkCVConfiguration = createSplunkCVConfig();
     Instant startTime = Instant.now().minus(5, ChronoUnit.MINUTES);
@@ -65,7 +65,7 @@ public class DataCollectionInfoServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testNewRelicDataCollectionInfoCreation() {
     NewRelicCVServiceConfiguration newRelicCVConfig = createNewRelicCVConfig();
     Instant startTime = Instant.now().minus(5, ChronoUnit.MINUTES);
