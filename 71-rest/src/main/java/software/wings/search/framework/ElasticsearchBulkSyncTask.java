@@ -23,9 +23,9 @@ import java.util.concurrent.Future;
 @Slf4j
 public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
   @Inject ElasticsearchEntityBulkMigrator elasticsearchEntityBulkMigrator;
-  private Queue<ChangeEvent<?>> changeEventsDuringBulkSync = new LinkedList<>();
-  private Map<Class, Boolean> isFirstChangeReceived = new HashMap<>();
-  private Set<SearchEntity<?>> entitiesToBulkSync = new HashSet<>();
+  private Queue<ChangeEvent<?>> changeEventsDuringBulkSync;
+  private Map<Class, Boolean> isFirstChangeReceived;
+  private Set<SearchEntity<?>> entitiesToBulkSync;
 
   private void setEntitiesToBulkSync() {
     for (SearchEntity<?> searchEntity : searchEntityMap.values()) {
@@ -62,6 +62,10 @@ public class ElasticsearchBulkSyncTask extends ElasticsearchSyncTask {
   }
 
   public boolean run() {
+    changeEventsDuringBulkSync = new LinkedList<>();
+    isFirstChangeReceived = new HashMap<>();
+    entitiesToBulkSync = new HashSet<>();
+
     logger.info("Initializing change listeners for search entities for bulk sync.");
     Future f = super.initializeChangeListeners();
 
