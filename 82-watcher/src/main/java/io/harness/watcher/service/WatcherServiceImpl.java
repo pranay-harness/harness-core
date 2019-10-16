@@ -166,57 +166,54 @@ public class WatcherServiceImpl implements WatcherService {
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   @Override
   public void run(boolean upgrade) {
-    synchronized (this) {
-      WatcherStackdriverLogAppender.setTimeLimiter(timeLimiter);
-      WatcherStackdriverLogAppender.setManagerClient(managerClient);
+    WatcherStackdriverLogAppender.setTimeLimiter(timeLimiter);
+    WatcherStackdriverLogAppender.setManagerClient(managerClient);
 
-      try {
-        logger.info(
-            upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
-        messageService.writeMessage(WATCHER_STARTED);
-        startInputCheck();
+    try {
+      logger.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
+      messageService.writeMessage(WATCHER_STARTED);
+      startInputCheck();
 
-        generateEcsDelegateSequenceConfigFile();
-        if (upgrade) {
-          Message message = messageService.waitForMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
-          logger.info(message != null ? "[New] Got go-ahead. Proceeding"
-                                      : "[New] Timed out waiting for go-ahead. Proceeding anyway");
-        }
-
-        messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
-
-        logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
-
-        String proxyHost = System.getProperty("https.proxyHost");
-
-        if (isNotBlank(proxyHost)) {
-          String proxyScheme = System.getProperty("proxyScheme");
-          String proxyPort = System.getProperty("https.proxyPort");
-          logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
-          String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
-          if (isNotBlank(nonProxyHostsString)) {
-            String[] suffixes = nonProxyHostsString.split("\\|");
-            List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
-            logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
-          }
-        } else {
-          logger.info("No proxy settings. Configure in proxy.config if needed");
-        }
-
-        checkAccountStatus();
-        startUpgradeCheck();
-        startCommandCheck();
-        startWatching();
-
-        synchronized (waiter) {
-          waiter.wait();
-        }
-
-        messageService.closeChannel(WATCHER, getProcessId());
-
-      } catch (InterruptedException e) {
-        logger.error("Interrupted while running watcher", e);
+      generateEcsDelegateSequenceConfigFile();
+      if (upgrade) {
+        Message message = messageService.waitForMessage(WATCHER_GO_AHEAD, TimeUnit.MINUTES.toMillis(5));
+        logger.info(message != null ? "[New] Got go-ahead. Proceeding"
+                                    : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
+
+      messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
+
+      logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
+
+      String proxyHost = System.getProperty("https.proxyHost");
+
+      if (isNotBlank(proxyHost)) {
+        String proxyScheme = System.getProperty("proxyScheme");
+        String proxyPort = System.getProperty("https.proxyPort");
+        logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
+        String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
+        if (isNotBlank(nonProxyHostsString)) {
+          String[] suffixes = nonProxyHostsString.split("\\|");
+          List<String> nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+          logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
+        }
+      } else {
+        logger.info("No proxy settings. Configure in proxy.config if needed");
+      }
+
+      checkAccountStatus();
+      startUpgradeCheck();
+      startCommandCheck();
+      startWatching();
+
+      synchronized (waiter) {
+        waiter.wait();
+      }
+
+      messageService.closeChannel(WATCHER, getProcessId());
+
+    } catch (InterruptedException e) {
+      logger.error("Interrupted while running watcher", e);
     }
   }
 
