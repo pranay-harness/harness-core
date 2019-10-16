@@ -11,6 +11,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table.Cell;
@@ -99,7 +100,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
 
   @Override
   public List<MetricElement> fetchMetrics(List<String> hostBatch) throws DataCollectionException {
-    assert hostBatch.size() == 1;
+    Preconditions.checkArgument(hostBatch.size() == 1);
     return fetchMetrics(hostBatch.get(0));
   }
 
@@ -592,7 +593,7 @@ public class NewRelicDataCollector implements MetricsDataCollector<NewRelicDataC
       return this.records.get(metricName, timeStamp);
     }
 
-    public Iterable<? extends Cell<String, Long, MetricElement>> cellSet() {
+    public Set<Cell<String, Long, MetricElement>> cellSet() {
       return records.cellSet();
     }
   }
