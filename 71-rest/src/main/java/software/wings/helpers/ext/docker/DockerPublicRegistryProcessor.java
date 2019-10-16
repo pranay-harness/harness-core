@@ -81,12 +81,12 @@ public class DockerPublicRegistryProcessor {
     // process first page
     List<BuildDetails> details = processPage(tagsPage, dockerConfig, imageName);
 
-    if (details.size() >= limit || tagsPage.getNext() == null) {
+    if (details.size() >= limit || tagsPage == null || tagsPage.getNext() == null) {
       return details.stream().limit(limit).collect(Collectors.toList());
     }
 
     HttpUrl nextPageUrl = HttpUrl.parse(tagsPage.getNext());
-    String nextPageNum = nextPageUrl.queryParameter("page");
+    String nextPageNum = nextPageUrl == null ? null : nextPageUrl.queryParameter("page");
 
     // process rest of pages
     while (EmptyPredicate.isNotEmpty(nextPageNum)) {
@@ -95,12 +95,12 @@ public class DockerPublicRegistryProcessor {
       List<BuildDetails> pageDetails = processPage(page, dockerConfig, imageName);
       details.addAll(pageDetails);
 
-      if (details.size() >= limit || page.getNext() == null) {
+      if (details.size() >= limit || page == null || page.getNext() == null) {
         break;
       }
 
       nextPageUrl = HttpUrl.parse(page.getNext());
-      nextPageNum = nextPageUrl.queryParameter("page");
+      nextPageNum = nextPageUrl == null ? null : nextPageUrl.queryParameter("page");
     }
 
     return details.stream().limit(limit).collect(Collectors.toList());
@@ -118,7 +118,7 @@ public class DockerPublicRegistryProcessor {
       return publicImageTags.getResults()
           .stream()
           .map(tag -> {
-            Map<String, String> metadata = new HashMap();
+            Map<String, String> metadata = new HashMap<>();
             metadata.put(ArtifactMetadataKeys.image, domainName + "/" + imageName + ":" + tag.getName());
             metadata.put(ArtifactMetadataKeys.tag, tag.getName());
             return aBuildDetails()
