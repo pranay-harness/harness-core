@@ -101,10 +101,13 @@ public class DeploymentChangeHandler implements ChangeHandler {
     WorkflowExecution workflowExecution = (WorkflowExecution) changeEvent.getFullDocument();
     DeploymentView deploymentView = deploymentViewBuilder.createDeploymentView(workflowExecution);
     Optional<String> jsonString = SearchEntityUtils.convertToJson(deploymentView);
-    if (jsonString.isPresent()) {
-      return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
+    if (deploymentView != null) {
+      if (jsonString.isPresent()) {
+        return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
+      }
+      return false;
     }
-    return false;
+    return true;
   }
 
   private boolean handleWorkflowExecutionUpdate(ChangeEvent<?> changeEvent) {
@@ -112,10 +115,13 @@ public class DeploymentChangeHandler implements ChangeHandler {
     DBObject changeDocument = changeEvent.getChanges();
     DeploymentView deploymentView = deploymentViewBuilder.createDeploymentView(workflowExecution, changeDocument);
     Optional<String> jsonString = SearchEntityUtils.convertToJson(deploymentView);
-    if (jsonString.isPresent()) {
-      return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
+    if (deploymentView != null) {
+      if (jsonString.isPresent()) {
+        return searchDao.upsertDocument(DeploymentSearchEntity.TYPE, deploymentView.getId(), jsonString.get());
+      }
+      return false;
     }
-    return false;
+    return true;
   }
 
   private boolean handleWorkflowExecutionChange(ChangeEvent<?> changeEvent) {

@@ -270,6 +270,7 @@ public class ElasticsearchDao implements SearchDao {
   public boolean deleteDocument(String entityType, String documentId) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     DeleteRequest deleteRequest = new DeleteRequest(indexName, documentId);
+    deleteRequest.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
     try {
       client.delete(deleteRequest, RequestOptions.DEFAULT);
       return true;
@@ -353,6 +354,7 @@ public class ElasticsearchDao implements SearchDao {
         return true;
       }
       logger.error(String.format("Failed to update index %s by query with params %s", indexName, params.toString()));
+      logger.error(String.format("Update by Query response is  %s", bulkResponse));
     } catch (IOException e) {
       logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
