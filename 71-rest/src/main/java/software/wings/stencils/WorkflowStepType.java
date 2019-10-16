@@ -8,12 +8,9 @@ public enum WorkflowStepType {
 
   ARTIFACT("Artifact"),
 
-  APM("Performance Monitoring"),
-  LOG("Log Analysis"),
-
   // ssh categories
-  AWS_SSH("AWS SSH"),
-  DC_SSH("DC SSH"),
+  AWS_SSH("AWS"),
+  DC_SSH("Data Center"),
   AZURE("Azure"),
 
   // AWS
@@ -28,12 +25,18 @@ public enum WorkflowStepType {
   // K8s
   KUBERNETES("Kubernetes"),
 
+  // Helm
   HELM("Helm"),
+  // PCF
   PCF("Pivotal Cloud Foundry"),
-  CLOUDFORMATION("Cloud Formation"),
 
-  // Approval,
+  // Infrastructure Provisioner,
   INFRASTRUCTURE_PROVISIONER("Infrastructure Provisioner"),
+
+  // verification providers
+  APM("Performance Monitoring"),
+  LOG("Log Analysis"),
+
   ISSUE_TRACKING("Issue Tracking"),
   NOTIFICATION("Notification"),
   FLOW_CONTROL("Flow Control"),
