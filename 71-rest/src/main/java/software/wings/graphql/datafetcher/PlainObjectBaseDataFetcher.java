@@ -70,9 +70,9 @@ public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
         result = fetchPlainObject(parameters, getAccountId(dataFetchingEnvironment));
       }
     } catch (WingsException ex) {
-      throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
+      throw new InvalidRequestException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
     } catch (Exception ex) {
-      throw new WingsException(GENERIC_EXCEPTION_MSG, USER_SRE);
+      throw new InvalidRequestException(GENERIC_EXCEPTION_MSG, ex, USER_SRE);
     }
     return result;
   }
