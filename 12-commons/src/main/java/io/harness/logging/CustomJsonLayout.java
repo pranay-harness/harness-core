@@ -31,7 +31,10 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
 
   private final ThrowableHandlingConverter throwableProxyConverter;
 
-  CustomJsonLayout() {
+  // Constructor needs to be public for initialization from outside of this package
+  // from logback.xml configurations
+  @SuppressWarnings("WeakerAccess")
+  public CustomJsonLayout() {
     this(null);
   }
 
