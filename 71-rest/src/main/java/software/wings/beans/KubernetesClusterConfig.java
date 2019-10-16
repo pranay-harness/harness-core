@@ -64,7 +64,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
 
   @NotEmpty private String accountId;
 
-  private CCMConfig ccmConfig;
+  @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
 
   @Transient private boolean decrypted;
 

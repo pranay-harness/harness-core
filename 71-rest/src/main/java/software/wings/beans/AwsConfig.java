@@ -41,7 +41,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
   @Attributes(title = "Ec2 Iam role tags") private String tag;
-  @JsonInclude(Include.NON_NULL) private CCMConfig ccmConfig;
+  @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
 
