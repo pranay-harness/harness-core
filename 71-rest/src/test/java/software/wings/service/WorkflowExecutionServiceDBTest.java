@@ -14,6 +14,7 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -26,6 +27,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.STATE_MACHINE_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -44,6 +46,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
@@ -51,17 +54,24 @@ import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
+import software.wings.events.TestUtils;
 import software.wings.resources.WorkflowResource;
 import software.wings.rules.Listeners;
+import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateMachine;
@@ -88,10 +98,13 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private WorkflowResource workflowResource;
   @Inject private HostService hostService;
-
+  @Mock private UserGroupService userGroupService;
+  @Mock private AuthHandler authHandler;
   @Mock private AppService appService;
+  @Inject private TestUtils eventTestHelper;
   @Mock private ArtifactService artifactService;
   @Mock private ServiceInstanceService serviceInstanceService;
+  @Mock private User user;
 
   @Before
   public void init() {
@@ -284,6 +297,186 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
     assertThat(workflowExecutionService.appendInfraMappingId(
                    workflowExecution.getAppId(), workflowExecution.getUuid(), generateUuid()))
         .isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetApprovalAuthorization() {
+    user = eventTestHelper.createUser(null);
+    UserThreadLocal.set(user);
+    String workflowId = generateUuid();
+    when(authHandler.authorize(any(), any(), any())).thenReturn(true);
+    assertThat(workflowExecutionService.verifyAuthorizedToAcceptOrReject(null, asList(APP_ID), workflowId)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldObtainLastGoodDeployedVariables() {
+    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    String serviceId = generateUuid();
+    String workflowId = generateUuid();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder().name("ArtifactVariable").entityType(SERVICE).entityId(serviceId).build();
+    executionArgs.setArtifactVariables(asList(artifactVariable));
+
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    workflowExecution.setWorkflowId(workflowId);
+
+    wingsPersistence.save(workflowExecution);
+    assertThat(
+        workflowExecutionService.obtainLastGoodDeployedArtifactsVariables(workflowExecution.getAppId(), workflowId))
+        .isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldObtainLastGoodDeployedArtifacts() {
+    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    String workflowId = generateUuid();
+
+    Artifact artifact = Artifact.Builder.anArtifact()
+                            .withAppId("APP_ID")
+                            .withArtifactStreamId(generateUuid())
+                            .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "1.2"))
+                            .withDisplayName("Some artifact")
+                            .build();
+
+    executionArgs.setArtifacts(asList(artifact));
+
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    workflowExecution.setWorkflowId(workflowId);
+
+    wingsPersistence.save(workflowExecution);
+    assertThat(workflowExecutionService.obtainLastGoodDeployedArtifacts(workflowExecution.getAppId(), workflowId))
+        .isNotEmpty();
+  }
+  @Test
+  @Category(UnitTests.class)
+  public void shouldRefreshCollectedArtifacts() {
+    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+    WorkflowExecution workflowExecution1 = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+
+    String envId = generateUuid();
+    String serviceId = generateUuid();
+    String workflowId = generateUuid();
+
+    workflowExecution.setEnvIds(asList(envId));
+    workflowExecution.setServiceIds(asList(serviceId));
+    workflowExecution.setWorkflowId(workflowId);
+
+    Artifact artifact = Artifact.Builder.anArtifact()
+                            .withAppId(workflowExecution.getAppId())
+                            .withArtifactStreamId(generateUuid())
+                            .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "1.2"))
+                            .withDisplayName("Some artifact")
+                            .build();
+
+    Artifact artifact1 = Artifact.Builder.anArtifact()
+                             .withAppId(workflowExecution.getAppId())
+                             .withArtifactStreamId(generateUuid())
+                             .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "1.2"))
+                             .withDisplayName("Some artifact")
+                             .build();
+
+    workflowExecution.setArtifacts(asList(artifact));
+    workflowExecution1.setArtifacts(asList(artifact, artifact1));
+
+    workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
+    wingsPersistence.save(workflowExecution);
+    wingsPersistence.save(workflowExecution1);
+    workflowExecutionService.refreshCollectedArtifacts(
+        workflowExecution.getAppId(), workflowExecution.getUuid(), workflowExecution1.getUuid());
+
+    WorkflowExecution retrievedWorkflowExecution =
+        workflowExecutionService.fetchLastWorkflowExecution(workflowExecution.getAppId(), workflowId, serviceId, envId);
+
+    assertThat(retrievedWorkflowExecution.getUuid()).isEqualTo(workflowExecution.getUuid());
+    assertThat(retrievedWorkflowExecution.getArtifacts()).isEqualTo(asList(artifact, artifact1));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchLatestExecutionForServiceIds() {
+    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+
+    String envId = generateUuid();
+    String serviceId = generateUuid();
+    String workflowId = generateUuid();
+
+    workflowExecution.setEnvIds(asList(envId));
+    workflowExecution.setServiceIds(asList(serviceId));
+    workflowExecution.setWorkflowId(workflowId);
+
+    workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
+    wingsPersistence.save(workflowExecution);
+    WorkflowExecution retrievedWorkflowExecution =
+        workflowExecutionService.fetchLastWorkflowExecution(workflowExecution.getAppId(), workflowId, serviceId, envId);
+
+    assertThat(retrievedWorkflowExecution.getUuid()).isEqualTo(workflowExecution.getUuid());
+    assertThat(retrievedWorkflowExecution.getStatus()).isEqualTo(workflowExecution.getStatus());
+    assertThat(retrievedWorkflowExecution.getServiceIds()).isEqualTo(asList(serviceId));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchExecutionForVerification() {
+    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+
+    String envId = generateUuid();
+    String serviceId = generateUuid();
+    String workflowId = generateUuid();
+
+    workflowExecution.setEnvIds(asList(envId));
+    workflowExecution.setServiceIds(asList(serviceId));
+    workflowExecution.setWorkflowId(workflowId);
+
+    workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
+    wingsPersistence.save(workflowExecution);
+    WorkflowExecution retrievedWorkflowExecution = workflowExecutionService.getWorkflowExecutionForVerificationService(
+        workflowExecution.getAppId(), workflowExecution.getUuid());
+
+    assertThat(retrievedWorkflowExecution.getUuid()).isEqualTo(workflowExecution.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchLatestExecutionForInfraMappingIds() {
+    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+
+    String infraId = generateUuid();
+    workflowExecution.setInfraMappingIds(asList(infraId));
+    workflowExecution.setPipelineExecution(createAndFetchPipelineExecution(SUCCESS));
+    wingsPersistence.save(workflowExecution);
+    WorkflowExecution retrievedWorkflowExecution =
+        workflowExecutionService.getLatestExecutionsFor(workflowExecution.getAppId(), infraId, 1, null, false).get(0);
+
+    assertThat(retrievedWorkflowExecution.getUuid()).isEqualTo(workflowExecution.getUuid());
+    assertThat(retrievedWorkflowExecution.getStatus()).isEqualTo(workflowExecution.getStatus());
+    assertThat(retrievedWorkflowExecution.getInfraMappingIds()).isEqualTo(asList(infraId));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowExecutionList() {
+    ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
+    WorkflowExecution workflowExecution = createWorkflowExecution(executionArgs, WorkflowType.ORCHESTRATION, SUCCESS);
+
+    String envId = generateUuid();
+    String workflowId = generateUuid();
+    workflowExecution.setEnvIds(asList(envId));
+    workflowExecution.setWorkflowId(workflowId);
+    wingsPersistence.save(workflowExecution);
+    WorkflowExecution retrievedWorkflowExecution =
+        workflowExecutionService.fetchWorkflowExecutionList(workflowExecution.getAppId(), workflowId, envId, 0, 1)
+            .get(0);
+
+    assertThat(retrievedWorkflowExecution.getUuid()).isEqualTo(workflowExecution.getUuid());
+    assertThat(retrievedWorkflowExecution.getStatus()).isEqualTo(workflowExecution.getStatus());
+    assertThat(retrievedWorkflowExecution.getEnvIds()).isEqualTo(asList(envId));
   }
 
   @Test
