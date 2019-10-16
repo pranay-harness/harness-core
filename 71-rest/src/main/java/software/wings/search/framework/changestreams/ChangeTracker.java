@@ -11,6 +11,8 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.ReadConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.OperationType;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
@@ -87,12 +89,19 @@ public class ChangeTracker {
     });
   }
 
+  private boolean shouldProcessChange(ChangeStreamDocument<DBObject> changeStreamDocument) {
+    return changeStreamDocument.getFullDocument() != null
+        || changeStreamDocument.getOperationType() == OperationType.DELETE;
+  }
+
   private <T extends PersistentEntity> ChangeStreamSubscriber getChangeStreamSubscriber(
       ChangeTrackingInfo<T> changeTrackingInfo) {
     return changeStreamDocument -> {
-      ChangeEvent<T> changeEvent =
-          changeEventFactory.fromChangeStreamDocument(changeStreamDocument, changeTrackingInfo.getMorphiaClass());
-      changeTrackingInfo.getChangeSubscriber().onChange(changeEvent);
+      if (shouldProcessChange(changeStreamDocument)) {
+        ChangeEvent<T> changeEvent =
+            changeEventFactory.fromChangeStreamDocument(changeStreamDocument, changeTrackingInfo.getMorphiaClass());
+        changeTrackingInfo.getChangeSubscriber().onChange(changeEvent);
+      }
     };
   }
 
