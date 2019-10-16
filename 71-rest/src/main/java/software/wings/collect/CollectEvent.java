@@ -74,7 +74,6 @@ public class CollectEvent extends Queuable {
     private boolean running;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
     private Date earliestGet = new Date();
-    private double priority;
     private Date created = new Date();
     private int retries;
 
@@ -145,17 +144,6 @@ public class CollectEvent extends Queuable {
     }
 
     /**
-     * With priority.
-     *
-     * @param priority the priority
-     * @return the builder
-     */
-    public Builder withPriority(double priority) {
-      this.priority = priority;
-      return this;
-    }
-
-    /**
      * With created.
      *
      * @param created the created
@@ -189,7 +177,6 @@ public class CollectEvent extends Queuable {
           .withRunning(running)
           .withResetTimestamp(resetTimestamp)
           .withEarliestGet(earliestGet)
-          .withPriority(priority)
           .withCreated(created)
           .withRetries(retries);
     }
@@ -206,7 +193,6 @@ public class CollectEvent extends Queuable {
       collectEvent.setRunning(running);
       collectEvent.setResetTimestamp(resetTimestamp);
       collectEvent.setEarliestGet(earliestGet);
-      collectEvent.setPriority(priority);
       collectEvent.setCreated(created);
       collectEvent.setRetries(retries);
       return collectEvent;
