@@ -30,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.metrics.MetricType;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
@@ -153,5 +154,33 @@ public class CloudWatchServiceTest extends WingsBaseTest {
     assertThat(cloudWatchMetrics.get(0).getUnit()).isEqualTo(StandardUnit.Milliseconds);
     assertThat(cloudWatchMetrics.get(1).getStatistics()).isEqualTo("Sum");
     assertThat(cloudWatchMetrics.get(1).getUnit()).isEqualTo(StandardUnit.Count);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFetchCloudWatchLambdaMetricType() {
+    Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics = CloudWatchServiceImpl.fetchMetrics();
+    assertThat(cloudwatchMetrics.keySet()).hasSize(4);
+    assertThat(cloudwatchMetrics.get(AwsNameSpace.LAMBDA)).hasSize(4);
+    List<CloudWatchMetric> lambdaMetrics = cloudwatchMetrics.get(AwsNameSpace.LAMBDA);
+    boolean hasThroughput = false, hasRespTime = false, hasErrors = false;
+    int errorsCount = 0;
+
+    for (CloudWatchMetric metric : lambdaMetrics) {
+      if (MetricType.RESP_TIME.name().equals(metric.getMetricType())) {
+        hasRespTime = true;
+      }
+      if (MetricType.ERROR.name().equals(metric.getMetricType())) {
+        hasErrors = true;
+        errorsCount++;
+      }
+      if (MetricType.THROUGHPUT.name().equals(metric.getMetricType())) {
+        hasThroughput = true;
+      }
+    }
+    assertThat(hasThroughput).isTrue();
+    assertThat(hasRespTime).isTrue();
+    assertThat(hasErrors).isTrue();
+    assertThat(errorsCount).isEqualTo(2);
   }
 }
