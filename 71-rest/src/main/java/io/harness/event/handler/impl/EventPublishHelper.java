@@ -689,11 +689,11 @@ public class EventPublishHelper {
   }
 
   public boolean publishVerificationWorkflowMetrics(
-      String workflowExecutionId, List<String> appIds, String accountId, boolean isVerificationRolledBack) {
+      WorkflowExecution workflowExecution, List<String> appIds, String accountId, boolean isVerificationRolledBack) {
     PageRequest<ContinuousVerificationExecutionMetaData> cvPageRequest =
         aPageRequest()
             .addFilter("appId", Operator.IN, appIds.toArray())
-            .addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId)
+            .addFilter("workflowExecutionId", Operator.EQ, workflowExecution.getUuid())
             .addFieldsIncluded("_id")
             .withLimit("1")
             .build();
@@ -703,8 +703,11 @@ public class EventPublishHelper {
     if (!isEmpty(cvExecutionMetaDataList)) {
       Map<String, String> properties = new HashMap<>();
       properties.put("accountId", accountId);
-      properties.put("workflowExecutionId", workflowExecutionId);
+      properties.put("workflowExecutionId", workflowExecution.getUuid());
       properties.put("rollback", String.valueOf(isVerificationRolledBack));
+      properties.put("envType", workflowExecution.getEnvType().name());
+      properties.put("workflowStatus", workflowExecution.getStatus().name());
+      properties.put("rollbackType", "MANUAL");
       publishEvent(EventType.DEPLOYMENT_VERIFIED, properties);
       return true;
     }
@@ -727,7 +730,7 @@ public class EventPublishHelper {
 
       boolean workflowRolledBack = isWorkflowRolledBack(workflowExecutionId, appIds);
       boolean workflowWithVerification =
-          publishVerificationWorkflowMetrics(workflowExecutionId, appIds, accountId, workflowRolledBack);
+          publishVerificationWorkflowMetrics(workflowExecution, appIds, accountId, workflowRolledBack);
 
       if (!checkIfMarketoOrSegmentIsEnabled()) {
         return;

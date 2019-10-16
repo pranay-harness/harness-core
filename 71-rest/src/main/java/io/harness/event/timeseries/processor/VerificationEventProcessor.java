@@ -12,6 +12,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
@@ -47,8 +48,8 @@ public class VerificationEventProcessor {
    */
   String insert_prepared_statement_sql =
       "INSERT INTO VERIFICATION_WORKFLOW_STATS (ACCOUNT_ID, APP_ID, SERVICE_ID, WORKFLOW_ID, WORKFLOW_EXECUTION_ID,"
-      + "STATE_EXECUTION_ID, CV_CONFIG_ID, STATE_TYPE, START_TIME, END_TIME, STATUS,"
-      + "IS_247, HAS_DATA, IS_ROLLED_BACK) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      + "STATE_EXECUTION_ID, CV_CONFIG_ID, STATE_TYPE, START_TIME, END_TIME, STATUS, IS_247, HAS_DATA, IS_ROLLED_BACK,"
+      + "ENVIRONMENT_TYPE, WORKFLOW_STATUS, ROLLBACK_TYPE, VERIFICATION_PROVIDER_TYPE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
 
@@ -68,6 +69,9 @@ public class VerificationEventProcessor {
 
       if (!isEmpty(cvExecutionMetaDataList)) {
         boolean rolledback = Boolean.valueOf(properties.get("rollback"));
+        String workflowStatus = properties.get("workflowStatus");
+        String rollbackType = properties.get("rollbackType");
+        String envType = properties.get("envType");
         boolean successfulInsert = false;
         int retryCount = 0;
         long startTime = System.currentTimeMillis();
@@ -90,6 +94,13 @@ public class VerificationEventProcessor {
                   14, rolledback && cvExecutionMetaData.getExecutionStatus() == ExecutionStatus.FAILED);
               insertPreparedStatement.setTimestamp(9, new Timestamp(System.currentTimeMillis()));
               insertPreparedStatement.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
+              insertPreparedStatement.setString(15, envType);
+              insertPreparedStatement.setString(16, workflowStatus);
+              insertPreparedStatement.setString(17, rollbackType);
+              insertPreparedStatement.setString(18,
+                  VerificationConstants.getLogAnalysisStates().contains(cvExecutionMetaData.getStateType())
+                      ? "LOGS"
+                      : "METRICS");
               insertPreparedStatement.addBatch();
             }
             insertPreparedStatement.executeBatch();

@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
@@ -40,6 +41,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -385,6 +387,8 @@ public class EventPublishHelperTest extends WingsBaseTest {
                           .withResponse(Arrays.asList(stateExecutionInstance))
                           .withTotal(1)
                           .build());
+      workflowExecution.setEnvType(EnvironmentType.NON_PROD);
+      workflowExecution.setStatus(ExecutionStatus.SUCCESS);
       eventPublishHelper.handleDeploymentCompleted(workflowExecution);
       verify(eventPublisher, times(2)).publishEvent(any(Event.class));
     } finally {
