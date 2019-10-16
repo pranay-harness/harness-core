@@ -56,6 +56,7 @@ public class ApplicationChangeHandler implements ChangeHandler {
       if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getEntityType().equals(EntityType.APPLICATION.name())
+              && entityAuditRecord.getAffectedResourceId() != null
               && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
             String fieldToUpdate = ApplicationViewKeys.audits;
             String filterId = entityAuditRecord.getAffectedResourceId();
@@ -227,7 +228,6 @@ public class ApplicationChangeHandler implements ChangeHandler {
         return handleApplicationUpdate(changeEvent);
       case DELETE:
         return searchDao.deleteDocument(ApplicationSearchEntity.TYPE, changeEvent.getUuid());
-
       default:
         return true;
     }

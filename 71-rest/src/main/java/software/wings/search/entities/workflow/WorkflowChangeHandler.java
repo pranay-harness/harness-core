@@ -126,6 +126,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
         if (entityAuditRecord.getAffectedResourceType().equals(EntityType.WORKFLOW.name())
+            && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
           String fieldToUpdate = WorkflowViewKeys.audits;
           String documentToUpdate = entityAuditRecord.getAffectedResourceId();
@@ -255,6 +256,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
       if (jsonString.isPresent()) {
         return searchDao.upsertDocument(WorkflowSearchEntity.TYPE, workflowView.getId(), jsonString.get());
       }
+      return false;
     }
     return true;
   }
@@ -268,6 +270,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
       if (jsonString.isPresent()) {
         return searchDao.upsertDocument(WorkflowSearchEntity.TYPE, workflowView.getId(), jsonString.get());
       }
+      return false;
     }
     return true;
   }

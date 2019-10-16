@@ -58,6 +58,7 @@ public class PipelineChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
         if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())
+            && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
           String fieldToUpdate = PipelineViewKeys.audits;
           String documentToUpdate = entityAuditRecord.getAffectedResourceId();
@@ -175,6 +176,7 @@ public class PipelineChangeHandler implements ChangeHandler {
       if (jsonString.isPresent()) {
         return searchDao.upsertDocument(PipelineSearchEntity.TYPE, pipelineView.getId(), jsonString.get());
       }
+      return false;
     }
     return true;
   }
@@ -188,6 +190,7 @@ public class PipelineChangeHandler implements ChangeHandler {
       if (jsonString.isPresent()) {
         return searchDao.upsertDocument(PipelineSearchEntity.TYPE, pipelineView.getId(), jsonString.get());
       }
+      return false;
     }
     return true;
   }
