@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -25,6 +26,7 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.MetricDataStoreService;
+import software.wings.service.impl.analysis.MetricElement;
 import software.wings.service.impl.analysis.MetricsDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -99,6 +101,39 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(dataCollectionService).executeParrallel(captor.capture());
     assertThat(captor.getValue().size()).isEqualTo(3);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testIfNewRelicMetricDataRecordsAreSaved() throws DataCollectionException {
+    MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
+    when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
+    Instant now = Instant.now();
+    when(metricsDataCollectionInfo.getStartTime()).thenReturn(now.minus(10, ChronoUnit.MINUTES));
+    when(metricsDataCollectionInfo.getEndTime()).thenReturn(now);
+    MetricElement metricElement = MetricElement.builder()
+                                      .name("metric1")
+                                      .host("host1")
+                                      .groupName("default")
+                                      .timestamp(System.currentTimeMillis())
+                                      .build();
+    when(metricsDataCollector.fetchMetrics(any())).thenReturn(Lists.newArrayList(metricElement));
+    metricsDataCollectionTask.collectAndSaveData(metricsDataCollectionInfo);
+
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(metricStoreService).saveNewRelicMetrics(any(), any(), any(), any(), captor.capture());
+    List<NewRelicMetricDataRecord> records = captor.getValue();
+    assertThat(records.size()).isEqualTo(1);
+    assertThat(records.get(0).getStateExecutionId()).isEqualTo(metricsDataCollectionInfo.getStateExecutionId());
+    assertThat(records.get(0).getServiceId()).isEqualTo(metricsDataCollectionInfo.getServiceId());
+    assertThat(records.get(0).getHost()).isEqualTo("host1");
+    assertThat(records.get(0).getGroupName()).isEqualTo(metricElement.getGroupName());
+    assertThat(records.get(0).getName()).isEqualTo(metricElement.getName());
+    assertThat(records.get(0).getTimeStamp()).isEqualTo(metricElement.getTimestamp());
+    assertThat(records.get(0).getStateType()).isEqualTo(metricsDataCollectionInfo.getStateType());
+    assertThat(records.get(0).getDataCollectionMinute())
+        .isEqualTo(TimeUnit.MILLISECONDS.toMinutes(metricElement.getTimestamp()));
+    assertThat(records.get(0).getCvConfigId()).isEqualTo(metricsDataCollectionInfo.getCvConfigId());
   }
 
   public MetricsDataCollectionInfo createMetricDataCollectionInfo() {

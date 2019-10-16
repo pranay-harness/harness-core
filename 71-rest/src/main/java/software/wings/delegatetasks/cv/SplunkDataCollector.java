@@ -3,6 +3,7 @@ package software.wings.delegatetasks.cv;
 import static software.wings.common.VerificationConstants.URL_STRING;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 
 import com.splunk.Event;
@@ -64,7 +65,7 @@ public class SplunkDataCollector implements LogDataCollector<SplunkDataCollectio
   }
   @Override
   public List<LogElement> fetchLogs(List<String> hostBatch) throws DataCollectionException {
-    assert hostBatch.size() == 1;
+    Preconditions.checkArgument(hostBatch.size() == 1);
     return fetchLogs(Optional.of(hostBatch.get(0)));
   }
 
