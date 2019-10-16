@@ -3298,13 +3298,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     // filter StepType by PhaseStepType
     List<StepType> stepTypesList = StepType.filterByPhaseStepType(sectionId, rollbackSection);
-    StepType[] stepTypes = stepTypesList.stream().toArray(StepType[] ::new);
     // get workflow phase
     WorkflowPhase workflowPhase = null;
     if (phaseId != null && !phaseId.equals("default")) { // for pre-deployment phaseId will be default
       workflowPhase = workflowServiceHelper.getWorkflowPhase(workflow, phaseId);
     }
-
+    // special handling for select node step types
+    StepType filteredSelectNode = null;
+    if (workflowPhase != null) {
+      filteredSelectNode = fetchStepTypeFromInfraMappingTypeForSelectNode(workflowPhase, workflow.getAppId());
+    }
+    List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
+    StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
     return calculateCategorySteps(favorites, recent, stepTypes, workflowPhase, workflow.getAppId());
   }
 
@@ -3327,13 +3332,55 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // Add recents
     addRecentsToWorkflowCategories(recent, categories);
     // Add favorites category always even if it is empty.
-    addFavoritesToWorkflowCategories(favorites, stepTypes, categories);
+    addFavoritesToWorkflowCategories(favorites, steps.keySet(), categories);
     // get all categories relevant for workflow
-    addWorkflowCategorySteps(stepTypes, categories);
+    addWorkflowCategorySteps(steps.keySet(), categories);
     // add service commands to categories
     addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
 
     return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
+  }
+
+  private List<StepType> filterSelectNodesStep(List<StepType> stepTypesList, StepType filteredSelectNode) {
+    List<StepType> stepTypes = new ArrayList<>();
+    for (StepType stepType : stepTypesList) {
+      if (StepType.AWS_NODE_SELECT.equals(stepType) || StepType.DC_NODE_SELECT.equals(stepType)
+          || StepType.AZURE_NODE_SELECT.equals(stepType)) {
+        if (stepType.equals(filteredSelectNode)) {
+          stepTypes.add(stepType);
+        }
+      } else {
+        stepTypes.add(stepType);
+      }
+    }
+    return stepTypes;
+  }
+
+  private StepType fetchStepTypeFromInfraMappingTypeForSelectNode(WorkflowPhase workflowPhase, String appId) {
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
+    InfrastructureMappingType infrastructureMappingType;
+    if (infraRefactor) {
+      String infraDefinitionId = workflowPhase.getInfraDefinitionId();
+      if (infraDefinitionId != null) {
+        InfrastructureDefinition infrastructureDefinition =
+            infrastructureDefinitionService.get(appId, infraDefinitionId);
+        if (infrastructureDefinition != null) {
+          infrastructureMappingType =
+              InfrastructureMappingType.valueOf(infrastructureDefinition.getInfrastructure().getInfrastructureType());
+          return StepType.infrastructureMappingTypeToStepTypeMap.get(infrastructureMappingType);
+        }
+      }
+    } else {
+      String infraMappingId = workflowPhase.getInfraMappingId();
+      if (infraMappingId != null) {
+        InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+        if (infrastructureMapping != null) {
+          infrastructureMappingType = InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
+          return StepType.infrastructureMappingTypeToStepTypeMap.get(infrastructureMappingType);
+        }
+      }
+    }
+    return null;
   }
 
   private List<String> fetchServiceCommandNames(WorkflowPhase workflowPhase, String appId) {
@@ -3344,12 +3391,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflowServiceHelper.getServiceCommands(workflowPhase, appId, serviceId);
   }
 
-  public void addWorkflowCategorySteps(StepType[] stepTypes, List<WorkflowCategoryStepsMeta> categories) {
-    Map<String, StepType> stepTypeMap = new HashMap<>();
-    for (StepType stepType : stepTypes) {
-      stepTypeMap.put(stepType.getType(), stepType);
-    }
-
+  public void addWorkflowCategorySteps(Set<String> filteredStepTypes, List<WorkflowCategoryStepsMeta> categories) {
     for (Entry<WorkflowStepType, List<StepType>> entry : StepType.workflowStepTypeListMap.entrySet()) {
       WorkflowStepType workflowStepType = entry.getKey();
       List<StepType> stepTypeList = entry.getValue();
@@ -3358,7 +3400,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       List<String> stepIds = new ArrayList<>();
       for (StepType stepType : stepTypeList) {
-        if (stepTypeMap.containsKey(stepType.getType()) && !stepIds.contains(stepType.getType())) {
+        if (filteredStepTypes.contains(stepType.getType()) && !stepIds.contains(stepType.getType())) {
           stepIds.add(stepType.getType());
         }
       }
@@ -3395,12 +3437,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private void addFavoritesToWorkflowCategories(
-      Set<String> favorites, StepType[] stepTypes, List<WorkflowCategoryStepsMeta> categories) {
+      Set<String> favorites, Set<String> filteredStepTypes, List<WorkflowCategoryStepsMeta> categories) {
     List<String> stepIds = new ArrayList<>();
     if (isNotEmpty(favorites)) {
-      for (StepType step : stepTypes) {
-        if (favorites.contains(step.getType())) {
-          stepIds.add(step.getType());
+      for (String stepType : filteredStepTypes) {
+        if (favorites.contains(stepType)) {
+          stepIds.add(stepType);
         }
       }
     }

@@ -13,6 +13,7 @@ import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
+import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.utils.Validator.validateUuid;
 
 import com.google.inject.Inject;
@@ -608,14 +609,18 @@ public class WorkflowResource {
     return new RestResponse<>(workflowService.getDeployedNodes(appId, workflowId));
   }
 
-  @POST
+  @GET
   @Path("steps/phase/{phaseId}/sections/{sectionId}/{position}")
   @Timed
   @ExceptionMetered
   public RestResponse<WorkflowCategorySteps> getSteps(@QueryParam("accountId") String accountId,
       @PathParam("phaseId") String phaseId, @PathParam("sectionId") String sectionId,
-      @PathParam("position") int position, @QueryParam("rollbackSection") boolean rollbackSection, Workflow workflow) {
+      @PathParam("position") int position, @QueryParam("rollbackSection") boolean rollbackSection,
+      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
     final User user = UserThreadLocal.get();
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    notNullCheck("Workflow does not exist", workflow);
+    notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
     final WorkflowCategorySteps steps =
         workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, sectionId, position, rollbackSection);
     return new RestResponse<>(steps);

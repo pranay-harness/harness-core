@@ -2,11 +2,12 @@ package software.wings.sm;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
@@ -36,8 +37,6 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ARTIFAC
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ARTIFACT_COLLECTION_STEP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_SELECT_NODES;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_SELECT_NODES;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.CF_CREATE_STACK;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.CF_DELETE_STACK;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.CLOUDWATCH;
@@ -88,9 +87,7 @@ import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLI
 import static software.wings.stencils.WorkflowStepType.APM;
 import static software.wings.stencils.WorkflowStepType.ARTIFACT;
 import static software.wings.stencils.WorkflowStepType.AWS_SSH;
-import static software.wings.stencils.WorkflowStepType.AZURE;
 import static software.wings.stencils.WorkflowStepType.CI_SYSTEM;
-import static software.wings.stencils.WorkflowStepType.CLOUDFORMATION;
 import static software.wings.stencils.WorkflowStepType.HELM;
 import static software.wings.stencils.WorkflowStepType.INFRASTRUCTURE_PROVISIONER;
 import static software.wings.stencils.WorkflowStepType.ISSUE_TRACKING;
@@ -106,6 +103,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.DeploymentType;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -216,274 +214,318 @@ public enum StepType {
   // Also, the Step Types are listed based on the order of Categories appearing in WorkflowStepType.
 
   // Each StepType takes in StateClass, the display name, the category to which the command belongs to, list of
-  // PhaseStepTypes where this command is relevant, the deployment types where the command is relevant and a boolean
-  // isRollback to indicate if the command is relevant only in rollback section.
+  // PhaseStepTypes where this command is relevant, the deployment types where the command is relevant and a list
+  // of PhaseTypes to indicate if the command is relevant only in rollback/ non-rollback section.
   // For eg. the AppDynamics State belongs to APM Category and its relevant only on Verify Service and K8S phase Step.
   // Another example is the AWS_NODE_SELECT command which belongs to AWS_SSH category, should show up only if
-  // PhaseStepType is INFRASTRUCTURE_NODE or SELECT_NODE.Deployment type is SSH in this case since it should be only
+  // PhaseStepType is INFRASTRUCTURE_NODE or SELECT_NODE. Deployment type is SSH in this case since it should be only
   // shown for SSH based deployments
 
-  // First the StepTypes are filtered based on the PhaseStepType - if List<PhaseStepType> is empty or contains the
-  // specified phase step type, it will be included in list of filtered step types.
-  // Next, the filtering happens based on deployment type - if List<DeploymentType> is empty or contains the specified
+  // First the StepTypes are filtered based on the PhaseStepType -
+  // if List<PhaseStepType> contains sectionId(i.e. phase step type), then we filter using the rollbackSection flag
+  // if rollbackSection == true check if List<PhaseType> contains ROLLBACK -> include it in list of filtered
+  // if rollbackSection == false check if List<PhaseType> contains NON_ROLLBACK -> include it in list of filtered
+  // step types.
+  // Next, the filtering happens based on deployment type - if List<DeploymentType> contains the specified
   // deployment type, it will be included in the list of filtered step types.
   // Next we group the StepTypes based on Categories(i.e WorkflowStepType) to display in UI
 
   // Artifact
-  ARTIFACT_COLLECTION(
-      ArtifactCollectionState.class, ARTIFACT_COLLECTION_STEP, asList(ARTIFACT), asList(COLLECT_ARTIFACT), emptyList()),
+  ARTIFACT_COLLECTION(ArtifactCollectionState.class, ARTIFACT_COLLECTION_STEP, asList(ARTIFACT),
+      asList(COLLECT_ARTIFACT), asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK)),
   ARTIFACT_CHECK(ArtifactCheckState.class, ARTIFACT_CHECK_STEP, asList(ARTIFACT), asList(PRE_DEPLOYMENT),
-      asList(DeploymentType.SSH)),
-
-  // APM
-  APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
-      emptyList()),
-  DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  PROMETHEUS(PrometheusState.class, WorkflowServiceHelper.PROMETHEUS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  DATA_DOG(DatadogState.class, DATADOG_METRICS, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  STACK_DRIVER(StackDriverState.class, STACKDRIVER, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  CLOUD_WATCH(CloudWatchState.class, CLOUDWATCH, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  BUG_SNAG(BugsnagState.class, WorkflowServiceHelper.BUG_SNAG, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
-      emptyList()), //
-  APM_VERIFICATION(
-      APMVerificationState.class, CUSTOM_METRICS, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-
-  // Logs
-  DATA_DOG_LOG(DatadogLogState.class, DATADOG_LOG, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  ELK(ElkAnalysisState.class, WorkflowServiceHelper.ELK, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
-      emptyList()),
-  SPLUNKV2(SplunkV2State.class, SPLUNK_V2, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  STACK_DRIVER_LOG(
-      StackDriverLogState.class, STACKDRIVER_LOG, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  SUMO(SumoLogicAnalysisState.class, SUMO_LOGIC, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
-  LOGZ(LogzAnalysisState.class, WorkflowServiceHelper.LOGZ, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
-      emptyList()),
-  LOG_VERIFICATION(CustomLogVerificationState.class, CUSTOM_LOG_VERIFICATION, asList(LOG),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
+      asList(DeploymentType.SSH), asList(PhaseType.NON_ROLLBACK)),
 
   // SSH
-  AWS_NODE_SELECT(AwsNodeSelectState.class, AWS_SELECT_NODES, asList(AWS_SSH), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
-      asList(DeploymentType.SSH)),
+  AWS_NODE_SELECT(AwsNodeSelectState.class, SELECT_NODE_NAME, asList(AWS_SSH), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
+      asList(DeploymentType.SSH), asList(PhaseType.NON_ROLLBACK)),
   ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, ELB, asList(AWS_SSH), asList(ENABLE_SERVICE, DISABLE_SERVICE),
-      asList(DeploymentType.SSH)),
+      asList(DeploymentType.SSH), asList(PhaseType.NON_ROLLBACK)),
 
   // DC SSH
-  DC_NODE_SELECT(DcNodeSelectState.class, SELECT_NODE_NAME, asList(WorkflowStepType.DC_SSH), asList(SELECT_NODE),
-      asList(DeploymentType.SSH)),
+  DC_NODE_SELECT(DcNodeSelectState.class, SELECT_NODE_NAME, asList(WorkflowStepType.DC_SSH),
+      asList(INFRASTRUCTURE_NODE, SELECT_NODE), asList(DeploymentType.SSH), asList(PhaseType.NON_ROLLBACK)),
 
   // AZURE ssh
-  AZURE_NODE_SELECT(AzureNodeSelectState.class, AZURE_SELECT_NODES, asList(AZURE),
-      asList(INFRASTRUCTURE_NODE, SELECT_NODE), Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM)),
+  AZURE_NODE_SELECT(AzureNodeSelectState.class, SELECT_NODE_NAME, asList(WorkflowStepType.AZURE),
+      asList(INFRASTRUCTURE_NODE, SELECT_NODE), Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM),
+      asList(PhaseType.NON_ROLLBACK)),
 
   // AWS CodeDeploy
   AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, AWS_CODE_DEPLOY, asList(WorkflowStepType.AWS_CODE_DEPLOY),
-      asList(DEPLOY_AWSCODEDEPLOY), Lists.newArrayList(DeploymentType.AWS_CODEDEPLOY)),
+      asList(DEPLOY_AWSCODEDEPLOY), Lists.newArrayList(DeploymentType.AWS_CODEDEPLOY), asList(PhaseType.NON_ROLLBACK)),
   AWS_CODEDEPLOY_ROLLBACK(AwsCodeDeployRollback.class, ROLLBACK_AWS_CODE_DEPLOY,
       asList(WorkflowStepType.AWS_CODE_DEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
-      Lists.newArrayList(DeploymentType.AWS_CODEDEPLOY), true),
+      Lists.newArrayList(DeploymentType.AWS_CODEDEPLOY), asList(PhaseType.ROLLBACK)),
 
   // AWS lambda
   AWS_LAMBDA_STATE(AwsLambdaState.class, AWS_LAMBDA, asList(WorkflowStepType.AWS_LAMBDA), asList(DEPLOY_AWS_LAMBDA),
-      Lists.newArrayList(DeploymentType.AWS_LAMBDA)),
+      Lists.newArrayList(DeploymentType.AWS_LAMBDA), asList(PhaseType.NON_ROLLBACK)),
   AWS_LAMBDA_ROLLBACK(AwsLambdaRollback.class, ROLLBACK_AWS_LAMBDA, asList(WorkflowStepType.AWS_LAMBDA),
-      asList(DEPLOY_AWS_LAMBDA), Lists.newArrayList(DeploymentType.AWS_LAMBDA)),
+      asList(DEPLOY_AWS_LAMBDA), Lists.newArrayList(DeploymentType.AWS_LAMBDA), asList(PhaseType.ROLLBACK)),
 
   // AMI
   AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, AMI_SETUP_COMMAND_NAME, asList(WorkflowStepType.AWS_AMI),
-      asList(AMI_AUTOSCALING_GROUP_SETUP), Lists.newArrayList(DeploymentType.AMI)),
+      asList(AMI_AUTOSCALING_GROUP_SETUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, UPGRADE_AUTOSCALING_GROUP, asList(WorkflowStepType.AWS_AMI),
-      asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI)),
+      asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   AWS_AMI_SWITCH_ROUTES(AwsAmiSwitchRoutesState.class, UPGRADE_AUTOSCALING_GROUP_ROUTE,
       asList(WorkflowStepType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
-      Lists.newArrayList(DeploymentType.AMI)),
+      Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, ROLLBACK_AWS_AMI_CLUSTER, asList(WorkflowStepType.AWS_AMI),
-      asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI), true),
+      asList(AMI_DEPLOY_AUTOSCALING_GROUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.ROLLBACK)),
   AWS_AMI_ROLLBACK_SWITCH_ROUTES(AwsAmiRollbackSwitchRoutesState.class, ROLLBACK_AUTOSCALING_GROUP_ROUTE,
       asList(WorkflowStepType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
-      Lists.newArrayList(DeploymentType.AMI), true),
+      Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.ROLLBACK)),
 
   // ECS
   ECS_SERVICE_SETUP(EcsServiceSetup.class, WorkflowServiceHelper.ECS_SERVICE_SETUP, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS)),
+      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK)),
   ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, WorkflowServiceHelper.ECS_DAEMON_SERVICE_SETUP,
-      asList(WorkflowStepType.ECS), asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS)),
+      asList(WorkflowStepType.ECS), asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS),
+      asList(PhaseType.NON_ROLLBACK)),
   ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, ECS_BG_SERVICE_SETUP_ELB, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS)),
+      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK)),
   ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, ECS_BG_SERVICE_SETUP_ROUTE_53,
-      asList(WorkflowStepType.ECS), asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS)),
+      asList(WorkflowStepType.ECS), asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS),
+      asList(PhaseType.NON_ROLLBACK)),
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, ECS_UPGRADE_CONTAINERS, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS)),
+      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK)),
   ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, ECS_STEADY_STATE_CHK, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS)),
+      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK)),
   ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, ECS_SWAP_TARGET_GROUPS, asList(WorkflowStepType.ECS),
-      singletonList(ECS_UPDATE_LISTENER_BG), Lists.newArrayList(DeploymentType.ECS)),
+      singletonList(ECS_UPDATE_LISTENER_BG), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK)),
   ECS_ROUTE53_DNS_WEIGHT_UPDATE(EcsBGUpdateRoute53DNSWeightState.class, ECS_ROUTE53_DNS_WEIGHTS,
       asList(WorkflowStepType.ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT),
-      Lists.newArrayList(DeploymentType.ECS)),
+      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK)),
 
   ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, ROLLBACK_ECS_SETUP, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), true),
+      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK)),
   ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, ECS_ROLLBACK_CONTAINERS, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), true),
+      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK)),
   ECS_ROUTE53_DNS_WEIGHT_UPDATE_ROLLBACK(EcsBGRollbackRoute53DNSWeightState.class, ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS,
       asList(WorkflowStepType.ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT),
-      Lists.newArrayList(DeploymentType.ECS), true),
+      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK)),
   ECS_LISTENER_UPDATE_ROLLBACK(EcsBGUpdateListnerRollbackState.class, ECS_SWAP_TARGET_GROUPS_ROLLBACK,
       asList(WorkflowStepType.ECS), singletonList(ECS_UPDATE_LISTENER_BG), Lists.newArrayList(DeploymentType.ECS),
-      true),
+      asList(PhaseType.ROLLBACK)),
 
   // Spot Instance
   SPOTINST_SETUP(SpotInstServiceSetup.class, WorkflowServiceHelper.SPOTINST_SETUP, asList(WorkflowStepType.SPOTINST),
-      asList(PhaseStepType.SPOTINST_SETUP), Lists.newArrayList(DeploymentType.AMI)),
+      asList(PhaseStepType.SPOTINST_SETUP), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   SPOTINST_DEPLOY(SpotInstDeployState.class, WorkflowServiceHelper.SPOTINST_DEPLOY, asList(WorkflowStepType.SPOTINST),
-      asList(PhaseStepType.SPOTINST_DEPLOY), Lists.newArrayList(DeploymentType.AMI)),
+      asList(PhaseStepType.SPOTINST_DEPLOY), Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   SPOTINST_LISTENER_UPDATE(SpotInstListenerUpdateState.class, WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE,
       asList(WorkflowStepType.SPOTINST), asList(PhaseStepType.SPOTINST_LISTENER_UPDATE),
-      Lists.newArrayList(DeploymentType.AMI)),
+      Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.NON_ROLLBACK)),
   SPOTINST_ROLLBACK(SpotInstRollbackState.class, WorkflowServiceHelper.SPOTINST_ROLLBACK,
       asList(WorkflowStepType.SPOTINST), asList(PhaseStepType.SPOTINST_ROLLBACK),
-      Lists.newArrayList(DeploymentType.AMI), true),
+      Lists.newArrayList(DeploymentType.AMI), asList(PhaseType.ROLLBACK)),
   SPOTINST_LISTENER_UPDATE_ROLLBACK(SpotInstListenerUpdateRollbackState.class,
       WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE_ROLLBACK, asList(WorkflowStepType.SPOTINST),
-      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK), Lists.newArrayList(DeploymentType.AMI), true),
+      asList(PhaseStepType.SPOTINST_LISTENER_UPDATE_ROLLBACK), Lists.newArrayList(DeploymentType.AMI),
+      asList(PhaseType.ROLLBACK)),
 
   // K8S
   KUBERNETES_SETUP(KubernetesSetup.class, KUBERNETES_SERVICE_SETUP, asList(WorkflowStepType.KUBERNETES),
-      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK)),
   KUBERNETES_DEPLOY(KubernetesDeploy.class, KUBERNETES_UPGRADE_CONTAINERS, asList(WorkflowStepType.KUBERNETES),
-      asList(CONTAINER_DEPLOY, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(CONTAINER_DEPLOY, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   KUBERNETES_STEADY_STATE_CHECK(KubernetesSteadyStateCheck.class, WorkflowServiceHelper.KUBERNETES_STEADY_STATE_CHECK,
-      asList(WorkflowStepType.KUBERNETES), asList(CONTAINER_DEPLOY),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(WorkflowStepType.KUBERNETES), asList(CONTAINER_DEPLOY, CONTAINER_SETUP),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, GCP_CLUSTER_SETUP_NAME, asList(WorkflowStepType.KUBERNETES),
-      asList(CLUSTER_SETUP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(CLUSTER_SETUP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK)),
   K8S_CANARY_DEPLOY(K8sCanaryDeploy.class, WorkflowConstants.K8S_CANARY_DEPLOY, asList(KUBERNETES),
-      asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK)),
   K8S_BLUE_GREEN_DEPLOY(K8sBlueGreenDeploy.class, WorkflowConstants.K8S_BLUE_GREEN_DEPLOY, asList(KUBERNETES),
-      asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
-  KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, SWAP_SERVICE_SELECTORS, asList(KUBERNETES),
-      asList(CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP, K8S_PHASE_STEP),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK)),
   K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, WorkflowConstants.K8S_DEPLOYMENT_ROLLING, asList(KUBERNETES),
-      asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK)),
+  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
+      asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), asList(PhaseType.ROLLBACK)),
+  KUBERNETES_SWAP_SERVICE_SELECTORS(KubernetesSwapServiceSelectors.class, SWAP_SERVICE_SELECTORS, asList(KUBERNETES),
+      asList(CONTAINER_SETUP, CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP, K8S_PHASE_STEP),
+      Lists.newArrayList(DeploymentType.KUBERNETES), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   K8S_TRAFFIC_SPLIT(K8sTrafficSplitState.class, K8S_TRAFFIC_SPLIT_STATE_NAME, asList(KUBERNETES),
-      asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
-  K8S_APPLY(K8sApplyState.class, K8S_APPLY_STATE, asList(KUBERNETES), asList(K8S_PHASE_STEP),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
-  K8S_SCALE(K8sScale.class, WorkflowConstants.K8S_SCALE, asList(KUBERNETES), asList(K8S_PHASE_STEP),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
-  K8S_DELETE(K8sDelete.class, WorkflowConstants.K8S_DELETE, asList(KUBERNETES), asList(K8S_PHASE_STEP),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      asList(K8S_PHASE_STEP, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  K8S_SCALE(K8sScale.class, WorkflowConstants.K8S_SCALE, asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  K8S_DELETE(K8sDelete.class, WorkflowConstants.K8S_DELETE, asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  K8S_APPLY(K8sApplyState.class, K8S_APPLY_STATE, asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   ROLLING_NODE_SELECT(RollingNodeSelectState.class, ROLLING_SELECT_NODES, asList(WorkflowStepType.KUBERNETES),
-      asList(SELECT_NODE), asList()),
+      asList(SELECT_NODE), asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK)),
 
   KUBERNETES_SETUP_ROLLBACK(KubernetesSetupRollback.class, ROLLBACK_KUBERNETES_SETUP,
       asList(WorkflowStepType.KUBERNETES), asList(CONTAINER_SETUP),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), true),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), asList(PhaseType.ROLLBACK)),
   KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, KUBERNETES_ROLLBACK_CONTAINERS,
       asList(WorkflowStepType.KUBERNETES), asList(CONTAINER_DEPLOY),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), true),
-  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
-      asList(KUBERNETES), asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
-      true),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), asList(PhaseType.ROLLBACK)),
 
   // Helm
   HELM_DEPLOY(HelmDeployState.class, WorkflowServiceHelper.HELM_DEPLOY, asList(HELM), asList(PhaseStepType.HELM_DEPLOY),
-      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), asList(PhaseType.NON_ROLLBACK)),
   HELM_ROLLBACK(HelmRollbackState.class, WorkflowServiceHelper.HELM_ROLLBACK, asList(HELM),
-      asList(PhaseStepType.HELM_DEPLOY), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), true),
+      asList(PhaseStepType.HELM_DEPLOY), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
+      asList(PhaseType.ROLLBACK)),
 
   // PCF
   PCF_SETUP(PcfSetupState.class, WorkflowServiceHelper.PCF_SETUP, asList(PCF), asList(PhaseStepType.PCF_SETUP),
-      Lists.newArrayList(DeploymentType.PCF)),
+      Lists.newArrayList(DeploymentType.PCF), asList(PhaseType.NON_ROLLBACK)),
   PCF_RESIZE(PcfDeployState.class, WorkflowServiceHelper.PCF_RESIZE, asList(PCF), asList(PhaseStepType.PCF_RESIZE),
-      Lists.newArrayList(DeploymentType.PCF)),
+      Lists.newArrayList(DeploymentType.PCF), asList(PhaseType.NON_ROLLBACK)),
   PCF_MAP_ROUTE(MapRouteState.class, PCF_MAP_ROUTE_NAME, asList(PCF), asList(PhaseStepType.PCF_RESIZE),
-      Lists.newArrayList(DeploymentType.PCF)),
+      Lists.newArrayList(DeploymentType.PCF), asList(PhaseType.NON_ROLLBACK)),
   PCF_UNMAP_ROUTE(UnmapRouteState.class, PCF_UNMAP_ROUTE_NAME, asList(PCF), asList(PhaseStepType.PCF_RESIZE),
-      Lists.newArrayList(DeploymentType.PCF)),
-  PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, WorkflowServiceHelper.PCF_BG_MAP_ROUTE, asList(PCF),
-      asList(PhaseStepType.PCF_RESIZE), Lists.newArrayList(DeploymentType.PCF)),
+      Lists.newArrayList(DeploymentType.PCF), asList(PhaseType.NON_ROLLBACK)),
+  PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, WorkflowServiceHelper.PCF_BG_SWAP_ROUTE, asList(PCF),
+      asList(PhaseStepType.PCF_SWICH_ROUTES), Lists.newArrayList(DeploymentType.PCF),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   PCF_ROLLBACK(PcfRollbackState.class, WorkflowServiceHelper.PCF_ROLLBACK, asList(PCF),
-      asList(PhaseStepType.PCF_RESIZE), Lists.newArrayList(DeploymentType.PCF), true),
-
-  // Cloud Formation
-  CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, CF_CREATE_STACK, asList(CLOUDFORMATION),
-      asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE), Lists.newArrayList(DeploymentType.SSH)),
-  CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, CF_DELETE_STACK, asList(CLOUDFORMATION),
-      asList(POST_DEPLOYMENT, WRAP_UP), Lists.newArrayList(DeploymentType.SSH)),
-  CLOUD_FORMATION_ROLLBACK_STACK(CloudFormationRollbackStackState.class, ROLLBACK_CLOUD_FORMATION,
-      asList(CLOUDFORMATION), singletonList(PRE_DEPLOYMENT), Lists.newArrayList(DeploymentType.SSH), true),
+      asList(PhaseStepType.PCF_RESIZE), Lists.newArrayList(DeploymentType.PCF), asList(PhaseType.ROLLBACK)),
 
   // Infra Provisioners
-  TERRAFORM_APPLY(ApplyTerraformState.class, WorkflowServiceHelper.TERRAFORM_APPLY, asList(INFRASTRUCTURE_PROVISIONER),
-      emptyList(), emptyList()),
+  CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, CF_CREATE_STACK,
+      asList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA),
+      asList(PhaseType.NON_ROLLBACK)),
+  CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, CF_DELETE_STACK,
+      asList(INFRASTRUCTURE_PROVISIONER), asList(POST_DEPLOYMENT, WRAP_UP),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA),
+      asList(PhaseType.NON_ROLLBACK)),
+  CLOUD_FORMATION_ROLLBACK_STACK(CloudFormationRollbackStackState.class, ROLLBACK_CLOUD_FORMATION,
+      asList(INFRASTRUCTURE_PROVISIONER), singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA),
+      asList(PhaseType.ROLLBACK)),
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_PROVISION,
       asList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
-      Lists.newArrayList(DeploymentType.SSH)),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA),
+      asList(PhaseType.NON_ROLLBACK)),
+  TERRAFORM_APPLY(ApplyTerraformState.class, WorkflowServiceHelper.TERRAFORM_APPLY, asList(INFRASTRUCTURE_PROVISIONER),
+      asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_DESTROY,
-      asList(INFRASTRUCTURE_PROVISIONER), asList(POST_DEPLOYMENT), Lists.newArrayList(DeploymentType.SSH)),
+      asList(INFRASTRUCTURE_PROVISIONER), asList(POST_DEPLOYMENT, WRAP_UP),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA),
+      asList(PhaseType.NON_ROLLBACK)),
   TERRAFORM_ROLLBACK(TerraformRollbackState.class, ROLLBACK_TERRAFORM_NAME, asList(INFRASTRUCTURE_PROVISIONER),
-      singletonList(PRE_DEPLOYMENT), Lists.newArrayList(DeploymentType.SSH), true),
+      singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA),
+      asList(PhaseType.ROLLBACK)),
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISION_SHELL_SCRIPT, asList(INFRASTRUCTURE_PROVISIONER),
-      asList(PRE_DEPLOYMENT), emptyList()),
+      asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK)),
+
+  // APM
+  APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  PROMETHEUS(PrometheusState.class, WorkflowServiceHelper.PROMETHEUS, asList(APM),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  DATA_DOG(DatadogState.class, DATADOG_METRICS, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  STACK_DRIVER(StackDriverState.class, STACKDRIVER, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  CLOUD_WATCH(CloudWatchState.class, CLOUDWATCH, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+
+  APM_VERIFICATION(APMVerificationState.class, CUSTOM_METRICS, asList(APM), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+
+  // Logs
+  DATA_DOG_LOG(DatadogLogState.class, DATADOG_LOG, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  BUG_SNAG(BugsnagState.class, WorkflowServiceHelper.BUG_SNAG, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)), //
+  ELK(ElkAnalysisState.class, WorkflowServiceHelper.ELK, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  SPLUNKV2(SplunkV2State.class, SPLUNK_V2, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  STACK_DRIVER_LOG(StackDriverLogState.class, STACKDRIVER_LOG, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  SUMO(SumoLogicAnalysisState.class, SUMO_LOGIC, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  LOGZ(LogzAnalysisState.class, WorkflowServiceHelper.LOGZ, asList(LOG), asList(VERIFY_SERVICE, K8S_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+  LOG_VERIFICATION(CustomLogVerificationState.class, CUSTOM_LOG_VERIFICATION, asList(LOG),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   // Issue Tracking
-  JIRA_CREATE_UPDATE(JiraCreateUpdate.class, JIRA, asList(ISSUE_TRACKING), emptyList(), emptyList()),
-  SERVICENOW_CREATE_UPDATE(
-      ServiceNowCreateUpdateState.class, SERVICENOW, asList(ISSUE_TRACKING), emptyList(), emptyList()),
+  JIRA_CREATE_UPDATE(JiraCreateUpdate.class, JIRA, asList(ISSUE_TRACKING), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  SERVICENOW_CREATE_UPDATE(ServiceNowCreateUpdateState.class, SERVICENOW, asList(ISSUE_TRACKING),
+      asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
   // Notifications
-  EMAIL(EmailState.class, WorkflowServiceHelper.EMAIL, asList(NOTIFICATION), emptyList(), emptyList()),
+  EMAIL(EmailState.class, WorkflowServiceHelper.EMAIL, asList(NOTIFICATION), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
   // Flow Control
-  BARRIER(BarrierState.class, WorkflowServiceHelper.BARRIER, asList(WorkflowStepType.FLOW_CONTROL), emptyList(),
-      emptyList()),
+  BARRIER(BarrierState.class, WorkflowServiceHelper.BARRIER, asList(WorkflowStepType.FLOW_CONTROL),
+      asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   RESOURCE_CONSTRAINT(ResourceConstraintState.class, WorkflowServiceHelper.RESOURCE_CONSTRAINT,
-      asList(WorkflowStepType.FLOW_CONTROL), emptyList(), emptyList()),
-  APPROVAL(ApprovalState.class, APPROVAL_NAME, asList(WorkflowStepType.FLOW_CONTROL), emptyList(), emptyList()),
+      asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  APPROVAL(ApprovalState.class, APPROVAL_NAME, asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
-  // Build System
-  JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), emptyList(), emptyList()),
-  BAMBOO(BambooState.class, WorkflowServiceHelper.BAMBOO, asList(CI_SYSTEM), emptyList(), emptyList()),
+  // CI System
+  JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  BAMBOO(BambooState.class, WorkflowServiceHelper.BAMBOO, asList(CI_SYSTEM), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
   // Utility
-  SHELL_SCRIPT(ShellScriptState.class, WorkflowServiceHelper.SHELL_SCRIPT, asList(UTILITY), asList(), asList()),
-  HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(), asList()),
+  SHELL_SCRIPT(ShellScriptState.class, WorkflowServiceHelper.SHELL_SCRIPT, asList(UTILITY),
+      asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+  HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
-      asList(UTILITY), asList(VERIFY_SERVICE, K8S_PHASE_STEP), emptyList()),
+      asList(UTILITY), asList(VERIFY_SERVICE, K8S_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
   // Command
-  COMMAND(CommandState.class, COMMAND_NAME, asList(WorkflowStepType.SERVICE_COMMAND), asList(),
-      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM));
+  COMMAND(CommandState.class, COMMAND_NAME, asList(WorkflowStepType.SERVICE_COMMAND), asList(PhaseStepType.values()),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK));
 
   private final Class<? extends State> stateClass;
   private List<String> phaseStepTypes = new ArrayList<>();
   private String displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
   private List<DeploymentType> deploymentTypes = emptyList();
   private List<WorkflowStepType> workflowStepTypes = emptyList();
-  private boolean isRollback;
+  private List<PhaseType> phaseTypes = emptyList();
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
-      List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes) {
+      List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes) {
     this.stateClass = stateClass;
     this.displayName = displayName;
     this.deploymentTypes = deploymentTypes;
     this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
     this.workflowStepTypes = workflowStepTypes;
-    this.isRollback = false;
-  }
-
-  StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
-      List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, boolean isRollback) {
-    this.stateClass = stateClass;
-    this.displayName = displayName;
-    this.deploymentTypes = deploymentTypes;
-    this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
-    this.workflowStepTypes = workflowStepTypes;
-    this.isRollback = isRollback;
+    this.phaseTypes = phaseTypes;
   }
 
   public List<WorkflowStepType> getWorkflowStepTypes() {
@@ -503,27 +545,33 @@ public enum StepType {
     return phaseStepTypes;
   }
 
-  public boolean isRollback() {
-    return isRollback;
+  public List<PhaseType> getPhaseTypes() {
+    return phaseTypes;
   }
 
   public boolean matches(DeploymentType deploymentType) {
     // Deployment type == null in case of build workflow for pre-deployment section
-    if (isEmpty(deploymentTypes) || deploymentType == null) {
-      return true;
-    }
-    return deploymentTypes.contains(deploymentType);
+    return deploymentTypes.contains(deploymentType) || deploymentType == null;
   }
 
   public static List<StepType> filterByPhaseStepType(String phaseStepType, boolean rollbackSection) {
     List<StepType> stepTypes = new ArrayList<>();
     // go over all step types
-    // if List<PhaseStepType> is empty or contains sectionId(i.e. phase step type) -> include it in list of filtered
+    // if List<PhaseStepType> contains sectionId(i.e. phase step type), then we filter using the rollbackSection flag
+    // if rollbackSection == true check if List<PhaseType> contains ROLLBACK -> include it in list of filtered
+    // if rollbackSection == false check if List<PhaseType> contains NON_ROLLBACK -> include it in list of filtered
     // step types
     for (StepType stepType : StepType.values()) {
-      if (isEmpty(stepType.getPhaseStepTypes())
-          || (stepType.getPhaseStepTypes().contains(phaseStepType) && stepType.isRollback() == rollbackSection)) {
-        stepTypes.add(stepType);
+      if (stepType.getPhaseStepTypes().contains(phaseStepType)) {
+        if (rollbackSection) {
+          if (stepType.getPhaseTypes().contains(PhaseType.ROLLBACK)) {
+            stepTypes.add(stepType);
+          }
+        } else {
+          if (stepType.getPhaseTypes().contains(PhaseType.NON_ROLLBACK)) {
+            stepTypes.add(stepType);
+          }
+        }
       }
     }
     return stepTypes;
@@ -532,9 +580,11 @@ public enum StepType {
   // static map that contains Categories and the corresponding step types in a specific order
   // order of values in each category is governed by the order of StepType enum values.
   // Changing order of that enum will affect the order of steps within each category.
-  // Step types in tern are listed in order of Categories they belong to. Category order is as defined in
-  // WorkflowStepType enum
+  // Step types in turn are listed in order of Categories they belong to. Category order is as defined in
+  // WorkflowStepType enum.
   public static final Map<WorkflowStepType, List<StepType>> workflowStepTypeListMap = new LinkedHashMap<>();
+  public static final Map<InfrastructureMappingType, StepType> infrastructureMappingTypeToStepTypeMap =
+      new LinkedHashMap<>();
 
   static {
     for (StepType st : StepType.values()) {
@@ -543,5 +593,9 @@ public enum StepType {
         listStateType.add(st);
       });
     }
+
+    infrastructureMappingTypeToStepTypeMap.put(PHYSICAL_DATA_CENTER_SSH, DC_NODE_SELECT);
+    infrastructureMappingTypeToStepTypeMap.put(InfrastructureMappingType.AWS_SSH, AWS_NODE_SELECT);
+    infrastructureMappingTypeToStepTypeMap.put(AZURE_INFRA, AZURE_NODE_SELECT);
   }
 }
