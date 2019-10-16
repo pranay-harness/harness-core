@@ -7,20 +7,27 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.ELK;
 import static software.wings.sm.StateType.SPLUNKV2;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
@@ -41,6 +48,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import retrofit2.Call;
 import retrofit2.Response;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.FeatureName;
@@ -1618,6 +1626,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
     assertThat(9).isEqualTo(endTime);
   }
+
   @Test
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisNoLEAnalysis() {
@@ -1641,6 +1650,407 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     assertThat(created).isFalse();
     assertThat(feedbackRecord).isNull();
     assertThat(isEmpty(records)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSaveClusteredLogDataNoCvConfig() {
+    assertThat(analysisService.saveClusteredLogData(appId, generateUuid(), ClusterLevel.L1, 0, generateUuid(), null))
+        .isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSaveClusteredLogDataL0ToL1() {
+    createLogsCVConfig(true);
+    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
+
+    Random r = new Random();
+    int numOfHosts = 1 + r.nextInt(10);
+    int numOfL0Records = 1 + r.nextInt(10);
+    int numOfMinutes = 1 + r.nextInt(5);
+    int logCollectionMinuteBase = 1 + r.nextInt(5000);
+    logger.info("numOfHosts: {}, numOfL0Records: {} numOfMinutes: {}", numOfHosts, numOfL0Records, numOfMinutes);
+
+    for (int logCollectionMinute = logCollectionMinuteBase;
+         logCollectionMinute < logCollectionMinuteBase + numOfMinutes; logCollectionMinute++) {
+      for (int hostNum = 0; hostNum < numOfHosts; hostNum++) {
+        for (int l1 = 0; l1 < numOfL0Records; l1++) {
+          wingsPersistence.save(LogDataRecord.builder()
+                                    .cvConfigId(cvConfigId)
+                                    .logMessage(generateUuid())
+                                    .clusterLevel(ClusterLevel.L0)
+                                    .host("host-" + hostNum)
+                                    .logCollectionMinute(logCollectionMinute)
+                                    .build());
+        }
+
+        wingsPersistence.save(LearningEngineAnalysisTask.builder()
+                                  .cvConfigId(cvConfigId)
+                                  .state_execution_id("LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute)
+                                  .analysis_minute(logCollectionMinute)
+                                  .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
+                                  .cluster_level(ClusterLevel.L1.getLevel())
+                                  .executionStatus(ExecutionStatus.RUNNING)
+                                  .build());
+      }
+    }
+
+    for (int logCollectionMinute = logCollectionMinuteBase;
+         logCollectionMinute < logCollectionMinuteBase + numOfMinutes; logCollectionMinute++) {
+      for (int hostNum = 0; hostNum < numOfHosts; hostNum++) {
+        List<LogElement> logElements = Lists.newArrayList(LogElement.builder()
+                                                              .host("host-" + hostNum)
+                                                              .logCollectionMinute(logCollectionMinute)
+                                                              .logMessage(generateUuid())
+                                                              .count(r.nextInt())
+                                                              .clusterLabel("2")
+                                                              .build());
+
+        assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                       .filter(LogDataRecordKeys.host, "host-" + hostNum)
+                       .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L0)
+                       .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
+                       .count())
+            .isEqualTo(numOfL0Records);
+
+        final boolean status = analysisService.saveClusteredLogData(
+            appId, cvConfigId, ClusterLevel.L1, logCollectionMinute, "host-" + hostNum, logElements);
+        assertThat(status).isTrue();
+        assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                       .filter(LogDataRecordKeys.host, "host-" + hostNum)
+                       .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L0)
+                       .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
+                       .count())
+            .isEqualTo(0);
+
+        assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                       .filter(LogDataRecordKeys.host, "host-" + hostNum)
+                       .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L1)
+                       .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
+                       .count())
+            .isEqualTo(logElements.size());
+
+        final LearningEngineAnalysisTask analysisL1Task =
+            wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+                .filter(LearningEngineAnalysisTaskKeys.state_execution_id,
+                    "LOGS_CLUSTER_L1_" + cvConfigId + "_" + logCollectionMinute)
+                .get();
+
+        if (hostNum == numOfHosts - 1) {
+          assertThat(analysisL1Task.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+        } else {
+          assertThat(analysisL1Task.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+        }
+      }
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSaveClusteredLogDataL1ToL2() {
+    createLogsCVConfig(true);
+    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
+
+    Random r = new Random();
+    int numOfHosts = 1 + r.nextInt(10);
+    int numOfL1Records = 1 + r.nextInt(10);
+    int numOfMinutes = 1 + r.nextInt(5);
+    int logCollectionMinuteBase = 1 + r.nextInt(5000);
+    logger.info("numOfHosts: {}, numOfL0Records: {} numOfL1Records: {} numOfMinutes: {}", numOfHosts, numOfL1Records,
+        numOfMinutes);
+
+    for (int logCollectionMinute = logCollectionMinuteBase;
+         logCollectionMinute < logCollectionMinuteBase + numOfMinutes; logCollectionMinute++) {
+      for (int hostNum = 0; hostNum < numOfHosts; hostNum++) {
+        for (int l2 = 0; l2 < numOfL1Records; l2++) {
+          wingsPersistence.save(LogDataRecord.builder()
+                                    .cvConfigId(cvConfigId)
+                                    .logMessage(generateUuid())
+                                    .clusterLevel(ClusterLevel.L1)
+                                    .host("host-" + hostNum)
+                                    .logCollectionMinute(logCollectionMinute)
+                                    .build());
+        }
+
+        wingsPersistence.save(LearningEngineAnalysisTask.builder()
+                                  .cvConfigId(cvConfigId)
+                                  .state_execution_id("LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute)
+                                  .analysis_minute(logCollectionMinute)
+                                  .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
+                                  .cluster_level(ClusterLevel.L2.getLevel())
+                                  .executionStatus(ExecutionStatus.RUNNING)
+                                  .build());
+      }
+    }
+
+    for (int logCollectionMinute = logCollectionMinuteBase;
+         logCollectionMinute < logCollectionMinuteBase + numOfMinutes; logCollectionMinute++) {
+      assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                     .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L1)
+                     .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
+                     .count())
+          .isEqualTo(numOfL1Records * numOfHosts);
+      List<LogElement> logElements = Lists.newArrayList(LogElement.builder()
+                                                            .host("host")
+                                                            .logCollectionMinute(logCollectionMinute)
+                                                            .logMessage(generateUuid())
+                                                            .count(r.nextInt())
+                                                            .clusterLabel("2")
+                                                            .build());
+
+      final boolean status = analysisService.saveClusteredLogData(
+          appId, cvConfigId, ClusterLevel.L2, logCollectionMinute, null, logElements);
+      assertThat(status).isTrue();
+      assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                     .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L1)
+                     .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
+                     .count())
+          .isEqualTo(0);
+
+      assertThat(wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority)
+                     .filter(LogDataRecordKeys.clusterLevel, ClusterLevel.L2)
+                     .filter(LogDataRecordKeys.logCollectionMinute, logCollectionMinute)
+                     .count())
+          .isEqualTo(logElements.size());
+      final LearningEngineAnalysisTask analysisL1Task =
+          wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority)
+              .filter(LearningEngineAnalysisTaskKeys.state_execution_id,
+                  "LOGS_CLUSTER_L2_" + cvConfigId + "_" + logCollectionMinute)
+              .get();
+      assertThat(analysisL1Task.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLogDataServiceGuard() {
+    createLogsCVConfig(true);
+    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
+    int numOfMinutes = 100;
+    int numOfHosts = 5;
+
+    for (int logCollectionMinute = 0; logCollectionMinute < numOfMinutes; logCollectionMinute++) {
+      for (int hostNum = 0; hostNum < numOfHosts; hostNum++) {
+        wingsPersistence.save(LogDataRecord.builder()
+                                  .cvConfigId(cvConfigId)
+                                  .logMessage(generateUuid())
+                                  .clusterLevel(ClusterLevel.L0)
+                                  .host("host-" + hostNum)
+                                  .logCollectionMinute(logCollectionMinute)
+                                  .build());
+      }
+    }
+
+    // ask for wrong time boundaries
+    try {
+      analysisService.getLogData(appId, cvConfigId, ClusterLevel.L0, 5, 3, 6, null);
+      fail("passed for invalid times");
+    } catch (Exception e) {
+      // expected
+    }
+
+    // ask for wrong labels host combination
+    try {
+      analysisService.getLogData(appId, cvConfigId, ClusterLevel.L0, 5, 0, 0, LogRequest.builder().build());
+      fail("passed for invalid times");
+    } catch (Exception e) {
+      // expected
+    }
+
+    assertThat(analysisService
+                   .getLogData(appId, cvConfigId, ClusterLevel.L0, 5, 0, 0,
+                       LogRequest.builder().nodes(Sets.newHashSet("host-0", "host-1")).build())
+                   .size())
+        .isEqualTo(2);
+
+    assertThat(analysisService
+                   .getLogData(appId, cvConfigId, ClusterLevel.L0, 0, 10, 19,
+                       LogRequest.builder().nodes(Sets.newHashSet("host-0", "host-1")).build())
+                   .size())
+        .isEqualTo(20);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLastSuccessfulWorkflowExecutionIdWithLogs() {
+    int numOfWorkflowExecutions = 20;
+    String query = generateUuid();
+    assertThat(analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+                   StateType.SUMO, appId, serviceId, workflowId, query))
+        .isNull();
+
+    for (int i = 0; i < numOfWorkflowExecutions; i++) {
+      wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
+                                .workflowId(workflowId)
+                                .stateType(StateType.SUMO)
+                                .executionStatus(i % 2 == 0 ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS)
+                                .workflowStartTs(i)
+                                .workflowExecutionId("execution-" + i)
+                                .build());
+    }
+
+    assertThat(analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+                   StateType.SUMO, appId, serviceId, workflowId, query))
+        .isEqualTo("execution-19");
+
+    wingsPersistence.save(
+        LogDataRecord.builder().workflowExecutionId("execution-15").clusterLevel(ClusterLevel.L2).query(query).build());
+    assertThat(analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+                   StateType.SUMO, appId, serviceId, workflowId, query))
+        .isEqualTo("execution-15");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetMaxCVCollectionMinute() {
+    String cvConfigId = generateUuid();
+    assertThat(analysisService.getMaxCVCollectionMinute(appId, cvConfigId)).isNegative();
+    for (int i = 1; i <= 100; i++) {
+      wingsPersistence.save(LogDataRecord.builder().cvConfigId(cvConfigId).logCollectionMinute(i).build());
+    }
+    assertThat(analysisService.getMaxCVCollectionMinute(appId, cvConfigId)).isEqualTo(100);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLogRecordMinute() {
+    String cvConfigId = generateUuid();
+    assertThat(analysisService.getLogRecordMinute(appId, cvConfigId, ClusterLevel.L0, OrderType.ASC)).isNegative();
+    for (int i = 1; i <= 100; i++) {
+      wingsPersistence.save(
+          LogDataRecord.builder().cvConfigId(cvConfigId).logCollectionMinute(i).clusterLevel(ClusterLevel.L0).build());
+    }
+    assertThat(analysisService.getLogRecordMinute(appId, cvConfigId, ClusterLevel.L0, OrderType.ASC)).isEqualTo(1);
+    assertThat(analysisService.getLogRecordMinute(appId, cvConfigId, ClusterLevel.L0, OrderType.DESC)).isEqualTo(100);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLastCVAnalysisMinute() {
+    createLogsCVConfig(true);
+    String cvConfigId = wingsPersistence.save(logsCVConfiguration);
+    assertThat(analysisService.getLastCVAnalysisMinute(appId, cvConfigId, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE))
+        .isEqualTo(-1);
+
+    for (int i = 1; i <= 100; i++) {
+      final LogMLAnalysisRecord mlAnalysisRecord =
+          LogMLAnalysisRecord.builder().cvConfigId(cvConfigId).logCollectionMinute(i).build();
+      mlAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+      wingsPersistence.save(mlAnalysisRecord);
+    }
+
+    assertThat(analysisService.getLastCVAnalysisMinute(appId, cvConfigId, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE))
+        .isEqualTo(-1);
+    assertThat(
+        analysisService.getLastCVAnalysisMinute(appId, cvConfigId, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE))
+        .isEqualTo(100);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLastWorkflowAnalysisMinute() {
+    assertThat(analysisService.getLastWorkflowAnalysisMinute(
+                   appId, stateExecutionId, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE))
+        .isEqualTo(-1);
+
+    for (int i = 1; i <= 100; i++) {
+      final LogMLAnalysisRecord mlAnalysisRecord =
+          LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).logCollectionMinute(i).build();
+      mlAnalysisRecord.setAnalysisStatus(LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE);
+      wingsPersistence.save(mlAnalysisRecord);
+    }
+
+    assertThat(analysisService.getLastWorkflowAnalysisMinute(
+                   appId, stateExecutionId, LogMLAnalysisStatus.LE_ANALYSIS_COMPLETE))
+        .isEqualTo(-1);
+    assertThat(analysisService.getLastWorkflowAnalysisMinute(
+                   appId, stateExecutionId, LogMLAnalysisStatus.FEEDBACK_ANALYSIS_COMPLETE))
+        .isEqualTo(100);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLastLogDataCollectedMinute() {
+    String query = generateUuid();
+    assertThat(analysisService.getLastLogDataCollectedMinute(query, appId, stateExecutionId, StateType.SUMO))
+        .isEqualTo(-1);
+
+    for (int i = 1; i <= 100; i++) {
+      wingsPersistence.save(LogDataRecord.builder().stateExecutionId(stateExecutionId).logCollectionMinute(i).build());
+    }
+
+    assertThat(analysisService.getLastLogDataCollectedMinute(query, appId, stateExecutionId, StateType.SUMO))
+        .isEqualTo(100);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testIsAnalysisPresent() {
+    assertThat(analysisService.isAnalysisPresent(stateExecutionId, appId)).isFalse();
+    wingsPersistence.save(
+        LogMLAnalysisRecord.builder().stateExecutionId(stateExecutionId).logCollectionMinute(100).build());
+    assertThat(analysisService.isAnalysisPresent(stateExecutionId, appId)).isTrue();
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testGetLastExecutionNodesNoExecution() {
+    analysisService.getLastExecutionNodes(appId, workflowId);
+  }
+
+  @Test(expected = WingsException.class)
+  @Category(UnitTests.class)
+  public void testGetLastExecutionNodesNoSummary() {
+    final WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .appId(appId)
+            .workflowId(workflowId)
+            .status(ExecutionStatus.SUCCESS)
+            .serviceExecutionSummaries(Lists.newArrayList(anElementExecutionSummary().build()))
+            .build();
+    wingsPersistence.save(workflowExecution);
+    analysisService.getLastExecutionNodes(appId, workflowId);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLastExecutionNodes() {
+    final WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .appId(appId)
+            .workflowId(workflowId)
+            .status(ExecutionStatus.SUCCESS)
+            .serviceExecutionSummaries(Lists.newArrayList(
+                anElementExecutionSummary()
+                    .withInstanceStatusSummaries(Lists.newArrayList(
+                        anInstanceStatusSummary()
+                            .withInstanceElement(
+                                anInstanceElement().hostName("host1").displayName("hostDisplayName").build())
+                            .build()))
+                    .build()))
+            .build();
+    wingsPersistence.save(workflowExecution);
+    final Map<String, InstanceElement> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
+    assertThat(lastExecutionNodes)
+        .isEqualTo(Collections.singletonMap(
+            "host1", anInstanceElement().hostName("host1").displayName("hostDisplayName").build()));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateAndSaveSummary() {
+    String query = generateUuid();
+    String message = generateUuid();
+    analysisService.createAndSaveSummary(StateType.SUMO, appId, stateExecutionId, query, message);
+    final LogMLAnalysisRecord logMLAnalysisRecord =
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class, excludeAuthority)
+            .filter(LogMLAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+            .get();
+
+    assertThat(logMLAnalysisRecord.getQuery()).isEqualTo(query);
+    assertThat(logMLAnalysisRecord.getAnalysisSummaryMessage()).isEqualTo(message);
+    assertThat(logMLAnalysisRecord.getStateType()).isEqualTo(StateType.SUMO);
   }
 
   private void createLETaskForBackoffTest(int analysisMinute, int backoffCount) {
