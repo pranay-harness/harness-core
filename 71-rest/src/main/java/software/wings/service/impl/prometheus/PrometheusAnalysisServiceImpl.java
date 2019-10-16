@@ -1,6 +1,7 @@
 package software.wings.service.impl.prometheus;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.resources.PrometheusResource.renderFetchQueries;
@@ -26,9 +27,7 @@ import software.wings.service.impl.apm.MLServiceUtils;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
-import software.wings.service.intfc.security.SecretManager;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
@@ -42,7 +41,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private SecretManager secretManager;
   @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
@@ -51,48 +49,62 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
     final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
     ThirdPartyApiCallLog apiCallLog = createApiCallLog(settingAttribute.getAccountId(), setupTestNodeData.getGuid());
 
-    String hostName = null;
-    if (!setupTestNodeData.isServiceLevel()) {
-      hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
-    }
-
-    VerificationNodeDataSetupResponse setupResponse =
-        VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
-
     // Request is made without host
     Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeriesWithoutHost =
         getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, null);
 
-    if (setupTestNodeData.isServiceLevel() || !metricDataResponseByTimeSeriesWithoutHost.isEmpty()) {
-      return VerificationNodeDataSetupResponse.builder()
-          .providerReachable(true)
-          .loadResponse(VerificationLoadResponse.builder()
-                            .isLoadPresent(!metricDataResponseByTimeSeriesWithoutHost.isEmpty())
-                            .loadResponse(metricDataResponseByTimeSeriesWithoutHost)
-                            .build())
-          .build();
+    if (metricDataResponseByTimeSeriesWithoutHost == null) {
+      // exception occurred during the call, provider not reachable.
+      return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
+    }
+    PrometheusMetricDataResponse responseDataFromDelegateForServiceLevel =
+        metricDataResponseByTimeSeriesWithoutHost.values().iterator().next();
+    boolean isLoadPresentForServiceLevel = responseDataFromDelegateForServiceLevel != null
+        && isNotEmpty(responseDataFromDelegateForServiceLevel.getData().getResult());
+
+    if (setupTestNodeData.isServiceLevel()) {
+      VerificationNodeDataSetupResponse responseForServiceLevel =
+          VerificationNodeDataSetupResponse.builder().providerReachable(true).build();
+      responseForServiceLevel.setLoadResponse(VerificationLoadResponse.builder()
+                                                  .isLoadPresent(isLoadPresentForServiceLevel)
+                                                  .loadResponse(responseDataFromDelegateForServiceLevel)
+                                                  .build());
+
+      return responseForServiceLevel;
     }
 
-    // No need to make a call with host if no data is present for without host.
-    if (metricDataResponseByTimeSeriesWithoutHost.isEmpty()) {
-      return setupResponse;
-    }
-
-    // Request is made with host
+    // make a call with hostname
+    String hostName = mlServiceUtils.getHostNameFromExpression(setupTestNodeData);
     Map<TimeSeries, PrometheusMetricDataResponse> metricDataResponseByTimeSeriesWithHost =
         getMetricDataByTimeSeries(setupTestNodeData, settingAttribute, apiCallLog, hostName);
 
-    if (!metricDataResponseByTimeSeriesWithHost.isEmpty()) {
-      setupResponse = VerificationNodeDataSetupResponse.builder()
-                          .providerReachable(true)
-                          .loadResponse(VerificationLoadResponse.builder()
-                                            .isLoadPresent(!metricDataResponseByTimeSeriesWithoutHost.isEmpty())
-                                            .loadResponse(metricDataResponseByTimeSeriesWithHost)
-                                            .build())
-                          .dataForNode(metricDataResponseByTimeSeriesWithHost)
-                          .build();
+    if (isEmpty(metricDataResponseByTimeSeriesWithHost)) {
+      // provider was reachable based on first find but something happened in the call with host.
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .loadResponse(VerificationLoadResponse.builder()
+                            .isLoadPresent(isLoadPresentForServiceLevel)
+                            .loadResponse(responseDataFromDelegateForServiceLevel)
+                            .build())
+          .dataForNode(null)
+          .build();
     }
-    return setupResponse;
+    PrometheusMetricDataResponse responseDataFromDelegateForHost =
+        metricDataResponseByTimeSeriesWithHost.values().iterator().next();
+    Object responseDataForHost;
+    if (responseDataFromDelegateForHost == null || responseDataFromDelegateForHost.getData() == null) {
+      responseDataForHost = null;
+    } else {
+      responseDataForHost = responseDataFromDelegateForHost.getData().getResult();
+    }
+    return VerificationNodeDataSetupResponse.builder()
+        .providerReachable(true)
+        .loadResponse(VerificationLoadResponse.builder()
+                          .isLoadPresent(isLoadPresentForServiceLevel)
+                          .loadResponse(responseDataFromDelegateForServiceLevel)
+                          .build())
+        .dataForNode(responseDataForHost)
+        .build();
   }
 
   /**
@@ -128,8 +140,9 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
             delegateProxyFactory.get(PrometheusDelegateService.class, taskContext)
                 .fetchMetricData((PrometheusConfig) settingAttribute.getValue(), url, apiCallLog);
         metricDataResponseByTimeSeries.put(timeSeries, response);
-      } catch (IOException e) {
-        return metricDataResponseByTimeSeries;
+      } catch (Exception e) {
+        logger.info("Exception while trying to collect data for prometheus test: ", e);
+        return null;
       }
     }
     return metricDataResponseByTimeSeries;
