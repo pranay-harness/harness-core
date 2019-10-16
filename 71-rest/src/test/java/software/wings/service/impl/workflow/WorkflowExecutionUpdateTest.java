@@ -2,8 +2,11 @@ package software.wings.service.impl.workflow;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -31,6 +34,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -42,6 +46,8 @@ import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.Duration;
 
 /**
@@ -78,11 +84,12 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldReportDeploymentEventToSegmentByTrigger() throws IllegalAccessException {
+  public void shouldReportDeploymentEventToSegmentByTrigger()
+      throws IllegalAccessException, IOException, URISyntaxException {
     SegmentConfig segmentConfig =
         SegmentConfig.builder().enabled(true).url("https://api.segment.io").apiKey("dummy_api_key").build();
     EventListener eventListener = mock(EventListener.class);
-    SegmentHandler segmentHandler = new SegmentHandler(segmentConfig, eventListener);
+    SegmentHandler segmentHandler = Mockito.spy(new SegmentHandler(segmentConfig, eventListener));
     SegmentHelper segmentHelper = new SegmentHelper();
 
     Utils utils = new Utils();
@@ -93,11 +100,13 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     when(accountService.getFromCacheWithFallback(anyString())).thenReturn(account);
     WorkflowExecution workflowExecution = createNewWorkflowExecution(null);
     workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
+    verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
   }
 
   @Test
   @Category(UnitTests.class)
-  public void shouldReportDeploymentEventToSegmentByUser() throws IllegalAccessException {
+  public void shouldReportDeploymentEventToSegmentByUser()
+      throws IllegalAccessException, IOException, URISyntaxException {
     Account account = testUtils.createAccount();
     User user = testUtils.createUser(account);
     user.setSegmentIdentity(UUIDGenerator.generateUuid());
@@ -108,7 +117,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     when(userService.get(anyString())).thenReturn(user);
     when(userService.getUserFromCacheOrDB(anyString())).thenReturn(user);
     when(userService.update(any(User.class))).thenReturn(user);
-    SegmentHandler segmentHandler = new SegmentHandler(segmentConfig, eventListener);
+    SegmentHandler segmentHandler = Mockito.spy(new SegmentHandler(segmentConfig, eventListener));
     SegmentHelper segmentHelper = new SegmentHelper();
     Utils utils = new Utils();
     FieldUtils.writeField(utils, "userService", userService, true);
@@ -122,8 +131,8 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     AcquiredLock acquiredLock = mock(AcquiredLock.class);
     when(persistentLocker.waitToAcquireLock(anyString(), any(Duration.class), any(Duration.class)))
         .thenReturn(acquiredLock);
-    //    when(segmentHandler.updateUserIdentity(any(User.class), anyString())).thenReturn(user);
     WorkflowExecution workflowExecution = createNewWorkflowExecution(user);
     workflowExecutionUpdate.reportDeploymentEventToSegment(workflowExecution);
+    verify(segmentHandler).reportTrackEvent(eq(account), anyString(), anyString(), anyMap(), anyMap());
   }
 }
