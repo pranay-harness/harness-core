@@ -126,7 +126,6 @@ public class WorkflowChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
         if (entityAuditRecord.getAffectedResourceType().equals(EntityType.WORKFLOW.name())
-            && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
           String fieldToUpdate = WorkflowViewKeys.audits;
           String documentToUpdate = entityAuditRecord.getAffectedResourceId();
