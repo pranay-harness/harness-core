@@ -1021,6 +1021,11 @@
                 <version>${pcf.client.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.codehaus.janino</groupId>
+                <artifactId>janino</artifactId>
+                <version>3.0.6</version>
+            </dependency>
+            <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
                 <artifactId>websocket-server</artifactId>
                 <version>9.3.9.v20160517</version>
@@ -1693,7 +1698,6 @@
                         <excludeRoots>
                             <excludeRoot>${generated.repo.code}</excludeRoot>
                         </excludeRoots>
-
                     </configuration>
                     <dependencies>
                         <dependency>
