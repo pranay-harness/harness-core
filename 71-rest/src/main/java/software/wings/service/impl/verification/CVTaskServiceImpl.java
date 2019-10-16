@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -150,6 +151,7 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   private void markStateFailed(CVTask cvTask) {
     if (isWorkflowTask(cvTask)) {
+      Preconditions.checkNotNull(waitNotifyEngine, "Wait notify engine is only available from manager");
       logger.info("Marking stateExecutionId {} as failed", cvTask.getStateExecutionId());
       VerificationStateAnalysisExecutionData analysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
@@ -194,10 +196,6 @@ public class CVTaskServiceImpl implements CVTaskService {
                                           .addFilter(CVTaskKeys.status, Operator.EQ, executionStatus)
                                           .build();
     return wingsPersistence.query(CVTask.class, pageRequest).getResponse();
-  }
-
-  private boolean is24X7Task(CVTask cvTask) {
-    return cvTask.getCvConfigId() != null;
   }
 
   private boolean isWorkflowTask(CVTask cvTask) {

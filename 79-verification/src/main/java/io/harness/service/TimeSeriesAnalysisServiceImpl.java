@@ -43,7 +43,6 @@ import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
-import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdCategory;
 import software.wings.metrics.TimeSeriesDataRecord;
@@ -107,7 +106,7 @@ import java.util.stream.Collectors;
 public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
-  @Inject private VerificationManagerClient managerClient;
+  @VisibleForTesting @Inject private VerificationManagerClient managerClient;
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private DataStoreService dataStoreService;
   @Inject private VerificationServiceConfiguration verificationServiceConfiguration;
@@ -384,7 +383,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .filter("workflowId", workflowId)
         .filter("appId", appId)
         .filter(TimeSeriesMLScoresKeys.analysisMinute, analysisMinute)
-        .field("workflowExecutionIds")
+        .field("workflowExecutionId")
         .in(workflowExecutionIds)
         .order("-createdAt")
         .asList(new FindOptions().limit(limit));
@@ -393,23 +392,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public void saveTimeSeriesMLScores(TimeSeriesMLScores scores) {
     wingsPersistence.save(scores);
-  }
-
-  /**
-   * Method to fetch Experimental Analysis Record for timeseries data.
-   * @param appId
-   * @param stateExecutionId
-   * @param workflowExecutionId
-   * @return
-   */
-  @Override
-  public List<ExperimentalMetricAnalysisRecord> getExperimentalAnalysisRecordsByNaturalKey(
-      String appId, String stateExecutionId, String workflowExecutionId) {
-    return wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class)
-        .filter("appId", appId)
-        .filter("stateExecutionId", stateExecutionId)
-        .filter("workflowExecutionId", workflowExecutionId)
-        .asList();
   }
 
   @Override
@@ -546,27 +528,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .getResource();
   }
 
-  private RiskLevel getRiskLevel(int risk) {
-    RiskLevel riskLevel;
-    switch (risk) {
-      case -1:
-        riskLevel = RiskLevel.NA;
-        break;
-      case 0:
-        riskLevel = RiskLevel.LOW;
-        break;
-      case 1:
-        riskLevel = RiskLevel.MEDIUM;
-        break;
-      case 2:
-        riskLevel = RiskLevel.HIGH;
-        break;
-      default:
-        throw new IllegalArgumentException("Unknown risk level " + risk);
-    }
-    return riskLevel;
-  }
-
   @Override
   @Deprecated
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(String appId, StateType stateType,
@@ -601,11 +562,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       StateType stateType, String stateExecutionId, String serviceId, String cvConfigId, String groupName,
       Version version) {
     Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
-
-    // Add supervised metric thresholds
     addSupervisedMetricThresholds(serviceId, result, version);
-
-    // Add user defined metric thresholds
     addUserDefinedMetricThresholds(appId, stateType, serviceId, cvConfigId, groupName, result);
 
     // Add default metrics under "default" key for all enabled metrics
@@ -775,19 +732,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                       .addFilter(SupervisedTSThresholdKeys.version, Operator.EQ, version)
                       .build())
               .getResponse();
-      if (isNotEmpty(thresholds)) {
-        for (SupervisedTSThreshold threshold : thresholds) {
-          List<Threshold> supervisedThresholds = SupervisedTSThreshold.getThresholds(threshold);
-          if (isNotEmpty(supervisedThresholds)) {
-            updateThresholdDefinitionSkeleton(threshold.getTransactionName(), threshold.getMetricName(),
-                threshold.getMetricType(), metricDefinitionMap);
-            metricDefinitionMap.get(threshold.getTransactionName())
-                .get(threshold.getMetricName())
-                .getCategorizedThresholds()
-                .put(ThresholdCategory.SUPERVISED, supervisedThresholds);
-          }
+
+      for (SupervisedTSThreshold threshold : thresholds) {
+        List<Threshold> supervisedThresholds = SupervisedTSThreshold.getThresholds(threshold);
+        if (isNotEmpty(supervisedThresholds)) {
+          updateThresholdDefinitionSkeleton(threshold.getTransactionName(), threshold.getMetricName(),
+              threshold.getMetricType(), metricDefinitionMap);
+          metricDefinitionMap.get(threshold.getTransactionName())
+              .get(threshold.getMetricName())
+              .getCategorizedThresholds()
+              .put(ThresholdCategory.SUPERVISED, supervisedThresholds);
         }
       }
+
     } catch (Exception e) {
       logger.error("Exception while fetching supervised metric thresholds", e);
     }
@@ -978,10 +935,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       historicalAnalysisTimes.add(analysisMin - i * TimeUnit.DAYS.toMinutes(7));
     }
 
-    if (historicalAnalysisTimes.size() == 0) {
-      return new ArrayList<>();
-    }
-
     Query<TimeSeriesMLAnalysisRecord> analysisQuery =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
             .filter(MetricAnalysisRecordKeys.cvConfigId, cvConfigId)
@@ -994,8 +947,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = analysisQuery.asList();
     if (timeSeriesMLAnalysisRecords != null) {
-      timeSeriesMLAnalysisRecords.forEach(
-          timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+      timeSeriesMLAnalysisRecords.forEach(MetricAnalysisRecord::decompressTransactions);
     }
     return timeSeriesMLAnalysisRecords;
   }
@@ -1065,7 +1017,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     } else {
       final String errorMsg = "AppId or CVConfigId is null in getCumulativeSumsForRange";
       logger.error(errorMsg);
-      throw new WingsException(errorMsg);
+      throw WingsException.builder().message(errorMsg).build();
     }
   }
 

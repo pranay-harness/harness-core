@@ -1,4 +1,4 @@
-package software.wings.verification;
+package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,16 +6,17 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
-import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVActivityLog.CVActivityLogKeys;
 import software.wings.verification.CVActivityLog.LogLevel;
 
@@ -29,18 +30,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class CVActivityLogServiceTest extends BaseIntegrationTest {
+public class CVActivityLogServiceTest extends WingsBaseTest {
   @Inject CVActivityLogService cvActivityLogService;
   @Mock FeatureFlagService featureFlagService;
-  private String stateExecuteionId;
+  private String stateExecutionId;
   @Before
   public void setupTests() throws IllegalAccessException {
     FieldUtils.writeField(cvActivityLogService, "featureFlagService", featureFlagService, true);
     when(featureFlagService.isGlobalEnabled(FeatureName.CV_ACTIVITY_LOG)).thenReturn(true);
-    stateExecuteionId = generateUuid();
+    stateExecutionId = generateUuid();
   }
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testSavingLogIfFeatureFlagEnabled() {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
@@ -55,7 +56,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testSavingLogWithTimestampParams() {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
@@ -70,7 +71,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testGetAnsi() {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
@@ -88,7 +89,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
     assertThat(cvActivityLog.getAnsiLog()).isEqualTo("activity log from test");
   }
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testSavingLogIfFeatureFlagDisabled() {
     String cvConfigId = generateUuid();
     when(featureFlagService.isGlobalEnabled(FeatureName.CV_ACTIVITY_LOG)).thenReturn(false);
@@ -102,14 +103,14 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testFindByCVConfigIdToReturnEmptyIfNoLogs() {
     String cvConfigId = generateUuid();
     assertThat(cvActivityLogService.findByCVConfigId(cvConfigId, 0, System.currentTimeMillis())).isEmpty();
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testFindByCVConfigIdWithSameStartTimeAndEndTime() {
     String cvConfigId = generateUuid();
     long nowMilli = System.currentTimeMillis();
@@ -129,7 +130,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testFindByStateExecutionId() {
     String stateExecutionId = generateUuid();
     String logLine = "test log message: " + generateUuid();
@@ -144,7 +145,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testFindByCVConfigIdWithDiffSameStartTimeAndEndTime() {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
@@ -167,16 +168,16 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testSaveActivityLogs() {
     List<CVActivityLog> cvActivityLogs =
         IntStream.range(0, 10).mapToObj(i -> getActivityLog()).collect(Collectors.toList());
     cvActivityLogService.saveActivityLogs(cvActivityLogs);
-    List<CVActivityLog> savedActivityLogs = cvActivityLogService.findByStateExecutionId(stateExecuteionId);
+    List<CVActivityLog> savedActivityLogs = cvActivityLogService.findByStateExecutionId(stateExecutionId);
     assertThat(cvActivityLogs).isEqualTo(savedActivityLogs);
   }
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testIfCVTaskValidUntilIsBeingSetTo2Weeks() {
     CVActivityLog cvActivityLog = createLog(UUID.randomUUID().toString(), System.currentTimeMillis(), "Test log");
     assertThat(cvActivityLog.getValidUntil().getTime() > Instant.now().toEpochMilli()).isTrue();
@@ -198,7 +199,7 @@ public class CVActivityLogServiceTest extends BaseIntegrationTest {
 
   private CVActivityLog getActivityLog() {
     return CVActivityLog.builder()
-        .stateExecutionId(stateExecuteionId)
+        .stateExecutionId(stateExecutionId)
         .logLevel(LogLevel.INFO)
         .log("test log: " + generateUuid())
         .build();

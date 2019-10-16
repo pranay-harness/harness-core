@@ -1,5 +1,6 @@
-package software.wings.verification;
+package software.wings.service.impl.verification;
 
+import static java.lang.Thread.sleep;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
@@ -12,7 +13,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -20,12 +21,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import software.wings.integration.BaseIntegrationTest;
+import software.wings.WingsBaseTest;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.verification.CVTaskService;
+import software.wings.verification.CVTask;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -35,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CVTaskServiceTest extends BaseIntegrationTest {
+public class CVTaskServiceTest extends WingsBaseTest {
   @Inject CVTaskService cvTaskService;
   private String stateExecutionId;
   private String cvConfigId;
@@ -53,8 +57,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
-
+  @Category(UnitTests.class)
   public void testSaveCVTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
     cvTaskService.saveCVTask(cvTask);
@@ -64,7 +67,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testValidAfterWhenNotSetOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
     cvTaskService.saveCVTask(cvTask);
@@ -74,7 +77,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testValidAfterWhenSetToFutureOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
     cvTask.setValidAfter(Instant.now().plus(10, ChronoUnit.MINUTES).toEpochMilli());
@@ -84,7 +87,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testValidAfterWhenSetToPastOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
     cvTask.setValidAfter(Instant.now().minus(10, ChronoUnit.MINUTES).toEpochMilli());
@@ -95,7 +98,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testExecutionStatusFilterOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
     cvTask.setStatus(ExecutionStatus.RUNNING);
@@ -110,7 +113,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testExecutionStatusUpdateOnGettingNextTask() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
     Optional<CVTask> nextTask = cvTaskService.getNextTask(cvTask.getAccountId());
@@ -120,11 +123,12 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
-  public void testOrderOnGettingNextTask() {
+  @Category(UnitTests.class)
+  public void testOrderOnGettingNextTask() throws InterruptedException {
     List<CVTask> cvTasks = new ArrayList<>();
     for (int i = 0; i < 10; i++) {
       cvTasks.add(createAndSaveCVTaskWithStateExecutionId());
+      sleep(1); // make sure last updated at is different for each cvTask.
     }
     cvTasks.get(0).setCorrelationId(generateUUID()); // update first
     wingsPersistence.save(cvTasks.get(0));
@@ -139,7 +143,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
     assertThat(cvTaskService.getNextTask(accountId).isPresent()).isFalse();
   }
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
     assertThat(cvTask.getValidUntil().getTime() > Instant.now().toEpochMilli()).isTrue();
@@ -149,14 +153,14 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testGetCVTaskById() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
     assertThat(cvTask.getUuid()).isEqualTo(cvTaskService.getCVTask(cvTask.getUuid()).getUuid());
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testEnqueueSeqTasks() {
     long startTime = Instant.now().toEpochMilli();
     List<CVTask> cvTasks = new ArrayList<>();
@@ -186,7 +190,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testUpdateTaskStatusWhenTaskResultIsSuccessful() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     CVTask nextTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.WAITING);
@@ -200,7 +204,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testUpdateTaskStatusWhenTaskHasFailed() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     CVTask nextTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.WAITING);
@@ -220,7 +224,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testUpdateNotifyErrorWhenTaskHasFailed() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     String correlationId = generateUUID();
@@ -242,7 +246,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testExpireLongRunningTasksIfTaskIsExpired() throws IllegalAccessException {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     Clock clock = mock(Clock.class);
@@ -255,7 +259,7 @@ public class CVTaskServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testDependentTaskStatusUpdateIfTaskExpired() throws IllegalAccessException {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
     CVTask nextTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.WAITING);
