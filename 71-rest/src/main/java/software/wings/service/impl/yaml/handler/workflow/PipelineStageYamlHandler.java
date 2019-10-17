@@ -24,6 +24,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStage.WorkflowVariable;
+import software.wings.beans.SkipCondition;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
@@ -105,14 +106,15 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       }
     }
 
-    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
-                                                    .uuid(stageElementId)
-                                                    .disable(yaml.isDisable())
-                                                    .name(yaml.getName())
-                                                    .type(yaml.getType())
-                                                    .properties(properties)
-                                                    .workflowVariables(workflowVariables)
-                                                    .build();
+    PipelineStageElement pipelineStageElement =
+        PipelineStageElement.builder()
+            .uuid(stageElementId)
+            .disableAssertion(yaml.getSkipCondition() != null ? yaml.getSkipCondition().fetchDisableAssertion() : null)
+            .name(yaml.getName())
+            .type(yaml.getType())
+            .properties(properties)
+            .workflowVariables(workflowVariables)
+            .build();
 
     stage.setPipelineStageElements(Lists.newArrayList(pipelineStageElement));
 
@@ -223,7 +225,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     return Yaml.builder()
         .name(stageElement.getName())
         .stageName(bean.getName())
-        .disable(stageElement.isDisable())
+        .skipCondition(SkipCondition.getInstanceForAssertion(stageElement.getDisableAssertion()))
         .parallel(bean.isParallel())
         .type(stageElement.getType())
         .workflowName(workflowName)

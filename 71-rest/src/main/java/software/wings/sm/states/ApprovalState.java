@@ -34,6 +34,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutput.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
@@ -61,6 +63,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.InformationNotification;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.Pipeline;
@@ -89,23 +92,20 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
-import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.UserGroupService;
-import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.EnvState.EnvStateKeys;
+import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.utils.Misc;
 
 import java.net.URL;
@@ -120,23 +120,19 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 @Slf4j
-public class ApprovalState extends State {
+public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private String groupName;
   @Getter @Setter private List<String> userGroups = new ArrayList<>();
   @Getter @Setter private boolean disable;
+  @Getter @Setter private String disableAssertion;
 
   public enum ApprovalStateType { JIRA, USER_GROUP, SHELL_SCRIPT, SERVICENOW }
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
   @Inject private AlertService alertService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private NotificationSetupService notificationSetupService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
-  @Inject private NotificationDispatcherService notificationDispatcherService;
   @Inject private NotificationService notificationService;
-  @Inject private UserGroupService userGroupService;
-  @Inject private UserService userService;
-  @Inject private EnvironmentService environmentService;
   @Inject private JiraHelperService jiraHelperService;
   @Inject private ServiceNowService serviceNowService;
   @Inject private transient ActivityService activityService;
@@ -144,8 +140,7 @@ public class ApprovalState extends State {
   @Inject private ApprovalPolingService approvalPolingService;
   @Inject private SecretManager secretManager;
   @Inject private PipelineService pipelineService;
-  @Inject private WorkflowService workflowService;
-  @Inject private ArtifactService artifactService;
+  @Inject private transient SweepingOutputService sweepingOutputService;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -159,6 +154,10 @@ public class ApprovalState extends State {
   @Getter @Setter ApprovalStateParams approvalStateParams;
   @Getter @Setter ApprovalStateType approvalStateType = USER_GROUP;
 
+  @Getter private SweepingOutput.Scope sweepingOutputScope = Scope.PIPELINE;
+  @Getter @Setter private String sweepingOutputName;
+
+  @Getter @Setter List<NameValuePair> variables;
   public ApprovalState(String name) {
     super(name, StateType.APPROVAL.name());
   }
@@ -170,14 +169,25 @@ public class ApprovalState extends State {
                                                    .approvalId(approvalId)
                                                    .approvalStateType(approvalStateType)
                                                    .timeoutMillis(getTimeoutMillis())
+                                                   .variables(getVariables())
                                                    .build();
 
-    if (disable) {
-      return ExecutionResponse.builder()
-          .executionStatus(SKIPPED)
-          .errorMessage("Approval step is disabled. Approval is skipped.")
-          .stateExecutionData(executionData)
-          .build();
+    if (isNotEmpty(disableAssertion)) {
+      try {
+        boolean assertionResult = (boolean) context.evaluateExpression(
+            disableAssertion, StateExecutionContext.builder().stateExecutionData(executionData).build());
+        if (assertionResult) {
+          return ExecutionResponse.builder()
+              .executionStatus(SKIPPED)
+              .errorMessage(getName() + " step in " + context.getPipelineStageName()
+                  + " has been skipped based on assertion expression [" + disableAssertion + "]")
+              .stateExecutionData(executionData)
+              .build();
+        }
+      } catch (Exception e) {
+        logger.info("Skip Assertion Evaluation Failed : {}", e.getMessage());
+        executionData.setSkipAssertionResponse("Assertion Evaluation failed : " + e.getMessage());
+      }
     }
 
     setPipelineVariables(context);
@@ -236,16 +246,25 @@ public class ApprovalState extends State {
     }
   }
 
+  @Override
+  public void parseProperties(Map<String, Object> properties) {
+    boolean isDisabled = properties.get(EnvStateKeys.disable) != null && (boolean) properties.get(EnvStateKeys.disable);
+    if (isDisabled && properties.get(EnvStateKeys.disableAssertion) == null) {
+      properties.put(EnvStateKeys.disableAssertion, "true");
+    }
+    super.parseProperties(properties);
+  }
+
   private void setPipelineVariables(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Map<String, Object> variables = new HashMap<>();
+    Map<String, Object> workflowVariables = new HashMap<>();
     if (isNotEmpty(workflowStandardParams.getWorkflowVariables())) {
-      workflowStandardParams.getWorkflowVariables().forEach((s, s2) -> { variables.put(s, s2); });
-      if (isNotEmpty(variables)) {
+      workflowStandardParams.getWorkflowVariables().forEach((s, s2) -> { workflowVariables.put(s, s2); });
+      if (isNotEmpty(workflowVariables)) {
         if (workflowStandardParams.getWorkflowElement() == null) {
-          workflowStandardParams.setWorkflowElement(WorkflowElement.builder().variables(variables).build());
+          workflowStandardParams.setWorkflowElement(WorkflowElement.builder().variables(workflowVariables).build());
         } else {
-          workflowStandardParams.getWorkflowElement().setVariables(variables);
+          workflowStandardParams.getWorkflowElement().setVariables(workflowVariables);
         }
       }
     }
@@ -351,7 +370,7 @@ public class ApprovalState extends State {
     JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
 
-    if (FAILED.equals(jiraExecutionData.getExecutionStatus())) {
+    if (jiraExecutionData.getExecutionStatus() != null && FAILED.equals(jiraExecutionData.getExecutionStatus())) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
           .errorMessage(jiraExecutionData.getErrorMessage())
@@ -620,6 +639,9 @@ public class ApprovalState extends State {
         (ApprovalStateExecutionData) response.values().iterator().next();
 
     boolean isApprovalFromSlack = approvalNotifyResponse.isApprovalFromSlack();
+    if (isNotEmpty(approvalNotifyResponse.getVariables())) {
+      setVariables(approvalNotifyResponse.getVariables());
+    }
 
     // Close the alert
     Application app = context.getApp();
@@ -649,6 +671,16 @@ public class ApprovalState extends State {
     }
     workflowNotificationHelper.sendApprovalNotification(
         app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues, context, approvalStateType);
+
+    if (isNotEmpty(variables)) {
+      Map<String, Object> output = new HashMap<>();
+      for (NameValuePair expression : variables) {
+        output.put(expression.getName(),
+            context.renderExpression(
+                expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
+      }
+      handleSweepingOutput(sweepingOutputService, context, output);
+    }
 
     switch (approvalStateType) {
       case JIRA:

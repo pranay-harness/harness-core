@@ -59,6 +59,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.User;
+import software.wings.beans.User.Builder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -229,8 +230,9 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSkipDisabledStep() {
     PageResponse pageResponse = new PageResponse();
-    pageResponse.setResponse(asList(User.Builder.anUser().build()));
-    approvalState.setDisable(true);
+    pageResponse.setResponse(Collections.singletonList(Builder.anUser().build()));
+    approvalState.setDisableAssertion("true");
+    when(context.evaluateExpression(eq("true"), any())).thenReturn(true);
     ExecutionResponse executionResponse = approvalState.execute(context);
     verify(alertService, times(0))
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));

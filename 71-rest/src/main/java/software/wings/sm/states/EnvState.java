@@ -26,6 +26,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +60,7 @@ import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -106,15 +108,9 @@ public class EnvState extends State {
   @Transient @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Transient @Inject private FeatureFlagService featureFlagService;
 
-  @JsonIgnore private boolean disable;
+  @Getter @Setter @JsonIgnore private boolean disable;
 
-  public boolean isDisable() {
-    return disable;
-  }
-
-  public void setDisable(boolean disable) {
-    this.disable = disable;
-  }
+  @Getter @Setter private String disableAssertion;
 
   public EnvState(String name) {
     super(name, StateType.ENV_STATE.name());
@@ -126,6 +122,7 @@ public class EnvState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    workflowStandardParams.setEnvId(envId);
     String appId = workflowStandardParams.getAppId();
 
     Workflow workflow = workflowService.readWorkflowWithoutServices(appId, workflowId);
@@ -140,12 +137,22 @@ public class EnvState extends State {
           .build();
     }
 
-    if (disable) {
-      return ExecutionResponse.builder()
-          .executionStatus(SKIPPED)
-          .errorMessage("Workflow [" + workflow.getName() + "] step is disabled. Execution has been skipped.")
-          .stateExecutionData(envStateExecutionData)
-          .build();
+    if (isNotEmpty(disableAssertion)) {
+      try {
+        boolean assertionResult = (boolean) context.evaluateExpression(
+            disableAssertion, StateExecutionContext.builder().stateExecutionData(envStateExecutionData).build());
+        if (assertionResult) {
+          return ExecutionResponse.builder()
+              .executionStatus(SKIPPED)
+              .errorMessage(getName() + " step in " + context.getPipelineStageName()
+                  + " has been skipped based on assertion expression [" + disableAssertion + "]")
+              .stateExecutionData(envStateExecutionData)
+              .build();
+        }
+      } catch (Exception e) {
+        logger.info("Skip Assertion Evaluation Failed : {}", e.getMessage());
+        envStateExecutionData.setSkipAssertionResponse("Assertion Evaluation failed : " + e.getMessage());
+      }
     }
 
     List<Artifact> artifacts = ((DeploymentExecutionContext) context).getArtifacts();
@@ -292,6 +299,15 @@ public class EnvState extends State {
       Workflow workflow, WorkflowStandardParams workflowStandardParams) {
     return WorkflowServiceHelper.overrideWorkflowVariables(workflow.getOrchestrationWorkflow().getUserVariables(),
         workflowVariables, workflowStandardParams.getWorkflowVariables());
+  }
+
+  @Override
+  public void parseProperties(Map<String, Object> properties) {
+    boolean isDisabled = properties.get(EnvStateKeys.disable) != null && (boolean) properties.get(EnvStateKeys.disable);
+    if (isDisabled && properties.get(EnvStateKeys.disableAssertion) == null) {
+      properties.put(EnvStateKeys.disableAssertion, "true");
+    }
+    super.parseProperties(properties);
   }
 
   /**

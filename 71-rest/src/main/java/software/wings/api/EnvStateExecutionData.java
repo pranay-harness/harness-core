@@ -4,6 +4,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.sm.StateExecutionData;
 
+import java.util.Map;
+
 /**
  * Created by anubhaw on 10/26/16.
  */
@@ -12,6 +14,7 @@ public class EnvStateExecutionData extends StateExecutionData {
   private String workflowExecutionId;
   private String envId;
   private OrchestrationWorkflowType orchestrationWorkflowType;
+  private String skipAssertionResponse;
 
   /**
    * Gets workflow id.
@@ -75,6 +78,18 @@ public class EnvStateExecutionData extends StateExecutionData {
     this.orchestrationWorkflowType = orchestrationWorkflowType;
   }
 
+  public void setSkipAssertionResponse(String skipAssertionResponse) {
+    this.skipAssertionResponse = skipAssertionResponse;
+  }
+
+  @Override
+  public Map<String, ExecutionDataValue> getExecutionSummary() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    putNotNull(executionDetails, "disableAssertion",
+        ExecutionDataValue.builder().displayName("Skip Assertion").value(skipAssertionResponse).build());
+    return executionDetails;
+  }
+
   /**
    * The type Builder.
    */
@@ -88,6 +103,7 @@ public class EnvStateExecutionData extends StateExecutionData {
     private Long endTs;
     private ExecutionStatus status;
     private String errorMsg;
+    private String skipAssertionResponse;
 
     private Builder() {}
 
@@ -200,6 +216,17 @@ public class EnvStateExecutionData extends StateExecutionData {
     }
 
     /**
+     * With error msg builder.
+     *
+     * @param skipAssertionResponse the error msg
+     * @return the builder
+     */
+    public Builder withSkipAssertionResponse(String skipAssertionResponse) {
+      this.skipAssertionResponse = skipAssertionResponse;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -214,7 +241,8 @@ public class EnvStateExecutionData extends StateExecutionData {
           .withEndTs(endTs)
           .withStatus(status)
           .withErrorMsg(errorMsg)
-          .withOrchestrationWorkflowType(orchestrationWorkflowType);
+          .withOrchestrationWorkflowType(orchestrationWorkflowType)
+          .withSkipAssertionResponse(skipAssertionResponse);
     }
 
     /**
@@ -233,6 +261,7 @@ public class EnvStateExecutionData extends StateExecutionData {
       envStateExecutionData.setStatus(status);
       envStateExecutionData.setErrorMsg(errorMsg);
       envStateExecutionData.setOrchestrationWorkflowType(orchestrationWorkflowType);
+      envStateExecutionData.setSkipAssertionResponse(skipAssertionResponse);
       return envStateExecutionData;
     }
   }

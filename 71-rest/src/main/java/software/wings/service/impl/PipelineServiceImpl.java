@@ -8,7 +8,6 @@ import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -43,6 +42,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
@@ -1295,24 +1295,25 @@ public class PipelineServiceImpl implements PipelineService {
         PipelineStage pipelineStage = pipelineStages.get(i);
         for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
           if (!isValidPipelineStageName(stageElement.getName())) {
-            throw new WingsException(INVALID_ARGUMENT, USER)
-                .addParam("args", "Pipeline stage name can only have a-z, A-Z, 0-9, -, (, ) and _");
+            throw new InvalidArgumentsException("Pipeline stage name can only have a-z, A-Z, 0-9, -, (, ) and _", USER);
           }
           if (APPROVAL.name().equals(stageElement.getType())) {
             ApprovalState.preValidatePropertyMap(stageElement.getProperties());
           }
+          if (!isValidSkipCondition(stageElement)) {
+            throw new InvalidArgumentsException("Not a valid skip condition for " + stageElement.getName(), USER);
+          }
+
           if (!ENV_STATE.name().equals(stageElement.getType())) {
             continue;
           }
           if (isNullOrEmpty((String) stageElement.getProperties().get("workflowId"))) {
-            throw new WingsException(INVALID_ARGUMENT, USER)
-                .addParam("args", "Workflow can not be null for Environment state");
+            throw new InvalidArgumentsException("Workflow can not be null for Environment state", USER);
           }
           Workflow workflow = workflowService.readWorkflow(
               pipeline.getAppId(), (String) stageElement.getProperties().get("workflowId"));
           if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-            throw new WingsException(INVALID_ARGUMENT, USER)
-                .addParam("args", "Workflow can not be null for Environment state");
+            throw new InvalidArgumentsException("Workflow can not be null for Environment state", USER);
           }
           keywords.add(workflow.getName());
           keywords.add(workflow.getDescription());
@@ -1320,9 +1321,8 @@ public class PipelineServiceImpl implements PipelineService {
           if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
               && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
             logger.info("It should not happen. If happens printing the properties of appId {} are {}",
-                pipeline.getAppId(), String.valueOf(stageElement.getProperties()));
-            throw new WingsException(INVALID_ARGUMENT, USER)
-                .addParam("args", "Environment can not be null for non-build state");
+                pipeline.getAppId(), stageElement.getProperties());
+            throw new InvalidArgumentsException("Environment can not be null for non-build state", USER);
           }
 
           String envId = workflowService.obtainTemplatedEnvironmentId(workflow, stageElement.getWorkflowVariables());
@@ -1333,8 +1333,8 @@ public class PipelineServiceImpl implements PipelineService {
       }
     }
     if (parameterizedEnvIds.size() > 1) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "A pipeline may only have one environment expression across all workflows");
+      throw new InvalidArgumentsException(
+          "A pipeline may only have one environment expression across all workflows", USER);
     }
     keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
   }
@@ -1344,6 +1344,15 @@ public class PipelineServiceImpl implements PipelineService {
       return false;
     }
     return ALLOWED_CHARS_SET_PIPELINE_STAGE.containsAll(Sets.newHashSet(Lists.charactersOf(name)));
+  }
+
+  private boolean isValidSkipCondition(PipelineStageElement pipelineStageElement) {
+    if (APPROVAL.name().equals(pipelineStageElement.getType())) {
+      return pipelineStageElement.getDisableAssertion() == null
+          || pipelineStageElement.getDisableAssertion().equals("true");
+    } else {
+      return true;
+    }
   }
 
   private boolean prunePipeline(String appId, String pipelineId) {

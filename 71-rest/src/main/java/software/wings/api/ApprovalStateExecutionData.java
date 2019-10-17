@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.intfc.UserGroupService;
@@ -74,6 +75,9 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Transient @Inject private transient UserGroupService userGroupService;
+
+  private String skipAssertionResponse;
+  private List<NameValuePair> variables;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {

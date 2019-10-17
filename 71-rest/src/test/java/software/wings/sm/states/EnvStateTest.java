@@ -103,7 +103,8 @@ public class EnvStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSkipDisabledStep() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    envState.setDisable(true);
+    envState.setDisableAssertion("true");
+    when(context.evaluateExpression(eq("true"), any())).thenReturn(true);
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
@@ -111,6 +112,7 @@ public class EnvStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
+
   @Test
   @Category(UnitTests.class)
   public void shouldExecuteWhenNoWorkflow() {

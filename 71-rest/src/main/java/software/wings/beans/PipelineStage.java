@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.mongodb.morphia.annotations.NotSaved;
 import software.wings.yaml.BaseYamlWithType;
 
 import java.util.ArrayList;
@@ -39,7 +40,9 @@ public class PipelineStage {
     private int parallelIndex;
     private Map<String, Object> properties = new HashMap<>();
     private Map<String, String> workflowVariables = new HashMap<>();
-    private boolean disable;
+    // Remove this once UI moves away from it
+    @NotSaved private boolean disable;
+    private String disableAssertion;
 
     private transient boolean valid = true;
     private transient String validationMessage;
@@ -51,23 +54,23 @@ public class PipelineStage {
   public static final class Yaml extends BaseYamlWithType {
     private String name;
     private String stageName;
-    private boolean disable;
+    private SkipCondition skipCondition;
     private boolean parallel;
     private String workflowName;
     private List<WorkflowVariable> workflowVariables = Lists.newArrayList();
     private Map<String, Object> properties = new HashMap<>();
 
     @Builder
-    public Yaml(String type, String name, String stageName, boolean disable, boolean parallel, String workflowName,
-        List<WorkflowVariable> workflowVariables, Map<String, Object> properties) {
+    public Yaml(String type, String name, String stageName, boolean parallel, String workflowName,
+        List<WorkflowVariable> workflowVariables, Map<String, Object> properties, SkipCondition skipCondition) {
       super(type);
       this.name = name;
       this.stageName = stageName;
       this.parallel = parallel;
-      this.disable = disable;
       this.workflowName = workflowName;
       this.workflowVariables = workflowVariables;
       this.properties = properties;
+      this.skipCondition = skipCondition;
     }
   }
 

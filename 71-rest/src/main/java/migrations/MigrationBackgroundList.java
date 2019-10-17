@@ -29,6 +29,7 @@ import migrations.all.LogAnalysisAddExecutionIdMigration;
 import migrations.all.LogAnalysisBaselineMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
+import migrations.all.MigratePipelineStagesToUseDisableAssertion;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.NoOpMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
@@ -117,6 +118,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(61, BaseMigration.class))
         .add(Pair.of(62, BaseMigration.class))
         .add(Pair.of(63, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(64, MigratePipelineStagesToUseDisableAssertion.class))
+        .add(Pair.of(65, BaseMigration.class))
         .build();
   }
 }

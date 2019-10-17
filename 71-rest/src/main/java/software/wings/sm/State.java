@@ -9,6 +9,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.serializer.MapperUtils;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.EntityType;
@@ -338,5 +339,9 @@ public abstract class State {
           task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
     }
     return delegateService.queueTask(task);
+  }
+
+  public void parseProperties(Map<String, Object> properties) {
+    MapperUtils.mapObject(properties, this);
   }
 }
