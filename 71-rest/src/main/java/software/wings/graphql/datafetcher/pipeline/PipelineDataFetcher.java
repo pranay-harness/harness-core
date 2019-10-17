@@ -40,7 +40,7 @@ public class PipelineDataFetcher extends AbstractObjectDataFetcher<QLPipeline, Q
     }
 
     if (pipeline == null) {
-      throw new InvalidRequestException(PIPELINE_DOES_NOT_EXIST_MSG, WingsException.USER);
+      return null;
     }
 
     if (!pipeline.getAccountId().equals(accountId)) {

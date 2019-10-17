@@ -15,6 +15,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalDataCenterConfig;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -28,6 +29,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -79,6 +81,7 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String INSTANCE7_SERVICE4_ENV5_APP3_ACCOUNT2 = "INSTANCE7_SERVICE4_ENV5_APP3_ACCOUNT2";
   public static final String INSTANCE8_SERVICE4_ENV6_APP3_ACCOUNT2 = "INSTANCE8_SERVICE4_ENV6_APP3_ACCOUNT2";
   public static final String WORKFLOW1 = "WORKFLOW1";
+  public static final String PIPELINE1 = "PIPELINE1";
   public static final String QUERY1 =
       "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 hours',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME FROM (SELECT REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY REPORTEDAT) INSTANCE_STATS GROUP BY GRP_BY_TIME ORDER BY GRP_BY_TIME";
   public static final String QUERY2 =
@@ -99,6 +102,7 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   @Inject InstanceService instanceService;
   @Inject SettingsService settingsService;
   @Inject WorkflowService workflowService;
+  @Inject PipelineService pipelineService;
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject protected TestUtils testUtils;
 
@@ -132,6 +136,10 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
                                               .appId(appId)
                                               .name(workflowName)
                                               .build());
+  }
+
+  public Pipeline createPipeline(String accountId, String appId, String pipelineName) {
+    return pipelineService.save(Pipeline.builder().accountId(accountId).appId(appId).name(pipelineName).build());
   }
 
   public void setTagToEntity(
