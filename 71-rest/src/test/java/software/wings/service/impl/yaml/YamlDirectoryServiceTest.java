@@ -1,60 +1,124 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.HarnessStringUtils.join;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.command.CommandType.START;
+import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.CV_CONFIG_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
+import static software.wings.service.impl.artifact.ArtifactCollectionServiceTest.GLOBAL_APP_ID;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
+import static software.wings.utils.WingsTestConstants.DEPLOYMENT_TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JiraConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceNowConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.artifact.AmazonS3ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.ScpCommandUnit;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.trigger.DeploymentTrigger;
+import software.wings.beans.trigger.Trigger;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.AppPermissionSummary;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
+import software.wings.verification.CVConfiguration;
 import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryNode.NodeType;
@@ -62,10 +126,12 @@ import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -76,15 +142,21 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private EnvironmentService environmentService;
   @Mock private InfrastructureMappingService infraMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
   @Mock private InfrastructureProvisionerService provisionerService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private SettingsService settingsService;
+  @Mock ApplicationManifestService applicationManifestService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService;
+
+  private DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
   @Test
   @Category(UnitTests.class)
-  public void testDoApplications() throws Exception {
-    DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
+  public void testDoApplications() {
     Map<String, AppPermissionSummary> appPermissionSummaryMap = new HashMap<>();
     appPermissionSummaryMap.put(APP_ID, null);
     performMocking();
@@ -249,6 +321,344 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(expectedDirPaths).isEmpty();
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void testDoEnvironments() {
+    final Application application =
+        anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    final Service service = Service.builder().name("service").appId(APP_ID).uuid("serviceId").build();
+    final Environment environment_1 = anEnvironment().name("env-1").uuid("envId-1").appId(APP_ID).build();
+    final Environment environment_2 = anEnvironment().name("env-2").uuid("envId-2").appId(APP_ID).build();
+    final InfrastructureDefinition infraDefinition_1 = InfrastructureDefinition.builder()
+                                                           .uuid("uuid-1")
+                                                           .name("i-1")
+                                                           .envId(environment_1.getUuid())
+                                                           .appId(environment_1.getAppId())
+                                                           .build();
+    final InfrastructureDefinition infraDefinition_2 = InfrastructureDefinition.builder()
+                                                           .uuid("uuid-2")
+                                                           .name("i-2")
+                                                           .envId(environment_2.getUuid())
+                                                           .appId(environment_2.getAppId())
+                                                           .build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(StoreType.Local)
+                                                  .envId(environment_1.getUuid())
+                                                  .serviceId(SERVICE_ID)
+                                                  .build();
+    applicationManifest.setUuid("app-manifest-id");
+    applicationManifest.setAppId(environment_1.getAppId());
+    ManifestFile manifestFile = ManifestFile.builder()
+                                    .fileContent("I am a manifest file")
+                                    .fileName("manifest-file-name")
+                                    .applicationManifestId(applicationManifest.getUuid())
+                                    .build();
+    // Mocking stuff
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    doReturn(Arrays.asList()).when(environmentService).getEnvByApp(anyString());
+    when(infrastructureDefinitionService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(infraDefinition_1)).build(),
+            aPageResponse().withResponse(Arrays.asList(infraDefinition_2)).build());
+    when(environmentService.getEnvByApp(APP_ID)).thenReturn(Arrays.asList(environment_1, environment_2));
+    when(applicationManifestService.getAllByEnvIdAndKind(
+             environment_1.getAppId(), environment_1.getUuid(), AppManifestKind.VALUES))
+        .thenReturn(Arrays.asList(applicationManifest));
+    when(applicationManifestService.getManifestFilesByAppManifestId(
+             applicationManifest.getAppId(), applicationManifest.getUuid()))
+        .thenReturn(Arrays.asList(manifestFile));
+    when(serviceResourceService.get(environment_1.getAppId(), applicationManifest.getServiceId(), false))
+        .thenReturn(service);
+
+    final FolderNode envNode = yamlDirectoryService.doEnvironments(application, directoryPath, false, null);
+    Assertions.assertThat(envNode).isNotNull();
+    List<DirectoryNode> envChildren = envNode.getChildren();
+    Assertions.assertThat(envChildren).hasSize(2);
+    FolderNode envFolderNode_1 = (FolderNode) envChildren.get(0);
+    FolderNode envFolderNode_2 = (FolderNode) envChildren.get(1);
+
+    // Verify returned folder node
+    List<DirectoryNode> infraDefEnv_1 = getNodesOfClass(envFolderNode_1, InfrastructureDefinition.class);
+    Assertions.assertThat(infraDefEnv_1).hasSize(1);
+    String nodeName = infraDefEnv_1.get(0).getName();
+    assertThat(nodeName).isEqualTo(infraDefinition_1.getName() + YAML_EXTENSION);
+
+    List<DirectoryNode> infraDefEnv_2 = getNodesOfClass(envFolderNode_2, InfrastructureDefinition.class);
+    Assertions.assertThat(infraDefEnv_2).hasSize(1);
+    nodeName = infraDefEnv_2.get(0).getName();
+    assertThat(nodeName).isEqualTo(infraDefinition_2.getName() + YAML_EXTENSION);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDoCloudProviders() {
+    SettingAttribute awsCp =
+        aSettingAttribute()
+            .withName("aws-cp")
+            .withUuid("aws-cp-id")
+            .withAccountId(ACCOUNT_ID)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
+            .withValue(AwsConfig.builder().accessKey("access-key").secretKey("secret-key".toCharArray()).build())
+            .build();
+    SettingAttribute gcpCp =
+        aSettingAttribute()
+            .withName("gcp-cp")
+            .withUuid("gcp-cp-id")
+            .withAccountId(ACCOUNT_ID)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
+            .withValue(
+                GcpConfig.builder().accountId(ACCOUNT_ID).serviceAccountKeyFileContent("key".toCharArray()).build())
+            .build();
+
+    // set up mocks
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.AWS.name()))
+        .thenReturn(Arrays.asList(awsCp, gcpCp));
+    final FolderNode cloudProviderFolderNode = yamlDirectoryService.doCloudProviders(ACCOUNT_ID, directoryPath);
+    List<DirectoryNode> cloudProviderDirectoryNode = getNodesOfClass(cloudProviderFolderNode, SettingAttribute.class);
+
+    // check if feature flag ARTIFACT_STREAM_REFACTOR
+    final AmazonS3ArtifactStream artifactStream = AmazonS3ArtifactStream.builder()
+                                                      .appId(GLOBAL_APP_ID)
+                                                      .settingId("artifact_stream_id")
+                                                      .name("s3-artifact-stream")
+                                                      .build();
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
+    when(artifactStreamService.listBySettingId(GLOBAL_APP_ID, awsCp.getUuid()))
+        .thenReturn(Arrays.asList(artifactStream));
+    final FolderNode cloudProviderFolderNode_ff = yamlDirectoryService.doCloudProviders(ACCOUNT_ID, directoryPath);
+    List<DirectoryNode> cloudProviderDirectoryNode_ff =
+        getNodesOfClass(cloudProviderFolderNode_ff, ArtifactStream.class);
+    assertThat(cloudProviderDirectoryNode_ff).hasSize(1);
+    assertThat(cloudProviderDirectoryNode_ff.get(0).getName()).isEqualTo(artifactStream.getName() + YAML_EXTENSION);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDoCollaborationProviders() {
+    SettingAttribute jiraConnector = aSettingAttribute()
+                                         .withAccountId(ACCOUNT_ID)
+                                         .withName("jira-connector")
+                                         .withCategory(CONNECTOR)
+                                         .withValue(JiraConfig.builder()
+                                                        .baseUrl("https://test"
+                                                            + ".com")
+                                                        .username("test")
+                                                        .password("test".toCharArray())
+                                                        .build())
+                                         .build();
+    SettingAttribute snowConnector = aSettingAttribute()
+                                         .withAccountId(ACCOUNT_ID)
+                                         .withName("snow-connector")
+                                         .withCategory(CONNECTOR)
+                                         .withValue(ServiceNowConfig.builder()
+                                                        .baseUrl("http://test.com")
+                                                        .username("test")
+                                                        .password("test".toCharArray())
+                                                        .build())
+                                         .build();
+    // mock stuff
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.JIRA.name()))
+        .thenReturn(Arrays.asList(jiraConnector));
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SERVICENOW.name()))
+        .thenReturn(Arrays.asList(snowConnector));
+
+    final FolderNode collabFolderNode = yamlDirectoryService.doCollaborationProviders(ACCOUNT_ID, directoryPath);
+    List<DirectoryNode> collabDirNode = getNodesOfClass(collabFolderNode, SettingAttribute.class);
+    assertThat(collabDirNode).hasSize(2);
+    assertThat(Arrays.asList(collabDirNode.get(0).getName(), collabDirNode.get(1).getName()))
+        .containsExactlyInAnyOrder(jiraConnector.getName() + YAML_EXTENSION, snowConnector.getName() + YAML_EXTENSION);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDoVerificationProviders() {
+    SettingAttribute jenkinsProvider = aSettingAttribute()
+                                           .withName("jenkins")
+                                           .withAccountId(ACCOUNT_ID)
+                                           .withCategory(CONNECTOR)
+                                           .withValue(JenkinsConfig.builder()
+                                                          .jenkinsUrl("https://jenkinsk8s.harness.io")
+                                                          .username("default")
+                                                          .password("default".toCharArray())
+                                                          .build())
+                                           .build();
+    SettingAttribute appdConnector = aSettingAttribute()
+                                         .withName("appd")
+                                         .withAccountId(ACCOUNT_ID)
+                                         .withCategory(CONNECTOR)
+                                         .withValue(AppDynamicsConfig.builder()
+                                                        .controllerUrl("http://test.com")
+                                                        .username("default")
+                                                        .password("default".toCharArray())
+                                                        .build())
+                                         .build();
+    // mock stuff
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.JENKINS.name()))
+        .thenReturn(Arrays.asList(jenkinsProvider));
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
+        .thenReturn(Arrays.asList(appdConnector));
+
+    final FolderNode verificationFolderNode = yamlDirectoryService.doVerificationProviders(ACCOUNT_ID, directoryPath);
+    List<DirectoryNode> verificationDirectoryNode = getNodesOfClass(verificationFolderNode, SettingAttribute.class);
+    assertThat(verificationDirectoryNode).hasSize(2);
+    assertThat(Arrays.asList(verificationDirectoryNode.get(0).getName(), verificationDirectoryNode.get(1).getName()))
+        .containsExactlyInAnyOrder(
+            jenkinsProvider.getName() + YAML_EXTENSION, appdConnector.getName() + YAML_EXTENSION);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDoArtifactServers() {
+    SettingAttribute dockerConnector = aSettingAttribute()
+                                           .withAccountId(ACCOUNT_ID)
+                                           .withName("docker")
+                                           .withCategory(CONNECTOR)
+                                           .withValue(DockerConfig.builder()
+                                                          .dockerRegistryUrl("https://hub.docker.com/_/registry")
+                                                          .username("default")
+                                                          .password("default".toCharArray())
+                                                          .build())
+                                           .build();
+    SettingAttribute awsS3HelmConnector = aSettingAttribute()
+                                              .withAccountId(ACCOUNT_ID)
+                                              .withName("aws-helm")
+                                              .withCategory(CONNECTOR)
+                                              .withValue(AmazonS3HelmRepoConfig.builder()
+                                                             .bucketName("default")
+                                                             .folderPath("default")
+                                                             .region("us-east-1")
+                                                             .connectorId("default")
+                                                             .build())
+                                              .build();
+
+    // do mocking
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, DOCKER.name()))
+        .thenReturn(Arrays.asList(dockerConnector));
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, AMAZON_S3_HELM_REPO.name()))
+        .thenReturn(Arrays.asList(awsS3HelmConnector));
+
+    FolderNode artifactServerFolderNode = yamlDirectoryService.doArtifactServers(ACCOUNT_ID, directoryPath);
+    List<DirectoryNode> artifactServersDirectoryNode =
+        getNodesOfClass(artifactServerFolderNode, SettingAttribute.class);
+    assertThat(artifactServersDirectoryNode).hasSize(2);
+    assertThat(
+        Arrays.asList(artifactServersDirectoryNode.get(0).getName(), artifactServersDirectoryNode.get(1).getName()))
+        .containsExactlyInAnyOrder(
+            dockerConnector.getName() + YAML_EXTENSION, awsS3HelmConnector.getName() + YAML_EXTENSION);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testObtainEntityRootPath() {
+    // create entities
+    Application app = anApplication().name(APP_NAME).uuid(APP_ID).build();
+    Service service = Service.builder().appId(app.getUuid()).uuid(SERVICE_ID).name(SERVICE_NAME).build();
+    Environment env = anEnvironment().appId(app.getUuid()).name(ENV_NAME).uuid(ENV_ID).build();
+    Pipeline pipeline = Pipeline.builder().name(PIPELINE_NAME).appId(app.getUuid()).build();
+    InfrastructureMapping infraMapping =
+        anAwsInfrastructureMapping().withName(INFRA_NAME).withEnvId(env.getUuid()).withAppId(app.getUuid()).build();
+    InfrastructureDefinition infraDefinition =
+        InfrastructureDefinition.builder().name("infra-def").envId(env.getUuid()).appId(app.getUuid()).build();
+    Workflow workflow = aWorkflow().name(WORKFLOW_NAME).appId(app.getUuid()).build();
+    ArtifactStream artifactStream = DockerArtifactStream.builder()
+                                        .name(ARTIFACT_STREAM_NAME)
+                                        .uuid(ARTIFACT_STREAM_ID)
+                                        .serviceId(service.getUuid())
+                                        .appId(app.getUuid())
+                                        .build();
+    InfrastructureProvisioner tfProvisioner =
+        TerraformInfrastructureProvisioner.builder().name(PROVISIONER_NAME).appId(app.getUuid()).build();
+    SettingAttribute awsCp =
+        aSettingAttribute()
+            .withName("aws-cp")
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
+            .withValue(AwsConfig.builder().accessKey("access-key").secretKey("secret-key".toCharArray()).build())
+            .build();
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).envId(env.getUuid()).serviceId(SERVICE_ID).build();
+    ManifestFile manifestFile =
+        ManifestFile.builder().fileName("manifest-file-name").applicationManifestId(appManifest.getUuid()).build();
+    CVConfiguration cvConfiguration = new CVConfiguration();
+    cvConfiguration.setAppId(app.getUuid());
+    cvConfiguration.setEnvId(env.getUuid());
+    Trigger trigger = Trigger.builder().name(TRIGGER_NAME).appId(app.getUuid()).build();
+    DeploymentTrigger deploymentTrigger =
+        DeploymentTrigger.builder().name(DEPLOYMENT_TRIGGER_NAME).appId(app.getUuid()).build();
+
+    // mock stuff
+    when(appService.get(APP_ID)).thenReturn(app);
+    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
+    when(artifactStreamServiceBindingService.getService(app.getUuid(), artifactStream.getUuid(), true))
+        .thenReturn(service);
+
+    String path = null;
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, app);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName()));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, env);
+    assertThat(path).isEqualTo(
+        join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER, env.getName()));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, pipeline);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), PIPELINES_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, infraMapping);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER,
+        env.getName(), INFRA_MAPPING_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, infraDefinition);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER,
+        env.getName(), INFRA_DEFINITION_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, workflow);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), WORKFLOWS_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, artifactStream);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), SERVICES_FOLDER,
+        service.getName(), ARTIFACT_SOURCES_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, tfProvisioner);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), PROVISIONERS_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, service);
+    assertThat(path).isEqualTo(
+        join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), SERVICES_FOLDER, service.getName()));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, awsCp);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, CLOUD_PROVIDERS_FOLDER));
+
+    //    path = yamlDirectoryService.obtainEntityRootPath(null, appManifest);
+    //    assertThat(path).isEqualTo(
+    //        join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER, env.getName()));
+    //    path = yamlDirectoryService.obtainEntityRootPath(null, manifestFile);
+    //    assertThat(path).isEqualTo(
+    //        join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER, env.getName()));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, cvConfiguration);
+    assertThat(path).isEqualTo(join(
+        "/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), ENVIRONMENTS_FOLDER, env.getName(), CV_CONFIG_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, trigger);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), TRIGGER_FOLDER));
+
+    path = yamlDirectoryService.obtainEntityRootPath(null, deploymentTrigger);
+    assertThat(path).isEqualTo(join("/", SETUP_FOLDER, APPLICATIONS_FOLDER, app.getName(), TRIGGER_FOLDER));
+  }
+
+  private List<DirectoryNode> getNodesOfClass(FolderNode folderNode, Class givenClass) {
+    List<DirectoryNode> directoryNodes = new ArrayList<>();
+    for (DirectoryNode node : folderNode.getChildren()) {
+      if (node instanceof FolderNode && node.getTheClass() == givenClass) {
+        directoryNodes.addAll(((FolderNode) node).getChildren());
+      } else if (node.getTheClass() == givenClass) {
+        directoryNodes.add(node);
+      } else if (node instanceof FolderNode) {
+        directoryNodes.addAll(getNodesOfClass((FolderNode) node, givenClass));
+      }
+    }
+    return directoryNodes;
+  }
+
   private void performMocking() {
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
 
@@ -262,13 +672,38 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
         .when(serviceResourceService)
         .findServicesByApp(anyString());
 
+    final Command command =
+        Command.Builder.aCommand()
+            .withCommandType(START)
+            .withName("start")
+            .withCommandUnits(Arrays.asList(ExecCommandUnit.Builder.anExecCommandUnit().withName("exec").build(),
+                ScpCommandUnit.Builder.aScpCommandUnit().withName("scp").build()))
+            .build();
+    final ServiceCommand serviceCommand = ServiceCommand.Builder.aServiceCommand()
+                                              .withUuid(SERVICE_COMMAND_ID)
+                                              .withAppId(APP_ID)
+                                              .withServiceId(SERVICE_ID)
+                                              .withName(command.getName())
+                                              .withTargetToAllEnv(true)
+                                              .withCommand(command)
+                                              .build();
     doReturn(false).when(serviceResourceService).hasInternalCommands(any());
+    doReturn(Arrays.asList(serviceCommand))
+        .when(serviceResourceService)
+        .getServiceCommands(serviceCommand.getAppId(), serviceCommand.getServiceId());
 
     doReturn(PcfServiceSpecification.builder().serviceId(SERVICE_ID).manifestYaml("Fake Manifest.yaml").build())
         .when(serviceResourceService)
         .getPcfServiceSpecification(anyString(), anyString());
 
-    doReturn(Collections.EMPTY_LIST).when(artifactStreamService).getArtifactStreamsForService(any(), any());
+    ArtifactStream artifactStream = DockerArtifactStream.builder()
+                                        .name("docker-stream")
+                                        .appId(APP_ID)
+                                        .uuid(ARTIFACT_STREAM_ID)
+                                        .serviceId(SERVICE_ID)
+                                        .build();
+    //    doReturn(Collections.EMPTY_LIST).when(artifactStreamService).getArtifactStreamsForService(any(), any());
+    doReturn(Arrays.asList(artifactStream)).when(artifactStreamService).getArtifactStreamsForService(any(), any());
 
     doReturn(Collections.EMPTY_LIST).when(configService).getConfigFilesForEntity(anyString(), anyString(), anyString());
 
