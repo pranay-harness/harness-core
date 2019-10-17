@@ -24,7 +24,8 @@ public class K8V2BlueGreenWorkflowCreator extends WorkflowCreator {
     MapperUtils.mapObject(clientWorkflow, workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    if (k8BlueGreenWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
+    if (canaryOrchestrationWorkflow != null
+        && k8BlueGreenWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
       addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
       addWorkflowPhases(workflow);
     }
@@ -37,7 +38,7 @@ public class K8V2BlueGreenWorkflowCreator extends WorkflowCreator {
     WorkflowPhase workflowPhase = k8BlueGreenWorkflowPhaseHelper.getWorkflowPhase(workflow, PHASE_NAME);
     orchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
-        workflow.getUuid(), k8BlueGreenWorkflowPhaseHelper.getRollbackPhaseForWorkflowPhase(workflowPhase));
+        workflowPhase.getUuid(), k8BlueGreenWorkflowPhaseHelper.getRollbackPhaseForWorkflowPhase(workflowPhase));
     for (WorkflowPhase phase : orchestrationWorkflow.getWorkflowPhases()) {
       attachWorkflowPhase(workflow, phase);
     }
