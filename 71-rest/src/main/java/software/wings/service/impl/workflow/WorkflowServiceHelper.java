@@ -433,7 +433,7 @@ public class WorkflowServiceHelper {
 
   public void setKeywords(Workflow workflow) {
     workflow.setDefaultVersion(1);
-    List<String> keywords = asList(workflow.getName(), workflow.getDescription(), workflow.getNotes());
+    List<String> keywords = new ArrayList<>(asList(workflow.getName(), workflow.getDescription(), workflow.getNotes()));
     if (workflow.getWorkflowType() != null) {
       keywords.add(workflow.getWorkflowType().name());
     }
