@@ -79,8 +79,8 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
 
-    Workflow sampleWorkflow =
-        workflowUtils.buildCanaryWorkflowPostDeploymentStep("Test Workflow mainDashboard", environment.getUuid());
+    Workflow sampleWorkflow = workflowUtils.buildCanaryWorkflowPostDeploymentStep(
+        "Test Workflow mainDashboard - " + System.currentTimeMillis(), environment.getUuid());
 
     // REST API.
     Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(
