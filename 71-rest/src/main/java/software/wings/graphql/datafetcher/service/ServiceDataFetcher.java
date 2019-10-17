@@ -24,7 +24,7 @@ public class ServiceDataFetcher extends AbstractObjectDataFetcher<QLService, QLS
   protected QLService fetch(QLServiceQueryParameters qlQuery, String accountId) {
     Service service = persistence.get(Service.class, qlQuery.getServiceId());
     if (service == null) {
-      throw new InvalidRequestException("Service does not exist", WingsException.USER);
+      return null;
     }
 
     if (!service.getAccountId().equals(accountId)) {
