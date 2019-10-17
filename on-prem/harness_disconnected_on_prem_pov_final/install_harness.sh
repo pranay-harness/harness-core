@@ -140,29 +140,47 @@ MONGO_URI=mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/harne
 mkdir -p $STORAGE_DIR_LOCATION
 
 
+function createMongoFiles() {
+         echo "##### Setting up directories for mongodb######## "
+         chmod 666 config/mongo/mongod.conf
+         chmod 666 config/mongo/add_first_user.js
+         chmod 666 config/mongo/add_learning_engine_secret.js
+         chmod 666 config/mongo/publish_version.js
+
+         mkdir -p $runtime_dir/mongo/$mongodb_sys_log_dir
+         mkdir -p $runtime_dir/mongo/$mongodb_data_dir
+         touch $runtime_dir/mongo/$mongodb_sys_log_dir/$mongodb_sys_log_file
+         echo "Creating file : "$runtime_dir/mongo/$mongodb_sys_log_dir/$mongodb_sys_log_file
+         mv config/mongo/mongod.conf $runtime_dir/mongo
+         mkdir -p $runtime_dir/mongo/scripts
+         mv config/mongo/add_first_user.js $runtime_dir/mongo/scripts
+         mv config/mongo/add_learning_engine_secret.js $runtime_dir/mongo/scripts
+         mv config/mongo/publish_version.js $runtime_dir/mongo/scripts
+
+         chown -R 999 $runtime_dir/mongo/*
+         chmod 777 $runtime_dir/mongo/$mongodb_data_dir
+}
+
+
+function checkAndCreateMongoFiles() {
+   if [ ! -d "$runtime_dir/mongo" ]; then
+     createMongoFiles()
+   else
+       echo "##### Mongo directory already present checking for files in it ######## "
+       if [  "$(ls -A $runtime_dir/mongo)"  ]; then
+            echo "##### Mongo directory is non-empty hence skipping creation of mongo files ######## "
+       else
+            echo "##### Mongo direcotry is empty hence creating mongo files ######## "
+            createMongoFiles()
+       fi
+   fi
+}
+
+
 function setUpMongoDBFirstTime(){
     echo "################################Starting up MongoDB for First Time ################################"
 
     printf "\n\n\n\n"
-
-    echo "##### Setting up directories for mongodb######## "
-    chmod 666 config/mongo/mongod.conf
-    chmod 666 config/mongo/add_first_user.js
-    chmod 666 config/mongo/add_learning_engine_secret.js
-    chmod 666 config/mongo/publish_version.js
-
-    mkdir -p $runtime_dir/mongo/$mongodb_sys_log_dir
-    mkdir -p $runtime_dir/mongo/$mongodb_data_dir
-    touch $runtime_dir/mongo/$mongodb_sys_log_dir/$mongodb_sys_log_file
-    echo "Creating file : "$runtime_dir/mongo/$mongodb_sys_log_dir/$mongodb_sys_log_file
-    mv config/mongo/mongod.conf $runtime_dir/mongo
-    mkdir -p $runtime_dir/mongo/scripts
-    mv config/mongo/add_first_user.js $runtime_dir/mongo/scripts
-    mv config/mongo/add_learning_engine_secret.js $runtime_dir/mongo/scripts
-    mv config/mongo/publish_version.js $runtime_dir/mongo/scripts
-
-    chown -R 999 $runtime_dir/mongo/*
-    chmod 777 $runtime_dir/mongo/$mongodb_data_dir
 
     docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm mongo:$MONGO_VERSION --port $mongodb_port
 
