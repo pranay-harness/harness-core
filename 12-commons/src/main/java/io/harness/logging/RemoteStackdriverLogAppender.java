@@ -161,12 +161,21 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   }
 
   private void ensureLoggingInitialized() {
-    if (logging != null
-        && ((GoogleCredentials) logging.getOptions().getCredentials())
-               .getAccessToken()
-               .getExpirationTime()
-               .after(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1)))) {
-      return;
+    if (logging != null) {
+      Date nineMinutesFromNow = new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(9));
+      GoogleCredentials credentials = (GoogleCredentials) logging.getOptions().getCredentials();
+      Date expirationTime = credentials.getAccessToken().getExpirationTime();
+      if (expirationTime.before(nineMinutesFromNow)) {
+        logger.info("Logging token expires {}. Refreshing.", expirationTime);
+        try {
+          logging.close();
+        } catch (Exception e) {
+          logger.error("Error closing logging", e);
+        }
+        logging = null;
+      } else {
+        return;
+      }
     }
 
     AccessTokenBean accessTokenBean = getLoggingToken();
