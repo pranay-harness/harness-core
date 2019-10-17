@@ -88,7 +88,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService {
-  public static int DEFAULT_PAGE_SIZE = 10;
+  public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private LearningEngineService learningEngineService;

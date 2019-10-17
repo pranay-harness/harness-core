@@ -32,13 +32,11 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -58,16 +56,10 @@ import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
-import io.harness.jobs.VerificationJob;
-import io.harness.jobs.VerificationMetricJob;
-import io.harness.jobs.housekeeping.UsageMetricsJob;
-import io.harness.jobs.sg247.ServiceGuardMainJob;
 import io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob;
 import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
 import io.harness.jobs.workflow.collection.CVDataCollectionJob;
-import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
-import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -78,7 +70,6 @@ import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
-import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
 import io.harness.security.VerificationServiceAuthenticationFilter;
@@ -91,7 +82,6 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
-import software.wings.app.WingsApplication;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
@@ -232,8 +222,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     registerHealthChecks(environment, injector);
 
-    registerCronJobs(injector);
-
     registerIterators(injector);
 
     initializeServiceTaskPoll(injector);
@@ -317,42 +305,24 @@ public class VerificationServiceApplication extends Application<VerificationServ
     environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
   }
 
-  private void registerCronJobs(Injector injector) {
-    logger.info("Register cron jobs...");
-    final PersistentScheduler jobScheduler =
-        injector.getInstance(Key.get(PersistentScheduler.class, Names.named("BackgroundJobScheduler")));
-
-    PersistentLocker persistentLocker = injector.getInstance(Key.get(PersistentLocker.class));
-
-    try (AcquiredLock acquiredLock = persistentLocker.waitToAcquireLock(
-             WingsApplication.class, "Initialization", ofSeconds(5), ofSeconds(10))) {
-      // If we do not get the lock, that's not critical - that's most likely because other managers took it
-      // and they will initialize the jobs.
-      if (acquiredLock != null) {
-        VerificationJob.removeJob(jobScheduler);
-        ServiceGuardMainJob.removeJob(jobScheduler);
-        VerificationMetricJob.removeJob(jobScheduler);
-        UsageMetricsJob.addJob(jobScheduler);
-      }
-    }
-  }
-
   private void registerIterators(Injector injector) {
     final ScheduledThreadPoolExecutor serviceGuardExecutor =
         new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
-    registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(), ofMinutes(2), 7);
-    registerIterator(injector, serviceGuardExecutor, new ServiceGuardLogAnalysisJob(), ofMinutes(1), 7);
-    registerIterator(
-        injector, serviceGuardExecutor, new CVDataCollectionJob(), ofSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC), 7);
+    registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(),
+        AccountKeys.serviceGuardDataCollectionIteration, ofMinutes(2), 7);
+    registerIterator(injector, serviceGuardExecutor, new ServiceGuardLogAnalysisJob(),
+        AccountKeys.serviceGuardDataAnalysisIteration, ofMinutes(1), 7);
+    registerIterator(injector, serviceGuardExecutor, new CVDataCollectionJob(),
+        AccountKeys.workflowDataCollectionIteration, ofSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC), 7);
   }
 
   private void registerIterator(Injector injector, ScheduledThreadPoolExecutor serviceGuardExecutor,
-      Handler<Account> handler, Duration interval, int maxAllowedThreads) {
+      Handler<Account> handler, String iteratorFieldName, Duration interval, int maxAllowedThreads) {
     injector.injectMembers(handler);
     PersistenceIterator dataCollectionIterator =
         MongoPersistenceIterator.<Account>builder()
             .clazz(Account.class)
-            .fieldName(AccountKeys.nextIteration)
+            .fieldName(iteratorFieldName)
             .targetInterval(interval)
             .acceptableNoAlertDelay(ofSeconds(30))
             .executorService(serviceGuardExecutor)
@@ -380,6 +350,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void initializeServiceTaskPoll(Injector injector) {
     injector.getInstance(WorkflowVerificationTaskPoller.class).scheduleTaskPoll();
-    injector.getInstance(ServiceGuardAccountPoller.class).scheduleAccountPolling();
+    injector.getInstance(ServiceGuardAccountPoller.class).scheduleUsageMetricsCollection();
+    injector.getInstance(ServiceGuardAccountPoller.class).deleteServiceGuardCrons();
   }
 }

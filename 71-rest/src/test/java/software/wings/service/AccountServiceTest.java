@@ -1,8 +1,10 @@
 package software.wings.service;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,6 +37,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -73,6 +76,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -577,6 +581,57 @@ public class AccountServiceTest extends WingsBaseTest {
     account = accountService.get(account.getUuid());
     assertThat(account.getAccountName()).isEqualTo(newAccountName);
     assertThat(account.getCompanyName()).isEqualTo(companyName);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAccountIteration() throws IllegalAccessException {
+    final Account account = anAccount().withCompanyName(generateUuid()).build();
+    Random r = new Random();
+    long serviceGuardDataCollectionIteration = r.nextLong();
+    FieldUtils.writeField(
+        account, AccountKeys.serviceGuardDataCollectionIteration, serviceGuardDataCollectionIteration, true);
+    long serviceGuardDataAnalysisIteration = r.nextLong();
+    FieldUtils.writeField(
+        account, AccountKeys.serviceGuardDataAnalysisIteration, serviceGuardDataAnalysisIteration, true);
+    long workflowDataCollectionIteration = r.nextLong();
+    FieldUtils.writeField(account, AccountKeys.workflowDataCollectionIteration, workflowDataCollectionIteration, true);
+
+    assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataCollectionIteration))
+        .isEqualTo(serviceGuardDataCollectionIteration);
+    assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataAnalysisIteration))
+        .isEqualTo(serviceGuardDataAnalysisIteration);
+    assertThat(account.obtainNextIteration(AccountKeys.workflowDataCollectionIteration))
+        .isEqualTo(workflowDataCollectionIteration);
+
+    serviceGuardDataCollectionIteration = r.nextLong();
+    account.updateNextIteration(AccountKeys.serviceGuardDataCollectionIteration, serviceGuardDataCollectionIteration);
+    assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataCollectionIteration))
+        .isEqualTo(serviceGuardDataCollectionIteration);
+
+    serviceGuardDataAnalysisIteration = r.nextLong();
+    account.updateNextIteration(AccountKeys.serviceGuardDataAnalysisIteration, serviceGuardDataAnalysisIteration);
+    assertThat(account.obtainNextIteration(AccountKeys.serviceGuardDataAnalysisIteration))
+        .isEqualTo(serviceGuardDataAnalysisIteration);
+
+    workflowDataCollectionIteration = r.nextLong();
+    account.updateNextIteration(AccountKeys.workflowDataCollectionIteration, workflowDataCollectionIteration);
+    assertThat(account.obtainNextIteration(AccountKeys.workflowDataCollectionIteration))
+        .isEqualTo(workflowDataCollectionIteration);
+
+    try {
+      account.updateNextIteration(generateUuid(), r.nextLong());
+      fail("Did not throw exception");
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
+    try {
+      account.obtainNextIteration(generateUuid());
+      fail("Did not throw exception");
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
   }
 
   @Test

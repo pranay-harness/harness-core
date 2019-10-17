@@ -118,5 +118,5 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusHours(8).toInstant());
 }
