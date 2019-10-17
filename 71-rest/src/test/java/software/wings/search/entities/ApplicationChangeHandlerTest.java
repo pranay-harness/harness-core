@@ -79,7 +79,8 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
     Map<String, Object> auditViewMap =
         relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
 
-    when(searchDao.addTimestamp(ApplicationSearchEntity.TYPE, ApplicationViewKeys.auditTimestamps, documentId, 7))
+    when(searchDao.addTimestamp(ApplicationSearchEntity.TYPE, ApplicationViewKeys.auditTimestamps, documentId,
+             nonDeleteAuditHeader.getCreatedAt(), 7))
         .thenReturn(true);
     when(searchDao.appendToListInSingleDocument(
              ApplicationSearchEntity.TYPE, ApplicationViewKeys.audits, documentId, auditViewMap, 3))

@@ -55,10 +55,10 @@ public interface SearchDao {
   List<String> nestedQuery(String entityType, String fieldName, String value);
 
   // Add timestamp in the document also removing stale data wrt daysToRetain
-  boolean addTimestamp(String entityType, String fieldName, String documentId, int daysToRetain);
+  boolean addTimestamp(String entityType, String fieldName, String documentId, long createdAt, int daysToRetain);
 
   // Add timestamp to multiple documents and also removing stale data wrt daysToRetain
-  boolean addTimestamp(String entityType, String fieldName, List<String> documentIds, int daysToRetain);
+  boolean addTimestamp(String entityType, String fieldName, List<String> documentIds, long createdAt, int daysToRetain);
 
   // Delete document with id documentId in index
   boolean deleteDocument(String entityType, String documentId);

@@ -63,8 +63,8 @@ public class ApplicationChangeHandler implements ChangeHandler {
             Map<String, Object> auditRelatedEntityViewMap =
                 relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
             String auditTimestampField = ApplicationViewKeys.auditTimestamps;
-            result &=
-                searchDao.addTimestamp(ApplicationSearchEntity.TYPE, auditTimestampField, filterId, DAYS_TO_RETAIN);
+            result &= searchDao.addTimestamp(ApplicationSearchEntity.TYPE, auditTimestampField, filterId,
+                auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
             result &= searchDao.appendToListInSingleDocument(
                 ApplicationSearchEntity.TYPE, fieldToUpdate, filterId, auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
             break;

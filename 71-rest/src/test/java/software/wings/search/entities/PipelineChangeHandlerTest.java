@@ -78,7 +78,8 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
     Map<String, Object> auditViewMap =
         relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
 
-    when(searchDao.addTimestamp(PipelineSearchEntity.TYPE, PipelineViewKeys.auditTimestamps, documentId, 7))
+    when(searchDao.addTimestamp(PipelineSearchEntity.TYPE, PipelineViewKeys.auditTimestamps, documentId,
+             nonDeleteAuditHeader.getCreatedAt(), 7))
         .thenReturn(true);
     when(searchDao.appendToListInSingleDocument(
              PipelineSearchEntity.TYPE, PipelineViewKeys.audits, documentId, auditViewMap, 3))

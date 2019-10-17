@@ -169,7 +169,8 @@ class EnvironmentViewBuilder {
       for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
         if (pipelineStage.getPipelineStageElements() != null) {
           for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
-            if (pipelineStageElement.getProperties().containsKey(ENV_ID_KEY)) {
+            if (pipelineStageElement.getProperties().containsKey(ENV_ID_KEY)
+                && pipelineStageElement.getProperties().get(ENV_ID_KEY) != null) {
               envIds.add(pipelineStageElement.getProperties().get(ENV_ID_KEY).toString());
             }
           }

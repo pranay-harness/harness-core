@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -32,6 +33,7 @@ import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,22 +67,26 @@ public class EnvironmentChangeHandler implements ChangeHandler {
     if (changeEvent.getChanges().containsField(WorkflowKeys.envId)) {
       Workflow workflow = (Workflow) changeEvent.getFullDocument();
       String fieldToUpdate = EnvironmentViewKeys.workflows;
-      String presentEnvId =
-          searchDao.nestedQuery(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.workflows, changeEvent.getUuid())
-              .get(0);
-      String incomingEnvId = workflow.getEnvId();
+      Set<String> currentEnvIds = Sets.newHashSet(
+          searchDao.nestedQuery(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.workflows, changeEvent.getUuid()));
+      Set<String> incomingEnvIds = Sets.newHashSet(Arrays.asList(workflow.getEnvId()));
+
+      List<String> toBeAddedEnvIds =
+          new ArrayList<>(Sets.difference(incomingEnvIds, Sets.intersection(incomingEnvIds, currentEnvIds)));
+      List<String> toBeDeletedEnvIds =
+          new ArrayList<>(Sets.difference(currentEnvIds, Sets.intersection(incomingEnvIds, currentEnvIds)));
 
       EntityInfo entityInfo = new EntityInfo(workflow.getUuid(), workflow.getName());
       Map<String, Object> newElement = SearchEntityUtils.convertToMap(entityInfo);
 
-      if (incomingEnvId != null) {
-        result = searchDao.appendToListInSingleDocument(
-            EnvironmentSearchEntity.TYPE, fieldToUpdate, incomingEnvId, newElement);
+      if (EmptyPredicate.isNotEmpty(toBeAddedEnvIds)) {
+        result = searchDao.appendToListInMultipleDocuments(
+            EnvironmentSearchEntity.TYPE, fieldToUpdate, toBeAddedEnvIds, newElement);
       }
-      if (presentEnvId != null) {
+      if (EmptyPredicate.isNotEmpty(toBeDeletedEnvIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
-                   EnvironmentSearchEntity.TYPE, fieldToUpdate, presentEnvId, changeEvent.getUuid());
+                   EnvironmentSearchEntity.TYPE, fieldToUpdate, toBeDeletedEnvIds, changeEvent.getUuid());
       }
     }
     if (changeEvent.getChanges().containsField(WorkflowKeys.name)) {
@@ -98,11 +104,10 @@ public class EnvironmentChangeHandler implements ChangeHandler {
 
   private boolean handleWorkflowDelete(ChangeEvent<?> changeEvent) {
     String fieldToUpdate = EnvironmentViewKeys.workflows;
-    String toBeDeletedEnvId =
-        searchDao.nestedQuery(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.workflows, changeEvent.getUuid())
-            .get(0);
+    List<String> toBeDeletedEnvIds =
+        searchDao.nestedQuery(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.workflows, changeEvent.getUuid());
     return searchDao.removeFromListInMultipleDocuments(
-        EnvironmentSearchEntity.TYPE, fieldToUpdate, toBeDeletedEnvId, changeEvent.getUuid());
+        EnvironmentSearchEntity.TYPE, fieldToUpdate, toBeDeletedEnvIds, changeEvent.getUuid());
   }
 
   private boolean handleWorkflowChange(ChangeEvent<?> changeEvent) {
@@ -184,8 +189,8 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = EnvironmentViewKeys.deploymentTimestamps;
-      result = searchDao.addTimestamp(
-          EnvironmentSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(EnvironmentSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate,
+          workflowExecution.getCreatedAt(), DAYS_TO_RETAIN);
       result = result
           && searchDao.appendToListInMultipleDocuments(EnvironmentSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,
                  deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
@@ -233,8 +238,8 @@ public class EnvironmentChangeHandler implements ChangeHandler {
           Map<String, Object> auditRelatedEntityViewMap =
               relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
           result = result
-              && searchDao.addTimestamp(
-                     EnvironmentSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+              && searchDao.addTimestamp(EnvironmentSearchEntity.TYPE, auditTimestampField, documentToUpdate,
+                     auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
           result = result
               && searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                      auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);

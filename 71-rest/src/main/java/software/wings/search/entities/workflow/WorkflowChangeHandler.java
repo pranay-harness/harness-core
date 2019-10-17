@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
 import io.harness.beans.WorkflowType;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -77,11 +78,11 @@ public class WorkflowChangeHandler implements ChangeHandler {
       EntityInfo entityInfo = new EntityInfo(pipeline.getUuid(), pipeline.getName());
       Map<String, Object> newElement = SearchEntityUtils.convertToMap(entityInfo);
 
-      if (!toBeAddedWorkflowIds.isEmpty()) {
+      if (EmptyPredicate.isNotEmpty(toBeAddedWorkflowIds)) {
         result = searchDao.appendToListInMultipleDocuments(
             WorkflowSearchEntity.TYPE, fieldToUpdate, toBeAddedWorkflowIds, newElement);
       }
-      if (!toBeDeletedWorkflowIds.isEmpty()) {
+      if (EmptyPredicate.isNotEmpty(toBeDeletedWorkflowIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
                    WorkflowSearchEntity.TYPE, fieldToUpdate, toBeDeletedWorkflowIds, pipeline.getUuid());
@@ -134,8 +135,8 @@ public class WorkflowChangeHandler implements ChangeHandler {
           Map<String, Object> auditRelatedEntityViewMap =
               relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
           result = result
-              && searchDao.addTimestamp(
-                     WorkflowSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+              && searchDao.addTimestamp(WorkflowSearchEntity.TYPE, auditTimestampField, documentToUpdate,
+                     auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
           result = result
               && searchDao.appendToListInSingleDocument(WorkflowSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                      auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
@@ -156,8 +157,8 @@ public class WorkflowChangeHandler implements ChangeHandler {
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = WorkflowViewKeys.deploymentTimestamps;
-      result = searchDao.addTimestamp(
-          WorkflowSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(WorkflowSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate,
+          workflowExecution.getCreatedAt(), DAYS_TO_RETAIN);
 
       result = result
           && searchDao.appendToListInMultipleDocuments(WorkflowSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,

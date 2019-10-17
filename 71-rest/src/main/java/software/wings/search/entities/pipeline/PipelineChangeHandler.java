@@ -65,8 +65,8 @@ public class PipelineChangeHandler implements ChangeHandler {
           String auditTimestampField = PipelineViewKeys.auditTimestamps;
           Map<String, Object> auditRelatedEntityViewMap =
               relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-          result &=
-              searchDao.addTimestamp(PipelineSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+          result &= searchDao.addTimestamp(PipelineSearchEntity.TYPE, auditTimestampField, documentToUpdate,
+              auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
           result &= searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
               auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
           break;
@@ -86,8 +86,8 @@ public class PipelineChangeHandler implements ChangeHandler {
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = PipelineViewKeys.deploymentTimestamps;
-      result = searchDao.addTimestamp(
-          PipelineSearchEntity.TYPE, deploymentTimestampsField, documentToUpdate, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(PipelineSearchEntity.TYPE, deploymentTimestampsField, documentToUpdate,
+          workflowExecution.getCreatedAt(), DAYS_TO_RETAIN);
 
       result = result
           && searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,

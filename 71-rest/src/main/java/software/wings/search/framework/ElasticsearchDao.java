@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Elasticsearch Dao
@@ -282,39 +281,43 @@ public class ElasticsearchDao implements SearchDao {
     return false;
   }
 
-  public boolean addTimestamp(String entityType, String fieldName, String documentId, int daysToRetain) {
+  public boolean addTimestamp(
+      String entityType, String fieldName, String documentId, long createdAt, int daysToRetain) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
     request.setRefresh(true);
     Map<String, Object> params = new HashMap<>();
-    long currentTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-    long newTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - daysToRetain * 86400;
+    long cutoffTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(daysToRetain);
 
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldName);
-    params.put("newTimestampValue", newTimestampValue);
-    params.put("currentTimestampValue", currentTimestampValue);
+    params.put("cutoffTimestamp", cutoffTimestamp);
+    params.put("currentTimestamp", createdAt);
 
-    request.setQuery(QueryBuilders.termQuery(EntityBaseViewKeys.id, documentId));
+    request.setQuery(QueryBuilders.boolQuery()
+                         .must(QueryBuilders.termQuery(EntityBaseViewKeys.id, documentId))
+                         .mustNot(QueryBuilders.termQuery(fieldName, createdAt)));
     request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
-        "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.newTimestampValue).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestampValue); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestampValue]; }",
+        "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.cutoffTimestamp).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestamp); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestamp]; }",
         params));
     return processUpdateByQuery(request, params, indexName);
   }
 
-  public boolean addTimestamp(String entityType, String fieldName, List<String> documentIds, int daysToRetain) {
+  public boolean addTimestamp(
+      String entityType, String fieldName, List<String> documentIds, long createdAt, int daysToRetain) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
     request.setRefresh(true);
     Map<String, Object> params = new HashMap<>();
-    long currentTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-    long newTimestampValue = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - daysToRetain * 86400;
+    long cutoffTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(daysToRetain);
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldName);
-    params.put("newTimestampValue", newTimestampValue);
-    params.put("currentTimestampValue", currentTimestampValue);
+    params.put("cutoffTimestamp", cutoffTimestamp);
+    params.put("currentTimestamp", createdAt);
 
-    request.setQuery(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds));
+    request.setQuery(QueryBuilders.boolQuery()
+                         .must(QueryBuilders.termsQuery(EntityBaseViewKeys.id, documentIds))
+                         .mustNot(QueryBuilders.termQuery(fieldName, createdAt)));
     request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
-        "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.newTimestampValue).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestampValue); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestampValue]; }",
+        "if (ctx._source[params.fieldToUpdate] != null) { ctx._source[params.fieldToUpdate] = ctx._source[params.fieldToUpdate].stream().filter(item -> item >= params.cutoffTimestamp).collect(Collectors.toList()); ctx._source[params.fieldToUpdate].add(params.currentTimestamp); } else { ctx._source[params.fieldToUpdate] = [params.currentTimestamp]; }",
         params));
     return processUpdateByQuery(request, params, indexName);
   }
@@ -331,7 +334,6 @@ public class ElasticsearchDao implements SearchDao {
     try {
       SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
       List<String> requiredIds = new ArrayList<>();
-
       for (SearchHit searchHit : searchResponse.getHits()) {
         requiredIds.add(searchHit.getId());
       }
