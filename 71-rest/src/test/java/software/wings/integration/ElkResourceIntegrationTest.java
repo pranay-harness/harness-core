@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +45,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   private String workflowId;
   private String workflowExecutionId;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
@@ -124,6 +126,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithInvalidJSONQuery() {
     // doesnt start with '{' its an invalid query String
