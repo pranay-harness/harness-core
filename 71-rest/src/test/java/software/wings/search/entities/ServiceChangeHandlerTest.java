@@ -78,7 +78,8 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
     Map<String, Object> auditViewMap =
         relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
 
-    when(searchDao.addTimestamp(ServiceSearchEntity.TYPE, ServiceViewKeys.auditTimestamps, documentId, 7))
+    when(searchDao.addTimestamp(ServiceSearchEntity.TYPE, ServiceViewKeys.auditTimestamps, documentId,
+             nonDeleteAuditHeader.getCreatedAt(), 7))
         .thenReturn(true);
     when(searchDao.appendToListInSingleDocument(
              ServiceSearchEntity.TYPE, ServiceViewKeys.audits, documentId, auditViewMap, 3))

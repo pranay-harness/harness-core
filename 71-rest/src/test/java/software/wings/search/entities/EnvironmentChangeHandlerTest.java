@@ -78,7 +78,8 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
     Map<String, Object> auditViewMap =
         relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
 
-    when(searchDao.addTimestamp(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.auditTimestamps, documentId, 7))
+    when(searchDao.addTimestamp(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.auditTimestamps, documentId,
+             nonDeleteAuditHeader.getCreatedAt(), 7))
         .thenReturn(true);
     when(searchDao.appendToListInSingleDocument(
              EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.audits, documentId, auditViewMap, 3))

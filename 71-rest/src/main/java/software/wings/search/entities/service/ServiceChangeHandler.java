@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -137,11 +138,11 @@ public class ServiceChangeHandler implements ChangeHandler {
       EntityInfo entityInfo = new EntityInfo(pipeline.getUuid(), pipeline.getName());
       Map<String, Object> newElement = SearchEntityUtils.convertToMap(entityInfo);
 
-      if (!toBeAddedServiceIds.isEmpty()) {
+      if (EmptyPredicate.isNotEmpty(toBeAddedServiceIds)) {
         result = searchDao.appendToListInMultipleDocuments(
             ServiceSearchEntity.TYPE, fieldToUpdate, toBeAddedServiceIds, newElement);
       }
-      if (!toBeDeletedServiceIds.isEmpty()) {
+      if (EmptyPredicate.isNotEmpty(toBeDeletedServiceIds)) {
         result = result
             && searchDao.removeFromListInMultipleDocuments(
                    ServiceSearchEntity.TYPE, fieldToUpdate, toBeDeletedServiceIds, pipeline.getUuid());
@@ -188,8 +189,8 @@ public class ServiceChangeHandler implements ChangeHandler {
       Map<String, Object> deploymentRelatedEntityViewMap =
           relatedDeploymentViewBuilder.getDeploymentRelatedEntityViewMap(workflowExecution);
       String deploymentTimestampsField = ServiceViewKeys.deploymentTimestamps;
-      result = searchDao.addTimestamp(
-          ServiceSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate, DAYS_TO_RETAIN);
+      result = searchDao.addTimestamp(ServiceSearchEntity.TYPE, deploymentTimestampsField, documentsToUpdate,
+          workflowExecution.getCreatedAt(), DAYS_TO_RETAIN);
       result = result
           && searchDao.appendToListInMultipleDocuments(ServiceSearchEntity.TYPE, fieldToUpdate, documentsToUpdate,
                  deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
@@ -237,8 +238,8 @@ public class ServiceChangeHandler implements ChangeHandler {
           Map<String, Object> auditRelatedEntityViewMap =
               relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
           result = result
-              && searchDao.addTimestamp(
-                     ServiceSearchEntity.TYPE, auditTimestampField, documentToUpdate, DAYS_TO_RETAIN);
+              && searchDao.addTimestamp(ServiceSearchEntity.TYPE, auditTimestampField, documentToUpdate,
+                     auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
           result = result
               && searchDao.appendToListInSingleDocument(ServiceSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                      auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);

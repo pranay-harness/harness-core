@@ -78,7 +78,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
     Map<String, Object> auditViewMap =
         relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
 
-    when(searchDao.addTimestamp(WorkflowSearchEntity.TYPE, WorkflowViewKeys.auditTimestamps, documentId, 7))
+    when(searchDao.addTimestamp(WorkflowSearchEntity.TYPE, WorkflowViewKeys.auditTimestamps, documentId,
+             nonDeleteAuditHeader.getCreatedAt(), 7))
         .thenReturn(true);
     when(searchDao.appendToListInSingleDocument(
              WorkflowSearchEntity.TYPE, WorkflowViewKeys.audits, documentId, auditViewMap, 3))

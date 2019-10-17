@@ -62,19 +62,21 @@ public class SynchronousElasticsearchDao implements SearchDao {
   }
 
   @Override
-  public boolean addTimestamp(String entityType, String listToUpdate, String documentId, int daysToRetain) {
+  public boolean addTimestamp(
+      String entityType, String listToUpdate, String documentId, long createdAt, int daysToRetain) {
     logger.info(
         "Add current timestamp to a list with elements referenced by key {} in a document having id {} of index type {} with days to retain {}",
         listToUpdate, documentId, entityType, daysToRetain);
     Callable<Boolean> addTimestampCallable =
-        () -> elasticsearchDao.addTimestamp(entityType, listToUpdate, documentId, daysToRetain);
+        () -> elasticsearchDao.addTimestamp(entityType, listToUpdate, documentId, createdAt, daysToRetain);
     return processElasticsearchTask(addTimestampCallable);
   }
 
   @Override
-  public boolean addTimestamp(String entityType, String listToUpdate, List<String> documentIds, int daysToRetain) {
+  public boolean addTimestamp(
+      String entityType, String listToUpdate, List<String> documentIds, long createdAt, int daysToRetain) {
     Callable<Boolean> addTimestampCallable =
-        () -> elasticsearchDao.addTimestamp(entityType, listToUpdate, documentIds, daysToRetain);
+        () -> elasticsearchDao.addTimestamp(entityType, listToUpdate, documentIds, createdAt, daysToRetain);
     return processElasticsearchTask(addTimestampCallable);
   }
 
