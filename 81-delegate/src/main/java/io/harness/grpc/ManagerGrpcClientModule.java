@@ -11,6 +11,7 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.govern.ProviderModule;
+import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import lombok.Builder;
 import lombok.Value;
@@ -33,21 +34,42 @@ public class ManagerGrpcClientModule extends ProviderModule {
   @Singleton
   @Provides
   public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
-    String versionPrefix = "v-" + versionInfoManager.getVersionInfo().getVersion().replace('.', '-') + "-";
-    String versionedAuthority = versionPrefix + config.authority;
-    String authorityToUse;
-    try {
-      authorityToUse = GrpcUtil.checkAuthority(versionedAuthority);
-      logger.info("Using versioned authority: {}", versionedAuthority);
-    } catch (Exception e) {
-      authorityToUse = config.authority;
-      logger.error("Using non-versioned authority due to error", e);
-    }
+    String authorityToUse = computeAuthority(versionInfoManager.getVersionInfo());
     SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
     return NettyChannelBuilder.forTarget(config.target)
         .overrideAuthority(authorityToUse)
         .sslContext(sslContext)
         .build();
+  }
+
+  private String computeAuthority(VersionInfo versionInfo) {
+    String defaultAuthority = "default-authority.harness.io";
+    String authorityToUse;
+    if (!isValidAuthority(config.authority)) {
+      logger.info("Authority in config {} is invalid. Using default value {}", config.authority, defaultAuthority);
+      authorityToUse = defaultAuthority;
+    } else {
+      String versionPrefix = "v-" + versionInfo.getVersion().replace('.', '-') + "-";
+      String versionedAuthority = versionPrefix + config.authority;
+      if (isValidAuthority(versionedAuthority)) {
+        logger.info("Using versioned authority: {}", versionedAuthority);
+        authorityToUse = versionedAuthority;
+      } else {
+        logger.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
+        authorityToUse = config.authority;
+      }
+    }
+    return authorityToUse;
+  }
+
+  private static boolean isValidAuthority(String authority) {
+    boolean valid = true;
+    try {
+      GrpcUtil.checkAuthority(authority);
+    } catch (Exception e) {
+      valid = false;
+    }
+    return valid;
   }
 
   @Value

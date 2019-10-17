@@ -56,7 +56,7 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = POOJA)
+  @Owner(emails = POOJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldCreateJiraStepinWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
