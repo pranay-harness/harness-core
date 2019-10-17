@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import migrations.timescaledb.AddIndexToInstanceV2Migration;
 import migrations.timescaledb.AddRollbackToDeployment;
+import migrations.timescaledb.AddSchemaForServiceGuardStats;
 import migrations.timescaledb.AddingToCVDeploymentMetrics;
 import migrations.timescaledb.ChangeToTimeStampTZ;
 import migrations.timescaledb.CreateNewInstanceV2Migration;
@@ -27,6 +28,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(7, AddIndexToInstanceV2Migration.class))
         .add(Pair.of(8, AddRollbackToDeployment.class))
         .add(Pair.of(9, AddingToCVDeploymentMetrics.class))
+        .add(Pair.of(10, AddSchemaForServiceGuardStats.class))
         .build();
   }
 }
