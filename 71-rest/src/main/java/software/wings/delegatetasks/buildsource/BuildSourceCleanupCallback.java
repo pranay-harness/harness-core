@@ -40,6 +40,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   @Inject private transient ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;
 
+  public BuildSourceCleanupCallback() {}
+
   public BuildSourceCleanupCallback(String accountId, String artifactStreamId) {
     this.accountId = accountId;
     this.artifactStreamId = artifactStreamId;
