@@ -87,7 +87,8 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructAwsLambdaInfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicDeploymentTemplateWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflow;
-import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithDeployServicePhaseStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStep;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStepWithInfraDefinitionId;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflow;
@@ -145,6 +146,7 @@ import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.StateType.WAIT;
 import static software.wings.sm.StepType.APPROVAL;
 import static software.wings.sm.StepType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StepType.AZURE_NODE_SELECT;
 import static software.wings.sm.StepType.BAMBOO;
 import static software.wings.sm.StepType.BARRIER;
 import static software.wings.sm.StepType.ECS_STEADY_STATE_CHECK;
@@ -168,6 +170,7 @@ import static software.wings.stencils.WorkflowStepType.ARTIFACT;
 import static software.wings.stencils.WorkflowStepType.AWS_AMI;
 import static software.wings.stencils.WorkflowStepType.AWS_SSH;
 import static software.wings.stencils.WorkflowStepType.CI_SYSTEM;
+import static software.wings.stencils.WorkflowStepType.DC_SSH;
 import static software.wings.stencils.WorkflowStepType.FLOW_CONTROL;
 import static software.wings.stencils.WorkflowStepType.ISSUE_TRACKING;
 import static software.wings.stencils.WorkflowStepType.KUBERNETES;
@@ -183,6 +186,7 @@ import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.JENKINS_URL;
@@ -279,12 +283,15 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.AccountService;
@@ -293,6 +300,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -322,6 +330,7 @@ import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -341,6 +350,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private AppService appService;
   @Mock private AccountService accountService;
   @Mock private NotificationSetupService notificationSetupService;
@@ -3592,7 +3602,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void categoriesForBasicWorkflow() throws IllegalArgumentException {
-    Workflow workflow = workflowService.createWorkflow(constructBasicWorkflowWithDeployServicePhaseStep());
+    Workflow workflow = workflowService.createWorkflow(constructBasicWorkflowWithInfraNodeDeployServicePhaseStep());
     String phaseId =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
     assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
@@ -3753,5 +3763,67 @@ public class WorkflowServiceTest extends WingsBaseTest {
       stepTypesCopy.removeAll(stateTypesCopy);
       return "StepType(s): " + Joiner.on(", ").join(stepTypesCopy) + " should be added to StateType as well.";
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSelectNodesForAwsSshWorkflow() {
+    Workflow workflow = workflowService.createWorkflow(constructBasicWorkflowWithInfraNodeDeployServicePhaseStep());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, INFRASTRUCTURE_NODE.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), asList(StepType.AWS_NODE_SELECT.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(DC_SSH.name(), AZURE_NODE_SELECT.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSelectNodesForAwsSshWorkflowWithInfraDefinition() {
+    Set<String> favorites = new HashSet<>();
+    favorites.add(StepType.AWS_NODE_SELECT.getType());
+    LinkedList<String> recents = new LinkedList<>();
+    recents.add(StepType.EMAIL.getType());
+    when(personalizationService.fetch(anyString(), anyString(), any()))
+        .thenReturn(Personalization.builder()
+                        .steps(Personalization.Steps.builder().favorites(favorites).recent(recents).build())
+                        .build());
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, null)).thenReturn(true);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(InfrastructureDefinition.builder()
+                        .name("def1")
+                        .infrastructure(AwsInstanceInfrastructure.builder().build())
+                        .deploymentType(SSH)
+                        .build());
+    Workflow workflow = workflowService.createWorkflow(
+        constructBasicWorkflowWithInfraNodeDeployServicePhaseStepWithInfraDefinitionId());
+    String phaseId =
+        ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    WorkflowCategorySteps workflowCategorySteps =
+        workflowService.calculateCategorySteps(workflow, user.getUuid(), phaseId, INFRASTRUCTURE_NODE.name(), 0, false);
+    assertThat(workflowCategorySteps.getCategories()).isNotEmpty();
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple("RECENTLY_USED", "Recently Used", asList(EMAIL.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple("MY_FAVORITES", "My Favorites", asList(StepType.AWS_NODE_SELECT.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(
+            WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
+        .contains(tuple(AWS_SSH.name(), AWS_SSH.getDisplayName(), asList(StepType.AWS_NODE_SELECT.name())));
+    assertThat(workflowCategorySteps.getCategories())
+        .extracting(WorkflowCategoryStepsMeta::getId)
+        .doesNotContain(DC_SSH.name(), AZURE_NODE_SELECT.name());
   }
 }
