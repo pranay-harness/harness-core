@@ -76,6 +76,7 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.expression.SubstitutionFunctor;
 import software.wings.expression.SweepingOutputFunctor;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.AccountLogContext;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.PipelineWorkflowExecutionLogContext;
@@ -86,6 +87,7 @@ import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -132,6 +134,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private transient VariableProcessor variableProcessor;
   @Inject private transient FeatureFlagService featureFlagService;
+  @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -1082,7 +1085,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return null;
     }
 
-    InfraMappingElementBuilder builder = InfraMappingElement.builder().name(infrastructureMapping.getName());
+    String name = infrastructureMapping.getName();
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infrastructureMapping.getAccountId())) {
+      InfrastructureDefinition infrastructureDefinition =
+          infrastructureDefinitionService.get(appId, infrastructureMapping.getInfrastructureDefinitionId());
+      name = infrastructureDefinition.getName();
+    }
+    InfraMappingElementBuilder builder = InfraMappingElement.builder().name(name);
     populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
     populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
 
