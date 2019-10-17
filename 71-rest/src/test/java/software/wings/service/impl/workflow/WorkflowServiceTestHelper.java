@@ -28,6 +28,7 @@ import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServic
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.HELM_DEPLOY;
+import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -53,6 +54,7 @@ import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.WAIT;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -295,7 +297,7 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
-  public static Workflow constructBasicWorkflowWithDeployServicePhaseStep() {
+  public static Workflow constructBasicWorkflowWithInfraNodeDeployServicePhaseStep() {
     return aWorkflow()
         .name(WORKFLOW_NAME)
         .appId(APP_ID)
@@ -308,7 +310,32 @@ public class WorkflowServiceTestHelper {
                     aWorkflowPhase()
                         .serviceId(SERVICE_ID)
                         .deploymentType(SSH)
-                        .phaseSteps(asList(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy Service").build()))
+                        .infraMappingId(INFRA_MAPPING_ID)
+                        .phaseSteps(
+                            asList(aPhaseStep(PhaseStepType.INFRASTRUCTURE_NODE, INFRASTRUCTURE_NODE.name()).build(),
+                                aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy Service").build()))
+                        .build())
+                .build())
+        .build();
+  }
+
+  public static Workflow constructBasicWorkflowWithInfraNodeDeployServicePhaseStepWithInfraDefinitionId() {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
+            aBuildOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                .addWorkflowPhase(
+                    aWorkflowPhase()
+                        .serviceId(SERVICE_ID)
+                        .deploymentType(SSH)
+                        .infraDefinitionId(INFRA_DEFINITION_ID)
+                        .phaseSteps(
+                            asList(aPhaseStep(PhaseStepType.INFRASTRUCTURE_NODE, INFRASTRUCTURE_NODE.name()).build(),
+                                aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy Service").build()))
                         .build())
                 .build())
         .build();
