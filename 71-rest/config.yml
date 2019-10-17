@@ -52,6 +52,8 @@ mktPlaceConfig:
   awsAccessKey: awsMktPlaceAccessKeyPlaceHolder
   awsSecretKey: awsMktPlaceSecretKeyPlaceHolder
   awsMarketPlaceProductCode: awsMktPlaceProductCodePlaceHolder
+  azureMarketplaceAccessKey: "ZWRlZDEzMjMtYTk5Zi00MDc0LWJmMjMtOWFhZTYzN2M4ZGQy"
+  azureMarketplaceSecretKey: "UmU4QmtxZkdKal9aWWhyTjlCTU5zRnFIcFNAXUI9ODc="
 
 marketoConfig:
   enabled: false #marketoConfigEnable
@@ -167,7 +169,7 @@ elasticsearch:
 
 watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
-apiUrl: ""
+apiUrl: "http://localhost:8080"
 deployMode: AWS
 envPath: ""
 

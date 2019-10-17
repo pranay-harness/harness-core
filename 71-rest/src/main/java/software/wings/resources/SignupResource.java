@@ -15,15 +15,20 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.signup.AzureMarketplaceIntegrationService;
 import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupService;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Api("signup")
 @Path("/signup")
@@ -34,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 @Slf4j
 public class SignupResource {
   @Inject SignupService signupService;
+  @Inject AzureMarketplaceIntegrationService azureMarketplaceIntegrationService;
 
   /**
    *  Start the trial registration with email and user info. (Doesn't contains password)
@@ -57,12 +63,37 @@ public class SignupResource {
   }
 
   @PublicApi
+  @GET
+  @Path("check-validity/azure-marketplace")
+  public Response validateToken(@QueryParam("token") String azureMarketplaceToken) {
+    try {
+      return signupService.checkValidity(azureMarketplaceToken);
+    } catch (Exception ex) {
+      throw new SignupException("Failed to signup. Please contact harness support");
+    }
+  }
+
+  @PublicApi
   @POST
   @Path("complete/{token}")
   public RestResponse<User> completeSignup(
       UpdatePasswordRequest passwordRequest, @NotEmpty @PathParam("token") String secretToken) {
     try {
       return new RestResponse<>(signupService.completeSignup(passwordRequest, secretToken));
+    } catch (SignupException ex) {
+      throw ex;
+    } catch (Exception ex) {
+      logger.error("Failed to complete signup", ex);
+      throw new SignupException("Failed to signup. Please contact harness support");
+    }
+  }
+
+  @PublicApi
+  @PUT
+  @Path("azure-marketplace/complete")
+  public RestResponse<User> completeAzureSignup(@QueryParam("token") String token) {
+    try {
+      return new RestResponse<>(signupService.completeAzureMarketplaceSignup(token));
     } catch (SignupException ex) {
       throw ex;
     } catch (Exception ex) {

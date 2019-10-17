@@ -12,4 +12,6 @@ public class MarketPlaceConfig {
   private String awsAccessKey;
   private String awsSecretKey;
   private String awsMarketPlaceProductCode;
+  private String azureMarketplaceAccessKey;
+  private String azureMarketplaceSecretKey;
 }

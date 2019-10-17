@@ -340,3 +340,10 @@ fi
 if [[ "$SEARCH_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE searchEnabled true
 fi
+
+if [[ "" != "$AZURE_MARKETPLACE_ACCESSKEY" ]]; then
+  yq write -i $CONFIG_FILE mktPlaceConfig.azureMarketplaceAccessKey "$AZURE_MARKETPLACE_ACCESSKEY"
+
+
+if [[ "" != "$AZURE_MARKETPLACE_SECRETKEY" ]]; then
+  yq write -i $CONFIG_FILE mktPlaceConfig.azureMarketplaceSecretKey "$AZURE_MARKETPLACE_SECRETKEY"

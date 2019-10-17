@@ -11,7 +11,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -45,6 +47,7 @@ public class SignupServiceImpl implements SignupService {
   @Inject MainConfiguration configuration;
   @Inject WingsPersistence wingsPersistence;
   @Inject BlackListedDomainChecker blackListedDomainChecker;
+  @Inject MainConfiguration mainConfiguration;
 
   private static final String TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME = "trial_signup_completed";
   private static final String SETUP_PASSWORD_FOR_SIGNUP = "setup_password_for_signup";
@@ -192,6 +195,31 @@ public class SignupServiceImpl implements SignupService {
 
     if (password.length < 8) {
       throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Password should at least be 8 characters");
+    }
+  }
+
+  public String getEmail(String jwtToken) {
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(mainConfiguration.getPortal().getJwtPasswordSecret());
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      verifier.verify(jwtToken);
+      JWT decode = JWT.decode(jwtToken);
+      return decode.getClaim("email").asString();
+    } catch (UnsupportedEncodingException exception) {
+      logger.error("Could not decode token for signup: {}", jwtToken);
+      throw new SignupException("Invalid signup token. Please signup again");
+    } catch (JWTVerificationException exception) {
+      logger.error("Signup token {} has expired", jwtToken);
+      throw new SignupException("Invalid signup token. Please signup again");
+    }
+  }
+
+  public void checkIfUserInviteIsValid(UserInvite userInvite, String email) {
+    if (userInvite == null) {
+      logger.info("No invite found in db for for email: {}", email);
+      throw new SignupException(String.format("Can not process signup for email: %s", email));
+    } else if (userInvite.isCompleted()) {
+      throw new SignupException("User invite has already been completed. Please login");
     }
   }
 }
