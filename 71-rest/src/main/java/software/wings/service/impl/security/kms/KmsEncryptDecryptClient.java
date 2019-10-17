@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateException;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -61,6 +62,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Singleton
 @Slf4j
 public class KmsEncryptDecryptClient {
+  private static final int DEFAULT_KMS_TIMEOUT = 10; // in seconds
   private TimeLimiter timeLimiter;
 
   // Caffeine cache is a high performance java cache just like Guava Cache. Below is the benchmark result
@@ -83,7 +85,7 @@ public class KmsEncryptDecryptClient {
     while (true) {
       try {
         return timeLimiter.callWithTimeout(
-            () -> encryptInternal(accountId, value, kmsConfig), 5, TimeUnit.SECONDS, true);
+            () -> encryptInternal(accountId, value, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
         logger.warn(format("Encryption failed. trial num: %d", failedAttempts), e);
@@ -102,18 +104,26 @@ public class KmsEncryptDecryptClient {
   }
 
   public EncryptedRecordData convertEncryptedRecordToLocallyEncrypted(
-      EncryptedRecord encryptedRecord, KmsConfig kmsConfig) {
-    char[] decryptedValue = decrypt(encryptedRecord, kmsConfig);
-    String randomEncryptionKey = UUIDGenerator.generateUuid();
-    char[] reEncryptedValue = new SimpleEncryption(randomEncryptionKey).encryptChars(decryptedValue);
+      EncryptedData encryptedRecord, KmsConfig kmsConfig) {
+    try {
+      char[] decryptedValue = decrypt(encryptedRecord, kmsConfig);
+      String randomEncryptionKey = UUIDGenerator.generateUuid();
+      char[] reEncryptedValue = new SimpleEncryption(randomEncryptionKey).encryptChars(decryptedValue);
 
-    return EncryptedRecordData.builder()
-        .uuid(encryptedRecord.getUuid())
-        .name(encryptedRecord.getName())
-        .encryptionType(LOCAL)
-        .encryptionKey(randomEncryptionKey)
-        .encryptedValue(reEncryptedValue)
-        .build();
+      return EncryptedRecordData.builder()
+          .uuid(encryptedRecord.getUuid())
+          .name(encryptedRecord.getName())
+          .encryptionType(LOCAL)
+          .encryptionKey(randomEncryptionKey)
+          .encryptedValue(reEncryptedValue)
+          .build();
+    } catch (SecretManagementDelegateException e) {
+      logger.warn("Failed to decrypt secret " + encryptedRecord + " with secret manager " + kmsConfig.getName()
+              + ". Falling back to decrypt this secret using delegate",
+          e);
+      // This means we are falling back to use delegate to decrypt.
+      return SecretManager.buildRecordData(encryptedRecord);
+    }
   }
 
   public char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) {
@@ -133,7 +143,8 @@ public class KmsEncryptDecryptClient {
           return decryptInternalIfCached(data, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
-          return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 5, TimeUnit.SECONDS, true);
+          return timeLimiter.callWithTimeout(
+              () -> decryptInternal(data, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
         }
       } catch (Exception e) {
         failedAttempts++;
