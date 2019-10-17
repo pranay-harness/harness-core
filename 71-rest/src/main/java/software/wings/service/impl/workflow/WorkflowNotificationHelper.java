@@ -109,7 +109,7 @@ public class WorkflowNotificationHelper {
       return;
     }
 
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = Objects.requireNonNull(((ExecutionContextImpl) context).getApp());
     Environment env = ((ExecutionContextImpl) context).getEnv();
 
     Map<String, String> placeHolderValues = getPlaceholderValues(context, app, env, status, null);
@@ -117,8 +117,8 @@ public class WorkflowNotificationHelper {
     Notification notification;
     if (status == SUCCESS || status == PAUSED || status == RESUMED) {
       notification = anInformationNotification()
-                         .withAccountId(app != null ? app.getAccountId() : null)
-                         .withAppId(app != null ? app.getUuid() : null)
+                         .withAccountId(app.getAccountId())
+                         .withAppId(app.getUuid())
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                          .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
@@ -126,8 +126,8 @@ public class WorkflowNotificationHelper {
                          .build();
     } else {
       notification = aFailureNotification()
-                         .withAccountId(app != null ? app.getAccountId() : null)
-                         .withAppId(app != null ? app.getUuid() : null)
+                         .withAccountId(app.getAccountId())
+                         .withAppId(app.getUuid())
                          .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? null : env.getUuid())
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
@@ -157,15 +157,15 @@ public class WorkflowNotificationHelper {
     }
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = Objects.requireNonNull(((ExecutionContextImpl) context).getApp());
 
     Map<String, String> placeHolderValues = getPlaceholderValues(context, app, env, status, phaseSubWorkflow);
 
     Notification notification;
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
       notification = anInformationNotification()
-                         .withAccountId(app != null ? app.getAccountId() : null)
-                         .withAppId(app != null ? app.getUuid() : null)
+                         .withAccountId(app.getAccountId())
+                         .withAppId(app.getUuid())
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                          .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
@@ -173,8 +173,8 @@ public class WorkflowNotificationHelper {
                          .build();
     } else if (status.equals(FAILED)) {
       notification = aFailureNotification()
-                         .withAccountId(app != null ? app.getAccountId() : null)
-                         .withAppId(app != null ? app.getUuid() : null)
+                         .withAccountId(app.getAccountId())
+                         .withAppId(app.getUuid())
                          .withEnvironmentId(env.getUuid())
                          .withEntityId(context.getWorkflowExecutionId())
                          .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)

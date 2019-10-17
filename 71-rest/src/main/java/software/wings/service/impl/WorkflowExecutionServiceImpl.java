@@ -169,6 +169,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidBaselineConfigurationException;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -424,6 +425,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                    .approvedBy(approvalDetails.getApprovedBy())
                                                    .comments(approvalDetails.getComments())
                                                    .approvalFromSlack(approvalDetails.isApprovalFromSlack())
+                                                   .variables(approvalDetails.getVariables())
                                                    .build();
 
     if (approvalDetails.getAction().equals(APPROVE)) {
@@ -2795,7 +2797,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution == null) {
-      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
+      throw new InvalidBaselineConfigurationException(
           "No workflow execution found with id: " + workflowExecutionId + " appId: " + appId);
     }
     List<WorkflowExecution> workflowExecutions = new ArrayList<>();
@@ -2803,15 +2805,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       case PIPELINE:
         PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
         if (pipelineExecution == null) {
-          throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, "Pipeline has not been executed.")
-              .addParam("message", "Pipeline has not been executed.");
+          throw new InvalidBaselineConfigurationException("Pipeline has not been executed.");
         }
 
         List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
         if (isEmpty(pipelineStageExecutions)) {
-          throw new WingsException(
-              ErrorCode.BASELINE_CONFIGURATION_ERROR, "No workflows have been executed for this pipeline.")
-              .addParam("message", "No workflows have been executed for this pipeline.");
+          throw new InvalidBaselineConfigurationException("No workflows have been executed for this pipeline.");
         }
         pipelineStageExecutions.forEach(
             pipelineStageExecution -> workflowExecutions.addAll(pipelineStageExecution.getWorkflowExecutions()));

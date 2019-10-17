@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -60,6 +61,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
@@ -68,6 +70,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.HQuery;
 import io.harness.resource.Loader;
 import io.harness.serializer.JsonUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -278,26 +281,9 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdatePipeline() {
-    PipelineStage pipelineStage = prepareStageSimple();
-
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
-    Pipeline pipeline = Pipeline.builder()
-                            .name("pipeline1")
-                            .appId(APP_ID)
-                            .uuid(PIPELINE_ID)
-                            .pipelineStages(asList(pipelineStage))
-                            .failureStrategies(asList(failureStrategy))
-                            .build();
-
-    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
-        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
-    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
-
-    pipeline.setName("Changed Pipeline");
-    pipeline.setDescription("Description changed");
-
-    when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
+    Pipeline pipeline = getPipelineSimple(failureStrategy, prepareStageSimple());
 
     Pipeline updatedPipeline = pipelineService.update(pipeline, false);
 
@@ -311,6 +297,61 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(wingsPersistence).createQuery(Pipeline.class);
     verify(pipelineQuery, times(2)).filter(any(), any());
     verify(wingsPersistence).createUpdateOperations(Pipeline.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdatePipelineWithDisableAssertion() {
+    FailureStrategy failureStrategy =
+        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+
+    Pipeline pipeline = getPipelineSimple(failureStrategy, prepareStageDisableAssertion(ENV_ID, WORKFLOW_ID));
+
+    Pipeline updatedPipeline = pipelineService.update(pipeline, false);
+
+    assertThat(updatedPipeline)
+        .isNotNull()
+        .extracting(Pipeline::getFailureStrategies)
+        .asList()
+        .containsExactly(failureStrategy);
+
+    verify(wingsPersistence, times(2)).getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    verify(wingsPersistence).createQuery(Pipeline.class);
+    verify(pipelineQuery, times(2)).filter(any(), any());
+    verify(wingsPersistence).createUpdateOperations(Pipeline.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotUpdatePipelineWithDisableAssertion() {
+    FailureStrategy failureStrategy =
+        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+    Pipeline pipeline = getPipelineSimple(
+        failureStrategy, prepareStageApprovalDisableAssertion(), prepareStageDisableAssertion(ENV_ID, WORKFLOW_ID));
+
+    assertThatExceptionOfType(InvalidArgumentsException.class)
+        .isThrownBy(() -> pipelineService.update(pipeline, false));
+  }
+
+  @NotNull
+  private Pipeline getPipelineSimple(FailureStrategy failureStrategy, PipelineStage... pipelineStages) {
+    Pipeline pipeline = Pipeline.builder()
+                            .name("pipeline1")
+                            .appId(APP_ID)
+                            .uuid(PIPELINE_ID)
+                            .pipelineStages(asList(pipelineStages))
+                            .failureStrategies(asList(failureStrategy))
+                            .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+    pipeline.setName("Changed Pipeline");
+    pipeline.setDescription("Description changed");
+
+    when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
+    return pipeline;
   }
 
   @Test
@@ -1345,6 +1386,31 @@ public class PipelineServiceTest extends WingsBaseTest {
     return PipelineStage.builder()
         .pipelineStageElements(Collections.singletonList(
             PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
+        .build();
+  }
+
+  private PipelineStage prepareStageDisableAssertion(String envId, String workflowId) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", envId);
+    properties.put("workflowId", workflowId);
+    return PipelineStage.builder()
+        .pipelineStageElements(Collections.singletonList(PipelineStageElement.builder()
+                                                             .name("STAGE1")
+                                                             .type(ENV_STATE.name())
+                                                             .properties(properties)
+                                                             .disableAssertion("true")
+                                                             .build()))
+        .build();
+  }
+
+  private PipelineStage prepareStageApprovalDisableAssertion() {
+    return PipelineStage.builder()
+        .pipelineStageElements(Collections.singletonList(PipelineStageElement.builder()
+                                                             .name("STAGE2")
+                                                             .type(APPROVAL.name())
+                                                             .disableAssertion("random")
+                                                             .properties(new HashMap<>())
+                                                             .build()))
         .build();
   }
 

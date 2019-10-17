@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.List;
+
 /**
  * Created by sgurubelli on 6/7/17.
  */
@@ -16,6 +18,7 @@ public class ApprovalDetails {
   private String comments;
   private Action action;
   private boolean approvalFromSlack;
+  private List<NameValuePair> variables;
 
   public enum Action {
     /**
