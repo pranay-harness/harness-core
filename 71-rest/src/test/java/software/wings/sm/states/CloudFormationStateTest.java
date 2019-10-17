@@ -320,6 +320,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(context).set("infrastructureMappingService", infrastructureMappingService);
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("featureFlagService", featureFlagService);
 
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     //    when(evaluator.substitute(anyString(), anyMap(), anyString())).thenAnswer(i -> i.getArguments()[0]);
@@ -328,6 +329,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID)).thenReturn(false);
   }
 
   @Test

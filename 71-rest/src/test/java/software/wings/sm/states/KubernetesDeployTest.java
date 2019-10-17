@@ -280,6 +280,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
+    on(context).set("featureFlagService", featureFlagService);
+
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
 
     ExecutionResponse response = kubernetesDeploy.execute(context);

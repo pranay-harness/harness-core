@@ -486,6 +486,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(context).set("sweepingOutputService", sweepingOutputService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
+    on(context).set("featureFlagService", featureFlagService);
+
     CommandExecutionResult result =
         CommandExecutionResult.builder()
             .commandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
