@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
 import io.harness.morphia.MorphiaModule;
+import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.map.HashedMap;
 import org.junit.Test;
@@ -18,10 +19,12 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.command.CommandUnit;
 import software.wings.common.PartitionProcessorTest.SampleElement;
+import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.integration.common.MongoDBTest.MongoEntity;
 import software.wings.integration.dl.PageRequestTest.Dummy;
 import software.wings.service.impl.WorkflowExecutionUpdateFake;
 import software.wings.service.impl.analysis.DataCollectionInfo;
+import software.wings.service.impl.analysis.LogDataCollectionInfoV2;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElement;
 import software.wings.sm.State;
@@ -78,6 +81,9 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
                                                            .add(State.class)
                                                            .add(StateMachineExecutionCallback.class)
                                                            .add(StepExecutionSummary.class)
+                                                           .add(InfraMappingInfrastructureProvider.class)
+                                                           .add(LogDataCollectionInfoV2.class)
+                                                           .add(NotifyCallback.class)
                                                            .build(),
         classes);
 
