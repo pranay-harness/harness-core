@@ -68,6 +68,7 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.service.impl.EventEmitter;
 
 import java.io.Closeable;
@@ -90,6 +91,8 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
   private int port;
   private ExecutorService executorService = new CurrentThreadExecutor();
   protected MongoType mongoType;
+
+  private static final String JWT_PASSWORD_SECRET = "123456789";
 
   /* (non-Javadoc)
    * @see org.junit.rules.MethodRule#apply(org.junit.runners.model.Statement, org.junit.runners.model.FrameworkMethod,
@@ -249,10 +252,17 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     configuration.getPortal().setUrl(PORTAL_URL);
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.getPortal().setJwtExternalServiceSecret("JWT_EXTERNAL_SERVICE_SECRET");
+    configuration.getPortal().setJwtPasswordSecret(JWT_PASSWORD_SECRET);
+    configuration.setApiUrl("http:localhost:8080");
     configuration.setMongoConnectionFactory(
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     configuration.getServiceSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+
+    MarketPlaceConfig marketPlaceConfig =
+        MarketPlaceConfig.builder().azureMarketplaceAccessKey("qwertyu").azureMarketplaceSecretKey("qwertyu").build();
+    configuration.setMarketPlaceConfig(marketPlaceConfig);
+
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getBackgroundSchedulerConfig().setAutoStart("true");
       configuration.getServiceSchedulerConfig().setAutoStart("true");
