@@ -695,9 +695,9 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
                                      .analysisMinute(currentMinute + minute)
                                      .build()));
 
-    assertThat(timeSeriesAnalysisService
-                   .getCumulativeSumsForRange(appId, cvConfigId, currentMinute - 2, currentMinute - 1, tag)
-                   .isEmpty());
+    assertThat(timeSeriesAnalysisService.getCumulativeSumsForRange(
+                   appId, cvConfigId, currentMinute - 2, currentMinute - 1, tag))
+        .isEmpty();
     assertThat(timeSeriesAnalysisService.getCumulativeSumsForRange(appId, cvConfigId, currentMinute, currentMinute, tag)
                    .size())
         .isEqualTo(1);
@@ -724,7 +724,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
 
     Set<TimeSeriesCumulativeSums> result = timeSeriesAnalysisService.getCumulativeSumsForRange(
         appId, cvConfigId, currentMinute, currentMinute, "test-tag");
-    assertThat(result.isEmpty());
+    assertThat(result).isEmpty();
     result =
         timeSeriesAnalysisService.getCumulativeSumsForRange(appId, cvConfigId, currentMinute, currentMinute, "tag1");
     assertThat(result.size()).isEqualTo(1);
@@ -735,7 +735,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   public void testGetCumulativeSumsForRangeWhenNoCumulativeSumAvailable() {
     Set<TimeSeriesCumulativeSums> timeSeriesCumulativeSums =
         timeSeriesAnalysisService.getCumulativeSumsForRange(generateUuid(), generateUuid(), 10, 20, "test-tag");
-    assertThat(timeSeriesCumulativeSums.isEmpty());
+    assertThat(timeSeriesCumulativeSums).isEmpty();
   }
 
   @Test(expected = WingsException.class)
