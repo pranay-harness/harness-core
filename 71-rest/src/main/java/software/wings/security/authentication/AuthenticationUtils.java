@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.exception.WingsException.USER;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -67,6 +68,7 @@ public class AuthenticationUtils {
   public Account getDefaultAccount(User user) {
     String defaultAccountId = user.getDefaultAccountId();
     if (isEmpty(defaultAccountId)) {
+      Preconditions.checkNotNull(user.getAccounts(), "Account field in user is null.");
       return user.getAccounts().get(0);
     } else {
       return accountService.get(defaultAccountId);

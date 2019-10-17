@@ -22,6 +22,7 @@ import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
+import static java.sql.Date.from;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -39,6 +40,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONME
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -162,6 +164,7 @@ import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.marketplace.gcp.GCPBillingPollingService;
+import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupSpamChecker;
 import software.wings.utils.CacheManager;
 
@@ -942,7 +945,8 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params) {
+  @Override
+  public void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params) {
     Map<String, String> templateModel = getEmailVerificationTemplateModel(userInvite.getEmail(), url, params);
     signupService.sendEmail(userInvite, TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME, templateModel);
   }
@@ -1083,6 +1087,22 @@ public class UserServiceImpl implements UserService {
     return completeTrialSignupAndSignIn(userInvite);
   }
 
+  public User completePaidSignupAndSignIn(UserInvite userInvite) {
+    String accountName = accountService.suggestAccountName(userInvite.getAccountName());
+    String companyName = userInvite.getCompanyName();
+
+    User user = Builder.anUser()
+                    .withEmail(userInvite.getEmail())
+                    .withName(userInvite.getName())
+                    .withPasswordHash(userInvite.getPasswordHash())
+                    .withAccountName(accountName)
+                    .withCompanyName(companyName != null ? companyName : accountName)
+                    .build();
+
+    completeSignup(user, userInvite, getDefaultPaidLicense());
+    return authenticationManager.defaultLoginUsingPasswordHash(userInvite.getEmail(), userInvite.getPasswordHash());
+  }
+
   public User completeTrialSignupAndSignIn(UserInvite userInvite) {
     String accountName = accountService.suggestAccountName(userInvite.getAccountName());
     String companyName = userInvite.getCompanyName();
@@ -1095,7 +1115,7 @@ public class UserServiceImpl implements UserService {
                     .withCompanyName(companyName != null ? companyName : accountName)
                     .build();
 
-    completeTrialSignup(user, userInvite);
+    completeSignup(user, userInvite, getTrialLicense());
     return authenticationManager.defaultLoginUsingPasswordHash(userInvite.getEmail(), userInvite.getPasswordHash());
   }
 
@@ -1216,7 +1236,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserInvite completeTrialSignup(User user, UserInvite userInvite) {
+  public UserInvite completeSignup(User user, UserInvite userInvite, LicenseInfo licenseInfo) {
     if (user.getAccountName() == null || user.getCompanyName() == null) {
       throw new InvalidRequestException("Account/company name is not provided", USER);
     }
@@ -1237,8 +1257,6 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(USER_ALREADY_REGISTERED, USER);
     }
 
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     Account account = Account.Builder.anAccount()
                           .withAccountName(user.getAccountName())
@@ -1259,6 +1277,22 @@ public class UserServiceImpl implements UserService {
 
     eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
     return userInvite;
+  }
+
+  private LicenseInfo getTrialLicense() {
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    return licenseInfo;
+  }
+
+  private LicenseInfo getDefaultPaidLicense() {
+    final Instant defaultExpiry = Instant.now().plus(365, ChronoUnit.DAYS);
+    return LicenseInfo.builder()
+        .accountType(AccountType.PAID)
+        .licenseUnits(50)
+        .expiryTime(from(defaultExpiry).getTime())
+        .accountStatus(AccountStatus.ACTIVE)
+        .build();
   }
 
   private void completeUserInviteForSignup(UserInvite userInvite, String accountId) {
@@ -1346,8 +1380,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private Account createAccountWithTrialLicense(User user) {
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
+    LicenseInfo licenseInfo = getTrialLicense();
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     Account account = Account.Builder.anAccount()
                           .withAccountName(user.getAccountName())
@@ -1666,6 +1699,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User unlockUser(String email, String accountId) {
     User user = getUserByEmail(email);
+    Preconditions.checkNotNull(user.getDefaultAccountId(), "Default account can't be null for any user");
     if (!user.getDefaultAccountId().equals(accountId)) {
       logger.error(String.format("Unlocking user: [%s] in account: [%s] failed because of insufficient permission",
                        email, accountId),
@@ -1896,6 +1930,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void evictUserFromCache(String userId) {
+    Preconditions.checkNotNull(cacheManager.getUserCache(), "User cache can't be null");
     cacheManager.getUserCache().remove(userId);
   }
 
@@ -2327,6 +2362,15 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  public String createSignupSecretToken(String email, Integer passExpirationDays) {
+    String jwtPasswordSecret = getJwtSecret();
+    try {
+      return signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, passExpirationDays);
+    } catch (JWTCreationException | UnsupportedEncodingException exception) {
+      throw new SignupException("Signup secret token can't be generated");
+    }
+  }
+
   private void sendPasswordExpirationWarningMail(User user, String token, Integer passExpirationDays) {
     try {
       String resetPasswordUrl = getResetPasswordUrl(token, user);
@@ -2407,6 +2451,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean passwordExpired(String email) {
     User user = getUserByEmail(email);
+    Preconditions.checkNotNull(user, "User is null");
     return user.isPasswordExpired();
   }
 

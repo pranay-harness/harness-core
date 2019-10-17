@@ -4,10 +4,6 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 import com.google.inject.Inject;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import io.harness.event.handler.impl.EventPublishHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
@@ -20,8 +16,6 @@ import software.wings.resources.UserResource.UpdatePasswordRequest;
 import software.wings.service.intfc.SignupHandler;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
-
-import java.io.UnsupportedEncodingException;
 
 @Slf4j
 public class MarketoSignupHandler implements SignupHandler {
@@ -65,9 +59,9 @@ public class MarketoSignupHandler implements SignupHandler {
   }
 
   public User completeSignup(UpdatePasswordRequest passwordRequest, String token) {
-    String email = getEmail(token);
+    String email = signupService.getEmail(token);
     UserInvite userInvite = signupService.getUserInviteByEmail(email);
-    throwExceptionIfInvalidRequest(userInvite, email);
+    signupService.checkIfUserInviteIsValid(userInvite, email);
     return setPasswordAndCompleteSignup(passwordRequest, userInvite);
   }
 
@@ -81,30 +75,5 @@ public class MarketoSignupHandler implements SignupHandler {
     // No user and account is created till here. Once this call is made, only then the account and user's are created.
     // This call returns a user object setting bearer token in it and directly logs in the user.
     return userService.completeTrialSignupAndSignIn(userInvite);
-  }
-
-  private void throwExceptionIfInvalidRequest(UserInvite userInvite, String email) {
-    if (userInvite == null) {
-      logger.info("No invite found in db for for email: {}", email);
-      throw new SignupException(String.format("Can not process signup for email: %s", email));
-    } else if (userInvite.isCompleted()) {
-      throw new SignupException("User invite has already been completed. Please login");
-    }
-  }
-
-  private String getEmail(String token) {
-    try {
-      Algorithm algorithm = Algorithm.HMAC256(mainConfiguration.getPortal().getJwtPasswordSecret());
-      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
-      verifier.verify(token);
-      JWT decode = JWT.decode(token);
-      return decode.getClaim("email").asString();
-    } catch (UnsupportedEncodingException exception) {
-      logger.error("Could not decode token for signup: {}", token);
-      throw new SignupException("Invalid signup token. Please signup again");
-    } catch (JWTVerificationException exception) {
-      logger.error("Signup token {} has expired", token);
-      throw new SignupException("Invalid signup token. Please signup again");
-    }
   }
 }

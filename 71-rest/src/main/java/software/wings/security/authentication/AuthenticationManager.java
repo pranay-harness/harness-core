@@ -20,6 +20,7 @@ import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -116,6 +117,7 @@ public class AuthenticationManager {
        * in user is having a list of associated accounts.
        */
       String defaultAccountId = user.getDefaultAccountId();
+      Preconditions.checkNotNull(user.getAccounts(), String.format("No account found for {}", user.getEmail()));
       Optional<Account> account =
           user.getAccounts().stream().filter(acct -> Objects.equals(defaultAccountId, acct.getUuid())).findFirst();
       if (account.isPresent()) {

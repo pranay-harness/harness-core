@@ -24,4 +24,8 @@ public interface SignupService {
       throws UnsupportedEncodingException;
 
   void validatePassword(char[] password);
+
+  String getEmail(String token);
+
+  void checkIfUserInviteIsValid(UserInvite userInvite, String email);
 }

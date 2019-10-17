@@ -13,6 +13,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
@@ -31,6 +32,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -259,6 +261,8 @@ public interface UserService extends OwnedByAccount {
 
   String getUserInviteUrl(String email) throws URISyntaxException;
 
+  void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params);
+
   /**
    * Send user invitation email
    *
@@ -314,9 +318,10 @@ public interface UserService extends OwnedByAccount {
    *
    * @param user The user to be signed up for a free trial
    * @param userInvite the user invite.
+   * @param licenseInfo
    * @return the completed user invite
    */
-  UserInvite completeTrialSignup(User user, UserInvite userInvite);
+  UserInvite completeSignup(User user, UserInvite userInvite, LicenseInfo licenseInfo);
 
   User completeMarketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType);
 
@@ -341,6 +346,8 @@ public interface UserService extends OwnedByAccount {
   User completeTrialSignupAndSignIn(String userInviteId);
 
   User completeTrialSignupAndSignIn(UserInvite userInvite);
+
+  User completePaidSignupAndSignIn(UserInvite userInvite);
 
   /**
    * Delete invite user invite.
@@ -453,6 +460,8 @@ public interface UserService extends OwnedByAccount {
   boolean passwordExpired(String email);
 
   void sendPasswordExpirationWarning(String email, Integer passExpirationDays);
+
+  String createSignupSecretToken(String email, Integer passExpirationDays);
 
   void sendPasswordExpirationMail(String email);
 

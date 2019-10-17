@@ -1,5 +1,6 @@
 package software.wings.service.intfc.signup;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -21,6 +22,7 @@ public class SignupSpamChecker {
     // the legitimate trial user's mailbox.
     Cache<String, Integer> trialEmailCache = cacheManager.getTrialRegistrationEmailCache();
     String emailAddress = userInvite.getEmail();
+    Preconditions.checkNotNull(trialEmailCache, "Email cache is null. ");
     Integer registrationCount = trialEmailCache.get(emailAddress);
     if (registrationCount == null) {
       registrationCount = 1;

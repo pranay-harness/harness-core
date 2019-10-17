@@ -1,3 +1,3 @@
 package software.wings.beans.marketplace;
 
-public enum MarketPlaceType { AWS, GCP }
+public enum MarketPlaceType { AWS, GCP, AZURE }
