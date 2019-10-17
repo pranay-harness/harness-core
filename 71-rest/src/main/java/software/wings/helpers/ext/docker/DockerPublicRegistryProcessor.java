@@ -4,6 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -76,8 +77,10 @@ public class DockerPublicRegistryProcessor {
    *              we might not want to show all of them on UI.
    * @throws IOException
    */
-  private List<BuildDetails> paginate(DockerPublicImageTagResponse tagsPage, DockerConfig dockerConfig,
-      String imageName, DockerRegistryRestClient registryRestClient, int limit) throws IOException {
+
+  @VisibleForTesting
+  List<BuildDetails> paginate(DockerPublicImageTagResponse tagsPage, DockerConfig dockerConfig, String imageName,
+      DockerRegistryRestClient registryRestClient, int limit) throws IOException {
     // process first page
     List<BuildDetails> details = processPage(tagsPage, dockerConfig, imageName);
 
