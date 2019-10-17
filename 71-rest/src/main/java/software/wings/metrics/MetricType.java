@@ -118,7 +118,7 @@ public enum MetricType {
               .ml(0.01)
               .build()));
 
-  public String name;
+  private String name;
   private List<Threshold> thresholds;
 
   MetricType(String name, List<Threshold> thresholds) {

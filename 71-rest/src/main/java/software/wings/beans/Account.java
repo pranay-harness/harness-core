@@ -88,9 +88,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
   private boolean oauthEnabled;
 
+  @Indexed private Long serviceGuardDataCollectionIteration;
+  @Indexed private Long serviceGuardDataAnalysisIteration;
+  @Indexed private Long workflowDataCollectionIteration;
   private boolean cloudCostEnabled;
-
-  @Indexed private Long nextIteration;
 
   private transient Map<String, String> defaults = new HashMap<>();
   /**
@@ -336,12 +337,37 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {
-    this.nextIteration = nextIteration;
+    if (AccountKeys.serviceGuardDataCollectionIteration.equals(fieldName)) {
+      this.serviceGuardDataCollectionIteration = nextIteration;
+      return;
+    }
+
+    if (AccountKeys.serviceGuardDataAnalysisIteration.equals(fieldName)) {
+      this.serviceGuardDataAnalysisIteration = nextIteration;
+      return;
+    }
+
+    if (AccountKeys.workflowDataCollectionIteration.equals(fieldName)) {
+      this.workflowDataCollectionIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
+    if (AccountKeys.serviceGuardDataCollectionIteration.equals(fieldName)) {
+      return this.serviceGuardDataCollectionIteration;
+    }
+
+    if (AccountKeys.serviceGuardDataAnalysisIteration.equals(fieldName)) {
+      return this.serviceGuardDataAnalysisIteration;
+    }
+
+    if (AccountKeys.workflowDataCollectionIteration.equals(fieldName)) {
+      return this.workflowDataCollectionIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   public static final class Builder {
