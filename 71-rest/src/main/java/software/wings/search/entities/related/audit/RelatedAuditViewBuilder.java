@@ -12,7 +12,11 @@ import java.util.Map;
 @Singleton
 public class RelatedAuditViewBuilder {
   public RelatedAuditView getAuditRelatedEntityView(AuditHeader auditHeader, EntityAuditRecord entityAuditRecord) {
-    return new RelatedAuditView(auditHeader.getUuid(), auditHeader.getCreatedBy().getName(), auditHeader.getCreatedAt(),
+    String createdBy = null;
+    if (auditHeader.getCreatedBy() != null) {
+      createdBy = auditHeader.getCreatedBy().getName();
+    }
+    return new RelatedAuditView(auditHeader.getUuid(), createdBy, auditHeader.getCreatedAt(),
         entityAuditRecord.getAppId(), entityAuditRecord.getAffectedResourceId(), entityAuditRecord.getEntityName(),
         entityAuditRecord.getEntityType());
   }
