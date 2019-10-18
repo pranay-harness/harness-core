@@ -29,6 +29,10 @@ import static io.harness.pcf.model.PcfConstants.SERVICES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.STACK_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.TIMEOUT_MANIFEST_YML_ELEMENT;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -42,6 +46,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -50,6 +55,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
+import org.jetbrains.annotations.NotNull;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.artifact.ArtifactFile;
@@ -131,8 +137,8 @@ public class PcfCommandTaskHelper {
       PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
     for (PcfServiceData pcfServiceData : upsizeList) {
+      executionLogCallback.saveExecutionLog(color("# Upsizing application:", White, Bold));
       executionLogCallback.saveExecutionLog(new StringBuilder()
-                                                .append("# Upsizing application:")
                                                 .append("\nAPPLICATION-NAME: ")
                                                 .append(pcfServiceData.getName())
                                                 .append("\n" + CURRENT_INSTANCE_COUNT)
@@ -153,8 +159,8 @@ public class PcfCommandTaskHelper {
       PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("\n");
     for (PcfServiceData pcfServiceData : downSizeList) {
+      executionLogCallback.saveExecutionLog(color("# Downsizing application:", White, Bold));
       executionLogCallback.saveExecutionLog(new StringBuilder()
-                                                .append("# Downsizing application:")
                                                 .append("\nAPPLICATION-NAME: ")
                                                 .append(pcfServiceData.getName())
                                                 .append("\n" + CURRENT_INSTANCE_COUNT)
@@ -198,7 +204,7 @@ public class PcfCommandTaskHelper {
       List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
     if (pcfCommandDeployRequest.isStandardBlueGreen()) {
-      executionLogCallback.saveExecutionLog("BG Deployment. Old Application will not be downsized.");
+      executionLogCallback.saveExecutionLog("# BG Deployment. Old Application will not be downsized.");
       return;
     }
 
@@ -362,17 +368,47 @@ public class PcfCommandTaskHelper {
 
   public File createManifestYamlFileLocally(PcfCreateApplicationRequestData requestData) throws IOException {
     File manifestFile = getManifestFile(requestData);
+    return writeToManifestFile(requestData.getFinalManifestYaml(), manifestFile);
+  }
+
+  public File createManifestVarsYamlFileLocally(
+      PcfCreateApplicationRequestData requestData, String varsContent, int index) {
+    try {
+      if (isBlank(varsContent)) {
+        return null;
+      }
+
+      File manifestFile = getManifestVarsFile(requestData, index);
+      return writeToManifestFile(varsContent, manifestFile);
+    } catch (IOException e) {
+      throw new UnexpectedException("Failed while writting manifest file on disk", e);
+    }
+  }
+
+  @NotNull
+  private File writeToManifestFile(String content, File manifestFile) throws IOException {
     if (!manifestFile.createNewFile()) {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", "Failed to create file " + manifestFile.getCanonicalPath());
     }
 
-    FileUtils.writeStringToFile(manifestFile, requestData.getFinalManifestYaml(), UTF_8);
+    FileUtils.writeStringToFile(manifestFile, content, UTF_8);
     return manifestFile;
   }
 
   public File getManifestFile(PcfCreateApplicationRequestData requestData) {
     return new File(requestData.getConfigPathVar() + "/" + requestData.getNewReleaseName() + ".yml");
+  }
+
+  public File getManifestVarsFile(PcfCreateApplicationRequestData requestData, int index) {
+    return new File(new StringBuilder(128)
+                        .append(requestData.getConfigPathVar())
+                        .append('/')
+                        .append(requestData.getNewReleaseName())
+                        .append("_vars_")
+                        .append(index)
+                        .append(".yml")
+                        .toString());
   }
 
   /**
@@ -390,7 +426,7 @@ public class PcfCommandTaskHelper {
       PcfCommandDeployRequest pcfCommandDeployRequest, List<PcfServiceData> pcfServiceDataUpdated,
       PcfRequestConfig pcfRequestConfig, ApplicationDetail details, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
-    executionLogCallback.saveExecutionLog("# Upsizing new application, ");
+    executionLogCallback.saveExecutionLog(color("# Upsizing new application:", White, Bold));
 
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("APPLICATION-NAME: ")
@@ -447,7 +483,7 @@ public class PcfCommandTaskHelper {
 
   public void mapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    executionLogCallback.saveExecutionLog("\n# Adding Routs");
+    executionLogCallback.saveExecutionLog(color("\n# Adding Routes", White, Bold));
     executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(routes));
     // map
@@ -458,7 +494,7 @@ public class PcfCommandTaskHelper {
   public void unmapExistingRouteMaps(String applicationName, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
-    executionLogCallback.saveExecutionLog("\n# Unmapping routes");
+    executionLogCallback.saveExecutionLog(color("\n# Unmapping routes", White, Bold));
     executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(applicationDetail.getUrls()));
     // map
@@ -468,7 +504,7 @@ public class PcfCommandTaskHelper {
 
   public void unmapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    executionLogCallback.saveExecutionLog("\n# Unmapping Routes");
+    executionLogCallback.saveExecutionLog(color("\n# Unmapping Routes", White, Bold));
     executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTES: \n[" + getRouteString(routes));
     // unmap
@@ -508,11 +544,9 @@ public class PcfCommandTaskHelper {
     TreeMap<String, Object> applicationToBeUpdated = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     applicationToBeUpdated.putAll(mapForUpdate);
 
-    // Update Name, Path for Artifact and Instances
+    // Update Name only if vars file is not present, legacy
     applicationToBeUpdated.put(NAME_MANIFEST_YML_ELEMENT, requestData.getNewReleaseName());
     applicationToBeUpdated.put(PATH_MANIFEST_YML_ELEMENT, requestData.getArtifactPath());
-
-    // To handle old locally generated manifests
     applicationToBeUpdated.put(INSTANCE_MANIFEST_YML_ELEMENT, 0);
 
     // Update routes.

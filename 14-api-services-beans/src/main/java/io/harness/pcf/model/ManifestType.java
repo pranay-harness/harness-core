@@ -1,4 +1,4 @@
-package io.harness.pcf;
+package io.harness.pcf.model;
 
 public enum ManifestType {
   APPLICATION_MANIFEST,

@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
@@ -11,6 +12,7 @@ import com.google.common.base.Charsets;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -126,7 +128,7 @@ public class PcfClientImpl implements PcfClient {
       if (exceptionOccured.get()) {
         throw new PivotalClientApiException(new StringBuilder()
                                                 .append("Exception occurred while fetching Organizations")
-                                                .append(", Error: " + errorBuilder.toString())
+                                                .append(", Error:" + errorBuilder.toString())
                                                 .toString());
       }
       return organizations;
@@ -238,7 +240,7 @@ public class PcfClientImpl implements PcfClient {
                                                 .append(pcfRequestConfig.getApplicationName())
                                                 .append(", to count: ")
                                                 .append(pcfRequestConfig.getDesiredCount())
-                                                .append(", Error: " + errorBuilder.toString())
+                                                .append(", Error:" + errorBuilder.toString())
                                                 .toString());
       }
     }
@@ -282,7 +284,6 @@ public class PcfClientImpl implements PcfClient {
   public void pushApplicationUsingManifest(PcfCreateApplicationRequestData requestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException, InterruptedException {
     PcfRequestConfig pcfRequestConfig = requestData.getPcfRequestConfig();
-    String manifestFilePath = requestData.getManifestFilePath();
 
     logger.info(new StringBuilder()
                     .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -290,7 +291,6 @@ public class PcfClientImpl implements PcfClient {
                     .append(pcfRequestConfig.getApplicationName())
                     .toString());
 
-    Path path = Paths.get(manifestFilePath);
     if (pcfRequestConfig.isUseCLIForAppCreate()) {
       logger.info("Using CLI to create application");
       performCfPushUsingCli(requestData, executionLogCallback);
@@ -298,6 +298,7 @@ public class PcfClientImpl implements PcfClient {
     } else {
       executionLogCallback.saveExecutionLog(
           "Using SDK to create application, Deprecated... Please enable flag: USE_PCF_CLI");
+      Path path = Paths.get(requestData.getManifestFilePath());
       pushUsingPcfSdk(pcfRequestConfig, path);
     }
   }
@@ -350,7 +351,7 @@ public class PcfClientImpl implements PcfClient {
       executionLogCallback.saveExecutionLog("# CF_HOME value: " + requestData.getConfigPathVar());
       boolean loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, requestData.getConfigPathVar());
       if (loginSuccessful) {
-        exitCode = doCfPush(pcfRequestConfig, executionLogCallback, finalFilePath, requestData.getConfigPathVar());
+        exitCode = doCfPush(pcfRequestConfig, executionLogCallback, finalFilePath, requestData);
       }
     } catch (Exception e) {
       throw new PivotalClientApiException(new StringBuilder()
@@ -372,13 +373,15 @@ public class PcfClientImpl implements PcfClient {
   }
 
   private int doCfPush(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
-      String finalFilePath, String configPathVar) throws InterruptedException, TimeoutException, IOException {
+      String finalFilePath, PcfCreateApplicationRequestData requestData)
+      throws InterruptedException, TimeoutException, IOException {
     executionLogCallback.saveExecutionLog("# Performing \"cf push\"");
+    String command = constructCfPushCommand(requestData, finalFilePath);
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
-                                          .command("/bin/sh", "-c", "cf push -f " + finalFilePath)
+                                          .command("/bin/sh", "-c", command)
                                           .readOutput(true)
-                                          .environment(getEnvironmentMapForPcfExecutor(configPathVar))
+                                          .environment(getEnvironmentMapForPcfExecutor(requestData.getConfigPathVar()))
                                           .redirectOutput(new LogOutputStream() {
                                             @Override
                                             protected void processLine(String line) {
@@ -387,6 +390,24 @@ public class PcfClientImpl implements PcfClient {
                                           });
     ProcessResult processResult = processExecutor.execute();
     return processResult.getExitValue();
+  }
+
+  private String constructCfPushCommand(PcfCreateApplicationRequestData requestData, String finalFilePath) {
+    StringBuilder builder = new StringBuilder(128).append("cf push -f ").append(finalFilePath);
+    if (!requestData.isVarsYmlFilePresent()) {
+      return builder.toString();
+    }
+
+    PcfManifestFileData pcfManifestFileData = requestData.getPcfManifestFileData();
+    if (isNotEmpty(pcfManifestFileData.getVarFiles())) {
+      pcfManifestFileData.getVarFiles().forEach(varsFile -> {
+        if (varsFile != null) {
+          builder.append(" --vars-file ").append(varsFile.getAbsoluteFile());
+        }
+      });
+    }
+
+    return builder.toString();
   }
 
   private Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar) {

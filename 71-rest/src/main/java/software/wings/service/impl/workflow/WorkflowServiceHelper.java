@@ -1079,8 +1079,8 @@ public class WorkflowServiceHelper {
     if (serviceSetupRequired) {
       Map<String, Object> defaultSetupProperties = new HashMap<>();
       defaultSetupProperties.put("blueGreen", true);
+      defaultSetupProperties.put("isWorkflowV2", true);
       defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
-      defaultSetupProperties.put("route", "${" + INFRA_TEMP_ROUTE_PCF + "}");
 
       phaseSteps.add(aPhaseStep(PhaseStepType.PCF_SETUP, SETUP)
                          .addStep(GraphNode.builder()
@@ -1129,8 +1129,8 @@ public class WorkflowServiceHelper {
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
   }
 
-  public void generateNewWorkflowPhaseStepsForPCF(String appId, String envId, WorkflowPhase workflowPhase,
-      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
+  public void generateNewWorkflowPhaseStepsForPCF(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -1139,8 +1139,8 @@ public class WorkflowServiceHelper {
     if (serviceSetupRequired) {
       Map<String, Object> defaultProperties = new HashMap<>();
       defaultProperties.put("blueGreen", false);
+      defaultProperties.put("isWorkflowV2", true);
       defaultProperties.put("resizeStrategy", "DOWNSIZE_OLD_FIRST");
-      defaultProperties.put("route", "${" + INFRA_ROUTE_PCF + "}");
 
       phaseSteps.add(aPhaseStep(PhaseStepType.PCF_SETUP, SETUP)
                          .addStep(GraphNode.builder()
@@ -2414,7 +2414,7 @@ public class WorkflowServiceHelper {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         generateNewWorkflowPhaseStepsForPCFBlueGreen(appId, workflowPhase, !serviceRepeat);
       } else {
-        generateNewWorkflowPhaseStepsForPCF(appId, envId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+        generateNewWorkflowPhaseStepsForPCF(appId, workflowPhase, !serviceRepeat);
       }
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);

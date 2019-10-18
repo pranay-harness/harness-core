@@ -1,19 +1,27 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
+import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
-import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
+import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NO_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.Service;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -23,13 +31,15 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.pcf.ManifestType;
+import io.harness.exception.UnexpectedException;
 import io.harness.pcf.PcfFileTypeChecker;
+import io.harness.pcf.model.ManifestType;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
+import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -38,7 +48,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.TaskType;
-import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
@@ -65,11 +74,12 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Singleton
 public class PcfStateHelper {
@@ -210,30 +220,9 @@ public class PcfStateHelper {
     return activityService.save(activityBuilder.build());
   }
 
-  public String fetchManifestYmlString(ExecutionContext context, Application app, ServiceElement serviceElement) {
-    String applicationManifestYmlContent;
-    if (featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())) {
-      applicationManifestYmlContent = getManifestFileContentForPcf(app, serviceElement);
-    } else {
-      applicationManifestYmlContent = getManifestFromPcfServiceSpecification(context, serviceElement);
-    }
-    return applicationManifestYmlContent;
-  }
-
-  private String getManifestFileContentForPcf(Application app, ServiceElement serviceElement) {
-    ApplicationManifest applicationManifest = applicationManifestService.getByServiceId(
-        app.getUuid(), serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
-
-    if (applicationManifest == null) {
-      throw new InvalidArgumentsException(Pair.of("applicationManifest", "Missing for PCF Service"));
-    }
-    ManifestFile manifestFile =
-        applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), MANIFEST_YML);
-    if (manifestFile == null) {
-      throw new InvalidArgumentsException(Pair.of("manifestFile", "manifest.yml file missing"));
-    }
-
-    return manifestFile.getFileContent();
+  public String fetchManifestYmlString(ExecutionContext context, ServiceElement serviceElement) {
+    String applicationManifestYmlContent = getManifestFromPcfServiceSpecification(context, serviceElement);
+    return context.renderExpression(applicationManifestYmlContent);
   }
 
   private String getManifestFromPcfServiceSpecification(ExecutionContext context, ServiceElement serviceElement) {
@@ -245,47 +234,32 @@ public class PcfStateHelper {
           Pair.of("PcfServiceSpecification", "Missing for PCF Service " + serviceElement.getUuid()));
     }
 
-    serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
-    validateSpecification(pcfServiceSpecification);
     return pcfServiceSpecification.getManifestYaml();
   }
 
-  private void validateSpecification(PcfServiceSpecification pcfServiceSpecification) {
-    if (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
-        || !pcfServiceSpecification.getManifestYaml().contains("{FILE_LOCATION}")
-        || !pcfServiceSpecification.getManifestYaml().contains("{INSTANCE_COUNT}")
-        || !pcfServiceSpecification.getManifestYaml().contains("{APPLICATION_NAME}")) {
-      throw new InvalidRequestException("Invalid manifest yaml "
-              + (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
-                        ? "NULL"
-                        : pcfServiceSpecification.getManifestYaml()),
-          USER);
-    }
-  }
-
-  public Map<ManifestType, String> getFinalManifestFilesMap(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
+  public PcfManifestsPackage getFinalManifestFilesMap(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
       GitFetchFilesFromMultipleRepoResult fetchFilesResult) {
-    Map<ManifestType, String> pcfManifestFilesMap = new HashMap<>();
+    PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
 
     ApplicationManifest applicationManifest = appManifestMap.get(Service);
-    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, Service, pcfManifestFilesMap);
+    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, Service, pcfManifestsPackage);
 
     applicationManifest = appManifestMap.get(ServiceOverride);
-    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, ServiceOverride, pcfManifestFilesMap);
+    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, ServiceOverride, pcfManifestsPackage);
 
     applicationManifest = appManifestMap.get(EnvironmentGlobal);
-    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, EnvironmentGlobal, pcfManifestFilesMap);
+    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, EnvironmentGlobal, pcfManifestsPackage);
 
     applicationManifest = appManifestMap.get(K8sValuesLocation.Environment);
     updatePcfManifestFilesMap(
-        applicationManifest, fetchFilesResult, K8sValuesLocation.Environment, pcfManifestFilesMap);
+        applicationManifest, fetchFilesResult, K8sValuesLocation.Environment, pcfManifestsPackage);
 
-    return pcfManifestFilesMap;
+    return pcfManifestsPackage;
   }
 
   private void updatePcfManifestFilesMap(ApplicationManifest applicationManifest,
       GitFetchFilesFromMultipleRepoResult fetchFilesResult, K8sValuesLocation k8sValuesLocation,
-      Map<ManifestType, String> pcfManifestFilesMap) {
+      PcfManifestsPackage pcfManifestsPackage) {
     if (applicationManifest == null) {
       return;
     }
@@ -295,7 +269,7 @@ public class PcfStateHelper {
           applicationManifest.getAppId(), applicationManifest.getUuid());
 
       for (ManifestFile manifestFile : manifestFiles) {
-        addToPcfManifestFilesMap(manifestFile.getFileContent(), pcfManifestFilesMap);
+        addToPcfManifestFilesMap(manifestFile.getFileContent(), pcfManifestsPackage);
       }
     } else if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
       if (fetchFilesResult == null || isEmpty(fetchFilesResult.getFilesFromMultipleRepo())) {
@@ -310,34 +284,31 @@ public class PcfStateHelper {
 
       List<GitFile> files = gitFetchFilesResult.getFiles();
       for (GitFile gitFile : files) {
-        addToPcfManifestFilesMap(gitFile.getFileContent(), pcfManifestFilesMap);
+        addToPcfManifestFilesMap(gitFile.getFileContent(), pcfManifestsPackage);
       }
     }
   }
 
-  private void addToPcfManifestFilesMap(String fileContent, Map<ManifestType, String> pcfManifestFilesMap) {
+  private void addToPcfManifestFilesMap(String fileContent, PcfManifestsPackage pcfManifestsPackage) {
     ManifestType manifestType = pcfFileTypeChecker.getManifestType(fileContent);
     if (manifestType == null) {
       return;
     }
 
-    pcfManifestFilesMap.put(manifestType, fileContent);
+    if (APPLICATION_MANIFEST.equals(manifestType)) {
+      pcfManifestsPackage.setManifestYml(fileContent);
+    } else if (VARIABLE_MANIFEST.equals(manifestType)) {
+      if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
+        pcfManifestsPackage.setVariableYmls(new ArrayList<>());
+      }
+
+      pcfManifestsPackage.getVariableYmls().add(fileContent);
+    }
   }
 
   public List<String> getRouteMaps(
       String applicationManifestYmlContent, PcfInfrastructureMapping pcfInfrastructureMapping) {
-    Yaml yaml = new Yaml();
-    Map<String, Object> yamlMap = (Map<String, Object>) yaml.load(applicationManifestYmlContent);
-    List<Map> applicationsMaps = (List<Map>) yamlMap.get(APPLICATION_YML_ELEMENT);
-
-    if (isEmpty(applicationsMaps)) {
-      throw new InvalidArgumentsException(Pair.of("Manifest", "contains no application config"));
-    }
-
-    // Always assume, 1st app is main application being deployed.
-    Map application = applicationsMaps.get(0);
-    Map<String, Object> applicationConfigMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    applicationConfigMap.putAll(application);
+    Map<String, Object> applicationConfigMap = getApplicationYamlMap(applicationManifestYmlContent);
 
     // fetch Routes element from application config
     final List<Map<String, String>> routeMapsInYaml =
@@ -375,5 +346,153 @@ public class PcfStateHelper {
   private boolean useNoRoute(Map application) {
     return application.containsKey(NO_ROUTE_MANIFEST_YML_ELEMENT)
         && (boolean) application.get(NO_ROUTE_MANIFEST_YML_ELEMENT);
+  }
+
+  public PcfManifestsPackage generateManifestMap(ExecutionContext context,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, Application app, ServiceElement serviceElement) {
+    PcfManifestsPackage pcfManifestsPackage;
+
+    if (featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())) {
+      PcfSetupStateExecutionData pcfSetupStateExecutionData =
+          (PcfSetupStateExecutionData) context.getStateExecutionData();
+
+      GitFetchFilesFromMultipleRepoResult filesFromMultipleRepoResult = null;
+      // Null means locally hosted files
+      if (pcfSetupStateExecutionData != null) {
+        filesFromMultipleRepoResult = pcfSetupStateExecutionData.getFetchFilesResult();
+        appManifestMap = pcfSetupStateExecutionData.getAppManifestMap();
+      }
+
+      pcfManifestsPackage = getFinalManifestFilesMap(appManifestMap, filesFromMultipleRepoResult);
+      String manifestYml = pcfManifestsPackage.getManifestYml();
+      notNullCheck("Application Manifest Can not be null/blank", manifestYml);
+      evaluateExpressionsInManifestTypes(context, pcfManifestsPackage);
+      return pcfManifestsPackage;
+    }
+
+    String applicationManifestYmlContent = fetchManifestYmlString(context, serviceElement);
+    notNullCheck("Application Manifest Can not be Null Or Blank", applicationManifestYmlContent);
+    return PcfManifestsPackage.builder().manifestYml(applicationManifestYmlContent).build();
+  }
+
+  @VisibleForTesting
+  void evaluateExpressionsInManifestTypes(ExecutionContext context, PcfManifestsPackage pcfManifestsPackage) {
+    // evaluate expressions in manifest.yml
+    pcfManifestsPackage.setManifestYml(context.renderExpression(pcfManifestsPackage.getManifestYml()));
+
+    // evaluate expression in variables.yml
+    List<String> varYmls = pcfManifestsPackage.getVariableYmls();
+    if (isNotEmpty(varYmls)) {
+      varYmls = varYmls.stream().map(varYml -> context.renderExpression(varYml)).collect(toList());
+      pcfManifestsPackage.setVariableYmls(varYmls);
+    }
+  }
+
+  public String fetchPcfApplicationName(PcfManifestsPackage pcfManifestsPackage, String defaultPrefix) {
+    String appName = null;
+    String varName = null;
+
+    Map<String, Object> applicationYamlMap = getApplicationYamlMap(pcfManifestsPackage.getManifestYml());
+    String name = (String) applicationYamlMap.get(NAME_MANIFEST_YML_ELEMENT);
+    if (isBlank(name)) {
+      return defaultPrefix;
+    }
+
+    boolean hasVarFiles = isNotEmpty(pcfManifestsPackage.getVariableYmls());
+
+    if (!hasVarFiles) {
+      appName = name;
+    } else {
+      appName = finalizeSubstitution(pcfManifestsPackage, name);
+    }
+
+    return appName;
+  }
+
+  String finalizeSubstitution(PcfManifestsPackage pcfManifestsPackage, String name) {
+    String varName;
+    String appName;
+    Matcher m = Pattern.compile("\\(\\(([^)]+)\\)\\)").matcher(name);
+    while (m.find()) {
+      varName = m.group(1);
+      List<String> varFiles = pcfManifestsPackage.getVariableYmls();
+      for (int i = varFiles.size() - 1; i >= 0; i--) {
+        Object value = getVaribleValue(varFiles.get(i), varName);
+        if (value != null) {
+          String val = value.toString();
+          if (isNotBlank(val)) {
+            name = name.replace("((" + varName + "))", val);
+            break;
+          }
+        }
+      }
+    }
+    appName = name;
+    return appName;
+  }
+
+  @VisibleForTesting
+  Map<String, Object> getApplicationYamlMap(String applicationManifestYmlContent) {
+    Yaml yaml = new Yaml();
+    Map<String, Object> yamlMap = (Map<String, Object>) yaml.load(applicationManifestYmlContent);
+    List<Map> applicationsMaps = (List<Map>) yamlMap.get(APPLICATION_YML_ELEMENT);
+
+    if (isEmpty(applicationsMaps)) {
+      throw new InvalidArgumentsException(Pair.of("Manifest", "contains no application config"));
+    }
+
+    // Always assume, 1st app is main application being deployed.
+    Map application = applicationsMaps.get(0);
+    Map<String, Object> applicationConfigMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    applicationConfigMap.putAll(application);
+    return applicationConfigMap;
+  }
+
+  public Object getVaribleValue(String content, String key) {
+    try {
+      Map<String, Object> map = null;
+      Yaml yaml = new Yaml();
+      map = (Map<String, Object>) yaml.load(content);
+      return map.get(key);
+    } catch (Exception e) {
+      throw new UnexpectedException("Failed while trying to substitute vars yml value", e);
+    }
+  }
+
+  public List<String> applyVarsYmlSubstitutionIfApplicable(
+      List<String> routeMaps, PcfManifestsPackage pcfManifestsPackage) {
+    if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
+      return routeMaps;
+    }
+
+    return routeMaps.stream()
+        .filter(route -> isNotEmpty(route))
+        .map(route -> applyVarsYamlVariables(route, pcfManifestsPackage))
+        .collect(toList());
+  }
+
+  private String applyVarsYamlVariables(String route, PcfManifestsPackage pcfManifestsPackage) {
+    if (route.contains("((") && route.contains("))")) {
+      route = finalizeSubstitution(pcfManifestsPackage, route);
+    }
+
+    return route;
+  }
+
+  public Integer fetchMaxCountFromManifest(PcfManifestsPackage pcfManifestsPackage) {
+    Map<String, Object> applicationYamlMap = getApplicationYamlMap(pcfManifestsPackage.getManifestYml());
+    Object maxCount = applicationYamlMap.get(INSTANCE_MANIFEST_YML_ELEMENT);
+    String maxVal;
+    if (maxCount instanceof Integer) {
+      maxVal = maxCount.toString();
+    } else {
+      maxVal = (String) maxCount;
+    }
+
+    if (maxVal.contains("((") && maxVal.contains("))")) {
+      maxVal = finalizeSubstitution(pcfManifestsPackage, maxVal);
+    }
+
+    return Integer.parseInt(maxVal);
   }
 }

@@ -13,6 +13,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -60,6 +61,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -110,6 +112,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -145,9 +148,9 @@ import java.util.Set;
 public class PcfSetupStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String MANIFEST_YAML_CONTENT = "  applications:\n"
-      + "  - name : ${APPLICATION_NAME}\n"
+      + "  - name : appName\n"
       + "    memory: 850M\n"
-      + "    instances : ${INSTANCE_COUNT}\n"
+      + "    instances : 3\n"
       + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
       + "    path: ${FILE_LOCATION}\n"
       + "    routes:\n"
@@ -171,9 +174,9 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ServiceHelper serviceHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
-  @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private ApplicationManifestService applicationManifestService;
+  @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
@@ -323,8 +326,10 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testExecute() {
-    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any(), any());
+    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any());
     on(context).set("serviceTemplateService", serviceTemplateService);
+    pcfSetupState.setUseCurrentRunningCount(false);
+    pcfSetupState.setMaxInstances(2);
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
@@ -338,6 +343,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
+    assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(2);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -353,6 +359,27 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
+    assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(2);
+
+    // With workflowV2 flag = true
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), anyMap(), any(), any());
+
+    executionResponse = pcfSetupState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    stateExecutionData = (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
+    pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("appName");
+    assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
+    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME);
+    assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
+    assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
+    assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(3);
   }
 
   @Test
@@ -394,9 +421,13 @@ public class PcfSetupStateTest extends WingsBaseTest {
     pcfSetupStateExecutionData.setAppManifestMap(appManifestMap);
     pcfSetupStateExecutionData.setActivityId("activityId");
 
-    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any(), any());
+    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any());
     on(context).set("serviceTemplateService", serviceTemplateService);
     when(featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())).thenReturn(true);
+
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), any(), any(), any());
 
     pcfSetupState.handleAsyncInternal(context, response);
     verify(activityService, times(0)).updateStatus("activityId", APP_ID, FAILED);
@@ -454,6 +485,24 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     appManifestMap.remove(K8sValuesLocation.Service);
     assertThat(pcfSetupState.isManifestInGit(appManifestMap)).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateCurrentRunningCount() {
+    assertThat(pcfSetupState.generateCurrentRunningCount(
+                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(3).build()))
+        .isEqualTo(3);
+
+    assertThat(pcfSetupState.generateCurrentRunningCount(
+                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(0).build()))
+        .isEqualTo(2);
+
+    assertThat(pcfSetupState.generateCurrentRunningCount(
+                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build()))
+        .isEqualTo(2);
+
+    assertThat(pcfSetupState.generateCurrentRunningCount(null)).isEqualTo(2);
   }
 
   @Test

@@ -2,6 +2,9 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 
 import com.google.inject.Singleton;
 
@@ -50,7 +53,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       throw new InvalidArgumentsException(
           Pair.of("pcfCommandRequest", "Must be instance of PcfCommandRollbackRequest"));
     }
-    executionLogCallback.saveExecutionLog("--------- Starting Rollback deployment");
+    executionLogCallback.saveExecutionLog(color("--------- Starting Rollback deployment", White, Bold));
     List<PcfServiceData> pcfServiceDataUpdated = new ArrayList<>();
     PcfDeployCommandResponse pcfDeployCommandResponse =
         PcfDeployCommandResponse.builder().pcfInstanceElements(new ArrayList<>()).build();

@@ -324,7 +324,7 @@ public class PivotalClientTest extends WingsBaseTest {
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
-          .isEqualTo("Exception occurred while fetching Organizations, Error: unauthorized: Bad credentials");
+          .isEqualTo("Exception occurred while fetching Organizations, Error:unauthorized: Bad credentials");
     }
   }
 
@@ -460,7 +460,7 @@ public class PivotalClientTest extends WingsBaseTest {
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
-          .isEqualTo("Exception occurred Scaling Applications: app, to count: 0, Error: No space targeted");
+          .isEqualTo("Exception occurred Scaling Applications: app, to count: 0, Error:No space targeted");
     }
   }
 
