@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/local/repositories/npmjs/content/"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-npm-packages-nexus2x.xml",
+    "headers": {
+      "Content-Type": "application/xml"
+    }
+  }
+}
