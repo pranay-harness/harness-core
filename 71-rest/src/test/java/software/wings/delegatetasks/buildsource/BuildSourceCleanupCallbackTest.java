@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
@@ -42,6 +43,8 @@ import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 
 public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
@@ -53,6 +56,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private Query query;
   @Mock private MorphiaIterator<Artifact, Artifact> artifactIterator;
+  @Mock private ExecutorService executorService;
 
   @InjectMocks @Inject private BuildSourceCleanupCallback buildSourceCleanupCallback;
 
@@ -103,7 +107,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
 
     BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
     buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(emptyList());
-    buildSourceCleanupCallback.notify(Maps.newHashMap("", buildSourceExecutionResponse));
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(buildSourceExecutionResponse, ARTIFACT_STREAM);
     verify(artifactService, never()).prepareArtifactWithMetadataQuery(any());
   }
 
@@ -117,7 +121,8 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
     when(artifactIterator.next()).thenReturn(anArtifact().build());
 
-    buildSourceCleanupCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(true)));
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM);
     verify(artifactService, times(1)).deleteArtifacts(any());
   }
 
@@ -133,7 +138,8 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     metadataMap.put(ArtifactMetadataKeys.buildNo, "1");
     when(artifactIterator.next()).thenReturn(anArtifact().withMetadata(metadataMap).build());
 
-    buildSourceCleanupCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(true)));
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM);
     verify(artifactService, never()).deleteArtifacts(any());
   }
 
@@ -143,8 +149,28 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
     BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
     buildSourceExecutionResponse.setBuildSourceResponse(null);
-    buildSourceCleanupCallback.notify(Maps.newHashMap("", buildSourceExecutionResponse));
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(buildSourceExecutionResponse, ARTIFACT_STREAM);
     verify(artifactService, never()).deleteArtifacts(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNotifyWithExecutorRejectedQueueException() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    when(executorService.submit(any(Runnable.class))).thenThrow(RejectedExecutionException.class);
+    BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
+    buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
+
+    buildSourceCleanupCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(true)));
+    verify(executorService, times(1)).submit(any(Runnable.class));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNotifyOnErrorNotifyResponseDataResponse() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    buildSourceCleanupCallback.notify(Maps.newHashMap("", ErrorNotifyResponseData.builder().build()));
+    verify(executorService, never()).submit(any(Runnable.class));
   }
 
   private BuildSourceExecutionResponse prepareBuildSourceExecutionResponse(boolean stable) {

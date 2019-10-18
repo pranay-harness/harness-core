@@ -21,6 +21,7 @@ import okhttp3.HttpUrl;
 import retrofit2.Response;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerRegistryToken;
 import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -66,6 +67,11 @@ public class DockerPublicRegistryProcessor {
         dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig, encryptionDetails);
     Response<DockerPublicImageTagResponse> response =
         registryRestClient.listPublicImageTags(imageName, null, maxNumberOfBuilds).execute();
+
+    if (!isSuccessful(response)) {
+      throw new InvalidArtifactServerException(response.message(), USER);
+    }
+
     return paginate(response.body(), dockerConfig, imageName, registryRestClient, maxNumberOfBuilds);
   }
 
@@ -93,8 +99,14 @@ public class DockerPublicRegistryProcessor {
 
     // process rest of pages
     while (EmptyPredicate.isNotEmpty(nextPageNum)) {
-      DockerPublicImageTagResponse page =
-          registryRestClient.listPublicImageTags(imageName, Integer.valueOf(nextPageNum), limit).execute().body();
+      Response<DockerPublicImageTagResponse> pageResponse =
+          registryRestClient.listPublicImageTags(imageName, Integer.valueOf(nextPageNum), limit).execute();
+
+      if (!isSuccessful(pageResponse)) {
+        throw new InvalidArtifactServerException(pageResponse.message(), USER);
+      }
+
+      DockerPublicImageTagResponse page = pageResponse.body();
       List<BuildDetails> pageDetails = processPage(page, dockerConfig, imageName);
       details.addAll(pageDetails);
 

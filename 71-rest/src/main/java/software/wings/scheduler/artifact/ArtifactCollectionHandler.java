@@ -64,7 +64,9 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
     } catch (WingsException exception) {
       logger.warn(
           "Failed to collect artifacts for artifact stream {}. Reason {}", artifactStreamId, exception.getMessage());
-      exception.addContext(Account.class, artifactStream.getAccountId());
+      if (artifactStream.getAccountId() != null) {
+        exception.addContext(Account.class, artifactStream.getAccountId());
+      }
       exception.addContext(ArtifactStream.class, artifactStreamId);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {

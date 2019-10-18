@@ -3,7 +3,6 @@ package software.wings.helpers.ext.docker;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -11,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.exception.ArtifactServerException;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
@@ -29,6 +27,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -97,7 +96,11 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         throw new WingsException(INVALID_CREDENTIAL, WingsException.USER);
       }
     }
-    DockerRegistryUtils.checkValidImage(imageName, response);
+
+    if (!isSuccessful(response)) {
+      throw new InvalidArtifactServerException(response.message(), USER);
+    }
+
     DockerImageTagResponse dockerImageTagResponse = response.body();
     if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
       logger.warn("There are no tags available for the imageName {}", imageName);
@@ -216,8 +219,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   public boolean validateCredentials(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (dockerConfig.hasCredentials()) {
       if (isEmpty(dockerConfig.getPassword()) && isEmpty(dockerConfig.getEncryptedPassword())) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "Password is a required field along with Username");
+        throw new InvalidArtifactServerException("Password is a required field along with Username", USER);
       }
       try {
         DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
@@ -232,8 +234,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
         return isSuccessful(response);
       } catch (IOException e) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", ExceptionUtils.getMessage(e));
+        throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
       }
     }
     return true;
@@ -280,20 +281,25 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   public static boolean isSuccessful(Response<?> response) {
+    if (response == null) {
+      throw new InvalidArtifactServerException("Null response found", USER);
+    }
+
+    if (response.isSuccessful()) {
+      return true;
+    }
+
+    logger.error("Request not successful. Reason: {}", response);
     int code = response.code();
     switch (code) {
-      case 200:
-        return true;
       case 404:
       case 400:
         return false;
       case 401:
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "Invalid Docker Registry credentials");
+        throw new InvalidArtifactServerException("Invalid Docker Registry credentials", USER);
       default:
-        unhandled(code);
+        throw new InvalidArtifactServerException(response.message(), USER);
     }
-    return true;
   }
 
   public static String parseLink(String headerLink) {

@@ -539,6 +539,8 @@ import java.time.Clock;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -901,6 +903,16 @@ public class WingsModule extends DependencyModule {
         .annotatedWith(Names.named("DeploymentReconTaskExecutor"))
         .toInstance(ThreadPool.create(1, 5, 10, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("DeploymentReconTaskExecutor-%d").build()));
+
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("BuildSourceCallbackExecutor"))
+        .toInstance(new ThreadPoolExecutor(1, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>(25000),
+            new ThreadFactoryBuilder().setNameFormat("BuildSourceCallbackExecutor-%d").build()));
+
+    bind(ExecutorService.class)
+        .annotatedWith(Names.named("BuildSourceCleanupCallbackExecutor"))
+        .toInstance(new ThreadPoolExecutor(1, 5, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>(25000),
+            new ThreadFactoryBuilder().setNameFormat("BuildSourceCleanupCallbackExecutor-%d").build()));
 
     bind(DashboardSettingsService.class).to(DashboardSettingsServiceImpl.class);
     bind(NameService.class).to(NameServiceImpl.class);
