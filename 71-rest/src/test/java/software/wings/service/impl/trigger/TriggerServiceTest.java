@@ -19,6 +19,7 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -58,6 +59,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
@@ -89,9 +91,11 @@ import org.quartz.TriggerKey;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.Variable;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -113,6 +117,8 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
+import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.AuditServiceHelper;
@@ -125,6 +131,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -152,6 +159,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowService workflowService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private MongoIdempotentRegistry<TriggerIdempotentResult> idempotentRegistry;
   @Mock private EnvironmentService environmentService;
   @Mock private FeatureFlagService featureFlagService;
@@ -1928,5 +1936,155 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotEmpty();
     assertThat(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(trigger.getAppId(), INFRA_MAPPING_ID))
         .isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetInfraMappingByName() {
+    InfrastructureMapping infrastructureMappingMocked = anAwsInfrastructureMapping()
+                                                            .withUuid(INFRA_MAPPING_ID)
+                                                            .withServiceId(SERVICE_ID)
+                                                            .withDeploymentType(SSH.name())
+                                                            .withComputeProviderType("AWS")
+                                                            .build();
+    when(infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(infrastructureMappingMocked);
+
+    TriggerServiceImpl triggerService1 = (TriggerServiceImpl) triggerService;
+    InfrastructureMapping infrastructureMapping = triggerService1.getInfrastructureMapping(APP_ID, ENV_ID, INFRA_NAME);
+    assertThat(infrastructureMapping).isNotNull();
+    assertThat(infrastructureMapping).isEqualTo(infrastructureMappingMocked);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetInfraDefinitionByName() {
+    InfrastructureDefinition infrastructureDefinitionMocked =
+        InfrastructureDefinition.builder()
+            .infrastructure(GoogleKubernetesEngine.builder().namespace("test").build())
+            .build();
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(infrastructureDefinitionMocked);
+
+    TriggerServiceImpl triggerService1 = (TriggerServiceImpl) triggerService;
+    InfrastructureDefinition infrastructureDefinition =
+        triggerService1.getInfrastructureDefinition(APP_ID, ENV_ID, INFRA_NAME);
+    assertThat(infrastructureDefinition).isNotNull();
+    assertThat(infrastructureDefinition).isEqualTo(infrastructureDefinitionMocked);
+  }
+
+  // after migration support old curl command test
+  @Test
+  @Category(UnitTests.class)
+  public void shouldResolveInfraDefOldPayloadAutoGeneratedName() {
+    InfrastructureMapping infrastructureMappingMocked = anAwsInfrastructureMapping()
+                                                            .withUuid(INFRA_MAPPING_ID)
+                                                            .withServiceId(SERVICE_ID)
+                                                            .withDeploymentType(SSH.name())
+                                                            .withComputeProviderType("AWS")
+                                                            .build();
+    infrastructureMappingMocked.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+
+    Map<String, String> triggerWorkflowVariables = new HashMap<>();
+    triggerWorkflowVariables.put("Environment", ENV_NAME);
+    triggerWorkflowVariables.put("Service", SERVICE_NAME);
+    triggerWorkflowVariables.put("ServiceInfra_ECS", INFRA_NAME);
+    triggerWorkflowVariables.put("InfraDefinition_ECS", "${Infra}");
+
+    List<Variable> workflowVariables =
+        asList(aVariable().entityType(SERVICE).name("Service").value("Service 1").build(),
+            aVariable().entityType(ENVIRONMENT).name("Environment").value("env 1").build(),
+            aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("InfraDefinition_ECS").value("${Infra}").build());
+
+    when(infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(infrastructureMappingMocked);
+
+    TriggerServiceImpl triggerService1 = (TriggerServiceImpl) triggerService;
+    triggerService1.resolveInfraDefinitions(APP_ID, triggerWorkflowVariables, ENV_ID, workflowVariables);
+    assertThat(triggerWorkflowVariables.get("InfraDefinition_ECS")).isNotNull();
+    assertThat(triggerWorkflowVariables.get("InfraDefinition_ECS")).isEqualTo(INFRA_DEFINITION_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldResolveInfraDefOldPayloadCustomName() {
+    InfrastructureMapping infrastructureMappingMocked = anAwsInfrastructureMapping()
+                                                            .withUuid(INFRA_MAPPING_ID)
+                                                            .withServiceId(SERVICE_ID)
+                                                            .withDeploymentType(SSH.name())
+                                                            .withComputeProviderType("AWS")
+                                                            .build();
+    infrastructureMappingMocked.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+
+    Map<String, String> triggerWorkflowVariables = new HashMap<>();
+    triggerWorkflowVariables.put("Environment", ENV_NAME);
+    triggerWorkflowVariables.put("Service", SERVICE_NAME);
+    triggerWorkflowVariables.put("Infra", INFRA_NAME);
+
+    List<Variable> workflowVariables =
+        asList(aVariable().entityType(SERVICE).name("Service").value("Service 1").build(),
+            aVariable().entityType(ENVIRONMENT).name("Environment").value("env 1").build(),
+            aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("Infra").value("${Infra}").build());
+    when(infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(infrastructureMappingMocked);
+
+    TriggerServiceImpl triggerService1 = (TriggerServiceImpl) triggerService;
+    triggerService1.resolveInfraDefinitions(APP_ID, triggerWorkflowVariables, ENV_ID, workflowVariables);
+    assertThat(triggerWorkflowVariables.get("Infra")).isNotNull();
+    assertThat(triggerWorkflowVariables.get("Infra")).isEqualTo(INFRA_DEFINITION_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldResolveInfraDefNewPayloadCustomName() {
+    Map<String, String> triggerWorkflowVariables = new HashMap<>();
+    triggerWorkflowVariables.put("Environment", ENV_NAME);
+    triggerWorkflowVariables.put("Service", SERVICE_NAME);
+    triggerWorkflowVariables.put("Infra", INFRA_NAME);
+
+    List<Variable> workflowVariables =
+        asList(aVariable().entityType(SERVICE).name("Service").value("Service 1").build(),
+            aVariable().entityType(ENVIRONMENT).name("Environment").value("env 1").build(),
+            aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("Infra").value("${Infra}").build());
+
+    InfrastructureDefinition infrastructureDefinitionMocked =
+        InfrastructureDefinition.builder()
+            .uuid(INFRA_DEFINITION_ID)
+            .infrastructure(GoogleKubernetesEngine.builder().namespace("test").build())
+            .build();
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(infrastructureDefinitionMocked);
+
+    TriggerServiceImpl triggerService1 = (TriggerServiceImpl) triggerService;
+    triggerService1.resolveInfraDefinitions(APP_ID, triggerWorkflowVariables, ENV_ID, workflowVariables);
+    assertThat(triggerWorkflowVariables.get("Infra")).isNotNull();
+    assertThat(triggerWorkflowVariables.get("Infra")).isEqualTo(INFRA_DEFINITION_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldResolveInfraDefNewPayloadAutoGeneratedName() {
+    Map<String, String> triggerWorkflowVariables = new HashMap<>();
+    triggerWorkflowVariables.put("Environment", ENV_NAME);
+    triggerWorkflowVariables.put("Service", SERVICE_NAME);
+    triggerWorkflowVariables.put("InfraDefinition_ECS", INFRA_NAME);
+
+    List<Variable> workflowVariables =
+        asList(aVariable().entityType(SERVICE).name("Service").value("Service 1").build(),
+            aVariable().entityType(ENVIRONMENT).name("Environment").value("env 1").build(),
+            aVariable().entityType(INFRASTRUCTURE_DEFINITION).name("InfraDefinition_ECS").value("${Infra}").build());
+
+    InfrastructureDefinition infrastructureDefinitionMocked =
+        InfrastructureDefinition.builder()
+            .uuid(INFRA_DEFINITION_ID)
+            .infrastructure(GoogleKubernetesEngine.builder().namespace("test").build())
+            .build();
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(infrastructureDefinitionMocked);
+
+    TriggerServiceImpl triggerService1 = (TriggerServiceImpl) triggerService;
+    triggerService1.resolveInfraDefinitions(APP_ID, triggerWorkflowVariables, ENV_ID, workflowVariables);
+    assertThat(triggerWorkflowVariables.get("InfraDefinition_ECS")).isNotNull();
+    assertThat(triggerWorkflowVariables.get("InfraDefinition_ECS")).isEqualTo(INFRA_DEFINITION_ID);
   }
 }
