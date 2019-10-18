@@ -424,6 +424,24 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return null;
   }
 
+  @Override
+  public Application fetchRequiredApp() {
+    WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
+    if (stdParam != null) {
+      return stdParam.fetchRequiredApp();
+    }
+    throw new InvalidRequestException("WorkflowStandardParams cannot be null");
+  }
+
+  @Override
+  public Environment fetchRequiredEnvironment() {
+    WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
+    if (stdParam != null) {
+      return stdParam.fetchRequiredEnv();
+    }
+    throw new InvalidRequestException("WorkflowStandardParams cannot be null");
+  }
+
   public Environment getEnv() {
     WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
     if (stdParam != null) {

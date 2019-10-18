@@ -13,6 +13,7 @@ import io.harness.logging.AutoLogContext;
 import software.wings.api.InfraMappingElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.settings.SettingValue;
 
@@ -52,6 +53,10 @@ public interface ExecutionContext {
   ErrorStrategy getErrorStrategy();
 
   Application getApp();
+
+  Application fetchRequiredApp();
+
+  Environment fetchRequiredEnvironment();
 
   String getWorkflowExecutionId();
 

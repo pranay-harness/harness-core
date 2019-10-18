@@ -4,7 +4,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -12,8 +15,10 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_META;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
@@ -166,6 +171,32 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     context.pushContextElement(std);
 
     assertThat(context.getArtifacts()).isNullOrEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchRequiredApp() {
+    WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
+    doReturn(ContextElementType.STANDARD).when(mockParams).getElementType();
+    doReturn(anApplication().appId(APP_ID).build()).when(mockParams).fetchRequiredApp();
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    context.pushContextElement(mockParams);
+    assertThat(context.fetchRequiredApp()).isNotNull();
+    ExecutionContextImpl context2 = new ExecutionContextImpl(new StateExecutionInstance());
+    assertThatThrownBy(context2::fetchRequiredApp).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchRequiredEnv() {
+    WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
+    doReturn(ContextElementType.STANDARD).when(mockParams).getElementType();
+    doReturn(anEnvironment().uuid(ENV_ID).build()).when(mockParams).fetchRequiredEnv();
+    ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
+    context.pushContextElement(mockParams);
+    assertThat(context.fetchRequiredEnvironment()).isNotNull();
+    ExecutionContextImpl context2 = new ExecutionContextImpl(new StateExecutionInstance());
+    assertThatThrownBy(context2::fetchRequiredEnvironment).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
