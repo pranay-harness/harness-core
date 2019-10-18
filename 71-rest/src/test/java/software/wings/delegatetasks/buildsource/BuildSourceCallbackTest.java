@@ -1,7 +1,10 @@
 package software.wings.delegatetasks.buildsource;
 
 import static java.util.Arrays.asList;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -17,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
@@ -37,6 +41,9 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+
 public class BuildSourceCallbackTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
@@ -47,6 +54,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Mock private TriggerService triggerService;
   @Mock private DeploymentTriggerService deploymentTriggerService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ExecutorService executorService;
 
   @InjectMocks @Inject private BuildSourceCallback buildSourceCallback;
 
@@ -93,7 +101,9 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccess() {
-    shouldNotifyOnSuccessHelper();
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    buildSourceCallback.handleResponseForSuccessInternal(prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM);
+    verify(artifactStreamService, never()).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, STABLE.name());
     verify(triggerService)
         .triggerExecutionPostArtifactCollectionAsync(
             ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID_1, asList(ARTIFACT_1, ARTIFACT_2));
@@ -103,23 +113,21 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessTriggerRefactor() {
     when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(true);
-    shouldNotifyOnSuccessHelper();
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    buildSourceCallback.handleResponseForSuccessInternal(prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM);
+    verify(artifactStreamService, never()).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, STABLE.name());
     verify(deploymentTriggerService)
         .triggerExecutionPostArtifactCollectionAsync(
             ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID_1, asList(ARTIFACT_1, ARTIFACT_2));
-  }
-
-  private void shouldNotifyOnSuccessHelper() {
-    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
-    buildSourceCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(true)));
-    verify(artifactStreamService, never()).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_1, STABLE.name());
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateCollectionStatus() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
-    buildSourceCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(true)));
+    buildSourceCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM_UNSTABLE);
+
     verify(artifactStreamService).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_2, STABLE.name());
     verify(triggerService, never())
         .triggerExecutionPostArtifactCollectionAsync(
@@ -130,7 +138,8 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotUpdateCollectionStatus() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
-    buildSourceCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(false)));
+    buildSourceCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(false), ARTIFACT_STREAM_UNSTABLE);
     verify(artifactStreamService, never()).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_2, STABLE.name());
     verify(triggerService, never())
         .triggerExecutionPostArtifactCollectionAsync(
@@ -141,12 +150,64 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldHandleNullBuildSourceResponse() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
-    buildSourceCallback.notify(Maps.newHashMap(
-        "", BuildSourceExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build()));
+    buildSourceCallback.handleResponseForSuccessInternal(
+        BuildSourceExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build(),
+        ARTIFACT_STREAM_UNSTABLE);
     verify(artifactStreamService, never()).updateCollectionStatus(ACCOUNT_ID, ARTIFACT_STREAM_ID_2, STABLE.name());
     verify(triggerService, never())
         .triggerExecutionPostArtifactCollectionAsync(
             ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID_2, asList(ARTIFACT_1, ARTIFACT_2));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNotify() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
+    buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
+
+    buildSourceCallback.notify(Maps.newHashMap("", buildSourceExecutionResponse));
+    verify(executorService, times(1)).submit(any(Runnable.class));
+    verify(artifactStreamService, times(1)).get(any());
+    verify(artifactStreamService, never()).updateCollectionStatus(any(), any(), any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNotifyOnFailedResponse() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
+    buildSourceExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
+
+    buildSourceCallback.notify(Maps.newHashMap("", buildSourceExecutionResponse));
+    verify(executorService, never()).submit(any(Runnable.class));
+    verify(artifactStreamService, times(1)).get(any());
+    verify(artifactStreamService, times(1)).updateFailedCronAttempts(any(), any(), anyInt());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNotifyOnErrorNotifyResponseDataResponse() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    buildSourceCallback.notify(Maps.newHashMap("", ErrorNotifyResponseData.builder().build()));
+    verify(executorService, never()).submit(any(Runnable.class));
+    verify(artifactStreamService, times(2)).get(any());
+    verify(artifactStreamService, times(1)).updateFailedCronAttempts(any(), any(), anyInt());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testNotifyWithExecutorRejectedQueueException() {
+    buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
+    when(executorService.submit(any(Runnable.class))).thenThrow(RejectedExecutionException.class);
+    BuildSourceExecutionResponse buildSourceExecutionResponse = prepareBuildSourceExecutionResponse(true);
+    buildSourceExecutionResponse.getBuildSourceResponse().setBuildDetails(null);
+
+    buildSourceCallback.notify(Maps.newHashMap("", prepareBuildSourceExecutionResponse(true)));
+    verify(executorService, times(1)).submit(any(Runnable.class));
+    verify(artifactStreamService, times(1)).get(any());
+    verify(artifactStreamService, never()).updateCollectionStatus(any(), any(), any());
   }
 
   private BuildSourceExecutionResponse prepareBuildSourceExecutionResponse(boolean stable) {

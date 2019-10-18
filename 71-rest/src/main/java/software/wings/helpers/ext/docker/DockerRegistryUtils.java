@@ -2,6 +2,7 @@ package software.wings.helpers.ext.docker;
 
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
+import software.wings.exception.InvalidArtifactServerException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -143,6 +145,11 @@ public class DockerRegistryUtils {
         throw new InvalidCredentialsException("Invalid docker registry credentials", USER);
       }
     }
+
+    if (!isSuccessful(response)) {
+      throw new InvalidArtifactServerException(response.message(), USER);
+    }
+
     checkValidImage(imageName, response);
     DockerImageManifestResponse dockerImageManifestResponse = response.body();
     if (dockerImageManifestResponse == null) {
