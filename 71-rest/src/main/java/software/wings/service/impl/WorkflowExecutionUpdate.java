@@ -268,7 +268,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
           }
         }
 
-        reportDeploymentEventToSegment(workflowExecution);
+        //        reportDeploymentEventToSegment(workflowExecution);
       } catch (Exception e) {
         logger.error(
             "Failed to generate events for workflowExecution:[{}], appId:[{}],", workflowExecutionId, appId, e);
