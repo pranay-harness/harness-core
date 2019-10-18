@@ -50,22 +50,20 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   public void testScaleElastigroup() throws Exception {
     doNothing()
         .when(deployTaskHandler)
-        .updateElastiGroupAndWait(
-            anyString(), anyString(), any(), anyString(), anyInt(), any(), anyString(), anyString());
+        .updateElastiGroupAndWait(anyString(), anyString(), any(), anyInt(), any(), anyString(), anyString());
     ElastiGroup group = ElastiGroup.builder().build();
-    deployTaskHandler.scaleElastigroup(group, "TOKEN", "ACCOUNT_ID", "WORKFLOW_EXECUTION_ID", 5,
-        SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
+    deployTaskHandler.scaleElastigroup(
+        group, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
     verify(deployTaskHandler)
-        .updateElastiGroupAndWait(
-            anyString(), anyString(), any(), anyString(), anyInt(), any(), anyString(), anyString());
+        .updateElastiGroupAndWait(anyString(), anyString(), any(), anyInt(), any(), anyString(), anyString());
   }
 
   @Test
   @Category(UnitTests.class)
   public void testScaleElastigroupNull() throws Exception {
     doNothing().when(deployTaskHandler).createAndFinishEmptyExecutionLog(any(), anyString(), anyString());
-    deployTaskHandler.scaleElastigroup(null, "TOKEN", "ACCOUNT_ID", "WORKFLOW_EXECUTION_ID", 5,
-        SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
+    deployTaskHandler.scaleElastigroup(
+        null, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
     verify(deployTaskHandler, times(2)).createAndFinishEmptyExecutionLog(any(), anyString(), anyString());
   }
 
@@ -84,7 +82,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
                                      .build();
     doNothing()
         .when(deployTaskHandler)
-        .scaleElastigroup(any(), anyString(), anyString(), anyString(), anyInt(), any(), anyString(), anyString());
+        .scaleElastigroup(any(), anyString(), anyString(), anyInt(), any(), anyString(), anyString());
     doReturn(singletonList(new Instance().withInstanceId("id-new")))
         .doReturn(singletonList(new Instance().withInstanceId("id-old")))
         .when(deployTaskHandler)
@@ -123,7 +121,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
                                      .build();
     doNothing()
         .when(deployTaskHandler)
-        .scaleElastigroup(any(), anyString(), anyString(), anyString(), anyInt(), any(), anyString(), anyString());
+        .scaleElastigroup(any(), anyString(), anyString(), anyInt(), any(), anyString(), anyString());
     doReturn(singletonList(new Instance().withInstanceId("id-new")))
         .doReturn(singletonList(new Instance().withInstanceId("id-old")))
         .when(deployTaskHandler)
@@ -162,7 +160,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
                                      .build();
     doNothing()
         .when(deployTaskHandler)
-        .scaleElastigroup(any(), anyString(), anyString(), anyString(), anyInt(), any(), anyString(), anyString());
+        .scaleElastigroup(any(), anyString(), anyString(), anyInt(), any(), anyString(), anyString());
     doReturn(singletonList(new Instance().withInstanceId("id-old")))
         .when(deployTaskHandler)
         .getAllEc2InstancesOfElastiGroup(any(), anyString(), anyString(), anyString(), anyString());

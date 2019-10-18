@@ -33,12 +33,12 @@ import java.util.List;
 @NoArgsConstructor
 public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
   @VisibleForTesting
-  void scaleElastigroup(ElastiGroup elastiGroup, String spotInstToken, String spotInstAccountId,
-      String workflowExecutionId, int steadyStateTimeOut, SpotInstDeployTaskParameters deployTaskParameters,
-      String scaleCommandUnit, String waitCommandUnit) throws Exception {
+  void scaleElastigroup(ElastiGroup elastiGroup, String spotInstToken, String spotInstAccountId, int steadyStateTimeOut,
+      SpotInstDeployTaskParameters deployTaskParameters, String scaleCommandUnit, String waitCommandUnit)
+      throws Exception {
     if (elastiGroup != null) {
-      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, elastiGroup, workflowExecutionId, steadyStateTimeOut,
-          deployTaskParameters, scaleCommandUnit, waitCommandUnit);
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, elastiGroup, steadyStateTimeOut, deployTaskParameters,
+          scaleCommandUnit, waitCommandUnit);
     } else {
       createAndFinishEmptyExecutionLog(deployTaskParameters, scaleCommandUnit, "No Elastigroup eligible for scaling");
       createAndFinishEmptyExecutionLog(deployTaskParameters, waitCommandUnit, "No Elastigroup eligible for scaling");
@@ -66,33 +66,27 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
 
     if (deployTaskParameters.isBlueGreen()) {
       // B/G
-      scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId, deployTaskParameters.getWorkflowExecutionId(),
-          steadyStateTimeOut, deployTaskParameters, UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+      scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId, steadyStateTimeOut, deployTaskParameters,
+          UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     } else {
       // Canary OR Basic
       if (deployTaskParameters.isRollback()) {
         // Roll back, always resize the old one first
-        scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+        scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId, steadyStateTimeOut, deployTaskParameters,
             UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-        scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId,
-            deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+        scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId, steadyStateTimeOut, deployTaskParameters,
             DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
       } else {
         // Deploy
         if (resizeNewFirst) {
-          scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId,
-              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+          scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId, steadyStateTimeOut, deployTaskParameters,
               UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-          scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId,
-              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+          scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId, steadyStateTimeOut, deployTaskParameters,
               DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
         } else {
-          scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId,
-              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+          scaleElastigroup(oldElastiGroup, spotInstToken, spotInstAccountId, steadyStateTimeOut, deployTaskParameters,
               DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-          scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId,
-              deployTaskParameters.getWorkflowExecutionId(), steadyStateTimeOut, deployTaskParameters,
+          scaleElastigroup(newElastiGroup, spotInstToken, spotInstAccountId, steadyStateTimeOut, deployTaskParameters,
               UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
         }
       }

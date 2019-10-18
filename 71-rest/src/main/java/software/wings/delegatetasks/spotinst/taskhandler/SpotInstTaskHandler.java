@@ -79,21 +79,22 @@ public abstract class SpotInstTaskHandler {
   }
 
   protected void updateElastiGroupAndWait(String spotInstToken, String spotInstAccountId, ElastiGroup elastiGroup,
-      String workflowExecutionId, int steadyStateTimeOut, SpotInstTaskParameters parameters,
-      String scaleCommandUnitName, String waitCommandUnitName) throws Exception {
+      int steadyStateTimeOut, SpotInstTaskParameters parameters, String scaleCommandUnitName,
+      String waitCommandUnitName) throws Exception {
+    String workflowExecutionId = parameters.getWorkflowExecutionId();
     ExecutionLogCallback logCallback = getLogCallBack(parameters, scaleCommandUnitName);
     Optional<ElastiGroup> elastiGroupIntialOptional =
         spotInstHelperServiceDelegate.getElastiGroupById(spotInstToken, spotInstAccountId, elastiGroup.getId());
     if (!elastiGroupIntialOptional.isPresent()) {
-      String message = format("Did not find elasti group with id: [%s]. Workflow execution: [%s]", elastiGroup.getId(),
-          workflowExecutionId);
+      String message = format(
+          "Did not find Elastigroup with id: [%s]. Workflow execution: [%s]", elastiGroup.getId(), workflowExecutionId);
       logger.error(message);
       logCallback.saveExecutionLog(message);
       throw new InvalidRequestException(message);
     }
     ElastiGroup elastiGroupIntial = elastiGroupIntialOptional.get();
     logCallback.saveExecutionLog(format(
-        "Current state of Elasti group: [%s], min: [%d], max: [%d], desired: [%d], Id: [%s]", elastiGroupIntial.getId(),
+        "Current state of Elastigroup: [%s], min: [%d], max: [%d], desired: [%d], Id: [%s]", elastiGroupIntial.getId(),
         elastiGroupIntial.getCapacity().getMinimum(), elastiGroupIntial.getCapacity().getMaximum(),
         elastiGroupIntial.getCapacity().getTarget(), elastiGroupIntial.getId()));
     int minInstances = elastiGroup.getCapacity().getMinimum();
@@ -101,7 +102,7 @@ public abstract class SpotInstTaskHandler {
     int targetInstances = elastiGroup.getCapacity().getTarget();
     String elastiGroupId = elastiGroup.getId();
     logCallback.saveExecutionLog(
-        format("Sending request to Spot Inst to update elasti group: [%s] with min: [%d], max: [%d] and target: [%d]",
+        format("Sending request to Spotinst to update Elastigroup: [%s] with min: [%d], max: [%d] and target: [%d]",
             elastiGroupId, minInstances, maxInstances, targetInstances));
     spotInstHelperServiceDelegate.updateElastiGroupCapacity(
         spotInstToken, spotInstAccountId, elastiGroupId, elastiGroup);
@@ -120,7 +121,7 @@ public abstract class SpotInstTaskHandler {
       }, steadyStateTimeOut, MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       String errorMessage =
-          format("Timed out while waiting for steady state for elasti group: [%s]. Workflow execution: [%s]",
+          format("Timed out while waiting for steady state for Elastigroup: [%s]. Workflow execution: [%s]",
               elastiGroupId, workflowExecutionId);
       waitLogCallback.saveExecutionLog(errorMessage, ERROR);
       throw new WingsException(INIT_TIMEOUT).addParam("message", errorMessage);
@@ -128,7 +129,7 @@ public abstract class SpotInstTaskHandler {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(
-          format("Timed out while waiting for steady state for elasti group: [%s]. Workflow execution: [%s]",
+          format("Timed out while waiting for steady state for Elastigroup: [%s]. Workflow execution: [%s]",
               elastiGroupId, workflowExecutionId),
           e);
     }
@@ -154,7 +155,7 @@ public abstract class SpotInstTaskHandler {
       }
     } else {
       waitLogCallback.saveExecutionLog(
-          format("Desired instances: [%d], Total instances: [%d], Healthy instances: [%d] for Elasti Group: [%s]",
+          format("Desired instances: [%d], Total instances: [%d], Healthy instances: [%d] for Elastigroup: [%s]",
               targetInstances, currentTotalCount, currentHealthyCount, elastiGroupId));
       if (targetInstances == currentHealthyCount && targetInstances == currentTotalCount) {
         waitLogCallback.saveExecutionLog(
