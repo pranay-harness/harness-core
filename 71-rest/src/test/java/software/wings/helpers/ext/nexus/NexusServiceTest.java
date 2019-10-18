@@ -1000,6 +1000,7 @@ public class NexusServiceTest extends WingsBaseTest {
                             .withBody(XML_CONTENT_RESPONSE_1)
                             .withHeader("Content-Type", "application/xml")));
   }
+
   @Test
   @Category(UnitTests.class)
   public void testExistsVersionWithExtensionNexus3x() {
@@ -1012,5 +1013,95 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNoVersionsFoundWithInvalidClassifierNexus3x() {
     nexusService.existsVersion(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, "source");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetPackageNamesForNPMNexus3x() {
+    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "harness-npm", RepositoryFormat.npm.name()))
+        .hasSize(1)
+        .contains("npm-app1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetPackageNamesForNugetNexus3x() {
+    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "nuget-group", RepositoryFormat.nuget.name()))
+        .hasSize(4)
+        .contains("AdamsLair.Duality.Samples.BasicMenu", "AdamsLair.Duality.Samples.InputHandling",
+            "NuGet.Package.Sample", "NuGet.Sample.Package");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetGroupIdsForMavenNexus3x() {
+    assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "maven-releases", RepositoryFormat.maven.name()))
+        .hasSize(1)
+        .contains("mygroup");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactNamesForMavenNexus3x() {
+    assertThat(nexusService.getArtifactNames(
+                   nexusThreeConfig, null, "maven-releases", "mygroup", RepositoryFormat.maven.name()))
+        .hasSize(1)
+        .contains("myartifact");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetVersionsForMavenNexus3x() {
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, null);
+    assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0", "1.8");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetVersionsForNPMNexus3x() {
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm", "npm-app1");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetVersionsForNugetNexus3x() {
+    List<BuildDetails> buildDetails = nexusService.getVersions(
+        RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-group", "NuGet.Sample.Package");
+    assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0.0.0", "1.0.0.18279");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetPackageNamesForNPMNexus2x() {
+    assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "npmjs", RepositoryFormat.npm.name()))
+        .hasSize(5)
+        .contains("chalk");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetPackageNamesForNugetNexus2x() {
+    assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "MyNuGet", RepositoryFormat.nuget.name()))
+        .hasSize(1)
+        .contains("NuGet.Sample.Package");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetVersionsForNugetNexus2x() {
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(RepositoryFormat.nuget.name(), nexusConfig, null, "MyNuGet", "NuGet.Sample.Package");
+    assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0.18279");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetVersionsForNPMNexus2x() {
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(RepositoryFormat.npm.name(), nexusConfig, null, "npmjs", "abbrev");
+    assertThat(buildDetails).hasSize(3).extracting(BuildDetails::getNumber).contains("1.0.3", "1.0.4", "1.0.5");
   }
 }

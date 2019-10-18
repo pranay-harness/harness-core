@@ -1,0 +1,14 @@
+<content>
+    <data>
+        <content-item>
+            <resourceURI>
+                http://localhost:8081/nexus/service/local/repositories/MyNuGet/content/NuGet.Sample.Package/
+            </resourceURI>
+            <relativePath>/NuGet.Sample.Package/</relativePath>
+            <text>NuGet.Sample.Package</text>
+            <leaf>false</leaf>
+            <lastModified>2019-07-03 04:58:53.0 UTC</lastModified>
+            <sizeOnDisk>-1</sizeOnDisk>
+        </content-item>
+    </data>
+</content>
