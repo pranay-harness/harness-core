@@ -52,17 +52,14 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     String spotInstToken = String.valueOf(spotInstConfig.getSpotInstToken());
     SpotInstSwapRoutesTaskParameters swapRoutesParameters = (SpotInstSwapRoutesTaskParameters) spotInstTaskParameters;
     if (swapRoutesParameters.isRollback()) {
-      return executeRollback(spotInstAccountId, spotInstToken, awsConfig, swapRoutesParameters,
-          swapRoutesParameters.getWorkflowExecutionId());
+      return executeRollback(spotInstAccountId, spotInstToken, awsConfig, swapRoutesParameters);
     } else {
-      return executeDeploy(spotInstAccountId, spotInstToken, awsConfig, swapRoutesParameters,
-          swapRoutesParameters.getWorkflowExecutionId());
+      return executeDeploy(spotInstAccountId, spotInstToken, awsConfig, swapRoutesParameters);
     }
   }
 
   private SpotInstTaskExecutionResponse executeDeploy(String spotInstAccountId, String spotInstToken,
-      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId)
-      throws Exception {
+      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters) throws Exception {
     ExecutionLogCallback logCallback = getLogCallBack(swapRoutesParameters, SWAP_ROUTES_COMMAND_UNIT);
     String prodElastiGroupName = swapRoutesParameters.getElastiGroupNamePrefix();
     String stageElastiGroupName =
@@ -73,14 +70,14 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     String oldElastiGroupId = (oldElastiGroup != null) ? oldElastiGroup.getId() : EMPTY;
 
     if (isNotEmpty(newElastiGroupId)) {
-      logCallback.saveExecutionLog(format(
-          "Sending request to rename Elasti Group with Id: [%s] to [%s]", newElastiGroupId, prodElastiGroupName));
+      logCallback.saveExecutionLog(
+          format("Sending request to rename Elastigroup with Id: [%s] to [%s]", newElastiGroupId, prodElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
           ElastiGroupRenameRequest.builder().name(prodElastiGroupName).build());
     }
     if (isNotEmpty(oldElastiGroupId)) {
       logCallback.saveExecutionLog(
-          format("Sending request to rename Elasti Group with Id: [%s] to [%s]", oldElastiGroup, stageElastiGroupName));
+          format("Sending request to rename Elastigroup with Id: [%s] to [%s]", oldElastiGroup, stageElastiGroupName));
       spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, oldElastiGroupId,
           ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
     }
@@ -98,8 +95,8 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
                              .capacity(ElastiGroupCapacity.builder().minimum(0).maximum(0).target(0).build())
                              .build();
       int steadyStateTimeOut = getTimeOut(swapRoutesParameters.getSteadyStateTimeOut());
-      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, workflowExecutionId, steadyStateTimeOut,
-          swapRoutesParameters, DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, steadyStateTimeOut, swapRoutesParameters,
+          DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
     } else {
       logCallback = getLogCallBack(swapRoutesParameters, DOWN_SCALE_COMMAND_UNIT);
       logCallback.saveExecutionLog("Nothing to Downsize.", INFO, SUCCESS);
@@ -110,8 +107,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
   }
 
   private SpotInstTaskExecutionResponse executeRollback(String spotInstAccountId, String spotInstToken,
-      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters, String workflowExecutionId)
-      throws Exception {
+      AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters) throws Exception {
     String prodElastiGroupName = swapRoutesParameters.getElastiGroupNamePrefix();
     String stageElastiGroupName =
         format("%s__%s", swapRoutesParameters.getElastiGroupNamePrefix(), STAGE_ELASTI_GROUP_NAME_SUFFIX);
@@ -122,14 +118,14 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     int steadyStateTimeOut = getTimeOut(swapRoutesParameters.getSteadyStateTimeOut());
     ExecutionLogCallback logCallback;
 
-    if (isNotEmpty(oldElastiGroupId)) {
+    if (oldElastiGroup != null && isNotEmpty(oldElastiGroupId)) {
       ElastiGroup temp = ElastiGroup.builder()
                              .id(oldElastiGroupId)
                              .name(prodElastiGroupName)
                              .capacity(oldElastiGroup.getCapacity())
                              .build();
-      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, workflowExecutionId, steadyStateTimeOut,
-          swapRoutesParameters, UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+      updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, steadyStateTimeOut, swapRoutesParameters,
+          UP_SCALE_COMMAND_UNIT, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
 
       logCallback = getLogCallBack(swapRoutesParameters, RENAME_OLD_COMMAND_UNIT);
       logCallback.saveExecutionLog(
@@ -139,11 +135,11 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
       logCallback.saveExecutionLog("Successfully renamed old elastiGroup", INFO, SUCCESS);
     } else {
       createAndFinishEmptyExecutionLog(
-          swapRoutesParameters, UP_SCALE_COMMAND_UNIT, "No old elastigroup found for upscaling");
+          swapRoutesParameters, UP_SCALE_COMMAND_UNIT, "No old Elastigroup found for upscaling");
       createAndFinishEmptyExecutionLog(
-          swapRoutesParameters, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, "No old elastigroup found for upscaling");
+          swapRoutesParameters, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, "No old Elastigroup found for upscaling");
       createAndFinishEmptyExecutionLog(
-          swapRoutesParameters, RENAME_OLD_COMMAND_UNIT, "No old elastigroup found for renaming");
+          swapRoutesParameters, RENAME_OLD_COMMAND_UNIT, "No old Elastigroup found for renaming");
     }
 
     restoreRoutesToOriginalStateIfChanged(awsConfig, swapRoutesParameters);
@@ -154,13 +150,13 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
                            .name(stageElastiGroupName)
                            .capacity(ElastiGroupCapacity.builder().minimum(0).maximum(0).target(0).build())
                            .build();
-    updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, workflowExecutionId, steadyStateTimeOut,
-        swapRoutesParameters, DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+    updateElastiGroupAndWait(spotInstToken, spotInstAccountId, temp, steadyStateTimeOut, swapRoutesParameters,
+        DOWN_SCALE_COMMAND_UNIT, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
 
     // Rename new elastiGroup to STAGE
     logCallback = getLogCallBack(swapRoutesParameters, RENAME_NEW_COMMAND_UNIT);
     logCallback.saveExecutionLog(
-        format("Renaming Elasti group with id: [%s] to name: [%s]", newElastiGroupId, stageElastiGroupName));
+        format("Renaming Elastigroup with id: [%s] to name: [%s]", newElastiGroupId, stageElastiGroupName));
     spotInstHelperServiceDelegate.updateElastiGroup(spotInstToken, spotInstAccountId, newElastiGroupId,
         ElastiGroupRenameRequest.builder().name(stageElastiGroupName).build());
     logCallback.saveExecutionLog("Completed Rename", INFO, SUCCESS);

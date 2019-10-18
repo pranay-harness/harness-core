@@ -86,8 +86,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
     doReturn(mockCallback).when(spotInstSwapRoutesTaskHandler).getLogCallBack(any(), anyString());
     doNothing()
         .when(spotInstSwapRoutesTaskHandler)
-        .updateElastiGroupAndWait(
-            anyString(), anyString(), any(), anyString(), anyInt(), any(), anyString(), anyString());
+        .updateElastiGroupAndWait(anyString(), anyString(), any(), anyInt(), any(), anyString(), anyString());
     doReturn(new DescribeListenersResult().withListeners(new Listener().withDefaultActions(
                  new Action().withType("forward").withTargetGroupArn("STAGE_TARGET_GROUP_ARN"))))
         .when(mockAwsElbHelperServiceDelegate)
@@ -111,7 +110,6 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
     verify(mockAwsElbHelperServiceDelegate)
         .updateListenersForEcsBG(any(), anyList(), anyString(), anyString(), anyString());
     verify(spotInstSwapRoutesTaskHandler, times(2))
-        .updateElastiGroupAndWait(
-            anyString(), anyString(), any(), anyString(), anyInt(), any(), anyString(), anyString());
+        .updateElastiGroupAndWait(anyString(), anyString(), any(), anyInt(), any(), anyString(), anyString());
   }
 }

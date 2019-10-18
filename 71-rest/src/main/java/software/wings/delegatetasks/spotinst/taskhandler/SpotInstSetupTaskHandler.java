@@ -91,7 +91,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     // Handle canary and basic
     String prefix = format("%s__", setupTaskParameters.getElastiGroupNamePrefix());
     int elastiGroupVersion = 1;
-    logCallback.saveExecutionLog(format("Querying spot inst for existing elasti groups with prefix: [%s]", prefix));
+    logCallback.saveExecutionLog(format("Querying Spotinst for existing Elastigroups with prefix: [%s]", prefix));
     List<ElastiGroup> elastiGroups = spotInstHelperServiceDelegate.listAllElastiGroups(
         spotInstToken, spotInstAccountId, setupTaskParameters.getElastiGroupNamePrefix());
     if (isNotEmpty(elastiGroups)) {
@@ -102,11 +102,11 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
 
     String finalJson = generateFinalJson(setupTaskParameters, newElastiGroupName);
 
-    logCallback.saveExecutionLog(format("Sending request to create elasti group with name: [%s]", newElastiGroupName));
+    logCallback.saveExecutionLog(format("Sending request to create Elastigroup with name: [%s]", newElastiGroupName));
     ElastiGroup elastiGroup =
         spotInstHelperServiceDelegate.createElastiGroup(spotInstToken, spotInstAccountId, finalJson);
     String newElastiGroupId = elastiGroup.getId();
-    logCallback.saveExecutionLog(format("Created elastigroup with id: [%s]", newElastiGroupId));
+    logCallback.saveExecutionLog(format("Created Elastigroup with id: [%s]", newElastiGroupId));
 
     /**
      * Look at all the Elastigroups except the "LAST" elastigroup.
@@ -145,7 +145,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
       String nameToDelete = groupsWithoutInstances.get(i).getName();
       String idToDelete = groupsWithoutInstances.get(i).getId();
       logCallback.saveExecutionLog(
-          format("Sending request to delete elasti group: [%s] with id: [%s]", nameToDelete, idToDelete));
+          format("Sending request to delete Elastigroup: [%s] with id: [%s]", nameToDelete, idToDelete));
       spotInstHelperServiceDelegate.deleteElastiGroup(spotInstToken, spotInstAccountId, idToDelete);
     }
 
@@ -178,35 +178,35 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
     String finalJson = generateFinalJson(setupTaskParameters, stageElastiGroupName);
 
     // Check if existing elastigroup with exists with same stage name
-    logCallback.saveExecutionLog(format("Querying to find elastigroup with name: [%s]", stageElastiGroupName));
+    logCallback.saveExecutionLog(format("Querying to find Elastigroup with name: [%s]", stageElastiGroupName));
     Optional<ElastiGroup> stageOptionalElastiGroup =
         spotInstHelperServiceDelegate.getElastiGroupByName(spotInstToken, spotInstAccountId, stageElastiGroupName);
     ElastiGroup stageElastiGroup;
     if (stageOptionalElastiGroup.isPresent()) {
       stageElastiGroup = stageOptionalElastiGroup.get();
       logCallback.saveExecutionLog(
-          format("Found stage elastigroup with id: [%s]. Deleting it. ", stageElastiGroup.getId()));
+          format("Found stage Elastigroup with id: [%s]. Deleting it. ", stageElastiGroup.getId()));
       spotInstHelperServiceDelegate.deleteElastiGroup(spotInstToken, spotInstAccountId, stageElastiGroup.getId());
     }
 
     // Create new elastiGroup
     logCallback.saveExecutionLog(
-        format("Sending request to create new Elasti Group with name: [%s]", stageElastiGroupName));
+        format("Sending request to create new Elastigroup with name: [%s]", stageElastiGroupName));
     stageElastiGroup = spotInstHelperServiceDelegate.createElastiGroup(spotInstToken, spotInstAccountId, finalJson);
     String stageElastiGroupId = stageElastiGroup.getId();
     logCallback.saveExecutionLog(
-        format("Created elasti group with name: [%s] and id: [%s]", stageElastiGroupName, stageElastiGroupId));
+        format("Created Elastigroup with name: [%s] and id: [%s]", stageElastiGroupName, stageElastiGroupId));
     builder.newElastiGroup(stageElastiGroup);
 
     // Prod ELasti Groups
     String prodElastiGroupName = setupTaskParameters.getElastiGroupNamePrefix();
-    logCallback.saveExecutionLog(format("Querying spot inst for elasti group with name: [%s]", prodElastiGroupName));
+    logCallback.saveExecutionLog(format("Querying Spotinst for Elastigroup with name: [%s]", prodElastiGroupName));
     Optional<ElastiGroup> prodOptionalElastiGroup =
         spotInstHelperServiceDelegate.getElastiGroupByName(spotInstToken, spotInstAccountId, prodElastiGroupName);
     List<ElastiGroup> prodElastiGroupList;
     if (prodOptionalElastiGroup.isPresent()) {
       ElastiGroup prodElastiGroup = prodOptionalElastiGroup.get();
-      logCallback.saveExecutionLog(format("Found existing Prod Elasti group with name: [%s] and id: [%s]",
+      logCallback.saveExecutionLog(format("Found existing Prod Elastigroup with name: [%s] and id: [%s]",
           prodElastiGroup.getName(), prodElastiGroup.getId()));
       prodElastiGroupList = singletonList(prodElastiGroup);
     } else {
@@ -316,7 +316,7 @@ public class SpotInstSetupTaskHandler extends SpotInstTaskHandler {
 
         lbDetailsWithArnValues.add(loadBalancerDetailsForBGDeployment);
 
-        logCallback.saveExecutionLog(format("Using TargetGroup: [%s], ARN: [%s] with new ElastiGroup",
+        logCallback.saveExecutionLog(format("Using TargetGroup: [%s], ARN: [%s] with new Elastigroup",
             loadBalancerDetailsForBGDeployment.getStageTargetGroupName(),
             loadBalancerDetailsForBGDeployment.getStageTargetGroupArn()));
       }
