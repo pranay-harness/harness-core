@@ -31,7 +31,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
@@ -210,15 +209,6 @@ public class SpotInstStateHelper {
         .append('_')
         .append(awsLoadBalancerConfig.getStageListenerPort())
         .toString();
-  }
-
-  private int getPortNum(String port) {
-    try {
-      return Integer.parseInt(port);
-    } catch (NumberFormatException e) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "PORT Number is invalid, Cant be cast to Integer: " + port, USER);
-    }
   }
 
   private String getBase64EncodedUserData(String appId, String serviceId, ExecutionContext context) {
