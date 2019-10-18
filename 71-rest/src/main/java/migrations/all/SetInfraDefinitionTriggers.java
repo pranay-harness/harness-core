@@ -121,13 +121,6 @@ public class SetInfraDefinitionTriggers {
       }
     }
 
-    if (isEmpty(infraUserVariables)) {
-      logger.info(
-          "[INFRA_MIGRATION_INFO] Trigger with workflow where infraMapping not templatised. skipping migration. TriggerId: "
-          + trigger.getUuid());
-      return false;
-    }
-
     for (Variable infraUserVariable : infraUserVariables) {
       String variableName = infraUserVariable.getName();
 

@@ -172,6 +172,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
       setInfraDefinitionTriggers.migrate(account);
       setInfraDefinitionPipelines.migrate(account);
       setInfraDefinitionWorkflows.migrate(account);
+      setInfraDefinitionTriggers.migrate(account);
       migrateDelegateScopesToInfraDefinition.migrate(account);
 
       logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
