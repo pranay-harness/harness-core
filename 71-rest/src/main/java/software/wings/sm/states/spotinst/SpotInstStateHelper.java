@@ -262,8 +262,8 @@ public class SpotInstStateHelper {
       ExecutionContext executionContext, String commandType, CommandUnitType commandUnitType, Environment environment,
       List<CommandUnit> commandUnits) {
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
+    notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
     return Activity.builder()
         .applicationName(appName)
@@ -308,8 +308,8 @@ public class SpotInstStateHelper {
 
   public Activity createActivity(ExecutionContext executionContext, Artifact artifact, String stateType, String command,
       CommandUnitType commandUnitType, List<CommandUnit> commandUnits) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
+    Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
     ActivityBuilder activityBuilder = generateActivityBuilder(app.getName(), app.getUuid(), command, Type.Command,
         executionContext, stateType, commandUnitType, env, commandUnits);
 
