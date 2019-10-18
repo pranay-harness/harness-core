@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/local/repositories"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-repositories-nexus2x.xml",
+    "headers": {
+      "Content-Type": "application/xml"
+    }
+  }
+}

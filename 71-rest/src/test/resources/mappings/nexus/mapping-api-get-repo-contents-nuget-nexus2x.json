@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/local/repositories/MyNuGet/content/NuGet.Sample.Package%2F1.0.0.18279"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-repo-contents-nuget-nexus2x.xml",
+    "headers": {
+      "Content-Type": "application/xml"
+    }
+  }
+}
