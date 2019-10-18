@@ -143,6 +143,8 @@ public interface WingsTestConstants {
 
   String SETTING_ID = "SETTING_ID";
 
+  String SPOTINST_SETTING_ID = "SPOTINST_SETTING_ID";
+
   String SETTING_NAME = "SETTING_NAME";
 
   String RUNTIME_PATH = "RUNTIME_PATH";
