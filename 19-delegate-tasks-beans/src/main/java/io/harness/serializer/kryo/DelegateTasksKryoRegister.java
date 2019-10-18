@@ -29,6 +29,7 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
@@ -97,5 +98,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(LoadBalancerDetailsForBGDeployment.class, 19031);
     kryo.register(LoadBalancerType.class, 19032);
     kryo.register(ArtifactServerException.class, 7244);
+    kryo.register(PcfManifestsPackage.class, 19033);
   }
 }

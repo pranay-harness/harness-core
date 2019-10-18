@@ -1,8 +1,9 @@
 package io.harness.pcf;
 
-import static io.harness.pcf.ManifestType.APPLICATION_MANIFEST;
-import static io.harness.pcf.ManifestType.APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
-import static io.harness.pcf.ManifestType.CREATE_SERVICE_MANIFEST;
+import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
+import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
+import static io.harness.pcf.model.ManifestType.CREATE_SERVICE_MANIFEST;
+import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -42,6 +43,9 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
       + "  plan:   \"sharedPlan\"\n"
       + "  parameters: \"{\\\"RAM\\\": 4gb }\"";
 
+  private String TEST_VAR = "  MY: order\n"
+      + "  PCF_APP_NAME : prod";
+
   @Test
   @Category(UnitTests.class)
   public void testCategory() {
@@ -50,5 +54,7 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
     assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML_CREATE_SERVICE_PUSH_YML))
         .isEqualTo(APPLICATION_MANIFEST_WITH_CREATE_SERVICE);
     assertThat(pcfFileTypeChecker.getManifestType(CREATE_SERVICE_PUSH_YML)).isEqualTo(CREATE_SERVICE_MANIFEST);
+    assertThat(pcfFileTypeChecker.getManifestType(TEST_VAR)).isEqualTo(VARIABLE_MANIFEST);
+    assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isNotEqualTo(VARIABLE_MANIFEST);
   }
 }

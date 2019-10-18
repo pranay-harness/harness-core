@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -46,7 +49,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
         PcfCommandExecutionResponse.builder().pcfCommandResponse(pcfCommandResponse).build();
 
     try {
-      executionLogCallback.saveExecutionLog("--------- Starting PCF Route Update\n");
+      executionLogCallback.saveExecutionLog(color("--------- Starting PCF Route Update\n", White, Bold));
       PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) pcfCommandRequest;
       PcfConfig pcfConfig = pcfCommandRouteUpdateRequest.getPcfConfig();
       encryptionService.decrypt(pcfConfig, encryptedDataDetails);

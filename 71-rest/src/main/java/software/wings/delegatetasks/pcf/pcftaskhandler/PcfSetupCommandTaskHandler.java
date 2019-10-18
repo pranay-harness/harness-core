@@ -7,8 +7,12 @@ import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX
 import static io.harness.pcf.model.PcfConstants.REPOSITORY_DIR_PATH;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -16,6 +20,8 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.pcf.PcfManifestFileData;
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
@@ -48,6 +54,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @NoArgsConstructor
 @Singleton
@@ -65,12 +72,11 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     if (!(pcfCommandRequest instanceof PcfCommandSetupRequest)) {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandSetupRequest"));
     }
-    executionLogCallback.saveExecutionLog("---------- Starting PCF App Setup Command");
-
+    executionLogCallback.saveExecutionLog(color("---------- Starting PCF App Setup Command", White, Bold));
+    PcfManifestFileData pcfManifestFileData = PcfManifestFileData.builder().varFiles(new ArrayList<>()).build();
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
     encryptionService.decrypt(pcfConfig, encryptedDataDetails);
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) pcfCommandRequest;
-    File manifestYamlFile = null;
     File artifactFile = null;
     File workingDirectory = null;
     try {
@@ -92,7 +98,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       if (EmptyPredicate.isEmpty(previousReleases)) {
         executionLogCallback.saveExecutionLog("# No Existing applications found");
       } else {
-        StringBuilder appNames = new StringBuilder("# Existing applications: ");
+        StringBuilder appNames = new StringBuilder(color("# Existing applications: ", White, Bold));
         previousReleases.forEach(applicationSummary -> appNames.append("\n").append(applicationSummary.getName()));
         executionLogCallback.saveExecutionLog(appNames.toString());
       }
@@ -130,33 +136,37 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       artifactFile = pcfCommandTaskHelper.downloadArtifact(
           pcfCommandSetupRequest.getArtifactFiles(), pcfCommandSetupRequest.getAccountId(), workingDirectory);
 
+      boolean varsYmlPresent = checkIfVarsFilePresent(pcfCommandSetupRequest);
       PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()
                                                         .pcfRequestConfig(pcfRequestConfig)
                                                         .artifactPath(artifactFile.getAbsolutePath())
                                                         .configPathVar(workingDirectory.getAbsolutePath())
                                                         .setupRequest(pcfCommandSetupRequest)
                                                         .newReleaseName(newReleaseName)
+                                                        .pcfManifestFileData(pcfManifestFileData)
+                                                        .varsYmlFilePresent(varsYmlPresent)
                                                         .build();
 
-      // Log manifest yml provided by user
-      executionLogCallback.saveExecutionLog("# Manifest yml Received: \n");
-      executionLogCallback.saveExecutionLog(requestData.getSetupRequest().getManifestYaml());
-
       // Generate final manifest Yml needed for push.
+
       requestData.setFinalManifestYaml(pcfCommandTaskHelper.generateManifestYamlForPush(requestData));
 
       // Create manifest.yaml file
-      manifestYamlFile = pcfCommandTaskHelper.createManifestYamlFileLocally(requestData);
-      requestData.setManifestFilePath(manifestYamlFile.getAbsolutePath());
+      prepareManifestYamlFile(requestData);
+      // create vars file if needed
+      if (varsYmlPresent) {
+        prepareVarsYamlFile(requestData);
+      }
 
       // Create new Application
-      executionLogCallback.saveExecutionLog("\n# Creating new Application");
+      executionLogCallback.saveExecutionLog(color("\n# Creating new Application", White, Bold));
 
       // Update pcfRequestConfig with details to create application
       updatePcfRequestConfig(pcfCommandSetupRequest, pcfRequestConfig, newReleaseName);
 
+      // create PCF Application
       ApplicationDetail newApplication = pcfDeploymentManager.createApplication(requestData, executionLogCallback);
-      executionLogCallback.saveExecutionLog("# Application created successfully");
+      executionLogCallback.saveExecutionLog(color("# Application created successfully", White, Bold));
       executionLogCallback.saveExecutionLog("# App Details: ");
       pcfCommandTaskHelper.printApplicationDetail(newApplication, executionLogCallback);
 
@@ -198,8 +208,47 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     } finally {
       // Delete downloaded artifact and generated manifest.yaml file
       removeTempFilesCreated((PcfCommandSetupRequest) pcfCommandRequest, executionLogCallback, artifactFile,
-          manifestYamlFile, workingDirectory);
+          workingDirectory, pcfManifestFileData);
     }
+  }
+
+  @VisibleForTesting
+  boolean checkIfVarsFilePresent(PcfCommandSetupRequest setupRequest) {
+    if (setupRequest.getPcfManifestsPackage() == null) {
+      return false;
+    }
+
+    List<String> varFiles = setupRequest.getPcfManifestsPackage().getVariableYmls();
+    if (isNotEmpty(varFiles)) {
+      varFiles = varFiles.stream().filter(varFileContent -> isNotBlank(varFileContent)).collect(toList());
+    }
+
+    return isNotEmpty(varFiles);
+  }
+
+  @VisibleForTesting
+  void prepareManifestYamlFile(PcfCreateApplicationRequestData requestData) throws IOException {
+    File manifestYamlFile = pcfCommandTaskHelper.createManifestYamlFileLocally(requestData);
+    requestData.setManifestFilePath(manifestYamlFile.getAbsolutePath());
+    requestData.getPcfManifestFileData().setManifestFile(manifestYamlFile);
+  }
+
+  @VisibleForTesting
+  void prepareVarsYamlFile(PcfCreateApplicationRequestData requestData) throws IOException {
+    if (!requestData.isVarsYmlFilePresent()) {
+      return;
+    }
+
+    PcfManifestsPackage pcfManifestsPackage = requestData.getSetupRequest().getPcfManifestsPackage();
+    AtomicInteger varFileIndex = new AtomicInteger(0);
+    pcfManifestsPackage.getVariableYmls().forEach(varFileYml -> {
+      File varsYamlFile =
+          pcfCommandTaskHelper.createManifestVarsYamlFileLocally(requestData, varFileYml, varFileIndex.get());
+      if (varsYamlFile != null) {
+        varFileIndex.incrementAndGet();
+        requestData.getPcfManifestFileData().getVarFiles().add(varsYamlFile);
+      }
+    });
   }
 
   private void updatePcfRequestConfig(
@@ -226,22 +275,26 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private void removeTempFilesCreated(PcfCommandSetupRequest pcfCommandRequest,
-      ExecutionLogCallback executionLogCallback, File artifactFile, File manifestYamlFile, File workingDirectory) {
+      ExecutionLogCallback executionLogCallback, File artifactFile, File workingDirectory,
+      PcfManifestFileData pcfManifestFileData) {
     try {
       executionLogCallback.saveExecutionLog("# Deleting any temporary files created");
       List<File> filesToBeRemoved = new ArrayList<>();
 
-      if (manifestYamlFile != null) {
-        filesToBeRemoved.add(manifestYamlFile);
-      }
+      // Delete all manifests created.
+      filesToBeRemoved.add(pcfManifestFileData.getManifestFile());
+      pcfManifestFileData.getVarFiles().forEach(file -> filesToBeRemoved.add(file));
+
       if (artifactFile != null) {
         filesToBeRemoved.add(artifactFile);
       }
 
       if (pcfCommandRequest.isUseCLIForPcfAppCreation()) {
+        File manifestYamlFile = pcfManifestFileData.getManifestFile();
         filesToBeRemoved.add(
             new File(pcfCommandTaskHelper.generateFinalManifestFilePath(manifestYamlFile.getAbsolutePath())));
       }
+
       pcfCommandTaskHelper.deleteCreatedFile(filesToBeRemoved);
 
       if (workingDirectory != null) {

@@ -196,6 +196,29 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testCreateManifestVarsYamlFileLocally() throws Exception {
+    PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()
+                                                      .configPathVar(".")
+                                                      .newReleaseName("app" + System.currentTimeMillis())
+                                                      .build();
+
+    File f = pcfCommandTaskHelper.createManifestVarsYamlFileLocally(requestData, "a:b", 1);
+    assertThat(f).isNotNull();
+
+    BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
+    String line;
+    StringBuilder stringBuilder = new StringBuilder(128);
+    while ((line = bufferedReader.readLine()) != null) {
+      stringBuilder.append(line);
+    }
+
+    assertThat(stringBuilder.toString()).isEqualTo("a:b");
+    pcfCommandTaskHelper.deleteCreatedFile(Arrays.asList(f));
+    assertThat(f.exists()).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testCreateManifestYamlFileLocally() throws Exception {
     File file = null;
 

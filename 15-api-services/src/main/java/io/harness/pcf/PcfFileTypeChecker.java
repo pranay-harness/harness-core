@@ -1,10 +1,10 @@
 package io.harness.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pcf.ManifestType.APPLICATION_MANIFEST;
-import static io.harness.pcf.ManifestType.APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
-import static io.harness.pcf.ManifestType.CREATE_SERVICE_MANIFEST;
-import static io.harness.pcf.ManifestType.VARIABLE_MANIFEST;
+import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
+import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
+import static io.harness.pcf.model.ManifestType.CREATE_SERVICE_MANIFEST;
+import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.CREATE_SERVICE_MANIFEST_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
@@ -14,6 +14,7 @@ import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import io.harness.pcf.model.ManifestType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -56,13 +57,13 @@ public class PcfFileTypeChecker {
   }
 
   private boolean isVariableManifest(Map<String, Object> map) {
-    Optional entryOptional = map.entrySet().stream().filter(entry -> isNotString(entry.getValue())).findFirst();
+    Optional entryOptional = map.entrySet().stream().filter(entry -> isInvalidValue(entry.getValue())).findFirst();
 
     return !entryOptional.isPresent();
   }
 
-  private boolean isNotString(Object value) {
-    return !(value instanceof String);
+  private boolean isInvalidValue(Object value) {
+    return value instanceof Map;
   }
 
   private boolean isCreateServiceManifest(Map<String, Object> map) {

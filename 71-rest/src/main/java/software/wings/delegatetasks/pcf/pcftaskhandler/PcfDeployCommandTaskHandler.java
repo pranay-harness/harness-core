@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
+import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 
 import com.google.inject.Singleton;
 
@@ -48,7 +51,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
     PcfDeployCommandResponse pcfDeployCommandResponse =
         PcfDeployCommandResponse.builder().pcfInstanceElements(new ArrayList<>()).build();
     try {
-      executionLogCallback.saveExecutionLog("\n---------- Starting PCF Resize Command\n");
+      executionLogCallback.saveExecutionLog(color("\n---------- Starting PCF Resize Command\n", White, Bold));
 
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
       encryptionService.decrypt(pcfConfig, encryptedDataDetails);

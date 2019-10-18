@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.pcf.request;
 
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,6 +33,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   private boolean useCurrentCount;
   private boolean blueGreen;
   private Integer olderActiveVersionCountToKeep;
+  private PcfManifestsPackage pcfManifestsPackage;
 
   @Builder
   public PcfCommandSetupRequest(String accountId, String appId, String commandName, String activityId,
@@ -39,7 +41,8 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       String releaseNamePrefix, String manifestYaml, List<ArtifactFile> artifactFiles, List<String> tempRouteMap,
       List<String> routeMaps, Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
       Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
-      boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation) {
+      boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
+      PcfManifestsPackage pcfManifestsPackage) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation);
     this.releaseNamePrefix = releaseNamePrefix;
@@ -54,5 +57,6 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
     this.olderActiveVersionCountToKeep = olderActiveVersionCountToKeep;
     this.currentRunningCount = currentRunningCount;
     this.useCurrentCount = useCurrentCount;
+    this.pcfManifestsPackage = pcfManifestsPackage;
   }
 }

@@ -1,12 +1,15 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -16,6 +19,8 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.pcf.PcfManifestFileData;
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
@@ -39,6 +44,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
@@ -624,5 +630,50 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         pcfRouteUpdateCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
     assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCheckIfVarsFilePresent() throws Exception {
+    PcfManifestsPackage manifestsPackage = PcfManifestsPackage.builder().build();
+    PcfCommandSetupRequest setupRequest =
+        PcfCommandSetupRequest.builder().pcfManifestsPackage(manifestsPackage).build();
+    assertThat(pcfSetupCommandTaskHandler.checkIfVarsFilePresent(setupRequest)).isFalse();
+
+    manifestsPackage.setVariableYmls(emptyList());
+    assertThat(pcfSetupCommandTaskHandler.checkIfVarsFilePresent(setupRequest)).isFalse();
+
+    String str = null;
+    manifestsPackage.setVariableYmls(Arrays.asList(str));
+    assertThat(pcfSetupCommandTaskHandler.checkIfVarsFilePresent(setupRequest)).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPrepareVarsYamlFile() throws Exception {
+    File f1 = mock(File.class);
+    File f2 = mock(File.class);
+    doReturn(f1)
+        .doReturn(f2)
+        .when(pcfCommandTaskHelper)
+        .createManifestVarsYamlFileLocally(any(), anyString(), anyInt());
+
+    PcfCreateApplicationRequestData requestData =
+        PcfCreateApplicationRequestData.builder()
+            .setupRequest(PcfCommandSetupRequest.builder()
+                              .pcfManifestsPackage(
+                                  PcfManifestsPackage.builder().variableYmls(Arrays.asList("a:b", "c:d")).build())
+                              .releaseNamePrefix("abc")
+                              .build())
+            .varsYmlFilePresent(true)
+            .pcfManifestFileData(PcfManifestFileData.builder().varFiles(new ArrayList<>()).build())
+            .build();
+
+    pcfSetupCommandTaskHandler.prepareVarsYamlFile(requestData);
+
+    assertThat(requestData.getPcfManifestFileData()).isNotNull();
+    assertThat(requestData.getPcfManifestFileData().getVarFiles()).isNotEmpty();
+    assertThat(requestData.getPcfManifestFileData().getVarFiles().size()).isEqualTo(2);
+    assertThat(requestData.getPcfManifestFileData().getVarFiles()).containsExactly(f1, f2);
   }
 }
