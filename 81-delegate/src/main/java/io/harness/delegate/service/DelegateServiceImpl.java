@@ -1231,6 +1231,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void sendHeartbeatWhenPollingEnabled(DelegateBuilder builder) {
     logger.info("Sending heartbeat...");
+
     try {
       updateBuilderIfEcsDelegate(builder);
       Delegate delegate = builder.build();

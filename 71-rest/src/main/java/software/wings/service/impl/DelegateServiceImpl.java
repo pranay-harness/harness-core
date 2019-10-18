@@ -1608,6 +1608,37 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
+  public DelegatePackage reportConnectionResults(
+      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
+    assignDelegateService.saveConnectionResults(results);
+    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
+    if (delegateTask == null) {
+      return null;
+    }
+
+    try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
+      logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? ASYNC : SYNC);
+
+      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                            .addToSet("validationCompleteDelegateIds", delegateId);
+      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                            .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
+                                            .filter(DelegateTaskKeys.status, QUEUED)
+                                            .field(DelegateTaskKeys.delegateId)
+                                            .doesNotExist()
+                                            .filter(ID_KEY, delegateTask.getUuid());
+      wingsPersistence.update(updateQuery, updateOperations);
+
+      if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
+        return assignTask(delegateId, taskId, delegateTask);
+      }
+    }
+
+    return null;
+  }
+
+  @Override
   public DelegatePackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     try {
       logger.info("Acquiring delegate task");
@@ -1637,37 +1668,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     } finally {
       logger.info("Done with acquire delegate task method");
     }
-  }
-
-  @Override
-  public DelegatePackage reportConnectionResults(
-      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results) {
-    assignDelegateService.saveConnectionResults(results);
-    DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
-    if (delegateTask == null) {
-      return null;
-    }
-
-    try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
-             TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-      logger.info("Delegate completed validating {} task", delegateTask.isAsync() ? ASYNC : SYNC);
-
-      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                            .addToSet("validationCompleteDelegateIds", delegateId);
-      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                            .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
-                                            .filter(DelegateTaskKeys.status, QUEUED)
-                                            .field(DelegateTaskKeys.delegateId)
-                                            .doesNotExist()
-                                            .filter(ID_KEY, delegateTask.getUuid());
-      wingsPersistence.update(updateQuery, updateOperations);
-
-      if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
-        return assignTask(delegateId, taskId, delegateTask);
-      }
-    }
-
-    return null;
   }
 
   @Override
