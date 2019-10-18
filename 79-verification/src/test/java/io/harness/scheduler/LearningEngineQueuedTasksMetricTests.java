@@ -118,21 +118,21 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   }
 
   private void verifyMetricsPublished(ArgumentCaptor<String> taskCaptorName) {
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(
-        taskCaptorName.getAllValues().contains(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT));
-    assertThat(
-        taskCaptorName.getAllValues().contains(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS));
-    assertThat(taskCaptorName.getAllValues().contains(LEARNING_ENGINE_WORKFLOW_TASK_COUNT));
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_ANALYSIS_TASK_QUEUED_COUNT);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues())
+        .contains(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_SERVICE_GUARD_ANALYSIS_TASK_QUEUED_COUNT);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT);
+    assertThat(taskCaptorName.getAllValues())
+        .contains(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS);
+    assertThat(taskCaptorName.getAllValues()).contains(LEARNING_ENGINE_WORKFLOW_TASK_COUNT);
   }
 }
