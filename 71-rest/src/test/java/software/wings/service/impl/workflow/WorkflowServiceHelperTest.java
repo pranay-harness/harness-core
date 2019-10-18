@@ -850,14 +850,14 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     // mock
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(pcfService);
 
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForPCF(APP_ID, ENV_ID, workflowPhase, true, BASIC);
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForPCF(APP_ID, workflowPhase, true);
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
         .containsExactly(PhaseStepType.PCF_SETUP, PhaseStepType.PCF_RESIZE, VERIFY_SERVICE, WRAP_UP);
 
     workflowPhase.getPhaseSteps().clear();
-    workflowServiceHelper.generateNewWorkflowPhaseStepsForPCF(APP_ID, ENV_ID, workflowPhase, false, BASIC);
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForPCF(APP_ID, workflowPhase, false);
     phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes).containsExactly(PhaseStepType.PCF_RESIZE, VERIFY_SERVICE, WRAP_UP);
