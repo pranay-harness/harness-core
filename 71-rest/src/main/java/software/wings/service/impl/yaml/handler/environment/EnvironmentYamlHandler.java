@@ -9,14 +9,21 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -24,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Application;
+import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
@@ -33,6 +41,7 @@ import software.wings.beans.Environment.Yaml;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
@@ -52,11 +61,15 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author rktummala on 11/07/17
@@ -84,7 +97,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     Yaml yaml = Yaml.builder()
                     .description(environment.getDescription())
                     .configMapYaml(environment.getConfigMapYaml())
-                    .configMapYamlByServiceTemplateId(environment.getConfigMapYamlByServiceTemplateId())
+                    .configMapYamlByServiceTemplateName(
+                        serviceTemplateIdToName(appId, environment.getConfigMapYamlByServiceTemplateId()))
                     .environmentType(environment.getEnvironmentType().name())
                     .variableOverrides(variableOverrideYamlList)
                     .harnessApiVersion(getHarnessApiVersion())
@@ -92,6 +106,79 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     updateYamlWithAdditionalInfo(environment, appId, yaml);
     return yaml;
+  }
+
+  private Map<String, String> serviceTemplateIdToName(
+      String appId, Map<String, String> configMapYamlByServiceTemplateId) {
+    if (isEmpty(configMapYamlByServiceTemplateId)) {
+      return Collections.emptyMap();
+    }
+    Set<String> uuids = configMapYamlByServiceTemplateId.keySet();
+    final int pageSize = PageRequest.DEFAULT_UNLIMITED;
+    int offset = 0;
+    PageRequest<ServiceTemplate> pageRequest = PageRequestBuilder.<ServiceTemplate>aPageRequest()
+                                                   .withLimit(String.valueOf(pageSize))
+                                                   .withOffset(String.valueOf(offset))
+                                                   .addFilter(ServiceTemplateKeys.appId, Operator.EQ, appId)
+                                                   .addFilter(BaseKeys.uuid, Operator.IN, uuids.toArray())
+                                                   .build();
+    List<ServiceTemplate> serviceTemplates = getRequiredServiceTemplates(pageSize, pageRequest);
+
+    if (isEmpty(serviceTemplates) || serviceTemplates.size() != uuids.size()) {
+      Set<String> retrievedIds = serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toSet());
+      Set<String> invalidIds = Sets.symmetricDifference(retrievedIds, uuids);
+      throw new UnexpectedException(format("Could not find Service Templates with id %s", invalidIds));
+    }
+
+    Map<String, String> serviceTemplateIdNameMap =
+        serviceTemplates.stream().collect(Collectors.toMap(ServiceTemplate::getUuid, ServiceTemplate::getName));
+    return configMapYamlByServiceTemplateId.keySet().stream().collect(
+        Collectors.toMap(serviceTemplateIdNameMap::get, configMapYamlByServiceTemplateId::get));
+  }
+
+  private Map<String, String> serviceTemplateNameToId(
+      String appId, Map<String, String> configMapYamlByServiceTemplateName) {
+    if (isEmpty(configMapYamlByServiceTemplateName)) {
+      return Collections.emptyMap();
+    }
+    Set<String> names = configMapYamlByServiceTemplateName.keySet();
+    final int pageSize = PageRequest.DEFAULT_UNLIMITED;
+    int offset = 0;
+    PageRequest<ServiceTemplate> pageRequest = PageRequestBuilder.<ServiceTemplate>aPageRequest()
+                                                   .withLimit(String.valueOf(pageSize))
+                                                   .withOffset(String.valueOf(offset))
+                                                   .addFilter(ServiceTemplateKeys.appId, Operator.EQ, appId)
+                                                   .addFilter(ServiceTemplateKeys.name, Operator.IN, names.toArray())
+                                                   .build();
+    List<ServiceTemplate> serviceTemplates = getRequiredServiceTemplates(pageSize, pageRequest);
+
+    if (isEmpty(serviceTemplates) || serviceTemplates.size() != names.size()) {
+      Set<String> retrievedNames = serviceTemplates.stream().map(ServiceTemplate::getName).collect(Collectors.toSet());
+      Set<String> invalidNames = Sets.symmetricDifference(retrievedNames, names);
+      throw new UnexpectedException(format("Could not find Service Templates with names %s", invalidNames));
+    }
+
+    Map<String, String> serviceTemplateNameIdMap =
+        serviceTemplates.stream().collect(Collectors.toMap(ServiceTemplate::getName, ServiceTemplate::getUuid));
+    return configMapYamlByServiceTemplateName.keySet().stream().collect(
+        Collectors.toMap(serviceTemplateNameIdMap::get, configMapYamlByServiceTemplateName::get));
+  }
+
+  @VisibleForTesting
+  @NotNull
+  List<ServiceTemplate> getRequiredServiceTemplates(int pageSize, PageRequest<ServiceTemplate> pageRequest) {
+    int offset = Integer.parseInt(pageRequest.getOffset());
+    List<ServiceTemplate> reqdServiceTemplates = new ArrayList<>();
+    List<ServiceTemplate> serviceTemplates =
+        serviceTemplateService.listWithoutServiceAndInfraMappingSummary(pageRequest, false, MASKED).getResponse();
+    reqdServiceTemplates.addAll(serviceTemplates);
+    while (serviceTemplates.size() == pageSize) {
+      offset += pageSize;
+      pageRequest.setOffset(String.valueOf(offset));
+      serviceTemplates = serviceTemplateService.listWithoutServiceAndInfraMappingSummary(pageRequest, false, MASKED);
+      reqdServiceTemplates.addAll(serviceTemplates);
+    }
+    return reqdServiceTemplates;
   }
 
   private List<ServiceVariable> getAllVariableOverridesForEnv(Environment environment) {
@@ -180,8 +267,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   @Override
-  public Environment upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public Environment upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId, USER);
@@ -192,7 +278,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                               .name(environmentName)
                               .description(yaml.getDescription())
                               .configMapYaml(yaml.getConfigMapYaml())
-                              .configMapYamlByServiceTemplateId(yaml.getConfigMapYamlByServiceTemplateId())
+                              .configMapYamlByServiceTemplateId(
+                                  serviceTemplateNameToId(appId, yaml.getConfigMapYamlByServiceTemplateName()))
                               .environmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
 
@@ -238,7 +325,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
@@ -344,7 +431,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   private void saveOrUpdateVariableOverrides(List<VariableOverrideYaml> latestVariableOverrideList,
-      List<ServiceVariable> currentVariables, String appId, String envId, boolean syncFromGit) throws HarnessException {
+      List<ServiceVariable> currentVariables, String appId, String envId, boolean syncFromGit) {
     Map<ServiceVariableKey, ServiceVariable> variableMap = new HashMap<>();
     for (ServiceVariable serviceVariable : currentVariables) {
       String serviceName = getParentServiceName(serviceVariable);
@@ -440,8 +527,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     }
   }
 
-  private ServiceVariable createNewVariableOverride(String appId, String envId, VariableOverrideYaml overrideYaml)
-      throws HarnessException {
+  private ServiceVariable createNewVariableOverride(String appId, String envId, VariableOverrideYaml overrideYaml) {
     notNullCheck("Value type is not set for variable: " + overrideYaml.getName(), overrideYaml.getValueType(), USER);
 
     String accountId = appService.get(appId, false).getAccountId();
@@ -459,12 +545,13 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
       if (isEmpty(templateRefKeysByService)) {
-        throw new HarnessException("Unable to locate a service template for the given service: " + parentServiceName);
+        throw new InvalidRequestException(
+            "Unable to locate a service template for the given service: " + parentServiceName);
       }
 
       String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
       if (isEmpty(serviceTemplateId)) {
-        throw new HarnessException(
+        throw new InvalidRequestException(
             "Unable to locate a service template with the given service: " + parentServiceName + " and env: " + envId);
       }
 

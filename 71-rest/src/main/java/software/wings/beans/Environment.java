@@ -496,18 +496,18 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String configMapYaml;
-    private Map<String, String> configMapYamlByServiceTemplateId;
+    private Map<String, String> configMapYamlByServiceTemplateName;
     private String environmentType = "NON_PROD";
     private List<VariableOverrideYaml> variableOverrides = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String configMapYaml,
-        Map<String, String> configMapYamlByServiceTemplateId, String environmentType,
+        Map<String, String> configMapYamlByServiceTemplateName, String environmentType,
         List<VariableOverrideYaml> variableOverrides) {
       super(EntityType.ENVIRONMENT.name(), harnessApiVersion);
       this.description = description;
       this.configMapYaml = configMapYaml;
-      this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
+      this.configMapYamlByServiceTemplateName = configMapYamlByServiceTemplateName;
       this.environmentType = environmentType;
       this.variableOverrides = variableOverrides;
     }
