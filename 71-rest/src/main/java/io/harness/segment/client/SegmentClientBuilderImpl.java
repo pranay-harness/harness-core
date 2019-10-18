@@ -1,9 +1,12 @@
 package io.harness.segment.client;
 
+import com.google.inject.Singleton;
+
 import com.segment.analytics.Analytics;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class SegmentClientBuilderImpl implements SegmentClientBuilder {
   private final String writeKey;
 
