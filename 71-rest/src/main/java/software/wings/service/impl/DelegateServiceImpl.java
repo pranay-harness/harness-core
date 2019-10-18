@@ -1630,7 +1630,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                             .filter(ID_KEY, delegateTask.getUuid());
       wingsPersistence.update(updateQuery, updateOperations);
 
-      if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
+      if (results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
       }
     }

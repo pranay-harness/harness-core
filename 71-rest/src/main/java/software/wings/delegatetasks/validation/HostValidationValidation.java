@@ -1,10 +1,13 @@
 package software.wings.delegatetasks.validation;
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
@@ -34,6 +37,7 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class HostValidationValidation extends AbstractDelegateValidateTask {
+  public static final String BATCH_HOST_VALIDATION = "BATCH_HOST_VALIDATION:";
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient TimeLimiter timeLimiter;
   @Inject private transient Clock clock;
@@ -71,7 +75,8 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
     try {
       timeLimiter.callWithTimeout(() -> {
         for (String hostName : hostNames) {
-          DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(hostName);
+          DelegateConnectionResultBuilder resultBuilder =
+              DelegateConnectionResult.builder().criteria(addPrefix(hostName));
           long startTime = clock.millis();
           if (connectionSetting.getValue() instanceof WinRmConnectionAttributes) {
             WinRmConnectionAttributes connectionAttributes = (WinRmConnectionAttributes) connectionSetting.getValue();
@@ -120,11 +125,26 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
     } catch (Exception e) {
       // Do nothing
     }
-    return results;
+    return prepareResult(results);
+  }
+
+  @VisibleForTesting
+  List<DelegateConnectionResult> prepareResult(final List<DelegateConnectionResult> delegateConnectionResults) {
+    final boolean anyValid = delegateConnectionResults.stream().anyMatch(DelegateConnectionResult::isValidated);
+    if (anyValid) {
+      //  mark all as valid
+      delegateConnectionResults.forEach(delegateConnectionResult -> delegateConnectionResult.setValidated(true));
+    }
+    return delegateConnectionResults;
   }
 
   @Override
   public List<String> getCriteria() {
-    return (List<String>) getParameters()[2];
+    final List<String> criteriaList = emptyIfNull((List<String>) getParameters()[2]);
+    return criteriaList.stream().map(this ::addPrefix).collect(toList());
+  }
+
+  private String addPrefix(String criteria) {
+    return BATCH_HOST_VALIDATION + criteria;
   }
 }
