@@ -2,6 +2,7 @@ package io.harness.batch.processing.integration.schedule;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Timestamp;
@@ -19,7 +20,6 @@ import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
@@ -103,7 +103,7 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
   }
 
   @Test
-  @Owner(emails = OwnerRule.HITESH)
+  @Owner(emails = HITESH, intermittent = true)
   @Category(IntegrationTests.class)
   public void shouldRunEcsJob() throws Exception {
     batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
