@@ -455,13 +455,13 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private void addEnvServiceInfraVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
       EntityType entityType = variable.obtainEntityType();
-      if (entityType.equals(ENVIRONMENT)) {
+      if (ENVIRONMENT.equals(entityType)) {
         reorderVariables.add(variable);
         break;
       }
     }
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(SERVICE)) {
+      if (SERVICE.equals(variable.obtainEntityType())) {
         if (reorderVariables.stream().noneMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
           reorderVariables.add(variable);
           addRelatedEntity(entityVariables, reorderVariables, variable, INFRASTRUCTURE_MAPPING);
@@ -474,26 +474,26 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addAppDUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(APPDYNAMICS_CONFIGID)) {
+      if (APPDYNAMICS_CONFIGID.equals(variable.obtainEntityType())) {
         reorderVariables.add(variable);
         entityVariables.stream()
             .filter(var
-                -> var.obtainEntityType().equals(APPDYNAMICS_APPID)
+                -> APPDYNAMICS_APPID.equals(var.obtainEntityType())
                     && var.getName().equals(variable.obtainRelatedField()))
             .findFirst()
             .ifPresent((Variable e) -> {
               reorderVariables.add(e);
               entityVariables.stream()
                   .filter(variable1
-                      -> variable1.obtainEntityType().equals(APPDYNAMICS_TIERID)
+                      -> APPDYNAMICS_TIERID.equals(variable1.obtainEntityType())
                           && variable1.getName().equals(e.obtainRelatedField()))
                   .findFirst()
-                  .ifPresent(e1 -> reorderVariables.add(e1));
+                  .ifPresent(reorderVariables::add);
             });
       }
     }
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(APPDYNAMICS_APPID)) {
+      if (APPDYNAMICS_APPID.equals(variable.obtainEntityType())) {
         if (reorderVariables.stream().noneMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
           reorderVariables.add(variable);
           addRelatedEntity(entityVariables, reorderVariables, variable, APPDYNAMICS_TIERID);
@@ -505,7 +505,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addNewRelicUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(NEWRELIC_CONFIGID)) {
+      if (NEWRELIC_CONFIGID.equals(variable.obtainEntityType())) {
         reorderVariables.add(variable);
         addRelatedEntity(entityVariables, reorderVariables, variable, NEWRELIC_APPID);
       }
@@ -515,7 +515,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addNewRelicMarkerUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(NEWRELIC_MARKER_CONFIGID)) {
+      if (NEWRELIC_MARKER_CONFIGID.equals(variable.obtainEntityType())) {
         reorderVariables.add(variable);
         addRelatedEntity(entityVariables, reorderVariables, variable, NEWRELIC_MARKER_APPID);
       }
@@ -525,7 +525,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addElkUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(ELK_CONFIGID)) {
+      if (ELK_CONFIGID.equals(variable.obtainEntityType())) {
         reorderVariables.add(variable);
         addRelatedEntity(entityVariables, reorderVariables, variable, ELK_INDICES);
       }
@@ -535,7 +535,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addSumoLogicUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(SUMOLOGIC_CONFIGID)) {
+      if (SUMOLOGIC_CONFIGID.equals(variable.obtainEntityType())) {
         reorderVariables.add(variable);
       }
     }
@@ -543,7 +543,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addCloudFormationUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(CF_AWS_CONFIG_ID)) {
+      if (CF_AWS_CONFIG_ID.equals(variable.obtainEntityType())) {
         reorderVariables.add(variable);
       }
     }
@@ -551,7 +551,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private void addHelmUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(HELM_GIT_CONFIG_ID)) {
+      if (HELM_GIT_CONFIG_ID.equals(variable.obtainEntityType())) {
         reorderVariables.add(variable);
       }
     }
@@ -560,7 +560,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private void addRemainingEntity(
       List<Variable> reorderVariables, List<Variable> entityVariables, EntityType entityType) {
     for (Variable variable : entityVariables) {
-      if (variable.obtainEntityType().equals(entityType)) {
+      if (variable.obtainEntityType() != null && variable.obtainEntityType().equals(entityType)) {
         if (reorderVariables.stream().noneMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
           reorderVariables.add(variable);
         }
@@ -572,7 +572,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       List<Variable> entityVariables, List<Variable> reorderVariables, Variable variable, EntityType entityType) {
     entityVariables.stream()
         .filter(variable1
-            -> variable1.obtainEntityType().equals(entityType)
+            -> variable1.obtainEntityType() != null && variable1.obtainEntityType().equals(entityType)
                 && variable1.getName().equals(variable.obtainRelatedField()))
         .findFirst()
         .ifPresent(reorderVariables::add);
