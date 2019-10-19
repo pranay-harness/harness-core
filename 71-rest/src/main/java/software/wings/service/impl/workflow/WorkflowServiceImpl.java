@@ -80,6 +80,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -3310,15 +3311,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
     StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
-    return calculateCategorySteps(favorites, recent, stepTypes, workflowPhase, workflow.getAppId());
+    return calculateCategorySteps(favorites, recent, stepTypes, workflowPhase, workflow.getAppId(),
+        workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
   }
 
   public WorkflowCategorySteps calculateCategorySteps(Set<String> favorites, LinkedList<String> recent,
-      StepType[] stepTypes, WorkflowPhase workflowPhase, String appId) {
+      StepType[] stepTypes, WorkflowPhase workflowPhase, String appId,
+      OrchestrationWorkflowType orchestrationWorkflowType) {
     Map<String, WorkflowStepMeta> steps = new HashMap<>();
     DeploymentType workflowPhaseDeploymentType = workflowPhase != null ? workflowPhase.getDeploymentType() : null;
     for (StepType step : stepTypes) {
-      if (step.matches(workflowPhaseDeploymentType)) {
+      if (step.matches(workflowPhaseDeploymentType, orchestrationWorkflowType)) {
         final WorkflowStepMeta stepMeta = WorkflowStepMeta.builder()
                                               .name(step.getName())
                                               .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
