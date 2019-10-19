@@ -2,8 +2,10 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,6 +36,7 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.exception.InvalidArgumentsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,6 +47,7 @@ import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
+import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -80,6 +84,7 @@ import java.util.Map;
 
 public class PcfStateHelperTest extends WingsBaseTest {
   public static final String REPLACE_ME = "REPLACE_ME";
+  public static final ServiceElement SERVICE_ELEMENT = ServiceElement.builder().uuid(SERVICE_ID).build();
   private String SERVICE_MANIFEST_YML = "applications:\n"
       + "- name: ((PCF_APP_NAME))\n"
       + "  memory: ((PCF_APP_MEMORY))\n"
@@ -183,11 +188,11 @@ public class PcfStateHelperTest extends WingsBaseTest {
         .when(serviceResourceService)
         .getPcfServiceSpecification(anyString(), anyString());
 
-    String yaml = pcfStateHelper.fetchManifestYmlString(context, ServiceElement.builder().uuid(SERVICE_ID).build());
+    String yaml = pcfStateHelper.fetchManifestYmlString(context, SERVICE_ELEMENT);
     assertThat(yaml).isNotNull();
     assertThat(yaml).isEqualTo(PcfSetupStateTest.MANIFEST_YAML_CONTENT);
 
-    yaml = pcfStateHelper.fetchManifestYmlString(context, ServiceElement.builder().uuid(SERVICE_ID).build());
+    yaml = pcfStateHelper.fetchManifestYmlString(context, SERVICE_ELEMENT);
     assertThat(yaml).isNotNull();
     assertThat(yaml).isEqualTo(PcfSetupStateTest.MANIFEST_YAML_CONTENT);
   }
@@ -523,5 +528,109 @@ public class PcfStateHelperTest extends WingsBaseTest {
     pcfManifestsPackage.setVariableYmls(Arrays.asList(TEST_VAR, TEST_VAR_1));
     appName = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, "app");
     assertThat(appName).isEqualTo("TEST_prod__dummy");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetManifestFromPcfServiceSpecification() {
+    String ymlContent = "yml";
+    doReturn(null)
+        .doReturn(PcfServiceSpecification.builder().manifestYaml(ymlContent).build())
+        .when(serviceResourceService)
+        .getPcfServiceSpecification(anyString(), any());
+
+    try {
+      pcfStateHelper.getManifestFromPcfServiceSpecification(context, SERVICE_ELEMENT);
+      fail("Exception was expected");
+    } catch (Exception e) {
+      assertThat(e instanceof InvalidArgumentsException).isTrue();
+    }
+
+    assertThat(pcfStateHelper.getManifestFromPcfServiceSpecification(context, SERVICE_ELEMENT)).isEqualTo(ymlContent);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAddToPcfManifestFilesMap() {
+    PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
+    pcfStateHelper.addToPcfManifestFilesMap(TEST_APP_MANIFEST, pcfManifestsPackage);
+
+    // 1
+    assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(TEST_APP_MANIFEST);
+
+    // 2
+    pcfStateHelper.addToPcfManifestFilesMap(TEST_VAR, pcfManifestsPackage);
+    assertThat(pcfManifestsPackage.getVariableYmls()).isNotEmpty();
+    assertThat(pcfManifestsPackage.getVariableYmls().get(0)).isEqualTo(TEST_VAR);
+
+    // 3
+    pcfStateHelper.addToPcfManifestFilesMap(TEST_VAR_1, pcfManifestsPackage);
+    assertThat(pcfManifestsPackage.getVariableYmls()).isNotEmpty();
+    assertThat(pcfManifestsPackage.getVariableYmls().get(0)).isEqualTo(TEST_VAR);
+    assertThat(pcfManifestsPackage.getVariableYmls().get(1)).isEqualTo(TEST_VAR_1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUseNoRoute() {
+    assertThat(pcfStateHelper.getRouteMaps(TEST_APP_MANIFEST, PcfInfrastructureMapping.builder().build())).isEmpty();
+
+    String route = "url1";
+    List<String> routeMaps = pcfStateHelper.getRouteMaps(
+        TEST_APP_MANIFEST, PcfInfrastructureMapping.builder().routeMaps(Arrays.asList(route)).build());
+    assertThat(routeMaps).isNotEmpty();
+    assertThat(routeMaps.get(0)).isEqualTo(route);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testEvaluateExpressionsInManifestTypes() {
+    String v1 = "app:app1";
+    String v2 = "count:1";
+
+    PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder()
+                                                  .manifestYml(TEST_APP_MANIFEST)
+                                                  .variableYmls(Arrays.asList(TEST_VAR, TEST_VAR_1))
+                                                  .build();
+    doReturn(SERVICE_MANIFEST_YML).doReturn(v1).doReturn(v2).when(context).renderExpression(anyString());
+
+    pcfStateHelper.evaluateExpressionsInManifestTypes(context, pcfManifestsPackage);
+    assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(SERVICE_MANIFEST_YML);
+    assertThat(pcfManifestsPackage.getVariableYmls()).isNotEmpty();
+    assertThat(pcfManifestsPackage.getVariableYmls().size()).isEqualTo(2);
+    assertThat(pcfManifestsPackage.getVariableYmls().get(0)).isEqualTo(v1);
+    assertThat(pcfManifestsPackage.getVariableYmls().get(1)).isEqualTo(v2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateManifestMap() {
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
+
+    Map<K8sValuesLocation, ApplicationManifest> map = new HashMap<>();
+    map.put(K8sValuesLocation.Service,
+        ApplicationManifest.builder()
+            .storeType(StoreType.Local)
+            .serviceId(SERVICE_ID)
+            .kind(AppManifestKind.PCF_OVERRIDE)
+            .build());
+
+    doReturn(PcfSetupStateExecutionData.builder().appManifestMap(map).build())
+        .doReturn(null)
+        .when(context)
+        .getStateExecutionData();
+
+    doReturn(Arrays.asList(ManifestFile.builder().fileContent(TEST_APP_MANIFEST).build()))
+        .when(applicationManifestService)
+        .getManifestFilesByAppManifestId(anyString(), anyString());
+
+    PcfManifestsPackage pcfManifestsPackage = pcfStateHelper.generateManifestMap(
+        context, map, anApplication().accountId(ACCOUNT_ID).build(), SERVICE_ELEMENT);
+
+    assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(TEST_APP_MANIFEST);
+
+    pcfManifestsPackage = pcfStateHelper.generateManifestMap(
+        context, map, anApplication().accountId(ACCOUNT_ID).build(), SERVICE_ELEMENT);
+    assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(TEST_APP_MANIFEST);
   }
 }

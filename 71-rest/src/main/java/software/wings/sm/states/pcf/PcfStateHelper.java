@@ -225,7 +225,8 @@ public class PcfStateHelper {
     return context.renderExpression(applicationManifestYmlContent);
   }
 
-  private String getManifestFromPcfServiceSpecification(ExecutionContext context, ServiceElement serviceElement) {
+  @VisibleForTesting
+  String getManifestFromPcfServiceSpecification(ExecutionContext context, ServiceElement serviceElement) {
     PcfServiceSpecification pcfServiceSpecification =
         serviceResourceService.getPcfServiceSpecification(context.getAppId(), serviceElement.getUuid());
 
@@ -289,7 +290,8 @@ public class PcfStateHelper {
     }
   }
 
-  private void addToPcfManifestFilesMap(String fileContent, PcfManifestsPackage pcfManifestsPackage) {
+  @VisibleForTesting
+  void addToPcfManifestFilesMap(String fileContent, PcfManifestsPackage pcfManifestsPackage) {
     ManifestType manifestType = pcfFileTypeChecker.getManifestType(fileContent);
     if (manifestType == null) {
       return;
@@ -343,7 +345,8 @@ public class PcfStateHelper {
     }
   }
 
-  private boolean useNoRoute(Map application) {
+  @VisibleForTesting
+  boolean useNoRoute(Map application) {
     return application.containsKey(NO_ROUTE_MANIFEST_YML_ELEMENT)
         && (boolean) application.get(NO_ROUTE_MANIFEST_YML_ELEMENT);
   }
