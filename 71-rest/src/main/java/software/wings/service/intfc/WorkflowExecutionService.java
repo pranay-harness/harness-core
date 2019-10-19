@@ -27,6 +27,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -86,6 +87,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   void incrementFailed(String appId, String workflowExecutionId, Integer inc);
 
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
+
+  WorkflowVariablesMetadata fetchWorkflowVariables(
+      String appId, ExecutionArgs executionArgs, String workflowExecutionId);
 
   DeploymentMetadata fetchDeploymentMetadata(
       String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact, String workflowExecutionId);

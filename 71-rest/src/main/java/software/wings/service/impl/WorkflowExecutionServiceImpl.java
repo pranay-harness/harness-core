@@ -165,6 +165,7 @@ import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.cache.MongoStore;
@@ -295,6 +296,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
   @Inject private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
@@ -1936,6 +1938,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return null;
+  }
+
+  @Override
+  public WorkflowVariablesMetadata fetchWorkflowVariables(
+      String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
+    return workflowExecutionServiceHelper.fetchWorkflowVariables(appId, executionArgs, workflowExecutionId);
   }
 
   @Override

@@ -42,6 +42,7 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.api.RestrictedFeature;
 import software.wings.security.PermissionAttribute;
@@ -325,6 +326,18 @@ public class ExecutionResource {
   public RestResponse<RequiredExecutionArgs> requiredArgs(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.getRequiredExecutionArgs(appId, envId, executionArgs));
+  }
+
+  @POST
+  @Path("workflow-variables")
+  @Timed
+  @ExceptionMetered
+  @ExternalFacingApiAuth
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<WorkflowVariablesMetadata> getWorkflowVariables(@QueryParam("appId") String appId,
+      @QueryParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(
+        workflowExecutionService.fetchWorkflowVariables(appId, executionArgs, workflowExecutionId));
   }
 
   @POST
