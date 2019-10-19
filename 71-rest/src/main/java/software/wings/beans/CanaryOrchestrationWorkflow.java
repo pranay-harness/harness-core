@@ -354,7 +354,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     String infraVarName = workflowPhase.fetchInfraMappingTemplatizedName();
     // if env is not templatised add envId in metadata
     Variable variable = contains(userVariables, infraVarName);
-    if (variable != null) {
+    if (variable != null && variable.getMetadata() != null) {
       if (!workflow.checkEnvironmentTemplatized()) {
         variable.getMetadata().put(Variable.ENV_ID, workflow.getEnvId());
       } else {
@@ -371,8 +371,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private void updateMetadataInfraDefinition(Workflow workflow, WorkflowPhase workflowPhase) {
     String infraVarName = workflowPhase.fetchInfraDefinitionTemplatizedName();
     Variable variable = contains(userVariables, infraVarName);
-    if (variable != null && variable.getMetadata() != null
-        && !variable.getMetadata().containsKey(Variable.RELATED_FIELD)) {
+    if (variable != null && variable.getMetadata() != null) {
       if (!workflow.checkEnvironmentTemplatized()) {
         variable.getMetadata().put(Variable.ENV_ID, workflow.getEnvId());
       } else {

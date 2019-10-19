@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
@@ -83,6 +84,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.impl.WorkflowExecutionServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
@@ -114,6 +116,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
 
   @Inject private WingsPersistence wingsPersistence1;
 
@@ -545,12 +548,22 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     }
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowVariables() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+    executionArgs.setOrchestrationId(WORKFLOW_ID);
+    workflowExecutionService.fetchWorkflowVariables(APP_ID, executionArgs, null);
+    verify(workflowExecutionServiceHelper).fetchWorkflowVariables(APP_ID, executionArgs, null);
+  }
+
   private PipelineExecution createPipelineExecution(ApprovalStateExecutionData approvalStateExecutionData) {
     PipelineStageExecution pipelineStageExecution = PipelineStageExecution.builder()
                                                         .status(ExecutionStatus.PAUSED)
                                                         .stateExecutionData(approvalStateExecutionData)
                                                         .build();
-    return PipelineExecution.Builder.aPipelineExecution()
+    return aPipelineExecution()
         .withPipelineStageExecutions(com.google.common.collect.Lists.newArrayList(pipelineStageExecution))
         .build();
   }

@@ -596,7 +596,8 @@ public class PipelineServiceImpl implements PipelineService {
         .get();
   }
 
-  private void setPipelineDetails(List<Pipeline> pipelines, boolean withFinalValuesOnly) {
+  @Override
+  public void setPipelineDetails(List<Pipeline> pipelines, boolean withFinalValuesOnly) {
     for (Pipeline pipeline : pipelines) {
       setSinglePipelineDetails(pipeline, withFinalValuesOnly);
     }
