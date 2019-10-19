@@ -502,7 +502,8 @@ public class PipelineServiceImpl implements PipelineService {
     return readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, null);
   }
 
-  private Pipeline readPipelineWithResolvedVariables(
+  @Override
+  public Pipeline readPipelineWithResolvedVariables(
       String appId, String pipelineId, Map<String, String> pipelineVariables, Map<String, Workflow> workflowCache) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
@@ -1138,19 +1139,29 @@ public class PipelineServiceImpl implements PipelineService {
   public DeploymentMetadata fetchDeploymentMetadata(String appId, String pipelineId,
       Map<String, String> pipelineVariables, List<String> artifactNeededServiceIds, List<String> envIds,
       DeploymentMetadata.Include... includeList) {
+    return fetchDeploymentMetadata(
+        appId, pipelineId, pipelineVariables, artifactNeededServiceIds, envIds, false, null, includeList);
+  }
+
+  @Override
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, String pipelineId,
+      Map<String, String> pipelineVariables, List<String> artifactNeededServiceIds, List<String> envIds,
+      boolean withDefaultArtifact, WorkflowExecution workflowExecution, DeploymentMetadata.Include... includeList) {
     Map<String, Workflow> workflowCache = new HashMap<>();
     Pipeline pipeline = readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, workflowCache);
-    return fetchDeploymentMetadata(appId, pipeline, artifactNeededServiceIds, envIds, workflowCache, includeList);
+    return fetchDeploymentMetadata(appId, pipeline, artifactNeededServiceIds, envIds, withDefaultArtifact,
+        workflowExecution, workflowCache, includeList);
   }
 
   @Override
   public DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline,
       List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList) {
-    return fetchDeploymentMetadata(appId, pipeline, artifactNeededServiceIds, envIds, null, includeList);
+    return fetchDeploymentMetadata(appId, pipeline, artifactNeededServiceIds, envIds, false, null, null, includeList);
   }
 
   private DeploymentMetadata fetchDeploymentMetadata(String appId, Pipeline pipeline,
-      List<String> artifactNeededServiceIds, List<String> envIds, Map<String, Workflow> workflowCache,
+      List<String> artifactNeededServiceIds, List<String> envIds, boolean withDefaultArtifact,
+      WorkflowExecution workflowExecution, Map<String, Workflow> workflowCache,
       DeploymentMetadata.Include... includeList) {
     Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
     if (artifactNeededServiceIds == null) {
@@ -1189,8 +1200,8 @@ public class PipelineServiceImpl implements PipelineService {
         }
 
         OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-        DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
-            appId, workflow, pse.getWorkflowVariables(), null, null, includeList);
+        DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(appId, workflow,
+            pse.getWorkflowVariables(), null, null, withDefaultArtifact, workflowExecution, includeList);
         if (deploymentMetadata == null) {
           continue;
         }

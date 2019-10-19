@@ -4,11 +4,13 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -23,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
@@ -64,20 +67,25 @@ import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -97,12 +105,15 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
+  @Mock private PipelineService pipelineService;
 
   @Mock private ServiceResourceService serviceResourceServiceMock;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Mock private MorphiaIterator<WorkflowExecution, WorkflowExecution> executionIterator;
   @Mock private DBCursor dbCursor;
   @Mock private AppService appService;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject private WingsPersistence wingsPersistence1;
 
@@ -472,6 +483,66 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
         APP_ID, workflowExecution.getUuid(), generateUuid(), approvalDetails);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadata() {
+    validateFetchDeploymentMetadata(false, false);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadataFFOn() {
+    validateFetchDeploymentMetadata(false, true);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadataPipeline() {
+    validateFetchDeploymentMetadata(true, false);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadataPipelineFFOn() {
+    validateFetchDeploymentMetadata(true, true);
+  }
+
+  private void validateFetchDeploymentMetadata(boolean isPipeline, boolean ffOn) {
+    when(featureFlagService.isEnabled(eq(FeatureName.DEPLOYMENT_MODAL_REFACTOR), any())).thenReturn(ffOn);
+    when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_STREAM_REFACTOR), any())).thenReturn(ffOn);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    if (isPipeline) {
+      executionArgs.setWorkflowType(WorkflowType.PIPELINE);
+      executionArgs.setPipelineId(PIPELINE_ID);
+    } else {
+      executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+      executionArgs.setOrchestrationId(WORKFLOW_ID);
+    }
+    Workflow workflow = aWorkflow().build();
+    DeploymentMetadata deploymentMetadata =
+        DeploymentMetadata.builder()
+            .artifactVariables(singletonList(ArtifactVariable.builder().name("art1").build()))
+            .artifactRequiredServiceIds(singletonList(SERVICE_ID))
+            .build();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null, false, null))
+        .thenReturn(deploymentMetadata);
+    when(pipelineService.fetchDeploymentMetadata(
+             APP_ID, executionArgs.getPipelineId(), executionArgs.getWorkflowVariables(), null, null, false, null))
+        .thenReturn(deploymentMetadata);
+    DeploymentMetadata finalDeploymentMetadata =
+        workflowExecutionService.fetchDeploymentMetadata(APP_ID, executionArgs);
+    assertThat(finalDeploymentMetadata).isNotNull();
+    assertThat(finalDeploymentMetadata.getArtifactVariables()).isNotNull();
+    assertThat(finalDeploymentMetadata.getArtifactVariables().size()).isEqualTo(1);
+    assertThat(finalDeploymentMetadata.getArtifactVariables().get(0).getName()).isEqualTo("art1");
+    if (ffOn) {
+      verify(serviceResourceService, never()).fetchServicesByUuids(any(), any());
+    } else {
+      verify(serviceResourceService).fetchServicesByUuids(any(), any());
+    }
   }
 
   private PipelineExecution createPipelineExecution(ApprovalStateExecutionData approvalStateExecutionData) {

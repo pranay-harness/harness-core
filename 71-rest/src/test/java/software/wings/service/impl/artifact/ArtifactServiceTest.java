@@ -99,7 +99,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @InjectMocks @Inject private ArtifactService artifactService;
-  String BUILD_NO = "buildNo";
+  private String BUILD_NO = "buildNo";
   private Builder artifactBuilder = anArtifact()
                                         .withAccountId(ACCOUNT_ID)
                                         .withAppId(APP_ID)
@@ -109,15 +109,25 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                         .withDisplayName("DISPLAY_NAME")
                                         .withCreatedAt(System.currentTimeMillis())
                                         .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+  private Builder artifactLatestBuilder = anArtifact()
+                                              .withAccountId(ACCOUNT_ID)
+                                              .withAppId(APP_ID)
+                                              .withMetadata(ImmutableMap.of("buildNo", "220"))
+                                              .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                              .withRevision("1.1")
+                                              .withDisplayName("LATEST_DISPLAY_NAME")
+                                              .withCreatedAt(System.currentTimeMillis() - 10)
+                                              .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
   private Artifact artifact = artifactBuilder.build();
 
-  JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
-                                                    .uuid(ARTIFACT_STREAM_ID)
-                                                    .appId(APP_ID)
-                                                    .sourceName("ARTIFACT_SOURCE")
-                                                    .serviceId(SERVICE_ID)
-                                                    .build();
+  private JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                            .accountId(ACCOUNT_ID)
+                                                            .uuid(ARTIFACT_STREAM_ID)
+                                                            .appId(APP_ID)
+                                                            .sourceName("ARTIFACT_SOURCE")
+                                                            .serviceId(SERVICE_ID)
+                                                            .build();
 
   @Before
   public void setUp() {
@@ -452,6 +462,20 @@ public class ArtifactServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(Artifact::getArtifactSourceName)
         .isEqualTo(savedArtifact.getArtifactSourceName());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchLastCollectedApprovedArtifactSortedForArtifactStream() {
+    Artifact latestArtifact = artifactService.fetchLastCollectedApprovedArtifactSorted(jenkinsArtifactStream);
+    assertThat(latestArtifact).isNull();
+
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), READY);
+    Artifact savedArtifactLatest = artifactService.create(artifactLatestBuilder.build());
+    artifactService.updateStatus(savedArtifactLatest.getUuid(), savedArtifactLatest.getAccountId(), READY);
+    latestArtifact = artifactService.fetchLastCollectedApprovedArtifactSorted(jenkinsArtifactStream);
+    assertThat(latestArtifact).isNotNull().extracting(Artifact::getBuildNo).isEqualTo(savedArtifactLatest.getBuildNo());
   }
 
   @Test

@@ -1939,29 +1939,44 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs) {
+  public DeploymentMetadata fetchDeploymentMetadata(
+      String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact, String workflowExecutionId) {
     Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
+    WorkflowExecution workflowExecution = null;
+    if (withDefaultArtifact && workflowExecutionId != null) {
+      workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    }
+
     DeploymentMetadata finalDeploymentMetadata;
     if (executionArgs.getWorkflowType() == ORCHESTRATION) {
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
-      finalDeploymentMetadata =
-          workflowService.fetchDeploymentMetadata(appId, workflow, executionArgs.getWorkflowVariables(), null, null);
+      finalDeploymentMetadata = workflowService.fetchDeploymentMetadata(
+          appId, workflow, executionArgs.getWorkflowVariables(), null, null, withDefaultArtifact, workflowExecution);
     } else {
-      finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(
-          appId, executionArgs.getPipelineId(), executionArgs.getWorkflowVariables(), null, null);
+      finalDeploymentMetadata = pipelineService.fetchDeploymentMetadata(appId, executionArgs.getPipelineId(),
+          executionArgs.getWorkflowVariables(), null, null, withDefaultArtifact, workflowExecution);
     }
 
     if (finalDeploymentMetadata != null) {
-      // set services
-      finalDeploymentMetadata.setArtifactRequiredServices(
-          serviceResourceService.fetchServicesByUuids(appId, finalDeploymentMetadata.getArtifactRequiredServiceIds()));
+      String accountId = appService.getAccountIdByAppId(appId);
+      // Set services only when feature-flags are off.
+      if (!featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, accountId)
+          && !featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
+        finalDeploymentMetadata.setArtifactRequiredServices(serviceResourceService.fetchServicesByUuids(
+            appId, finalDeploymentMetadata.getArtifactRequiredServiceIds()));
+      }
 
-      // set environments
+      // Set environments.
       finalDeploymentMetadata.setEnvSummaries(
           environmentService.obtainEnvironmentSummaries(appId, finalDeploymentMetadata.getEnvIds()));
     }
 
     return finalDeploymentMetadata;
+  }
+
+  @Override
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, ExecutionArgs executionArgs) {
+    return fetchDeploymentMetadata(appId, executionArgs, false, null);
   }
 
   @Override

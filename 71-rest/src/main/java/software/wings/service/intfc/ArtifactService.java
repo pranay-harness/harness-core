@@ -181,6 +181,8 @@ public interface ArtifactService extends OwnedByArtifactStream {
 
   Artifact fetchLastCollectedApprovedArtifactForArtifactStream(ArtifactStream artifactStream);
 
+  Artifact fetchLastCollectedApprovedArtifactSorted(ArtifactStream artifactStream);
+
   Artifact fetchLastCollectedArtifact(ArtifactStream artifactStream);
 
   Artifact getArtifactByBuildNumber(ArtifactStream artifactStream, String buildNumber, boolean regex);

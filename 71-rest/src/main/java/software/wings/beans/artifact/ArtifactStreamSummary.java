@@ -11,6 +11,7 @@ public class ArtifactStreamSummary {
   private String displayName;
   private String name;
   private String lastCollectedArtifact;
+  private ArtifactSummary defaultArtifact;
 
   public static ArtifactStreamSummary prepareSummaryFromArtifactStream(
       ArtifactStream artifactStream, Artifact lastCollectedArtifact) {

@@ -87,6 +87,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
 
+  DeploymentMetadata fetchDeploymentMetadata(
+      String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact, String workflowExecutionId);
+
   DeploymentMetadata fetchDeploymentMetadata(@NotEmpty String appId, @NotNull ExecutionArgs executionArgs);
 
   CountsByStatuses getBreakdown(String appId, String workflowExecutionId);

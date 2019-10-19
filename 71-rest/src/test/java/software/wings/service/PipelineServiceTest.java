@@ -166,7 +166,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(serviceResourceService.fetchServicesByUuids(APP_ID, Arrays.asList(SERVICE_ID)))
         .thenReturn(Arrays.asList(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build()));
     when(workflowService.fetchDeploymentMetadata(
-             anyString(), any(Workflow.class), anyMap(), anyList(), anyList(), any(), any(), any()))
+             anyString(), any(Workflow.class), anyMap(), anyList(), anyList(), anyVararg()))
         .thenReturn(DeploymentMetadata.builder()
                         .artifactRequiredServiceIds(asList(SERVICE_ID))
                         .envIds(asList(ENV_ID))
@@ -1218,6 +1218,22 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadata() {
+    validateFetchDeploymentMetadata(false, false);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadataWithId() {
+    validateFetchDeploymentMetadata(true, false);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchDeploymentMetadataWithIdAndDefaultArtifact() {
+    validateFetchDeploymentMetadata(true, true);
+  }
+
+  private void validateFetchDeploymentMetadata(boolean withId, boolean withDefaultArtifact) {
     String workflowId1 = WORKFLOW_ID + "_1";
     String workflowId2 = WORKFLOW_ID + "_2";
     String workflowId3 = WORKFLOW_ID + "_3";
@@ -1229,21 +1245,27 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow().uuid(WORKFLOW_ID).name("w").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
-    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
-
     Workflow workflow1 =
         aWorkflow().uuid(workflowId1).name("w1").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
-    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId1), anyBoolean())).thenReturn(workflow1);
-
     Workflow workflow2 =
         aWorkflow().uuid(workflowId2).name("w2").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
-    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId2), anyBoolean())).thenReturn(workflow2);
-
     Workflow workflow3 =
         aWorkflow().uuid(workflowId3).name("w3").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
-    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(workflowId3), anyBoolean())).thenReturn(workflow3);
 
-    when(workflowService.fetchDeploymentMetadata(any(), any(Workflow.class), anyMap(), any(), any(), anyVararg()))
+    Map<String, Workflow> workflowMap = new HashMap<>();
+    workflowMap.put(WORKFLOW_ID, workflow);
+    workflowMap.put(workflowId1, workflow1);
+    workflowMap.put(workflowId2, workflow2);
+    workflowMap.put(workflowId3, workflow3);
+
+    when(workflowService.readWorkflowWithoutServices(eq(APP_ID), anyString(), anyBoolean()))
+        .thenAnswer(invocation -> workflowMap.getOrDefault((String) invocation.getArguments()[1], null));
+
+    when(workflowService.readWorkflow(eq(APP_ID), anyString()))
+        .thenAnswer(invocation -> workflowMap.getOrDefault((String) invocation.getArguments()[1], null));
+
+    when(workflowService.fetchDeploymentMetadata(
+             any(), any(Workflow.class), anyMap(), any(), any(), anyBoolean(), any(), anyVararg()))
         .thenAnswer(invocation -> {
           Workflow argument = (Workflow) invocation.getArguments()[1];
           switch (argument.getName()) {
@@ -1265,8 +1287,24 @@ public class PipelineServiceTest extends WingsBaseTest {
           }
         });
 
-    DeploymentMetadata deploymentMetadata =
-        pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, artifactNeededServiceIds, envIds);
+    DeploymentMetadata deploymentMetadata;
+    if (withId) {
+      when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, pipeline.getUuid())).thenReturn(pipeline);
+      when(workflowService.getResolvedServices(any(), any())).thenReturn(Collections.emptyList());
+      when(workflowService.getResolvedInfraMappingIds(any(), any())).thenReturn(Collections.emptyList());
+      when(workflowService.getResolvedInfraDefinitionIds(any(), any())).thenReturn(Collections.emptyList());
+      when(workflowService.resolveEnvironmentId(any(), any())).thenReturn(null);
+      if (withDefaultArtifact) {
+        deploymentMetadata = pipelineService.fetchDeploymentMetadata(
+            APP_ID, pipeline.getUuid(), null, artifactNeededServiceIds, envIds, false, null);
+      } else {
+        deploymentMetadata =
+            pipelineService.fetchDeploymentMetadata(APP_ID, pipeline.getUuid(), null, artifactNeededServiceIds, envIds);
+      }
+    } else {
+      deploymentMetadata = pipelineService.fetchDeploymentMetadata(APP_ID, pipeline, artifactNeededServiceIds, envIds);
+    }
+
     assertThat(deploymentMetadata).isNotNull();
 
     List<String> serviceIds = deploymentMetadata.getArtifactRequiredServiceIds();
@@ -1415,16 +1453,23 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   private PipelineStage prepareStageDisabled() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", WORKFLOW_ID);
     return PipelineStage.builder()
-        .pipelineStageElements(Collections.singletonList(
-            PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).disable(true).build()))
+        .pipelineStageElements(Collections.singletonList(PipelineStageElement.builder()
+                                                             .name("STAGE1")
+                                                             .type(ENV_STATE.name())
+                                                             .disable(true)
+                                                             .properties(properties)
+                                                             .build()))
         .build();
   }
 
   private PipelineStage prepareStageApproval() {
     return PipelineStage.builder()
         .pipelineStageElements(Collections.singletonList(
-            PipelineStageElement.builder().name("STAGE1").type(APPROVAL.name()).disable(true).build()))
+            PipelineStageElement.builder().name("STAGE1").type(APPROVAL.name()).disable(false).build()))
         .build();
   }
 }

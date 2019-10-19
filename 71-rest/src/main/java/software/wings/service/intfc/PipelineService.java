@@ -9,6 +9,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
@@ -57,6 +59,9 @@ public interface PipelineService extends OwnedByApplication {
    * @return
    */
   Pipeline readPipelineWithResolvedVariables(String appId, String pipelineId, Map<String, String> workflowVariables);
+
+  Pipeline readPipelineWithResolvedVariables(
+      String appId, String pipelineId, Map<String, String> pipelineVariables, Map<String, Workflow> workflowCache);
 
   Pipeline getPipelineByName(String appId, String pipelineName);
 
@@ -131,6 +136,10 @@ public interface PipelineService extends OwnedByApplication {
    * @return List of referenced pipelines
    */
   List<String> obtainPipelineNamesReferencedByEnvironment(String appId, @NotEmpty String envId);
+
+  DeploymentMetadata fetchDeploymentMetadata(String appId, String pipelineId, Map<String, String> pipelineVariables,
+      List<String> artifactNeededServiceIds, List<String> envIds, boolean withDefaultArtifact,
+      WorkflowExecution workflowExecution, DeploymentMetadata.Include... includeList);
 
   DeploymentMetadata fetchDeploymentMetadata(String appId, String pipelineId, Map<String, String> pipelineVariables,
       List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList);

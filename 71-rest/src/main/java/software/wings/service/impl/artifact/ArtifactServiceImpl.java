@@ -1,6 +1,8 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -496,6 +498,19 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public Artifact fetchLastCollectedApprovedArtifactForArtifactStream(ArtifactStream artifactStream) {
     return getArtifact(artifactStream, asList(READY, APPROVED));
+  }
+
+  @Override
+  public Artifact fetchLastCollectedApprovedArtifactSorted(ArtifactStream artifactStream) {
+    // Try to get 100 artifacts and sort them in application code.
+    PageRequest<Artifact> pageRequest = aPageRequest()
+                                            .addFilter(ArtifactKeys.accountId, EQ, artifactStream.getAccountId())
+                                            .addFilter(ArtifactKeys.artifactStreamId, EQ, artifactStream.getUuid())
+                                            .addFilter(ArtifactKeys.status, IN, READY, APPROVED)
+                                            .withLimit("100")
+                                            .build();
+    List<Artifact> artifacts = listSortByBuildNo(pageRequest);
+    return isEmpty(artifacts) ? null : artifacts.get(0);
   }
 
   @Override
