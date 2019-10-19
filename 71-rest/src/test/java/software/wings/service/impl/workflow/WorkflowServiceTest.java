@@ -28,7 +28,10 @@ import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.PROVISIONER;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.WORKFLOW;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -58,6 +61,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
 import static software.wings.common.Constants.ARTIFACT__S3_KEY_EXPRESSION;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
@@ -182,6 +186,9 @@ import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID_ARTIFACTORY;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID_CHANGED;
@@ -244,6 +251,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BlueGreenOrchestrationWorkflow;
@@ -251,7 +259,7 @@ import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FailureCriteria;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FeatureName;
@@ -278,9 +286,13 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowCategoryStepsMeta;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.peronalization.Personalization;
@@ -296,6 +308,7 @@ import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -328,6 +341,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.stencils.WorkflowStepType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -362,6 +376,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private YamlPushService yamlPushService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ArtifactService artifactService;
   @Mock private ArtifactStream artifactStream;
   @Mock private TriggerService triggerService;
   @Mock private EnvironmentService environmentService;
@@ -405,12 +420,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(appService.get(TARGET_APP_ID)).thenReturn(Application.Builder.anApplication().accountId(ACCOUNT_ID).build());
 
     when(environmentService.get(APP_ID, ENV_ID, false))
-        .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
+        .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
 
     when(environmentService.exist(APP_ID, ENV_ID)).thenReturn(true);
 
     when(environmentService.get(APP_ID, ENV_ID))
-        .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
+        .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).build());
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
@@ -3483,6 +3498,387 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, null)).thenReturn(true);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null).getArtifactVariables())
         .isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateArtifactVariablesWithoutDefaultArtifact() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+    ArtifactVariable artifactVariable = ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).build();
+    workflowService.updateArtifactVariables(APP_ID, null, Collections.singletonList(artifactVariable), false, null);
+    assertThat(artifactVariable.getDisplayInfo()).isNotNull();
+    assertThat(artifactVariable.getDisplayInfo()).containsKeys("services");
+    assertThat(artifactVariable.getDisplayInfo().get("services")).contains(SERVICE_NAME);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateArtifactVariablesWithDefaultArtifact() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+
+    ArtifactStream artifactStream = DockerArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).build();
+    ArtifactStream artifactStreamArtifactory =
+        ArtifactoryArtifactStream.builder().uuid(ARTIFACT_STREAM_ID_ARTIFACTORY).build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_ARTIFACTORY)).thenReturn(artifactStreamArtifactory);
+    when(artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStream))
+        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).build());
+    when(artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStreamArtifactory)).thenReturn(null);
+
+    ArtifactVariable artifactVariable1 = ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).build();
+    ArtifactVariable artifactVariable2 = ArtifactVariable.builder()
+                                             .entityType(SERVICE)
+                                             .entityId(SERVICE_ID)
+                                             .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+                                             .build();
+    ArtifactVariable artifactVariable3 = ArtifactVariable.builder()
+                                             .entityType(SERVICE)
+                                             .entityId(SERVICE_ID)
+                                             .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID_ARTIFACTORY))
+                                             .build();
+    ArtifactVariable artifactVariable4 = ArtifactVariable.builder()
+                                             .entityType(SERVICE)
+                                             .entityId(SERVICE_ID)
+                                             .allowedList(asList("stream1", "stream2"))
+                                             .build();
+    workflowService.updateArtifactVariables(
+        APP_ID, null, asList(artifactVariable1, artifactVariable2, artifactVariable3, artifactVariable4), true, null);
+
+    assertThat(artifactVariable1.getArtifactStreamSummaries()).isNullOrEmpty();
+
+    assertThat(artifactVariable2.getArtifactStreamSummaries()).isNotNull();
+    assertThat(artifactVariable2.getArtifactStreamSummaries().size()).isEqualTo(1);
+    assertThat(artifactVariable2.getArtifactStreamSummaries().get(0).getArtifactStreamId())
+        .isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(artifactVariable2.getArtifactStreamSummaries().get(0).getDefaultArtifact().getUuid())
+        .isEqualTo(ARTIFACT_ID);
+
+    assertThat(artifactVariable3.getArtifactStreamSummaries()).isNotNull();
+    assertThat(artifactVariable3.getArtifactStreamSummaries().size()).isEqualTo(1);
+    assertThat(artifactVariable3.getArtifactStreamSummaries().get(0).getArtifactStreamId())
+        .isEqualTo(ARTIFACT_STREAM_ID_ARTIFACTORY);
+    assertThat(artifactVariable3.getArtifactStreamSummaries().get(0).getDefaultArtifact()).isNull();
+
+    assertThat(artifactVariable4.getArtifactStreamSummaries()).isNotNull();
+    assertThat(artifactVariable4.getArtifactStreamSummaries().size()).isEqualTo(2);
+    assertThat(artifactVariable4.getArtifactStreamSummaries().get(0).getArtifactStreamId()).isEqualTo("stream1");
+    assertThat(artifactVariable4.getArtifactStreamSummaries().get(0).getDefaultArtifact()).isNull();
+    assertThat(artifactVariable4.getArtifactStreamSummaries().get(1).getArtifactStreamId()).isEqualTo("stream2");
+    assertThat(artifactVariable4.getArtifactStreamSummaries().get(1).getDefaultArtifact()).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldUpdateArtifactVariablesWithDefaultArtifactAndExecution() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
+    ArtifactVariable artifactVariable1 = ArtifactVariable.builder()
+                                             .entityType(SERVICE)
+                                             .entityId(SERVICE_ID)
+                                             .name("art_srv")
+                                             .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+                                             .build();
+    ArtifactVariable artifactVariable2 = ArtifactVariable.builder()
+                                             .entityType(SERVICE)
+                                             .entityId(SERVICE_ID)
+                                             .name("art_invalid")
+                                             .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+                                             .build();
+    when(artifactService.get("art1"))
+        .thenReturn(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    workflowService.updateArtifactVariables(
+        APP_ID, null, asList(artifactVariable1, artifactVariable2), true, workflowExecution);
+
+    assertThat(artifactVariable1.getArtifactStreamSummaries()).isNotNull();
+    assertThat(artifactVariable1.getArtifactStreamSummaries().size()).isEqualTo(1);
+    assertThat(artifactVariable1.getArtifactStreamSummaries().get(0).getArtifactStreamId())
+        .isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(artifactVariable1.getArtifactStreamSummaries().get(0).getDefaultArtifact().getUuid()).isEqualTo("art1");
+
+    assertThat(artifactVariable2.getArtifactStreamSummaries()).isNotNull();
+    assertThat(artifactVariable2.getArtifactStreamSummaries().size()).isEqualTo(1);
+    assertThat(artifactVariable2.getArtifactStreamSummaries().get(0).getArtifactStreamId())
+        .isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(artifactVariable2.getArtifactStreamSummaries().get(0).getDefaultArtifact()).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactForService() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
+    when(artifactService.get("art1"))
+        .thenReturn(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId(SERVICE_ID)
+            .name("art_srv")
+            .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+            .build(),
+        workflowExecution);
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getUuid()).isEqualTo("art1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactForEnv() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
+    when(artifactService.get("art2"))
+        .thenReturn(anArtifact().withUuid("art2").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder()
+            .entityType(ENVIRONMENT)
+            .entityId(ENV_ID)
+            .name("art_env")
+            .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+            .build(),
+        workflowExecution);
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getUuid()).isEqualTo("art2");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactForWorkflow() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
+    when(artifactService.get("art3"))
+        .thenReturn(anArtifact().withUuid("art3").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder()
+            .entityType(WORKFLOW)
+            .entityId(WORKFLOW_ID)
+            .name("art_wrk")
+            .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+            .build(),
+        workflowExecution);
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getUuid()).isEqualTo("art3");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactForInvalidArtifactVariable() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId(SERVICE_ID)
+            .name("art_random")
+            .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+            .build(),
+        workflowExecution);
+    assertThat(artifact).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactForInvalidArtifactId() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId(SERVICE_ID)
+            .name("art_invalid")
+            .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+            .build(),
+        workflowExecution);
+    assertThat(artifact).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactForEmptyArtifacts() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(true);
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).name("art_srv").build(), workflowExecution);
+    assertThat(artifact).isNull();
+  }
+
+  private WorkflowExecution prepareWorkflowExecutionWithArtifactVariables(boolean emptyArtifacts) {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifactVariables(asList(
+        ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).name("art_srv").value("art1").build(),
+        ArtifactVariable.builder().entityType(ENVIRONMENT).entityId(ENV_ID).name("art_env").value("art2").build(),
+        ArtifactVariable.builder().entityType(WORKFLOW).entityId(WORKFLOW_ID).name("art_wrk").value("art3").build(),
+        ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).name("art_invalid").build()));
+    if (!emptyArtifacts) {
+      executionArgs.setArtifacts(asList(anArtifact().withUuid("art1").build(), anArtifact().withUuid("art2").build(),
+          anArtifact().withUuid("art3").build()));
+    }
+    return WorkflowExecution.builder().executionArgs(executionArgs).build();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactWithoutVariables() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
+    when(artifactService.get("art1"))
+        .thenReturn(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder().allowedList(Collections.singletonList(ARTIFACT_STREAM_ID)).build(),
+        workflowExecution);
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getUuid()).isEqualTo("art1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactNoArtifacts() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(true);
+    when(artifactService.get("art1"))
+        .thenReturn(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder().allowedList(Collections.singletonList(ARTIFACT_STREAM_ID)).build(),
+        workflowExecution);
+    assertThat(artifact).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactNoAllowedList() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
+    when(artifactService.get("art1"))
+        .thenReturn(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder().allowedList(Collections.emptyList()).build(), workflowExecution);
+    assertThat(artifact).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactInvalidArtifactStreamId() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
+    when(artifactService.get("art1")).thenReturn(anArtifact().withUuid("art1").withArtifactStreamId("random").build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder().allowedList(Collections.singletonList(ARTIFACT_STREAM_ID)).build(),
+        workflowExecution);
+    assertThat(artifact).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactDeletedArtifact() {
+    WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
+    when(artifactService.get("art1")).thenReturn(null);
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder().allowedList(Collections.singletonList(ARTIFACT_STREAM_ID)).build(),
+        workflowExecution);
+    assertThat(artifact).isNull();
+  }
+
+  private WorkflowExecution prepareWorkflowExecutionWithoutArtifactVariables(boolean empty) {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    if (!empty) {
+      executionArgs.setArtifacts(asList(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build(),
+          anArtifact().withUuid("art2").build()));
+    }
+    return WorkflowExecution.builder().executionArgs(executionArgs).build();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDisplayInfoForService() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+    Map<String, List<String>> displayInfo = workflowService.getDisplayInfo(
+        APP_ID, null, ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).build());
+    assertThat(displayInfo).isNotNull();
+    assertThat(displayInfo).containsKeys("services");
+    assertThat(displayInfo.get("services")).contains(SERVICE_NAME);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDisplayInfoForInvalidService() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(null);
+    Map<String, List<String>> displayInfo = workflowService.getDisplayInfo(
+        APP_ID, null, ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).build());
+    assertThat(displayInfo).isNotNull();
+    assertThat(displayInfo).doesNotContainKeys("services");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDisplayInfoForEnv() {
+    String serviceId1 = "SERVICE_ID_1";
+    String serviceId2 = "SERVICE_ID_2";
+    String serviceName1 = "SVC_1";
+    String serviceName2 = "SVC_2";
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(anEnvironment().name(ENV_NAME).build());
+    when(serviceResourceService.get(APP_ID, serviceId1)).thenReturn(Service.builder().name(serviceName1).build());
+    when(serviceResourceService.get(APP_ID, serviceId2)).thenReturn(Service.builder().name(serviceName2).build());
+    Map<String, List<String>> displayInfo = workflowService.getDisplayInfo(APP_ID, null,
+        ArtifactVariable.builder()
+            .entityType(ENVIRONMENT)
+            .entityId(ENV_ID)
+            .overriddenArtifactVariables(
+                asList(ArtifactVariable.builder().entityType(SERVICE).entityId(serviceId1).build(),
+                    ArtifactVariable.builder().entityType(SERVICE).entityId(serviceId2).build()))
+            .build());
+    assertThat(displayInfo).isNotNull();
+    assertThat(displayInfo).containsKeys("environments");
+    assertThat(displayInfo.get("environments")).contains(ENV_NAME);
+    assertThat(displayInfo).containsKeys("services");
+    assertThat(displayInfo.get("services")).contains(serviceName1, serviceName2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDisplayInfoForInvalidEnv() {
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(null);
+    Map<String, List<String>> displayInfo = workflowService.getDisplayInfo(
+        APP_ID, null, ArtifactVariable.builder().entityType(ENVIRONMENT).entityId(ENV_ID).build());
+    assertThat(displayInfo).isNotNull();
+    assertThat(displayInfo).doesNotContainKeys("environments");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDisplayInfoForWorkflow() {
+    String serviceId1 = "SERVICE_ID_1";
+    String serviceId2 = "SERVICE_ID_2";
+    String serviceName1 = "SVC_1";
+    String serviceName2 = "SVC_2";
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(anEnvironment().name(ENV_NAME).build());
+    when(serviceResourceService.get(APP_ID, serviceId1)).thenReturn(Service.builder().name(serviceName1).build());
+    when(serviceResourceService.get(APP_ID, serviceId2)).thenReturn(Service.builder().name(serviceName2).build());
+    Map<String, List<String>> displayInfo =
+        workflowService.getDisplayInfo(APP_ID, aWorkflow().name(WORKFLOW_NAME).build(),
+            ArtifactVariable.builder()
+                .entityType(WORKFLOW)
+                .entityId(WORKFLOW_ID)
+                .overriddenArtifactVariables(Collections.singletonList(
+                    ArtifactVariable.builder()
+                        .entityType(ENVIRONMENT)
+                        .entityId(ENV_ID)
+                        .overriddenArtifactVariables(
+                            asList(ArtifactVariable.builder().entityType(SERVICE).entityId(serviceId1).build(),
+                                ArtifactVariable.builder().entityType(SERVICE).entityId(serviceId2).build()))
+                        .build()))
+                .build());
+    assertThat(displayInfo).isNotNull();
+    assertThat(displayInfo).containsKeys("workflows");
+    assertThat(displayInfo.get("workflows")).contains(WORKFLOW_NAME);
+    assertThat(displayInfo).containsKeys("environments");
+    assertThat(displayInfo.get("environments")).contains(ENV_NAME);
+    assertThat(displayInfo).containsKeys("services");
+    assertThat(displayInfo.get("services")).contains(serviceName1, serviceName2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDisplayInfoForInvalidWorkflow() {
+    Map<String, List<String>> displayInfo = workflowService.getDisplayInfo(
+        APP_ID, null, ArtifactVariable.builder().entityType(WORKFLOW).entityId(WORKFLOW_ID).build());
+    assertThat(displayInfo).isNotNull();
+    assertThat(displayInfo).doesNotContainKeys("workflows");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetDisplayInfoForInvalidEntityType() {
+    Map<String, List<String>> displayInfo =
+        workflowService.getDisplayInfo(APP_ID, null, ArtifactVariable.builder().entityType(PROVISIONER).build());
+    assertThat(displayInfo).isNullOrEmpty();
   }
 
   private Workflow createLinkedWorkflow(TemplateType templateType) {

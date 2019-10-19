@@ -7,6 +7,7 @@ import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.InstanceElement;
+import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
@@ -20,7 +21,9 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
@@ -170,7 +173,18 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   List<EntityType> getRequiredEntities(@NotEmpty String appId, @NotEmpty String workflowId);
 
   DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow, Map<String, String> workflowVariables,
-      List<String> artifactNeededServiceIds, List<String> envIds, DeploymentMetadata.Include... includeList);
+      List<String> artifactNeededServiceIds, List<String> envIds, Include... includeList);
+
+  DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow, Map<String, String> workflowVariables,
+      List<String> artifactRequiredServiceIds, List<String> envIds, boolean withDefaultArtifact,
+      WorkflowExecution workflowExecution, Include... includes);
+
+  void updateArtifactVariables(String appId, Workflow workflow, List<ArtifactVariable> artifactVariables,
+      boolean withDefaultArtifact, WorkflowExecution workflowExecution);
+
+  Artifact getArtifactVariableDefaultArtifact(ArtifactVariable artifactVariable, WorkflowExecution workflowExecution);
+
+  Map<String, List<String>> getDisplayInfo(String appId, Workflow workflow, ArtifactVariable artifactVariable);
 
   Set<EntityType> fetchRequiredEntityTypes(String appId, Workflow workflow);
 

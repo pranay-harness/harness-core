@@ -156,8 +156,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowStepMeta;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.beans.artifact.ArtifactStreamSummary.ArtifactStreamSummaryBuilder;
+import software.wings.beans.artifact.ArtifactSummary;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -1934,6 +1937,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow,
       Map<String, String> workflowVariables, List<String> artifactRequiredServiceIds, List<String> envIds,
       Include... includes) {
+    return fetchDeploymentMetadata(
+        appId, workflow, workflowVariables, artifactRequiredServiceIds, envIds, false, null, includes);
+  }
+
+  @Override
+  public DeploymentMetadata fetchDeploymentMetadata(String appId, Workflow workflow,
+      Map<String, String> workflowVariables, List<String> artifactRequiredServiceIds, List<String> envIds,
+      boolean withDefaultArtifact, WorkflowExecution workflowExecution, Include... includes) {
     DeploymentMetadataBuilder deploymentMetadataBuilder = DeploymentMetadata.builder();
 
     List<Include> includeList = isEmpty(includes) ? Arrays.asList(Include.values()) : Arrays.asList(includes);
@@ -1968,26 +1979,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       // Update artifact variables with display info and artifact stream summaries.
       if (isNotEmpty(artifactVariables)) {
         deploymentMetadataBuilder.artifactVariables(artifactVariables);
-        for (ArtifactVariable artifactVariable : artifactVariables) {
-          artifactVariable.setDisplayInfo(getDisplayInfo(appId, workflow, artifactVariable));
-          if (isEmpty(artifactVariable.getAllowedList())) {
-            continue;
-          }
-
-          List<ArtifactStream> artifactStreams = artifactStreamService.listByIds(artifactVariable.getAllowedList());
-          if (isEmpty(artifactStreams)) {
-            continue;
-          }
-
-          artifactVariable.setArtifactStreamSummaries(
-              artifactStreams.stream()
-                  .map(artifactStream -> ArtifactStreamSummary.prepareSummaryFromArtifactStream(artifactStream, null))
-                  .collect(Collectors.toList()));
-        }
+        updateArtifactVariables(appId, workflow, artifactVariables, withDefaultArtifact, workflowExecution);
       }
 
       deploymentMetadataBuilder.artifactRequiredServiceIds(artifactRequiredServiceIds);
     }
+
     if (includeList.contains(Include.DEPLOYMENT_TYPE)) {
       final List<DeploymentType> deploymentTypes =
           workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow());
@@ -2008,13 +2005,121 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return deploymentMetadataBuilder.build();
   }
 
-  private Map<String, List<String>> getDisplayInfo(String appId, Workflow workflow, ArtifactVariable artifactVariable) {
+  @Override
+  public void updateArtifactVariables(String appId, Workflow workflow, List<ArtifactVariable> artifactVariables,
+      boolean withDefaultArtifact, WorkflowExecution workflowExecution) {
+    for (ArtifactVariable artifactVariable : artifactVariables) {
+      artifactVariable.setDisplayInfo(getDisplayInfo(appId, workflow, artifactVariable));
+      if (isEmpty(artifactVariable.getAllowedList())) {
+        continue;
+      }
+
+      if (withDefaultArtifact && workflowExecution == null && artifactVariable.getAllowedList().size() == 1) {
+        // Set default artifact as last collected artifact.
+        String artifactStreamId = artifactVariable.getAllowedList().get(0);
+        ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+        ArtifactStreamSummaryBuilder artifactStreamSummaryBuilder =
+            ArtifactStreamSummary.builder().artifactStreamId(artifactStreamId);
+        if (artifactStream != null) {
+          Artifact artifact = artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStream);
+          if (artifact != null) {
+            artifactStreamSummaryBuilder.defaultArtifact(ArtifactSummary.prepareSummaryFromArtifact(artifact));
+          }
+        }
+        artifactVariable.setArtifactStreamSummaries(singletonList(artifactStreamSummaryBuilder.build()));
+        continue;
+      }
+
+      Artifact artifact = (withDefaultArtifact && workflowExecution != null)
+          ? getArtifactVariableDefaultArtifact(artifactVariable, workflowExecution)
+          : null;
+      ArtifactSummary artifactSummary =
+          (artifact != null) ? ArtifactSummary.prepareSummaryFromArtifact(artifact) : null;
+      artifactVariable.setArtifactStreamSummaries(artifactVariable.getAllowedList()
+                                                      .stream()
+                                                      .map(artifactStreamId -> {
+                                                        ArtifactStreamSummaryBuilder artifactStreamSummaryBuilder =
+                                                            ArtifactStreamSummary.builder().artifactStreamId(
+                                                                artifactStreamId);
+                                                        if (artifactSummary != null) {
+                                                          artifactStreamSummaryBuilder.defaultArtifact(artifactSummary);
+                                                        }
+                                                        return artifactStreamSummaryBuilder.build();
+                                                      })
+                                                      .collect(Collectors.toList()));
+    }
+  }
+
+  @Override
+  public Artifact getArtifactVariableDefaultArtifact(
+      ArtifactVariable artifactVariable, WorkflowExecution workflowExecution) {
+    if (isEmpty(artifactVariable.getAllowedList())) {
+      // No artifact streams, so we cannot pre-fill it.
+      return null;
+    }
+
+    Artifact artifact = getArtifactVariableDefaultArtifactHelper(artifactVariable, workflowExecution);
+    if (artifact == null) {
+      return null;
+    }
+
+    artifact = artifactService.get(artifact.getUuid());
+    if (artifact == null || !artifactVariable.getAllowedList().contains(artifact.getArtifactStreamId())) {
+      // Ensure artifact has not been deleted.
+      return null;
+    }
+    return artifact;
+  }
+
+  private Artifact getArtifactVariableDefaultArtifactHelper(
+      ArtifactVariable artifactVariable, WorkflowExecution workflowExecution) {
+    List<ArtifactVariable> previousArtifactVariables = workflowExecution.getExecutionArgs().getArtifactVariables();
+    if (isNotEmpty(previousArtifactVariables)) {
+      // If artifact variables are present use them.
+      ArtifactVariable foundArtifactVariable =
+          previousArtifactVariables.stream()
+              .filter(previousArtifactVariable
+                  -> artifactVariable.getName().equals(previousArtifactVariable.getName())
+                      && artifactVariable.getEntityType().equals(previousArtifactVariable.getEntityType())
+                      && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId()))
+              .findFirst()
+              .orElse(null);
+      if (foundArtifactVariable == null) {
+        return null;
+      }
+
+      String artifactId = foundArtifactVariable.getValue();
+      if (isBlank(artifactId)) {
+        return null;
+      }
+
+      List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
+      if (isEmpty(artifacts)) {
+        return null;
+      }
+
+      return artifacts.stream().filter(artifact -> artifactId.equals(artifact.getUuid())).findFirst().orElse(null);
+    }
+
+    List<Artifact> previousArtifacts = workflowExecution.getExecutionArgs().getArtifacts();
+    if (isEmpty(previousArtifacts) || isEmpty(artifactVariable.getAllowedList())) {
+      return null;
+    }
+
+    return previousArtifacts.stream()
+        .filter(artifact -> artifactVariable.getAllowedList().contains(artifact.getArtifactStreamId()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Override
+  public Map<String, List<String>> getDisplayInfo(String appId, Workflow workflow, ArtifactVariable artifactVariable) {
     Map<String, List<String>> displayInfo = new HashMap<>();
     Environment environment;
     Service service;
     switch (artifactVariable.getEntityType()) {
       case SERVICE:
-        service = serviceResourceService.getWithDetails(appId, artifactVariable.getEntityId());
+        service = serviceResourceService.get(appId, artifactVariable.getEntityId());
         if (service == null) {
           return displayInfo;
         }

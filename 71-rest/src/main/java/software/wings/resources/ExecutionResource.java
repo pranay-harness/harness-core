@@ -333,9 +333,11 @@ public class ExecutionResource {
   @ExceptionMetered
   @ExternalFacingApiAuth
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  public RestResponse<DeploymentMetadata> getDeploymentMetadata(
-      @QueryParam("appId") String appId, ExecutionArgs executionArgs) {
-    return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadata(appId, executionArgs));
+  public RestResponse<DeploymentMetadata> getDeploymentMetadata(@QueryParam("appId") String appId,
+      @QueryParam("withDefaultArtifact") boolean withDefaultArtifact,
+      @QueryParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(workflowExecutionService.fetchDeploymentMetadata(
+        appId, executionArgs, withDefaultArtifact, workflowExecutionId));
   }
 
   /**
