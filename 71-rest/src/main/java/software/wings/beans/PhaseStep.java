@@ -287,8 +287,10 @@ public class PhaseStep {
         prevNode = step;
       }
     }
-    originNode.setOrigin(true);
 
+    if (originNode != null) {
+      originNode.setOrigin(true);
+    }
     return graphBuilder.build();
   }
 
@@ -333,7 +335,7 @@ public class PhaseStep {
             && (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
                    || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name()))) {
           Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());
-          if ((Boolean) properties.get("specificHosts")) {
+          if (properties.containsKey("specificHosts") && (Boolean) properties.get("specificHosts")) {
             properties.remove("hostNames");
             clonedStep.setProperties(properties);
           }
