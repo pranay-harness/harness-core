@@ -1231,8 +1231,4 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName())
         .isEqualTo("NuGet.Sample.Package-1.0.0.18279.nupkg");
   }
-
-  @Test
-  @Category(UnitTests.class)
-  public void getRepositoriesForMavenNexus2x() {}
 }
