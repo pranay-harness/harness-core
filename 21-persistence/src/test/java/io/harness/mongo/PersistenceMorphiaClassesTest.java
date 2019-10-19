@@ -6,6 +6,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.TestCronIterableEntity;
 import io.harness.iterator.TestIrregularIterableEntity;
+import io.harness.iterator.TestIterableEntity;
 import io.harness.iterator.TestRegularIterableEntity;
 import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.TestHolderEntity;
@@ -30,6 +31,7 @@ public class PersistenceMorphiaClassesTest extends CategoryTest {
                                                 .add(TestHolderEntity.class)
                                                 .add(TestInternalEntity.class)
                                                 .add(TestIrregularIterableEntity.class)
+                                                .add(TestIterableEntity.class)
                                                 .add(TestQueuableObject.class)
                                                 .add(TestRegularIterableEntity.class)
                                                 .build());

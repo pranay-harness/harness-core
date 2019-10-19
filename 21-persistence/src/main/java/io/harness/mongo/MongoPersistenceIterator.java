@@ -142,10 +142,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
           break;
         }
 
-        final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName)).project(fieldName, true);
-        if (filterExpander != null) {
-          filterExpander.filter(query);
-        }
+        final Query<T> query = createQuery().project(fieldName, true);
 
         final T next = query.get();
 
@@ -187,11 +184,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   public T next(long base, long throttled) {
     final long now = currentTimeMillis();
 
-    final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
-    query.or(query.criteria(fieldName).lessThan(now), query.criteria(fieldName).doesNotExist());
-    if (filterExpander != null) {
-      filterExpander.filter(query);
-    }
+    final Query<T> query = createQuery(now);
 
     UpdateOperations<T> updateOperations = persistence.createUpdateOperations(clazz);
     switch (schedulingType) {
@@ -209,6 +202,24 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     }
 
     return persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnOldOptions);
+  }
+
+  public Query<T> createQuery() {
+    final Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
+    if (filterExpander != null) {
+      filterExpander.filter(query);
+    }
+    return query;
+  }
+
+  public Query<T> createQuery(long now) {
+    final Query<T> query = createQuery();
+    if (filterExpander == null) {
+      query.or(query.criteria(fieldName).lessThan(now), query.criteria(fieldName).doesNotExist());
+    } else {
+      query.and(query.or(query.criteria(fieldName).lessThan(now), query.criteria(fieldName).doesNotExist()));
+    }
+    return query;
   }
 
   @SuppressWarnings({"squid:S2445"}) // We are aware that the entity will be different object every time the method is
