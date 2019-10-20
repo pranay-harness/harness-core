@@ -91,6 +91,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithNormalQuery() {
     ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata("error");
