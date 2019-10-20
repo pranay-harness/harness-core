@@ -13,12 +13,13 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
 public class MorphiaModule extends DependencyProviderModule {
-  private static volatile MorphiaModule instance;
+  private static MorphiaModule instance;
 
   public static MorphiaModule getInstance() {
     if (instance == null) {
@@ -56,7 +57,7 @@ public class MorphiaModule extends DependencyProviderModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return null;
+    return Collections.emptySet();
   }
 
   public void testAutomaticSearch(Set<Class> testClasses) {

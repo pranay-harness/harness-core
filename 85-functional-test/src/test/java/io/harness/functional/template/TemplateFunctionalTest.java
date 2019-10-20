@@ -4,6 +4,7 @@ import static io.harness.generator.AccountGenerator.adminUserEmail;
 import static io.harness.generator.AccountGenerator.readOnlyEmail;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.APP_FOLDER_SHELL_SCRIPTS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
+import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -22,6 +23,7 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.TemplateFolderGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.TestUtils;
 import io.restassured.http.ContentType;
@@ -315,6 +317,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldNotUpdateTemplateWithDuplicateNameInSameFolder() {
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {};
