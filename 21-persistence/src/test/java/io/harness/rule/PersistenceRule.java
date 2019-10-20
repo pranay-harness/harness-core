@@ -76,6 +76,7 @@ public class PersistenceRule
     morphia.map(TestQueuableObject.class);
     morphia.map(TestRegularIterableEntity.class);
     morphia.map(TestIrregularIterableEntity.class);
+
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName);
     datastore.setQueryFactory(new QueryFactory());
 

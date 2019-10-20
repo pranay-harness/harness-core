@@ -3,10 +3,10 @@ package io.harness.mongo;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
 import com.mongodb.AggregationOptions;
@@ -18,17 +18,16 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.annotation.IgnoreUnusedIndex;
-import io.harness.exception.UnexpectedException;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedClass;
@@ -39,6 +38,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,7 +48,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 @Slf4j
+@UtilityClass
 public class IndexManager {
+  public static final String UNIQUE = "unique";
+
   public interface IndexCreator { void create(); }
 
   @Value
@@ -103,23 +106,14 @@ public class IndexManager {
   // A good article on the topic:
   // https://www.objectrocket.com/blog/mongodb/considerations-for-using-indexstats-to-find-unused-indexes-in-mongodb/
   // NOTE: This is work in progress. For the time being we are checking only for completely unused indexes.
-  private static void checkForUnusedIndexes(DBCollection collection) {
-    final Map<String, Accesses> accessesPrimary = extractAccesses(
-        collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
-            AggregationOptions.builder().build(), ReadPreference.primary()));
-    final Map<String, Accesses> accessesSecondary = extractAccesses(
-        collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
-            AggregationOptions.builder().build(), ReadPreference.secondary()));
-
-    final Map<String, Accesses> accesses = mergeAccesses(accessesPrimary, accessesSecondary);
-
+  private static void checkForUnusedIndexes(DBCollection collection, Map<String, Accesses> accesses) {
     final long now = System.currentTimeMillis();
     final Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
 
     final List<DBObject> indexInfo = collection.getIndexInfo();
     final Set<String> uniqueIndexes = indexInfo.stream()
                                           .filter(obj -> {
-                                            final Object unique = obj.get("unique");
+                                            final Object unique = obj.get(UNIQUE);
                                             return unique != null && unique.toString().equals("true");
                                           })
                                           .map(obj -> obj.get("name").toString())
@@ -147,6 +141,17 @@ public class IndexManager {
         });
   }
 
+  static Map<String, Accesses> fetchIndexAccesses(DBCollection collection) {
+    final Map<String, Accesses> accessesPrimary = extractAccesses(
+        collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
+            AggregationOptions.builder().build(), ReadPreference.primary()));
+    final Map<String, Accesses> accessesSecondary = extractAccesses(
+        collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
+            AggregationOptions.builder().build(), ReadPreference.secondary()));
+
+    return mergeAccesses(accessesPrimary, accessesSecondary);
+  }
+
   public static void updateMovedClasses(
       AdvancedDatastore primaryDatastore, Map<String, Class> morphiaInterfaceImplementers) {
     for (Entry<String, Class> entry : morphiaInterfaceImplementers.entrySet()) {
@@ -163,15 +168,14 @@ public class IndexManager {
   }
 
   public static void ensureIndex(AdvancedDatastore primaryDatastore, Morphia morphia) {
-    /*
-    Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
-    There is no way to override this behavior.
-    https://github.com/mongodb/morphia/issues/706
-     */
+    // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
+    // There is no way to override this behavior.
+    // https://github.com/mongodb/morphia/issues/706
 
     Set<String> processedCollections = new HashSet<>();
 
-    morphia.getMapper().getMappedClasses().forEach(mc -> {
+    final Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
+    mappedClasses.forEach(mc -> {
       if (mc.getEntityAnnotation() == null) {
         return;
       }
@@ -184,54 +188,41 @@ public class IndexManager {
 
       Map<String, IndexCreator> creators = indexCreators(mc, collection);
 
-      final List<String> obsoleteIndexes = collection.getIndexInfo()
-                                               .stream()
-                                               .map(obj -> obj.get("name").toString())
-                                               .filter(name -> !"_id_".equals(name))
-                                               .filter(name -> !creators.keySet().contains(name))
-                                               .collect(toList());
-      if (isNotEmpty(obsoleteIndexes)) {
-        logger.error("Obsolete indexes: {} : {}", collection.getName(), Joiner.on(", ").join(obsoleteIndexes));
-        obsoleteIndexes.forEach(name -> {
-          try {
-            collection.dropIndex(name);
-          } catch (RuntimeException ex) {
-            logger.error(format("Failed to drop index %s", name), ex);
-          }
-        });
-      }
+      // We should be attempting to drop indexes only if we successfully created all new ones
+      boolean okToDropIndexes = createNewIndexes(creators) == creators.size();
 
-      creators.forEach((name, creator) -> {
-        try {
-          for (int retry = 0; retry < 2; ++retry) {
-            try {
-              creator.create();
-              break;
-            } catch (MongoCommandException mex) {
-              // 86 - Index must have unique name.
-              if (mex.getErrorCode() == 85 || mex.getErrorCode() == 86) {
-                try {
-                  logger.warn("Drop index: {}.{}", collection.getName(), name);
-                  collection.dropIndex(name);
-                } catch (RuntimeException ex) {
-                  logger.error("Failed to drop index {}", name, mex);
-                }
-              } else {
-                logger.error("Failed to create index {}", name, mex);
+      final Map<String, Accesses> accesses = fetchIndexAccesses(collection);
+
+      if (okToDropIndexes) {
+        final List<DBObject> indexInfo = collection.getIndexInfo();
+        final List<String> obsoleteIndexes = indexInfo.stream()
+                                                 .map(obj -> obj.get("name").toString())
+                                                 .filter(name -> !"_id_".equals(name))
+                                                 .filter(name -> !creators.keySet().contains(name))
+                                                 .collect(toList());
+
+        if (isNotEmpty(obsoleteIndexes)) {
+          // Make sure that all indexes that we have are operational, we check that they have being seen since
+          // at least a day
+          final Date tooNew = tooNew();
+          okToDropIndexes = isOkToDropIndexes(tooNew, accesses, indexInfo);
+
+          if (okToDropIndexes) {
+            logger.error("Obsolete indexes: {} : {}", collection.getName(), join(", ", obsoleteIndexes));
+            obsoleteIndexes.forEach(name -> {
+              try {
+                collection.dropIndex(name);
+              } catch (RuntimeException ex) {
+                logger.error(format("Failed to drop index %s", name), ex);
               }
-            }
+            });
           }
-        } catch (DuplicateKeyException exception) {
-          logger.error(
-              "Because of deployment, a new index with uniqueness flag was introduced. Current data does not meet this expectation."
-                  + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
-              exception);
         }
-      });
+      }
 
       try {
         if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
-          checkForUnusedIndexes(collection);
+          checkForUnusedIndexes(collection, accesses);
         }
       } catch (Exception exception) {
         logger.warn("", exception);
@@ -264,8 +255,51 @@ public class IndexManager {
     if (isNotEmpty(obsoleteCollections)) {
       logger.error("Unknown mongo collections detected: {}\n"
               + "Please create migration to delete them or add them to the whitelist.",
-          Joiner.on(", ").join(obsoleteCollections));
+          join(", ", obsoleteCollections));
     }
+  }
+
+  static Date tooNew() {
+    return new Date(System.currentTimeMillis() - Duration.ofDays(1).toMillis());
+  }
+
+  static boolean isOkToDropIndexes(Date tooNew, Map<String, Accesses> accesses, List<DBObject> indexInfo) {
+    for (DBObject info : indexInfo) {
+      final String name = info.get("name").toString();
+      // Note that we are aware that we checking the obsolete indexes as well. This is to play on the safe side.
+      final Accesses access = accesses.get(name);
+      if (access == null || access.getSince().compareTo(tooNew) > 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static int createNewIndexes(Map<String, IndexCreator> creators) {
+    int created = 0;
+    for (Entry<String, IndexCreator> creator : creators.entrySet()) {
+      String name = creator.getKey();
+      try {
+        final IndexCreator indexCreator = creator.getValue();
+        indexCreator.create();
+        created++;
+      } catch (MongoCommandException mex) {
+        // 86 - Index must have unique name.
+        if (mex.getErrorCode() == 85 || mex.getErrorCode() == 86) {
+          logger.error("Index with name {} already exists. Always use new name when modifying an index", name, mex);
+        } else {
+          logger.error("Failed to create index {}", name, mex);
+        }
+      } catch (DuplicateKeyException exception) {
+        logger.error("Because of deployment, a new index with uniqueness flag was introduced. "
+                + "Current data does not meet this expectation."
+                + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
+            exception);
+      } catch (RuntimeException exception) {
+        logger.error("Unexpected exception when trying to create index {}", name, exception);
+      }
+    }
+    return created;
   }
 
   public static Map<String, IndexCreator> indexCreators(MappedClass mc, DBCollection collection) {
@@ -275,8 +309,6 @@ public class IndexManager {
     List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
     if (indexesAnnotations != null) {
       indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-        reportDeprecatedUnique(index);
-
         BasicDBObject keys = new BasicDBObject();
         for (Field field : index.fields()) {
           keys.append(field.value(), field.type().toIndexValue());
@@ -291,7 +323,7 @@ public class IndexManager {
           DBObject options = new BasicDBObject();
           options.put("name", indexName);
           if (index.options().unique()) {
-            options.put("unique", Boolean.TRUE);
+            options.put(UNIQUE, Boolean.TRUE);
           } else {
             options.put("background", Boolean.TRUE);
           }
@@ -304,7 +336,6 @@ public class IndexManager {
     for (final MappedField mf : mc.getPersistenceFields()) {
       if (mf.hasAnnotation(Indexed.class)) {
         final Indexed indexed = mf.getAnnotation(Indexed.class);
-        reportDeprecatedUnique(indexed);
 
         int direction = 1;
         final String name = isNotEmpty(indexed.options().name()) ? indexed.options().name() : mf.getNameToStore();
@@ -315,7 +346,7 @@ public class IndexManager {
         DBObject options = new BasicDBObject();
         options.put("name", indexName);
         if (indexed.options().unique()) {
-          options.put("unique", Boolean.TRUE);
+          options.put(UNIQUE, Boolean.TRUE);
         } else {
           options.put("background", Boolean.TRUE);
         }
@@ -328,19 +359,5 @@ public class IndexManager {
     }
 
     return creators;
-  }
-
-  @SuppressWarnings("deprecation")
-  public static void reportDeprecatedUnique(final Index index) {
-    if (index.unique()) {
-      throw new UnexpectedException("Someone still uses deprecated unique annotation");
-    }
-  }
-
-  @SuppressWarnings("deprecation")
-  public static void reportDeprecatedUnique(final Indexed indexed) {
-    if (indexed.unique()) {
-      throw new UnexpectedException("Someone still uses deprecated unique annotation");
-    }
   }
 }
