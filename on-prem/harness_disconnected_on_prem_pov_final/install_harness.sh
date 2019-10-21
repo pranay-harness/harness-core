@@ -164,14 +164,14 @@ function createMongoFiles() {
 
 function checkAndCreateMongoFiles() {
    if [ ! -d "$runtime_dir/mongo" ]; then
-     createMongoFiles()
+     createMongoFiles
    else
        echo "##### Mongo directory already present checking for files in it ######## "
        if [  "$(ls -A $runtime_dir/mongo)"  ]; then
             echo "##### Mongo directory is non-empty hence skipping creation of mongo files ######## "
        else
             echo "##### Mongo direcotry is empty hence creating mongo files ######## "
-            createMongoFiles()
+            createMongoFiles
        fi
    fi
 }
