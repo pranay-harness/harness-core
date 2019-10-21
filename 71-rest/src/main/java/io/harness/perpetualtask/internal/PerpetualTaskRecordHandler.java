@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.mongo.MongoPersistenceIterator;
@@ -63,8 +64,8 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
     PerpetualTaskServiceClient client = clientRegistry.getClient(taskRecord.getPerpetualTaskType());
     DelegateTask validationTask = client.getValidationTask(taskRecord.getClientContext(), taskRecord.getAccountId());
     try {
-      AssignmentTaskResponse response = delegateService.executeTask(validationTask);
-      String delegateId = response.getDelegateId();
+      DelegateTaskNotifyResponseData response = delegateService.executeTask(validationTask);
+      String delegateId = response.getDelegateMetaInfo().getId();
       logger.info("Delegate {} is assigned to the inactive {} perpetual task with id {}.", delegateId,
           taskRecord.getPerpetualTaskType(), taskRecord.getUuid());
       perpetualTaskRecordDao.setDelegateId(taskRecord.getUuid(), delegateId);
