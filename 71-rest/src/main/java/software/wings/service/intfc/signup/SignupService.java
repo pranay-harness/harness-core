@@ -9,6 +9,7 @@ import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.resources.UserResource.UpdatePasswordRequest;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.SimpleUrlBuilder;
+import software.wings.signup.OnpremSignupHandler;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.Response;
 @Slf4j
 public class SignupService {
   @Inject MarketoSignupHandler marketoSignupHandler;
+  @Inject OnpremSignupHandler onpremSignupHandler;
   @Inject AzureMarketplaceIntegrationService azureMarketplaceIntegrationService;
   @Inject AzureMarketplaceSignupHandler azureMarketplaceSignupHandler;
   @Inject AuthenticationUtils authenticationUtils;
@@ -32,6 +34,8 @@ public class SignupService {
     switch (sourceType) {
       case MARKETO_LINKEDIN:
         return marketoSignupHandler.handle(userInvite);
+      case ONPREM:
+        return onpremSignupHandler.handle(userInvite);
       case AZURE_MARKETPLACE:
         return azureMarketplaceSignupHandler.handle(userInvite);
       default:

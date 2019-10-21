@@ -52,7 +52,6 @@ newinstallation=false
 if [[ $(checkIfFileExists "$runtime_dir/savedState") -eq 1 ]]; then
     echo "No state found, creating a new savedState"
     newinstallation=true
-    learningengine_secret=$(generateRandomStringOfLength 32)
     account_secret=$(generateRandomString)
     jwtPasswordSecret=$(generateRandomStringOfLength 80)
     jwtExternalServiceSecret=$(generateRandomStringOfLength 80)
@@ -60,7 +59,7 @@ if [[ $(checkIfFileExists "$runtime_dir/savedState") -eq 1 ]]; then
     jwtMultiAuthSecret=$(generateRandomStringOfLength 80)
     jwtSsoRedirectSecret=$(generateRandomStringOfLength 80)
     accountKey=$(generateRandomStringOfLength 22)
-    echo "learningengine_secret"=$learningengine_secret > "$runtime_dir/savedState"
+
     echo "account_secret"=$account_secret >> "$runtime_dir/savedState"
     echo "jwtPasswordSecret"=$jwtPasswordSecret >> "$runtime_dir/savedState"
     echo "jwtExternalServiceSecret="$jwtExternalServiceSecret >> "$runtime_dir/savedState"
@@ -235,6 +234,20 @@ function seedMongoDB(){
 
 }
 
+function populateEnvironmentVariablesFromMongo(){
+    echo "################################ Populating  learning engine secret from db ################################"
+
+    echo $MANAGER1
+    until $(curl --silent --output /dev/null --fail http://$MANAGER1/api/version); do
+        echo "Manger not up yet. Sleeping for 30 seconds"
+        sleep 30s
+    done
+
+    learningengine_secret=$(docker exec mongoContainer bash -c "mongo mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/harness?authSource=admin --quiet --eval \"db.getCollection('serviceSecrets').findOne({'serviceType' : 'LEARNING_ENGINE'}, {'serviceSecret' : 1, _id: 0}).serviceSecret\" ")
+    echo "Learning engine secret "$learningengine_secret
+    echo "learningengine_secret"=$learningengine_secret >> "$runtime_dir/savedState"
+}
+
 
 function setUpProxy(){
     echo "################################Setting up proxy ################################"
@@ -405,13 +418,17 @@ function startUp(){
     loadDockerImages
     if [[ ${newinstallation} == "true" ]];then
         setUpMongoDBFirstTime
-        seedMongoDB
     else
-        echo "Not seeding Mongo,existing installation found "
+        echo "Not seeding Mongo, existing installation found "
     fi
     setUpMongoDB
     setUpProxy
     setupManager
+
+    if [[ ${newinstallation} == "true" ]];then
+        populateEnvironmentVariablesFromMongo
+    fi
+
     setUpVerificationService
     setupUI
     setUpLearningEngine
