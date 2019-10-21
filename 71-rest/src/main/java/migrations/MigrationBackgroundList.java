@@ -117,9 +117,11 @@ public class MigrationBackgroundList {
         .add(Pair.of(60, BaseMigration.class))
         .add(Pair.of(61, BaseMigration.class))
         .add(Pair.of(62, BaseMigration.class))
-        .add(Pair.of(63, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(63, BaseMigration.class))
         .add(Pair.of(64, MigratePipelineStagesToUseDisableAssertion.class))
         .add(Pair.of(65, BaseMigration.class))
+        .add(Pair.of(66, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(67, BaseMigration.class))
         .build();
   }
 }
