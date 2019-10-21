@@ -55,6 +55,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
@@ -83,6 +84,7 @@ public class SpotInstStateHelper {
   @Inject private SecretManager secretManager;
   @Inject private ActivityService activityService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AwsCommandHelper commandHelper;
 
   public SpotInstSetupStateExecutionData prepareStateExecutionData(
       ExecutionContext context, SpotInstServiceSetup serviceSetup) {
@@ -90,7 +92,7 @@ public class SpotInstStateHelper {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     Application app = appService.get(context.getAppId());
-    Environment env = workflowStandardParams.getEnv();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
 
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceElement.getUuid());
@@ -280,16 +282,18 @@ public class SpotInstStateHelper {
   }
 
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
-      String infrastructureMappingId, Object[] parameters, int timeout) {
+      String infrastructureMappingId, SpotInstCommandRequest spotInstCommandRequest) {
     return DelegateTask.builder()
         .async(true)
         .accountId(accountId)
         .appId(appId)
         .waitId(waitId)
+        .tags(commandHelper.nonEmptyTag(spotInstCommandRequest.getAwsConfig()))
         .data(TaskData.builder()
                   .taskType(taskType.name())
-                  .parameters(parameters)
-                  .timeout(TimeUnit.MINUTES.toMillis(timeout))
+                  .parameters(new Object[] {spotInstCommandRequest})
+                  .timeout(TimeUnit.MINUTES.toMillis(generateTimeOutForDelegateTask(
+                      spotInstCommandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())))
                   .build())
         .envId(envId)
         .infrastructureMappingId(infrastructureMappingId)

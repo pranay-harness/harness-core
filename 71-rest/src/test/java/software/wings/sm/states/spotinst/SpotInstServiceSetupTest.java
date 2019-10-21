@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -63,7 +62,7 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
     DelegateTask task = DelegateTask.builder().build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), anyInt());
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any());
     state.execute(mockContext);
     verify(mockDelegateService).queueTask(any());
   }

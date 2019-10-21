@@ -88,7 +88,7 @@ public class SpotInstListenerUpdateState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
-    Environment env = workflowStandardParams.getEnv();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
     Application app = appService.get(context.getAppId());
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping =
         (AwsAmiInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
@@ -121,10 +121,9 @@ public class SpotInstListenerUpdateState extends State {
     stateExecutionData.setSpotinstCommandRequest(spotInstCommandRequest);
     setElastigroupFieldsInStateExecutionData(spotInstSetupContextElement, stateExecutionData);
 
-    DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
-        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
-        new Object[] {spotInstCommandRequest},
-        spotInstStateHelper.generateTimeOutForDelegateTask(spotInstTaskParameters.getTimeoutIntervalInMin()));
+    DelegateTask task =
+        spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.SPOTINST_COMMAND_TASK,
+            activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(), spotInstCommandRequest);
 
     delegateService.queueTask(task);
     return ExecutionResponse.builder()
