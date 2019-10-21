@@ -22,6 +22,8 @@ public interface SampleDataProviderConstants {
   String K8S_SERVICE_INFRA_NAME = "To-Do List K8s";
   String K8S_SERVICE_INFRA_DEFAULT_NAMESPACE = "default";
 
+  String K8S_INFRA_NAME = "K8s";
+
   String K8S_QA_ENVIRONMENT = "qa";
   String K8S_PROD_ENVIRONMENT = "prod";
 

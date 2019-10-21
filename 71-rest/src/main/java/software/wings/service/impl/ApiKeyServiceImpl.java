@@ -9,6 +9,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Objects.requireNonNull;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -23,6 +24,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.UnauthorizedException;
+import io.harness.persistence.HQuery;
 import io.harness.security.SimpleEncryption;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
@@ -127,9 +129,11 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private void evictApiKeyAndRebuildCache(String apiKey, String accountId, boolean rebuild) {
-    Cache<String, ApiKeyEntry> apiKeyCache = cacheManager.getApiKeyCache();
-    Cache<String, UserPermissionInfo> apiKeyPermissionInfoCache = cacheManager.getApiKeyPermissionInfoCache();
-    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache = cacheManager.getApiKeyRestrictionInfoCache();
+    Cache<String, ApiKeyEntry> apiKeyCache = requireNonNull(cacheManager.getApiKeyCache());
+    Cache<String, UserPermissionInfo> apiKeyPermissionInfoCache =
+        requireNonNull(cacheManager.getApiKeyPermissionInfoCache());
+    Cache<String, UserRestrictionInfo> apiKeyRestrictionInfoCache =
+        requireNonNull(cacheManager.getApiKeyRestrictionInfoCache());
 
     boolean apiKeyPresent = apiKeyCache.remove(apiKey);
     boolean apiKeyPresentInPermissions = apiKeyPermissionInfoCache.remove(apiKey);
@@ -200,7 +204,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public PageResponse<ApiKeyEntry> list(
       PageRequest<ApiKeyEntry> pageRequest, String accountId, boolean loadUserGroups, boolean decrypt) {
     pageRequest.addFilter("accountId", EQ, accountId);
-    PageResponse<ApiKeyEntry> response = wingsPersistence.query(ApiKeyEntry.class, pageRequest);
+    PageResponse<ApiKeyEntry> response = wingsPersistence.query(ApiKeyEntry.class, pageRequest, HQuery.excludeValidate);
     if (response.isEmpty()) {
       return response;
     }
