@@ -149,7 +149,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenTryToUpdateResetDurationForNullMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateResetDuration(null));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateHeartbeat(null));
   }
 
   /**
@@ -162,7 +162,7 @@ public class MongoQueueTest extends PersistenceTest {
     // sets resetTimestamp on messageOne
     TestQueuableObject message = queue.get(Duration.ZERO, Duration.ZERO);
 
-    queue.updateResetDuration(message);
+    queue.updateHeartbeat(message);
 
     TestQueuableObject actual = getDatastore().get(TestQueuableObject.class, message.getId());
 
@@ -179,7 +179,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     queue.send(message);
 
-    queue.updateResetDuration(message);
+    queue.updateHeartbeat(message);
 
     TestQueuableObject actual = getDatastore().get(TestQueuableObject.class, message.getId());
 
@@ -202,7 +202,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     assertThat(messageResetTimeStamp).isAfter(beforeGet);
     queue.setHeartbeat(ofSeconds(20));
-    queue.updateResetDuration(message);
+    queue.updateHeartbeat(message);
 
     TestQueuableObject actual = getDatastore().get(TestQueuableObject.class, message.getId());
     log().info("Actual Timestamp of message = {}", actual.getResetTimestamp());

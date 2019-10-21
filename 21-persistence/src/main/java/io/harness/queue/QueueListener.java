@@ -115,7 +115,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       final T finalizedMessage = message;
 
       ScheduledFuture<?> future = timer.scheduleAtFixedRate(
-          () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
+          () -> queue.updateHeartbeat(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
       try {
         try (GlobalContextGuard guard = initGlobalContextGuard(message.getGlobalContext())) {
           onMessage(message);

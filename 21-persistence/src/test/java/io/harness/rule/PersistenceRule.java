@@ -36,6 +36,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +63,17 @@ public class PersistenceRule
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(TestQueuableObjectListener.class), 1);
+
+    closingFactory.addServer(new Closeable() {
+      @Override
+      public void close() throws IOException {
+        try {
+          queueListenerController.stop();
+        } catch (Exception exception) {
+          throw new IOException(exception);
+        }
+      }
+    });
   }
 
   @Override
