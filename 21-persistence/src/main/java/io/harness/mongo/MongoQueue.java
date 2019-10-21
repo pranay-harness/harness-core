@@ -4,14 +4,17 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
@@ -27,44 +30,25 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MongoQueue<T extends Queuable> implements Queue<T> {
   private final Class<T> klass;
-  private int resetDurationInSeconds;
+  @Setter private Duration heartbeat;
   private final boolean filterWithVersion;
 
   private Semaphore semaphore = new Semaphore(1);
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
-  /**
-   * Instantiates a new mongo queue impl.
-   *
-   * @param klass     the klass
-   * @param datastore the datastore
-   */
   public MongoQueue(Class<T> klass) {
-    this(klass, 5);
+    this(klass, ofSeconds(5));
   }
 
-  /**
-   * Instantiates a new mongo queue impl.
-   *
-   * @param klass                  the klass
-   * @param resetDurationInSeconds the reset duration in seconds
-   */
-  public MongoQueue(Class<T> klass, int resetDurationInSeconds) {
-    this(klass, resetDurationInSeconds, false);
+  public MongoQueue(Class<T> klass, Duration heartbeat) {
+    this(klass, heartbeat, false);
   }
 
-  /**
-   * Instantiates a new mongo queue impl.
-   *
-   * @param klass                  the klass
-   * @param resetDurationInSeconds the reset duration in seconds
-   * @param filterWithVersion      the filterWithVersion
-   */
-  public MongoQueue(Class<T> klass, int resetDurationInSeconds, boolean filterWithVersion) {
+  public MongoQueue(Class<T> klass, Duration heartbeat, boolean filterWithVersion) {
     Objects.requireNonNull(klass);
     this.klass = klass;
-    this.resetDurationInSeconds = resetDurationInSeconds;
+    this.heartbeat = heartbeat;
     this.filterWithVersion = filterWithVersion;
   }
 
@@ -74,7 +58,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
     boolean acquired = false;
     try {
-      if (acquired = semaphore.tryAcquire(wait.toMillis(), TimeUnit.MILLISECONDS)) {
+      acquired = semaphore.tryAcquire(wait.toMillis(), TimeUnit.MILLISECONDS);
+      if (acquired) {
         return getUnderLock(endTime, poll);
       }
     } catch (InterruptedException e) {
@@ -101,7 +86,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       UpdateOperations<T> updateOperations =
           datastore.createUpdateOperations(klass)
               .set(QueuableKeys.running, true)
-              .set(QueuableKeys.resetTimestamp, new Date(now.getTime() + resetDurationMillis()));
+              .set(QueuableKeys.resetTimestamp, new Date(now.getTime() + heartbeat().toMillis()));
 
       T message = HPersistence.retry(() -> datastore.findAndModify(query, updateOperations));
       if (message != null) {
@@ -125,7 +110,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
   @Override
   public void updateResetDuration(T message) {
-    Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
+    Date resetTimestamp = new Date(System.currentTimeMillis() + heartbeat().toMillis());
 
     Query<T> query = persistence.createQuery(klass)
                          .filter(QueuableKeys.id, message.getId())
@@ -160,7 +145,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       default:
         unhandled(filter);
     }
-    throw new RuntimeException(format("Unknown filter type %s", filter));
+    throw new UnexpectedException(format("Unknown filter type %s", filter));
   }
 
   @Override
@@ -197,23 +182,13 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public long resetDurationMillis() {
-    return TimeUnit.SECONDS.toMillis(resetDurationInSeconds);
+  public Duration heartbeat() {
+    return heartbeat;
   }
 
   @Override
   public String name() {
     return persistence.getCollection(klass).getName();
-  }
-
-  /**
-   * Reset duration.
-   *
-   * @param resetDurationInSeconds the reset duration in seconds
-   */
-  // package protected
-  public void resetDuration(int resetDurationInSeconds) {
-    this.resetDurationInSeconds = resetDurationInSeconds;
   }
 
   private Query<T> createQuery() {

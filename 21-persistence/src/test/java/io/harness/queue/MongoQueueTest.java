@@ -1,6 +1,7 @@
 package io.harness.queue;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+import static java.time.Duration.ZERO;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -136,7 +137,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldResetStuckMessageWhenResetDurationHasExpired() {
     queue.send(new TestQueuableObject(1));
 
-    queue.resetDuration(0);
+    queue.setHeartbeat(ZERO);
     // sets resetTimestamp on messageOne
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
@@ -191,7 +192,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   public void shouldExtendResetTimestampOfMessageWhichIsRunningAndNotExpired() {
-    queue.resetDuration(10);
+    queue.setHeartbeat(ofSeconds(10));
     queue.send(new TestQueuableObject(1));
 
     Date beforeGet = new Date();
@@ -200,7 +201,7 @@ public class MongoQueueTest extends PersistenceTest {
     Date messageResetTimeStamp = message.getResetTimestamp();
 
     assertThat(messageResetTimeStamp).isAfter(beforeGet);
-    queue.resetDuration(20);
+    queue.setHeartbeat(ofSeconds(20));
     queue.updateResetDuration(message);
 
     TestQueuableObject actual = getDatastore().get(TestQueuableObject.class, message.getId());
@@ -369,7 +370,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldFilterWithVersion() {
     Queue<TestQueuableObject> versionQueue;
-    versionQueue = new MongoQueue<>(TestQueuableObject.class, 5, true);
+    versionQueue = new MongoQueue<>(TestQueuableObject.class, ofSeconds(5), true);
     on(versionQueue).set("persistence", persistence);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     TestQueuableObject message = new TestQueuableObject(1);
@@ -382,7 +383,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldNotFilterWithVersion() {
     Queue<TestQueuableObject> versionQueue;
-    versionQueue = new MongoQueue<>(TestQueuableObject.class, 5, false);
+    versionQueue = new MongoQueue<>(TestQueuableObject.class, ofSeconds(5), false);
     on(versionQueue).set("persistence", persistence);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     TestQueuableObject message = new TestQueuableObject(1);

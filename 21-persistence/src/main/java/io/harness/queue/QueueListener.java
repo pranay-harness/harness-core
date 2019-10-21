@@ -106,7 +106,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       logger.trace("got message {}", message);
     }
 
-    long timerInterval = queue.resetDurationMillis() - 500;
+    long timerInterval = queue.heartbeat().toMillis() - 500;
     if (logger.isDebugEnabled()) {
       logger.debug("Started timer thread for message {} every {} ms", message, timerInterval);
     }

@@ -1,5 +1,8 @@
 package software.wings.app;
 
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
@@ -33,14 +36,19 @@ public class ManagerQueueModule extends AbstractModule {
     bind(new TypeLiteral<Queue<PruneEvent>>() {}).toInstance(new MongoQueue<>(PruneEvent.class));
     bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class));
     bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class));
-    bind(new TypeLiteral<Queue<DeploymentEvent>>() {}).toInstance(new MongoQueue<>(DeploymentEvent.class, 60, true));
-    bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {}).toInstance(new MongoQueue<>(KmsTransitionEvent.class, 30));
-    bind(new TypeLiteral<Queue<ExecutionEvent>>() {}).toInstance(new MongoQueue<>(ExecutionEvent.class, 30, true));
-    bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, true));
-    bind(new TypeLiteral<Queue<QueableEvent>>() {}).toInstance(new MongoQueue<>(QueableEvent.class, 60, true));
-    bind(new TypeLiteral<Queue<InstanceEvent>>() {}).toInstance(new MongoQueue<>(InstanceEvent.class, 60, true));
+    bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
+        .toInstance(new MongoQueue<>(DeploymentEvent.class, ofMinutes(1), true));
+    bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
+        .toInstance(new MongoQueue<>(KmsTransitionEvent.class, ofSeconds(30)));
+    bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
+        .toInstance(new MongoQueue<>(ExecutionEvent.class, ofSeconds(30), true));
+    bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, ofSeconds(5), true));
+    bind(new TypeLiteral<Queue<QueableEvent>>() {})
+        .toInstance(new MongoQueue<>(QueableEvent.class, ofMinutes(1), true));
+    bind(new TypeLiteral<Queue<InstanceEvent>>() {})
+        .toInstance(new MongoQueue<>(InstanceEvent.class, ofMinutes(1), true));
     bind(new TypeLiteral<Queue<DeploymentTimeSeriesEvent>>() {})
-        .toInstance(new MongoQueue<>(DeploymentTimeSeriesEvent.class, 60, true));
+        .toInstance(new MongoQueue<>(DeploymentTimeSeriesEvent.class, ofMinutes(1), true));
 
     bind(new TypeLiteral<QueueListener<PruneEvent>>() {}).to(PruneEntityListener.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
