@@ -163,6 +163,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -205,16 +206,16 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private InfrastructureDefinitionHelper infrastructureDefinitionHelper;
 
   private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
-      new HashMap<CloudProviderType, EnumSet<DeploymentType>>() {
-        {
-          put(CloudProviderType.AWS, EnumSet.of(SSH, WINRM, ECS, AWS_LAMBDA, AMI, AWS_CODEDEPLOY));
-          put(CloudProviderType.AZURE, EnumSet.of(SSH, WINRM, HELM, KUBERNETES));
-          put(CloudProviderType.GCP, EnumSet.of(HELM, KUBERNETES));
-          put(CloudProviderType.KUBERNETES_CLUSTER, EnumSet.of(HELM, KUBERNETES));
-          put(CloudProviderType.PCF, EnumSet.of(PCF));
-          put(CloudProviderType.PHYSICAL_DATA_CENTER, EnumSet.of(SSH, WINRM));
-        }
-      };
+      new EnumMap<>(CloudProviderType.class);
+  static {
+    supportedCloudProviderDeploymentTypes.put(
+        CloudProviderType.AWS, EnumSet.of(SSH, WINRM, ECS, AWS_LAMBDA, AMI, AWS_CODEDEPLOY));
+    supportedCloudProviderDeploymentTypes.put(CloudProviderType.AZURE, EnumSet.of(SSH, WINRM, HELM, KUBERNETES));
+    supportedCloudProviderDeploymentTypes.put(CloudProviderType.GCP, EnumSet.of(HELM, KUBERNETES));
+    supportedCloudProviderDeploymentTypes.put(CloudProviderType.KUBERNETES_CLUSTER, EnumSet.of(HELM, KUBERNETES));
+    supportedCloudProviderDeploymentTypes.put(CloudProviderType.PCF, EnumSet.of(PCF));
+    supportedCloudProviderDeploymentTypes.put(CloudProviderType.PHYSICAL_DATA_CENTER, EnumSet.of(SSH, WINRM));
+  }
 
   @Inject private WorkflowExecutionService workflowExecutionService;
 
