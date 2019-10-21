@@ -74,6 +74,7 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -147,6 +148,8 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.artifact.ArtifactStreamBinding;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -178,6 +181,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -255,6 +259,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -320,7 +325,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
     request.addFilter("appId", EQ, APP_ID);
-    when(mockWingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<>());
+    Service mockService = Service.builder().uuid(SERVICE_ID).appId(APP_ID).build();
+    when(mockWingsPersistence.query(Service.class, request))
+        .thenReturn(aPageResponse().withResponse(asList(mockService)).build());
     PageRequest<ServiceCommand> serviceCommandPageRequest =
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, APP_ID).build();
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
@@ -333,13 +340,27 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                  .withCommand(commandBuilder.build())
                                                  .build()))
                         .build());
-    srs.list(request, false, true, false, null);
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(mockService)).thenReturn(asList(ARTIFACT_STREAM_ID));
+    when(artifactStreamService.listByIds(asList(ARTIFACT_STREAM_ID)))
+        .thenReturn(asList(DockerArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).build()));
+    when(artifactStreamServiceBindingService.list(APP_ID, SERVICE_ID))
+        .thenReturn(asList(ArtifactStreamBinding.builder().name("test").build()));
+    PageResponse<Service> response = srs.list(request, true, true, true, null);
     ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
     verify(mockWingsPersistence).query(eq(Service.class), argument.capture());
     SearchFilter filter = (SearchFilter) argument.getValue().getFilters().get(0);
     assertThat(filter.getFieldName()).isEqualTo("appId");
     assertThat(filter.getFieldValues()).containsExactly(APP_ID);
     assertThat(filter.getOp()).isEqualTo(EQ);
+
+    List<Service> services = response.getResponse();
+    assertThat(services).isNotNull();
+    Service service = services.get(0);
+    assertThat(service.getServiceCommands()).isNotNull();
+    assertThat(service.getArtifactStreams()).isNotNull();
+    assertThat(service.getArtifactStreams().size()).isEqualTo(1);
+    assertThat(service.getArtifactStreamBindings()).isNotNull();
+    assertThat(service.getArtifactStreamBindings().size()).isEqualTo(1);
   }
 
   @Test
