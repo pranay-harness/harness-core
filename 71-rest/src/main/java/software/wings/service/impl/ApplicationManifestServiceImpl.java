@@ -78,6 +78,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @Slf4j
 public class ApplicationManifestServiceImpl implements ApplicationManifestService {
+  private static final int ALLOWED_SIZE_IN_BYTES = 1024 * 1024; // 1 MiB
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -829,7 +831,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   private void doFileValidations(ManifestFile manifestFile) {
-    doFileSizeValidation(manifestFile, 16 * 1024);
+    doFileSizeValidation(manifestFile, ALLOWED_SIZE_IN_BYTES);
   }
 
   @VisibleForTesting
