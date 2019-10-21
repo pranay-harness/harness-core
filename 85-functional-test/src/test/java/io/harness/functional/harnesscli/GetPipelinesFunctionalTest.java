@@ -30,7 +30,7 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
 
   private Application application;
-  private String defaultOutput = "No pipelines to show.";
+  private String defaultOutput = "No Pipelines were found in the Application provided";
   private Pipeline testPipeline;
 
   private final Seed seed = new Seed(0);
@@ -106,13 +106,13 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
     logger.info("Running harness get pipelines with invalid app ID");
     List<String> cliOutput = null;
     try {
-      cliOutput = harnesscliHelper.getCLICommandError(command);
+      cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
       logger.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
     assertThat(cliOutput.size()).isEqualTo(1);
-    assertThat(cliOutput.get(0).equals(defaultOutput));
+    assertThat(cliOutput.get(0)).isEqualTo(defaultOutput);
   }
 }

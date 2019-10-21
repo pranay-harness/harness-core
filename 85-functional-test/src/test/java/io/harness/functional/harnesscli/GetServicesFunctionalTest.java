@@ -34,7 +34,7 @@ public class GetServicesFunctionalTest extends AbstractFunctionalTest {
 
   private Application application;
   private Service testService;
-  private String defaultOutput = "No services to show.";
+  private String defaultOutput = "No Services were found in the Application provided";
 
   private final Seed seed = new Seed(0);
   private Owners owners;
@@ -109,13 +109,13 @@ public class GetServicesFunctionalTest extends AbstractFunctionalTest {
     logger.info("Running harness get services with invalid app ID");
     List<String> cliOutput = null;
     try {
-      cliOutput = harnesscliHelper.getCLICommandError(command);
+      cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
       logger.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
     assertThat(cliOutput.size()).isEqualTo(1);
-    assertThat(cliOutput.get(0).equals(defaultOutput));
+    assertThat(cliOutput.get(0)).isEqualTo(defaultOutput);
   }
 }

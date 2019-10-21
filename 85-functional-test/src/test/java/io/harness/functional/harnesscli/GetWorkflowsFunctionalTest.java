@@ -34,7 +34,7 @@ public class GetWorkflowsFunctionalTest extends AbstractFunctionalTest {
   @Inject private WorkflowUtils workflowUtils;
 
   private Application application;
-  private String defaultOutput = "No workflows to show.";
+  private String defaultOutput = "No Workflows were found in the Application provided";
   private Workflow testWorkflow;
 
   private final Seed seed = new Seed(0);
@@ -110,13 +110,13 @@ public class GetWorkflowsFunctionalTest extends AbstractFunctionalTest {
     logger.info("Running harness get workflows with invalid app ID");
     List<String> cliOutput = null;
     try {
-      cliOutput = harnesscliHelper.getCLICommandError(command);
+      cliOutput = harnesscliHelper.executeCLICommand(command);
     } catch (Exception IOException) {
       logger.info("Could not read output of terminal command");
       assertThat(false).isTrue();
     }
     assertThat(cliOutput).isNotNull();
     assertThat(cliOutput.size()).isEqualTo(1);
-    assertThat(cliOutput.get(0).equals(defaultOutput));
+    assertThat(cliOutput.get(0)).isEqualTo(defaultOutput);
   }
 }
