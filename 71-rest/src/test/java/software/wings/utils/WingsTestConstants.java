@@ -13,6 +13,12 @@ import lombok.Value;
 public interface WingsTestConstants {
   String APP_ID = "APP_ID";
 
+  String PROJECT_ID = "PROJECT_ID";
+
+  String REPO_NAME = "REPO_NAME";
+
+  String REPOSITORY_FORMAT = "REPOSITORY_FORMAT";
+
   String TARGET_APP_ID = "TARGET_APP_ID";
 
   String APP_NAME = "APP_NAME";
