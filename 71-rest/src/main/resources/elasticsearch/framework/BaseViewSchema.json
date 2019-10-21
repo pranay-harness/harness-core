@@ -1,11 +1,20 @@
 {
   "settings" : {
-    "index" : { "number_of_replicas": 1, "number_of_shards": 1},
-    "analysis" : {
-      "analyzer" : {"custom_analyzer" : {"tokenizer" : "custom_tokenizer"}},
-      "tokenizer" : {
-        "custom_tokenizer" :
-        {"type" : "edge_ngram", "min_gram" : "1", "max_gram" : "25"}
+    "index" : {
+      "number_of_replicas": 1,
+      "number_of_shards": 1
+    },
+    "analysis": {
+      "tokenizer": {
+        "camel_case_tokenizer": {
+          "type":       "pattern",
+          "pattern": "([^\\p{L}\\d]+)|(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)|(?<=[\\p{L}&&[^\\p{Lu}]])(?=\\p{Lu})|(?<=\\p{Lu})(?=\\p{Lu}[\\p{L}&&[^\\p{Lu}]])"
+        }
+      },
+      "analyzer": {
+        "camel_case_analyzer": {
+          "tokenizer": "camel_case_tokenizer"
+        }
       }
     }
   },
@@ -40,7 +49,7 @@
       : {"type" : "text", "analyzer" : "standard"},
       "id" : {"type" : "keyword"},
       "lastUpdatedAt" : {"type" : "long","index" : false},
-      "name" : {"type" : "text", "analyzer": "standard" },
+      "name" : {"type" : "text", "analyzer": "camel_case_analyzer" },
       "type" : {
         "type" : "keyword",
         "index" : false

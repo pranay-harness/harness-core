@@ -56,6 +56,7 @@ public class ElasticsearchServiceImpl implements SearchService {
   @Inject protected Map<Class<? extends PersistentEntity>, SearchEntity<?>> searchEntityMap;
   private static final int MAX_RESULTS = 50;
   private static final int BOOST_VALUE = 5;
+  private static final int SLOP_DISTANCE_VALUE = 10;
 
   public SearchResults getSearchResults(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
     SearchHits hits = search(searchString, accountId);
@@ -139,11 +140,12 @@ public class ElasticsearchServiceImpl implements SearchService {
 
   private static BoolQueryBuilder createQuery(@NotBlank String searchString, @NotBlank String accountId) {
     BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-    QueryBuilder queryBuilder =
-        QueryBuilders.disMaxQuery()
-            .add(QueryBuilders.matchPhrasePrefixQuery(EntityBaseViewKeys.name, searchString).boost(BOOST_VALUE))
-            .add(QueryBuilders.matchPhraseQuery(EntityBaseViewKeys.description, searchString))
-            .tieBreaker(0.7f);
+    QueryBuilder queryBuilder = QueryBuilders.disMaxQuery()
+                                    .add(QueryBuilders.matchPhrasePrefixQuery(EntityBaseViewKeys.name, searchString)
+                                             .boost(BOOST_VALUE)
+                                             .slop(SLOP_DISTANCE_VALUE))
+                                    .add(QueryBuilders.matchPhraseQuery(EntityBaseViewKeys.description, searchString))
+                                    .tieBreaker(0.7f);
     boolQueryBuilder.must(queryBuilder).filter(QueryBuilders.termQuery(EntityBaseViewKeys.accountId, accountId));
     return boolQueryBuilder;
   }
