@@ -88,7 +88,8 @@ public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private MigrateDelegateScopesToInfraDefinition migrateDelegateScopesToInfraDefinition;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
-  private final List<String> accountIds = Arrays.asList("jDOmhrFmSOGZJ1C91UC_hg", "SAsyUUHTTImuYSZ35HPDvw");
+  // Accounts Migrated "jDOmhrFmSOGZJ1C91UC_hg", "SAsyUUHTTImuYSZ35HPDvw"
+  private final List<String> accountIds = Arrays.asList("-oSRX0KNRni3wCdyoesp8Q");
 
   public void migrate() {
     for (String accountId : accountIds) {
