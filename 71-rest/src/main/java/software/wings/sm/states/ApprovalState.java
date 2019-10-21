@@ -30,6 +30,7 @@ import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackAp
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -255,7 +256,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     super.parseProperties(properties);
   }
 
-  private void setPipelineVariables(ExecutionContext context) {
+  @VisibleForTesting
+  void setPipelineVariables(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Map<String, Object> workflowVariables = new HashMap<>();
     if (isNotEmpty(workflowStandardParams.getWorkflowVariables())) {
