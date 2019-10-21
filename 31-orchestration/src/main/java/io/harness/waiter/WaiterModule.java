@@ -1,5 +1,7 @@
 package io.harness.waiter;
 
+import static java.time.Duration.ofSeconds;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.TypeLiteral;
 
@@ -23,7 +25,7 @@ public class WaiterModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueue<>(NotifyEvent.class, 5, true));
+    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueue<>(NotifyEvent.class, ofSeconds(5), true));
     bind(new TypeLiteral<QueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
   }
 

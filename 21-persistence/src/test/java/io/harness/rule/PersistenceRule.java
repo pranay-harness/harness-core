@@ -1,5 +1,7 @@
 package io.harness.rule;
 
+import static java.time.Duration.ofSeconds;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -96,7 +98,7 @@ public class PersistenceRule
       @Override
       protected void configure() {
         bind(new TypeLiteral<Queue<TestQueuableObject>>() {})
-            .toInstance(new MongoQueue<>(TestQueuableObject.class, 5, true));
+            .toInstance(new MongoQueue<>(TestQueuableObject.class, ofSeconds(5), true));
 
         bind(QueueController.class).toInstance(new QueueController() {
           @Override

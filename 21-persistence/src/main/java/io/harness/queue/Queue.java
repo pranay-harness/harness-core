@@ -71,7 +71,7 @@ public interface Queue<T> {
    *
    * @return reset duration in milliseconds
    */
-  long resetDurationMillis();
+  Duration heartbeat();
 
   /**
    * Returns the name of the queue.

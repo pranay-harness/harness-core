@@ -105,7 +105,7 @@ public class QueueListenerTest extends PersistenceTest {
       assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
       listener.setRunOnce(true);
-      queue.resetDuration(1);
+      queue.setHeartbeat(ofSeconds(1));
 
       doAnswer(invocation -> {
         log().info("In mock executor");
