@@ -1,7 +1,9 @@
 package io.harness.queue;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ZERO;
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -15,7 +17,6 @@ import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -35,11 +36,6 @@ public class MongoQueueTest extends PersistenceTest {
 
   private MongoQueue<TestQueuableObject> queue;
 
-  /**
-   * Setup.
-   *
-   * @throws UnknownHostException the unknown host exception
-   */
   @Before
   public void setup() throws UnknownHostException {
     queue = new MongoQueue<>(TestQueuableObject.class);
@@ -47,9 +43,6 @@ public class MongoQueueTest extends PersistenceTest {
     on(queue).set("versionInfoManager", versionInfoManager);
   }
 
-  /**
-   * Should not get message once acquired.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldNotGetMessageOnceAcquired() {
@@ -61,9 +54,6 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
   }
 
-  /**
-   * Should return message in time order.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldReturnMessageInTimeOrder() {
@@ -80,9 +70,6 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageThree);
   }
 
-  /**
-   * Should wait for specified time period for get when no messages.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
@@ -93,11 +80,7 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(elapsed).isBetween(1000L, 3000L);
   }
 
-  /**
-   * Should get message when available within wait period.
-   */
   @Test
-  @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldGetMessageWhenAvailableWithinWaitPeriod() {
     Date start = new Date();
@@ -109,13 +92,7 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(new Date().getTime() - start.getTime()).isLessThan(2000);
   }
 
-  /**
-   * Should not get message before earliest get.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
   @Test
-  @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
     TestQueuableObject message = new TestQueuableObject(1);
@@ -124,14 +101,11 @@ public class MongoQueueTest extends PersistenceTest {
 
     assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
 
-    Thread.sleep(200);
+    sleep(ofMillis(200));
 
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
   }
 
-  /**
-   * Should reset stuck message when reset duration has expired.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldResetStuckMessageWhenResetDurationHasExpired() {
@@ -143,18 +117,12 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
   }
 
-  /**
-   * Should throw npe when try to update reset duration for null message.
-   */
   @Test
   @Category(UnitTests.class)
-  public void shouldThrowNpeWhenTryToUpdateResetDurationForNullMessage() {
+  public void shouldThrowNpeWhenTryToUpdateResetTimestampForNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateHeartbeat(null));
   }
 
-  /**
-   * Should not extend reset timestamp of already expired message.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldNotExtendResetTimestampOfAlreadyExpiredMessage() {
@@ -169,9 +137,6 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(actual.getResetTimestamp()).isEqualTo(message.getResetTimestamp());
   }
 
-  /**
-   * Should not extend reset timestamp of message which is not running.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldNotExtendResetTimestampOfMessageWhichIsNotRunning() {
@@ -186,9 +151,6 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
 
-  /**
-   * Should extend reset timestamp of message which is running and not expired.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldExtendResetTimestampOfMessageWhichIsRunningAndNotExpired() {
@@ -212,9 +174,6 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
 
-  /**
-   * Should return count of objects in the queue.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldReturnCountOfObjectsInTheQueue() {
@@ -235,9 +194,6 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(queue.count(Filter.ALL)).isEqualTo(1);
   }
 
-  /**
-   * Should ack message.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldAckMessage() {
@@ -256,18 +212,12 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(getDatastore().getCount(TestQueuableObject.class)).isEqualTo(1);
   }
 
-  /**
-   * Should throw npe when acking null message.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenAckingNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ack(null));
   }
 
-  /**
-   * Should requeue message.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldRequeueMessage() {
@@ -293,27 +243,18 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(actual).isEqualToIgnoringGivenFields(expected, "id", "resetTimestamp");
   }
 
-  /**
-   * Should throw npe when requeuing with null earliest get.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue("id", 0, null));
   }
 
-  /**
-   * Should throw npe when send is called with null message.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenSendIsCalledWithNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.send(null));
   }
 
-  /**
-   * Should send message.
-   */
   @Test
   @Owner(emails = GEORGE)
   @Category(UnitTests.class)
@@ -341,9 +282,6 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");
   }
 
-  /**
-   * Should send and get message with entity reference.
-   */
   @Test
   @Category(UnitTests.class)
   public void shouldSendAndGetMessageWithEntityReference() {
