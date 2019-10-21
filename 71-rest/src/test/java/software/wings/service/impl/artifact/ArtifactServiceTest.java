@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.data.MapEntry.entry;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -16,7 +17,6 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
-import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.NOT_DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.Status;
@@ -52,6 +52,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.BaseFile;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -62,6 +63,7 @@ import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.EcrArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
@@ -77,11 +79,14 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.ConstraintViolationException;
 
 @SetupScheduler
@@ -97,6 +102,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private Queue<CollectEvent> collectQueue;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private SettingsService settingsService;
 
   @InjectMocks @Inject private ArtifactService artifactService;
   private String BUILD_NO = "buildNo";
@@ -246,12 +252,12 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateContentStatusWithErrorMessage() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    artifactService.updateStatus(
-        savedArtifact.getUuid(), savedArtifact.getAccountId(), Status.FAILED, FAILED, "Failed to download artifact");
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), Status.FAILED,
+        ContentStatus.FAILED, "Failed to download artifact");
     Artifact updatedArtifact = artifactService.get(savedArtifact.getUuid());
     assertThat(updatedArtifact).isNotNull();
     assertThat(updatedArtifact.getStatus()).isEqualTo(Status.FAILED);
-    assertThat(updatedArtifact.getContentStatus()).isEqualTo(FAILED);
+    assertThat(updatedArtifact.getContentStatus()).isEqualTo(ContentStatus.FAILED);
     assertThat(updatedArtifact.getErrorMessage()).isEqualTo("Failed to download artifact");
   }
 
@@ -312,6 +318,15 @@ public class ArtifactServiceTest extends WingsBaseTest {
         .extracting(Artifact::getBuildNo)
         .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
             "todolist-1.0-1.x86_64.rpm");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldListSortByBuildNoAtConnector() {
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID)).thenReturn(asList());
+    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+        GLOBAL_APP_ID, SERVICE_ID, aPageRequest().addFilter(ArtifactKeys.accountId, EQ, ACCOUNT_ID).build());
+    assertThat(artifacts).hasSize(0);
   }
 
   @Test
@@ -882,7 +897,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotDeleteFailedArtifacts() {
-    createArtifactWithArtifactFile(FAILED);
+    createArtifactWithArtifactFile(ContentStatus.FAILED);
     artifactService.deleteArtifacts(0);
     assertThat(artifactService.listByAppId(APP_ID)).hasSize(1);
   }
@@ -971,5 +986,226 @@ public class ArtifactServiceTest extends WingsBaseTest {
     savedArtifact.setContentStatus(contentStatus);
 
     wingsRule.getDatastore().save(savedArtifact);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testListByAppIdForGlobalAppId() {
+    assertThat(artifactService.listByAppId(GLOBAL_APP_ID)).hasSize(0);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFetchArtifactFiles() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
+    artifactService.addArtifactFile(savedArtifact.getUuid(), savedArtifact.getAccountId(), asList(artifactFile));
+    List<ArtifactFile> artifactFiles = artifactService.fetchArtifactFiles(savedArtifact.getUuid());
+    assertThat(artifactFiles.size()).isEqualTo(1);
+    assertThat(artifactFiles).extracting(BaseFile::getName).contains("test-artifact.war");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateArtifactAtConnectorWithoutAccountId() {
+    when(settingsService.fetchAccountIdBySettingId(SETTING_ID)).thenReturn(ACCOUNT_ID);
+    Builder artifactBuilder = anArtifact()
+                                  .withAppId(GLOBAL_APP_ID)
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                  .withSettingId(SETTING_ID)
+                                  .withRevision("1.0")
+                                  .withDisplayName("DISPLAY_NAME")
+                                  .withCreatedAt(System.currentTimeMillis())
+                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+
+    Artifact artifact = artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
+    assertThat(artifact).isNotNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateArtifactStatusForNexusAtConnector() {
+    Builder artifactBuilder = anArtifact()
+                                  .withAppId(GLOBAL_APP_ID)
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                  .withSettingId(SETTING_ID)
+                                  .withRevision("1.0")
+                                  .withDisplayName("DISPLAY_NAME")
+                                  .withCreatedAt(System.currentTimeMillis())
+                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .sourceName("nuget-hosted/NuGet.Sample.Package")
+                                                  .settingId(SETTING_ID)
+                                                  .appId(GLOBAL_APP_ID)
+                                                  .jobname("nuget-hosted")
+                                                  .packageName("NuGet.Sample.Package")
+                                                  .autoPopulate(true)
+                                                  .build();
+    when(artifactStreamService.get(artifact.getArtifactStreamId())).thenReturn(nexusArtifactStream);
+    Artifact artifact =
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "1.0.0.18279")).but().build());
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getBuildNo()).isEqualTo("1.0.0.18279");
+    assertThat(artifact.getContentStatus()).isEqualTo(NOT_DOWNLOADED);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateArtifactStatusForArtifactoryDockerAtConnector() {
+    Builder artifactBuilder = anArtifact()
+                                  .withAppId(GLOBAL_APP_ID)
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                  .withSettingId(SETTING_ID)
+                                  .withDisplayName("DISPLAY_NAME")
+                                  .withCreatedAt(System.currentTimeMillis())
+                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+    ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
+                                                              .sourceName("docker/hello-world-harness")
+                                                              .settingId(SETTING_ID)
+                                                              .appId(GLOBAL_APP_ID)
+                                                              .groupId("hello-world-harness")
+                                                              .imageName("hello-world-harness")
+                                                              .autoPopulate(true)
+                                                              .build();
+    when(artifactStreamService.get(artifact.getArtifactStreamId())).thenReturn(artifactoryArtifactStream);
+    Artifact artifact =
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "latest")).but().build());
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getBuildNo()).isEqualTo("latest");
+    assertThat(artifact.getContentStatus()).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateArtifactStatusForArtifactoryAnyAtConnector() {
+    Builder artifactBuilder = anArtifact()
+                                  .withAppId(GLOBAL_APP_ID)
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                  .withSettingId(SETTING_ID)
+                                  .withDisplayName("DISPLAY_NAME")
+                                  .withCreatedAt(System.currentTimeMillis())
+                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+    ArtifactoryArtifactStream artifactoryArtifactStream =
+        ArtifactoryArtifactStream.builder()
+            .sourceName("harness-maven/com/mycompany/app/todolist/1.0/todolist-*.war")
+            .settingId(SETTING_ID)
+            .appId(GLOBAL_APP_ID)
+            .jobname("harness-maven")
+            .artifactPattern("com/mycompany/app/todolist/1.0/todolist-*.war")
+            .autoPopulate(true)
+            .build();
+    when(artifactStreamService.get(artifact.getArtifactStreamId())).thenReturn(artifactoryArtifactStream);
+    Artifact artifact = artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0.war")).but().build());
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getBuildNo()).isEqualTo("todolist-1.0.war");
+    assertThat(artifact.getStatus()).isEqualTo(QUEUED);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateArtifactSourceName() {
+    CustomArtifactStream customArtifactStream =
+        CustomArtifactStream.builder().sourceName("test").uuid(ARTIFACT_STREAM_ID).build();
+    Builder artifactBuilder = anArtifact()
+                                  .withAppId(GLOBAL_APP_ID)
+                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                  .withSettingId(SETTING_ID)
+                                  .withAccountId(ACCOUNT_ID)
+                                  .withRevision("1.0")
+                                  .withDisplayName("DISPLAY_NAME")
+                                  .withCreatedAt(System.currentTimeMillis())
+                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+
+    Artifact artifact1 =
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0.war"))
+                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                   .withStatus(RUNNING)
+                                   .but()
+                                   .build());
+    Artifact artifact2 =
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.1.war"))
+                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                   .withStatus(READY)
+                                   .but()
+                                   .build());
+    Artifact artifact3 =
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.2.war"))
+                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                   .withStatus(Status.FAILED)
+                                   .but()
+                                   .build());
+    artifactService.updateArtifactSourceName(customArtifactStream);
+    Artifact updatedArtifact1 = artifactService.get(artifact1.getUuid());
+    assertThat(updatedArtifact1).isNotNull();
+    assertThat(updatedArtifact1.getArtifactSourceName()).isEqualTo("test");
+    Artifact updatedArtifact2 = artifactService.get(artifact2.getUuid());
+    assertThat(updatedArtifact2).isNotNull();
+    assertThat(updatedArtifact2.getArtifactSourceName()).isEqualTo("test");
+    Artifact updatedArtifact3 = artifactService.get(artifact3.getUuid());
+    assertThat(updatedArtifact3).isNotNull();
+    assertThat(updatedArtifact1.getArtifactSourceName()).isEqualTo("test");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetArtifactWithServices() {
+    Artifact artifact1 =
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0.war"))
+                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                   .withAppId(APP_ID)
+                                   .withStatus(RUNNING)
+                                   .but()
+                                   .build());
+    when(artifactStreamServiceBindingService.listServices(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(asList(Service.builder().name("Service1").build()));
+    Artifact artifact = artifactService.getWithServices(artifact1.getUuid(), APP_ID);
+    assertThat(artifact.getServices()).isNotEmpty();
+    assertThat(artifact.getServices()).extracting(Service::getName).containsExactly("Service1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetArtifactWithSource() {
+    Artifact artifact1 =
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0.war"))
+                                   .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withAppId(APP_ID)
+                                   .withStatus(RUNNING)
+                                   .but()
+                                   .build());
+    Map<String, String> sourceProperties = new HashMap<>();
+    sourceProperties.put("k1", "v1");
+    sourceProperties.put("k2", "v2");
+    when(artifactStreamService.fetchArtifactSourceProperties(ACCOUNT_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(sourceProperties);
+    Artifact artifact = artifactService.getWithSource(artifact1.getUuid());
+    assertThat(artifact.getSource()).isNotEmpty();
+    assertThat(artifact.getSource().size()).isEqualTo(2);
+    assertThat(artifact.getSource()).contains(entry("k1", "v1"), entry("k2", "v2"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetCustomArtifactByBuildNumberSource() {
+    CustomArtifactStream customArtifactStream =
+        CustomArtifactStream.builder().sourceName("test").uuid(ARTIFACT_STREAM_ID).build();
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), APPROVED);
+    Artifact latestArtifact =
+        artifactService.getArtifactByBuildNumber(customArtifactStream, savedArtifact.getBuildNo(), false);
+    assertThat(latestArtifact)
+        .isNotNull()
+        .extracting(Artifact::getArtifactSourceName)
+        .isEqualTo(savedArtifact.getArtifactSourceName());
   }
 }
