@@ -18,6 +18,7 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
@@ -91,10 +92,13 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionSimulator;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class workflowExecutionServiceTest.
@@ -385,6 +389,45 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setPipelineExecution(createPipelineExecution(approvalStateExecutionData));
 
+    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+        .thenReturn(workflowExecution);
+
+    ApprovalStateExecutionData returnedExecutionData =
+        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+            APP_ID, workflowExecution.getUuid(), null, approvalDetails);
+    assertThat(returnedExecutionData.getApprovalId()).isEqualTo(approvalId);
+    assertThat(returnedExecutionData.getUserGroups()).isEqualTo(asList(userGroup.getUuid()));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFetchApprovalStateExecutionDataWithEmptyStateExecution() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.APPROVE);
+
+    User user = createUser(USER_ID);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId(approvalId).userGroups(asList(userGroup.getUuid())).build();
+    approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Approval", approvalStateExecutionData);
+    final StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().displayName("Approval").stateExecutionMap(hashMap).build();
+
+    PageResponse<StateExecutionInstance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(stateExecutionInstance));
+    pageResponse.setTotal(1l);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(statequery.get()).thenReturn(stateExecutionInstance);
+    when(statequery.filter(any(), any())).thenReturn(statequery);
+    when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(statequery);
+    when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class))).thenReturn(pageResponse);
     when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 
