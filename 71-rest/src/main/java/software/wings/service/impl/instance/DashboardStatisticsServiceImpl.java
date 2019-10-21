@@ -171,7 +171,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         entityNameColumn = "computeProviderName";
         entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
       } else {
-        throw WingsException.builder().message("Unsupported groupBy entity type:" + groupByEntityType).build();
+        throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
       }
 
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
