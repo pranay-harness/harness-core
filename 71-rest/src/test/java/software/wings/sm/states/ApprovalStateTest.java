@@ -10,6 +10,8 @@ import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +36,8 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
+
+import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -73,10 +77,12 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -429,5 +435,28 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.ORCHESTRATION);
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_EXECUTION_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testParseProperties() {
+    final Map<String, Object> properties = new HashMap<>();
+    properties.put(EnvStateKeys.disable, true);
+    approvalState.parseProperties(properties);
+    assertThat(properties.get(EnvStateKeys.disableAssertion)).isEqualTo("true");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSetPipelineVariables() {
+    final ExecutionContext executionContextMock = mock(ExecutionContext.class);
+    final WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    workflowStandardParams.setWorkflowVariables(ImmutableMap.of("key", "value"));
+    doReturn(workflowStandardParams).when(executionContextMock).getContextElement(ContextElementType.STANDARD);
+    approvalState.setPipelineVariables(executionContextMock);
+    assertThat(workflowStandardParams.getWorkflowElement()).isNotNull();
+
+    approvalState.setPipelineVariables(executionContextMock);
+    assertThat(workflowStandardParams.getWorkflowElement().getVariables().get("key")).isEqualTo("value");
   }
 }
