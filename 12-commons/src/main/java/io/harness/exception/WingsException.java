@@ -82,6 +82,15 @@ public class WingsException extends RuntimeException {
   }
 
   @Deprecated
+  public static WingsExceptionBuilder builder() {
+    return new WingsExceptionBuilder();
+  }
+
+  protected static WingsExceptionBuilder internalBuilder() {
+    return new WingsExceptionBuilder();
+  }
+
+  @Deprecated
   public WingsException(String message) {
     this(UNKNOWN_ERROR, message);
   }
