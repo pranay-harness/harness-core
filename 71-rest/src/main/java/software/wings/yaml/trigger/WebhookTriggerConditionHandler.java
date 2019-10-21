@@ -32,7 +32,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
         .action(getYAMLActions(webHookTriggerCondition))
         .repositoryType(getBeanWebhookSourceForYAML(webHookTriggerCondition.getWebhookSource()))
         .eventType(getYAMLEventTypes(webHookTriggerCondition.getEventTypes()))
-        .branchName(webHookTriggerCondition.getBranchName())
+        .branchName(webHookTriggerCondition.getBranchRegex())
         .build();
   }
 
@@ -44,12 +44,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     WebhookEventTriggerConditionYaml webhookConditionYaml = (WebhookEventTriggerConditionYaml) yaml;
 
-    WebHookTriggerCondition webHookTriggerCondition =
-        WebHookTriggerCondition.builder()
-            .branchName(webhookConditionYaml.getBranchName())
-            .eventTypes(getBeansEventTypes(webhookConditionYaml.getEventType()))
-            .webhookSource(getBeanWebhookSource(webhookConditionYaml.getRepositoryType()))
-            .build();
+    WebHookTriggerCondition webHookTriggerCondition = fromYAML(webhookConditionYaml);
 
     if (EmptyPredicate.isNotEmpty(webhookConditionYaml.getRepositoryType())) {
       if (webhookConditionYaml.getRepositoryType().equals("GitLab")) {
@@ -62,6 +57,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     }
 
     return webHookTriggerCondition;
+  }
+
+  public WebHookTriggerCondition fromYAML(WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml) {
+    return WebHookTriggerCondition.builder()
+        .branchRegex(webhookEventTriggerConditionYaml.getBranchName())
+        .eventTypes(getBeansEventTypes(webhookEventTriggerConditionYaml.getEventType()))
+        .webhookSource(getBeanWebhookSource(webhookEventTriggerConditionYaml.getRepositoryType()))
+        .build();
   }
 
   private WebhookSource getBeanWebhookSource(String webhookSource) {
