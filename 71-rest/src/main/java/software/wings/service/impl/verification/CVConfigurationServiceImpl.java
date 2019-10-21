@@ -3,6 +3,7 @@ package software.wings.service.impl.verification;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.APM_CONFIGURATION_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -31,6 +32,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
@@ -44,6 +46,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeries
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
@@ -52,6 +55,7 @@ import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.PrometheusState;
+import software.wings.sm.states.StackDriverState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.apm.APMCVServiceConfiguration;
@@ -69,6 +73,8 @@ import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationKeys;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.StackDriverMetricCVConfigurationKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,6 +99,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject CvValidationService cvValidationService;
   @Inject private YamlPushService yamlPushService;
   @Inject private ExecutorService executorService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
 
@@ -157,6 +164,21 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
         break;
 
+      case STACK_DRIVER:
+        if (!featureFlagService.isEnabled(FeatureName.STACKDRIVER_SERVICEGUARD, accountId)) {
+          logger.info("Stackdriver metrics service guard 24/7 is not enabled for account {}", accountId);
+          throw new UnsupportedOperationException(
+              "Stackdriver metrics service guard 24/7 is not enabled for account " + accountId);
+        }
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), StackDriverMetricCVConfiguration.class);
+        ((StackDriverMetricCVConfiguration) cvConfiguration).setMetricFilters();
+        Map<String, String> stackDriverInvalidFields = StackDriverState.validateMetricDefinitions(
+            ((StackDriverMetricCVConfiguration) cvConfiguration).getMetricDefinitions(), true);
+        if (isNotEmpty(stackDriverInvalidFields)) {
+          throw new VerificationOperationException(
+              ErrorCode.APM_CONFIGURATION_ERROR, "Invalid configuration. Reason: " + stackDriverInvalidFields);
+        }
+        break;
       case SUMO:
       case DATA_DOG_LOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), LogsCVConfiguration.class);
@@ -362,6 +384,16 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case CLOUD_WATCH:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
+        break;
+      case STACK_DRIVER:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), StackDriverMetricCVConfiguration.class);
+        ((StackDriverMetricCVConfiguration) updatedConfig).setMetricFilters();
+        Map<String, String> stackDriverInvalidFields = StackDriverState.validateMetricDefinitions(
+            ((StackDriverMetricCVConfiguration) updatedConfig).getMetricDefinitions(), true);
+        if (isNotEmpty(stackDriverInvalidFields)) {
+          throw new VerificationOperationException(
+              APM_CONFIGURATION_ERROR, "Invalid setup: " + stackDriverInvalidFields);
+        }
         break;
       case SUMO:
       case DATA_DOG_LOG:
@@ -630,6 +662,19 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           updateOperations.unset("ecsMetrics");
         }
         break;
+      case STACK_DRIVER:
+        if (!featureFlagService.isEnabled(FeatureName.STACKDRIVER_SERVICEGUARD, savedConfiguration.getAccountId())) {
+          logger.info("Stackdriver metrics service guard 24/7 is not enabled for account {}",
+              savedConfiguration.getAccountId());
+          throw new UnsupportedOperationException(
+              "Stackdriver metrics service guard 24/7 is not enabled for account " + savedConfiguration.getAccountId());
+        }
+        StackDriverMetricCVConfiguration stackDriverMetricCVConfiguration =
+            (StackDriverMetricCVConfiguration) cvConfiguration;
+        stackDriverMetricCVConfiguration.setMetricFilters();
+        updateOperations.set(StackDriverMetricCVConfigurationKeys.metricDefinitions,
+            stackDriverMetricCVConfiguration.getMetricDefinitions());
+        break;
       case SUMO:
       case DATA_DOG_LOG:
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
@@ -791,6 +836,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         metricTemplates = PrometheusState.createMetricTemplates(
             ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze());
         break;
+      case STACK_DRIVER:
+        metricTemplates = ((StackDriverMetricCVConfiguration) cvConfiguration).fetchMetricTemplate();
+        break;
       case DATA_DOG:
         DatadogCVServiceConfiguration datadogCVServiceConfiguration = (DatadogCVServiceConfiguration) cvConfiguration;
         if (isNotEmpty(datadogCVServiceConfiguration.getDockerMetrics())) {
@@ -811,12 +859,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         metricTemplates = CloudWatchState.fetchMetricTemplates(
             CloudWatchServiceImpl.fetchMetrics((CloudWatchCVServiceConfiguration) cvConfiguration));
         break;
+
       case APM_VERIFICATION:
         APMCVServiceConfiguration apmcvServiceConfiguration = (APMCVServiceConfiguration) cvConfiguration;
         List<MetricCollectionInfo> metricCollectionInfos = apmcvServiceConfiguration.getMetricCollectionInfos();
         metricTemplates = metricDefinitions(
             APMVerificationState.buildMetricInfoMap(metricCollectionInfos, Optional.empty()).values());
         break;
+
       default:
         throw new VerificationOperationException(
             ErrorCode.APM_CONFIGURATION_ERROR, "No matching metric state type found " + stateType);

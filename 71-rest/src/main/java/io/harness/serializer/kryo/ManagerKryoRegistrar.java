@@ -657,6 +657,7 @@ import software.wings.utils.FileType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Instant;
@@ -1172,7 +1173,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PrometheusMetricDataResponse.PrometheusMetricDataResult.class, 5488);
     kryo.register(PrometheusMetricDataResponse.class, 5315);
     kryo.register(SplunkDataCollectionInfo.class, 5172);
-    kryo.register(StackDriverDataCollectionInfo.class, 5594);
+
     kryo.register(StackDriverMetric.class, 5593);
     kryo.register(StackDriverSetupTestNodeData.class, 5592);
     kryo.register(SumoDataCollectionInfo.class, 5173);
@@ -1362,9 +1363,12 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotInstSetupStateExecutionData.class, 7241);
     kryo.register(SpotinstDeployExecutionSummary.class, 7242);
     kryo.register(AppManifestKind.class, 7243);
+
+    kryo.register(StackDriverDataCollectionInfo.class, 5594);
     kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
     kryo.register(HelmChartInfo.class, 7246);
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
     kryo.register(CCMConfig.class, 7248);
+    kryo.register(StackDriverMetricDefinition.class, 7249);
   }
 }

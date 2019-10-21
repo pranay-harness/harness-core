@@ -11,6 +11,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class StackDriverDataCollectionInfo
   private Map<String, String> hosts;
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics;
   private List<StackDriverMetric> podMetrics;
+  List<StackDriverMetricDefinition> timeSeriesToCollect;
 
   @Builder
   public StackDriverDataCollectionInfo(String accountId, String applicationId, String stateExecutionId,
@@ -43,7 +45,8 @@ public class StackDriverDataCollectionInfo
       long startTime, long endTime, int startMinute, int collectionTime, int dataCollectionMinute,
       TimeSeriesMlAnalysisType timeSeriesMlAnalysisType, List<EncryptedDataDetail> encryptedDataDetails,
       Map<String, String> hosts, Map<String, List<StackDriverMetric>> loadBalancerMetrics,
-      List<StackDriverMetric> podMetrics, int initialDelayMinutes) {
+      List<StackDriverMetric> podMetrics, int initialDelayMinutes,
+      List<StackDriverMetricDefinition> timeSeriesToCollect) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId);
     this.gcpConfig = gcpConfig;
     this.startTime = startTime;
@@ -57,6 +60,7 @@ public class StackDriverDataCollectionInfo
     this.hosts = hosts;
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.podMetrics = podMetrics;
+    this.timeSeriesToCollect = timeSeriesToCollect;
   }
 
   @Override

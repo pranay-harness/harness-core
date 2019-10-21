@@ -1,31 +1,17 @@
 package software.wings.verification;
 
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.beans.Application;
-import software.wings.beans.Environment;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.impl.yaml.service.YamlHelper;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration.DatadogCVConfigurationYaml;
@@ -33,59 +19,13 @@ import software.wings.verification.datadog.DatadogCVServiceConfiguration.Datadog
 import java.util.HashMap;
 import java.util.Map;
 
-public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
-  @Mock YamlHelper yamlHelper;
-  @Mock CVConfigurationService cvConfigurationService;
-  @Mock EnvironmentService environmentService;
-  @Mock ServiceResourceService serviceResourceService;
-  @Mock AppService appService;
-  @Mock SettingsService settingsService;
-
-  private String envId;
-  private String serviceId;
-  private String appId;
-  private String connectorId;
-  private String accountId;
-
-  private String envName = "EnvName";
-  private String appName = "AppName";
-  private String serviceName = "serviceName";
-  private String connectorName = "newRelicConnector";
-
+public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHandlerTestBase {
   DatadogCvConfigurationYamlHandler yamlHandler = new DatadogCvConfigurationYamlHandler();
 
   @Before
   public void setup() throws IllegalAccessException {
-    accountId = generateUUID();
-    envId = generateUUID();
-    serviceId = generateUUID();
-    appId = generateUUID();
-    connectorId = generateUUID();
-
     MockitoAnnotations.initMocks(this);
-    FieldUtils.writeField(yamlHandler, "yamlHelper", yamlHelper, true);
-    FieldUtils.writeField(yamlHandler, "cvConfigurationService", cvConfigurationService, true);
-    FieldUtils.writeField(yamlHandler, "appService", appService, true);
-    FieldUtils.writeField(yamlHandler, "environmentService", environmentService, true);
-    FieldUtils.writeField(yamlHandler, "serviceResourceService", serviceResourceService, true);
-    FieldUtils.writeField(yamlHandler, "settingsService", settingsService, true);
-
-    Environment env = Environment.Builder.anEnvironment().uuid(envId).name(envName).build();
-    when(environmentService.getEnvironmentByName(appId, envName)).thenReturn(env);
-    when(environmentService.get(appId, envId)).thenReturn(env);
-
-    Service service = Service.builder().uuid(serviceId).name(serviceName).build();
-    when(serviceResourceService.getWithDetails(appId, serviceId)).thenReturn(service);
-    when(serviceResourceService.getServiceByName(appId, serviceName)).thenReturn(service);
-
-    Application app = Application.Builder.anApplication().name(appName).uuid(appId).build();
-    when(appService.get(appId)).thenReturn(app);
-    when(appService.getAppByName(accountId, appName)).thenReturn(app);
-
-    SettingAttribute settingAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withName(connectorName).withUuid(connectorId).build();
-    when(settingsService.getSettingAttributeByName(accountId, connectorName)).thenReturn(settingAttribute);
-    when(settingsService.get(connectorId)).thenReturn(settingAttribute);
+    setupTests(yamlHandler);
   }
 
   private void setBasicInfo(DatadogCVServiceConfiguration cvServiceConfiguration) {
@@ -97,20 +37,6 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     cvServiceConfiguration.setAppId(appId);
     cvServiceConfiguration.setEnabled24x7(true);
     cvServiceConfiguration.setName("TestDDConfig");
-  }
-
-  private DatadogCVConfigurationYaml buildYaml() {
-    Map<String, String> dockerMetrics = new HashMap<>();
-    dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
-
-    DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().dockerMetrics(dockerMetrics).build();
-    yaml.setName("TestDDConfig");
-    yaml.setAccountId(accountId);
-    yaml.setServiceName(serviceName);
-    yaml.setEnvName(envName);
-    yaml.setConnectorName(connectorName);
-    yaml.setHarnessApplicationName(appName);
-    return yaml;
   }
 
   @Test
@@ -145,7 +71,12 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestDDConfig.yaml").build();
     changeContext.setChange(c);
-    changeContext.setYaml(buildYaml());
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
+
+    DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().dockerMetrics(dockerMetrics).build();
+    buildYaml(yaml);
+    changeContext.setYaml(yaml);
     DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
     assertThat(bean.getName()).isEqualTo("TestDDConfig");
@@ -165,8 +96,11 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
-    DatadogCVConfigurationYaml yaml = buildYaml();
-    yaml.setDockerMetrics(null);
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
+
+    DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().dockerMetrics(null).build();
+    buildYaml(yaml);
     changeContext.setYaml(yaml);
     DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
   }
@@ -182,10 +116,12 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
 
-    DatadogCVConfigurationYaml yaml = buildYaml();
     Map<String, String> dockerMetrics = new HashMap<>();
     dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage123");
-    yaml.setDockerMetrics(dockerMetrics);
+
+    DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().dockerMetrics(dockerMetrics).build();
+    buildYaml(yaml);
+
     changeContext.setYaml(yaml);
     DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
   }
@@ -200,9 +136,13 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestAppDConfig.yaml").build();
     changeContext.setChange(c);
-    DatadogCVConfigurationYaml yaml = buildYaml();
-    changeContext.setYaml(yaml);
     Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
+
+    DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().dockerMetrics(dockerMetrics).build();
+    buildYaml(yaml);
+    changeContext.setYaml(yaml);
+    dockerMetrics = new HashMap<>();
     dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
     yaml.setDockerMetrics(dockerMetrics);
     yaml.setDatadogServiceName("todolist");
@@ -224,7 +164,12 @@ public class DatadogCVConfigurationYamlHandlerTest extends CategoryTest {
     ChangeContext<DatadogCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId("accountId").withFilePath("TestDDConfig.yaml").build();
     changeContext.setChange(c);
-    changeContext.setYaml(buildYaml());
+    Map<String, String> dockerMetrics = new HashMap<>();
+    dockerMetrics.put("cluster:harness-test", "kubernetes.cpu.usage.total");
+
+    DatadogCVConfigurationYaml yaml = DatadogCVConfigurationYaml.builder().dockerMetrics(dockerMetrics).build();
+    buildYaml(yaml);
+    changeContext.setYaml(yaml);
     DatadogCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
 
     assertThat(bean.getName()).isEqualTo("TestDDConfig");
