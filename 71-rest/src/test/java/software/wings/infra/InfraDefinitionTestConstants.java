@@ -22,6 +22,8 @@ public interface InfraDefinitionTestConstants {
 
   String RELEASE_NAME = "releaseName";
 
+  String INFRA_DEFINITION_NAME = "infraDefinitionName";
+
   String INFRA_DEFINITION_ID = "infraDefinitionId";
 
   String INFRA_PROVISIONER = "infraProvisioner";
