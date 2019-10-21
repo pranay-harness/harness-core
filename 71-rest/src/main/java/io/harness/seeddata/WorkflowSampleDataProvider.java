@@ -102,13 +102,15 @@ public class WorkflowSampleDataProvider {
     return savedWorkflow.getUuid();
   }
 
-  public String createK8sV2RollingWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
+  public String createK8sV2RollingWorkflow(
+      String appId, String envId, String serviceId, String infraMappingId, String infraDefinitionId) {
     Workflow workflow = aWorkflow()
                             .name(K8S_ROLLING_WORKFLOW_NAME)
                             .appId(appId)
                             .envId(envId)
                             .serviceId(serviceId)
                             .infraMappingId(infraMappingId)
+                            .infraDefinitionId(infraDefinitionId)
                             .workflowType(WorkflowType.ORCHESTRATION)
                             .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
                             .sample(true)
@@ -123,13 +125,15 @@ public class WorkflowSampleDataProvider {
     return savedWorkflow.getUuid();
   }
 
-  public String createK8sV2CanaryWorkflow(String appId, String envId, String serviceId, String infraMappingId) {
+  public String createK8sV2CanaryWorkflow(
+      String appId, String envId, String serviceId, String infraMappingId, String infraDefinitionId) {
     Workflow workflow = aWorkflow()
                             .name(K8S_CANARY_WORKFLOW_NAME)
                             .appId(appId)
                             .envId(envId)
                             .serviceId(serviceId)
                             .infraMappingId(infraMappingId)
+                            .infraDefinitionId(infraDefinitionId)
                             .workflowType(WorkflowType.ORCHESTRATION)
                             .sample(true)
                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())

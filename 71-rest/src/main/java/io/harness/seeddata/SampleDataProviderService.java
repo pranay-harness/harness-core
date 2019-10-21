@@ -13,9 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.KubernetesConvention;
@@ -31,6 +33,7 @@ public class SampleDataProviderService {
   @Inject private ArtifactStreamSampleDataProvider artifactStreamSampleDataProvider;
   @Inject private EnvironmentSampleDataProvider environmentSampleDataProvider;
   @Inject private InfraMappingSampleDataProvider infraMappingSampleDataProvider;
+  @Inject private InfraDefinitionSampleDataProvider infraDefinitionSampleDataProvider;
   @Inject private WorkflowSampleDataProvider workflowSampleDataProvider;
   @Inject private PipelineSampleDataProvider pipelineSampleDataProvider;
   @Inject private FeatureFlagService featureFlagService;
@@ -155,23 +158,39 @@ public class SampleDataProviderService {
     //    }
 
     Environment qaEnv = environmentSampleDataProvider.createQAEnvironment(kubernetesApp.getUuid());
-
-    String namespace = "account-" + KubernetesConvention.getAccountIdentifier(account.getUuid());
-    InfrastructureMapping qaInfraMapping =
-        infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
-            qaEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
-
     Environment prodEnv = environmentSampleDataProvider.createProdEnvironment(kubernetesApp.getUuid());
 
-    InfrastructureMapping prodInfraMapping =
-        infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
-            prodEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
+    String namespace = "account-" + KubernetesConvention.getAccountIdentifier(account.getUuid());
+    String basicWorkflowId;
+    String canaryWorkflowId;
 
-    String basicWorkflowId = workflowSampleDataProvider.createK8sV2RollingWorkflow(
-        kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), qaInfraMapping.getUuid());
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, account.getUuid())) {
+      InfrastructureDefinition qaInfraDefinition = infraDefinitionSampleDataProvider.createInfraStructure(
+          kubernetesApp.getUuid(), qaEnv.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
 
-    String canaryWorkflowId = workflowSampleDataProvider.createK8sV2CanaryWorkflow(
-        kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(), prodInfraMapping.getUuid());
+      InfrastructureDefinition prodInfraDefinition = infraDefinitionSampleDataProvider.createInfraStructure(
+          kubernetesApp.getUuid(), prodEnv.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
+
+      basicWorkflowId = workflowSampleDataProvider.createK8sV2RollingWorkflow(
+          kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), null, qaInfraDefinition.getUuid());
+
+      canaryWorkflowId = workflowSampleDataProvider.createK8sV2CanaryWorkflow(
+          kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(), null, prodInfraDefinition.getUuid());
+    } else {
+      InfrastructureMapping qaInfraMapping =
+          infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
+              qaEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
+
+      InfrastructureMapping prodInfraMapping =
+          infraMappingSampleDataProvider.createKubeServiceInfraStructure(account.getUuid(), kubernetesApp.getUuid(),
+              prodEnv.getUuid(), kubeService.getUuid(), kubernetesClusterConfig.getUuid(), namespace);
+
+      basicWorkflowId = workflowSampleDataProvider.createK8sV2RollingWorkflow(
+          kubernetesApp.getUuid(), qaEnv.getUuid(), kubeService.getUuid(), qaInfraMapping.getUuid(), null);
+
+      canaryWorkflowId = workflowSampleDataProvider.createK8sV2CanaryWorkflow(
+          kubernetesApp.getUuid(), prodEnv.getUuid(), kubeService.getUuid(), prodInfraMapping.getUuid(), null);
+    }
 
     pipelineSampleDataProvider.createPipeline(kubernetesApp.getAccountId(), kubernetesApp.getUuid(), basicWorkflowId,
         qaEnv.getUuid(), canaryWorkflowId, prodEnv.getUuid());
