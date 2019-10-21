@@ -122,7 +122,7 @@ public class QueueListenerTest extends PersistenceTest {
 
       assertThat(queue.count(Filter.ALL)).isEqualTo(0);
       verify(listener).onMessage(message);
-      verify(queue, atLeast(1)).updateResetDuration(any(TestQueuableObject.class));
+      verify(queue, atLeast(1)).updateHeartbeat(any(TestQueuableObject.class));
     }
   }
 

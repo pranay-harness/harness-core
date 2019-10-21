@@ -109,7 +109,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public void updateResetDuration(T message) {
+  public void updateHeartbeat(T message) {
     Date resetTimestamp = new Date(System.currentTimeMillis() + heartbeat().toMillis());
 
     Query<T> query = persistence.createQuery(klass)
@@ -125,8 +125,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       message.setResetTimestamp(resetTimestamp);
       return;
     }
-    final T currentState = persistence.createQuery(klass).filter(QueuableKeys.id, message.getId()).get();
-    logger.error("Reset duration failed for {}", currentState.toString());
+
+    logger.error("Update heartbeat failed for {}", message.getId());
   }
 
   @Override

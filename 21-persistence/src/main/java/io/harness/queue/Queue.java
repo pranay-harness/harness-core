@@ -19,11 +19,11 @@ public interface Queue<T> {
   T get(Duration wait, Duration poll);
 
   /**
-   * Update the refresh duration of a message while still processing.
+   * Update the heartbeat duration of a message while still processing.
    *
    * @param message message received from get(). Should not be null.
    */
-  void updateResetDuration(T message);
+  void updateHeartbeat(T message);
 
   enum Filter { ALL, RUNNING, NOT_RUNNING }
 
