@@ -662,7 +662,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       Optional<String> taskId, Optional<Boolean> isFeedbackAnalysis) {
     mlAnalysisResponse.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
     List<ExperimentalMessageComparisonResult> comparisonResults = mlAnalysisResponse.getComparisonMsgPairs();
-    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = mlAnalysisResponse.getUnknown_clusters();
     mlAnalysisResponse.setCvConfigId(cvConfigId);
     mlAnalysisResponse.setAppId(appId);
     mlAnalysisResponse.setLogCollectionMinute(analysisMinute);
@@ -731,7 +730,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (mlAnalysisResponse.getIgnore_clusters() != null) {
       mlAnalysisResponse.setIgnore_clusters(getClustersWithDotsReplaced(mlAnalysisResponse.getIgnore_clusters()));
     }
-    List<ExperimentalMessageComparisonResult> messageComparisonResult = mlAnalysisResponse.getComparisonMsgPairs();
 
     if (mlAnalysisResponse.getLogCollectionMinute() == -1 || !isEmpty(mlAnalysisResponse.getControl_events())
         || !isEmpty(mlAnalysisResponse.getTest_events())) {

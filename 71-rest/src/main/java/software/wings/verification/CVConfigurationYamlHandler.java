@@ -5,6 +5,8 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -75,16 +77,19 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
 
     Application harnessApp = appService.getAppByName(yaml.getAccountId(), yaml.getHarnessApplicationName());
     if (harnessApp == null) {
-      throw new WingsException("Invalid Harness ApplicationName provided in Yaml for CVConfiguration.");
+      throw new VerificationOperationException(
+          ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Harness ApplicationName provided in Yaml for CVConfiguration.");
     }
     Environment environment = environmentService.getEnvironmentByName(harnessApp.getUuid(), yaml.getEnvName());
     if (environment == null) {
-      throw new WingsException("Invalid Environment name in Yaml for CVConfiguration.");
+      throw new VerificationOperationException(
+          ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Environment name in Yaml for CVConfiguration.");
     }
 
     Service service = serviceResourceService.getServiceByName(harnessApp.getUuid(), yaml.getServiceName());
     if (service == null) {
-      throw new WingsException("Invalid Service name in Yaml for CVConfiguration.");
+      throw new VerificationOperationException(
+          ErrorCode.APM_CONFIGURATION_ERROR, "Invalid Service name in Yaml for CVConfiguration.");
     }
     bean.setAccountId(yaml.getAccountId());
     bean.setEnvId(environment.getUuid());

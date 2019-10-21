@@ -238,6 +238,7 @@ import software.wings.verification.LogsCVConfigurationYamlHandler;
 import software.wings.verification.NewRelicCVConfigurationYamlHandler;
 import software.wings.verification.PrometheusCVConfigurationYamlHandler;
 import software.wings.verification.SplunkCVConfigurationYamlHandler;
+import software.wings.verification.StackDriverMetricsCVConfigurationYamlHandler;
 import software.wings.verification.StackdriverCVConfigurationYamlHandler;
 import software.wings.yaml.trigger.ArtifactTriggerConditionHandler;
 import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
@@ -404,6 +405,8 @@ public class YamlModule extends AbstractModule {
     cvConfigYamlHelperMapBinder.addBinding(StateType.STACK_DRIVER_LOG.name())
         .to(StackdriverCVConfigurationYamlHandler.class);
     cvConfigYamlHelperMapBinder.addBinding(StateType.DYNA_TRACE.name()).to(DynatraceCVConfigurationYamlHandler.class);
+    cvConfigYamlHelperMapBinder.addBinding(StateType.STACK_DRIVER.name())
+        .to(StackDriverMetricsCVConfigurationYamlHandler.class);
 
     MapBinder<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CollaborationProviderYamlHandler.class);

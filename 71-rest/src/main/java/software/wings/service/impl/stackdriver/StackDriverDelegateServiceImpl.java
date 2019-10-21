@@ -110,6 +110,17 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
       }));
     }
 
+    if (!isEmpty(setupTestNodeData.getMetricDefinitions())) {
+      setupTestNodeData.getMetricDefinitions().forEach(metricDefinition -> {
+        String filter = metricDefinition.getFilter();
+        ListTimeSeriesResponse response = getTimeSeriesResponse(
+            monitoring, projectResource, gcpConfig, filter, startTime, endTime, apiCallLog.copy());
+        if (isNotEmpty(response)) {
+          responses.add(response);
+        }
+      });
+    }
+
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)
         .loadResponse(
@@ -176,8 +187,9 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
 
   private ListTimeSeriesResponse getTimeSeriesResponse(Monitoring monitoring, String projectResource, GcpConfig config,
       String filter, long startTime, long endTime, ThirdPartyApiCallLog apiCallLog) {
-    apiCallLog.setTitle(
-        "Fetching metric data from project from " + getDateFormatTime(startTime) + " to " + getDateFormatTime(endTime));
+    String projectId = getProjectId(config);
+    apiCallLog.setTitle("Fetching metric data from project " + projectId
+        + " for the time range: " + getDateFormatTime(startTime) + " to " + getDateFormatTime(endTime));
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
 
     apiCallLog.addFieldToRequest(

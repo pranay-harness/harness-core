@@ -219,8 +219,11 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     int aggregatedRisk = -1;
 
-    TimeSeriesRiskSummary riskSummary =
-        TimeSeriesRiskSummary.builder().analysisMinute(analysisMinute).cvConfigId(cvConfigId).build();
+    TimeSeriesRiskSummary riskSummary = TimeSeriesRiskSummary.builder()
+                                            .analysisMinute(analysisMinute)
+                                            .cvConfigId(cvConfigId)
+                                            .tag(mlAnalysisResponse.getTag())
+                                            .build();
 
     riskSummary.setAppId(appId);
     TreeBasedTable<String, String, Integer> risks = TreeBasedTable.create();

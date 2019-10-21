@@ -1,10 +1,12 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
+import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -36,11 +38,17 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
+import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -149,7 +157,9 @@ public class StackDriverState extends AbstractMetricAnalysisState {
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = workflowStandardParams == null || workflowStandardParams.getEnv() == null
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
 
     SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
 
@@ -252,5 +262,80 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
   public void setLogState(boolean logState) {
     isLogState = logState;
+  }
+
+  public static String getMetricTypeForMetric(StackDriverMetricCVConfiguration cvConfiguration, String metricName) {
+    if (cvConfiguration != null && isNotEmpty(metricName)) {
+      return cvConfiguration.getMetricDefinitions()
+          .stream()
+          .filter(timeSeries -> timeSeries.getMetricName().equals(metricName))
+          .findAny()
+          .map(timeSeries -> timeSeries.getMetricType())
+          .orElse(null);
+    }
+    return null;
+  }
+
+  public static Map<String, String> validateMetricDefinitions(
+      List<StackDriverMetricDefinition> metricDefinitions, boolean serviceLevel) {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isEmpty(metricDefinitions)) {
+      invalidFields.put("metricDefinitions", "No metrics given to analyze.");
+      return invalidFields;
+    }
+    Map<String, String> metricNameToType = new HashMap<>();
+    final TreeBasedTable<String, MetricType, Set<String>> txnToMetricType = TreeBasedTable.create();
+
+    metricDefinitions.forEach(timeSeries -> {
+      MetricType metricType = MetricType.valueOf(timeSeries.getMetricType());
+      final String filter = timeSeries.getFilter();
+      if (isEmpty(filter)) {
+        invalidFields.put("No Filter JSON specified for ",
+            "Group: " + timeSeries.getTxnName() + " Metric: " + timeSeries.getMetricName());
+      }
+
+      // TODO: When we have filterJSON for workflow, add logic here for checking host field in query json
+
+      if (metricNameToType.get(timeSeries.getMetricName()) == null) {
+        metricNameToType.put(timeSeries.getMetricName(), timeSeries.getMetricType());
+      } else if (!metricNameToType.get(timeSeries.getMetricName()).equals(timeSeries.getMetricType())) {
+        invalidFields.put(
+            "Invalid metric type for group: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
+            timeSeries.getMetricName() + " has been configured as " + metricNameToType.get(timeSeries.getMetricName())
+                + " in previous transactions. Same metric name can not have different metric types.");
+      }
+
+      if (!txnToMetricType.contains(timeSeries.getTxnName(), metricType)) {
+        txnToMetricType.put(timeSeries.getTxnName(), metricType, new HashSet<>());
+      }
+
+      txnToMetricType.get(timeSeries.getTxnName(), metricType).add(timeSeries.getMetricName());
+    });
+
+    txnToMetricType.rowKeySet().forEach(txnName -> {
+      final SortedMap<MetricType, Set<String>> txnRow = txnToMetricType.row(txnName);
+      if (txnRow.containsKey(MetricType.ERROR) || txnRow.containsKey(MetricType.RESP_TIME)) {
+        if (!txnRow.containsKey(MetricType.THROUGHPUT)) {
+          invalidFields.put("Invalid metrics for group: " + txnName,
+              txnName + " has error metrics "
+                  + (txnRow.get(MetricType.ERROR) == null ? Collections.emptySet() : txnRow.get(MetricType.ERROR))
+                  + " and/or response time metrics "
+                  + (txnRow.get(MetricType.RESP_TIME) == null ? Collections.emptySet()
+                                                              : txnRow.get(MetricType.RESP_TIME))
+                  + " but no throughput metrics.");
+        } else if (txnRow.get(MetricType.THROUGHPUT).size() > 1) {
+          invalidFields.put("Invalid metrics for group: " + txnName,
+              txnName + " has more than one throughput metrics " + txnRow.get(MetricType.THROUGHPUT) + " defined.");
+        }
+      }
+
+      if (txnRow.containsKey(MetricType.THROUGHPUT) && txnRow.size() == 1) {
+        invalidFields.put("Invalid metrics for group: " + txnName,
+            txnName + " has only throughput metrics " + txnRow.get(MetricType.THROUGHPUT)
+                + ". Throughput metrics is used to analyze other metrics and is not analyzed.");
+      }
+    });
+
+    return invalidFields;
   }
 }

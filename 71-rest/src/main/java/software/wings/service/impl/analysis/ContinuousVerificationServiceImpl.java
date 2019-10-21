@@ -122,6 +122,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMet
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
+import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.AlertService;
@@ -152,6 +153,7 @@ import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.NewRelicState;
+import software.wings.sm.states.StackDriverState;
 import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
@@ -175,6 +177,7 @@ import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -990,6 +993,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .findAny()
             .map(CloudWatchMetric::getMetricType)
             .orElse(null);
+      case STACK_DRIVER:
+        return StackDriverState.getMetricTypeForMetric((StackDriverMetricCVConfiguration) cvConfig, metricName);
       default:
         logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
         return null;
@@ -1660,6 +1665,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             (CloudWatchCVServiceConfiguration) cvConfiguration;
         task = createCloudWatchDelegateTask(cloudWatchCVServiceConfiguration, waitId, startTime, endTime);
         break;
+      case STACK_DRIVER:
+        StackDriverMetricCVConfiguration stackDriverMetricCVConfiguration =
+            (StackDriverMetricCVConfiguration) cvConfiguration;
+        task = createStackDriverMetricDelegateTask(stackDriverMetricCVConfiguration, waitId, startTime, endTime);
+        break;
       case SUMO:
       case DATA_DOG_LOG:
         LogsCVConfiguration logsCVConfiguration = (LogsCVConfiguration) cvConfiguration;
@@ -1883,6 +1893,29 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionMinute(0)
             .build();
     return createDelegateTask(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+  }
+
+  private DelegateTask createStackDriverMetricDelegateTask(
+      StackDriverMetricCVConfiguration config, String waitId, long startTime, long endTime) {
+    GcpConfig gcpConfig = (GcpConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final StackDriverDataCollectionInfo dataCollectionInfo =
+        StackDriverDataCollectionInfo.builder()
+            .gcpConfig(gcpConfig)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(gcpConfig, config.getAppId(), null))
+            .timeSeriesToCollect(config.getMetricDefinitions())
+            .hosts(new HashMap<>())
+            .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .dataCollectionMinute(0)
+            .build();
+    return createDelegateTask(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
   }
 

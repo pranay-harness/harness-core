@@ -661,6 +661,7 @@ import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -925,6 +926,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PipelineGovernanceConfig.class);
     set.add(DeploymentReconRecord.class);
     set.add(ExperimentalMessageComparisonResult.class);
+    set.add(StackDriverMetricCVConfiguration.class);
   }
 
   @Override
