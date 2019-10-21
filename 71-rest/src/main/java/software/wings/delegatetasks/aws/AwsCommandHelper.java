@@ -53,7 +53,7 @@ public class AwsCommandHelper {
     return emptyList();
   }
 
-  private List<String> nonEmptyTag(AwsConfig awsConfig) {
+  public List<String> nonEmptyTag(AwsConfig awsConfig) {
     String tag = awsConfig.getTag();
     return isNotEmpty(tag) ? singletonList(tag) : null;
   }

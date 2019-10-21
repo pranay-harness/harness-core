@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -72,7 +71,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(mockParams).when(mockContext).getContextElement(any());
     Environment env = anEnvironment().uuid(ENV_ID).build();
-    doReturn(env).when(mockParams).getEnv();
+    doReturn(env).when(mockParams).fetchRequiredEnv();
     AwsAmiInfrastructureMapping infrastructureMapping =
         anAwsAmiInfrastructureMapping().withAmiDeploymentType(SPOTINST).withRegion("us-east-1").build();
     doReturn(infrastructureMapping).when(mockInfrastructureMappingService).get(anyString(), anyString());
@@ -115,7 +114,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
     DelegateTask task = DelegateTask.builder().build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), anyInt());
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any());
     ExecutionResponse response = state.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);

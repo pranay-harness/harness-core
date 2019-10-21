@@ -1,22 +1,27 @@
 package software.wings.sm.states.spotinst;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.TaskType.SPOTINST_COMMAND_TASK;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
@@ -25,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
@@ -51,6 +57,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.intfc.ActivityService;
@@ -73,6 +80,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   @Mock private SecretManager mockSecretManager;
   @Mock private ActivityService mockActivityService;
   @Mock private ServiceResourceService mockServiceResourceService;
+  @Mock private AwsCommandHelper mockCommandHelper;
 
   @Spy @Inject @InjectMocks SpotInstStateHelper spotInstStateHelper;
 
@@ -124,7 +132,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
     WorkflowStandardParams mockWorkflowStandardParams = mock(WorkflowStandardParams.class);
     doReturn(mockWorkflowStandardParams).when(mockContext).getContextElement(any());
     Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
-    doReturn(environment).when(mockWorkflowStandardParams).getEnv();
+    doReturn(environment).when(mockWorkflowStandardParams).fetchRequiredEnv();
     doReturn(environment).when(mockContext).fetchRequiredEnvironment();
     Application application = anApplication().appId(APP_ID).name("app-name").build();
     doReturn(application).when(mockContext).fetchRequiredApp();
@@ -237,5 +245,22 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
     ElastiGroupCapacity capacity = elastiGroup.getCapacity();
     assertThat(capacity).isNotNull();
     assertThat(capacity.getTarget()).isEqualTo(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetDelegateTask() {
+    String tag = "tag";
+    doReturn(singletonList(tag)).when(mockCommandHelper).nonEmptyTag(any());
+    DelegateTask task = spotInstStateHelper.getDelegateTask(ACCOUNT_ID, APP_ID, SPOTINST_COMMAND_TASK, ACTIVITY_ID,
+        ENV_ID, INFRA_MAPPING_ID,
+        SpotInstCommandRequest.builder()
+            .awsConfig(AwsConfig.builder().build())
+            .spotInstTaskParameters(SpotInstSetupTaskParameters.builder().build())
+            .build());
+    assertThat(task).isNotNull();
+    assertThat(task.getTags().size()).isEqualTo(1);
+    assertThat(task.getTags().get(0)).isEqualTo(tag);
+    verify(mockCommandHelper).nonEmptyTag(any());
   }
 }

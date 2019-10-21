@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -121,7 +120,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
     DelegateTask task = DelegateTask.builder().build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), anyInt());
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any());
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity)
         .when(mockSpotinstStateHelper)
