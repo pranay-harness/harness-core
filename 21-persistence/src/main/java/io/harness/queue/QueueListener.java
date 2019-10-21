@@ -2,7 +2,6 @@ package io.harness.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.govern.Switch.noop;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.threading.Morpheus.sleep;
@@ -100,7 +99,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     }
   }
 
-  @SuppressWarnings("PMD")
+  @SuppressWarnings({"PMD", "squid:S1181"})
   private void processMessage(T message) {
     if (logger.isTraceEnabled()) {
       logger.trace("got message {}", message);
@@ -116,26 +115,20 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
       ScheduledFuture<?> future = timer.scheduleAtFixedRate(
           () -> queue.updateHeartbeat(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
-      try {
-        try (GlobalContextGuard guard = initGlobalContextGuard(message.getGlobalContext())) {
-          onMessage(message);
-        }
+      try (GlobalContextGuard guard = initGlobalContextGuard(message.getGlobalContext())) {
+        onMessage(message);
+
       } finally {
         future.cancel(true);
       }
 
       queue.ack(message);
+    } catch (InstantiationError exception) {
+      logger.error(format("Critical exception happened in onMessage %s", queue.name()), exception);
+
+      queue.ack(message);
     } catch (Throwable exception) {
-      logger.error(format("Exception happened in onMessage %s", queue.name()), exception);
-      if (exception instanceof InstantiationError) {
-        // we can never process this message. Just purge it.
-        queue.ack(message);
-      } else if (exception instanceof Exception) {
-        onException((Exception) exception, message);
-      } else {
-        // we have already logged Throwable exception above. no-op here.
-        noop();
-      }
+      onException(exception, message);
     }
   }
 
@@ -145,13 +138,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     queue.requeue(message.getId(), message.getRetries() - 1);
   }
 
-  /**
-   * On exception.
-   *
-   * @param exception the exception
-   * @param message   the message
-   */
-  public void onException(Exception exception, T message) {
+  public void onException(Throwable exception, T message) {
     if (exception instanceof WingsException) {
       ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, logger);
     } else {
