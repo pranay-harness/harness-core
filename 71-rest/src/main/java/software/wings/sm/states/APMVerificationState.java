@@ -404,6 +404,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
 
     List<APMMetricInfo> metricInfos = new ArrayList<>();
     for (MetricCollectionInfo metricCollectionInfo : metricCollectionInfos) {
+      final String collectionUrl = metricCollectionInfo.getCollectionUrl();
+      if (collectionUrl.contains("\n") && collectionUrl.split("\n").length == 2) {
+        final String[] canaryCollectionUrls = collectionUrl.split("\n");
+        logger.info("for {} canary url is provided", context.getStateExecutionInstanceId());
+        metricCollectionInfo.setCollectionUrl(canaryCollectionUrls[0]);
+        metricCollectionInfo.setBaselineCollectionUrl(canaryCollectionUrls[1]);
+      }
       if (isEmpty(metricCollectionInfo.getBaselineCollectionUrl())) {
         continue;
       }
