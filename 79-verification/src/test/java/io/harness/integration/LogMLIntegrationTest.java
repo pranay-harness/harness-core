@@ -29,6 +29,8 @@ import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob.LogAnalysisTask;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -37,6 +39,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.quartz.JobDataMap;
@@ -113,6 +116,7 @@ import javax.ws.rs.core.Response;
  */
 @SuppressWarnings("ALL")
 @Slf4j
+@Ignore("LE repo moved")
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
   private Set<String> hosts = new HashSet<>();
@@ -185,6 +189,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void saveAnalysisSummaryControlClusters() throws Exception {
     loginAdminUser();
@@ -267,6 +273,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testFeatureflagDemoSuccess() {
     loginAdminUser();
@@ -329,6 +337,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testFeatureflagDemoFail() {
     loginAdminUser();
@@ -404,6 +414,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
@@ -520,6 +532,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void controlButNoTestData() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -729,6 +743,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testButNoControlDataFirstExecution() throws IOException, InterruptedException {
     final String query = UUID.randomUUID().toString();
@@ -799,6 +815,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testNoControlNotFirstExecution() throws Exception {
     final String query = UUID.randomUUID().toString();
@@ -863,6 +881,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void noControlandTestData() throws IOException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -972,6 +992,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void withControlAndTest() throws IOException, InterruptedException {
     int numOfNodes = 5;
@@ -1114,6 +1136,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testFetchCorrectLastWorkflowLogsMissingData() {
     final String query = UUID.randomUUID().toString();
@@ -1125,6 +1149,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testFetchCorrectLastWorkflowLogs() {
     final String query = UUID.randomUUID().toString();
@@ -1136,6 +1162,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testFetchCorrectLastWorkflowLogsFirstWorkflow() {
     final String query = UUID.randomUUID().toString();
@@ -1145,6 +1173,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testFetchCorrectLastWorkflowLogsNoData() {
     final String query = UUID.randomUUID().toString();
@@ -1210,6 +1240,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testGetCurrentExecutionLogs() throws Exception {
     final Random r = new Random();
@@ -1286,6 +1318,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void testGetLastExecutionLogs() throws Exception {
     final Random r = new Random();
@@ -1411,6 +1445,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = OwnerRule.SRIRAM)
+  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
   public void onlyFeedback() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
