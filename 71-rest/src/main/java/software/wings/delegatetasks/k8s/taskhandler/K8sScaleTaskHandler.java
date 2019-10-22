@@ -3,6 +3,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdFromNamespaceKindName;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -63,7 +64,10 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
     k8sScaleResponse = K8sScaleResponse.builder().build();
 
-    boolean success = init(k8sScaleTaskParameters, k8sDelegateTaskParams,
+    KubernetesConfig kubernetesConfig =
+        containerDeploymentDelegateHelper.getKubernetesConfig(k8sScaleTaskParameters.getK8sClusterConfig());
+
+    boolean success = init(k8sScaleTaskParameters, k8sDelegateTaskParams, kubernetesConfig.getNamespace(),
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
             k8sScaleTaskParameters.getAppId(), k8sScaleTaskParameters.getActivityId(), Init));
 
@@ -74,9 +78,6 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
     if (resourceIdToScale == null) {
       return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);
     }
-
-    KubernetesConfig kubernetesConfig =
-        containerDeploymentDelegateHelper.getKubernetesConfig(k8sScaleTaskParameters.getK8sClusterConfig());
 
     List<K8sPod> beforePodList = k8sTaskHelper.getPodDetails(
         kubernetesConfig, resourceIdToScale.getNamespace(), k8sScaleTaskParameters.getReleaseName());
@@ -119,7 +120,7 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
   }
 
   private boolean init(K8sScaleTaskParameters k8sScaleTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams,
-      ExecutionLogCallback executionLogCallback) {
+      String namespace, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
     try {
@@ -135,6 +136,10 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog(
           color("\nWorkload to scale is: ", White, Bold) + color(resourceIdToScale.namespaceKindNameRef(), Cyan, Bold));
+
+      if (isBlank(resourceIdToScale.getNamespace())) {
+        resourceIdToScale.setNamespace(namespace);
+      }
 
       executionLogCallback.saveExecutionLog("\nQuerying current replicas");
       Integer currentReplicas = k8sTaskHelper.getCurrentReplicas(client, resourceIdToScale, k8sDelegateTaskParams);

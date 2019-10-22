@@ -142,8 +142,8 @@ public class K8sStateHelper {
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
       ActivityService activityService, List<CommandUnit> commandUnits) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
+    Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
 
     Activity activity = Activity.builder()
                             .applicationName(app.getName())

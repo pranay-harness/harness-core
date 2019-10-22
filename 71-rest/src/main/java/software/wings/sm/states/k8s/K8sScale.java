@@ -125,6 +125,14 @@ public class K8sScale extends State {
 
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
+      stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+
+      if (ExecutionStatus.FAILED.equals(executionStatus)) {
+        return ExecutionResponse.builder()
+            .executionStatus(executionStatus)
+            .stateExecutionData(context.getStateExecutionData())
+            .build();
+      }
 
       InstanceElementListParam instanceElementListParam =
           k8sStateHelper.getInstanceElementListParam(k8sScaleResponse.getK8sPodList());
