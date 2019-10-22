@@ -3,6 +3,7 @@ package software.wings.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
@@ -449,6 +450,22 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
         .isEqualTo("ECS Container RSS Memory");
   }
 
+  @Test
+  @Category(IntegrationTests.class)
+  public void testTimeSeriesUnitDynaTrace_withMetricNameFilter() {
+    TimeSeriesFilter filter = TimeSeriesFilter.builder()
+                                  .cvConfigId(dynaTraceCVServiceConfiguration.getUuid())
+                                  .startTime(start12HoursAgo)
+                                  .endTime(endTime)
+                                  .metricNames(Sets.newHashSet("apdexScore", "averageResponseTime"))
+                                  .build();
+    List<TransactionTimeSeries> fetchedObject =
+        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    assertThat(fetchedObject).hasSize(1);
+    assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/login");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("apdexScore");
+    assertThat(fetchedObject.get(0).getMetricTimeSeries().last().getMetricName()).isEqualTo("averageResponseTime");
+  }
   @Test
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitDynaTrace() {
