@@ -427,7 +427,7 @@ public class PipelineServiceImpl implements PipelineService {
     List<EntityType> entityTypes = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
-        if (pipelineStageElement.isDisable()) {
+        if (pipelineStageElement.checkDisableAssertion()) {
           continue;
         }
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
@@ -615,7 +615,7 @@ public class PipelineServiceImpl implements PipelineService {
     Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage pipelineStage : pipelineStages) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
-        if (!ENV_STATE.name().equals(pse.getType()) || pse.isDisable()) {
+        if (!ENV_STATE.name().equals(pse.getType()) || pse.checkDisableAssertion()) {
           continue;
         }
 
@@ -710,7 +710,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<String> invalidStageWorkflows = new ArrayList<>();
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pse.getType())) {
-          if (pse.isDisable()) {
+          if (pse.checkDisableAssertion()) {
             continue;
           }
 
@@ -1185,7 +1185,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
-        if (!ENV_STATE.name().equals(pse.getType()) || pse.isDisable()) {
+        if (!ENV_STATE.name().equals(pse.getType()) || pse.checkDisableAssertion()) {
           continue;
         }
 

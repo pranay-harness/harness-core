@@ -46,6 +46,10 @@ public class PipelineStage {
 
     private transient boolean valid = true;
     private transient String validationMessage;
+
+    public boolean checkDisableAssertion() {
+      return disableAssertion != null && disableAssertion.equals("true");
+    }
   }
 
   @Data
