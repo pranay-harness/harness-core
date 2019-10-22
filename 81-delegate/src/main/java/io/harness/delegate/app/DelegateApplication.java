@@ -129,7 +129,9 @@ public class DelegateApplication {
                                                 .target(configuration.getManagerTarget())
                                                 .authority(configuration.getManagerAuthority())
                                                 .build()));
-    modules.add(new PingPongModule());
+    if (!isOnpremDelegate()) {
+      modules.add(new PingPongModule());
+    }
     if (configuration.isEnablePerpetualTasks()) {
       modules.add(new PerpetualTaskWorkerModule());
     }
@@ -158,12 +160,18 @@ public class DelegateApplication {
       watcherData.put(WATCHER_PROCESS, watcherProcess);
       messageService.putAllData(WATCHER_DATA, watcherData);
     }
-    injector.getInstance(PingPongClient.class).startAsync();
+    if (!isOnpremDelegate()) {
+      injector.getInstance(PingPongClient.class).startAsync();
+    }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));
     DelegateService delegateService = injector.getInstance(DelegateService.class);
     delegateService.run(watched);
-
     System.exit(0);
+  }
+
+  private boolean isOnpremDelegate() {
+    String deployMode = System.getenv().get("DEPLOY_MODE");
+    return deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM");
   }
 
   private void addShutdownHook(Injector injector, MessageService messageService) {
