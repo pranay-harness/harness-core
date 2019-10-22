@@ -13,7 +13,6 @@ import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.model.Restriction;
 import io.harness.governance.pipeline.model.Tag;
-import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
@@ -44,7 +43,6 @@ public class PipelineGovernanceReportEvaluator {
 
   @Inject private HarnessTagService harnessTagService;
   @Inject private PipelineGovernanceService pipelineGovernanceService;
-  @Inject @OnPipeline private GovernanceStatusEvaluator<Pipeline> pipelineStatusEvaluator;
 
   @Inject @OnWorkflow private GovernanceStatusEvaluator<Workflow> workflowStatusEvaluator;
 
@@ -61,12 +59,10 @@ public class PipelineGovernanceReportEvaluator {
     for (PipelineGovernanceRule rule : governanceConfigRules) {
       List<GovernanceRuleStatus> tempStatuses = new LinkedList<>();
 
-      GovernanceRuleStatus ruleStatus =
-          pipelineStatusEvaluator.status(accountId, reportEvaluationContext.getPipeline(), rule);
-      tempStatuses.add(ruleStatus);
-
+      // looks for tags in workflows. If you want to look for tags in some other entity like Commands, then add that
+      // logic here by implementing `GovernanceStatusEvaluator` for Command entity and using it here
       for (Workflow workflow : reportEvaluationContext.getWorkflows()) {
-        ruleStatus = workflowStatusEvaluator.status(accountId, workflow, rule);
+        GovernanceRuleStatus ruleStatus = workflowStatusEvaluator.status(accountId, workflow, rule);
         tempStatuses.add(ruleStatus);
       }
 
@@ -133,7 +129,7 @@ public class PipelineGovernanceReportEvaluator {
             harnessTagService.fetchTagsForEntity(accountId, anApplication().uuid(appId).build());
         List<Tag> appTags = appTagLinks.stream().map(Tag::fromTagLink).collect(toList());
 
-        return CollectionUtils.containsAny(appTags, restriction.getTags());
+        return CollectionUtils.containsAll(appTags, restriction.getTags());
       }
     }
 
