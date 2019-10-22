@@ -30,7 +30,7 @@ public class LdapConstants {
   public static final int MAX_GROUP_MEMBERS_LIMIT = 500;
   public static final String GROUP_MEMBERS_EXCEEDED =
       String.format("Group has more than %s members.", MAX_GROUP_MEMBERS_LIMIT);
-  public static final String USER_GROUP_SYNC_FAILED = "User group syncing failed for ssoId: %s.";
+  public static final String USER_GROUP_SYNC_FAILED = "User group syncing failed for SSO Provider: %s";
   public static final String USER_GROUP_SYNC_INVALID_REMOTE_GROUP =
       "User group syncing failed for group: %s. Remote group could be wrong or empty.";
   public static final String USER_GROUP_SYNC_NOT_ELIGIBLE = "User group %s not eligible for syncing. %s";

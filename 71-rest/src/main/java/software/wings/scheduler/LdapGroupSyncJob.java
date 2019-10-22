@@ -270,15 +270,16 @@ public class LdapGroupSyncJob implements Job {
       return;
     }
 
+    LdapSettings ldapSettings = ssoSettingService.getLdapSettingsByUuid(ssoId);
+    if (ldapSettings == null) {
+      jobScheduler.deleteJob(ssoId, GROUP);
+      return;
+    }
+
     try {
       ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
-      logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
 
-      LdapSettings ldapSettings = ssoSettingService.getLdapSettingsByUuid(ssoId);
-      if (ldapSettings == null) {
-        jobScheduler.deleteJob(ssoId, GROUP);
-        return;
-      }
+      logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
 
       LdapTestResponse ldapTestResponse = ssoService.validateLdapConnectionSettings(ldapSettings, accountId);
       if (ldapTestResponse.getStatus().equals(Status.FAILURE)) {
@@ -301,13 +302,14 @@ public class LdapGroupSyncJob implements Job {
       if (exception.getCode().equals(ErrorCode.USER_GROUP_SYNC_FAILURE)) {
         ssoSettingService.raiseSyncFailureAlert(accountId, ssoId, exception.getMessage());
       } else {
-        ssoSettingService.raiseSyncFailureAlert(
-            accountId, ssoId, String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ssoId) + exception.getMessage());
+        ssoSettingService.raiseSyncFailureAlert(accountId, ssoId,
+            String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ldapSettings.getDisplayName())
+                + exception.getMessage());
       }
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {
-      ssoSettingService.raiseSyncFailureAlert(
-          accountId, ssoId, String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ssoId) + ex.getMessage());
+      ssoSettingService.raiseSyncFailureAlert(accountId, ssoId,
+          String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ldapSettings.getDisplayName()) + ex.getMessage());
       logger.warn("Error while syncing ssoId: {}", ssoId, ex);
     }
   }
