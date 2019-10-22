@@ -14,6 +14,7 @@ import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.beans.CyberArkConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
@@ -155,5 +156,15 @@ public class CapabilityHelperTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
     assertThat(AWS_KMS_URL + ":" + HTTPS_PORT).isEqualTo(capability.fetchCapabilityBasis());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetHttpCapabilityForDecryption_secretconfig() throws Exception {
+    EncryptionConfig encryptionConfig = CyberArkConfig.builder().cyberArkUrl("https://harness.cyberark.com").build();
+    HttpConnectionExecutionCapability capability = CapabilityHelper.getHttpCapabilityForDecryption(encryptionConfig);
+    assertThat("https://harness.cyberark.com"
+        + ":" + HTTPS_PORT)
+        .isEqualTo(capability.fetchCapabilityBasis());
   }
 }

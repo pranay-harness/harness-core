@@ -20,6 +20,8 @@ import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
@@ -33,7 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Singleton
 @Slf4j
 public class CapabilityHelper {
@@ -99,15 +103,18 @@ public class CapabilityHelper {
     return executionCapabilities;
   }
 
-  public static HttpConnectionExecutionCapability getHttpCapabilityForDecryption(EncryptionConfig encryptionConfig) {
+  public static HttpConnectionExecutionCapability getHttpCapabilityForDecryption(
+      @NotNull EncryptionConfig encryptionConfig) {
     if (encryptionConfig instanceof KmsConfig) {
       return HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
           ((KmsConfig) encryptionConfig).getRegion());
     } else if (encryptionConfig instanceof VaultConfig) {
       return HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
           ((VaultConfig) encryptionConfig).getVaultUrl());
+    } else if (isNotEmpty(encryptionConfig.getEncryptionServiceUrl())) {
+      return HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+          encryptionConfig.getEncryptionServiceUrl());
     }
-
     return null;
   }
 
@@ -116,7 +123,7 @@ public class CapabilityHelper {
     // TODO: Remove this when jenkins/bambooConfig etc are integrated with new framework
     try {
       Object argument = Arrays.stream(taskData.getParameters())
-                            .filter(parameter -> isEncryptionDetailsList(parameter))
+                            .filter(CapabilityHelper::isEncryptionDetailsList)
                             .findFirst()
                             .orElse(null);
 
