@@ -1125,7 +1125,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                                .name("SE")
                                                .type(ENV_STATE.name())
                                                .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
-                                               .disable(true)
+                                               .disableAssertion("true")
                                                .build()))
                                        .build()))
                         .build());

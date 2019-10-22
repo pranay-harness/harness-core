@@ -914,7 +914,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       PipelineStageElement element = stage.getPipelineStageElements().get(0);
       parallelIndex = element.getParallelIndex();
 
-      if (element.isDisable()) {
+      if (element.checkDisableAssertion()) {
         continue;
       }
 
