@@ -10,6 +10,8 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.app.DeployMode.DEPLOY_MODE;
+import static software.wings.app.DeployMode.isOnPrem;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -129,7 +131,7 @@ public class DelegateApplication {
                                                 .target(configuration.getManagerTarget())
                                                 .authority(configuration.getManagerAuthority())
                                                 .build()));
-    if (!isOnpremDelegate()) {
+    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
     }
     if (configuration.isEnablePerpetualTasks()) {
@@ -160,18 +162,13 @@ public class DelegateApplication {
       watcherData.put(WATCHER_PROCESS, watcherProcess);
       messageService.putAllData(WATCHER_DATA, watcherData);
     }
-    if (!isOnpremDelegate()) {
+    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
       injector.getInstance(PingPongClient.class).startAsync();
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));
     DelegateService delegateService = injector.getInstance(DelegateService.class);
     delegateService.run(watched);
     System.exit(0);
-  }
-
-  private boolean isOnpremDelegate() {
-    String deployMode = System.getenv().get("DEPLOY_MODE");
-    return deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM");
   }
 
   private void addShutdownHook(Injector injector, MessageService messageService) {
