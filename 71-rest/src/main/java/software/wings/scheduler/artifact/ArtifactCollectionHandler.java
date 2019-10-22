@@ -2,7 +2,6 @@ package software.wings.scheduler.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static java.lang.Long.max;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -45,9 +44,8 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
     }
 
     try {
-      int leaseDuration = (int) max(
-          TimeUnit.MINUTES.toMillis(2) * PermitServiceImpl.getBackoffMultiplier(artifactStream.getFailedCronAttempts()),
-          TimeUnit.MINUTES.toMillis(10));
+      int leaseDuration = (int) (TimeUnit.MINUTES.toMillis(2)
+          * PermitServiceImpl.getBackoffMultiplier(artifactStream.getFailedCronAttempts()));
       String permitId = permitService.acquirePermit(Permit.builder()
                                                         .appId(artifactStream.fetchAppId())
                                                         .group(GROUP)
