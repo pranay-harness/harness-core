@@ -116,7 +116,6 @@ import javax.ws.rs.core.Response;
  */
 @SuppressWarnings("ALL")
 @Slf4j
-@Ignore("LE repo moved")
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
   private Set<String> hosts = new HashSet<>();
@@ -190,8 +189,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void saveAnalysisSummaryControlClusters() throws Exception {
     loginAdminUser();
     int numOfControlClusters = 1 + r.nextInt(10);
@@ -274,8 +273,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFeatureflagDemoSuccess() {
     loginAdminUser();
     initDemoSetup("elk_prod");
@@ -338,8 +337,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFeatureflagDemoFail() {
     loginAdminUser();
     initDemoSetup("elk_dev");
@@ -415,8 +414,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
@@ -533,8 +532,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void controlButNoTestData() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -744,8 +743,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testButNoControlDataFirstExecution() throws IOException, InterruptedException {
     final String query = UUID.randomUUID().toString();
     final String host = UUID.randomUUID().toString();
@@ -816,8 +815,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testNoControlNotFirstExecution() throws Exception {
     final String query = UUID.randomUUID().toString();
     final String host = UUID.randomUUID().toString();
@@ -882,8 +881,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void noControlandTestData() throws IOException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -993,8 +992,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void withControlAndTest() throws IOException, InterruptedException {
     int numOfNodes = 5;
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -1137,8 +1136,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsMissingData() {
     final String query = UUID.randomUUID().toString();
     String workflow1 = addWorkflowDataForLogs(true, query);
@@ -1150,8 +1149,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogs() {
     final String query = UUID.randomUUID().toString();
     String workflow1 = addWorkflowDataForLogs(true, query);
@@ -1163,8 +1162,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsFirstWorkflow() {
     final String query = UUID.randomUUID().toString();
     final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
@@ -1174,8 +1173,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testFetchCorrectLastWorkflowLogsNoData() {
     final String query = UUID.randomUUID().toString();
     String workflow1 = addWorkflowDataForLogs(false, query);
@@ -1241,8 +1240,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetCurrentExecutionLogs() throws Exception {
     final Random r = new Random();
     final int numOfExecutions = 4;
@@ -1319,8 +1318,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void testGetLastExecutionLogs() throws Exception {
     final Random r = new Random();
     final int numOfExecutions = 1;
@@ -1446,8 +1445,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(emails = OwnerRule.SRIRAM)
-  @Ignore("LE repo moved")
   @Category(IntegrationTests.class)
+  @Ignore("Learning Engine repository moved. Enable when jenkins is fixed")
   public void onlyFeedback() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
