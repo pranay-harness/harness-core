@@ -308,4 +308,14 @@ public class InfrastructureDefinitionResource {
     return new RestResponse<>(infrastructureDefinitionService.getContainerRunningInstances(
         appId, infraDefinitionId, serviceId, serviceNameExpr));
   }
+
+  @GET
+  @Path("{infraDefinitionId}/routes")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<List<String>> getRoutesForPcf(
+      @QueryParam("appId") String appId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.listRoutesForPcf(appId, infraDefinitionId));
+  }
 }

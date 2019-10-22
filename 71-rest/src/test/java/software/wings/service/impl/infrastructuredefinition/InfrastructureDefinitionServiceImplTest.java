@@ -39,6 +39,7 @@ import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -65,6 +66,7 @@ import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.GoogleKubernetesEngine.GoogleKubernetesEngineKeys;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBuilder;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.service.intfc.AppService;
@@ -656,6 +658,45 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
       default:
         throw new InvalidRequestException("Invalid type");
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testContainsExpression() {
+    assertThat(infrastructureDefinitionService.containsExpression("org")).isFalse();
+    assertThat(infrastructureDefinitionService.containsExpression("${serviceVariable.val}")).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testListRoutesForPcf() throws Exception {
+    InfrastructureDefinitionServiceImpl definitionService = spy(InfrastructureDefinitionServiceImpl.class);
+    SettingsService settingsService = mock(SettingsService.class);
+    FieldUtils.writeField(definitionService, "settingsService", settingsService, true);
+    doReturn(null).when(definitionService).get(anyString(), anyString());
+
+    assertThatThrownBy(() -> definitionService.listRoutesForPcf("app", "def"))
+        .isNotInstanceOf(NullPointerException.class);
+
+    doReturn(InfrastructureDefinition.builder().build()).when(definitionService).get(anyString(), anyString());
+    assertThatThrownBy(() -> definitionService.listRoutesForPcf("app", "def"));
+
+    doReturn(InfrastructureDefinition.builder().infrastructure(AwsAmiInfrastructure.builder().build()).build())
+        .when(definitionService)
+        .get(anyString(), anyString());
+    assertThatThrownBy(() -> definitionService.listRoutesForPcf("app", "def"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Not PcfInfraStructure, invalid type");
+
+    doReturn(InfrastructureDefinition.builder().infrastructure(PcfInfraStructure.builder().build()).build())
+        .when(definitionService)
+        .get(anyString(), anyString());
+    doReturn(null).when(settingsService).get(anyString());
+    assertThatThrownBy(() -> definitionService.listRoutesForPcf("app", "def"));
+
+    doReturn(aSettingAttribute().withValue(AwsConfig.builder().build()).build()).when(settingsService).get(anyString());
+    assertThatThrownBy(() -> definitionService.listRoutesForPcf("app", "def"))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

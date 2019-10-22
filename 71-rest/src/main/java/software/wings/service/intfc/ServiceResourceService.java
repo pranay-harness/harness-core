@@ -514,4 +514,8 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   void setPcfV2ServiceFromAppManifestIfRequired(
       ApplicationManifest applicationManifest, AppManifestSource appManifestSource);
+
+  void createDefaultPcfV2Manifests(Service service);
+
+  void upsertPCFSpecInManifestFile(PcfServiceSpecification pcfServiceSpecification);
 }

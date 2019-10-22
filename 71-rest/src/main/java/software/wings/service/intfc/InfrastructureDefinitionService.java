@@ -108,4 +108,6 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   AwsAsgGetRunningCountData getAmiCurrentlyRunningInstanceCount(
       String appId, String infraDefinitionId, String serviceId);
+
+  List<String> listRoutesForPcf(String appId, String infraDefinitionId);
 }

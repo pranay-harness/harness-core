@@ -138,7 +138,8 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
-            .build());
+            .build(),
+        pcfSetupContextElement);
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(

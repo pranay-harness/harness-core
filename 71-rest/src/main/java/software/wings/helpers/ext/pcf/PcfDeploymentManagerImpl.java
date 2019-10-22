@@ -5,6 +5,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -146,13 +147,24 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       }
 
       return applicationSummaries.stream()
-          .filter(applicationSummary -> getAppPrefixByRemovingNumber(applicationSummary.getName()).equals(prefix))
+          .filter(applicationSummary -> matchesPrefix(prefix, applicationSummary))
           .sorted(comparingInt(applicationSummary -> getRevisionFromServiceName(applicationSummary.getName())))
           .collect(toList());
 
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @VisibleForTesting
+  boolean matchesPrefix(String prefix, ApplicationSummary applicationSummary) {
+    int revision = getRevisionFromServiceName(applicationSummary.getName());
+    // has no revision, so this app was not deployed by harness
+    if (revision == -1) {
+      return false;
+    }
+
+    return getAppPrefixByRemovingNumber(applicationSummary.getName()).equals(prefix);
   }
 
   @Override
@@ -263,12 +275,9 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
 
     int index = name.lastIndexOf(DELIMITER);
+    String prefix;
     if (index >= 0) {
-      try {
-        return name.substring(0, index);
-      } catch (NumberFormatException e) {
-        // Ignore
-      }
+      name = name.substring(0, index);
     }
     return name;
   }

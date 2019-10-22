@@ -99,7 +99,6 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "  instances: 0\n"
       + "  buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
       + "  path: /root/app\n"
-      + "  host: app1-space\n"
       + "  random-route: true\n";
 
   public static final String MANIFEST_YAML_NO_ROUTE = "  applications:\n"
@@ -133,7 +132,6 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "    instances: ${INSTANCE_COUNT}\n"
       + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
       + "    path: ${FILE_LOCATION}\n"
-      + "    host: app1-space\n"
       + "    random-route: true\n";
 
   public static final String MANIFEST_YAML_RANDON_ROUTE_RESOLVED = "---\n"
@@ -143,7 +141,6 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "  instances: 0\n"
       + "  buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
       + "  path: /root/app\n"
-      + "  host: app1-space\n"
       + "  random-route: true\n";
 
   public static final String ACCOUNT_ID = "ACCOUNT_ID";

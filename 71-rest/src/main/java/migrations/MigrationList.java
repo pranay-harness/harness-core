@@ -85,6 +85,7 @@ import migrations.all.NonWorkflowCVConfigurationMigration;
 import migrations.all.OAuthAllowedProvidersListMigration;
 import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
+import migrations.all.PcfServiceSpecificationToManifestFileMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.PrometheusCVMigration;
 import migrations.all.RemoveDupInstanceStats;
@@ -283,6 +284,7 @@ public class MigrationList {
         .add(Pair.of(278, DatadogCustomMetricMigration.class))
         .add(Pair.of(279, SettingAttributesCategoryMigration.class))
         .add(Pair.of(280, ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes.class))
+        .add(Pair.of(281, PcfServiceSpecificationToManifestFileMigration.class))
         .build();
   }
 }

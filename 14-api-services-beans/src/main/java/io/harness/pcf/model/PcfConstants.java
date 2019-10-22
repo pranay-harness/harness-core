@@ -40,4 +40,17 @@ public interface PcfConstants {
   String ROUTE_PATH_MANIFEST_YML_ELEMENT = "route-path";
   String INFRA_ROUTE = "${infra.route}";
   String PCF_INFRA_ROUTE = "${infra.pcf.route}";
+
+  String LEGACY_NAME_PCF_MANIFEST = "${APPLICATION_NAME}";
+
+  String CONTEXT_NEW_APP_NAME = "newAppName";
+  String CONTEXT_NEW_APP_GUID = "newAppGuid";
+  String CONTEXT_NEW_APP_ROUTES = "newAppRoutes";
+
+  String CONTEXT_OLD_APP_NAME = "oldAppName";
+  String CONTEXT_OLD_APP_GUID = "oldAppGuid";
+  String CONTEXT_OLD_APP_ROUTES = "oldAppRoutes";
+
+  String CONTEXT_APP_FINAL_ROUTES = "finalRoutes";
+  String CONTEXT_APP_TEMP_ROUTES = "tempRoutes";
 }

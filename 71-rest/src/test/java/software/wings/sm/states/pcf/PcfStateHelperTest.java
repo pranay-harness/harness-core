@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.pcf.model.PcfConstants.LEGACY_NAME_PCF_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -37,6 +38,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,6 +49,7 @@ import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
+import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -54,6 +57,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -67,6 +71,7 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -398,7 +403,10 @@ public class PcfStateHelperTest extends WingsBaseTest {
                                    .build())
             .build();
 
-    ExecutionResponse response = pcfStateHelper.queueDelegateTaskForRouteUpdate(requestData);
+    ExecutionResponse response = pcfStateHelper.queueDelegateTaskForRouteUpdate(requestData,
+        PcfSetupContextElement.builder()
+            .pcfCommandRequest(PcfCommandSetupRequest.builder().organization("org").space("space").build())
+            .build());
     assertThat(response).isNotNull();
     assertThat(response.isAsync()).isTrue();
     assertThat(response.getCorrelationIds()).containsExactly(ACTIVITY_ID);
@@ -528,6 +536,11 @@ public class PcfStateHelperTest extends WingsBaseTest {
     pcfManifestsPackage.setVariableYmls(Arrays.asList(TEST_VAR, TEST_VAR_1));
     appName = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, "app");
     assertThat(appName).isEqualTo("TEST_prod__dummy");
+
+    // manifest is pcf legacy manifest, and contains ${APPLICATION_NAME}
+    pcfManifestsPackage.setManifestYml(TEST_APP_MANIFEST.replace(REPLACE_ME, LEGACY_NAME_PCF_MANIFEST));
+    appName = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, "TEST");
+    assertThat(appName).isEqualTo("TEST");
   }
 
   @Test
@@ -606,6 +619,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateManifestMap() {
     doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
+    Service service = Service.builder().uuid(SERVICE_ID).isPcfV2(true).build();
+    doReturn(service).when(serviceResourceService).get(anyString());
 
     Map<K8sValuesLocation, ApplicationManifest> map = new HashMap<>();
     map.put(K8sValuesLocation.Service,
@@ -632,5 +647,13 @@ public class PcfStateHelperTest extends WingsBaseTest {
     pcfManifestsPackage = pcfStateHelper.generateManifestMap(
         context, map, anApplication().accountId(ACCOUNT_ID).build(), SERVICE_ELEMENT);
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(TEST_APP_MANIFEST);
+
+    // Negative scenario
+    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
+    try {
+      pcfStateHelper.generateManifestMap(context, map, anApplication().accountId(ACCOUNT_ID).build(), SERVICE_ELEMENT);
+    } catch (Exception e) {
+      assertThat(e instanceof InvalidRequestException).isTrue();
+    }
   }
 }
