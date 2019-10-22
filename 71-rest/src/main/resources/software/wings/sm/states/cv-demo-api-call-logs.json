@@ -1,0 +1,138 @@
+{
+  "logs": {
+    "request": {
+      "startTime": 1571374380000,
+      "endTime": 1571374390000,
+      "query": "| where _sourceHost = 'harness-example-deployment-5c6849b4d7-b7lfh' | timeslice 1m"
+    },
+    "response": {
+      "took": 17,
+      "timed_out": false,
+      "_shards": {
+        "total": 5,
+        "successful": 5,
+        "skipped": 0,
+        "failed": 0
+      },
+      "hits": {
+        "total": 1000,
+        "max_score": 0,
+        "hits": [
+          {
+            "_index": "main",
+            "_type": "_doc",
+            "_id": "gfG3wGwBhJ3XTYaVdl81",
+            "_score": 0,
+            "_source": {
+              "hostname": "harness-todolist-prod-deployment-canary-57c6fbc556-hwf24",
+              "level": "ERROR",
+              "message": "java.lang.RuntimeException: Method throws runtime exception",
+              "@timestamp": "2019-08-23T23:02:11.084Z"
+            }
+          },
+          {
+            "_index": "main",
+            "_type": "_doc",
+            "_id": "1fG3wGwBhJ3XTYaVvGCz",
+            "_score": 0,
+            "_source": {
+              "hostname": "harness-test-appd-deployment-5d486cf658-txwz4",
+              "level": "ERROR",
+              "message": "java.lang.NullPointerException: Null pointer exception at com.realtime.StreamProcessor.processStreamData(StreamProcessor.java:13)",
+              "@timestamp": "2019-08-23T23:02:29.112Z"
+            }
+          },
+          {
+            "_index": "main",
+            "_type": "_doc",
+            "_id": "b_G4wGwBhJ3XTYaVzm1i",
+            "_score": 0,
+            "_source": {
+              "hostname": "harness-example-deployment-74fdbdf98b-nxpxd",
+              "level": "WARN",
+              "message": "java.lang.NullPointerException: Null pointer exception at com.realtime.StreamProcessor.processStreamData(StreamProcessor.java:13)",
+              "@timestamp": "2019-08-23T23:03:39.180Z"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "request": {
+      "startTime": 1571374380000,
+      "endTime": 1571374390000,
+      "names": "performance*,/users/signup,/notes/all"
+    },
+    "response": [
+      {
+        "metricId": 41457342,
+        "metricName": "Average Response Time (ms)",
+        "metricPath": "Business Transactions|docker-tier|/todolist/register|Individual Nodes|harness-test-app|Average Response Time (ms)",
+        "frequency": "ONE_MIN",
+        "metricValues": [
+          {
+            "startTimeInMillis": 1571374380000,
+            "occurrences": 1,
+            "current": 1,
+            "min": 0,
+            "max": 1,
+            "useRange": true,
+            "count": 16,
+            "sum": 14,
+            "value": 1,
+            "standardDeviation": 0
+          },
+          {
+            "startTimeInMillis": 1571374440000,
+            "occurrences": 1,
+            "current": 1,
+            "min": 0,
+            "max": 2,
+            "useRange": true,
+            "count": 27,
+            "sum": 24,
+            "value": 1,
+            "standardDeviation": 0
+          },
+          {
+            "startTimeInMillis": 1571374500000,
+            "occurrences": 1,
+            "current": 1,
+            "min": 0,
+            "max": 1,
+            "useRange": true,
+            "count": 21,
+            "sum": 14,
+            "value": 1,
+            "standardDeviation": 0
+          },
+          {
+            "startTimeInMillis": 1571374560000,
+            "occurrences": 1,
+            "current": 1,
+            "min": 0,
+            "max": 1,
+            "useRange": true,
+            "count": 24,
+            "sum": 14,
+            "value": 1,
+            "standardDeviation": 0
+          },
+          {
+            "startTimeInMillis": 1571374620000,
+            "occurrences": 1,
+            "current": 0,
+            "min": 0,
+            "max": 1,
+            "useRange": true,
+            "count": 22,
+            "sum": 14,
+            "value": 1,
+            "standardDeviation": 0
+          }
+        ]
+      }
+    ]
+  }
+}

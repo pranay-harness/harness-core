@@ -130,9 +130,13 @@ public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAwar
     if (fieldType == null) {
       return response.toString();
     }
+
     switch (fieldType) {
       case JSON:
         try {
+          if (response instanceof String) {
+            return response.toString();
+          }
           return JsonUtils.asJson(response);
         } catch (Exception e) {
           return response.toString();
