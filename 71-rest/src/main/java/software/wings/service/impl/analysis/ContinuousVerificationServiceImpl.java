@@ -1174,9 +1174,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           filter.getMetricNames().add(NewRelicMetricValueDefinition.ERROR);
         }
         break;
-
       default:
-        throw new WingsException("Invalid State: " + cvConfiguration.getStateType());
+        break;
     }
   }
 
