@@ -7,7 +7,6 @@ import static io.harness.pcf.model.ManifestType.CREATE_SERVICE_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.CREATE_SERVICE_MANIFEST_ELEMENT;
-import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.MEMORY_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
 
@@ -20,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 @Singleton
 @Slf4j
@@ -78,8 +78,9 @@ public class PcfFileTypeChecker {
       }
 
       Map application = applicationMaps.get(0);
-      if (application.containsKey(INSTANCE_MANIFEST_YML_ELEMENT) && application.containsKey(NAME_MANIFEST_YML_ELEMENT)
-          && application.containsKey(MEMORY_MANIFEST_YML_ELEMENT)) {
+      Map<String, Object> treeMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+      treeMap.putAll(application);
+      if (treeMap.containsKey(NAME_MANIFEST_YML_ELEMENT) && treeMap.containsKey(MEMORY_MANIFEST_YML_ELEMENT)) {
         return true;
       }
     }

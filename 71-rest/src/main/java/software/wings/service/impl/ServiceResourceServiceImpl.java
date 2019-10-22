@@ -2296,7 +2296,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     createPcfServiceSpecification(pcfServiceSpecification);
   }
 
-  private void createDefaultPcfV2Manifests(Service service) {
+  public void createDefaultPcfV2Manifests(Service service) {
     if (applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid()) != null) {
       return;
     }
@@ -2323,7 +2323,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   /*
     Remove this method once the PCFSpec migration to manifest files is done
    */
-  private void upsertPCFSpecInManifestFile(PcfServiceSpecification pcfServiceSpecification) {
+  public void upsertPCFSpecInManifestFile(PcfServiceSpecification pcfServiceSpecification) {
     try {
       String serviceId = pcfServiceSpecification.getServiceId();
       String appId = pcfServiceSpecification.getAppId();

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import org.apache.commons.lang3.StringUtils;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,8 +36,68 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void getAppPrefixByRemovingNumber() throws Exception {
+  public void getAppPrefixByRemovingNumber() {
     assertThat(StringUtils.EMPTY).isEqualTo(deploymentManager.getAppPrefixByRemovingNumber(null));
     assertThat("a_b_c").isEqualTo(deploymentManager.getAppPrefixByRemovingNumber("a_b_c__4"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void getMatchesPrefix() {
+    ApplicationSummary applicationSummary = ApplicationSummary.builder()
+                                                .id("id1")
+                                                .name("a__b__c__1")
+                                                .diskQuota(1)
+                                                .instances(1)
+                                                .memoryLimit(1)
+                                                .requestedState("RUNNING")
+                                                .runningInstances(0)
+                                                .build();
+
+    assertThat(deploymentManager.matchesPrefix("a__b__c", applicationSummary)).isTrue();
+
+    applicationSummary = ApplicationSummary.builder()
+                             .id("id1")
+                             .name("a__b__c__2")
+                             .diskQuota(1)
+                             .instances(1)
+                             .memoryLimit(1)
+                             .requestedState("RUNNING")
+                             .runningInstances(0)
+                             .build();
+    assertThat(deploymentManager.matchesPrefix("a__b__c", applicationSummary)).isTrue();
+
+    applicationSummary = ApplicationSummary.builder()
+                             .id("id1")
+                             .name("a__b__c__d__2")
+                             .diskQuota(1)
+                             .instances(1)
+                             .memoryLimit(1)
+                             .requestedState("RUNNING")
+                             .runningInstances(0)
+                             .build();
+    assertThat(deploymentManager.matchesPrefix("a__b__c", applicationSummary)).isFalse();
+
+    applicationSummary = ApplicationSummary.builder()
+                             .id("id1")
+                             .name("a__b__2")
+                             .diskQuota(1)
+                             .instances(1)
+                             .memoryLimit(1)
+                             .requestedState("RUNNING")
+                             .runningInstances(0)
+                             .build();
+    assertThat(deploymentManager.matchesPrefix("a__b__c", applicationSummary)).isFalse();
+
+    applicationSummary = ApplicationSummary.builder()
+                             .id("id1")
+                             .name("BG__1_vars.yml")
+                             .diskQuota(1)
+                             .instances(1)
+                             .memoryLimit(1)
+                             .requestedState("RUNNING")
+                             .runningInstances(0)
+                             .build();
+    assertThat(deploymentManager.matchesPrefix("BG", applicationSummary)).isFalse();
   }
 }

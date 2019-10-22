@@ -1507,4 +1507,38 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
     return (SpotInstConfig) computeProviderSetting.getValue();
   }
+
+  @Override
+  public List<String> listRoutesForPcf(String appId, String infraDefinitionId) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infrastructure Definition is null", infrastructureDefinition);
+
+    InfraMappingInfrastructureProvider infrastructure = infrastructureDefinition.getInfrastructure();
+    notNullCheck("InfraMappingInfrastructureProvider is null", infrastructure);
+
+    if (!(infrastructure instanceof PcfInfraStructure)) {
+      throw new InvalidRequestException("Not PcfInfraStructure, invalid type");
+    }
+
+    PcfInfraStructure pcfInfraStructure = (PcfInfraStructure) infrastructure;
+
+    SettingAttribute computeProviderSetting = settingsService.get(pcfInfraStructure.getCloudProviderId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (!(computeProviderSetting.getValue() instanceof PcfConfig)) {
+      throw new InvalidRequestException("Invalid computeProviderSetting");
+    }
+
+    if (containsExpression(pcfInfraStructure.getOrganization()) || containsExpression(pcfInfraStructure.getSpace())) {
+      return emptyList();
+    }
+
+    return pcfHelperService.listRoutes((PcfConfig) computeProviderSetting.getValue(),
+        pcfInfraStructure.getOrganization(), pcfInfraStructure.getSpace());
+  }
+
+  @VisibleForTesting
+  boolean containsExpression(String value) {
+    return isEmpty(value) || value.startsWith("${");
+  }
 }

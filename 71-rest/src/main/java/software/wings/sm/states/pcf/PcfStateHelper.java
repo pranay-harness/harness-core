@@ -17,7 +17,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
-import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.Service;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -33,12 +32,15 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.ManifestType;
+import io.harness.pcf.model.PcfConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
+import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -47,6 +49,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.PcfInfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -152,7 +155,8 @@ public class PcfStateHelper {
                          .build());
   }
 
-  public ExecutionResponse queueDelegateTaskForRouteUpdate(PcfRouteUpdateQueueRequestData queueRequestData) {
+  public ExecutionResponse queueDelegateTaskForRouteUpdate(
+      PcfRouteUpdateQueueRequestData queueRequestData, PcfSetupContextElement pcfSetupContextElement) {
     Integer timeoutIntervalInMinutes = queueRequestData.getTimeoutIntervalInMinutes() == null
         ? Integer.valueOf(5)
         : queueRequestData.getTimeoutIntervalInMinutes();
@@ -160,18 +164,19 @@ public class PcfStateHelper {
     PcfInfrastructureMapping pcfInfrastructureMapping = queueRequestData.getPcfInfrastructureMapping();
     String activityId = queueRequestData.getActivityId();
 
-    PcfCommandRequest pcfCommandRequest = PcfCommandRouteUpdateRequest.builder()
-                                              .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
-                                              .commandName(queueRequestData.getCommandName())
-                                              .appId(app.getUuid())
-                                              .accountId(app.getAccountId())
-                                              .activityId(activityId)
-                                              .pcfConfig(queueRequestData.getPcfConfig())
-                                              .organization(pcfInfrastructureMapping.getOrganization())
-                                              .space(pcfInfrastructureMapping.getSpace())
-                                              .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
-                                              .timeoutIntervalInMin(timeoutIntervalInMinutes)
-                                              .build();
+    PcfCommandRequest pcfCommandRequest =
+        PcfCommandRouteUpdateRequest.builder()
+            .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
+            .commandName(queueRequestData.getCommandName())
+            .appId(app.getUuid())
+            .accountId(app.getAccountId())
+            .activityId(activityId)
+            .pcfConfig(queueRequestData.getPcfConfig())
+            .organization(pcfSetupContextElement.getPcfCommandRequest().getOrganization())
+            .space(pcfSetupContextElement.getPcfCommandRequest().getSpace())
+            .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
+            .timeoutIntervalInMin(timeoutIntervalInMinutes)
+            .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
         getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), pcfCommandRequest,
@@ -242,8 +247,8 @@ public class PcfStateHelper {
       GitFetchFilesFromMultipleRepoResult fetchFilesResult) {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
 
-    ApplicationManifest applicationManifest = appManifestMap.get(Service);
-    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, Service, pcfManifestsPackage);
+    ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
+    updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, K8sValuesLocation.Service, pcfManifestsPackage);
 
     applicationManifest = appManifestMap.get(ServiceOverride);
     updatePcfManifestFilesMap(applicationManifest, fetchFilesResult, ServiceOverride, pcfManifestsPackage);
@@ -355,7 +360,17 @@ public class PcfStateHelper {
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, Application app, ServiceElement serviceElement) {
     PcfManifestsPackage pcfManifestsPackage;
 
-    if (featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId())) {
+    Service service = serviceResourceService.get(serviceElement.getUuid());
+    notNullCheck("Service does not exists", service);
+    boolean pcfManifestRedesign = featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, app.getAccountId());
+    boolean pcfV2Service = service.isPcfV2();
+
+    if (pcfV2Service && !pcfManifestRedesign) {
+      throw new InvalidRequestException(
+          "Service uses New Manifest Design, Please enabled PCF_MANIFEST_REDESIGN feature");
+    }
+
+    if (pcfManifestRedesign) {
       PcfSetupStateExecutionData pcfSetupStateExecutionData =
           (PcfSetupStateExecutionData) context.getStateExecutionData();
 
@@ -393,11 +408,10 @@ public class PcfStateHelper {
 
   public String fetchPcfApplicationName(PcfManifestsPackage pcfManifestsPackage, String defaultPrefix) {
     String appName = null;
-    String varName = null;
 
     Map<String, Object> applicationYamlMap = getApplicationYamlMap(pcfManifestsPackage.getManifestYml());
     String name = (String) applicationYamlMap.get(NAME_MANIFEST_YML_ELEMENT);
-    if (isBlank(name)) {
+    if (isBlank(name) || PcfConstants.LEGACY_NAME_PCF_MANIFEST.equals(name)) {
       return defaultPrefix;
     }
 

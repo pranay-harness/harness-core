@@ -624,7 +624,7 @@ public class PcfCommandTaskHelper {
     // 2. Check if random-route config is needed. This happens if random-route=true in manifest or
     // user has not provided any route value.
     if (shouldUseRandomRoute(applicationToBeUpdated, setupRequest)) {
-      handleRandomRouteScenario(requestData, applicationToBeUpdated);
+      applicationToBeUpdated.put(RANDOM_ROUTE_MANIFEST_YML_ELEMENT, true);
       return;
     }
 

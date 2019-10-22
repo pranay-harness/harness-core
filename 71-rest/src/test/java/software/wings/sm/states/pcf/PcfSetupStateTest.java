@@ -2,6 +2,8 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
+import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -9,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
@@ -114,6 +117,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.service.ServiceHelper;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -155,6 +159,10 @@ public class PcfSetupStateTest extends WingsBaseTest {
       + "    path: ${FILE_LOCATION}\n"
       + "    routes:\n"
       + "      - route: ${ROUTE_MAP}\n";
+
+  public static final String MANIFEST_YAML_LEGACY = "  applications:\n"
+      + "  - name: ${APPLICATION_NAME}\n"
+      + "    instances: ${INSTANCE_COUNT}\n";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -519,6 +527,116 @@ public class PcfSetupStateTest extends WingsBaseTest {
     setupState.setCurrentRunningCount(4);
     assertThat(setupState.getCurrentRunningCountForSetupRequest()).isNotNull();
     assertThat(setupState.getCurrentRunningCountForSetupRequest().intValue()).isEqualTo(4);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateAppNamePrefix() {
+    PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_LEGACY).build();
+    String appName = "applicationName";
+    pcfSetupState.setPcfAppName(appName);
+    String appPrefix =
+        pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, false, pcfManifestsPackage);
+    assertThat(appPrefix).isNotNull();
+    assertThat(appPrefix).isEqualTo(appName);
+
+    pcfSetupState.setPcfAppName(null);
+    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, false, pcfManifestsPackage);
+    assertThat(appPrefix).isNotNull();
+    assertThat(appPrefix).isEqualTo(APP_NAME + "__" + SERVICE_NAME + "__" + ENV_NAME);
+
+    pcfSetupState.setPcfAppName(appName);
+    appName = "appName";
+    doReturn(appName).when(pcfStateHelper).fetchPcfApplicationName(any(), anyString());
+    pcfManifestsPackage.setManifestYml(MANIFEST_YAML_CONTENT);
+    appPrefix = pcfSetupState.generateAppNamePrefix(context, app, serviceElement, env, true, pcfManifestsPackage);
+    assertThat(appPrefix).isNotNull();
+    assertThat(appPrefix).isEqualTo("appName");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testShouldUseOriginalRoute() {
+    PcfSetupState state = new PcfSetupState("");
+    assertThat(state.shouldUseOriginalRoute(false)).isTrue();
+
+    state.setRoute(INFRA_ROUTE);
+    assertThat(state.shouldUseOriginalRoute(false)).isTrue();
+
+    state.setRoute(PCF_INFRA_ROUTE);
+    assertThat(state.shouldUseOriginalRoute(false)).isTrue();
+
+    state.setRoute(INFRA_ROUTE);
+    state.setBlueGreen(true);
+    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+
+    state.setRoute(PCF_INFRA_ROUTE);
+    state.setBlueGreen(true);
+    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+
+    state.setRoute(WorkflowServiceHelper.INFRA_TEMP_ROUTE_PCF);
+    state.setBlueGreen(false);
+    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+
+    state.setRoute(WorkflowServiceHelper.INFRA_TEMP_ROUTE_PCF);
+    state.setBlueGreen(true);
+    assertThat(state.shouldUseOriginalRoute(false)).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFetchMaxCount() {
+    pcfSetupState.setUseCurrentRunningCount(false);
+    pcfSetupState.setMaxInstances(3);
+    assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(3);
+
+    pcfSetupState.setUseCurrentRunningCount(true);
+    pcfSetupState.setMaxInstances(3);
+    pcfSetupState.setCurrentRunningCount(2);
+    assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(0);
+
+    doReturn(2).when(pcfStateHelper).fetchMaxCountFromManifest(any());
+    assertThat(pcfSetupState.fetchMaxCount(true, null)).isEqualTo(0);
+
+    pcfSetupState.setUseCurrentRunningCount(false);
+    assertThat(pcfSetupState.fetchMaxCount(true, null)).isEqualTo(2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFetchTempRoutes() {
+    PcfSetupState state = new PcfSetupState("");
+    assertThat(state.fetchTempRoutes(context, PcfInfrastructureMapping.builder().tempRouteMap(null).build())).isEmpty();
+
+    String r1 = "myRoute1";
+    String r2 = "myRoute2";
+    String r3 = "myRoute3";
+    state.setTempRouteMap(new String[] {r1, r2});
+    assertThat(state.fetchTempRoutes(context, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
+        .contains(r1, r2);
+
+    state.setTempRouteMap(null);
+    assertThat(
+        state.fetchTempRoutes(context, PcfInfrastructureMapping.builder().tempRouteMap(Arrays.asList(r1, r3)).build()))
+        .contains(r1, r3);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFetchRouteMas() {
+    PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
+    String r1 = "myRoute4";
+    doReturn(Arrays.asList(r1)).when(pcfStateHelper).getRouteMaps(anyString(), any());
+    pcfSetupState.setBlueGreen(false);
+    assertThat(pcfSetupState.fetchRouteMaps(
+                   context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
+        .containsExactly(r1);
+
+    pcfSetupState.setBlueGreen(true);
+    doReturn(Arrays.asList(r1)).when(pcfStateHelper).applyVarsYmlSubstitutionIfApplicable(anyList(), any());
+    assertThat(pcfSetupState.fetchRouteMaps(
+                   context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
+        .containsExactly(r1);
   }
 
   private void assertCommandUnits(List<CommandUnit> commandUnits, Set<String> commandUnitsList) {

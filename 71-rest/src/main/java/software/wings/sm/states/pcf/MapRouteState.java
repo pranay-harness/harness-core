@@ -152,7 +152,8 @@ public class MapRouteState extends State {
             .commandName(PCF_MAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDetails)
-            .build());
+            .build(),
+        pcfSetupContextElement);
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(

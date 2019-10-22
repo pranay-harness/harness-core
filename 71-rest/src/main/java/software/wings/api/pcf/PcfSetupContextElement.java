@@ -2,6 +2,14 @@ package software.wings.api.pcf;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_APP_FINAL_ROUTES;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_APP_TEMP_ROUTES;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_GUID;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_NAME;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_ROUTES;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_GUID;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_NAME;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_ROUTES;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -59,15 +67,20 @@ public class PcfSetupContextElement implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = newHashMap();
     if (newPcfApplicationDetails != null) {
-      map.put("newAppName", newPcfApplicationDetails.getApplicationName());
-      map.put("newAppGuid", newPcfApplicationDetails.getApplicationGuid());
+      map.put(CONTEXT_NEW_APP_NAME, newPcfApplicationDetails.getApplicationName());
+      map.put(CONTEXT_NEW_APP_GUID, newPcfApplicationDetails.getApplicationGuid());
+      map.put(CONTEXT_NEW_APP_ROUTES, newPcfApplicationDetails.getUrls());
     }
 
     PcfAppSetupTimeDetails oldAppDetails = getOldAppDetail(appDetailsToBeDownsized);
     if (oldAppDetails != null) {
-      map.put("oldAppName", oldAppDetails.getApplicationName());
-      map.put("oldAppGuid", oldAppDetails.getApplicationGuid());
+      map.put(CONTEXT_OLD_APP_NAME, oldAppDetails.getApplicationName());
+      map.put(CONTEXT_OLD_APP_GUID, oldAppDetails.getApplicationGuid());
+      map.put(CONTEXT_OLD_APP_ROUTES, oldAppDetails.getUrls());
     }
+
+    map.put(CONTEXT_APP_FINAL_ROUTES, routeMaps);
+    map.put(CONTEXT_APP_TEMP_ROUTES, tempRouteMap);
     return ImmutableMap.of("pcf", map);
   }
 

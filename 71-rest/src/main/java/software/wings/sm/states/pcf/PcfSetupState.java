@@ -1,6 +1,5 @@
 package software.wings.sm.states.pcf;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
@@ -14,6 +13,7 @@ import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
+import static software.wings.utils.Misc.normalizeExpression;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -94,7 +94,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
-import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.ArrayList;
@@ -156,7 +155,7 @@ public class PcfSetupState extends State {
 
   @Getter @Setter private boolean blueGreen;
   @Getter @Setter private boolean isWorkflowV2;
-  @Getter @Setter private List<String> tempRouteMap;
+  @Getter @Setter private String[] tempRouteMap;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -242,46 +241,13 @@ public class PcfSetupState extends State {
         pcfStateHelper.generateManifestMap(context, appManifestMap, app, serviceElement);
 
     boolean manifestRefactorFlagEnabled = isPcfManifestRefactorEnabled(app.getAccountId());
-    String pcfAppNameSuffix = Misc.normalizeExpression(
-        ServiceVersionConvention.getPrefix(app.getName(), serviceElement.getName(), env.getName()));
-    if (manifestRefactorFlagEnabled) {
-      pcfAppNameSuffix = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, pcfAppNameSuffix);
-      pcfAppNameSuffix = Misc.normalizeExpression(context.renderExpression(pcfAppNameSuffix));
-    } else {
-      if (isNotBlank(pcfAppName)) {
-        pcfAppNameSuffix = Misc.normalizeExpression(context.renderExpression(pcfAppName));
-      }
-    }
-
     String applicationManifestYmlContent = pcfManifestsPackage.getManifestYml();
-    // User has control to decide if for new application,
-    // inframapping.routes to use or inframapping.tempRoutes to use.
-    // so it automatically, attaches B-G deployment capability to deployment
-    // if user selected tempRoutes
-    boolean isOriginalRoute;
-    String infraRouteConstLegacy = INFRA_ROUTE;
-    String infraRouteConst = PCF_INFRA_ROUTE;
-    if (blueGreen) {
-      isOriginalRoute = false;
-    } else if (manifestRefactorFlagEnabled || route == null || infraRouteConstLegacy.equalsIgnoreCase(route.trim())
-        || infraRouteConst.equalsIgnoreCase(route.trim())) {
-      isOriginalRoute = true;
-    } else {
-      isOriginalRoute = false;
-    }
-
-    // @TODO: This needs to be moved to a workflow setup.
+    String pcfAppNameSuffix =
+        generateAppNamePrefix(context, app, serviceElement, env, manifestRefactorFlagEnabled, pcfManifestsPackage);
+    boolean isOriginalRoute = shouldUseOriginalRoute(manifestRefactorFlagEnabled);
     List<String> tempRouteMaps = fetchTempRoutes(context, pcfInfrastructureMapping);
-
-    List<String> routeMaps = pcfStateHelper.getRouteMaps(applicationManifestYmlContent, pcfInfrastructureMapping);
-
-    // In BlueGreen, we can not reply on cf push, as temp routes will be used while creating app, and
-    // routes mentioned in manifest will we swapped in the end after verification.
-    // So, we need to resolve these values manually if they are referencing vars.yml
-    if (blueGreen) {
-      routeMaps = pcfStateHelper.applyVarsYmlSubstitutionIfApplicable(routeMaps, pcfManifestsPackage);
-    }
-    routeMaps = routeMaps.stream().map(route -> context.renderExpression(route)).collect(toList());
+    List<String> routeMaps = fetchRouteMaps(context, pcfManifestsPackage, pcfInfrastructureMapping);
+    Integer maxCount = fetchMaxCount(manifestRefactorFlagEnabled, pcfManifestsPackage);
 
     Map<String, String> serviceVariables = context.getServiceVariables().entrySet().stream().collect(
         Collectors.toMap(Entry::getKey, e -> e.getValue().toString()));
@@ -290,15 +256,6 @@ public class PcfSetupState extends State {
     }
 
     boolean useCliForSetup = featureFlagService.isEnabled(FeatureName.USE_PCF_CLI, app.getAccountId());
-
-    // if isWorkflowV2, read from manifest, else read from workflow state
-    Integer maxCount;
-    if (useCurrentRunningCount) {
-      maxCount = -1;
-    } else {
-      maxCount =
-          manifestRefactorFlagEnabled ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage) : maxInstances;
-    }
 
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
@@ -373,12 +330,80 @@ public class PcfSetupState extends State {
   }
 
   @VisibleForTesting
+  Integer fetchMaxCount(boolean manifestRefactorFlagEnabled, PcfManifestsPackage pcfManifestsPackage) {
+    Integer maxCount;
+    if (useCurrentRunningCount) {
+      maxCount = 0;
+    } else {
+      maxCount =
+          manifestRefactorFlagEnabled ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage) : maxInstances;
+    }
+
+    return maxCount;
+  }
+
+  @VisibleForTesting
+  List<String> fetchRouteMaps(ExecutionContext context, PcfManifestsPackage pcfManifestsPackage,
+      PcfInfrastructureMapping pcfInfrastructureMapping) {
+    List<String> routeMaps =
+        pcfStateHelper.getRouteMaps(pcfManifestsPackage.getManifestYml(), pcfInfrastructureMapping);
+
+    // In BlueGreen, we can not rely on cf push to perform variable substitution,
+    // as temp routes will be used while creating app, and
+    // routes mentioned in manifest will we swapped in the end after verification.
+    // So, we need to resolve these values manually if they are referencing vars.yml
+    if (blueGreen) {
+      routeMaps = pcfStateHelper.applyVarsYmlSubstitutionIfApplicable(routeMaps, pcfManifestsPackage);
+    }
+    routeMaps = routeMaps.stream().map(routeMap -> context.renderExpression(routeMap)).collect(toList());
+    return routeMaps;
+  }
+
+  @VisibleForTesting
+  boolean shouldUseOriginalRoute(boolean manifestRefactorFlagEnabled) {
+    // These constants were used in legacy pcf workflows
+    String infraRouteConstLegacy = INFRA_ROUTE;
+    String infraRouteConst = PCF_INFRA_ROUTE;
+
+    boolean isOriginalRoute = false;
+    // Always use tempRoute for BG
+    if (blueGreen) {
+      return false;
+    }
+
+    if (manifestRefactorFlagEnabled || route == null || infraRouteConstLegacy.equalsIgnoreCase(route.trim())
+        || infraRouteConst.equalsIgnoreCase(route.trim())) {
+      isOriginalRoute = true;
+    } else {
+      isOriginalRoute = false;
+    }
+
+    return isOriginalRoute;
+  }
+
+  @VisibleForTesting
+  String generateAppNamePrefix(ExecutionContext context, Application app, ServiceElement serviceElement,
+      Environment env, boolean manifestRefactorFlagEnabled, PcfManifestsPackage pcfManifestsPackage) {
+    String pcfAppNameSuffix = isNotBlank(pcfAppName) ? normalizeExpression(context.renderExpression(pcfAppName))
+                                                     : normalizeExpression(ServiceVersionConvention.getPrefix(
+                                                           app.getName(), serviceElement.getName(), env.getName()));
+
+    if (manifestRefactorFlagEnabled) {
+      pcfAppNameSuffix = pcfStateHelper.fetchPcfApplicationName(pcfManifestsPackage, pcfAppNameSuffix);
+      pcfAppNameSuffix = normalizeExpression(context.renderExpression(pcfAppNameSuffix));
+    }
+
+    return pcfAppNameSuffix;
+  }
+
+  @VisibleForTesting
   List<String> fetchTempRoutes(ExecutionContext context, PcfInfrastructureMapping pcfInfrastructureMapping) {
-    List<String> tempRouteMaps = isEmpty(tempRouteMap) ? pcfInfrastructureMapping.getTempRouteMap() : tempRouteMap;
+    List<String> tempRouteMaps =
+        isEmpty(tempRouteMap) ? pcfInfrastructureMapping.getTempRouteMap() : Arrays.asList(tempRouteMap);
     if (isEmpty(tempRouteMaps)) {
       return emptyList();
     }
-    tempRouteMaps = tempRouteMaps.stream().map(tempRpute -> context.renderExpression(tempRpute)).collect(toList());
+    tempRouteMaps = tempRouteMaps.stream().map(tempRoute -> context.renderExpression(tempRoute)).collect(toList());
     return tempRouteMaps;
   }
 
@@ -555,16 +580,6 @@ public class PcfSetupState extends State {
     activity.setArtifactId(artifact.getUuid());
 
     return activityService.save(activity);
-  }
-
-  @Override
-  public Map<String, String> validateFields() {
-    Map<String, String> invalidFields = newHashMap();
-    if (!useCurrentRunningCount && (maxInstances == null || maxInstances < 0)) {
-      invalidFields.put("maxInstances", "Maximum instances needs to be populated");
-    }
-
-    return invalidFields;
   }
 
   private ExecutionResponse executeGitTask(
