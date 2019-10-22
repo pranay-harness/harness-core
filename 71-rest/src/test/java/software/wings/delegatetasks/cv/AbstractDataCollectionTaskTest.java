@@ -243,7 +243,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     assertThat(thirdPartyApiCallLog.getResponse().get(0).getValue()).isEqualTo("200");
     assertThat(thirdPartyApiCallLog.getResponse().get(0).getType()).isEqualTo(FieldType.NUMBER);
     assertThat(thirdPartyApiCallLog.getResponse().get(0).getName()).isEqualTo("Status Code");
-    assertThat(thirdPartyApiCallLog.getResponse().get(1).getValue()).isEqualTo("\"This is test response\"");
+    assertThat(thirdPartyApiCallLog.getResponse().get(1).getValue()).isEqualTo(responseStr);
     assertThat(thirdPartyApiCallLog.getResponse().get(1).getType()).isEqualTo(FieldType.JSON);
     assertThat(thirdPartyApiCallLog.getResponse().get(1).getName()).isEqualTo("Response Body");
   }

@@ -16,7 +16,9 @@ import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
+import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
+import static software.wings.service.impl.ThirdPartyApiCallLog.PAYLOAD;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -27,13 +29,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
@@ -76,6 +75,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
@@ -114,18 +116,17 @@ import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVTask;
 
-import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -277,9 +278,9 @@ public abstract class AbstractAnalysisState extends State {
               .workflowId(executionContext.getWorkflowId())
               .stateExecutionId(executionContext.getStateExecutionInstanceId())
               .serviceId(getPhaseServiceId(executionContext))
-              .envName(((ExecutionContextImpl) executionContext).getEnv().getName())
+              .envName(getEnvName(executionContext))
               .workflowName(executionContext.getWorkflowExecutionName())
-              .appName(((ExecutionContextImpl) executionContext).getApp().getName())
+              .appName(getAppName(executionContext))
               .artifactName(artifactForService == null ? null : artifactForService.getDisplayName())
               .serviceName(getPhaseServiceName(executionContext))
               .workflowStartTs(workflowExecution.getStartTs())
@@ -288,7 +289,7 @@ public abstract class AbstractAnalysisState extends State {
               .phaseName(getPhaseName(executionContext))
               .phaseId(getPhaseId(executionContext))
               .executionStatus(ExecutionStatus.RUNNING)
-              .envId(((ExecutionContextImpl) executionContext).getEnv().getUuid());
+              .envId(getEnvId(executionContext));
 
       if (workflowExecution.getPipelineExecutionId() != null) {
         WorkflowExecution pipelineExecutionDetails = workflowExecutionService.getExecutionDetails(
@@ -325,7 +326,6 @@ public abstract class AbstractAnalysisState extends State {
     Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
     InfrastructureMapping infrastructureMapping = getInfrastructureMapping(context);
     String infraMappingId = infrastructureMapping.getUuid();
-
     if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       return getPcfHostNames(context, true);
     }
@@ -417,10 +417,8 @@ public abstract class AbstractAnalysisState extends State {
       phaseHosts.keySet().forEach(host -> hosts.remove(host));
       return hosts;
     }
-    int offset = 0;
 
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
     String phaseInfraMappingId = getPhaseInfraMappingId(context);
 
     List<WorkflowExecution> successfulExecutions = new ArrayList<>();
@@ -764,21 +762,64 @@ public abstract class AbstractAnalysisState extends State {
 
   public abstract void setAnalysisServerConfigId(String analysisServerConfigId);
 
-  public static String generateAuthToken(final String secret) throws UnsupportedEncodingException {
-    if (secret == null) {
-      throw new InvalidRequestException("No secret present for external service");
-    }
-
-    Algorithm algorithm = Algorithm.HMAC256(secret);
-    return JWT.create()
-        .withIssuer("Harness Inc")
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
-        .sign(algorithm);
+  protected boolean isDemoPath(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId)
+        && (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
+               || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod"));
   }
 
-  protected boolean isDemoPath(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
+  protected void generateDemoActivityLogs(CVActivityLogService.Logger activityLogger, boolean failedState) {
+    logDataCollectionTriggeredMessage(activityLogger);
+    long startTime = dataCollectionStartTimestampMillis();
+    int duration = Integer.parseInt(getTimeDuration());
+    for (int minute = 0; minute < duration; minute += getTaskDuration().toMinutes()) {
+      long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
+      long endTimeMSForCurrentMinute = startTimeMSForCurrentMinute + getTaskDuration().toMillis();
+      activityLogger.info(
+          "Starting data collection. Time range %t to %t", startTimeMSForCurrentMinute, endTimeMSForCurrentMinute);
+      if (minute == duration - 1 && failedState) {
+        activityLogger.info(
+            "Starting data collection. Time range %t to %t", startTimeMSForCurrentMinute, endTimeMSForCurrentMinute);
+        activityLogger.error(
+            "Data collection failed for time range %t to %t", startTimeMSForCurrentMinute, endTimeMSForCurrentMinute);
+      } else {
+        activityLogger.info("Data collection successful for time range %t to %t", startTimeMSForCurrentMinute,
+            endTimeMSForCurrentMinute);
+        activityLogger.info(
+            "Analysis completed for time range %t to %t", startTimeMSForCurrentMinute, endTimeMSForCurrentMinute);
+      }
+    }
+    if (failedState) {
+      activityLogger.error("Analysis failed");
+    } else {
+      activityLogger.info("Analysis successful");
+    }
+  }
+
+  protected void generateDemoThirdPartyApiCallLogs(
+      String accountId, String stateExecutionId, boolean failedState, String demoRequestBody, String demoResponseBody) {
+    List<ThirdPartyApiCallLog> thirdPartyApiCallLogs = new ArrayList<>();
+    long startTime = dataCollectionStartTimestampMillis();
+    int duration = Integer.parseInt(getTimeDuration());
+    Random random = new Random();
+    for (int minute = 0; minute < duration; minute += getTaskDuration().toMinutes()) {
+      long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
+      ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, stateExecutionId);
+      apiCallLog.setTitle("Demo third party API call log");
+      apiCallLog.setRequestTimeStamp(startTimeMSForCurrentMinute);
+      apiCallLog.addFieldToRequest(
+          ThirdPartyApiCallField.builder().name(URL_STRING).value("http://example.com/").type(FieldType.URL).build());
+      apiCallLog.addFieldToRequest(
+          ThirdPartyApiCallField.builder().name(PAYLOAD).value(demoRequestBody).type(FieldType.JSON).build());
+      if (minute == duration / 2 && failedState) {
+        apiCallLog.addFieldToResponse(408, "Timeout from service provider", FieldType.JSON);
+      } else {
+        apiCallLog.addFieldToResponse(200, demoResponseBody, FieldType.JSON);
+      }
+      apiCallLog.setResponseTimeStamp(startTimeMSForCurrentMinute + random.nextInt(100));
+      thirdPartyApiCallLogs.add(apiCallLog);
+    }
+    wingsPersistence.save(thirdPartyApiCallLogs);
   }
 
   /**
@@ -804,8 +845,7 @@ public abstract class AbstractAnalysisState extends State {
       getLogger().info("for {} no host element set for {}", context.getStateExecutionInstanceId(), instanceElement);
       return;
     }
-    Host host =
-        hostService.get(context.getAppId(), ((ExecutionContextImpl) context).getEnv().getUuid(), hostElement.getUuid());
+    Host host = hostService.get(context.getAppId(), getEnvId(context), hostElement.getUuid());
     if (host == null) {
       getLogger().info("for {} no host found for {}", context.getStateExecutionInstanceId(), hostElement);
       return;
@@ -838,9 +878,8 @@ public abstract class AbstractAnalysisState extends State {
 
   protected InfrastructureMapping getInfrastructureMapping(ExecutionContext context) {
     String infraMappingId = context.fetchInfraMappingId();
-    if (context.fetchInfraMappingId() == null) {
-      return null;
-    }
+    Preconditions.checkNotNull(
+        context.fetchInfraMappingId(), "for " + context.getStateExecutionInstanceId() + " no infra mapping id found");
     return infraMappingService.get(context.getAppId(), infraMappingId);
   }
 
@@ -913,5 +952,21 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     return false;
+  }
+
+  protected String getEnvId(ExecutionContext executionContext) {
+    return ((ExecutionContextImpl) executionContext).getEnv() == null
+        ? null
+        : ((ExecutionContextImpl) executionContext).getEnv().getUuid();
+  }
+
+  protected String getEnvName(ExecutionContext executionContext) {
+    return ((ExecutionContextImpl) executionContext).getEnv() == null
+        ? null
+        : ((ExecutionContextImpl) executionContext).getEnv().getName();
+  }
+
+  protected String getAppName(ExecutionContext executionContext) {
+    return executionContext.getApp() == null ? null : executionContext.getApp().getName();
   }
 }

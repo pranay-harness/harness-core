@@ -4,11 +4,14 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -48,12 +51,15 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -103,6 +109,100 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
     when(serviceResourceService.get(anyString(), anyString(), anyBoolean()))
         .thenReturn(Service.builder().uuid(serviceId).name("ServiceA").build());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateDemoActivityLogs_whenStateIsSuccessful() {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
+    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
+    Logger activityLogger = mock(Logger.class);
+    abstractAnalysisState.generateDemoActivityLogs(activityLogger, false);
+    verify(activityLogger, times(46)).info(anyString(), anyLong(), anyLong());
+    verify(activityLogger, times(1)).info(eq("Analysis successful"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateDemoActivityLogs_whenStateFailed() {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
+    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
+    Logger activityLogger = mock(Logger.class);
+    abstractAnalysisState.generateDemoActivityLogs(activityLogger, true);
+    verify(activityLogger, times(45)).info(anyString(), anyLong(), anyLong());
+    verify(activityLogger, times(1)).error(anyString(), anyLong(), anyLong());
+    verify(activityLogger, times(1)).error(eq("Analysis failed"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateDemoThirdPartyApiCallLogs_whenStateIsSuccessful() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    FieldUtils.writeField(abstractAnalysisState, "wingsPersistence", wingsPersistence, true);
+    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
+    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
+    String accountId = generateUuid();
+    String stateExecutionId = generateUuid();
+    abstractAnalysisState.generateDemoThirdPartyApiCallLogs(
+        accountId, stateExecutionId, false, "request body", "response body");
+
+    ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(wingsPersistence).save(argumentCaptor.capture());
+    List<ThirdPartyApiCallLog> savedCallLogs = argumentCaptor.getValue();
+    assertThat(savedCallLogs).hasSize(15);
+    savedCallLogs.forEach(callLog -> {
+      assertThat(callLog.getStateExecutionId()).isEqualTo(stateExecutionId);
+      assertThat(callLog.getAccountId()).isEqualTo(accountId);
+      assertThat(callLog.getRequest()).hasSize(2);
+      assertThat(callLog.getRequest().get(1).getValue()).isEqualTo("request body");
+      assertThat(callLog.getRequest().get(1).getType()).isEqualTo(FieldType.JSON);
+      assertThat(callLog.getResponse()).hasSize(2);
+      assertThat(callLog.getRequest().get(0).getType()).isEqualTo(FieldType.URL);
+      assertThat(callLog.getResponse().get(1).getType()).isEqualTo(FieldType.JSON);
+      assertThat(callLog.getTitle()).isEqualTo("Demo third party API call log");
+      assertThat(callLog.getResponse().get(0).getValue()).isEqualTo("200");
+      assertThat(callLog.getResponse().get(1).getValue()).isEqualTo("response body");
+    });
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateDemoThirdPartyApiCallLogs_whenStateFailed() throws IllegalAccessException {
+    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    FieldUtils.writeField(abstractAnalysisState, "wingsPersistence", wingsPersistence, true);
+    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
+    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
+    String accountId = generateUuid();
+    String stateExecutionId = generateUuid();
+    abstractAnalysisState.generateDemoThirdPartyApiCallLogs(
+        accountId, stateExecutionId, true, "request body", "response body");
+    ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(wingsPersistence).save(argumentCaptor.capture());
+    List<ThirdPartyApiCallLog> savedCallLogs = argumentCaptor.getValue();
+    assertThat(savedCallLogs).hasSize(15);
+    for (int minute = 0; minute < 15; minute++) {
+      ThirdPartyApiCallLog callLog = savedCallLogs.get(minute);
+      assertThat(callLog.getStateExecutionId()).isEqualTo(stateExecutionId);
+      assertThat(callLog.getAccountId()).isEqualTo(accountId);
+      assertThat(callLog.getRequest()).hasSize(2);
+      assertThat(callLog.getRequest().get(1).getValue()).isEqualTo("request body");
+      assertThat(callLog.getRequest().get(1).getType()).isEqualTo(FieldType.JSON);
+      assertThat(callLog.getResponse()).hasSize(2);
+      assertThat(callLog.getRequest().get(0).getType()).isEqualTo(FieldType.URL);
+      assertThat(callLog.getResponse().get(1).getType()).isEqualTo(FieldType.JSON);
+      assertThat(callLog.getTitle()).isEqualTo("Demo third party API call log");
+      if (minute == 15 / 2) {
+        assertThat(callLog.getResponse().get(0).getValue()).isEqualTo("408");
+        assertThat(callLog.getResponse().get(1).getValue()).isEqualTo("Timeout from service provider");
+      } else {
+        assertThat(callLog.getResponse().get(0).getValue()).isEqualTo("200");
+        assertThat(callLog.getResponse().get(1).getValue()).isEqualTo("response body");
+      }
+    }
   }
 
   @Test

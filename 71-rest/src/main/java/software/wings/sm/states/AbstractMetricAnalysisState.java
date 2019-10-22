@@ -14,15 +14,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.intellij.lang.annotations.Language;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PcfInstanceElement;
 import software.wings.beans.GcpConfig;
@@ -46,6 +50,8 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,7 +70,22 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   public static final int COMPARISON_WINDOW = 1;
   public static final int PARALLEL_PROCESSES = 7;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
-
+  private static String DEMO_REQUEST_BODY;
+  private static String DEMO_RESPONSE_BODY;
+  static {
+    initDemoParams();
+  }
+  private static void initDemoParams() {
+    try {
+      String json = IOUtils.toString(
+          AbstractAnalysisState.class.getResourceAsStream("cv-demo-api-call-logs.json"), StandardCharsets.UTF_8.name());
+      JsonNode node = JsonUtils.readTree(json).get("metrics");
+      DEMO_REQUEST_BODY = JsonUtils.asPrettyJson(node.get("request"));
+      DEMO_RESPONSE_BODY = JsonUtils.asPrettyJson(node.get("response"));
+    } catch (IOException e) {
+      throw new RuntimeException("Could not read demo data from resources");
+    }
+  }
   @Transient @Inject protected MetricDataAnalysisService metricAnalysisService;
   @Transient @Inject protected VersionInfoManager versionInfoManager;
 
@@ -98,15 +119,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
       if (isDemoPath(analysisContext.getAccountId())) {
-        if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
-            || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
-          boolean failedState =
-              settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
-          if (failedState) {
-            return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Demo CV");
-          } else {
-            return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Demo CV");
-          }
+        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+        generateDemoActivityLogs(activityLogger, failedState);
+        generateDemoThirdPartyApiCallLogs(context.getAccountId(), context.getStateExecutionInstanceId(), failedState);
+        if (failedState) {
+          return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Demo CV");
+        } else {
+          return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Demo CV");
         }
       }
 
@@ -511,5 +530,18 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   public void setAnalysisTolerance(String tolerance) {
     this.tolerance = tolerance;
+  }
+
+  private void generateDemoThirdPartyApiCallLogs(String accountId, String stateExecutionId, boolean failedState) {
+    super.generateDemoThirdPartyApiCallLogs(
+        accountId, stateExecutionId, failedState, demoRequestBody(), demoMetricResponse());
+  }
+  @Language("JSON")
+  private String demoRequestBody() {
+    return DEMO_REQUEST_BODY;
+  }
+  @Language("JSON")
+  private String demoMetricResponse() {
+    return DEMO_RESPONSE_BODY;
   }
 }

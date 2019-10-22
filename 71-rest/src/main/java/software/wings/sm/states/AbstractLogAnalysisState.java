@@ -16,14 +16,18 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.ExceptionUtils;
+import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
+import org.apache.commons.io.IOUtils;
+import org.intellij.lang.annotations.Language;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.ElkConfig;
@@ -53,6 +57,8 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,6 +74,22 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public static final int HOST_BATCH_SIZE = 5;
+  private static String DEMO_REQUEST_BODY;
+  private static String DEMO_RESPONSE_BODY;
+  static {
+    initDemoParams();
+  }
+  private static void initDemoParams() {
+    try {
+      String json = IOUtils.toString(
+          AbstractAnalysisState.class.getResourceAsStream("cv-demo-api-call-logs.json"), StandardCharsets.UTF_8.name());
+      JsonNode node = JsonUtils.readTree(json).get("logs");
+      DEMO_REQUEST_BODY = JsonUtils.asPrettyJson(node.get("request"));
+      DEMO_RESPONSE_BODY = JsonUtils.asPrettyJson(node.get("response"));
+    } catch (IOException e) {
+      throw new RuntimeException("Could not read demo data from resources");
+    }
+  }
 
   protected String query;
 
@@ -121,15 +143,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();
       if (isDemoPath(analysisContext.getAccountId())) {
-        if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
-            || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
-          boolean failedState =
-              settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
-          if (failedState) {
-            return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
-          } else {
-            return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
-          }
+        boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+        generateDemoActivityLogs(activityLogger, failedState);
+        generateDemoThirdPartyApiCallLogs(
+            analysisContext.getAccountId(), analysisContext.getStateExecutionId(), failedState);
+        if (failedState) {
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
+        } else {
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
         }
       }
 
@@ -400,8 +421,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
     Map<String, String> testNodes = getCanaryNewHostNames(context);
     testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     renderedQuery = context.renderExpression(query);
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();
@@ -427,7 +446,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .analysisServerConfigId(getAnalysisServerConfigId())
             .correlationId(correlationId)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
-            .envId(envId)
+            .envId(getEnvId(context))
             .hostNameField(hostNameField)
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .predictiveHistoryMinutes(Integer.parseInt(getPredictiveHistoryMinutes()))
@@ -571,5 +590,18 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
 
     return batchedHosts;
+  }
+
+  private void generateDemoThirdPartyApiCallLogs(String accountId, String stateExecutionId, boolean failedState) {
+    super.generateDemoThirdPartyApiCallLogs(
+        accountId, stateExecutionId, failedState, demoRequestBody(), demoLogResponse());
+  }
+  @Language("JSON")
+  private String demoRequestBody() {
+    return DEMO_REQUEST_BODY;
+  }
+  @Language("JSON")
+  private String demoLogResponse() {
+    return DEMO_RESPONSE_BODY;
   }
 }
