@@ -35,6 +35,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.StackDriverState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
@@ -215,27 +216,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     });
   }
 
-  private StackDriverMetricCVConfiguration createStackDriverConfig() throws Exception {
-    String paramsForStackDriver = Resources.toString(
-        CVConfigurationServiceImplTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
-    StackDriverMetricDefinition definition = StackDriverMetricDefinition.builder()
-                                                 .filterJson(paramsForStackDriver)
-                                                 .metricName("metricName")
-                                                 .metricType("INFRA")
-                                                 .txnName("Group")
-                                                 .build();
-    StackDriverMetricCVConfiguration configuration =
-        StackDriverMetricCVConfiguration.builder().metricDefinitions(Arrays.asList(definition)).build();
-    configuration.setAccountId(accountId);
-    configuration.setStateType(StateType.STACK_DRIVER);
-    configuration.setEnvId(generateUuid());
-    configuration.setName("StackDriver");
-    configuration.setConnectorId(generateUuid());
-    configuration.setServiceId(generateUuid());
-
-    return configuration;
-  }
-
   @Test(expected = VerificationOperationException.class)
   @Category(UnitTests.class)
   public void testInvalidCvConfig() {
@@ -266,7 +246,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testCreateStackDriverMetrics() throws Exception {
-    StackDriverMetricCVConfiguration configuration = createStackDriverConfig();
+    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
 
     String cvConfigId = cvConfigurationService.saveConfiguration(
         accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.STACK_DRIVER, configuration);
@@ -278,6 +258,19 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions()).isNotNull();
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions().size()).isEqualTo(1);
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions().get(0).getFilter()).isNotBlank();
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Category(UnitTests.class)
+  public void testCreateStackDriverMetricsWithInvalidFields() throws Exception {
+    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
+    configuration.getMetricDefinitions().get(0).setMetricType("ERROR");
+    String cvConfigId = cvConfigurationService.saveConfiguration(
+        accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.STACK_DRIVER, configuration);
+
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    StackDriverMetricCVConfiguration stackDriverMetricCVConfiguration =
+        (StackDriverMetricCVConfiguration) cvConfiguration;
   }
 
   @Test
@@ -320,6 +313,20 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(updatedConfig).isNotNull();
     assertThat(updatedConfig.getMetricDefinitions()).isNotNull();
     assertThat(updatedConfig.getMetricDefinitions().get(0).getMetricName()).isEqualTo("UpdatedMetricName");
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Category(UnitTests.class)
+  public void testUpdateStackDriverMetricsWithInvalidFields() throws Exception {
+    testCreateStackDriverMetrics();
+    StackDriverMetricCVConfiguration configuration =
+        wingsPersistence.createQuery(StackDriverMetricCVConfiguration.class)
+            .filter(CVConfigurationKeys.stateType, StateType.STACK_DRIVER)
+            .get();
+
+    configuration.getMetricDefinitions().get(0).setMetricType("THROUGHPUT");
+    cvConfigurationService.updateConfiguration(
+        accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.STACK_DRIVER, configuration, configuration.getUuid());
   }
 
   @Test
@@ -365,6 +372,67 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testStackDriverFeatureFlagOff() throws Exception {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
     testCreateStackDriverMetrics();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateDefinitionsForMetricStackdriver() throws Exception {
+    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
+    configuration.setMetricFilters();
+    Map<String, String> invalidFields =
+        StackDriverState.validateMetricDefinitions(configuration.getMetricDefinitions(), true);
+    assertThat(invalidFields).isEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateDefinitionsForMetricStackdriverInvalidSetup() throws Exception {
+    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
+    configuration.getMetricDefinitions().get(0).setMetricType("ERROR");
+    configuration.setMetricFilters();
+    Map<String, String> invalidFields =
+        StackDriverState.validateMetricDefinitions(configuration.getMetricDefinitions(), true);
+    assertThat(invalidFields).isNotEmpty();
+    assertThat(invalidFields.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateDefinitionsForMetricStackdriverNoFilterJson() throws Exception {
+    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
+    Map<String, String> invalidFields =
+        StackDriverState.validateMetricDefinitions(configuration.getMetricDefinitions(), true);
+    assertThat(invalidFields).isNotEmpty();
+    assertThat(invalidFields.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetMetricTypeForMetricStackdriver() throws Exception {
+    StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
+    String metricType = StackDriverState.getMetricTypeForMetric(configuration, "metricName");
+    assertThat(metricType).isEqualTo(MetricType.INFRA.name());
+  }
+
+  public static StackDriverMetricCVConfiguration createStackDriverConfig(String accountId) throws Exception {
+    String paramsForStackDriver = Resources.toString(
+        CVConfigurationServiceImplTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
+    StackDriverMetricDefinition definition = StackDriverMetricDefinition.builder()
+                                                 .filterJson(paramsForStackDriver)
+                                                 .metricName("metricName")
+                                                 .metricType("INFRA")
+                                                 .txnName("Group")
+                                                 .build();
+    StackDriverMetricCVConfiguration configuration =
+        StackDriverMetricCVConfiguration.builder().metricDefinitions(Arrays.asList(definition)).build();
+    configuration.setAccountId(accountId);
+    configuration.setStateType(StateType.STACK_DRIVER);
+    configuration.setEnvId(generateUuid());
+    configuration.setName("StackDriver");
+    configuration.setConnectorId(generateUuid());
+    configuration.setServiceId(generateUuid());
+
+    return configuration;
   }
 
   private LogsCVConfiguration createLogsCVConfig(boolean enabled24x7) {

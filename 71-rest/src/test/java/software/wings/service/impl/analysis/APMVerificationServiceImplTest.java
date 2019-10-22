@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createStackDriverConfig;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -38,6 +39,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -68,6 +70,7 @@ import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -512,5 +515,36 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     assertThat(15).isEqualTo(dataCollectionInfo.getCollectionTime());
     assertThat(1540419553000l).isEqualTo(dataCollectionInfo.getStartTime());
     assertThat(AnalysisComparisonStrategy.PREDICTIVE).isEqualTo(dataCollectionInfo.getAnalysisComparisonStrategy());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateStackDriver24x7Task() throws Exception {
+    String accountId = generateUuid();
+    StackDriverMetricCVConfiguration cvConfiguration = createStackDriverConfig(accountId);
+    cvConfiguration.setMetricFilters();
+    wingsPersistence.save(cvConfiguration);
+
+    GcpConfig gcpConfig = GcpConfig.builder().build();
+    SettingAttribute attribute = SettingAttribute.Builder.aSettingAttribute()
+                                     .withValue(gcpConfig)
+                                     .withUuid(cvConfiguration.getConnectorId())
+                                     .build();
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(mockWaitNotifyEngine.waitForAll(anyObject(), anyString())).thenReturn("waitId");
+    when(mockSecretManager.getEncryptionDetails(gcpConfig, cvConfiguration.getAppId(), null))
+        .thenReturn(new ArrayList<>());
+
+    // execute behavior
+    boolean response =
+        service.collect247Data(cvConfiguration.getUuid(), StateType.STACK_DRIVER, 1540419553000l, 1540420454000l);
+    // verify
+    assertThat(response).isTrue();
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
+    verify(mockDelegateService).queueTask(taskCaptor.capture());
+
+    assertThat(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA.name())
+        .isEqualTo(taskCaptor.getValue().getData().getTaskType());
   }
 }
