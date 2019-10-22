@@ -24,7 +24,8 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml =
         webhookTriggerConditionHandler.toYaml(webHookTriggerCondition, "APP_ID");
 
-    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()));
+    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()))
+        .isTrue();
   }
 
   @Test
@@ -35,6 +36,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
     WebHookTriggerCondition webHookTriggerCondition =
         webhookTriggerConditionHandler.fromYAML(webhookEventTriggerConditionYaml);
 
-    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()));
+    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()))
+        .isTrue();
   }
 }
