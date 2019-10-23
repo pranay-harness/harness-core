@@ -47,7 +47,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private static final int MAX_BATCH_SIZE = 1000;
   private static final String SEVERITY = "severity";
   private static final String LOG_NAME = "delegate";
-  private static final String LOG_PROXY_HOST = "logs.app.harness.io:443";
+  private static final String LOG_PROXY_HOST = "logs.harness.io:443";
 
   private Logging logging;
   private AtomicBoolean useLogProxy;
@@ -196,8 +196,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     }
 
     Builder loggingOptionsBuilder =
-        LoggingOptions.getDefaultInstance()
-            .toBuilder()
+        LoggingOptions.newBuilder()
             .setProjectId(accessTokenBean.getProjectId())
             .setCredentials(GoogleCredentials.create(
                 new AccessToken(accessTokenBean.getTokenValue(), new Date(accessTokenBean.getExpirationTimeMillis()))));
@@ -205,8 +204,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     if (useLogProxy.get()) {
       loggingOptionsBuilder.setHost(LOG_PROXY_HOST);
     }
-
-    logging = loggingOptionsBuilder.build().getService();
+    try {
+      logging = loggingOptionsBuilder.build().getService();
+    } catch (Exception e) {
+      logger.info("Failed to build the google logging Builder object for StackDriverLogging", e);
+    }
   }
 
   private Map<String, String> getLogLabels() {
