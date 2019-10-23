@@ -18,12 +18,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
+import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -50,6 +52,8 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
@@ -57,8 +61,6 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -69,6 +71,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -76,7 +79,6 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.threading.Poller;
 import io.harness.waiter.NotifyEventListener;
-import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -89,7 +91,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.WorkflowElement;
-import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
@@ -114,6 +115,7 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -125,6 +127,9 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
+import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
+import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
@@ -137,6 +142,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -147,14 +153,16 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.HoldingScope;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
 /**
@@ -169,6 +177,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private PipelineService pipelineService;
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ResourceConstraintService resourceConstraintService;
   @Inject @InjectMocks private AccountService accountService;
   @Inject @InjectMocks private LicenseService licenseService;
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
@@ -179,13 +188,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
 
-  @Mock private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
 
-  @Inject @Named("waitStateResumer") private ScheduledExecutorService executorService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
-
-  @InjectMocks @Inject private Injector injector;
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   private static final String PHASE_PARAM = "PHASE_PARAM";
@@ -193,7 +197,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private Account account;
   private Application app;
   private Environment env;
-  private Artifact artifact;
 
   /*
    * Should trigger simple workflow.
@@ -216,12 +219,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     app = wingsPersistence.saveAndGet(
         Application.class, anApplication().name(APP_NAME).accountId(account.getUuid()).build());
     env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().appId(app.getUuid()).build());
-    artifact = anArtifact()
-                   .withAccountId(ACCOUNT_ID)
-                   .withAppId(app.getAppId())
-                   .withUuid(generateUuid())
-                   .withDisplayName(ARTIFACT_NAME)
-                   .build();
+    Artifact artifact = anArtifact()
+                            .withAccountId(ACCOUNT_ID)
+                            .withAppId(app.getAppId())
+                            .withUuid(generateUuid())
+                            .withDisplayName(ARTIFACT_NAME)
+                            .build();
     when(artifactService.listByAppId(anyString())).thenReturn(singletonList(artifact));
     when(artifactService.listByIds(any(), any())).thenReturn(singletonList(artifact));
   }
@@ -788,25 +791,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   private Workflow createExecutableWorkflow(String appId, Environment env, String workflowName) {
-    Graph graph = aGraph()
-                      .addNodes(GraphNode.builder()
-                                    .id("n1")
-                                    .name("wait")
-                                    .type(StateType.WAIT.name())
-                                    .properties(ImmutableMap.<String, Object>builder().put("duration", 1L).build())
-                                    .origin(true)
-                                    .build(),
-                          GraphNode.builder()
-                              .id("n2")
-                              .name("email")
-                              .type(EMAIL.name())
-                              .properties(ImmutableMap.<String, Object>builder()
-                                              .put("toAddress", "a@b.com")
-                                              .put("subject", "testing")
-                                              .build())
-                              .build())
-                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-                      .build();
+    Graph graph = getGraphForExecutableWorkflow();
 
     Workflow workflow =
         aWorkflow()
@@ -821,6 +806,48 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
     return workflow;
+  }
+
+  private Workflow createExecutableWorkflowWithThrottling(String appId, Environment env, String workflowName) {
+    Graph graph = getGraphForExecutableWorkflow();
+
+    Workflow workflow = aWorkflow()
+                            .envId(env.getUuid())
+                            .appId(appId)
+                            .name(workflowName)
+                            .description("Sample Workflow")
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                                       .withGraph(graph)
+                                                       .withConcurrencyStrategy(ConcurrencyStrategy.builder().build())
+                                                       .build())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
+    return workflow;
+  }
+
+  private Graph getGraphForExecutableWorkflow() {
+    return aGraph()
+        .addNodes(GraphNode.builder()
+                      .id("n1")
+                      .name("wait")
+                      .type(StateType.WAIT.name())
+                      .properties(ImmutableMap.<String, Object>builder().put("duration", 1L).build())
+                      .origin(true)
+                      .build(),
+            GraphNode.builder()
+                .id("n2")
+                .name("email")
+                .type(EMAIL.name())
+                .properties(ImmutableMap.<String, Object>builder()
+                                .put("toAddress", "a@b.com")
+                                .put("subject", "testing")
+                                .build())
+                .build())
+        .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+        .build();
   }
 
   /**
@@ -1998,10 +2025,30 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Owner(emails = {SRINIVAS})
   @Category(UnitTests.class)
   public void shouldListWaitingOnDeployments() {
+    List<WorkflowExecution> waitingOnDeployments = getWorkflowExecutions(false);
+    assertThat(waitingOnDeployments).isNotEmpty().hasSize(2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testShouldNotQueueDeployment() {
+    when(featureFlagService.isEnabled(eq(INFRA_MAPPING_REFACTOR), any())).thenReturn(true, true, true, true);
+    List<WorkflowExecution> waitingOnDeployments = getWorkflowExecutions(true);
+    assertThat(waitingOnDeployments).isNotEmpty().hasSize(2);
+    List<ExecutionStatus> executionStatuses =
+        waitingOnDeployments.stream().map(WorkflowExecution::getStatus).collect(toList());
+    assertThat(executionStatuses).isNotEmpty().hasSize(2);
+    assertThat(executionStatuses.get(0)).isEqualTo(ExecutionStatus.RUNNING);
+    assertThat(executionStatuses.get(1)).isEqualTo(ExecutionStatus.RUNNING);
+  }
+
+  private List<WorkflowExecution> getWorkflowExecutions(boolean withConcurrencyStrategy) {
     String appId = app.getUuid();
-    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
+    Workflow workflow = withConcurrencyStrategy ? createExecutableWorkflowWithThrottling(appId, env, "workflow1")
+                                                : createExecutableWorkflow(appId, env, "workflow1");
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+    executionArgs.setArtifacts(
+        singletonList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
 
     WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
     WorkflowExecution firstExecution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
@@ -2013,9 +2060,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
     assertThat(execution).isNotNull();
 
-    List<WorkflowExecution> waitingOnDeployments =
-        workflowExecutionService.listWaitingOnDeployments(appId, execution.getUuid());
-    assertThat(waitingOnDeployments).isNotEmpty().hasSize(2);
+    return workflowExecutionService.listWaitingOnDeployments(appId, execution.getUuid());
   }
 
   @Test
@@ -2121,5 +2166,63 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, ACCOUNT_ID);
     verify(multiArtifactWorkflowExecutionServiceHelper).filterArtifactsForExecution(any(), any(), any());
     assertThat(workflowExecution.getArtifacts()).isNullOrEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchWorkflowExecutionsForResourceConstraint() {
+    int count = 0;
+    String firstExecutionId = null;
+    List<ResourceConstraintInstance> resourceConstraintInstances = new ArrayList<>();
+    List<WorkflowExecution> executions = getWorkflowExecutions(true);
+    for (WorkflowExecution execution : executions) {
+      resourceConstraintInstances.add(ResourceConstraintInstance.builder()
+                                          .releaseEntityId(execution.getUuid())
+                                          .releaseEntityType(HoldingScope.WORKFLOW.name())
+                                          .resourceUnit(INFRA_MAPPING_ID)
+                                          .state(count == 0 ? State.ACTIVE.name() : State.BLOCKED.name())
+                                          .build());
+      if (count == 0) {
+        firstExecutionId = execution.getUuid();
+      }
+      count++;
+    }
+    when(resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(any(), any(), any()))
+        .thenReturn(resourceConstraintInstances);
+    ConcurrentExecutionResponse response =
+        workflowExecutionService.fetchConcurrentExecutions(app.getUuid(), firstExecutionId, INFRA_MAPPING_ID);
+    assertThat(response).isNotNull();
+    assertThat(response.getUnitType()).isEqualTo(UnitType.INFRA);
+    assertThat(response.getExecutions()).isNotNull().hasSize(2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExtractInfrastructureDetails() {
+    Service service = addService("Service");
+    ServiceTemplate serviceTemplate = getServiceTemplate(service);
+
+    String computeProviderId = wingsPersistence.save(
+        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
+
+    SettingAttribute computeProvider =
+        wingsPersistence.getWithAppId(SettingAttribute.class, app.getUuid(), computeProviderId);
+
+    InfrastructureMapping infrastructureMapping =
+        createInfraMappingService(serviceTemplate, computeProvider, "Name4", "host1");
+
+    WorkflowExecution execution = WorkflowExecution.builder()
+                                      .appId(app.getUuid())
+                                      .infraDefinitionIds(singletonList(INFRA_DEFINITION_ID))
+                                      .infraMappingIds(singletonList(infrastructureMapping.getUuid()))
+                                      .serviceIds(singletonList(service.getUuid()))
+                                      .build();
+    Map<String, Object> infraMap =
+        workflowExecutionService.extractServiceInfrastructureDetails(app.getUuid(), execution);
+    assertThat(infraMap).isNotNull();
+    assertThat(infraMap.containsKey("Service")).isTrue();
+    assertThat(infraMap.get("Service")).isEqualTo("Service");
+    assertThat(infraMap.containsKey("CloudProvider")).isTrue();
+    assertThat(infraMap.get("CloudProvider")).isEqualTo("PHYSICAL_DATA_CENTER");
   }
 }

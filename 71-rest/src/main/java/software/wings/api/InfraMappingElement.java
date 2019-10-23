@@ -10,6 +10,7 @@ public class InfraMappingElement {
   private Kubernetes kubernetes;
   private Helm helm;
   private String name;
+  private String infraId;
 
   @Data
   @Builder

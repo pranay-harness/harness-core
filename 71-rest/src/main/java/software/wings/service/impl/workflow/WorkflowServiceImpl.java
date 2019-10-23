@@ -45,6 +45,7 @@ import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
+import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
@@ -163,6 +164,8 @@ import software.wings.beans.artifact.ArtifactStreamSummary.ArtifactStreamSummary
 import software.wings.beans.artifact.ArtifactSummary;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
+import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataBuilder;
@@ -249,6 +252,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -761,6 +765,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
         if (isEmpty(canaryOrchestrationWorkflow.getFailureStrategies())) {
           createDefaultFailureStrategy(workflow);
+        }
+
+        if (canaryOrchestrationWorkflow.getConcurrencyStrategy() == null && infraRefactor) {
+          canaryOrchestrationWorkflow.setConcurrencyStrategy(ConcurrencyStrategy.builder().build());
         }
       }
 
@@ -1861,6 +1869,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
     return orchestrationWorkflow.getNotificationRules();
+  }
+
+  @Override
+  public ConcurrencyStrategy updateConcurrencyStrategy(
+      String appId, String workflowId, @NotNull @Valid ConcurrencyStrategy concurrencyStrategy) {
+    Workflow workflow = readWorkflow(appId, workflowId);
+    notNullCheck("workflow", workflow);
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+
+    if (concurrencyStrategy.getUnitType() == UnitType.INFRA) {
+      concurrencyStrategy.setResourceUnit(INFRA_ID_EXPRESSION);
+    }
+    orchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
+    orchestrationWorkflow = updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getConcurrencyStrategy();
   }
 
   private static void validateNotificationRule(NotificationRule notificationRule) {

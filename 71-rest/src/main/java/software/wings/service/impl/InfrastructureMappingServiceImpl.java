@@ -2267,7 +2267,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     sweepingOutputService.save(SweepingOutputServiceImpl
                                    .prepareSweepingOutputBuilder(appId, null, workflowExecutionId, phaseExecutionId,
                                        null, SweepingOutput.Scope.PHASE)
-                                   .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid())
+                                   .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid())
                                    .output(KryoUtils.asDeflatedBytes(infrastructureMappingId))
                                    .build());
   }

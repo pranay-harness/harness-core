@@ -1,6 +1,7 @@
 package software.wings.service.impl.workflow.creation;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -24,8 +25,8 @@ public class K8V2BlueGreenWorkflowCreator extends WorkflowCreator {
     MapperUtils.mapObject(clientWorkflow, workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-    if (canaryOrchestrationWorkflow != null
-        && k8BlueGreenWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
+    notNullCheck("orchestrationWorkflow", canaryOrchestrationWorkflow);
+    if (k8BlueGreenWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
       addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
       addWorkflowPhases(workflow);
     }
@@ -46,6 +47,6 @@ public class K8V2BlueGreenWorkflowCreator extends WorkflowCreator {
 
   @Override
   public void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
-    logger.info("Notify to add Init Phase");
+    // No action needed in attaching Phase
   }
 }

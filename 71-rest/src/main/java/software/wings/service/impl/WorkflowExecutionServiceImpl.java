@@ -41,6 +41,7 @@ import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.DEPLOYMENT;
+import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_NAME_KEY;
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_DOCKER_CONFIG_PLACEHOLDER;
@@ -79,6 +80,10 @@ import io.harness.beans.WorkflowType;
 import io.harness.cache.Distributable;
 import io.harness.cache.Ordinal;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.CollectionUtils;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.distribution.constraint.Consumer;
+import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -130,6 +135,7 @@ import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.DeploymentExecutionContext;
@@ -149,6 +155,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
+import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.StateExecutionElement;
@@ -164,6 +171,8 @@ import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
 import software.wings.beans.alert.UsageLimitExceededAlert;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.concurrency.ConcurrentExecutionResponse;
+import software.wings.beans.concurrency.ConcurrentExecutionResponse.ConcurrentExecutionResponseBuilder;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.beans.infrastructure.Host;
@@ -181,6 +190,7 @@ import software.wings.service.impl.deployment.checks.DeploymentCtx;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -195,6 +205,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
@@ -232,6 +243,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
+import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.utils.Validator;
 
@@ -249,6 +261,7 @@ import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -302,6 +315,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private HostService hostService;
+  @Inject private WorkflowConcurrencyHelper workflowConcurrencyHelper;
+  @Inject private ResourceConstraintService resourceConstraintService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1076,7 +1091,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
     String accountId = appService.getAccountIdByAppId(appId);
-    boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId);
 
     logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
 
@@ -1094,6 +1109,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
+
+    if (infraRefactor) {
+      workflow.setOrchestrationWorkflow(workflowConcurrencyHelper.enhanceWithConcurrencySteps(
+          workflow.getAppId(), workflow.getAccountId(), workflow.getOrchestrationWorkflow()));
+    }
 
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
@@ -1118,6 +1138,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowType(ORCHESTRATION);
     workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+    workflowExecution.setConcurrencyStrategy(workflow.getOrchestrationWorkflow().getConcurrencyStrategy());
     workflowExecution.setStateMachine(stateMachine);
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
@@ -1313,8 +1334,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
 
     WorkflowExecution savedWorkflowExecution;
-    if (workflowExecution.getWorkflowType() != ORCHESTRATION
-        || BUILD.equals(workflowExecution.getOrchestrationType())) {
+    if (shouldNotQueueWorkflow(workflowExecution, workflow)) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
       updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
       savedWorkflowExecution = wingsPersistence.getWithAppId(
@@ -1335,6 +1355,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return savedWorkflowExecution;
+  }
+
+  private boolean shouldNotQueueWorkflow(WorkflowExecution workflowExecution, Workflow workflow) {
+    if (workflowExecution.getWorkflowType() != ORCHESTRATION
+        || BUILD.equals(workflowExecution.getOrchestrationType())) {
+      return true;
+    } else if (featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflow.getAccountId())) {
+      CanaryOrchestrationWorkflow orchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+      return orchestrationWorkflow.getConcurrencyStrategy() != null
+          && orchestrationWorkflow.getConcurrencyStrategy().isEnabled();
+    } else {
+      return false;
+    }
   }
 
   private void savePipelineSweepingOutPut(
@@ -2194,7 +2228,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
     boolean infraRefactor = featureFlagService.isEnabled(
-        FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflowExecution.getAppId()));
+        INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(workflowExecution.getAppId()));
     List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
     // TODO : version should also be captured as part of the WorkflowExecution
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
@@ -2510,8 +2544,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private int refreshTotal(WorkflowExecution workflowExecution) {
-    boolean infraRefactor =
-        featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId());
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, workflowExecution.getAccountId());
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       logger.info("Workflow was deleted. Skipping the refresh total");
@@ -3325,5 +3358,80 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     workflowExecutionList.forEach(we -> we.setStateMachine(null));
     return workflowExecutionList;
+  }
+
+  @Override
+  public ConcurrentExecutionResponse fetchConcurrentExecutions(String appId, String workflowExecutionId, String unit) {
+    WorkflowExecution execution = getWorkflowExecution(appId, workflowExecutionId);
+    notNullCheck("Workflow Execution not found", execution);
+    ConcurrentExecutionResponseBuilder responseBuilder = ConcurrentExecutionResponse.builder();
+    List<ResourceConstraintInstance> instances =
+        resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(
+            appId, unit, HoldingScope.WORKFLOW.name());
+    responseBuilder.state(extractState(workflowExecutionId, instances));
+    responseBuilder.executions(fetchWorkflowExecutionsForResourceConstraint(
+        appId, instances.stream().map(ResourceConstraintInstance::getReleaseEntityId).collect(Collectors.toList())));
+    responseBuilder.unitType(
+        execution.getConcurrencyStrategy() != null ? execution.getConcurrencyStrategy().getUnitType() : null);
+    responseBuilder.infrastructureDetails(extractServiceInfrastructureDetails(appId, execution));
+    return responseBuilder.build();
+  }
+
+  @Override
+  public Map<String, Object> extractServiceInfrastructureDetails(String appId, WorkflowExecution execution) {
+    Map<String, Object> infrastructureDetails = new LinkedHashMap<>();
+
+    if (isNotEmpty(execution.getInfraMappingIds())) {
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(appId, execution.getInfraMappingIds().get(0));
+
+      Service service = serviceResourceService.get(appId, infrastructureMapping.getServiceId());
+      infrastructureDetails.put("Service", service.getName());
+      infrastructureDetails.put("DeploymentType", service.getDeploymentType());
+
+      infrastructureDetails.put("CloudProvider", infrastructureMapping.getComputeProviderType());
+      infrastructureDetails.put("CloudProviderName", infrastructureMapping.getComputeProviderName());
+      if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
+        infrastructureDetails.put(
+            "ClusterName", ((ContainerInfrastructureMapping) infrastructureMapping).getClusterName());
+        String namespace = ((ContainerInfrastructureMapping) infrastructureMapping).getNamespace();
+        if (namespace != null) {
+          infrastructureDetails.put("namespace", namespace);
+        }
+      }
+    }
+    return infrastructureDetails;
+  }
+
+  private State extractState(String workflowExecutionId, List<ResourceConstraintInstance> instances) {
+    Optional<ResourceConstraintInstance> optionalInstance = CollectionUtils.filterAndGetFirst(
+        instances, instance -> workflowExecutionId.equals(instance.getReleaseEntityId()));
+    if (optionalInstance.isPresent()) {
+      ResourceConstraintInstance executionInstance = optionalInstance.get();
+      return Consumer.State.valueOf(executionInstance.getState());
+    } else {
+      return null;
+    }
+  }
+
+  private List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds) {
+    if (EmptyPredicate.isNotEmpty(entityIds)) {
+      return wingsPersistence.createQuery(WorkflowExecution.class)
+          .project(WorkflowExecutionKeys.appId, true)
+          .project(WorkflowExecutionKeys.status, true)
+          .project(WorkflowExecutionKeys.workflowId, true)
+          .project(WorkflowExecutionKeys.createdAt, true)
+          .project(WorkflowExecutionKeys.uuid, true)
+          .project(WorkflowExecutionKeys.startTs, true)
+          .project(WorkflowExecutionKeys.endTs, true)
+          .project(WorkflowExecutionKeys.name, true)
+          .project(WorkflowExecutionKeys.envId, true)
+          .filter(WorkflowExecutionKeys.appId, appId)
+          .field(WorkflowExecutionKeys.uuid)
+          .in(entityIds)
+          .asList();
+    } else {
+      return Collections.emptyList();
+    }
   }
 }

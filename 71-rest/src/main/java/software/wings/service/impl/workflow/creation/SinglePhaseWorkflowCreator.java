@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -29,6 +30,7 @@ public class SinglePhaseWorkflowCreator extends WorkflowCreator {
     MapperUtils.mapObject(clientWorkflow, workflow);
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    notNullCheck("orchestrationWorkflow", canaryOrchestrationWorkflow);
     addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
     addWorkflowPhases(workflow);
     return workflow;
@@ -75,6 +77,5 @@ public class SinglePhaseWorkflowCreator extends WorkflowCreator {
         workflowPhase, true, orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
     canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-    logger.info("Notify to add Init Phase");
   }
 }

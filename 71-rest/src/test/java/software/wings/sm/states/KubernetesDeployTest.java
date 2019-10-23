@@ -192,7 +192,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
 
-  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
   private SweepingOutput sweepingOutput = SweepingOutput.builder()
                                               .appId(APP_ID)
                                               .name(outputName)

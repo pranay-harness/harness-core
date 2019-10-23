@@ -101,6 +101,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWithHttpPhaseStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWithHttpStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithConcurrencyStrategy;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCanaryWorkflowWithTwoPhases;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructCloneMetadata;
@@ -295,6 +296,8 @@ import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
+import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.stats.CloneMetadata;
@@ -4221,5 +4224,19 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
         .doesNotContain(DC_SSH.name(), AZURE_NODE_SELECT.name());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateConcurrencyStrategy() {
+    Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflowWithConcurrencyStrategy());
+    ConcurrencyStrategy newConcurrencyStrategy = ConcurrencyStrategy.builder().unitType(UnitType.NONE).build();
+    workflowService.updateConcurrencyStrategy(workflow.getAppId(), workflow.getUuid(), newConcurrencyStrategy);
+
+    Workflow workflow1 = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
+    OrchestrationWorkflow orchestrationWorkflow = workflow1.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull();
+    assertThat(orchestrationWorkflow.getConcurrencyStrategy()).isNotNull();
+    assertThat(orchestrationWorkflow.getConcurrencyStrategy().getUnitType()).isEqualTo(UnitType.NONE);
   }
 }

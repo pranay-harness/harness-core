@@ -4,6 +4,7 @@ import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestra
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.OrchestrationWorkflowType;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
+    private ConcurrencyStrategy concurrencyStrategy;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();
     private List<Variable> userVariables = new ArrayList<>();
@@ -97,6 +99,11 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       return this;
     }
 
+    public RollingOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+      this.concurrencyStrategy = concurrencyStrategy;
+      return this;
+    }
+
     public RollingOrchestrationWorkflowBuilder withFailureStrategies(List<FailureStrategy> failureStrategies) {
       this.failureStrategies = failureStrategies;
       return this;
@@ -142,6 +149,7 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       rollingOrchestrationWorkflow.setUserVariables(userVariables);
       rollingOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       rollingOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
+      rollingOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       return rollingOrchestrationWorkflow;
     }
   }
