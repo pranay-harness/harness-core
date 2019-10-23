@@ -22,6 +22,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
 
   private static TimeLimiter timeLimiter;
   private static ManagerClient managerClient;
+  private static String delegateId;
 
   private String accountId = "";
   private String managerHost = "";
@@ -45,6 +46,11 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
       managerHost = substringBetween(getConfiguration().getManagerUrl(), "://", "/api/");
     }
     return managerHost;
+  }
+
+  @Override
+  protected String getDelegateId() {
+    return delegateId;
   }
 
   @Override
@@ -74,5 +80,9 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
 
   public static void setManagerClient(ManagerClient managerClient) {
     DelegateStackdriverLogAppender.managerClient = managerClient;
+  }
+
+  public static void setDelegateId(String delegateId) {
+    DelegateStackdriverLogAppender.delegateId = delegateId;
   }
 }
