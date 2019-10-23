@@ -335,8 +335,10 @@ public class PcfSetupState extends State {
     if (useCurrentRunningCount) {
       maxCount = 0;
     } else {
-      maxCount =
-          manifestRefactorFlagEnabled ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage) : maxInstances;
+      maxInstances = maxInstances == null || maxInstances.intValue() < 0 ? Integer.valueOf(2) : maxInstances;
+      maxCount = manifestRefactorFlagEnabled
+          ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage, maxInstances)
+          : maxInstances;
     }
 
     return maxCount;

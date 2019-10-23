@@ -595,7 +595,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     pcfSetupState.setCurrentRunningCount(2);
     assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(0);
 
-    doReturn(2).when(pcfStateHelper).fetchMaxCountFromManifest(any());
+    doReturn(2).when(pcfStateHelper).fetchMaxCountFromManifest(any(), any());
     assertThat(pcfSetupState.fetchMaxCount(true, null)).isEqualTo(0);
 
     pcfSetupState.setUseCurrentRunningCount(false);

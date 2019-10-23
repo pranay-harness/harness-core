@@ -7,6 +7,7 @@ import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NO_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
@@ -496,14 +497,19 @@ public class PcfStateHelper {
     return route;
   }
 
-  public Integer fetchMaxCountFromManifest(PcfManifestsPackage pcfManifestsPackage) {
+  public Integer fetchMaxCountFromManifest(PcfManifestsPackage pcfManifestsPackage, Integer maxInstances) {
     Map<String, Object> applicationYamlMap = getApplicationYamlMap(pcfManifestsPackage.getManifestYml());
     Object maxCount = applicationYamlMap.get(INSTANCE_MANIFEST_YML_ELEMENT);
+
     String maxVal;
     if (maxCount instanceof Integer) {
       maxVal = maxCount.toString();
     } else {
       maxVal = (String) maxCount;
+    }
+
+    if (isBlank(maxVal) || INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED.equals(maxVal)) {
+      return maxInstances;
     }
 
     if (maxVal.contains("((") && maxVal.contains("))")) {
