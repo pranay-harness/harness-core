@@ -16,7 +16,6 @@ import static software.wings.sm.StateType.PHASE_STEP;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.beans.ExecutionStatus;
@@ -29,6 +28,7 @@ import io.harness.distribution.barrier.ForcerId;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
@@ -66,18 +66,17 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   private static final String APP_ID = "appId";
   private static final String LEVEL = "level";
 
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
-  public static void registerIterators(Injector injector) {
+  public void registerIterators() {
     final int threads = 2;
     final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
         threads, new ThreadFactoryBuilder().setNameFormat("Iterator-BarrierInstanceMonitor").build());
 
-    final BarrierService barrierService = injector.getInstance(BarrierService.class);
-
-    PersistenceIterator iterator =
+    PersistenceIterator iterator = persistenceIteratorFactory.create(
         MongoPersistenceIterator.<BarrierInstance>builder()
             .clazz(BarrierInstance.class)
             .fieldName(BarrierInstanceKeys.nextIteration)
@@ -85,13 +84,11 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(executor)
             .semaphore(new Semaphore(threads))
-            .handler(barrierInstance -> barrierService.update(barrierInstance))
+            .handler(this ::update)
             .filterExpander(query -> query.filter(BarrierInstanceKeys.state, STANDING.name()))
             .schedulingType(REGULAR)
-            .redistribute(true)
-            .build();
+            .redistribute(true));
 
-    injector.injectMembers(iterator);
     executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 1, TimeUnit.MINUTES);
   }
 

@@ -1,6 +1,8 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.exception.WingsException.EVERYBODY;
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,6 +45,9 @@ public class InstanceHandlerFactory {
   public InstanceHandler getInstanceHandler(InfrastructureMapping infraMapping) {
     InfrastructureMappingType infraMappingType =
         Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+
+    notNullCheck("Infra mapping type.", infraMappingType, EVERYBODY);
+
     switch (infraMappingType) {
       case AWS_SSH:
         return awsInstanceHandler;

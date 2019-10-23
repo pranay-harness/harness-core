@@ -5,12 +5,12 @@ import static java.time.Duration.ofMinutes;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -27,33 +27,29 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Singleton
 public class ECSPollingHandler implements Handler<ECSPollingJobEntity> {
+  private static final int POOL_SIZE = 5;
+
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private CloudWatchService cloudWatchService;
 
-  public static class ECSPollingExecutor {
-    static int POOL_SIZE = 5;
-    public static void registerIterators(Injector injector) {
-      final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ECSPollingHandler").build());
+  public void registerIterators() {
+    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+        POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ECSPollingHandler").build());
 
-      final ECSPollingHandler handler = new ECSPollingHandler();
-      injector.injectMembers(handler);
+    Semaphore semaphore = new Semaphore(POOL_SIZE);
+    PersistenceIterator iterator =
+        persistenceIteratorFactory.create(MongoPersistenceIterator.<ECSPollingJobEntity>builder()
+                                              .clazz(ECSPollingJobEntity.class)
+                                              .fieldName(ECSPollingJobEntityKeys.nextIteration)
+                                              .targetInterval(ofMinutes(60))
+                                              .acceptableNoAlertDelay(ofMinutes(1))
+                                              .executorService(executor)
+                                              .semaphore(semaphore)
+                                              .handler(this)
+                                              .schedulingType(REGULAR)
+                                              .redistribute(true));
 
-      Semaphore semaphore = new Semaphore(POOL_SIZE);
-      PersistenceIterator iterator = MongoPersistenceIterator.<ECSPollingJobEntity>builder()
-                                         .clazz(ECSPollingJobEntity.class)
-                                         .fieldName(ECSPollingJobEntityKeys.nextIteration)
-                                         .targetInterval(ofMinutes(60))
-                                         .acceptableNoAlertDelay(ofMinutes(1))
-                                         .executorService(executor)
-                                         .semaphore(semaphore)
-                                         .handler(handler)
-                                         .schedulingType(REGULAR)
-                                         .redistribute(true)
-                                         .build();
-
-      injector.injectMembers(iterator);
-      executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 120, TimeUnit.MINUTES);
-    }
+    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 120, TimeUnit.MINUTES);
   }
 
   @Override

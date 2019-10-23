@@ -5,12 +5,12 @@ import static java.time.Duration.ofSeconds;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
@@ -25,38 +25,33 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> {
+  private static final int POOL_SIZE = 3;
+
   public static final Long PERPETUAL_TASK_TIMEOUT = TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
 
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject DelegateService delegateService;
   @Inject PerpetualTaskRecordDao perpetualTaskRecordDao;
   @Inject PerpetualTaskServiceClientRegistry clientRegistry;
 
-  public static class PerpetualTaskRecordExecutor {
-    static int POOL_SIZE = 3;
+  public void registerIterators() {
+    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+        POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-PerpetualTaskRecordProcessor").build());
 
-    public static void registerIterators(Injector injector) {
-      final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-PerpetualTaskRecordProcessor").build());
-      final PerpetualTaskRecordHandler handler = new PerpetualTaskRecordHandler();
-      injector.injectMembers(handler);
+    PersistenceIterator iterator = persistenceIteratorFactory.create(
+        MongoPersistenceIterator.<PerpetualTaskRecord>builder()
+            .clazz(PerpetualTaskRecord.class)
+            .fieldName(PerpetualTaskRecordKeys.nextIteration)
+            .targetInterval(ofSeconds(5))
+            .acceptableNoAlertDelay(ofSeconds(45))
+            .executorService(executor)
+            .semaphore(new Semaphore(POOL_SIZE))
+            .handler(this)
+            .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))
+            .schedulingType(REGULAR)
+            .redistribute(true));
 
-      PersistenceIterator iterator =
-          MongoPersistenceIterator.<PerpetualTaskRecord>builder()
-              .clazz(PerpetualTaskRecord.class)
-              .fieldName(PerpetualTaskRecordKeys.nextIteration)
-              .targetInterval(ofSeconds(5))
-              .acceptableNoAlertDelay(ofSeconds(45))
-              .executorService(executor)
-              .semaphore(new Semaphore(POOL_SIZE))
-              .handler(handler)
-              .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))
-              .schedulingType(REGULAR)
-              .redistribute(true)
-              .build();
-
-      injector.injectMembers(iterator);
-      executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 3, TimeUnit.SECONDS);
-    }
+    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 3, TimeUnit.SECONDS);
   }
 
   @Override

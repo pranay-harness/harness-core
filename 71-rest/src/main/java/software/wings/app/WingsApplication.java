@@ -6,9 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofHours;
-import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
@@ -60,8 +57,6 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.health.HealthService;
-import io.harness.iterator.PersistenceIterator;
-import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
@@ -72,7 +67,6 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
-import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.internal.RecentlyDisconnectedDelegateHandler;
 import io.harness.persistence.HPersistence;
@@ -99,9 +93,6 @@ import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.User;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -131,7 +122,7 @@ import software.wings.scheduler.artifact.ArtifactCleanupHandler;
 import software.wings.scheduler.artifact.ArtifactCollectionHandler;
 import software.wings.scheduler.audit.EntityAuditRecordHandler;
 import software.wings.scheduler.ecs.ECSPollingHandler;
-import software.wings.scheduler.events.segment.SegmentGroupEventJob.SegmentGroupEventJobExecutor;
+import software.wings.scheduler.events.segment.SegmentGroupEventJob;
 import software.wings.scheduler.instance.InstanceSyncHandler;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
 import software.wings.scheduler.persistance.PersistentLockCleanup;
@@ -175,7 +166,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Caching;
 import javax.cache.configuration.Configuration;
@@ -587,59 +577,21 @@ public class WingsApplication extends Application<MainConfiguration> {
     final ScheduledThreadPoolExecutor artifactCollectionExecutor = new ScheduledThreadPoolExecutor(
         25, new ThreadFactoryBuilder().setNameFormat("Iterator-ArtifactCollection").build());
 
-    final ArtifactCollectionHandler artifactCollectionHandler = new ArtifactCollectionHandler();
-    injector.injectMembers(artifactCollectionHandler);
+    injector.getInstance(ArtifactCollectionHandler.class).registerIterators(artifactCollectionExecutor);
+    injector.getInstance(ArtifactCleanupHandler.class).registerIterators(artifactCollectionExecutor);
+    injector.getInstance(InstanceSyncHandler.class).registerIterators();
+    injector.getInstance(ApprovalPollingHandler.class).registerIterators();
+    injector.getInstance(ScheduleTriggerHandler.class).registerIterators();
+    injector.getInstance(ECSPollingHandler.class).registerIterators();
+    injector.getInstance(GCPBillingHandler.class).registerIterators();
+    injector.getInstance(SegmentGroupEventJob.class).registerIterators();
+    injector.getInstance(BarrierServiceImpl.class).registerIterators();
+    injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
 
-    PersistenceIterator artifactCollectionIterator = MongoPersistenceIterator.<ArtifactStream>builder()
-                                                         .clazz(ArtifactStream.class)
-                                                         .fieldName(ArtifactStreamKeys.nextIteration)
-                                                         .targetInterval(ofMinutes(1))
-                                                         .acceptableNoAlertDelay(ofSeconds(30))
-                                                         .executorService(artifactCollectionExecutor)
-                                                         .semaphore(new Semaphore(25))
-                                                         .handler(artifactCollectionHandler)
-                                                         .schedulingType(REGULAR)
-                                                         .redistribute(true)
-                                                         .build();
-
-    injector.injectMembers(artifactCollectionIterator);
-    artifactCollectionExecutor.scheduleAtFixedRate(
-        () -> artifactCollectionIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
-
-    final ArtifactCleanupHandler artifactCleanupHandler = new ArtifactCleanupHandler();
-    injector.injectMembers(artifactCleanupHandler);
-
-    PersistenceIterator artifactCleanupIterator =
-        MongoPersistenceIterator.<ArtifactStream>builder()
-            .clazz(ArtifactStream.class)
-            .fieldName(ArtifactStreamKeys.nextCleanupIteration)
-            .targetInterval(ofHours(2))
-            .acceptableNoAlertDelay(ofMinutes(15))
-            .executorService(artifactCollectionExecutor)
-            .semaphore(new Semaphore(5))
-            .handler(artifactCleanupHandler)
-            .filterExpander(
-                query -> query.filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.DOCKER.name()))
-            .schedulingType(REGULAR)
-            .redistribute(true)
-            .build();
-
-    injector.injectMembers(artifactCleanupIterator);
-    artifactCollectionExecutor.scheduleAtFixedRate(
-        () -> artifactCleanupIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.MINUTES);
-
-    InstanceSyncHandler.InstanceSyncExecutor.registerIterators(injector);
-    ApprovalPollingHandler.ApprovalPollingExecutor.registerIterators(injector);
-    ScheduleTriggerHandler.registerIterators(injector);
-    ECSPollingHandler.ECSPollingExecutor.registerIterators(injector);
-    GCPBillingHandler.GCPBillingExecutor.registerIterators(injector);
-    SegmentGroupEventJobExecutor.registerIterators(injector);
-    BarrierServiceImpl.registerIterators(injector);
-    EntityAuditRecordHandler.EntityAuditRecordExecutor.registerIterators(injector);
     if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
       logger.info("Initializing Perpetual Task Assignor..");
-      PerpetualTaskRecordHandler.PerpetualTaskRecordExecutor.registerIterators(injector);
-      RecentlyDisconnectedDelegateHandler.RecentlyDisconnectedDelegateExecutor.registerIterators(injector);
+      injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+      injector.getInstance(RecentlyDisconnectedDelegateHandler.class).registerIterators();
     }
   }
 

@@ -5,10 +5,10 @@ import static java.time.Duration.ofMinutes;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -22,36 +22,31 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class GCPBillingHandler implements Handler<GCPBillingJobEntity> {
+  private static final int POOL_SIZE = 5;
+
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject GCPMarketPlaceService gcpMarketPlaceService;
 
-  public static class GCPBillingExecutor {
-    static int POOL_SIZE = 5;
-    public static void registerIterators(Injector injector) {
-      final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-GCPBilling").build());
+  public void registerIterators() {
+    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+        POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-GCPBilling").build());
 
-      final GCPBillingHandler handler = new GCPBillingHandler();
-      injector.injectMembers(handler);
+    Semaphore semaphore = new Semaphore(POOL_SIZE);
+    PersistenceIterator iterator = MongoPersistenceIterator.<GCPBillingJobEntity>builder()
+                                       .clazz(GCPBillingJobEntity.class)
+                                       .fieldName(GCPBillingJobEntityKeys.nextIteration)
+                                       .targetInterval(ofMinutes(60))
+                                       .acceptableNoAlertDelay(ofMinutes(1))
+                                       .executorService(executor)
+                                       .semaphore(semaphore)
+                                       .handler(this)
+                                       .schedulingType(REGULAR)
+                                       .redistribute(true)
+                                       .build();
 
-      Semaphore semaphore = new Semaphore(POOL_SIZE);
-      PersistenceIterator iterator = MongoPersistenceIterator.<GCPBillingJobEntity>builder()
-                                         .clazz(GCPBillingJobEntity.class)
-                                         .fieldName(GCPBillingJobEntityKeys.nextIteration)
-                                         .targetInterval(ofMinutes(60))
-                                         .acceptableNoAlertDelay(ofMinutes(1))
-                                         .executorService(executor)
-                                         .semaphore(semaphore)
-                                         .handler(handler)
-                                         .schedulingType(REGULAR)
-                                         .redistribute(true)
-                                         .build();
-
-      injector.injectMembers(iterator);
-
-      // this'll check every 30 minutes if there are any new jobs to process.
-      // this value must be lower than `targetInterval`
-      executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.MINUTES);
-    }
+    // this'll check every 30 minutes if there are any new jobs to process.
+    // this value must be lower than `targetInterval`
+    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.MINUTES);
   }
 
   @Override

@@ -5,11 +5,11 @@ import static java.time.Duration.ofMinutes;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -25,35 +25,32 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity> {
+  private static final int POOL_SIZE = 5;
+
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private JiraHelperService jiraHelperService;
   @Inject private ServiceNowService serviceNowService;
   @Inject private ShellScriptApprovalService shellScriptApprovalService;
 
-  public static class ApprovalPollingExecutor {
-    static int POOL_SIZE = 5;
-    public static void registerIterators(Injector injector) {
-      final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ApprovalPolling").build());
+  public void registerIterators() {
+    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+        POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ApprovalPolling").build());
 
-      final ApprovalPollingHandler handler = new ApprovalPollingHandler();
-      injector.injectMembers(handler);
+    PersistenceIterator iterator =
+        persistenceIteratorFactory.create(MongoPersistenceIterator.<ApprovalPollingJobEntity>builder()
+                                              .clazz(ApprovalPollingJobEntity.class)
+                                              .fieldName(ApprovalPollingJobEntityKeys.nextIteration)
+                                              .targetInterval(ofMinutes(1))
+                                              .acceptableNoAlertDelay(ofMinutes(1))
+                                              .executorService(executor)
+                                              .semaphore(new Semaphore(POOL_SIZE))
+                                              .handler(this)
+                                              .schedulingType(REGULAR)
+                                              .redistribute(true));
 
-      PersistenceIterator iterator = MongoPersistenceIterator.<ApprovalPollingJobEntity>builder()
-                                         .clazz(ApprovalPollingJobEntity.class)
-                                         .fieldName(ApprovalPollingJobEntityKeys.nextIteration)
-                                         .targetInterval(ofMinutes(1))
-                                         .acceptableNoAlertDelay(ofMinutes(1))
-                                         .executorService(executor)
-                                         .semaphore(new Semaphore(POOL_SIZE))
-                                         .handler(handler)
-                                         .schedulingType(REGULAR)
-                                         .redistribute(true)
-                                         .build();
-
-      injector.injectMembers(iterator);
-      executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
-    }
+    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
   }
+
   @Override
   public void handle(ApprovalPollingJobEntity entity) {
     logger.info("Polling Approval status for approval polling job {}", entity);
