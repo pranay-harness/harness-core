@@ -22,6 +22,7 @@ import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.stats.CloneMetadata;
@@ -117,6 +118,9 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   List<NotificationRule> updateNotificationRules(
       String appId, String workflowId, List<NotificationRule> notificationRules);
+
+  ConcurrencyStrategy updateConcurrencyStrategy(
+      String appId, String workflowId, @NotNull @Valid ConcurrencyStrategy concurrencyStrategy);
 
   List<FailureStrategy> updateFailureStrategies(
       String appId, String workflowId, @Valid List<FailureStrategy> failureStrategies);

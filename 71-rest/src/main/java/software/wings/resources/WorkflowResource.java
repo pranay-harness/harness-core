@@ -41,6 +41,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowCategorySteps;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.Action;
@@ -515,6 +516,15 @@ public class WorkflowResource {
   public RestResponse<List<NotificationRule>> updateNotificationRules(@QueryParam("appId") String appId,
       @PathParam("workflowId") String workflowId, List<NotificationRule> notificationRules) {
     return new RestResponse<>(workflowService.updateNotificationRules(appId, workflowId, notificationRules));
+  }
+
+  @PUT
+  @Path("{workflowId}/concurrency-strategy")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ConcurrencyStrategy> concurrencyStrategy(@QueryParam("appId") String appId,
+      @PathParam("workflowId") String workflowId, ConcurrencyStrategy concurrencyStrategy) {
+    return new RestResponse<>(workflowService.updateConcurrencyStrategy(appId, workflowId, concurrencyStrategy));
   }
 
   /**

@@ -26,6 +26,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.beans.trigger.Trigger;
@@ -42,6 +43,7 @@ import software.wings.sm.StateStatusUpdate;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -200,4 +202,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   void refreshAwsLambdaExecutionSummary(
       String workflowExecutionId, List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries);
+
+  ConcurrentExecutionResponse fetchConcurrentExecutions(String appId, String workflowExecutionId, String unit);
+
+  Map<String, Object> extractServiceInfrastructureDetails(String appId, WorkflowExecution execution);
 }

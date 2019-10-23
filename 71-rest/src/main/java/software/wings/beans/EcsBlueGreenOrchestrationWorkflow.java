@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,6 +52,7 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
     private List<Variable> systemVariables = new ArrayList<>();
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<NotificationRule> notificationRules = new ArrayList<>();
+    private ConcurrencyStrategy concurrencyStrategy;
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private List<Variable> userVariables = new ArrayList<>();
     private List<Variable> derivedVariables = new ArrayList<>();
@@ -111,6 +113,11 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       return this;
     }
 
+    public EcsBlueGreenOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+      this.concurrencyStrategy = concurrencyStrategy;
+      return this;
+    }
+
     public EcsBlueGreenOrchestrationWorkflowBuilder withFailureStrategies(List<FailureStrategy> failureStrategies) {
       this.failureStrategies = failureStrategies;
       return this;
@@ -157,6 +164,7 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       blueGreenOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       blueGreenOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       blueGreenOrchestrationWorkflow.setEcsBGType(ecsBGType);
+      blueGreenOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       return blueGreenOrchestrationWorkflow;
     }
   }

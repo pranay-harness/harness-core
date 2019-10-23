@@ -4,6 +4,7 @@ import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestration
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.OrchestrationWorkflowType;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
+    private ConcurrencyStrategy concurrencyStrategy;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();
     private List<Variable> userVariables = new ArrayList<>();
@@ -100,6 +102,11 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       return this;
     }
 
+    public BasicOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+      this.concurrencyStrategy = concurrencyStrategy;
+      return this;
+    }
+
     public BasicOrchestrationWorkflowBuilder withFailureStrategies(List<FailureStrategy> failureStrategies) {
       this.failureStrategies = failureStrategies;
       return this;
@@ -145,6 +152,7 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       basicOrchestrationWorkflow.setUserVariables(userVariables);
       basicOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       basicOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
+      basicOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       return basicOrchestrationWorkflow;
     }
   }

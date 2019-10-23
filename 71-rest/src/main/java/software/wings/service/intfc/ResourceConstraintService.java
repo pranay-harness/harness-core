@@ -8,6 +8,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResourceConstraint;
+import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
@@ -24,6 +25,8 @@ public interface ResourceConstraintService extends OwnedByAccount {
 
   ResourceConstraint get(String accountId, String resourceConstraintId);
 
+  ResourceConstraint ensureResourceConstraintForConcurrency(String accountId, String name);
+
   void delete(String accountId, String resourceConstraintId);
 
   ConstraintRegistry getRegistry();
@@ -39,6 +42,9 @@ public interface ResourceConstraintService extends OwnedByAccount {
   void updateBlockedConstraints(Set<String> constraintIds);
 
   List<ResourceConstraintUsage> usage(String accountId, List<String> resourceConstraintIds);
+
+  List<ResourceConstraintInstance> fetchResourceConstraintInstancesForUnitAndEntityType(
+      String appId, String unit, String entityType);
 
   static String workflowExecutionIdFromReleaseEntityId(String releaseEntityId) {
     return releaseEntityId.split("[|]")[0];

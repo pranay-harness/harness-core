@@ -9,7 +9,7 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.sm.states.ResourceConstraintState.HoldingScope.WORKFLOW;
+import static software.wings.sm.states.HoldingScope.WORKFLOW;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -22,6 +22,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.Constraint.Spec;
+import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.ConstraintRegistry;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -59,7 +60,7 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ResourceConstraintStatusData;
 import software.wings.sm.StateExecutionData;
-import software.wings.sm.states.ResourceConstraintState.HoldingScope;
+import software.wings.sm.states.HoldingScope;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -108,6 +109,22 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       return null;
     }
     return resourceConstraint;
+  }
+
+  @Override
+  public ResourceConstraint ensureResourceConstraintForConcurrency(String accountId, String name) {
+    try {
+      ResourceConstraint resourceConstraint =
+          ResourceConstraint.builder().name(name).accountId(accountId).capacity(1).strategy(Strategy.FIFO).build();
+      wingsPersistence.save(resourceConstraint);
+      return resourceConstraint;
+    } catch (DuplicateKeyException ex) {
+      logger.info("Resource Constraint Already exist for name {}", name);
+      return wingsPersistence.createQuery(ResourceConstraint.class)
+          .filter(ResourceConstraintKeys.accountId, accountId)
+          .filter(ResourceConstraintKeys.name, name)
+          .get();
+    }
   }
 
   private void ensureSafeToDelete(String accountId, String resourceConstraintId) {
@@ -490,5 +507,17 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       return false;
     }
     return true;
+  }
+
+  @Override
+  public List<ResourceConstraintInstance> fetchResourceConstraintInstancesForUnitAndEntityType(
+      String appId, String unit, String entityType) {
+    return wingsPersistence.createQuery(ResourceConstraintInstance.class)
+        .filter(ResourceConstraintInstanceKeys.appId, appId)
+        .filter(ResourceConstraintInstanceKeys.resourceUnit, unit)
+        .filter(ResourceConstraintInstanceKeys.releaseEntityType, entityType)
+        .field(ResourceConstraintInstanceKeys.state)
+        .in(asList(State.ACTIVE.name(), State.BLOCKED.name()))
+        .asList();
   }
 }

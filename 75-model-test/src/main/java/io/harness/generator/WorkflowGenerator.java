@@ -86,9 +86,9 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.HttpState.HttpStateKeys;
 import software.wings.sm.states.JenkinsState;
-import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
 import java.util.ArrayList;
 import java.util.HashMap;

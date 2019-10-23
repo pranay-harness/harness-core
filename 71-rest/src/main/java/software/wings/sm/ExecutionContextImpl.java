@@ -1109,7 +1109,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           infrastructureDefinitionService.get(appId, infrastructureMapping.getInfrastructureDefinitionId());
       name = infrastructureDefinition.getName();
     }
-    InfraMappingElementBuilder builder = InfraMappingElement.builder().name(name);
+    InfraMappingElementBuilder builder =
+        InfraMappingElement.builder().name(name).infraId(infrastructureMapping.getUuid());
     populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
     populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
 
@@ -1168,9 +1169,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (phaseElement == null) {
       return null;
     }
-    SweepingOutput sweepingOutput =
-        sweepingOutputService.find(getAppId(), InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid(),
-            null, phaseElement.getWorkflowExecutionId(), phaseElement.getPhaseExecutionIdForSweepingOutput(), null);
+    SweepingOutput sweepingOutput = sweepingOutputService.find(getAppId(),
+        InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid(), null,
+        phaseElement.getWorkflowExecutionId(), phaseElement.getPhaseExecutionIdForSweepingOutput(), null);
     return sweepingOutput == null ? null : (String) KryoUtils.asInflatedObject(sweepingOutput.getOutput());
   }
 }

@@ -3,6 +3,7 @@ package software.wings.service.impl.workflow.creation;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -33,6 +34,7 @@ public class MultiPhaseWorkflowCreator extends WorkflowCreator {
     MapperUtils.mapObject(clientWorkflow, workflow);
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    notNullCheck("orchestrationWorkflow", canaryOrchestrationWorkflow);
     addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
     addWorkflowPhases(workflow);
     return workflow;
@@ -70,7 +72,5 @@ public class MultiPhaseWorkflowCreator extends WorkflowCreator {
             orchestrationWorkflow.getOrchestrationWorkflowType(), workflow.getCreationFlags());
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
     canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-
-    logger.info("Notify to add Init Phase");
   }
 }

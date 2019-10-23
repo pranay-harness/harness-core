@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION;
-import static software.wings.sm.states.ResourceConstraintState.HoldingScope.WORKFLOW;
+import static software.wings.sm.states.HoldingScope.WORKFLOW;
 
 import com.google.inject.Inject;
 
@@ -24,8 +24,11 @@ import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.ConsumerId;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.PhaseElement;
 import software.wings.api.ResourceConstraintExecutionData;
 import software.wings.beans.Application;
@@ -57,23 +60,19 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.Min;
 
-/*
- */
-
+@FieldNameConstants(innerTypeName = "ResourceConstraintStateKeys")
 public class ResourceConstraintState extends State {
-  @Inject private transient AppService applicationService;
-  @Inject private transient ResourceConstraintService resourceConstraintService;
-  @Inject private transient NotificationSetupService notificationSetupService;
-  @Inject private transient NotificationService notificationService;
-  @Inject private transient WingsPersistence wingsPersistence;
-  @Inject private transient WorkflowNotificationHelper workflowNotificationHelper;
+  @Inject @Transient private AppService applicationService;
+  @Inject @Transient private ResourceConstraintService resourceConstraintService;
+  @Inject @Transient private NotificationSetupService notificationSetupService;
+  @Inject @Transient private NotificationService notificationService;
+  @Inject @Transient private WingsPersistence wingsPersistence;
+  @Inject @Transient private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Getter @Setter private String resourceConstraintId;
   @Getter @Setter private String resourceUnit;
 
   @Getter @Setter @Min(value = 1) private int permits;
-
-  public enum HoldingScope { PIPELINE, WORKFLOW, PHASE, PHASE_SECTION, NEXT_STEP }
 
   @Getter @Setter private String holdingScope;
 
@@ -158,6 +157,13 @@ public class ResourceConstraintState extends State {
 
     final ExecutionResponseBuilder executionResponseBuilder =
         executionResponseBuilder(resourceConstraint, renderedResourceUnit.getValue());
+
+    if (ExpressionEvaluator.matchesVariablePattern(renderedResourceUnit.getValue())) {
+      return ExecutionResponse.builder()
+          .executionStatus(ExecutionStatus.SKIPPED)
+          .errorMessage("Cannot Resolve Constraint Unit " + renderedResourceUnit.getValue() + " Skipping...")
+          .build();
+    }
 
     String consumerId = generateUuid();
     try {

@@ -5,6 +5,7 @@ import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.WorkflowConstants.K8S_CANARY_PHASE_NAME;
 import static software.wings.common.WorkflowConstants.K8S_PRIMARY_PHASE_NAME;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -37,6 +38,7 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
     MapperUtils.mapObject(clientWorkflow, workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    notNullCheck("orchestrationWorkflow", canaryOrchestrationWorkflow);
     if (k8CanaryWorkflowPhaseHelper.isCreationRequired(canaryOrchestrationWorkflow)) {
       addLinkedPreOrPostDeploymentSteps(canaryOrchestrationWorkflow);
       addWorkflowPhases(workflow);
@@ -102,7 +104,5 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
 
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
     canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-
-    logger.info("Notify to add Init Phase");
   }
 }

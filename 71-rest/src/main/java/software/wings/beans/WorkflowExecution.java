@@ -36,6 +36,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.entityinterface.AccountAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.sm.PipelineSummary;
@@ -166,6 +167,7 @@ public class WorkflowExecution
 
   private HelmExecutionSummary helmExecutionSummary;
   private List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries;
+  private ConcurrencyStrategy concurrencyStrategy;
 
   @Default
   @JsonIgnore

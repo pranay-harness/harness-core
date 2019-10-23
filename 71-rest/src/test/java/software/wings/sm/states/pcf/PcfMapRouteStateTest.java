@@ -193,7 +193,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
       asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
 
-  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY + phaseElement.getUuid();
+  private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
   private SweepingOutput sweepingOutput = SweepingOutput.builder()
                                               .appId(APP_ID)
                                               .name(outputName)

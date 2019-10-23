@@ -4,6 +4,7 @@ import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServic
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.OrchestrationWorkflowType;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
+    private ConcurrencyStrategy concurrencyStrategy;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();
     private List<Variable> userVariables = new ArrayList<>();
@@ -111,6 +113,11 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       return this;
     }
 
+    public MultiServiceOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+      this.concurrencyStrategy = concurrencyStrategy;
+      return this;
+    }
+
     public MultiServiceOrchestrationWorkflowBuilder withSystemVariables(List<Variable> systemVariables) {
       this.systemVariables = systemVariables;
       return this;
@@ -146,6 +153,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       multiServiceOrchestrationWorkflow.setUserVariables(userVariables);
       multiServiceOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       multiServiceOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
+      multiServiceOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       return multiServiceOrchestrationWorkflow;
     }
   }

@@ -38,7 +38,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.PipelineService;
-import software.wings.sm.states.ResourceConstraintState.HoldingScope;
+import software.wings.sm.states.HoldingScope;
 
 @Singleton
 public class PipelineGenerator {

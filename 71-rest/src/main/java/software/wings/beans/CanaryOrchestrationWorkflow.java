@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Graph.Builder;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
@@ -348,6 +349,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       });
     }
     populatePhaseSteps(postDeploymentSteps, getGraph());
+    if (concurrencyStrategy == null && infraRefactor) {
+      setConcurrencyStrategy(ConcurrencyStrategy.builder().build());
+    }
     reorderUserVariables();
   }
   private void updateMetadataInfraMapping(Workflow workflow, WorkflowPhase workflowPhase) {
@@ -641,7 +645,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     phaseStep.setSteps(phaseStep.getStepsIds().stream().map(stepId -> nodesMap.get(stepId)).collect(toList()));
   }
 
-  private Graph generateGraph() {
+  public Graph generateGraph() {
     String id1 = preDeploymentSteps.getUuid();
     String id2;
     GraphNode preDeploymentNode = preDeploymentSteps.generatePhaseStepNode();
@@ -837,6 +841,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .withDerivedVariables(getDerivedVariables())
         .withRequiredEntityTypes(getRequiredEntityTypes())
         .withOrchestrationWorkflowType(getOrchestrationWorkflowType())
+        .withConcurrencyStrategy(getConcurrencyStrategy())
         .build();
   }
 
@@ -965,6 +970,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
+    private ConcurrencyStrategy concurrencyStrategy;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();
     private List<Variable> userVariables = new ArrayList<>();
@@ -1024,6 +1030,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       return this;
     }
 
+    public CanaryOrchestrationWorkflowBuilder withConcurrencyStrategy(ConcurrencyStrategy concurrencyStrategy) {
+      this.concurrencyStrategy = concurrencyStrategy;
+      return this;
+    }
+
     public CanaryOrchestrationWorkflowBuilder withFailureStrategies(List<FailureStrategy> failureStrategies) {
       this.failureStrategies = failureStrategies;
       return this;
@@ -1071,6 +1082,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       canaryOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       canaryOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       canaryOrchestrationWorkflow.setOrchestrationWorkflowType(orchestrationWorkflowType);
+      canaryOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       return canaryOrchestrationWorkflow;
     }
   }

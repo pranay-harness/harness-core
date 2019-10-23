@@ -15,7 +15,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.beans.Variable.VariableBuilder;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.State;
@@ -42,6 +45,7 @@ import java.util.regex.Matcher;
       @JsonSubTypes.Type(value = BuildWorkflow.class, name = "BUILD"),
 })
 public abstract class OrchestrationWorkflow {
+  @Getter @Setter protected ConcurrencyStrategy concurrencyStrategy;
   private OrchestrationWorkflowType orchestrationWorkflowType;
 
   private boolean valid;

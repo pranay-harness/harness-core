@@ -41,6 +41,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.features.DeploymentHistoryFeature;
@@ -539,5 +540,16 @@ public class ExecutionResource {
     }
 
     return new RestResponse<>(workflowExecutionService.getApprovalAuthorization(appId, userGroups));
+  }
+
+  @GET
+  @Path("{workflowExecutionId}/constraint-executions")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<ConcurrentExecutionResponse> getExecutionsForConstraint(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String workflowExecutionId, @QueryParam("unit") String unit) {
+    notNullCheck("App cannot be null", appId);
+    return new RestResponse<>(workflowExecutionService.fetchConcurrentExecutions(appId, workflowExecutionId, unit));
   }
 }

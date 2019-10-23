@@ -26,6 +26,7 @@ import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.HELM_DEPLOY;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
@@ -44,14 +45,21 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_SERVICE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.RUNTIME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_CONTAINERS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
+import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.CLOUD_FORMATION_CREATE_STACK;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
+import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import static software.wings.sm.StateType.WAIT;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
@@ -93,9 +101,11 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1027,5 +1037,109 @@ public class WorkflowServiceTestHelper {
         .extracting(Variable::getValue)
         .contains("https://harness.io?q=${artifact.name}");
     assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method", "assertion");
+  }
+
+  public static Workflow constructCanaryWorkflowWithConcurrencyStrategy() {
+    return aWorkflow()
+        .uuid(generateUuid())
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .accountId(ACCOUNT_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
+            aCanaryOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT)
+                                            .addStep(GraphNode.builder()
+                                                         .type(TERRAFORM_PROVISION.name())
+                                                         .name("Terraform Provision")
+                                                         .properties(ImmutableMap.<String, Object>builder().build())
+                                                         .build())
+                                            .build())
+                .addWorkflowPhase(aWorkflowPhase()
+                                      .infraDefinitionId(INFRA_DEFINITION_ID)
+                                      .infraMappingId(INFRA_MAPPING_ID)
+                                      .serviceId(SERVICE_ID)
+                                      .deploymentType(SSH)
+                                      .phaseSteps(getSSHPhaseSteps())
+                                      .build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                .withConcurrencyStrategy(ConcurrencyStrategy.builder().build())
+                .build())
+        .build();
+  }
+
+  public static Workflow constructBasicWorkflowWithThrottling(boolean withProvisionerStep) {
+    return aWorkflow()
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .accountId(ACCOUNT_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .addWorkflowPhase(aWorkflowPhase()
+                                                         .infraDefinitionId(INFRA_DEFINITION_ID)
+                                                         .serviceId(SERVICE_ID)
+                                                         .deploymentType(SSH)
+                                                         .phaseSteps(getAmiPhaseSteps(withProvisionerStep))
+                                                         .build())
+                                   .withThrottlingStrategy(ConcurrencyStrategy.builder().build())
+                                   .build())
+        .build();
+  }
+
+  private static List<PhaseStep> getAmiPhaseSteps(boolean withProvisionerStep) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+    if (withProvisionerStep) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, "Provision InfraStructure")
+                         .addStep(GraphNode.builder()
+                                      .type(CLOUD_FORMATION_CREATE_STACK.name())
+                                      .name("CloudFormation Create Stack")
+                                      .properties(ImmutableMap.<String, Object>builder().build())
+                                      .build())
+                         .build());
+    }
+    phaseSteps.add(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, "Setup AutoScaling Group")
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_AMI_SERVICE_SETUP.name())
+                                    .name("AWS AutoScaling Group Setup")
+                                    .properties(new HashMap<>())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, DEPLOY_SERVICE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_AMI_SERVICE_DEPLOY.name())
+                                    .name("Upgrade AutoScaling Group")
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, "Verify Service").build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, "Wrap Up").build());
+    return phaseSteps;
+  }
+
+  private static List<PhaseStep> getSSHPhaseSteps() {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+    phaseSteps.add(aPhaseStep(INFRASTRUCTURE_NODE, "Prepare Infra")
+                       .addStep(GraphNode.builder()
+                                    .type(AWS_NODE_SELECT.name())
+                                    .name("Select Nodes")
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("specificHosts", false)
+                                                    .put("instanceCount", 1)
+                                                    .put("excludeSelectedHostsFromFuturePhases", true)
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, "Disable Service").build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, DEPLOY_SERVICE).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, "Enable Service").build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, "Wrap UP").build());
+    return phaseSteps;
   }
 }
