@@ -47,6 +47,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.config.WorkersConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -304,6 +305,14 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
     modules.add(new GrpcServiceConfigurationModule(configuration.getGrpcServerConfig()));
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      WorkersConfiguration workersConfig() {
+        return configuration.getWorkers();
+      }
+    });
 
     Injector injector = Guice.createInjector(modules);
 

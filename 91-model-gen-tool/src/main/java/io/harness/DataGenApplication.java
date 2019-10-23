@@ -89,6 +89,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
         return configuration.getMongoConnectionFactory();
       }
     });
+
     modules.addAll(new MongoModule().cumulativeDependencies());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()

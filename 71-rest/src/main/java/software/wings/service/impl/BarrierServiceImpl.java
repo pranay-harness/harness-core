@@ -14,7 +14,6 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -26,9 +25,8 @@ import io.harness.distribution.barrier.Forcer;
 import io.harness.distribution.barrier.Forcer.State;
 import io.harness.distribution.barrier.ForcerId;
 import io.harness.exception.WingsException;
-import io.harness.iterator.PersistenceIterator;
-import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
@@ -54,9 +52,6 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
@@ -72,24 +67,18 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public void registerIterators() {
-    final int threads = 2;
-    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-        threads, new ThreadFactoryBuilder().setNameFormat("Iterator-BarrierInstanceMonitor").build());
-
-    PersistenceIterator iterator = persistenceIteratorFactory.create(
+    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+        PumpExecutorOptions.builder().name("BarrierInstanceMonitor").poolSize(2).interval(ofMinutes(1)).build(),
+        BarrierService.class,
         MongoPersistenceIterator.<BarrierInstance>builder()
             .clazz(BarrierInstance.class)
             .fieldName(BarrierInstanceKeys.nextIteration)
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(1))
-            .executorService(executor)
-            .semaphore(new Semaphore(threads))
             .handler(this ::update)
             .filterExpander(query -> query.filter(BarrierInstanceKeys.state, STANDING.name()))
             .schedulingType(REGULAR)
             .redistribute(true));
-
-    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 1, TimeUnit.MINUTES);
   }
 
   @Override

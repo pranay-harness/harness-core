@@ -7,12 +7,10 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
-import io.harness.iterator.PersistenceIterator;
-import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import software.wings.audit.AuditRecord;
@@ -21,32 +19,23 @@ import software.wings.audit.EntityAuditRecord;
 import software.wings.service.intfc.AuditService;
 
 import java.util.List;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 public class EntityAuditRecordHandler implements Handler<AuditRecord> {
-  private static final int POOL_SIZE = 2;
-
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private AuditService auditService;
 
   public void registerIterators() {
-    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-        POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-EntityAuditRecordProcessor").build());
-
-    PersistenceIterator iterator = persistenceIteratorFactory.create(MongoPersistenceIterator.<AuditRecord>builder()
-                                                                         .clazz(AuditRecord.class)
-                                                                         .fieldName(AuditRecordKeys.nextIteration)
-                                                                         .targetInterval(ofMinutes(30))
-                                                                         .acceptableNoAlertDelay(ofSeconds(45))
-                                                                         .executorService(executor)
-                                                                         .semaphore(new Semaphore(POOL_SIZE))
-                                                                         .handler(this)
-                                                                         .schedulingType(REGULAR)
-                                                                         .redistribute(true));
-
-    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.SECONDS);
+    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+        PumpExecutorOptions.builder().name("EntityAuditRecordProcessor").poolSize(2).interval(ofSeconds(30)).build(),
+        EntityAuditRecordHandler.class,
+        MongoPersistenceIterator.<AuditRecord>builder()
+            .clazz(AuditRecord.class)
+            .fieldName(AuditRecordKeys.nextIteration)
+            .targetInterval(ofMinutes(30))
+            .acceptableNoAlertDelay(ofSeconds(45))
+            .handler(this)
+            .schedulingType(REGULAR)
+            .redistribute(true));
   }
 
   @Override
