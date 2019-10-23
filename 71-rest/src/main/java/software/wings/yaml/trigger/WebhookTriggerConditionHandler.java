@@ -1,5 +1,8 @@
 package software.wings.yaml.trigger;
 
+import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
+import static software.wings.beans.trigger.WebhookSource.GITHUB;
+
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -40,31 +43,31 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   public TriggerCondition upsertFromYaml(
       ChangeContext<WebhookEventTriggerConditionYaml> changeContext, List<ChangeContext> changeSetContext) {
     TriggerConditionYaml yaml = changeContext.getYaml();
-    String appId =
-        yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
+
     WebhookEventTriggerConditionYaml webhookConditionYaml = (WebhookEventTriggerConditionYaml) yaml;
 
-    WebHookTriggerCondition webHookTriggerCondition = fromYAML(webhookConditionYaml);
+    return fromYAML(webhookConditionYaml);
+  }
+
+  public WebHookTriggerCondition fromYAML(WebhookEventTriggerConditionYaml webhookConditionYaml) {
+    WebHookTriggerCondition webHookTriggerCondition =
+        WebHookTriggerCondition.builder()
+            .branchRegex(webhookConditionYaml.getBranchName())
+            .eventTypes(getBeansEventTypes(webhookConditionYaml.getEventType()))
+            .webhookSource(getBeanWebhookSource(webhookConditionYaml.getRepositoryType()))
+            .build();
 
     if (EmptyPredicate.isNotEmpty(webhookConditionYaml.getRepositoryType())) {
-      if (webhookConditionYaml.getRepositoryType().equals("GitLab")) {
+      if (webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
         webHookTriggerCondition.setActions(
             getPRActionTypes(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
-      } else if (webhookConditionYaml.getRepositoryType().equals("Bitbucket")) {
+      } else if (webhookConditionYaml.getRepositoryType().equals(BITBUCKET.name())) {
         webHookTriggerCondition.setBitBucketEvents(
             getBitBucketEventType(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
       }
     }
 
     return webHookTriggerCondition;
-  }
-
-  public WebHookTriggerCondition fromYAML(WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml) {
-    return WebHookTriggerCondition.builder()
-        .branchRegex(webhookEventTriggerConditionYaml.getBranchName())
-        .eventTypes(getBeansEventTypes(webhookEventTriggerConditionYaml.getEventType()))
-        .webhookSource(getBeanWebhookSource(webhookEventTriggerConditionYaml.getRepositoryType()))
-        .build();
   }
 
   private WebhookSource getBeanWebhookSource(String webhookSource) {
@@ -107,7 +110,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
   private List<PrAction> getPRActionTypes(List<String> actions, String webhookSource) {
     if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals("GitLab")) {
+        && webhookSource.equals(GITHUB.name())) {
       return actions.stream().map(action -> PrAction.find(action)).collect(Collectors.toList());
     } else {
       return null;
@@ -116,7 +119,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
   private List<BitBucketEventType> getBitBucketEventType(List<String> actions, String webhookSource) {
     if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals("Bitbucket")) {
+        && webhookSource.equals("BITBUCKET")) {
       return actions.stream().map(action -> BitBucketEventType.find(action)).collect(Collectors.toList());
     } else {
       return null;
@@ -133,7 +136,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
   private List<String> getYAMLActions(WebHookTriggerCondition webHookTriggerCondition) {
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
-        && webHookTriggerCondition.getWebhookSource().equals(WebhookSource.GITHUB)) {
+        && webHookTriggerCondition.getWebhookSource().equals(GITHUB)) {
       if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getActions())) {
         return webHookTriggerCondition.getActions()
             .stream()
