@@ -275,7 +275,6 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
 
     int index = name.lastIndexOf(DELIMITER);
-    String prefix;
     if (index >= 0) {
       name = name.substring(0, index);
     }
