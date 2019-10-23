@@ -41,7 +41,7 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
 
   @Before
   public void setUp() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH) || !mainConfiguration.isSearchEnabled()) {
+    if (isSearchDisabled()) {
       return;
     }
 
@@ -65,7 +65,7 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
   @Owner(emails = UTKARSH)
   @Category(FunctionalTests.class)
   public void testEnvironmentCRUDSync() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH) || !mainConfiguration.isSearchEnabled()) {
+    if (isSearchDisabled()) {
       return;
     }
 
@@ -106,5 +106,11 @@ public class EnvironmentSearchEntitySyncTest extends AbstractFunctionalTest {
       }
     }
     return environmentFound;
+  }
+
+  private boolean isSearchDisabled() {
+    return !featureFlagService.isGlobalEnabled(FeatureName.SEARCH)
+        || !featureFlagService.isEnabled(FeatureName.SEARCH_REQUEST, getAccount().getUuid())
+        || !mainConfiguration.isSearchEnabled();
   }
 }

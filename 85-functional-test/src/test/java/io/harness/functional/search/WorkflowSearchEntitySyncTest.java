@@ -46,7 +46,7 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
 
   @Before
   public void setUp() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH) || !mainConfiguration.isSearchEnabled()) {
+    if (isSearchDisabled()) {
       return;
     }
 
@@ -76,7 +76,7 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
   @Owner(emails = UTKARSH)
   @Category(FunctionalTests.class)
   public void testWorkflowCRUDSync() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH) || !mainConfiguration.isSearchEnabled()) {
+    if (isSearchDisabled()) {
       return;
     }
 
@@ -116,5 +116,11 @@ public class WorkflowSearchEntitySyncTest extends AbstractFunctionalTest {
       }
     }
     return worklfowFound;
+  }
+
+  private boolean isSearchDisabled() {
+    return !featureFlagService.isGlobalEnabled(FeatureName.SEARCH)
+        || !featureFlagService.isEnabled(FeatureName.SEARCH_REQUEST, getAccount().getUuid())
+        || !mainConfiguration.isSearchEnabled();
   }
 }

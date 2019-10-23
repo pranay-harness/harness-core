@@ -6,8 +6,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
+import io.harness.manage.ManagedExecutorService;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
@@ -36,8 +39,10 @@ import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
+import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.framework.ElasticsearchDao;
 import software.wings.search.framework.SearchDao;
+import software.wings.search.framework.SearchEntity;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.ContainerServiceImpl;
@@ -146,7 +151,13 @@ public class WingsTestModule extends AbstractModule {
         .annotatedWith(Names.named("timeoutExecutor"))
         .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("timeout-enforcer-%d").setPriority(Thread.NORM_PRIORITY).build()));
+    bind(ManagedExecutorService.class)
+        .toInstance(new ManagedExecutorService(ThreadPool.create(1, 1, 0, TimeUnit.SECONDS)));
     bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
+
+    Multibinder<SearchEntity<?>> searchEntityMultibinder =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<SearchEntity<?>>() {});
+    searchEntityMultibinder.addBinding().to(ApplicationSearchEntity.class);
   }
 
   @Provides

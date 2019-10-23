@@ -4,10 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 
 import io.harness.manage.ManagedExecutorService;
-import io.harness.persistence.PersistentEntity;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -63,20 +62,13 @@ public class SearchModule extends AbstractModule {
   }
 
   private void bindEntities() {
-    MapBinder<Class<? extends PersistentEntity>, SearchEntity<?>> sourceEntitiesToSearchEntitiesMap =
-        MapBinder.newMapBinder(
-            binder(), new TypeLiteral<Class<? extends PersistentEntity>>() {}, new TypeLiteral<SearchEntity<?>>() {});
-
-    sourceEntitiesToSearchEntitiesMap.addBinding(ApplicationSearchEntity.SOURCE_ENTITY_CLASS)
-        .to(ApplicationSearchEntity.class);
-    sourceEntitiesToSearchEntitiesMap.addBinding(PipelineSearchEntity.SOURCE_ENTITY_CLASS)
-        .to(PipelineSearchEntity.class);
-    sourceEntitiesToSearchEntitiesMap.addBinding(WorkflowSearchEntity.SOURCE_ENTITY_CLASS)
-        .to(WorkflowSearchEntity.class);
-    sourceEntitiesToSearchEntitiesMap.addBinding(ServiceSearchEntity.SOURCE_ENTITY_CLASS).to(ServiceSearchEntity.class);
-    sourceEntitiesToSearchEntitiesMap.addBinding(EnvironmentSearchEntity.SOURCE_ENTITY_CLASS)
-        .to(EnvironmentSearchEntity.class);
-    sourceEntitiesToSearchEntitiesMap.addBinding(DeploymentSearchEntity.SOURCE_ENTITY_CLASS)
-        .to(DeploymentSearchEntity.class);
+    Multibinder<SearchEntity<?>> searchEntityMultibinder =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<SearchEntity<?>>() {});
+    searchEntityMultibinder.addBinding().to(ApplicationSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(PipelineSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(WorkflowSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(ServiceSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(EnvironmentSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(DeploymentSearchEntity.class);
   }
 }

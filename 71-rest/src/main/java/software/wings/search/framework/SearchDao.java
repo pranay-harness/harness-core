@@ -10,9 +10,6 @@ import java.util.Map;
  * @author ujjawal
  */
 public interface SearchDao {
-  // Inserts the document to Elasticsearch
-  boolean insertDocument(String entityType, String entityId, String entityJson);
-
   // Upserts the partial document to Elasticsearch
   boolean upsertDocument(String entityType, String entityId, String entityJson);
 

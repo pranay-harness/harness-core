@@ -6,18 +6,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
@@ -38,27 +38,13 @@ import java.util.Map;
  */
 @Slf4j
 public class ElasticsearchDao implements SearchDao {
-  @Inject RestHighLevelClient client;
-  @Inject ElasticsearchIndexManager elasticsearchIndexManager;
+  @Inject private ElasticsearchClient elasticsearchClient;
+  @Inject private ElasticsearchIndexManager elasticsearchIndexManager;
   private static final String SCRIPT_LANGUAGE = "painless";
   private static final String COULD_NOT_CONNECT_ERROR_MESSAGE = "Could not connect to elasticsearch";
   private static final String FIELD_TO_UPDATE_PARAMS_KEY = "fieldToUpdate";
   private static final String NEW_ELEMENT_PARAMS_KEY = "newList";
   private static final String ID_TO_BE_DELETED_PARAMS_KEY = "idToBeDeleted";
-
-  public boolean insertDocument(String entityType, String entityId, String entityJson) {
-    String indexName = elasticsearchIndexManager.getIndexName(entityType);
-    IndexRequest indexRequest = new IndexRequest(indexName);
-    indexRequest.id(entityId);
-    indexRequest.source(entityJson, XContentType.JSON);
-    try {
-      client.index(indexRequest, RequestOptions.DEFAULT);
-      return true;
-    } catch (IOException e) {
-      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
-    }
-    return false;
-  }
 
   public boolean upsertDocument(String entityType, String entityId, String entityJson) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
@@ -68,10 +54,25 @@ public class ElasticsearchDao implements SearchDao {
     updateRequest.docAsUpsert(true);
     updateRequest.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
     try {
-      client.update(updateRequest, RequestOptions.DEFAULT);
-      return true;
+      UpdateResponse updateResponse = elasticsearchClient.update(updateRequest);
+      return updateResponse.status() == RestStatus.OK || updateResponse.status() == RestStatus.OK;
     } catch (ElasticsearchException e) {
       logger.error(String.format("Error while updating document %s in index %s", entityJson, indexName), e);
+    } catch (IOException e) {
+      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
+    }
+    return false;
+  }
+
+  public boolean deleteDocument(String entityType, String documentId) {
+    String indexName = elasticsearchIndexManager.getIndexName(entityType);
+    DeleteRequest deleteRequest = new DeleteRequest(indexName, documentId);
+    deleteRequest.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
+    try {
+      DeleteResponse deleteResponse = elasticsearchClient.delete(deleteRequest);
+      return deleteResponse.status() == RestStatus.OK || deleteResponse.status() == RestStatus.NOT_FOUND;
+    } catch (ElasticsearchException e) {
+      logger.error(String.format("Error while trying to delete document %s in index %s", documentId, indexName), e);
     } catch (IOException e) {
       logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
     }
@@ -82,13 +83,11 @@ public class ElasticsearchDao implements SearchDao {
       String entityType, String listToUpdate, List<String> documentIds, Map<String, Object> newElement) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
     params.put(NEW_ELEMENT_PARAMS_KEY, newElement);
 
-    request.setRefresh(true);
     String key = listToUpdate + "." + EntityInfoKeys.id;
     request.setQuery(
         QueryBuilders.boolQuery()
@@ -109,7 +108,6 @@ public class ElasticsearchDao implements SearchDao {
       Map<String, Object> newElement, int maxElementsInList) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
@@ -133,7 +131,6 @@ public class ElasticsearchDao implements SearchDao {
       String entityType, String listToUpdate, String documentId, Map<String, Object> newElement) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
     String key = listToUpdate + "." + EntityInfoKeys.id;
     Map<String, Object> params = new HashMap<>();
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
@@ -155,7 +152,6 @@ public class ElasticsearchDao implements SearchDao {
       Map<String, Object> newElement, int maxElementsInList) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
 
     String key = listToUpdate + "." + EntityInfoKeys.id;
     Map<String, Object> params = new HashMap<>();
@@ -178,7 +174,6 @@ public class ElasticsearchDao implements SearchDao {
       String entityType, String listToUpdate, List<String> documentIds, String idToBeDeleted) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
@@ -195,7 +190,6 @@ public class ElasticsearchDao implements SearchDao {
       String entityType, String listToUpdate, String documentId, String idToBeDeleted) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, listToUpdate);
@@ -211,7 +205,6 @@ public class ElasticsearchDao implements SearchDao {
   public boolean removeFromListInMultipleDocuments(String entityType, String listToUpdate, String idToBeDeleted) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
     params.put("listKey", listToUpdate);
@@ -230,7 +223,6 @@ public class ElasticsearchDao implements SearchDao {
       String type, String listToUpdate, String newElement, String elementId, String elementKeyToChange) {
     String indexName = elasticsearchIndexManager.getIndexName(type);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
 
     Map<String, Object> params = new HashMap<>();
     params.put("entityType", listToUpdate);
@@ -258,7 +250,6 @@ public class ElasticsearchDao implements SearchDao {
     params.put("filterKey", filterKey);
     params.put("filterValue", filterValue);
 
-    request.setRefresh(true);
     request.setQuery(QueryBuilders.termQuery(filterKey, filterValue));
     request.setScript(new Script(ScriptType.INLINE, SCRIPT_LANGUAGE,
         "if (ctx._source[params.filterKey] == params.filterValue) {ctx._source[params.keyToUpdate] = params.newValue;}",
@@ -266,26 +257,10 @@ public class ElasticsearchDao implements SearchDao {
     return processUpdateByQuery(request, params, indexName);
   }
 
-  public boolean deleteDocument(String entityType, String documentId) {
-    String indexName = elasticsearchIndexManager.getIndexName(entityType);
-    DeleteRequest deleteRequest = new DeleteRequest(indexName, documentId);
-    deleteRequest.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
-    try {
-      client.delete(deleteRequest, RequestOptions.DEFAULT);
-      return true;
-    } catch (ElasticsearchException e) {
-      logger.error(String.format("Error while trying to delete document %s in index %s", documentId, indexName), e);
-    } catch (IOException e) {
-      logger.error(COULD_NOT_CONNECT_ERROR_MESSAGE, e);
-    }
-    return false;
-  }
-
   public boolean addTimestamp(
       String entityType, String fieldName, String documentId, long createdAt, int daysToRetain) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
     Map<String, Object> params = new HashMap<>();
     long cutoffTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(daysToRetain);
 
@@ -306,7 +281,6 @@ public class ElasticsearchDao implements SearchDao {
       String entityType, String fieldName, List<String> documentIds, long createdAt, int daysToRetain) {
     String indexName = elasticsearchIndexManager.getIndexName(entityType);
     UpdateByQueryRequest request = new UpdateByQueryRequest(indexName);
-    request.setRefresh(true);
     Map<String, Object> params = new HashMap<>();
     long cutoffTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(daysToRetain);
     params.put(FIELD_TO_UPDATE_PARAMS_KEY, fieldName);
@@ -332,7 +306,7 @@ public class ElasticsearchDao implements SearchDao {
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(nestedQueryBuilder).size(MAX_RESULTS);
     searchRequest.source(searchSourceBuilder);
     try {
-      SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+      SearchResponse searchResponse = elasticsearchClient.search(searchRequest);
       List<String> requiredIds = new ArrayList<>();
       for (SearchHit searchHit : searchResponse.getHits()) {
         requiredIds.add(searchHit.getId());
@@ -347,7 +321,8 @@ public class ElasticsearchDao implements SearchDao {
   private boolean processUpdateByQuery(
       UpdateByQueryRequest updateByQueryRequest, Map<String, Object> params, String indexName) {
     try {
-      BulkByScrollResponse bulkResponse = client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT);
+      updateByQueryRequest.setRefresh(true);
+      BulkByScrollResponse bulkResponse = elasticsearchClient.updateByQuery(updateByQueryRequest);
       if (bulkResponse.getSearchFailures().isEmpty() && bulkResponse.getBulkFailures().isEmpty()) {
         if (bulkResponse.getUpdated() == 0) {
           logger.warn(

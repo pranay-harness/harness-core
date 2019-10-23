@@ -31,12 +31,6 @@ public class SynchronousElasticsearchDao implements SearchDao {
   });
 
   @Override
-  public boolean insertDocument(String entityType, String entityId, String entityJson) {
-    Callable<Boolean> insertDocumentCallable = () -> elasticsearchDao.insertDocument(entityType, entityId, entityJson);
-    return processElasticsearchTask(insertDocumentCallable);
-  }
-
-  @Override
   public boolean upsertDocument(String entityType, String entityId, String entityJson) {
     Callable<Boolean> upsertDocumentCallable = () -> elasticsearchDao.upsertDocument(entityType, entityId, entityJson);
     return processElasticsearchTask(upsertDocumentCallable);

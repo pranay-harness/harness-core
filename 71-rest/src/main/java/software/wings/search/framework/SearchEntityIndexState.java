@@ -1,6 +1,5 @@
 package software.wings.search.framework;
 
-import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.PersistentEntity;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -16,13 +15,14 @@ import org.mongodb.morphia.annotations.Id;
  */
 
 @Value
-@Entity(value = "searchEntitiesVersion", noClassnameStored = true)
-@HarnessEntity(exportable = false)
-@FieldNameConstants(innerTypeName = "SearchEntityVersionKeys")
+@Entity(value = "searchEntitiesIndexState", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "SearchEntityIndexStateKeys")
 @Slf4j
-public class SearchEntityVersion implements PersistentEntity {
+public class SearchEntityIndexState implements PersistentEntity {
   @Id private String entityClass;
   private String syncVersion;
+  private String indexName;
+  private boolean recreateIndex;
 
   private SearchEntity getSearchEntity() {
     try {
@@ -36,7 +36,7 @@ public class SearchEntityVersion implements PersistentEntity {
   boolean shouldBulkSync() {
     SearchEntity searchEntity = getSearchEntity();
     if (searchEntity != null) {
-      return !searchEntity.getVersion().equals(syncVersion);
+      return !(searchEntity.getVersion().equals(syncVersion)) || recreateIndex;
     }
     return true;
   }

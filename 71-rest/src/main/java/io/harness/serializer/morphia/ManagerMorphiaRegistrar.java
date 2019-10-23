@@ -443,8 +443,9 @@ import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.prune.PruneEvent;
 import software.wings.resources.DelegateFileResource.FileIdempotentResult;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
+import software.wings.search.framework.ElasticsearchBulkMigrationJob;
 import software.wings.search.framework.SearchDistributedLock;
-import software.wings.search.framework.SearchEntityVersion;
+import software.wings.search.framework.SearchEntityIndexState;
 import software.wings.search.framework.SearchSourceEntitySyncState;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -761,6 +762,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(EcsInfrastructureMapping.class);
     set.add(ECSPollingJobEntity.class);
     set.add(EcsServiceSpecification.class);
+    set.add(ElasticsearchBulkMigrationJob.class);
     set.add(ElkCVConfiguration.class);
     set.add(EmailData.class);
     set.add(EmailVerificationToken.class);
@@ -862,7 +864,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SamlSettings.class);
     set.add(Schema.class);
     set.add(SearchDistributedLock.class);
-    set.add(SearchEntityVersion.class);
+    set.add(SearchEntityIndexState.class);
     set.add(SearchSourceEntitySyncState.class);
     set.add(SecretChangeLog.class);
     set.add(SecretManagerConfig.class);
