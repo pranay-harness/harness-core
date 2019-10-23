@@ -390,8 +390,12 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
                 int maxControlMinute = analysisService.getMaxControlMinuteWithData(context.getStateType(),
                     context.getAppId(), context.getServiceId(), context.getWorkflowId(),
                     context.getPrevWorkflowExecutionId(), groupName);
-
-                if (analysisMinute > maxControlMinute) {
+                // this is a migration code
+                // we are moving from relative minute to absolute minute for all the usecases.
+                // we can get rid of this logic only after we have no relative minute baseline set. The current TTL for
+                // newRelicMetricDataRecord is 6 months.
+                if (getRelativeAnalysisMinute(analysisMinute, context)
+                    > getMaxControlRelativeMinute(maxControlMinute, minControlMinute)) {
                   logger.warn(
                       "For {} Not enough control data. analysis minute = {} , max control minute = {} analysisContext = {}",
                       context.getStateExecutionId(), analysisMinute, maxControlMinute, context);
@@ -457,6 +461,13 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
           logger.error("analysis failed", ex);
         }
       }
+    }
+
+    private int getRelativeAnalysisMinute(int analysisMinute, AnalysisContext context) {
+      return analysisMinute > 10000 ? (int) (context.getStartDataCollectionMinute() - analysisMinute) : analysisMinute;
+    }
+    private int getMaxControlRelativeMinute(int maxControlMinute, int minControlMinute) {
+      return maxControlMinute > 10000 ? maxControlMinute - minControlMinute : maxControlMinute;
     }
 
     /**
