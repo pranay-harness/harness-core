@@ -26,14 +26,14 @@ import java.util.function.Consumer;
 
 @Value
 @Slf4j
-public class ChangeTrackingTask implements Runnable {
-  private MongoCollection<DBObject> collection;
+class ChangeTrackingTask implements Runnable {
   private ChangeStreamSubscriber changeStreamSubscriber;
-  private BsonDocument resumeToken;
+  private MongoCollection<DBObject> collection;
   private CountDownLatch latch;
+  private BsonDocument resumeToken;
 
   ChangeTrackingTask(ChangeStreamSubscriber changeStreamSubscriber, MongoCollection<DBObject> collection,
-      String tokenParam, CountDownLatch latch) {
+      CountDownLatch latch, String tokenParam) {
     this.changeStreamSubscriber = changeStreamSubscriber;
     this.collection = collection;
     if (tokenParam != null) {
@@ -66,8 +66,8 @@ public class ChangeTrackingTask implements Runnable {
       logger.info(String.format("changeStream opened on %s", collection.getNamespace()));
       openChangeStream(this ::handleChange);
     } catch (MongoInterruptedException e) {
-      logger.warn(String.format("Changestream on %s interrupted", collection.getNamespace()), e);
       Thread.currentThread().interrupt();
+      logger.warn(String.format("Changestream on %s interrupted", collection.getNamespace()), e);
     } catch (RuntimeException e) {
       logger.error(String.format("Unexpectedly %s changeStream shutting down", collection.getNamespace()), e);
     } finally {

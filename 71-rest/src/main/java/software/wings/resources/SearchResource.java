@@ -40,7 +40,7 @@ public class SearchResource {
   @ExceptionMetered
   public RestResponse<SearchResults> getSearchResults(@QueryParam("query") @NotBlank String searchQuery,
       @QueryParam("accountId") @NotBlank String accountId) throws IOException {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
+    if (!featureFlagService.isEnabled(FeatureName.SEARCH_REQUEST, accountId)) {
       throw new HintException(String.format("Feature not allowed for account: %s ", accountId));
     } else if (!configuration.isSearchEnabled()) {
       throw new HintException("Search is not enabled for your account");

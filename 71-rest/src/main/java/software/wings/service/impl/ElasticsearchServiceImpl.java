@@ -3,12 +3,10 @@ package software.wings.service.impl;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -36,6 +34,7 @@ import software.wings.search.entities.service.ServiceView;
 import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.entities.workflow.WorkflowSearchResult;
 import software.wings.search.entities.workflow.WorkflowView;
+import software.wings.search.framework.ElasticsearchClient;
 import software.wings.search.framework.ElasticsearchIndexManager;
 import software.wings.search.framework.EntityBaseView.EntityBaseViewKeys;
 import software.wings.search.framework.SearchEntity;
@@ -48,12 +47,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 public class ElasticsearchServiceImpl implements SearchService {
-  @Inject private RestHighLevelClient client;
+  @Inject private ElasticsearchClient elasticsearchClient;
   @Inject private ElasticsearchIndexManager elasticsearchIndexManager;
-  @Inject protected Map<Class<? extends PersistentEntity>, SearchEntity<?>> searchEntityMap;
+  @Inject private Set<SearchEntity<?>> searchEntities;
   private static final int MAX_RESULTS = 50;
   private static final int BOOST_VALUE = 5;
   private static final int SLOP_DISTANCE_VALUE = 10;
@@ -120,21 +120,22 @@ public class ElasticsearchServiceImpl implements SearchService {
   }
 
   private SearchHits search(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
-    String[] indexNames = getIndexesToSearch();
+    String[] indexNames = getAliasesToSearch();
     SearchRequest searchRequest = new SearchRequest(indexNames);
     BoolQueryBuilder boolQueryBuilder = createQuery(searchString, accountId);
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(boolQueryBuilder).size(MAX_RESULTS);
     searchRequest.source(searchSourceBuilder);
-    SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+    searchRequest.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
+
+    SearchResponse searchResponse = elasticsearchClient.search(searchRequest);
     logger.info("Search results, time taken : {}, number of hits: {}, accountID: {}", searchResponse.getTook(),
         searchResponse.getHits().getTotalHits(), accountId);
     return searchResponse.getHits();
   }
 
-  private String[] getIndexesToSearch() {
-    return searchEntityMap.values()
-        .stream()
-        .map(searchEntity -> elasticsearchIndexManager.getIndexName(searchEntity.getType()))
+  private String[] getAliasesToSearch() {
+    return searchEntities.stream()
+        .map(searchEntity -> elasticsearchIndexManager.getAliasName(searchEntity.getType()))
         .toArray(String[] ::new);
   }
 

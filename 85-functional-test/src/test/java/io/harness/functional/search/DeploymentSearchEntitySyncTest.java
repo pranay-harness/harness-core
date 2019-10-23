@@ -48,7 +48,7 @@ public class DeploymentSearchEntitySyncTest extends AbstractFunctionalTest {
 
   @Before
   public void setUp() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH) || !mainConfiguration.isSearchEnabled()) {
+    if (isSearchDisabled()) {
       return;
     }
 
@@ -88,7 +88,7 @@ public class DeploymentSearchEntitySyncTest extends AbstractFunctionalTest {
   @Owner(emails = UTKARSH)
   @Category(FunctionalTests.class)
   public void testDeploymentCRUDSync() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.SEARCH) || !mainConfiguration.isSearchEnabled()) {
+    if (isSearchDisabled()) {
       return;
     }
 
@@ -117,5 +117,11 @@ public class DeploymentSearchEntitySyncTest extends AbstractFunctionalTest {
       }
     }
     return worklfowExecutionFound;
+  }
+
+  private boolean isSearchDisabled() {
+    return !featureFlagService.isGlobalEnabled(FeatureName.SEARCH)
+        || !featureFlagService.isEnabled(FeatureName.SEARCH_REQUEST, getAccount().getUuid())
+        || !mainConfiguration.isSearchEnabled();
   }
 }

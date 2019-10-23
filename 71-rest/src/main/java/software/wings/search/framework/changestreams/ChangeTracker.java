@@ -64,7 +64,7 @@ public class ChangeTracker {
 
       ChangeStreamSubscriber changeStreamSubscriber = getChangeStreamSubscriber(changeTrackingInfo);
       ChangeTrackingTask changeTrackingTask =
-          new ChangeTrackingTask(changeStreamSubscriber, collection, changeTrackingInfo.getResumeToken(), latch);
+          new ChangeTrackingTask(changeStreamSubscriber, collection, latch, changeTrackingInfo.getResumeToken());
       changeTrackingTasks.add(changeTrackingTask);
     }
   }

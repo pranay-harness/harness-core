@@ -2,6 +2,7 @@ package software.wings.search.framework.changestreams;
 
 import com.mongodb.DBObject;
 import io.harness.persistence.PersistentEntity;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @Builder
+@AllArgsConstructor
 public class ChangeEvent<T extends PersistentEntity> {
   @NonNull private String token;
   @NonNull private ChangeType changeType;
