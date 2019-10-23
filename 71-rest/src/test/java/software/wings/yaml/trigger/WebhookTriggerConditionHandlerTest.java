@@ -31,8 +31,26 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
   public void upsertFromYaml() {
-    WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml =
-        WebhookEventTriggerConditionYaml.builder().action(asList("repo:push")).branchName("abc").build();
+    WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()
+                                                                            .action(asList("closed"))
+                                                                            .branchName("abc")
+                                                                            .repositoryType("GITHUB")
+                                                                            .build();
+    WebHookTriggerCondition webHookTriggerCondition =
+        webhookTriggerConditionHandler.fromYAML(webhookEventTriggerConditionYaml);
+
+    assertThat(webhookEventTriggerConditionYaml.getBranchName().equals(webHookTriggerCondition.getBranchRegex()))
+        .isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void upsertFromYamlForBitBucket() {
+    WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()
+                                                                            .action(asList("repo:push"))
+                                                                            .branchName("abc")
+                                                                            .repositoryType("BITBUCKET")
+                                                                            .build();
     WebHookTriggerCondition webHookTriggerCondition =
         webhookTriggerConditionHandler.fromYAML(webhookEventTriggerConditionYaml);
 
