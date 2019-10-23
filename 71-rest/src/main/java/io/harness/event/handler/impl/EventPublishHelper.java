@@ -23,9 +23,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -67,7 +65,6 @@ import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
@@ -674,20 +671,6 @@ public class EventPublishHelper {
     return marketoConfig.isEnabled() || segmentConfig.isEnabled();
   }
 
-  public boolean isWorkflowRolledBack(String workflowExecutionId, List<String> appIds) {
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .addFilter("appId", SearchFilter.Operator.IN, appIds.toArray())
-            .addFilter("executionUuid", SearchFilter.Operator.EQ, workflowExecutionId)
-            .addFilter("rollback", SearchFilter.Operator.EQ, true)
-            .addFieldsIncluded("_id")
-            .addOrder("createdAt", SortOrder.OrderType.ASC)
-            .withLimit("1")
-            .build();
-    PageResponse<StateExecutionInstance> pageResponse = stateExecutionService.list(pageRequest);
-    return isNotEmpty(pageResponse.getResponse());
-  }
-
   public boolean publishVerificationWorkflowMetrics(
       WorkflowExecution workflowExecution, List<String> appIds, String accountId, boolean isVerificationRolledBack) {
     PageRequest<ContinuousVerificationExecutionMetaData> cvPageRequest =
@@ -728,7 +711,7 @@ public class EventPublishHelper {
 
       List<String> appIds = appService.getAppIdsByAccountId(accountId);
 
-      boolean workflowRolledBack = isWorkflowRolledBack(workflowExecutionId, appIds);
+      boolean workflowRolledBack = workflowExecution.getRollbackDuration() != null;
       boolean workflowWithVerification =
           publishVerificationWorkflowMetrics(workflowExecution, appIds, accountId, workflowRolledBack);
 

@@ -274,7 +274,6 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
         StackDriverDataCollectionInfo dataCollectionInfo, TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv,
         TimeSeriesMlAnalysisType analysisType) {
       String projectResource = "projects/" + dataFetchParameters.getProjectId();
-
       setupThridPartyCallLogs(dataFetchParameters.getApiCallLog(), dataFetchParameters.getFilter(),
           dataFetchParameters.getStartTime(), dataFetchParameters.getEndTime(), dataFetchParameters.getProjectId(),
           dataFetchParameters.getMetric());
@@ -378,6 +377,18 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       return collectionMinute;
     }
 
+    private StackdriverDataFetchParameters createDataFetchParameters(long startTime, long endTime) {
+      return StackdriverDataFetchParameters.builder()
+          .startTime(startTime)
+          .endTime(endTime)
+          .is247Task(is247Task)
+          .apiCallLog(createApiCallLog(dataCollectionInfo.getStateExecutionId()))
+          .groupByFields(Optional.empty())
+          .perSeriesAligner(Optional.empty())
+          .dataCollectionMinute(dataCollectionCurrentMinute)
+          .build();
+    }
+
     public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() throws IOException {
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
@@ -385,20 +396,10 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       long endTime = collectionStartTime;
       long startTime = endTime - TimeUnit.MINUTES.toMillis(1);
 
-      StackdriverDataFetchParameters dataFetchParameters =
-          StackdriverDataFetchParameters.builder()
-              .startTime(startTime)
-              .endTime(endTime)
-              .is247Task(is247Task)
-              .apiCallLog(createApiCallLog(dataCollectionInfo.getStateExecutionId()))
-              .groupByFields(Optional.empty())
-              .perSeriesAligner(Optional.empty())
-              .dataCollectionMinute(dataCollectionCurrentMinute)
-              .build();
-
       if (!isEmpty(dataCollectionInfo.getLoadBalancerMetrics())) {
         dataCollectionInfo.getLoadBalancerMetrics().forEach(
             (forwardRule, stackDriverMetrics) -> stackDriverMetrics.forEach(stackDriverMetric -> {
+              StackdriverDataFetchParameters dataFetchParameters = createDataFetchParameters(startTime, endTime);
               dataFetchParameters.setFilter(stackDriverDelegateService.createFilter(
                   LOADBALANCER, stackDriverMetric.getMetricName(), forwardRule));
               dataFetchParameters.setGroupName(DEFAULT_GROUP_NAME);
@@ -412,6 +413,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       if (!isEmpty(dataCollectionInfo.getPodMetrics())) {
         dataCollectionInfo.getHosts().forEach(
             (host, groupName) -> dataCollectionInfo.getPodMetrics().forEach(stackDriverMetric -> {
+              StackdriverDataFetchParameters dataFetchParameters = createDataFetchParameters(startTime, endTime);
               dataFetchParameters.setGroupName(groupName);
               dataFetchParameters.setDimensionValue(host);
               dataFetchParameters.setMetric(stackDriverMetric.getMetric());
@@ -426,6 +428,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       if (!isEmpty(dataCollectionInfo.getTimeSeriesToCollect()) && is24X7Task()) {
         // This is exclusively for 24/7 Service guard as of now.
         dataCollectionInfo.getTimeSeriesToCollect().forEach(timeSeriesDefinition -> {
+          StackdriverDataFetchParameters dataFetchParameters = createDataFetchParameters(startTime, endTime);
           dataFetchParameters.setGroupName(timeSeriesDefinition.getTxnName());
           dataFetchParameters.setDimensionValue("dummyHost");
           dataFetchParameters.setMetric(timeSeriesDefinition.getMetricName());
