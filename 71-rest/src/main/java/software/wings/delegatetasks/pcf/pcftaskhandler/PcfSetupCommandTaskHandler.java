@@ -432,7 +432,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
   }
 
-  private void downsizeApplicationToZero(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig,
+  @VisibleForTesting
+  void downsizeApplicationToZero(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("# Application Being Downsized To 0: ")
@@ -441,7 +442,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     pcfRequestConfig.setApplicationName(applicationSummary.getName());
     pcfRequestConfig.setDesiredCount(0);
     try {
-      pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+      ApplicationDetail applicationDetail = pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+
+      // Unmap routes from application having 0 instances
+      if (isNotEmpty(applicationDetail.getUrls())) {
+        pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, applicationDetail.getUrls());
+      }
     } catch (PivotalClientApiException e) {
       executionLogCallback.saveExecutionLog(new StringBuilder(128)
                                                 .append("Failed while Downsizing application: ")
