@@ -358,6 +358,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       delegateId = registerDelegate(builder);
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
+      DelegateStackdriverLogAppender.setDelegateId(delegateId);
 
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
       sslContext.init(null, TRUST_ALL_CERTS.toArray(new TrustManager[1]), new java.security.SecureRandom());

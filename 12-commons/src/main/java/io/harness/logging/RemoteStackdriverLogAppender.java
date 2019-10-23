@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Localhost.getLocalHostName;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -26,6 +27,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -208,15 +210,20 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   }
 
   private Map<String, String> getLogLabels() {
-    if (isEmpty(logLabels)) {
-      logLabels = ImmutableMap.<String, String>builder()
-                      .put("source", localhostName)
-                      .put("processId", processId)
-                      .put("version", versionInfoManager.getVersionInfo().getVersion())
-                      .put("app", getAppName())
-                      .put("accountId", getAccountId())
-                      .put("managerHost", getManagerHost())
-                      .build();
+    String delegateId = getDelegateId();
+    if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
+      ImmutableMap.Builder<String, String> labelsBuilder =
+          ImmutableMap.<String, String>builder()
+              .put("source", localhostName)
+              .put("processId", processId)
+              .put("version", versionInfoManager.getVersionInfo().getVersion())
+              .put("app", getAppName())
+              .put("accountId", getAccountId())
+              .put("managerHost", getManagerHost());
+      if (isNotBlank(delegateId)) {
+        labelsBuilder.put("delegateId", delegateId);
+      }
+      logLabels = labelsBuilder.build();
     }
     return logLabels;
   }
@@ -224,6 +231,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   protected abstract String getAppName();
   protected abstract String getAccountId();
   protected abstract String getManagerHost();
+  protected abstract String getDelegateId();
   protected abstract AccessTokenBean getLoggingToken();
 
   @VisibleForTesting

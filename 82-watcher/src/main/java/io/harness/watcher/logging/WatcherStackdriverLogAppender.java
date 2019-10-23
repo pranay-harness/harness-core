@@ -48,6 +48,11 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
   }
 
   @Override
+  protected String getDelegateId() {
+    return null;
+  }
+
+  @Override
   protected AccessTokenBean getLoggingToken() {
     if (timeLimiter == null || managerClient == null) {
       return null;
