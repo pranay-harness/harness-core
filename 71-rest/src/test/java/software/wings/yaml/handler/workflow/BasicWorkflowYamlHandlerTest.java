@@ -26,7 +26,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.beans.Workflow;
+import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.common.InfrastructureConstants;
 import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandler;
 import software.wings.utils.WingsTestConstants.MockChecker;
 import software.wings.yaml.workflow.BasicWorkflowYaml;
@@ -97,6 +99,11 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(workflow).isNotNull();
     assertThat(workflowName).isEqualTo(workflow.getName());
+    assertThat(workflow.getOrchestrationWorkflow()).isNotNull();
+    assertThat(workflow.getOrchestrationWorkflow().getConcurrencyStrategy()).isNotNull();
+    assertThat(workflow.getOrchestrationWorkflow().getConcurrencyStrategy().getUnitType()).isEqualTo(UnitType.INFRA);
+    assertThat(workflow.getOrchestrationWorkflow().getConcurrencyStrategy().getResourceUnit())
+        .isEqualTo(InfrastructureConstants.INFRA_ID_EXPRESSION);
 
     BasicWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertThat(yaml).isNotNull();

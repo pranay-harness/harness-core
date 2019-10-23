@@ -2,10 +2,10 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.yaml.workflow.MultiServiceWorkflowYaml;
 
 /**
@@ -18,16 +18,19 @@ public class MultiServiceWorkflowYamlHandler extends WorkflowYamlHandler<MultiSe
     MultiServiceOrchestrationWorkflowBuilder multiServiceWorkflowBuilder =
         MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow();
 
-    MultiServiceOrchestrationWorkflow orchestrationWorkflow =
+    MultiServiceOrchestrationWorkflowBuilder orchestrationWorkflowBuilder =
         multiServiceWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
             .withNotificationRules(workflowInfo.getNotificationRules())
             .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
             .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
             .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
             .withUserVariables(workflowInfo.getUserVariables())
-            .withWorkflowPhases(workflowInfo.getPhaseList())
-            .build();
-    workflow.orchestrationWorkflow(orchestrationWorkflow);
+            .withWorkflowPhases(workflowInfo.getPhaseList());
+    if (workflowInfo.getConcurrencyStrategy() != null) {
+      orchestrationWorkflowBuilder.withConcurrencyStrategy(
+          ConcurrencyStrategy.buildFromUnit(workflowInfo.getConcurrencyStrategy()));
+    }
+    workflow.orchestrationWorkflow(orchestrationWorkflowBuilder.build());
   }
 
   @Override

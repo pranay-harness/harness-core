@@ -34,6 +34,7 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
         .withUserVariables(getUserVariables())
         .withDerivedVariables(getDerivedVariables())
         .withRequiredEntityTypes(getRequiredEntityTypes())
+        .withConcurrencyStrategy(getConcurrencyStrategy())
         .build();
   }
 
@@ -99,7 +100,7 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       return this;
     }
 
-    public RollingOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+    public RollingOrchestrationWorkflowBuilder withConcurrencyStrategy(ConcurrencyStrategy concurrencyStrategy) {
       this.concurrencyStrategy = concurrencyStrategy;
       return this;
     }

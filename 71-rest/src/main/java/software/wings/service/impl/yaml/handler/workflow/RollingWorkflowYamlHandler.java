@@ -8,6 +8,7 @@ import software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWor
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.yaml.workflow.RollingWorkflowYaml;
 
 import java.util.List;
@@ -36,6 +37,10 @@ public class RollingWorkflowYamlHandler extends WorkflowYamlHandler<RollingWorkf
         .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
         .withUserVariables(workflowInfo.getUserVariables())
         .withWorkflowPhases(phaseList);
+    if (workflowInfo.getConcurrencyStrategy() != null) {
+      rollingOrchestrationWorkflowBuilder.withConcurrencyStrategy(
+          ConcurrencyStrategy.buildFromUnit(workflowInfo.getConcurrencyStrategy()));
+    }
     workflow.orchestrationWorkflow(rollingOrchestrationWorkflowBuilder.build());
   }
 

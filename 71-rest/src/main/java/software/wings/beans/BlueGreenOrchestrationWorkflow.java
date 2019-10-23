@@ -34,6 +34,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
         .withUserVariables(getUserVariables())
         .withDerivedVariables(getDerivedVariables())
         .withRequiredEntityTypes(getRequiredEntityTypes())
+        .withConcurrencyStrategy(getConcurrencyStrategy())
         .build();
   }
 
@@ -99,7 +100,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
       return this;
     }
 
-    public BlueGreenOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+    public BlueGreenOrchestrationWorkflowBuilder withConcurrencyStrategy(ConcurrencyStrategy concurrencyStrategy) {
       this.concurrencyStrategy = concurrencyStrategy;
       return this;
     }

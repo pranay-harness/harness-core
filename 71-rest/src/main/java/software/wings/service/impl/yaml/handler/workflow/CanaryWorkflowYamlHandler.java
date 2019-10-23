@@ -2,10 +2,10 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.yaml.workflow.CanaryWorkflowYaml;
 
 /**
@@ -18,16 +18,19 @@ public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflo
     CanaryOrchestrationWorkflowBuilder canaryOrchestrationWorkflowBuilder =
         CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow();
 
-    CanaryOrchestrationWorkflow orchestrationWorkflow =
+    CanaryOrchestrationWorkflowBuilder orchestrationWorkflowBuilder =
         canaryOrchestrationWorkflowBuilder.withFailureStrategies(workflowInfo.getFailureStrategies())
             .withNotificationRules(workflowInfo.getNotificationRules())
             .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
             .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
             .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
             .withUserVariables(workflowInfo.getUserVariables())
-            .withWorkflowPhases(workflowInfo.getPhaseList())
-            .build();
-    workflow.orchestrationWorkflow(orchestrationWorkflow);
+            .withWorkflowPhases(workflowInfo.getPhaseList());
+    if (workflowInfo.getConcurrencyStrategy() != null) {
+      orchestrationWorkflowBuilder.withConcurrencyStrategy(
+          ConcurrencyStrategy.buildFromUnit(workflowInfo.getConcurrencyStrategy()));
+    }
+    workflow.orchestrationWorkflow(orchestrationWorkflowBuilder.build());
   }
 
   @Override

@@ -4,6 +4,8 @@ import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.distribution.constraint.Constraint.Strategy;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -29,5 +31,14 @@ public class ConcurrencyStrategy {
   @JsonIgnore
   public boolean isEnabled() {
     return unitType != UnitType.NONE;
+  }
+
+  public static ConcurrencyStrategy buildFromUnit(String unitTypeName) {
+    try {
+      UnitType unitTypeFromName = UnitType.valueOf(unitTypeName);
+      return ConcurrencyStrategy.builder().unitType(unitTypeFromName).build();
+    } catch (IllegalArgumentException ex) {
+      throw new InvalidArgumentsException("Not a valid Concurrency Strategy", WingsException.USER);
+    }
   }
 }

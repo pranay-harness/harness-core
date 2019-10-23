@@ -40,6 +40,7 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
         .withDerivedVariables(getDerivedVariables())
         .withRequiredEntityTypes(getRequiredEntityTypes())
         .withEcsBgType(getEcsBGType())
+        .withConcurrencyStrategy(getConcurrencyStrategy())
         .build();
   }
 
@@ -113,7 +114,7 @@ public class EcsBlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       return this;
     }
 
-    public EcsBlueGreenOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+    public EcsBlueGreenOrchestrationWorkflowBuilder withConcurrencyStrategy(ConcurrencyStrategy concurrencyStrategy) {
       this.concurrencyStrategy = concurrencyStrategy;
       return this;
     }

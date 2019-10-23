@@ -120,7 +120,7 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
         .fixed(bean.isFixed())
         .mandatory(bean.isMandatory())
         .name(bean.getName())
-        .type(bean.getType().name())
+        .type(bean.getType() != null ? bean.getType().name() : null)
         .value(bean.getValue())
         .allowedValues(bean.getAllowedValues())
         .build();
