@@ -337,6 +337,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
@@ -1370,5 +1371,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
     kryo.register(CCMConfig.class, 7248);
     kryo.register(StackDriverMetricDefinition.class, 7249);
+    kryo.register(InvalidArtifactServerException.class, 7250);
   }
 }
