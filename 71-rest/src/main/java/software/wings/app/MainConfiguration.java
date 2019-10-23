@@ -21,6 +21,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.config.WorkersConfiguration;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.grpc.GrpcServerConfig;
@@ -111,6 +112,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("disabledCache") private Set<String> disabledCache;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("workers") private WorkersConfiguration workers;
+
   private DelegateConfigParams delegateConfigParams;
 
   private int applicationPort;

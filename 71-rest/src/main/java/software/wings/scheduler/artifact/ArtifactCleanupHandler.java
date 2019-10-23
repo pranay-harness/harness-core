@@ -35,7 +35,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   @Inject @Named("AsyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceAsync;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
-    PersistenceIterator artifactCleanupIterator =
+    PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCleanupHandler.class,
         MongoPersistenceIterator.<ArtifactStream>builder()
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextCleanupIteration)
@@ -47,11 +47,11 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
             .filterExpander(
                 query -> query.filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.DOCKER.name()))
             .schedulingType(REGULAR)
-            .redistribute(true)
-            .build();
+            .redistribute(true));
 
-    artifactCollectionExecutor.scheduleAtFixedRate(
-        () -> artifactCleanupIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.MINUTES);
+    if (iterator != null) {
+      artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.MINUTES);
+    }
   }
 
   @Override

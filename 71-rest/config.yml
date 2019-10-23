@@ -353,3 +353,8 @@ techStacks:
 
 delegateConfigParams:
   queueFilePath: eventQueue
+
+workers:
+  active:
+    io.harness: true
+    software.wings: true

@@ -41,20 +41,21 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
-    PersistenceIterator artifactCollectionIterator =
-        persistenceIteratorFactory.create(MongoPersistenceIterator.<ArtifactStream>builder()
-                                              .clazz(ArtifactStream.class)
-                                              .fieldName(ArtifactStreamKeys.nextIteration)
-                                              .targetInterval(ofMinutes(1))
-                                              .acceptableNoAlertDelay(ofSeconds(30))
-                                              .executorService(artifactCollectionExecutor)
-                                              .semaphore(new Semaphore(25))
-                                              .handler(this)
-                                              .schedulingType(REGULAR)
-                                              .redistribute(true));
+    PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCollectionHandler.class,
+        MongoPersistenceIterator.<ArtifactStream>builder()
+            .clazz(ArtifactStream.class)
+            .fieldName(ArtifactStreamKeys.nextIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(artifactCollectionExecutor)
+            .semaphore(new Semaphore(25))
+            .handler(this)
+            .schedulingType(REGULAR)
+            .redistribute(true));
 
-    artifactCollectionExecutor.scheduleAtFixedRate(
-        () -> artifactCollectionIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+    if (iterator != null) {
+      artifactCollectionExecutor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+    }
   }
 
   @Override

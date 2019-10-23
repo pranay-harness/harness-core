@@ -348,3 +348,12 @@ fi
 if [[ "" != "$AZURE_MARKETPLACE_SECRETKEY" ]]; then
   yq write -i $CONFIG_FILE mktPlaceConfig.azureMarketplaceSecretKey "$AZURE_MARKETPLACE_SECRETKEY"
 fi
+
+if [[ "" != "$WORKERS" ]]; then
+  IFS=',' read -ra WORKER_ITEMS <<< "$WORKERS"
+  for ITEM in "${WORKER_ITEMS[@]}"; do
+    WORKER=`echo $ITEM | awk -F= '{print $1}'`
+    WORKER_FLAG=`echo $ITEM | awk -F= '{print $2}'`
+    yq write -i $CONFIG_FILE workers.active.[$WORKER] "${WORKER_FLAG}"
+  done
+fi
