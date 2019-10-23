@@ -1,9 +1,9 @@
-# Portal Project Dev environment setup instructions... :
+Portal Project Dev environment setup instructions
+=================================================
 
 ## On MacOS
 
 ### Prerequisities
-
 1. Install Homebrew :
 
    `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
@@ -217,21 +217,36 @@ helper shell scripts:
 
 4. Install Lombok Plugin: https://projectlombok.org/setup/intellij
 5. Install SonarLint plugin:
-   - Go to Preferences -> Plugins ->  type SonarLint -> Install plugin. (Will need to restart Intellij)
    - This plugin is really helpful to analyze your code for issues as you code.
+   - Go to `Preferences -> Plugins` ->  type SonarLint -> Install plugin. (Will need to restart Intellij)
+   - Go to `Preferences -> Other settings -> Sonarlint general settings`. Check "Automatically trigger analysis". Add a connection to `https://sonar.harness.io`. You'll need to create a custom token.
+   - Go to `Preferences -> Other settings -> Sonarlint project settings`. Check "Bind project to sonarqube", and select the connection, and set project as `portal`. This is so that we use the same rules locally instead of the default rules.
+    ![config image](img/sonar-config.png).
+   - Go to `Preferences -> Editor -> Colorscheme -> Sonarlint`. For Blocker, Critical & Major, untick "Inherit values from" checkbox and configure a different highlighting style. These violations are treated as release blockers and this configuration is to highlight them differently from regular warnings.
+    ![config image](img/sonar-highlight-config.png).
    - Just right click on file in intellij and "Analyze with SonarLint" or enable autoscan.
-6. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
+6. Setup issue navigation to linkify PRs & Jiras in git log. In `Preferences -> Version Control -> Issue navigation`, add below mappings:
+    ```
+    [A-Z]+\-\d+ -> https://harness.atlassian.net/browse/$0
+    \(#(\d+)\)  -> https://github.com/wings-software/portal/pull/$1
+    ```
+    This will linkify PRs & issue ids in git log.
+    ![config image](img/issue-navigation.png).
+7. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness-checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to "java sources including tests".
+    ![config image](img/checkstyle-config.png).
+8. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
    Annotations > Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
-7. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
+9. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
    Select portal/tools/config/src/main/resources/intellij-java-google-style.xml
-8. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
-9. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
+10. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
+11. Increase Build Process Heap Size (Preferences > Build, Execution, Development > Compiler, search for "Build Process Heap Size" and set it to 2048 or higher if you still see an out of memory exception in future)
 
 ![config image](img/imports_limits.png)
 
 Also make sure that the layout looks like this:
 
 ![config image](img/imports_layout.png).
+
 
 ### Run from IntelliJ
 
@@ -357,7 +372,7 @@ Add the following to your `~/.bash_profile` to display the current git branch in
 
 ```
 parse_git_branch() {
-  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+  git branch 2 > / dev / null | sed - e '/^[^*]/d' - e 's/* \(.*\)/ (\1)/'
 }
 export PS1="\[\033[34m\]\w\[\033[36m\]\$(parse_git_branch)\[\033[31m\] $\[\033[0m\] "
 ```
