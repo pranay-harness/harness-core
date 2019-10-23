@@ -199,7 +199,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
@@ -268,7 +268,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
-  final ConcurrentMap<String, AtomicBoolean> syncTaskWaitMap = new ConcurrentHashMap<>();
+  final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -311,11 +311,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                               .map(key -> key.getId().toString())
                                               .collect(toList());
         for (String taskId : completedSyncTasks) {
-          AtomicBoolean flag = syncTaskWaitMap.get(taskId);
-          if (flag != null) {
-            synchronized (flag) {
-              flag.set(false);
-              flag.notifyAll();
+          AtomicLong endAt = syncTaskWaitMap.get(taskId);
+          if (endAt != null) {
+            synchronized (endAt) {
+              endAt.set(0L);
+              endAt.notifyAll();
             }
           }
         }
@@ -1467,10 +1467,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       try {
         logger.info("Executing sync task");
         broadcastHelper.broadcastNewDelegateTask(task);
-        AtomicBoolean flag = syncTaskWaitMap.computeIfAbsent(task.getUuid(), k -> new AtomicBoolean(true));
-        synchronized (flag) {
-          while (flag.get()) {
-            flag.wait(task.getData().getTimeout());
+        AtomicLong endAt = syncTaskWaitMap.computeIfAbsent(
+            task.getUuid(), k -> new AtomicLong(clock.millis() + task.getData().getTimeout()));
+        synchronized (endAt) {
+          while (clock.millis() < endAt.get()) {
+            endAt.wait(task.getData().getTimeout());
           }
         }
         completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
