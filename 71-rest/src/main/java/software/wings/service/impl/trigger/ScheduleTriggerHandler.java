@@ -7,11 +7,11 @@ import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -27,36 +27,38 @@ import java.util.concurrent.Semaphore;
 @Singleton
 @Slf4j
 public class ScheduleTriggerHandler implements Handler<DeploymentTrigger> {
+  private static final int POOL_SIZE = 3;
+
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private DeploymentTriggerService deploymentTriggerService;
-  private static int POOL_SIZE = 3;
-  private static final ScheduleTriggerHandler handler = new ScheduleTriggerHandler();
+
+  PersistenceIterator<DeploymentTrigger> iterator;
+
   private static ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final ScheduledThreadPoolExecutor executorService = new ScheduledThreadPoolExecutor(
       POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-ScheduleTriggerThread").build());
 
-  private static PersistenceIterator<DeploymentTrigger> iterator =
-      MongoPersistenceIterator.<DeploymentTrigger>builder()
-          .clazz(DeploymentTrigger.class)
-          .fieldName("nextIterations")
-          .acceptableNoAlertDelay(ofSeconds(5))
-          .maximumDelayForCheck(ofMinutes(30))
-          .executorService(executorService)
-          .semaphore(new Semaphore(10))
-          .handler(handler)
-          .filterExpander(query -> query.filter(DeploymentTriggerKeys.type, SCHEDULED))
-          .schedulingType(IRREGULAR_SKIP_MISSED)
-          .throttleInterval(ofSeconds(45))
-          .build();
-
-  public static void registerIterators(Injector injector) {
-    injector.injectMembers(handler);
-    injector.injectMembers(iterator);
+  public void registerIterators() {
+    iterator = MongoPersistenceIterator.<DeploymentTrigger>builder()
+                   .clazz(DeploymentTrigger.class)
+                   .fieldName("nextIterations")
+                   .acceptableNoAlertDelay(ofSeconds(5))
+                   .maximumDelayForCheck(ofMinutes(30))
+                   .executorService(executorService)
+                   .semaphore(new Semaphore(10))
+                   .handler(this)
+                   .filterExpander(query -> query.filter(DeploymentTriggerKeys.type, SCHEDULED))
+                   .schedulingType(IRREGULAR_SKIP_MISSED)
+                   .throttleInterval(ofSeconds(45))
+                   .build();
 
     executor.submit(() -> iterator.process(ProcessMode.LOOP));
   }
 
   public void wakeup() {
-    iterator.wakeup();
+    if (iterator != null) {
+      iterator.wakeup();
+    }
   }
   @Override
   public void handle(DeploymentTrigger entity) {

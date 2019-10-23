@@ -2,31 +2,60 @@ package software.wings.scheduler.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.iterator.PersistenceIterator;
+import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
+import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Permit;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.PermitService;
 
 import java.util.Date;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+@Singleton
 @Slf4j
 public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
 
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private PermitService permitService;
-
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
+
+  public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
+    PersistenceIterator artifactCollectionIterator =
+        persistenceIteratorFactory.create(MongoPersistenceIterator.<ArtifactStream>builder()
+                                              .clazz(ArtifactStream.class)
+                                              .fieldName(ArtifactStreamKeys.nextIteration)
+                                              .targetInterval(ofMinutes(1))
+                                              .acceptableNoAlertDelay(ofSeconds(30))
+                                              .executorService(artifactCollectionExecutor)
+                                              .semaphore(new Semaphore(25))
+                                              .handler(this)
+                                              .schedulingType(REGULAR)
+                                              .redistribute(true));
+
+    artifactCollectionExecutor.scheduleAtFixedRate(
+        () -> artifactCollectionIterator.process(ProcessMode.PUMP), 0, 10, TimeUnit.SECONDS);
+  }
 
   @Override
   public void handle(ArtifactStream artifactStream) {

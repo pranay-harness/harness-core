@@ -9,10 +9,10 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import software.wings.audit.AuditRecord;
@@ -26,32 +26,27 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class EntityAuditRecordHandler implements Handler<AuditRecord> {
+  private static final int POOL_SIZE = 2;
+
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private AuditService auditService;
 
-  public static class EntityAuditRecordExecutor {
-    static int POOL_SIZE = 2;
-    public static void registerIterators(Injector injector) {
-      final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-          POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-EntityAuditRecordProcessor").build());
+  public void registerIterators() {
+    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
+        POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-EntityAuditRecordProcessor").build());
 
-      final EntityAuditRecordHandler handler = new EntityAuditRecordHandler();
-      injector.injectMembers(handler);
+    PersistenceIterator iterator = persistenceIteratorFactory.create(MongoPersistenceIterator.<AuditRecord>builder()
+                                                                         .clazz(AuditRecord.class)
+                                                                         .fieldName(AuditRecordKeys.nextIteration)
+                                                                         .targetInterval(ofMinutes(30))
+                                                                         .acceptableNoAlertDelay(ofSeconds(45))
+                                                                         .executorService(executor)
+                                                                         .semaphore(new Semaphore(POOL_SIZE))
+                                                                         .handler(this)
+                                                                         .schedulingType(REGULAR)
+                                                                         .redistribute(true));
 
-      PersistenceIterator iterator = MongoPersistenceIterator.<AuditRecord>builder()
-                                         .clazz(AuditRecord.class)
-                                         .fieldName(AuditRecordKeys.nextIteration)
-                                         .targetInterval(ofMinutes(30))
-                                         .acceptableNoAlertDelay(ofSeconds(45))
-                                         .executorService(executor)
-                                         .semaphore(new Semaphore(POOL_SIZE))
-                                         .handler(handler)
-                                         .schedulingType(REGULAR)
-                                         .redistribute(true)
-                                         .build();
-
-      injector.injectMembers(iterator);
-      executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.SECONDS);
-    }
+    executor.scheduleAtFixedRate(() -> iterator.process(ProcessMode.PUMP), 0, 30, TimeUnit.SECONDS);
   }
 
   @Override
