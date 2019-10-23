@@ -24,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.beans.Workflow;
+import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.workflow.MultiServiceWorkflowYamlHandler;
 import software.wings.utils.WingsTestConstants.MockChecker;
@@ -61,6 +62,9 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(workflow).isNotNull();
     assertThat(workflowName).isEqualTo(workflow.getName());
+    assertThat(workflow.getOrchestrationWorkflow()).isNotNull();
+    assertThat(workflow.getOrchestrationWorkflow().getConcurrencyStrategy()).isNotNull();
+    assertThat(workflow.getOrchestrationWorkflow().getConcurrencyStrategy().getUnitType()).isEqualTo(UnitType.NONE);
 
     MultiServiceWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertThat(yaml).isNotNull();

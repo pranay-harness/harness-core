@@ -41,6 +41,7 @@ import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlH
 import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.yaml.workflow.StepYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
@@ -58,6 +59,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
   @Inject YamlHelper yamlHelper;
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EnvironmentService environmentService;
+  @Inject FeatureFlagService featureFlagService;
 
   protected abstract void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflowBuilder);
 
@@ -290,8 +292,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                       .rollbackPhaseMap(rollbackPhaseMap)
                                       .userVariables(userVariables)
                                       .phaseList(phaseList)
+                                      .concurrencyStrategy(yaml.getConcurrencyStrategy())
                                       .build();
-
       setOrchestrationWorkflow(workflowInfo, workflow);
 
       String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
@@ -416,6 +418,9 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     yaml.setNotificationRules(notificationRuleYamlList);
     yaml.setFailureStrategies(failureStrategyYamlList);
     yaml.setHarnessApiVersion(getHarnessApiVersion());
+    if (orchestrationWorkflow.getConcurrencyStrategy() != null) {
+      yaml.setConcurrencyStrategy(orchestrationWorkflow.getConcurrencyStrategy().getUnitType().name());
+    }
 
     updateYamlWithAdditionalInfo(workflow, appId, yaml);
   }
@@ -456,5 +461,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     private Map<String, WorkflowPhase> rollbackPhaseMap;
     private List<Variable> userVariables;
     private List<WorkflowPhase> phaseList;
+    private String concurrencyStrategy;
   }
 }

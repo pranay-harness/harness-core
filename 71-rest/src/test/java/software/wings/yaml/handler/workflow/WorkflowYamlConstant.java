@@ -4,6 +4,7 @@ public class WorkflowYamlConstant {
   // START STRING CONSTANTS FOR BASIC WORKFLOW YAML TEST
   public static final String BASIC_VALID_YAML_CONTENT = "harnessApiVersion: '1.0'\n"
       + "type: BASIC\n"
+      + "concurrencyStrategy: INFRA\n"
       + "envName: ENV_NAME\n"
       + "failureStrategies:\n"
       + "- executionScope: WORKFLOW\n"
@@ -196,6 +197,7 @@ public class WorkflowYamlConstant {
 
   public static final String BASIC_VALID_YAML_CONTENT_TEMPLATIZED = "harnessApiVersion: '1.0'\n"
       + "type: BASIC\n"
+      + "concurrencyStrategy: INFRA\n"
       + "envName: ENV_NAME\n"
       + "failureStrategies:\n"
       + "- executionScope: WORKFLOW\n"
@@ -415,6 +417,7 @@ public class WorkflowYamlConstant {
   // START STRING CONSTANTS FOR CANARY WORKFLOW YAML TEST
   public static final String CANARY_VALID_YAML_CONTENT = "harnessApiVersion: '1.0'\n"
       + "type: CANARY\n"
+      + "concurrencyStrategy: INFRA\n"
       + "envName: ENV_NAME\n"
       + "failureStrategies:\n"
       + "- executionScope: WORKFLOW\n"
@@ -546,6 +549,7 @@ public class WorkflowYamlConstant {
   // START STRING CONSTANTS FOR MULTI_SERVICE WORKFLOW YAML TEST
   public static final String MULTI_SERVICE_VALID_YAML_CONTENT = "harnessApiVersion: '1.0'\n"
       + "type: MULTI_SERVICE\n"
+      + "concurrencyStrategy: NONE\n"
       + "envName: ENV_NAME\n"
       + "failureStrategies:\n"
       + "- executionScope: WORKFLOW\n"

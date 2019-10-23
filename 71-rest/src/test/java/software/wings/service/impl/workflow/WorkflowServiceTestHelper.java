@@ -1086,7 +1086,7 @@ public class WorkflowServiceTestHelper {
                                                          .deploymentType(SSH)
                                                          .phaseSteps(getAmiPhaseSteps(withProvisionerStep))
                                                          .build())
-                                   .withThrottlingStrategy(ConcurrencyStrategy.builder().build())
+                                   .withConcurrencyStrategy(ConcurrencyStrategy.builder().build())
                                    .build())
         .build();
   }

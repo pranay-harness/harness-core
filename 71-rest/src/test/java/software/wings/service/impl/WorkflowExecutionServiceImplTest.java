@@ -2170,7 +2170,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldFetchWorkflowExecutionsForResourceConstraint() {
+  public void shouldFetchConcurrentExecutions() {
     int count = 0;
     String firstExecutionId = null;
     List<ResourceConstraintInstance> resourceConstraintInstances = new ArrayList<>();

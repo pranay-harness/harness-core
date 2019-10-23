@@ -37,6 +37,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
         .withUserVariables(getUserVariables())
         .withDerivedVariables(getDerivedVariables())
         .withRequiredEntityTypes(getRequiredEntityTypes())
+        .withConcurrencyStrategy(getConcurrencyStrategy())
         .build();
   }
 
@@ -113,7 +114,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       return this;
     }
 
-    public MultiServiceOrchestrationWorkflowBuilder withThrottlingStrategy(ConcurrencyStrategy concurrencyStrategy) {
+    public MultiServiceOrchestrationWorkflowBuilder withConcurrencyStrategy(ConcurrencyStrategy concurrencyStrategy) {
       this.concurrencyStrategy = concurrencyStrategy;
       return this;
     }

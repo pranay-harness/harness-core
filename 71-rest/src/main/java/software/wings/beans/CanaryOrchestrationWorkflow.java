@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -349,7 +350,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       });
     }
     populatePhaseSteps(postDeploymentSteps, getGraph());
-    if (concurrencyStrategy == null && infraRefactor) {
+    if (concurrencyStrategy == null && infraRefactor && !BUILD.equals(getOrchestrationWorkflowType())) {
       setConcurrencyStrategy(ConcurrencyStrategy.builder().build());
     }
     reorderUserVariables();

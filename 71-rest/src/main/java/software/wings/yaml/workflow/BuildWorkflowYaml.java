@@ -28,8 +28,8 @@ public class BuildWorkflowYaml extends WorkflowYaml {
       String envName, boolean templatized, List<StepYaml> preDeploymentSteps, List<WorkflowPhase.Yaml> phases,
       List<WorkflowPhase.Yaml> rollbackPhases, List<StepYaml> postDeploymentSteps,
       List<NotificationRule.Yaml> notificationRules, List<FailureStrategy.Yaml> failureStrategies,
-      List<Variable.Yaml> userVariables) {
+      List<Variable.Yaml> userVariables, String concurrencyStrategy) {
     super(type, harnessApiVersion, description, templateExpressions, envName, templatized, preDeploymentSteps, phases,
-        rollbackPhases, postDeploymentSteps, notificationRules, failureStrategies, userVariables);
+        rollbackPhases, postDeploymentSteps, notificationRules, failureStrategies, userVariables, concurrencyStrategy);
   }
 }

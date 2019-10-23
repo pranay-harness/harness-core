@@ -3365,15 +3365,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution execution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("Workflow Execution not found", execution);
     ConcurrentExecutionResponseBuilder responseBuilder = ConcurrentExecutionResponse.builder();
-    List<ResourceConstraintInstance> instances =
-        resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(
-            appId, unit, HoldingScope.WORKFLOW.name());
-    responseBuilder.state(extractState(workflowExecutionId, instances));
-    responseBuilder.executions(fetchWorkflowExecutionsForResourceConstraint(
-        appId, instances.stream().map(ResourceConstraintInstance::getReleaseEntityId).collect(Collectors.toList())));
     responseBuilder.unitType(
         execution.getConcurrencyStrategy() != null ? execution.getConcurrencyStrategy().getUnitType() : null);
     responseBuilder.infrastructureDetails(extractServiceInfrastructureDetails(appId, execution));
+    if (ExecutionStatus.isRunningStatus(execution.getStatus())) {
+      List<ResourceConstraintInstance> instances =
+          resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(
+              appId, unit, HoldingScope.WORKFLOW.name());
+      responseBuilder.state(extractState(workflowExecutionId, instances));
+      responseBuilder.executions(fetchWorkflowExecutionsForResourceConstraint(
+          appId, instances.stream().map(ResourceConstraintInstance::getReleaseEntityId).collect(Collectors.toList())));
+    }
     return responseBuilder.build();
   }
 
