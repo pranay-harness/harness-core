@@ -8,12 +8,13 @@
       "tokenizer": {
         "camel_case_tokenizer": {
           "type":       "pattern",
-          "pattern": "([^\\p{L}\\d]+)|(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)|(?<=[\\p{L}&&[^\\p{Lu}]])(?=\\p{Lu})|(?<=\\p{Lu})(?=\\p{Lu}[\\p{L}&&[^\\p{Lu}]])"
+          "pattern": "([^\\p{L}\\d]+)|(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)"
         }
       },
       "analyzer": {
         "camel_case_analyzer": {
-          "tokenizer": "camel_case_tokenizer"
+          "tokenizer": "camel_case_tokenizer",
+          "filter": ["lowercase"]
         }
       }
     }
