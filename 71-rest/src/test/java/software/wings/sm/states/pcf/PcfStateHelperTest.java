@@ -3,6 +3,7 @@ package software.wings.sm.states.pcf;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static io.harness.pcf.model.PcfConstants.LEGACY_NAME_PCF_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -515,6 +516,19 @@ public class PcfStateHelperTest extends WingsBaseTest {
     pcfManifestsPackage.setManifestYml(
         TEST_APP_MANIFEST.replace("((INSTANCES))", INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED));
     assertThat(pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage, 4)).isEqualTo(4);
+
+    pcfManifestsPackage.setManifestYml(TEST_APP_MANIFEST.replace("((INSTANCES))", INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED)
+                                           .replace("instances", "INSTANCES"));
+    assertThat(pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage, 4)).isEqualTo(4);
+
+    pcfManifestsPackage.setVariableYmls(emptyList());
+    pcfManifestsPackage.setManifestYml(TEST_APP_MANIFEST);
+    try {
+      assertThat(pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage, 1)).isEqualTo(3);
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage())
+          .isEqualTo("No Valid Variable file Found, please verify var file is present and has valid structure");
+    }
   }
 
   @Test
