@@ -16,15 +16,16 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.OwnerRule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.beans.instance.HarnessServiceInfo;
-import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -38,10 +39,7 @@ import java.util.Optional;
 public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGenerator {
   @InjectMocks private EcsSyncEventWriter ecsSyncEventWriter;
   @Mock private InstanceDataService instanceDataService;
-  @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
 
-  private final String LAUNCH_TYPE = "EC2";
-  private final String TEST_TASK_ARN = "TASK_ARN_" + this.getClass().getSimpleName();
   private final String TEST_ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_ACTIVE_CONTAINER_ARN = "ACTIVE_CONTAINER_ARN_" + this.getClass().getSimpleName();
@@ -50,6 +48,11 @@ public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGene
 
   private final Instant NOW = Instant.now();
   private final Timestamp INSTANCE_LAST_PROCESSED_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(emails = HITESH)

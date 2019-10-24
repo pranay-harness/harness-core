@@ -24,12 +24,14 @@ import io.harness.event.payloads.EcsTaskInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.OwnerRule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
@@ -56,6 +58,11 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   private final String TEST_CONTAINER_ARN = "CONTAINER_ARN_" + this.getClass().getSimpleName();
 
   private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(Instant.now());
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(emails = HITESH)
