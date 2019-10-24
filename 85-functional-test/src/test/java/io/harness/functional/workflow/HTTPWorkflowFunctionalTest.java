@@ -59,8 +59,8 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   public void shouldCreateHTTPStepInWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    Workflow workflow =
-        workflowUtils.buildCanaryWorkflowPostDeploymentStep("HTTP Workflow", environment.getUuid(), getHTTPNode());
+    Workflow workflow = workflowUtils.buildCanaryWorkflowPostDeploymentStep(
+        "HTTP Workflow" + System.currentTimeMillis(), environment.getUuid(), getHTTPNode());
     // Test  creating a workflow
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);

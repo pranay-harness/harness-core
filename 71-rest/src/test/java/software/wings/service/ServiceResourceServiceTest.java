@@ -121,6 +121,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
@@ -164,6 +165,8 @@ import software.wings.beans.command.InitSshCommandUnitV2;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
+import software.wings.beans.container.EcsServiceSpecification.EcsServiceSpecificationKeys;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPayload;
@@ -558,6 +561,40 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(configService).pruneByService(APP_ID, SERVICE_ID);
     inOrder.verify(serviceTemplateService).pruneByService(APP_ID, SERVICE_ID);
     inOrder.verify(serviceVariableService).pruneByService(APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFailCloneWhenServiceNameIsNull() {
+    Service originalService = Service.builder().build();
+    assertThatThrownBy(() -> srs.clone(APP_ID, SERVICE_ID, originalService))
+        .isInstanceOf(WingsException.class)
+        .hasMessage("Service Name can not be empty");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchServiceNamesByUuids() {
+    List<String> serviceIds = asList(SERVICE_ID);
+    List<Service> services = asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
+
+    Query mockQuery = mock(Query.class);
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+    doReturn(mockQuery).when(mockWingsPersistence).createQuery(Service.class);
+    doReturn(mockQuery).when(mockQuery).project(ServiceKeys.name, true);
+    doReturn(mockQuery).when(mockQuery).project(ServiceKeys.accountId, true);
+    doReturn(mockQuery).when(mockQuery).project(ServiceKeys.appId, true);
+    doReturn(mockQuery).when(mockQuery).filter(anyString(), anyString());
+
+    doReturn(fieldEnd).when(mockQuery).field(anyString());
+    doReturn(mockQuery).when(fieldEnd).in(serviceIds);
+
+    doReturn(services).when(mockQuery).asList();
+
+    List<String> returnedServices = srs.fetchServiceNamesByUuids(APP_ID, serviceIds);
+    assertThat(returnedServices).isNotNull();
+    assertThat(returnedServices.size()).isEqualTo(1);
+    assertThat(returnedServices.get(0)).isEqualTo(SERVICE_NAME);
   }
 
   @Test
@@ -2352,5 +2389,28 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .isThrownBy(
             () -> spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName()))
         .withMessageContaining(sc_1.getName());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetExistingEcsServiceSpecification() {
+    EcsServiceSpecification org = EcsServiceSpecification.builder().serviceId(SERVICE_ID).build();
+    Query mockQuery = mock(Query.class);
+    doReturn(mockQuery).when(mockWingsPersistence).createQuery(EcsServiceSpecification.class);
+    doReturn(mockQuery).when(mockQuery).filter(anyString(), anyString());
+    doReturn(mockQuery).when(mockQuery).filter(EcsServiceSpecificationKeys.serviceId, SERVICE_ID);
+    doReturn(org).when(mockQuery).get();
+
+    EcsServiceSpecification result = srs.getExistingOrDefaultEcsServiceSpecification(APP_ID, SERVICE_ID);
+    assertThat(result).isNotNull();
+    assertThat(result).isEqualTo(org);
+
+    doReturn(null).when(mockQuery).get();
+    EcsServiceSpecification resultDefault = srs.getExistingOrDefaultEcsServiceSpecification(APP_ID, SERVICE_ID);
+
+    assertThat(resultDefault).isNotNull();
+    assertThat(resultDefault).isNotEqualTo(org);
+    assertThat(resultDefault.getServiceId()).isEqualTo(SERVICE_ID);
+    assertThat(resultDefault.getAppId()).isEqualTo(APP_ID);
   }
 }
