@@ -129,6 +129,8 @@ public interface WingsTestConstants {
 
   String USER_NAME = "USER_NAME";
 
+  String DOMAIN = "DOMAIN";
+
   String USER_EMAIL = "user@wings.software";
 
   String TEMPORARY_EMAIL = "user@mailinator.com";
