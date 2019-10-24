@@ -40,6 +40,7 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
@@ -56,6 +57,7 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -109,6 +111,7 @@ public class InstanceHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private DeploymentService deploymentService;
   @Inject private ExecutorService executorService;
+  @Inject private FeatureFlagService featureFlagService;
 
   /**
    * The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -145,6 +148,12 @@ public class InstanceHelper {
       }
 
       InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, context.fetchInfraMappingId());
+
+      if (!isSyncEnabledForAccount(infrastructureMapping.getInfraMappingType(), infrastructureMapping.getAccountId())) {
+        logger.info("Sync not enabled for InfraMappingType= [{}], accountId=[{}]",
+            infrastructureMapping.getInfraMappingType(), infrastructureMapping.getAccountId());
+        return;
+      }
 
       if (PHYSICAL_DATA_CENTER_SSH.getName().equals(infrastructureMapping.getInfraMappingType())
           || PHYSICAL_DATA_CENTER_WINRM.getName().equals(infrastructureMapping.getInfraMappingType())
@@ -214,7 +223,6 @@ public class InstanceHelper {
             return;
           }
         }
-        // todo @rk : define instance handler for lambda, define deployment summary for that as well.
         InstanceHandler instanceHandler = instanceHandlerOptional.get();
         List<DeploymentSummary> deploymentSummaries = instanceHandler.getDeploymentSummariesForEvent(phaseExecutionData,
             phaseStepExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
@@ -234,10 +242,6 @@ public class InstanceHelper {
   }
 
   private boolean hasNoInstanceHandler(String infraMappingType) {
-    // todo @rk
-    if (AWS_AWS_LAMBDA.getName().equals(infraMappingType)) {
-      return true;
-    }
     return false;
   }
 
@@ -429,9 +433,7 @@ public class InstanceHelper {
                                 .filter(deploymentSummary -> hasDeploymentKey(deploymentSummary))
                                 .collect(Collectors.toList());
 
-      if (!deploymentEvent.isRollback()) {
-        deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
-      }
+      deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
 
       processDeploymentSummaries(deploymentSummaries, deploymentEvent.isRollback());
     } catch (Exception ex) {
@@ -440,20 +442,33 @@ public class InstanceHelper {
     }
   }
 
-  private DeploymentSummary saveDeploymentSummary(DeploymentSummary deploymentSummary, boolean rollback) {
-    if (rollback) {
-      return deploymentSummary;
+  @VisibleForTesting
+  boolean shouldSaveDeploymentSummary(DeploymentSummary summary, boolean isRollback) {
+    if (summary == null) {
+      return false;
     }
-
-    return deploymentService.save(deploymentSummary);
+    if (!isRollback) {
+      return true;
+    }
+    // save rollback for lambda deployments
+    return summary.getAwsLambdaDeploymentKey() != null;
   }
 
-  private boolean hasDeploymentKey(DeploymentSummary deploymentSummary) {
-    // todo @rk: add the deployment key
+  @VisibleForTesting
+  DeploymentSummary saveDeploymentSummary(DeploymentSummary deploymentSummary, boolean rollback) {
+    if (shouldSaveDeploymentSummary(deploymentSummary, rollback)) {
+      return deploymentService.save(deploymentSummary);
+    }
+    return deploymentSummary;
+  }
+
+  @VisibleForTesting
+  boolean hasDeploymentKey(DeploymentSummary deploymentSummary) {
     return deploymentSummary.getPcfDeploymentKey() != null || deploymentSummary.getK8sDeploymentKey() != null
         || deploymentSummary.getContainerDeploymentKey() != null || deploymentSummary.getAwsAmiDeploymentKey() != null
         || deploymentSummary.getAwsCodeDeployDeploymentKey() != null
-        || deploymentSummary.getSpotinstAmiDeploymentKey() != null;
+        || deploymentSummary.getSpotinstAmiDeploymentKey() != null
+        || deploymentSummary.getAwsLambdaDeploymentKey() != null;
   }
 
   private void processDeploymentSummaries(List<DeploymentSummary> deploymentSummaries, boolean isRollback) {
@@ -502,12 +517,10 @@ public class InstanceHelper {
 
   @VisibleForTesting
   boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
-    // todo @rk
-    if (AWS_AWS_LAMBDA.equals(infrastructureMappingType) || PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
+    if (PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
         || PHYSICAL_DATA_CENTER_WINRM.equals(infrastructureMappingType)) {
       return false;
     }
-
     return true;
   }
 
@@ -562,6 +575,14 @@ public class InstanceHelper {
         logger.warn("Could not locate phase for phase step {}", phaseStepSubWorkflow.getId());
       }
     }
+  }
+
+  @VisibleForTesting
+  boolean isSyncEnabledForAccount(String infrastructureMappingType, String accountId) {
+    if (AWS_AWS_LAMBDA.getName().equals(infrastructureMappingType)) {
+      return featureFlagService.isEnabled(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA, accountId);
+    }
+    return true;
   }
 
   public String manualSync(String appId, String infraMappingId) {

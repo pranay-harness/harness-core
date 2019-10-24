@@ -53,6 +53,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.logging.log4j.util.Strings;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
@@ -69,6 +70,8 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse.AwsLambdaFunctionResponseBuilder;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
 import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
+import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 
 import java.io.UnsupportedEncodingException;
@@ -457,5 +460,39 @@ public class AwsLambdaHelperServiceDelegateImpl
     }
     logCallback.saveExecutionLog(format("Executing tagging for function: [%s]", functionArn));
     lambdaClient.tagResource(new TagResourceRequest().withResource(functionArn).withTags(functionTags));
+  }
+
+  @Override
+  public AwsLambdaDetailsResponse getFunctionDetails(AwsLambdaDetailsRequest request) {
+    try {
+      GetFunctionResult getFunctionResult = null;
+      final AwsConfig awsConfig = request.getAwsConfig();
+      final List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      final AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+      try {
+        getFunctionResult = lambdaClient.getFunction(
+            new GetFunctionRequest().withFunctionName(request.getFunctionName()).withQualifier(request.getQualifier()));
+      } catch (ResourceNotFoundException rnfe) {
+        logger.info("No function found with name =[{}], qualifier =[{}]. Error Msg is [{}]", request.getFunctionName(),
+            request.getQualifier(), rnfe.getMessage());
+        return AwsLambdaDetailsResponse.builder().executionStatus(SUCCESS).details(null).build();
+      }
+      ListAliasesResult listAliasesResult = null;
+      if (Boolean.TRUE.equals(request.getLoadAliases())) {
+        final ListAliasesRequest listAliasRequest =
+            new ListAliasesRequest().withFunctionName(request.getFunctionName());
+        if (Strings.isNotEmpty(getFunctionResult.getConfiguration().getVersion())) {
+          listAliasRequest.withFunctionVersion(getFunctionResult.getConfiguration().getVersion());
+        }
+        listAliasesResult = lambdaClient.listAliases(listAliasRequest);
+      }
+      return AwsLambdaDetailsResponse.from(getFunctionResult, listAliasesResult);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return null;
   }
 }

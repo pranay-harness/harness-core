@@ -1,7 +1,6 @@
 package software.wings.scheduler;
 
-import static software.wings.common.Constants.ACCOUNT_ID_KEY;
-
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
@@ -34,6 +33,7 @@ import javax.annotation.Nonnull;
 @Slf4j
 public class InstanceStatsCollectorJob implements Job {
   public static final String GROUP = "INSTANCE_STATS_COLLECT_CRON_GROUP";
+  public static final String ACCOUNT_ID_KEY = "accountId";
 
   // 10 minutes
   private static final int SYNC_INTERVAL = 10;
@@ -88,7 +88,8 @@ public class InstanceStatsCollectorJob implements Job {
     });
   }
 
-  private void createStats(@Nonnull final String accountId) {
+  @VisibleForTesting
+  void createStats(@Nonnull final String accountId) {
     Objects.requireNonNull(accountId, "Account Id must be present");
 
     try (AcquiredLock lock =
@@ -104,6 +105,15 @@ public class InstanceStatsCollectorJob implements Job {
             sw.elapsed(TimeUnit.MILLISECONDS));
       } else {
         logger.info("No instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
+            sw.elapsed(TimeUnit.MILLISECONDS));
+      }
+      sw = Stopwatch.createStarted();
+      ranAtLeastOnce = statsCollector.createServerlessStats(accountId);
+      if (ranAtLeastOnce) {
+        logger.info("Successfully saved Serverless instance history stats. Account Id: {}. Time taken: {} millis",
+            accountId, sw.elapsed(TimeUnit.MILLISECONDS));
+      } else {
+        logger.info("No Serverless instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
             sw.elapsed(TimeUnit.MILLISECONDS));
       }
     }

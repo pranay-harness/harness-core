@@ -6,6 +6,8 @@ import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
 
+import com.amazonaws.services.cloudwatch.model.Datapoint;
+import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
@@ -567,6 +569,11 @@ import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesRequest;
 import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesResponse;
 import software.wings.service.impl.aws.model.AwsRoute53Request;
 import software.wings.service.impl.aws.model.AwsRoute53Request.AwsRoute53RequestType;
+import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
+import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
+import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
+import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
 import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
@@ -1372,5 +1379,12 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CCMConfig.class, 7248);
     kryo.register(StackDriverMetricDefinition.class, 7249);
     kryo.register(InvalidArtifactServerException.class, 7250);
+    kryo.register(Dimension.class, 7251);
+    kryo.register(Datapoint.class, 7252);
+    kryo.register(AwsCloudWatchStatisticsResponse.class, 7253);
+    kryo.register(AwsCloudWatchStatisticsRequest.class, 7254);
+    kryo.register(AwsLambdaDetailsRequest.class, 7255);
+    kryo.register(AwsLambdaDetailsResponse.class, 7256);
+    kryo.register(AwsLambdaDetails.class, 7257);
   }
 }

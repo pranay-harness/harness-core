@@ -3,28 +3,37 @@ package software.wings.service.impl.aws.delegate;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.google.common.collect.ImmutableMap;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.lambda.AWSLambdaClient;
+import com.amazonaws.services.lambda.model.AliasConfiguration;
 import com.amazonaws.services.lambda.model.CreateAliasResult;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionConfiguration;
+import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.InvokeResult;
+import com.amazonaws.services.lambda.model.ListAliasesRequest;
 import com.amazonaws.services.lambda.model.ListAliasesResult;
 import com.amazonaws.services.lambda.model.PublishVersionResult;
+import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -37,6 +46,8 @@ import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionParams;
 import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
+import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.charset.StandardCharsets;
@@ -165,5 +176,58 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetAlternateNormalizedFunctionName() {
     assertThat(awsLambdaHelperServiceDelegate.getAlternateNormalizedFunctionName("foo_bar")).isEqualTo("foo-bar");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_getFunctionDetails() {
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
+    final GetFunctionResult getFunctionResult =
+        new GetFunctionResult()
+            .withConfiguration(new FunctionConfiguration().withLastModified("2019-10-09T11:49:13.585-0700"))
+            .withTags(ImmutableMap.of("key", "value"));
+
+    doReturn(getFunctionResult).when(mockClient).getFunction(any(GetFunctionRequest.class));
+    final ListAliasesResult listAliasesResult =
+        new ListAliasesResult().withAliases(new AliasConfiguration().withName("alias"));
+    doReturn(listAliasesResult).when(mockClient).listAliases(any(ListAliasesRequest.class));
+
+    doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
+    final AwsLambdaDetailsRequest awsLambdaDetailsRequest = AwsLambdaDetailsRequest.builder().loadAliases(true).build();
+    final AwsLambdaDetailsResponse functionDetails =
+        awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest);
+    assertThat(functionDetails.getLambdaDetails().getLastModified()).isNotNull();
+    assertThat(functionDetails.getLambdaDetails().getTags()).containsKeys("key");
+    assertThat(functionDetails.getLambdaDetails().getAliases()).contains("alias");
+    verify(mockClient, times(1)).listAliases(any(ListAliasesRequest.class));
+    verify(mockClient, times(1)).getFunction(any(GetFunctionRequest.class));
+  }
+
+  @Test()
+  @Category(UnitTests.class)
+  public void test_getFunctionDetails_error() {
+    AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
+    doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
+
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doThrow(new AmazonServiceException("service exception"))
+        .when(mockClient)
+        .getFunction(any(GetFunctionRequest.class));
+
+    final AwsLambdaDetailsRequest awsLambdaDetailsRequest = AwsLambdaDetailsRequest.builder().loadAliases(true).build();
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest));
+
+    doThrow(new AmazonClientException("client exception")).when(mockClient).getFunction(any(GetFunctionRequest.class));
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest));
+
+    doThrow(new ResourceNotFoundException("resource not found"))
+        .when(mockClient)
+        .getFunction(any(GetFunctionRequest.class));
+    final AwsLambdaDetailsResponse functionDetails =
+        awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest);
+    assertThat(functionDetails.getLambdaDetails()).isNull();
   }
 }

@@ -10,6 +10,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -18,7 +19,11 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
+import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
+import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
+import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
+import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 
@@ -46,7 +51,13 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
     return ((AwsLambdaFunctionResponse) response).getLambdaFunctions();
   }
 
-  private AwsResponse executeTask(String accountId, AwsLambdaFunctionRequest request) {
+  @Override
+  public AwsLambdaDetails getFunctionDetails(AwsLambdaDetailsRequest request) {
+    AwsResponse awsResponse = executeTask(request.getAwsConfig().getAccountId(), request);
+    return ((AwsLambdaDetailsResponse) awsResponse).getLambdaDetails();
+  }
+
+  private AwsResponse executeTask(String accountId, AwsLambdaRequest request) {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
@@ -61,13 +72,15 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
-      } else if (notifyResponseData instanceof AwsLambdaFunctionResponse
-          && ((AwsLambdaFunctionResponse) notifyResponseData).getExecutionStatus().equals(ExecutionStatus.FAILED)) {
-        throw new WingsException(((AwsLambdaFunctionResponse) notifyResponseData).getErrorMessage());
+        throw new GeneralException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      } else if (notifyResponseData instanceof AwsResponse
+          && ((AwsResponse) notifyResponseData).getExecutionStatus().equals(ExecutionStatus.FAILED)) {
+        throw new GeneralException(((AwsResponse) notifyResponseData).getErrorMessage());
       }
+
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
   }

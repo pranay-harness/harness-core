@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.Tag;
 import software.wings.beans.command.CodeDeployParams;
@@ -78,6 +79,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   // Aws Lambda Data
   private List<String> aliases;
   private List<Tag> tags;
+  private List<FunctionMeta> lambdaFunctionMetaList;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -184,7 +186,8 @@ public class CommandStateExecutionData extends StateExecutionData {
 
     commandStepExecutionSummary.setAliases(aliases);
     commandStepExecutionSummary.setTags(tags);
-
+    commandStepExecutionSummary.setLambdaFunctionMetaList(lambdaFunctionMetaList);
+    commandStepExecutionSummary.setArtifactId(artifactId);
     return commandStepExecutionSummary;
   }
 

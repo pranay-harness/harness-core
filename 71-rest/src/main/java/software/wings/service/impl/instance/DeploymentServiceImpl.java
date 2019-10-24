@@ -18,6 +18,7 @@ import software.wings.api.DeploymentSummary.DeploymentSummaryKeys;
 import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
@@ -119,6 +120,11 @@ public class DeploymentServiceImpl implements DeploymentService {
       SpotinstAmiDeploymentKey spotinstAmiDeploymentKey = deploymentSummary.getSpotinstAmiDeploymentKey();
       query.filter("spotinstAmiDeploymentKey.elastigroupId", spotinstAmiDeploymentKey.getElastigroupId());
       return spotinstAmiDeploymentKey;
+    } else if (deploymentSummary.getAwsLambdaDeploymentKey() != null) {
+      final AwsLambdaDeploymentKey awsLambdaDeploymentKey = deploymentSummary.getAwsLambdaDeploymentKey();
+      query.filter("awsLambdaDeploymentKey.functionName", awsLambdaDeploymentKey.getFunctionName());
+      query.filter("awsLambdaDeploymentKey.version", awsLambdaDeploymentKey.getVersion());
+      return awsLambdaDeploymentKey;
     } else {
       String msg = "Either AMI, CodeDeploy, container or pcf deployment key needs to be set";
       logger.error(msg);

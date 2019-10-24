@@ -22,12 +22,14 @@ public class InstanceHandlerFactory {
   private PcfInstanceHandler pcfInstanceHandler;
   private AzureInstanceHandler azureInstanceHandler;
   private SpotinstAmiInstanceHandler spotinstAmiInstanceHandler;
+  private AwsLambdaInstanceHandler awsLambdaInstanceHandler;
 
   @Inject
   public InstanceHandlerFactory(ContainerInstanceHandler containerInstanceHandler,
       AwsInstanceHandler awsInstanceHandler, AwsAmiInstanceHandler awsAmiInstanceHandler,
       AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler, PcfInstanceHandler pcfInstanceHandler,
-      AzureInstanceHandler azureInstanceHandler, SpotinstAmiInstanceHandler spotinstAmiInstanceHandler) {
+      AzureInstanceHandler azureInstanceHandler, SpotinstAmiInstanceHandler spotinstAmiInstanceHandler,
+      AwsLambdaInstanceHandler awsLambdaInstanceHandler) {
     this.containerInstanceHandler = containerInstanceHandler;
     this.awsInstanceHandler = awsInstanceHandler;
     this.awsAmiInstanceHandler = awsAmiInstanceHandler;
@@ -35,6 +37,7 @@ public class InstanceHandlerFactory {
     this.pcfInstanceHandler = pcfInstanceHandler;
     this.azureInstanceHandler = azureInstanceHandler;
     this.spotinstAmiInstanceHandler = spotinstAmiInstanceHandler;
+    this.awsLambdaInstanceHandler = awsLambdaInstanceHandler;
   }
 
   private boolean isAmiSpotinstInfraMappingType(InfrastructureMapping infraMapping) {
@@ -69,7 +72,7 @@ public class InstanceHandlerFactory {
       case PCF_PCF:
         return pcfInstanceHandler;
       case AWS_AWS_LAMBDA:
-        // todo @rk: add aws lambda instance handler
+        return awsLambdaInstanceHandler;
       case PHYSICAL_DATA_CENTER_SSH:
       case PHYSICAL_DATA_CENTER_WINRM:
         return null;

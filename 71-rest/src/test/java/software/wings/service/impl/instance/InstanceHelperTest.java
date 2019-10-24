@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -48,6 +49,7 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -62,16 +64,20 @@ import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInf
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -107,6 +113,8 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private Queue<DeploymentEvent> deploymentEventQueue;
   @Mock private ExecutionContext context;
   @Mock private ContainerSync containerSync;
+  @Mock private DeploymentService deploymentService;
+  @Mock FeatureFlagService featureFlagService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @InjectMocks @Spy WorkflowStandardParams workflowStandardParams;
 
@@ -117,6 +125,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private PcfInstanceHandler pcfInstanceHandler;
   @InjectMocks @Inject private AzureInstanceHandler azureInstanceHandler;
   @InjectMocks @Inject private SpotinstAmiInstanceHandler spotinstAmiInstanceHandler;
+  @InjectMocks @Inject private AwsLambdaInstanceHandler awsLambdaInstanceHandler;
 
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
@@ -724,7 +733,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testIsSupported() throws Exception {
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH)).isFalse();
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM)).isFalse();
-    assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_LAMBDA)).isFalse();
+    assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_LAMBDA)).isTrue();
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_ECS)).isTrue();
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AMI)).isTrue();
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.AWS_AWS_CODEDEPLOY)).isTrue();
@@ -773,9 +782,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testManualSyncSuccess() throws Exception {
-    InstanceHandlerFactory instanceHandlerFactory =
-        spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
-            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler, spotinstAmiInstanceHandler));
+    InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
+        awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler,
+        azureInstanceHandler, spotinstAmiInstanceHandler, awsLambdaInstanceHandler));
     FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
@@ -829,9 +838,9 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testManualSyncFailure() throws Exception {
-    InstanceHandlerFactory instanceHandlerFactory =
-        spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
-            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler, spotinstAmiInstanceHandler));
+    InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
+        awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler,
+        azureInstanceHandler, spotinstAmiInstanceHandler, awsLambdaInstanceHandler));
     FieldUtils.writeField(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory, true);
 
     doReturn(new InstanceHandler() {
@@ -882,5 +891,62 @@ public class InstanceHelperTest extends WingsBaseTest {
         .handleSyncFailure(anyString(), anyString(), anyString(), anyString(), anyString(), anyLong(), anyString());
     instanceHelper.manualSync(APP_ID, INFRA_MAP_ID);
     assertThat(count.get()).isEqualTo(1);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_shouldSaveDeploymentSummary() {
+    final DeploymentSummary deploymentSummary =
+        DeploymentSummary.builder().awsLambdaDeploymentKey(AwsLambdaDeploymentKey.builder().build()).build();
+    assertThat(instanceHelper.shouldSaveDeploymentSummary(deploymentSummary, false)).isTrue();
+
+    final DeploymentSummary deploymentSummary1 =
+        DeploymentSummary.builder().awsLambdaDeploymentKey(AwsLambdaDeploymentKey.builder().build()).build();
+    assertThat(instanceHelper.shouldSaveDeploymentSummary(deploymentSummary1, true)).isTrue();
+
+    final DeploymentSummary deploymentSummary2 =
+        DeploymentSummary.builder().pcfDeploymentKey(PcfDeploymentKey.builder().build()).build();
+    assertThat(instanceHelper.shouldSaveDeploymentSummary(deploymentSummary2, true)).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_saveDeploymentSummary() {
+    final DeploymentSummary deploymentSummarySaved = DeploymentSummary.builder().build();
+    doReturn(deploymentSummarySaved).when(deploymentService).save(any(DeploymentSummary.class));
+    final DeploymentSummary deploymentSummary =
+        DeploymentSummary.builder().awsLambdaDeploymentKey(AwsLambdaDeploymentKey.builder().build()).build();
+    assertThat(instanceHelper.saveDeploymentSummary(deploymentSummary, false) == deploymentSummarySaved).isTrue();
+
+    final DeploymentSummary deploymentSummary1 =
+        DeploymentSummary.builder().awsLambdaDeploymentKey(AwsLambdaDeploymentKey.builder().build()).build();
+    assertThat(instanceHelper.saveDeploymentSummary(deploymentSummary1, true) == deploymentSummarySaved).isTrue();
+
+    final DeploymentSummary deploymentSummary2 =
+        DeploymentSummary.builder().pcfDeploymentKey(PcfDeploymentKey.builder().build()).build();
+    assertThat(instanceHelper.saveDeploymentSummary(deploymentSummary2, true) == deploymentSummarySaved).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_hasDeploymentKey() {
+    assertThat(
+        instanceHelper.hasDeploymentKey(
+            DeploymentSummary.builder().awsLambdaDeploymentKey(AwsLambdaDeploymentKey.builder().build()).build()))
+        .isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void test_isSyncEnabledForAccount() {
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
+    assertThat(instanceHelper.isSyncEnabledForAccount(InfrastructureMappingType.AWS_AWS_LAMBDA.name(), ACCOUNT_ID))
+        .isTrue();
+    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
+    assertThat(instanceHelper.isSyncEnabledForAccount(InfrastructureMappingType.AWS_AWS_LAMBDA.name(), ACCOUNT_ID))
+        .isFalse();
+    assertThat(
+        instanceHelper.isSyncEnabledForAccount(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name(), ACCOUNT_ID))
+        .isTrue();
   }
 }
