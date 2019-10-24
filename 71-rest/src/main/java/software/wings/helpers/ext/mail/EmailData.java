@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "emailQueue", noClassnameStored = true)
+@Entity(value = "emailQueue2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class EmailData extends Queuable {
   private String accountId;

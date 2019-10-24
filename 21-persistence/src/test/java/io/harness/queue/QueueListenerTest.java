@@ -33,8 +33,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class QueueListenerTest extends PersistenceTest {
-  private MongoQueue<TestQueuableObject> queue;
-  private TestQueuableObjectListener listener;
+  private MongoQueue<TestVersionedQueuableObject> queue;
+  private TestVersionedQueuableObjectListener listener;
 
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
@@ -47,11 +47,11 @@ public class QueueListenerTest extends PersistenceTest {
   public void setup() throws Exception {
     queueListenerController.stop();
 
-    queue = spy(new MongoQueue<>(TestQueuableObject.class));
+    queue = spy(new MongoQueue<>(TestVersionedQueuableObject.class));
     on(queue).set("persistence", persistence);
     on(queue).set("versionInfoManager", versionInfoManager);
 
-    listener = new TestQueuableObjectListener();
+    listener = new TestVersionedQueuableObjectListener();
     listener.setQueue(queue);
     listener.setRunOnce(true);
     on(listener).set("timer", timer);
@@ -68,7 +68,7 @@ public class QueueListenerTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldProcessWhenReceivedMessageFromQueue() throws IOException {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      TestQueuableObject message = new TestQueuableObject(1);
+      TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
       queue.send(message);
       assertThat(queue.count(Filter.ALL)).isEqualTo(1);
       listener.run();
@@ -83,7 +83,7 @@ public class QueueListenerTest extends PersistenceTest {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       listener.setRunOnce(false);
 
-      TestQueuableObject message = new TestQueuableObject(1);
+      TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
       queue.send(message);
       assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
@@ -92,15 +92,15 @@ public class QueueListenerTest extends PersistenceTest {
       listener.run();
 
       assertThat(queue.count(Filter.ALL)).isEqualTo(1);
-      verify(listener, times(0)).onMessage(any(TestQueuableObject.class));
+      verify(listener, times(0)).onMessage(any(TestVersionedQueuableObject.class));
     }
   }
 
   @Test(timeout = 5000)
   @Category(UnitTests.class)
-  public void shouldExtendResetDuration() throws Exception {
+  public void shouldExtendHeartbeat() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      TestQueuableObject message = new TestQueuableObject(1);
+      TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
       queue.send(message);
       assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
@@ -122,7 +122,7 @@ public class QueueListenerTest extends PersistenceTest {
 
       assertThat(queue.count(Filter.ALL)).isEqualTo(0);
       verify(listener).onMessage(message);
-      verify(queue, atLeast(1)).updateHeartbeat(any(TestQueuableObject.class));
+      verify(queue, atLeast(1)).updateHeartbeat(any(TestVersionedQueuableObject.class));
     }
   }
 
@@ -150,7 +150,7 @@ public class QueueListenerTest extends PersistenceTest {
       listener.shutDown();
       listenerThread.join();
 
-      verify(listener, times(0)).onMessage(any(TestQueuableObject.class));
+      verify(listener, times(0)).onMessage(any(TestVersionedQueuableObject.class));
     }
   }
 
@@ -158,7 +158,7 @@ public class QueueListenerTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldRequeueMessageWhenRetriesAreSet() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      TestQueuableObject message = new TestQueuableObject(1);
+      TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
       message.setRetries(1);
       listener.setThrowException(true);
       queue.send(message);
@@ -177,7 +177,7 @@ public class QueueListenerTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldNotRequeueMessageWhenRetriesAreZero() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      TestQueuableObject message = new TestQueuableObject(1);
+      TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
       listener.setThrowException(true);
       queue.send(message);
       assertThat(queue.count(Filter.ALL)).isEqualTo(1);

@@ -117,7 +117,6 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
           () -> queue.updateHeartbeat(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
       try (GlobalContextGuard guard = initGlobalContextGuard(message.getGlobalContext())) {
         onMessage(message);
-
       } finally {
         future.cancel(true);
       }
@@ -125,7 +124,6 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       queue.ack(message);
     } catch (InstantiationError exception) {
       logger.error(format("Critical exception happened in onMessage %s", queue.name()), exception);
-
       queue.ack(message);
     } catch (Throwable exception) {
       onException(exception, message);

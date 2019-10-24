@@ -3,6 +3,7 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
@@ -1105,6 +1106,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = RAGHU)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisAlertIfNecessary() {
     LogsCVConfiguration cvConfiguration = (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);

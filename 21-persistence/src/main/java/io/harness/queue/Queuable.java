@@ -20,34 +20,24 @@ import org.mongodb.morphia.annotations.PrePersist;
 import java.util.Date;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "next"),
-      fields =
-      {
-        @Field(QueuableKeys.created)
-        , @Field(QueuableKeys.version), @Field(QueuableKeys.earliestGet), @Field(QueuableKeys.running),
-            @Field(QueuableKeys.resetTimestamp)
-      })
+  @Index(options = @IndexOptions(name = "next2"),
+      fields = { @Field(QueuableKeys.version)
+                 , @Field(QueuableKeys.created), @Field(QueuableKeys.earliestGet) })
   ,
-      @Index(options = @IndexOptions(name = "versioned_extra1"), fields = {
-        @Field(QueuableKeys.version), @Field(QueuableKeys.earliestGet), @Field(QueuableKeys.resetTimestamp)
-      }), @Index(options = @IndexOptions(name = "versioned_extra2"), fields = {
-        @Field(QueuableKeys.version), @Field(QueuableKeys.running), @Field(QueuableKeys.earliestGet)
+      @Index(options = @IndexOptions(name = "extra"), fields = {
+        @Field(QueuableKeys.version), @Field(QueuableKeys.earliestGet)
       })
 })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
   @Getter @Setter @Id private String id;
-  @Getter @Setter private boolean running;
-  @Getter @Setter private Date resetTimestamp = new Date(Long.MAX_VALUE);
+  @Getter @Setter private Date runningUntil;
   @Getter @Setter private Date earliestGet = new Date();
   @Getter @Setter private Date created = new Date();
   @Getter @Setter private int retries;
   @Getter @Setter private String version;
   @Getter @Setter private GlobalContext globalContext;
 
-  /**
-   * Instantiates a new queuable.
-   */
   protected Queuable() {}
 
   protected Queuable(Date earliestGet) {

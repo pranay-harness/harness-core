@@ -21,8 +21,10 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
-import io.harness.queue.TestQueuableObject;
-import io.harness.queue.TestQueuableObjectListener;
+import io.harness.queue.TestUnversionedQueuableObject;
+import io.harness.queue.TestUnversionedQueuableObjectListener;
+import io.harness.queue.TestVersionedQueuableObject;
+import io.harness.queue.TestVersionedQueuableObjectListener;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -62,7 +64,8 @@ public class PersistenceRule
     }
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(TestQueuableObjectListener.class), 1);
+    queueListenerController.register(injector.getInstance(TestVersionedQueuableObjectListener.class), 1);
+    queueListenerController.register(injector.getInstance(TestUnversionedQueuableObjectListener.class), 1);
 
     closingFactory.addServer(new Closeable() {
       @Override
@@ -87,7 +90,7 @@ public class PersistenceRule
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(objectFactory);
-    morphia.map(TestQueuableObject.class);
+    morphia.map(TestVersionedQueuableObject.class);
     morphia.map(TestRegularIterableEntity.class);
     morphia.map(TestIrregularIterableEntity.class);
 
@@ -109,8 +112,10 @@ public class PersistenceRule
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(new TypeLiteral<Queue<TestQueuableObject>>() {})
-            .toInstance(new MongoQueue<>(TestQueuableObject.class, ofSeconds(5), true));
+        bind(new TypeLiteral<Queue<TestVersionedQueuableObject>>() {})
+            .toInstance(new MongoQueue<>(TestVersionedQueuableObject.class, ofSeconds(5), true));
+        bind(new TypeLiteral<Queue<TestUnversionedQueuableObject>>() {})
+            .toInstance(new MongoQueue<>(TestUnversionedQueuableObject.class, ofSeconds(5), true));
 
         bind(QueueController.class).toInstance(new QueueController() {
           @Override

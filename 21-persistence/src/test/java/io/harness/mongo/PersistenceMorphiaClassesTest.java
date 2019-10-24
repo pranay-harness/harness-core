@@ -11,7 +11,8 @@ import io.harness.iterator.TestRegularIterableEntity;
 import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.TestHolderEntity;
 import io.harness.queue.TestInternalEntity;
-import io.harness.queue.TestQueuableObject;
+import io.harness.queue.TestUnversionedQueuableObject;
+import io.harness.queue.TestVersionedQueuableObject;
 import io.harness.serializer.morphia.PersistenceMorphiaRegistrar;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,7 +33,8 @@ public class PersistenceMorphiaClassesTest extends CategoryTest {
                                                 .add(TestInternalEntity.class)
                                                 .add(TestIrregularIterableEntity.class)
                                                 .add(TestIterableEntity.class)
-                                                .add(TestQueuableObject.class)
+                                                .add(TestVersionedQueuableObject.class)
+                                                .add(TestUnversionedQueuableObject.class)
                                                 .add(TestRegularIterableEntity.class)
                                                 .build());
   }
