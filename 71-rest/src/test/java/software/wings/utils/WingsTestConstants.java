@@ -15,6 +15,10 @@ public interface WingsTestConstants {
 
   String PROJECT_ID = "PROJECT_ID";
 
+  String IMAGE_NAME = "IMAGE_NAME";
+
+  String REGISTRY_HOST = "REGISTRY_HOST";
+
   String REPO_NAME = "REPO_NAME";
 
   String REPOSITORY_FORMAT = "REPOSITORY_FORMAT";
