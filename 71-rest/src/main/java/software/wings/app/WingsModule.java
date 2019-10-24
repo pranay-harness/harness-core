@@ -45,8 +45,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
-import io.harness.segment.client.SegmentClientBuilder;
-import io.harness.segment.client.SegmentClientBuilderImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -54,7 +52,6 @@ import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -847,14 +844,6 @@ public class WingsModule extends DependencyModule {
     // Start of deployment trigger dependencies
     bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);
     bind(FailedLoginAttemptCountChecker.class).to(FailedLoginAttemptCountCheckerImpl.class);
-
-    if (null != configuration.getSegmentConfig()
-        && !StringUtils.isEmpty(configuration.getSegmentConfig().getApiKey())) {
-      bind(SegmentClientBuilder.class)
-          .toInstance(new SegmentClientBuilderImpl(configuration.getSegmentConfig().getApiKey()));
-    } else {
-      bind(SegmentClientBuilder.class).toInstance(new SegmentClientBuilderImpl("dummy-key"));
-    }
 
     bind(SegmentGroupEventJobService.class).to(SegmentGroupEventJobServiceImpl.class);
 

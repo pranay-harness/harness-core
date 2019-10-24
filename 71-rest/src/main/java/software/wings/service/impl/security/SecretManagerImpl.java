@@ -66,7 +66,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.segment.client.SegmentClientBuilder;
 import io.harness.serializer.KryoUtils;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
@@ -194,7 +193,6 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private UserService userService;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private AzureSecretsManagerService azureSecretsManagerService;
-  @Inject private SegmentClientBuilder segmentClientBuilder;
   @Inject private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   @Inject private FeatureFlagService featureFlagService;
 

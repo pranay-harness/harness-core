@@ -924,7 +924,7 @@ public class AuthServiceImpl implements AuthService {
           integrations.put(SegmentHandler.Keys.NATERO, true);
           integrations.put(SegmentHandler.Keys.SALESFORCE, false);
 
-          //          segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
+          segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
         } catch (Exception e) {
           logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
         }

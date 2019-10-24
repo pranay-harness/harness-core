@@ -6,6 +6,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -36,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
@@ -46,7 +48,6 @@ import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 
@@ -84,16 +85,14 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldReportDeploymentEventToSegmentByTrigger()
-      throws IllegalAccessException, IOException, URISyntaxException {
+  public void shouldReportDeploymentEventToSegmentByTrigger() throws IllegalAccessException, URISyntaxException {
     SegmentConfig segmentConfig =
         SegmentConfig.builder().enabled(true).url("https://api.segment.io").apiKey("dummy_api_key").build();
     EventListener eventListener = mock(EventListener.class);
     SegmentHandler segmentHandler = Mockito.spy(new SegmentHandler(segmentConfig, eventListener));
-    SegmentHelper segmentHelper = new SegmentHelper();
-
-    Utils utils = new Utils();
-    FieldUtils.writeField(segmentHelper, "utils", utils, true);
+    MainConfiguration mainConfiguration = mock(MainConfiguration.class);
+    FieldUtils.writeField(mainConfiguration, "segmentConfig", segmentConfig, true);
+    SegmentHelper segmentHelper = new SegmentHelper(mainConfiguration);
     FieldUtils.writeField(segmentHandler, "segmentHelper", segmentHelper, true);
     FieldUtils.writeField(workflowExecutionUpdate, "segmentHandler", segmentHandler, true);
     Account account = testUtils.createAccount();
@@ -105,8 +104,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldReportDeploymentEventToSegmentByUser()
-      throws IllegalAccessException, IOException, URISyntaxException {
+  public void shouldReportDeploymentEventToSegmentByUser() throws IllegalAccessException, URISyntaxException {
     Account account = testUtils.createAccount();
     User user = testUtils.createUser(account);
     user.setSegmentIdentity(UUIDGenerator.generateUuid());
@@ -118,10 +116,11 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
     when(userService.getUserFromCacheOrDB(anyString())).thenReturn(user);
     when(userService.update(any(User.class))).thenReturn(user);
     SegmentHandler segmentHandler = Mockito.spy(new SegmentHandler(segmentConfig, eventListener));
-    SegmentHelper segmentHelper = new SegmentHelper();
-    Utils utils = new Utils();
+    MainConfiguration mainConfiguration = mock(MainConfiguration.class);
+    FieldUtils.writeField(mainConfiguration, "segmentConfig", segmentConfig, true);
+    SegmentHelper segmentHelper = new SegmentHelper(mainConfiguration);
+    Utils utils = spy(new Utils());
     FieldUtils.writeField(utils, "userService", userService, true);
-    FieldUtils.writeField(segmentHelper, "utils", utils, true);
     FieldUtils.writeField(segmentHandler, "segmentHelper", segmentHelper, true);
     FieldUtils.writeField(segmentHandler, "utils", utils, true);
     FieldUtils.writeField(segmentHandler, "userService", userService, true);

@@ -40,7 +40,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -69,7 +68,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheManager;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
@@ -329,7 +327,6 @@ public class AuthServiceTest extends WingsBaseTest {
   @Test
   @Owner(emails = RAMA)
   @Category(UnitTests.class)
-  @Ignore("Disabling test until the segment fix is in")
   public void shouldSendSegmentTrackEvent() throws IllegalAccessException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
     Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").withUuid(ACCOUNT_ID).build();
@@ -344,7 +341,7 @@ public class AuthServiceTest extends WingsBaseTest {
       Thread.sleep(10000);
       verify(segmentHandler, times(1))
           .reportTrackEvent(any(Account.class), anyString(), any(User.class), anyMap(), anyMap());
-    } catch (InterruptedException | IOException | URISyntaxException e) {
+    } catch (InterruptedException | URISyntaxException e) {
       throw new InvalidRequestException(e.getMessage());
     }
   }
