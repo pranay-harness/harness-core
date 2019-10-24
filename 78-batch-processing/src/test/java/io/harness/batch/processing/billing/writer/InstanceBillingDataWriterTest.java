@@ -18,12 +18,14 @@ import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.test.context.ActiveProfiles;
@@ -60,6 +62,11 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Mock private BillingDataServiceImpl billingDataService;
   @Mock private JobParameters parameters;
   @Mock private BillingCalculationService billingCalculationService;
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(emails = HITESH)
