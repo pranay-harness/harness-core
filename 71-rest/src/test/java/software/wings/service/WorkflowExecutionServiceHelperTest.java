@@ -160,15 +160,6 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     assertThat(workflowVariablesMetadata.isChanged()).isFalse();
     newWorkflowVariables = workflowVariablesMetadata.getWorkflowVariables();
     validateUnsetWorkflowVariables(newWorkflowVariables);
-
-    workflowExecution = prepareWorkflowExecution(workflowVariables, workflowVariablesMap, false);
-    workflowExecution.getStateMachine().setOrchestrationWorkflow(null);
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
-    workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
-        APP_ID, prepareExecutionArgs(null, false), WORKFLOW_EXECUTION_ID);
-    assertThat(workflowVariablesMetadata.isChanged()).isFalse();
-    newWorkflowVariables = workflowVariablesMetadata.getWorkflowVariables();
-    validateUnsetWorkflowVariables(newWorkflowVariables);
   }
 
   @Test
@@ -285,14 +276,11 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
     WorkflowVariablesMetadata workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
         APP_ID, prepareExecutionArgs(null, false), WORKFLOW_EXECUTION_ID);
-    assertThat(workflowVariablesMetadata.isChanged()).isTrue();
     List<Variable> newWorkflowVariables = workflowVariablesMetadata.getWorkflowVariables();
     assertThat(newWorkflowVariables).isNotNull();
     assertThat(newWorkflowVariables.size()).isEqualTo(4);
     assertThat(newWorkflowVariables.get(0).getName()).isEqualTo("var1");
-    assertThat(newWorkflowVariables.get(0).getValue()).isNull();
     assertThat(newWorkflowVariables.get(1).getName()).isEqualTo("var2");
-    assertThat(newWorkflowVariables.get(1).getValue()).isNull();
     assertThat(newWorkflowVariables.get(2).getName()).isEqualTo("var3");
     assertThat(newWorkflowVariables.get(2).getValue()).isEqualTo("val3");
     assertThat(newWorkflowVariables.get(3).getName()).isEqualTo("var4");
@@ -306,75 +294,24 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     List<Variable> oldWorkflowVariables =
         asList(prepareVariable(1, VariableType.ENTITY, SERVICE), prepareVariable(2, VariableType.ENTITY, ENVIRONMENT),
             prepareVariable(3, VariableType.ENTITY, INFRASTRUCTURE_DEFINITION), prepareVariable(4, VariableType.TEXT));
-    List<Variable> workflowVariables = asList(prepareVariable(1, VariableType.ENTITY, SERVICE),
-        prepareVariable(2, VariableType.ENTITY, INFRASTRUCTURE_DEFINITION),
-        prepareVariable(3, VariableType.ENTITY, ENVIRONMENT), prepareVariable(4, VariableType.TEXT));
+    List<Variable> workflowVariables =
+        asList(prepareVariable(1, VariableType.ENTITY, SERVICE), prepareVariable(2, VariableType.ENTITY, ENVIRONMENT),
+            prepareVariable(3, VariableType.ENTITY, INFRASTRUCTURE_DEFINITION), prepareVariable(4, VariableType.TEXT));
     Workflow workflow = prepareWorkflow(workflowVariables);
     WorkflowExecution workflowExecution = prepareWorkflowExecution(oldWorkflowVariables, workflowVariablesMap, false);
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
     WorkflowVariablesMetadata workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
         APP_ID, prepareExecutionArgs(null, false), WORKFLOW_EXECUTION_ID);
-    assertThat(workflowVariablesMetadata.isChanged()).isTrue();
+    assertThat(workflowVariablesMetadata.isChanged()).isFalse();
     List<Variable> newWorkflowVariables = workflowVariablesMetadata.getWorkflowVariables();
     assertThat(newWorkflowVariables).isNotNull();
     assertThat(newWorkflowVariables.size()).isEqualTo(4);
     assertThat(newWorkflowVariables.get(0).getName()).isEqualTo("var1");
-    assertThat(newWorkflowVariables.get(0).getValue()).isNull();
     assertThat(newWorkflowVariables.get(1).getName()).isEqualTo("var2");
-    assertThat(newWorkflowVariables.get(1).getValue()).isNull();
     assertThat(newWorkflowVariables.get(2).getName()).isEqualTo("var3");
-    assertThat(newWorkflowVariables.get(2).getValue()).isNull();
     assertThat(newWorkflowVariables.get(3).getName()).isEqualTo("var4");
     assertThat(newWorkflowVariables.get(3).getValue()).isEqualTo("val4");
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void shouldFetchWorkflowVariablesExtraNonEntityVariables() {
-    Map<String, String> workflowVariablesMap = prepareWorkflowVariablesMap(3);
-    List<Variable> oldWorkflowVariables = asList(prepareVariable(1), prepareVariable(2, VariableType.TEXT));
-    List<Variable> workflowVariables =
-        asList(prepareVariable(1), prepareVariable(2, VariableType.TEXT), prepareVariable(3, VariableType.TEXT));
-    Workflow workflow = prepareWorkflow(workflowVariables);
-    WorkflowExecution workflowExecution = prepareWorkflowExecution(oldWorkflowVariables, workflowVariablesMap, false);
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
-    WorkflowVariablesMetadata workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
-        APP_ID, prepareExecutionArgs(null, false), WORKFLOW_EXECUTION_ID);
-    assertThat(workflowVariablesMetadata.isChanged()).isFalse();
-    List<Variable> newWorkflowVariables = workflowVariablesMetadata.getWorkflowVariables();
-    assertThat(newWorkflowVariables).isNotNull();
-    assertThat(newWorkflowVariables.size()).isEqualTo(3);
-    assertThat(newWorkflowVariables.get(0).getName()).isEqualTo("var1");
-    assertThat(newWorkflowVariables.get(0).getValue()).isEqualTo("val1");
-    assertThat(newWorkflowVariables.get(1).getName()).isEqualTo("var2");
-    assertThat(newWorkflowVariables.get(1).getValue()).isEqualTo("val2");
-    assertThat(newWorkflowVariables.get(2).getName()).isEqualTo("var3");
-    assertThat(newWorkflowVariables.get(2).getValue()).isNull();
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  public void shouldFetchWorkflowVariablesLessNonEntityVariables() {
-    Map<String, String> workflowVariablesMap = prepareWorkflowVariablesMap(3);
-    List<Variable> oldWorkflowVariables =
-        asList(prepareVariable(1), prepareVariable(2, VariableType.TEXT), prepareVariable(3, VariableType.TEXT));
-    List<Variable> workflowVariables = asList(prepareVariable(1), prepareVariable(2, VariableType.TEXT));
-    Workflow workflow = prepareWorkflow(workflowVariables);
-    WorkflowExecution workflowExecution = prepareWorkflowExecution(oldWorkflowVariables, workflowVariablesMap, false);
-    when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
-    WorkflowVariablesMetadata workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
-        APP_ID, prepareExecutionArgs(null, false), WORKFLOW_EXECUTION_ID);
-    assertThat(workflowVariablesMetadata.isChanged()).isFalse();
-    List<Variable> newWorkflowVariables = workflowVariablesMetadata.getWorkflowVariables();
-    assertThat(newWorkflowVariables).isNotNull();
-    assertThat(newWorkflowVariables.size()).isEqualTo(2);
-    assertThat(newWorkflowVariables.get(0).getName()).isEqualTo("var1");
-    assertThat(newWorkflowVariables.get(0).getValue()).isEqualTo("val1");
-    assertThat(newWorkflowVariables.get(1).getName()).isEqualTo("var2");
-    assertThat(newWorkflowVariables.get(1).getValue()).isEqualTo("val2");
   }
 
   private void validateUnsetWorkflowVariables(List<Variable> workflowVariables) {

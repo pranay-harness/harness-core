@@ -9,13 +9,15 @@ import java.util.List;
 public class WorkflowVariablesMetadata {
   private List<Variable> workflowVariables;
   private boolean changed;
+  private String changedMessage;
 
-  public WorkflowVariablesMetadata(List<Variable> workflowVariables, boolean changed) {
+  public WorkflowVariablesMetadata(List<Variable> workflowVariables, boolean changed, String changedMessage) {
     this.workflowVariables = workflowVariables;
     this.changed = changed;
+    this.changedMessage = changedMessage;
   }
 
   public WorkflowVariablesMetadata(List<Variable> workflowVariables) {
-    this(workflowVariables, false);
+    this(workflowVariables, false, null);
   }
 }

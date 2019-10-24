@@ -876,6 +876,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse().withResponse(asList(pipeline, pipeline2)).build());
 
     Workflow workflow = aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    workflow.getOrchestrationWorkflow().setValid(true);
     when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
     PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
                                                                       .withLimit("2")
@@ -1015,6 +1016,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                        .addWorkflowPhase(aWorkflowPhase().deploymentType(DeploymentType.SSH).build())
                                        .build())
             .build();
+    workflow.getOrchestrationWorkflow().setValid(true);
     when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID), anyBoolean())).thenReturn(workflow);
 
     PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
