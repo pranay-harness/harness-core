@@ -49,7 +49,8 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private static final String LOG_NAME = "delegate";
   private static final String LOG_PROXY_HOST = "logs.harness.io:443";
 
-  private Logging logging;
+  private static Logging logging;
+
   private AtomicBoolean useLogProxy;
   private String localhostName = "localhost";
   private CustomJsonLayout layout;
@@ -62,6 +63,10 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
       Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
   private final AtomicInteger failedAttempts = new AtomicInteger(0);
   private final AtomicLong nextAttempt = new AtomicLong(0);
+
+  static boolean loggingInitialized() {
+    return logging != null;
+  }
 
   @Override
   public void start() {
@@ -188,9 +193,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     if (useLogProxy == null) {
       boolean cannotConnectStackdriver = !connectableHttpUrl("https://" + LoggingSettings.getDefaultEndpoint());
       if (cannotConnectStackdriver) {
-        if (!connectableHttpUrl("https://" + LOG_PROXY_HOST)) {
-          return;
-        }
+        return;
+        // TODO (brett) - Enable log proxy check after verified working with grpc
+        //        if (!connectableHttpUrl("https://" + LOG_PROXY_HOST)) {
+        //          return;
+        //        }
       }
       useLogProxy = new AtomicBoolean(cannotConnectStackdriver);
     }
@@ -204,10 +211,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     if (useLogProxy.get()) {
       loggingOptionsBuilder.setHost(LOG_PROXY_HOST);
     }
+
     try {
       logging = loggingOptionsBuilder.build().getService();
     } catch (Exception e) {
-      logger.info("Failed to build the google logging Builder object for StackDriverLogging", e);
+      logger.error("Failed to build Logging client for StackdriverLogging", e);
     }
   }
 

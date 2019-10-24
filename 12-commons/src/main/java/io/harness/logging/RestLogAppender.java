@@ -99,6 +99,10 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   }
 
   private void submitLogs() {
+    if (stackdriverSuccessful()) {
+      return;
+    }
+
     try {
       if (!logQueue.isEmpty()) {
         if (logQueue.size() > MAX_BATCH_SIZE) {
@@ -124,6 +128,10 @@ public class RestLogAppender<E> extends AppenderBase<E> {
 
   @Override
   protected void append(E eventObject) {
+    if (stackdriverSuccessful()) {
+      return;
+    }
+
     appenderPool.submit(() -> {
       try {
         String logLevel = Level.INFO.toString();
@@ -163,6 +171,10 @@ public class RestLogAppender<E> extends AppenderBase<E> {
             this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);
       }
     }
+  }
+
+  private boolean stackdriverSuccessful() {
+    return RemoteStackdriverLogAppender.loggingInitialized();
   }
 
   public String getProgramName() {
