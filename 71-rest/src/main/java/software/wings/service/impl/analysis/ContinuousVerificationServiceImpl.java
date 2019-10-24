@@ -2403,7 +2403,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .data(TaskData.builder()
                   .taskType(taskType.name())
                   .parameters(dataCollectionInfo)
-                  .timeout(TimeUnit.MINUTES.toMillis(30))
+                  .timeout(TimeUnit.MINUTES.toMillis(5))
                   .build())
         .envId(envId)
         .correlationId(waitId)
