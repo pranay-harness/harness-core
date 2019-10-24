@@ -70,7 +70,7 @@ public class ServiceSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public ServiceSearchResult(ServiceView serviceView) {
+  public ServiceSearchResult(ServiceView serviceView, boolean includeAudits) {
     super(serviceView.getId(), serviceView.getName(), serviceView.getDescription(), serviceView.getAccountId(),
         serviceView.getCreatedAt(), serviceView.getLastUpdatedAt(), serviceView.getType(), serviceView.getCreatedBy(),
         serviceView.getLastUpdatedBy());
@@ -81,6 +81,8 @@ public class ServiceSearchResult extends SearchResult {
     this.workflows = serviceView.getWorkflows();
     this.pipelines = serviceView.getPipelines();
     setDeployments(serviceView);
-    setAudits(serviceView);
+    if (includeAudits) {
+      setAudits(serviceView);
+    }
   }
 }

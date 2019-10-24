@@ -68,7 +68,7 @@ public class EnvironmentSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public EnvironmentSearchResult(EnvironmentView environmentView) {
+  public EnvironmentSearchResult(EnvironmentView environmentView, boolean includeAudits) {
     super(environmentView.getId(), environmentView.getName(), environmentView.getDescription(),
         environmentView.getAccountId(), environmentView.getCreatedAt(), environmentView.getLastUpdatedAt(),
         environmentView.getType(), environmentView.getCreatedBy(), environmentView.getLastUpdatedBy());
@@ -78,6 +78,8 @@ public class EnvironmentSearchResult extends SearchResult {
     this.workflows = environmentView.getWorkflows();
     this.pipelines = environmentView.getPipelines();
     setDeployments(environmentView);
-    setAudits(environmentView);
+    if (includeAudits) {
+      setAudits(environmentView);
+    }
   }
 }
