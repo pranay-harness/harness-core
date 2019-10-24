@@ -608,7 +608,7 @@ public class PipelineServiceImpl implements PipelineService {
     boolean templatized = false;
     boolean pipelineParameterized = false;
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
-    List<String> invalidWorkflows = new ArrayList<>();
+    Set<String> invalidWorkflows = new HashSet<>();
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     List<Variable> pipelineVariables = new ArrayList<>();
     List<DeploymentType> deploymentTypes = new ArrayList<>();
@@ -639,6 +639,11 @@ public class PipelineServiceImpl implements PipelineService {
           if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
             templatized = true;
           }
+
+          if (!workflow.getOrchestrationWorkflow().isValid()) {
+            invalidWorkflows.add(workflow.getName());
+          }
+
           validateWorkflowVariables(workflow, pse, invalidWorkflows, pse.getWorkflowVariables());
           setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
           if (!pipelineParameterized) {
@@ -704,10 +709,9 @@ public class PipelineServiceImpl implements PipelineService {
     boolean hasBuildWorkflow = false;
     boolean infraRefactor = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, pipeline.getAccountId());
     List<DeploymentType> deploymentTypes = new ArrayList<>();
-    List<String> invalidWorkflows = new ArrayList<>();
+    Set<String> invalidWorkflows = new HashSet<>();
     Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-      List<String> invalidStageWorkflows = new ArrayList<>();
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pse.getType())) {
           if (pse.checkDisableAssertion()) {
@@ -723,6 +727,10 @@ public class PipelineServiceImpl implements PipelineService {
             Validator.notNullCheck("Workflow does not exist", workflow, USER);
             Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
             workflowCache.put(workflowId, workflow);
+          }
+
+          if (!workflow.getOrchestrationWorkflow().isValid()) {
+            invalidWorkflows.add(workflow.getName());
           }
 
           if (!hasBuildWorkflow) {
@@ -741,12 +749,6 @@ public class PipelineServiceImpl implements PipelineService {
             envParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
           }
         }
-        if (!invalidStageWorkflows.isEmpty()) {
-          pipelineStage.setValid(false);
-          pipelineStage.setValidationMessage(
-              format(PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidStageWorkflows.toString()));
-        }
-        invalidWorkflows.addAll(invalidStageWorkflows);
       }
     }
     if (!invalidWorkflows.isEmpty()) {
@@ -1045,7 +1047,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void validateWorkflowVariables(Workflow workflow, PipelineStageElement pse, List<String> invalidWorkflows,
+  private void validateWorkflowVariables(Workflow workflow, PipelineStageElement pse, Set<String> invalidWorkflows,
       Map<String, String> pseWorkflowVariables) {
     if (isEmpty(pseWorkflowVariables)) {
       return;
