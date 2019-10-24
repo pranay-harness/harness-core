@@ -109,7 +109,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_manualSync() {
     doReturn("").when(instanceHelper).manualSync(anyString(), anyString());
-    serverlessDashboardResource.manualSync(ACCOUNTID, APPID_1, "infraid");
+    serverlessDashboardResource.manualSyncServerlessInfraMapping(ACCOUNTID, APPID_1, "infraid");
     verify(instanceHelper, times(1)).manualSync(APPID_1, "infraid");
   }
 

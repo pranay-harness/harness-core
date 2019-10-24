@@ -81,16 +81,6 @@ public class ServerlessDashboardResource {
       @QueryParam("timestamp") long timestamp) {
     return new RestResponse<>(serverlessDashboardService.getServiceInstances(accountId, serviceId, timestamp));
   }
-  @PUT
-  @Path("manual-sync")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
-  @Timed
-  @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  public RestResponse<String> manualSync(@QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
-      @QueryParam("inframappingId") String infraMappingId) {
-    return new RestResponse<>(instanceHelper.manualSync(appId, infraMappingId));
-  }
 
   @GET
   @Path("instance-details")
@@ -99,6 +89,17 @@ public class ServerlessDashboardResource {
   public RestResponse<ServerlessInstance> getInstanceDetails(
       @QueryParam("accountId") String accountId, @QueryParam("instanceId") String instanceId) {
     return new RestResponse<>(serverlessDashboardService.getInstanceDetails(instanceId));
+  }
+
+  @PUT
+  @Path("manual-sync")
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<String> manualSyncServerlessInfraMapping(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("inframappingId") String infraMappingId) {
+    return new RestResponse<>(instanceHelper.manualSync(appId, infraMappingId));
   }
 
   @GET
