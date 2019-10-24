@@ -3,7 +3,6 @@ package io.harness.delegate.logging;
 import static ch.qos.logback.classic.Level.INFO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.RemoteStackdriverLogAppender.logLevelToSeverity;
-import static io.harness.rule.OwnerRule.BRETT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.anyString;
@@ -23,7 +22,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.logging.AccessTokenBean;
 import io.harness.managerclient.ManagerClient;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule.Owner;
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response.Builder;
@@ -81,14 +79,13 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = BRETT, intermittent = true)
   @Category(UnitTests.class)
   public void shouldSubmit() {
     String message = "my log message";
     log(INFO, message);
     waitForMessage(INFO, message);
     BlockingQueue<LogEntry> logQueue = appender.getLogQueue();
-    await().atMost(5L, TimeUnit.SECONDS).until(logQueue::isEmpty);
+    await().atMost(15L, TimeUnit.SECONDS).until(logQueue::isEmpty);
   }
 
   private void log(Level level, String message) {

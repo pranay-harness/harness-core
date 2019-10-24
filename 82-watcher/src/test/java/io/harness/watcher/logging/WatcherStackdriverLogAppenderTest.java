@@ -85,7 +85,7 @@ public class WatcherStackdriverLogAppenderTest extends CategoryTest {
     log(INFO, message);
     waitForMessage(INFO, message);
     BlockingQueue<LogEntry> logQueue = appender.getLogQueue();
-    await().atMost(5L, TimeUnit.SECONDS).until(logQueue::isEmpty);
+    await().atMost(15L, TimeUnit.SECONDS).until(logQueue::isEmpty);
   }
 
   private void log(Level level, String message) {
