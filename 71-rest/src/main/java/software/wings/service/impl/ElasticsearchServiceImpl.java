@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,8 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.EntityType;
+import software.wings.features.AuditTrailFeature;
+import software.wings.features.api.PremiumFeature;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.application.ApplicationSearchResult;
 import software.wings.search.entities.application.ApplicationView;
@@ -52,6 +55,7 @@ import java.util.Set;
 @Slf4j
 public class ElasticsearchServiceImpl implements SearchService {
   @Inject private ElasticsearchClient elasticsearchClient;
+  @Inject @Named(AuditTrailFeature.FEATURE_NAME) private PremiumFeature auditTrailFeature;
   @Inject private ElasticsearchIndexManager elasticsearchIndexManager;
   @Inject private Set<SearchEntity<?>> searchEntities;
   private static final int MAX_RESULTS = 50;
@@ -69,33 +73,34 @@ public class ElasticsearchServiceImpl implements SearchService {
     List<SearchResult> environmentResponseViewList = new ArrayList<>();
     List<SearchResult> deploymentResponseViewList = new ArrayList<>();
     ObjectMapper mapper = new ObjectMapper();
+    boolean includeAudits = auditTrailFeature.isAvailableForAccount(accountId);
 
     for (SearchHit hit : hits) {
       Map<String, Object> result = hit.getSourceAsMap();
       switch (EntityType.valueOf(result.get(EntityBaseViewKeys.type).toString())) {
         case APPLICATION:
           ApplicationView applicationView = mapper.convertValue(result, ApplicationView.class);
-          ApplicationSearchResult applicationSearchResult = new ApplicationSearchResult(applicationView);
+          ApplicationSearchResult applicationSearchResult = new ApplicationSearchResult(applicationView, includeAudits);
           applicationResponseViewList.add(applicationSearchResult);
           break;
         case SERVICE:
           ServiceView serviceView = mapper.convertValue(result, ServiceView.class);
-          ServiceSearchResult serviceSearchResult = new ServiceSearchResult(serviceView);
+          ServiceSearchResult serviceSearchResult = new ServiceSearchResult(serviceView, includeAudits);
           serviceResponseViewList.add(serviceSearchResult);
           break;
         case ENVIRONMENT:
           EnvironmentView environmentView = mapper.convertValue(result, EnvironmentView.class);
-          EnvironmentSearchResult environmentSearchResult = new EnvironmentSearchResult(environmentView);
+          EnvironmentSearchResult environmentSearchResult = new EnvironmentSearchResult(environmentView, includeAudits);
           environmentResponseViewList.add(environmentSearchResult);
           break;
         case WORKFLOW:
           WorkflowView workflowView = mapper.convertValue(result, WorkflowView.class);
-          WorkflowSearchResult workflowSearchResult = new WorkflowSearchResult(workflowView);
+          WorkflowSearchResult workflowSearchResult = new WorkflowSearchResult(workflowView, includeAudits);
           workflowResponseViewList.add(workflowSearchResult);
           break;
         case PIPELINE:
           PipelineView pipelineView = mapper.convertValue(result, PipelineView.class);
-          PipelineSearchResult pipelineSearchResult = new PipelineSearchResult(pipelineView);
+          PipelineSearchResult pipelineSearchResult = new PipelineSearchResult(pipelineView, includeAudits);
           pipelineResponseViewList.add(pipelineSearchResult);
           break;
         case DEPLOYMENT:

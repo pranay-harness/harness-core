@@ -66,7 +66,7 @@ public class PipelineSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public PipelineSearchResult(PipelineView pipelineView) {
+  public PipelineSearchResult(PipelineView pipelineView, boolean includeAudits) {
     super(pipelineView.getId(), pipelineView.getName(), pipelineView.getDescription(), pipelineView.getAccountId(),
         pipelineView.getCreatedAt(), pipelineView.getLastUpdatedAt(), pipelineView.getType(),
         pipelineView.getCreatedBy(), pipelineView.getLastUpdatedBy());
@@ -75,6 +75,8 @@ public class PipelineSearchResult extends SearchResult {
     this.workflows = pipelineView.getWorkflows();
     this.services = pipelineView.getServices();
     setDeployments(pipelineView);
-    setAudits(pipelineView);
+    if (includeAudits) {
+      setAudits(pipelineView);
+    }
   }
 }

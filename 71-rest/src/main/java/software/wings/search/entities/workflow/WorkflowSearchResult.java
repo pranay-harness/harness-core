@@ -69,7 +69,7 @@ public class WorkflowSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public WorkflowSearchResult(WorkflowView workflowView) {
+  public WorkflowSearchResult(WorkflowView workflowView, boolean includeAudits) {
     super(workflowView.getId(), workflowView.getName(), workflowView.getDescription(), workflowView.getAccountId(),
         workflowView.getCreatedAt(), workflowView.getLastUpdatedAt(), workflowView.getType(),
         workflowView.getCreatedBy(), workflowView.getLastUpdatedBy());
@@ -80,8 +80,9 @@ public class WorkflowSearchResult extends SearchResult {
     this.pipelines = workflowView.getPipelines();
     this.environmentId = workflowView.getEnvironmentId();
     this.environmentName = workflowView.getEnvironmentName();
-
     setDeployments(workflowView);
-    setAudits(workflowView);
+    if (includeAudits) {
+      setAudits(workflowView);
+    }
   }
 }

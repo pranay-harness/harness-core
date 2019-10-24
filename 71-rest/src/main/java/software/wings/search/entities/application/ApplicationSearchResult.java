@@ -52,7 +52,7 @@ public class ApplicationSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public ApplicationSearchResult(ApplicationView applicationView) {
+  public ApplicationSearchResult(ApplicationView applicationView, boolean includeAudits) {
     super(applicationView.getId(), applicationView.getName(), applicationView.getDescription(),
         applicationView.getAccountId(), applicationView.getCreatedAt(), applicationView.getLastUpdatedAt(),
         applicationView.getType(), applicationView.getCreatedBy(), applicationView.getLastUpdatedBy());
@@ -60,6 +60,8 @@ public class ApplicationSearchResult extends SearchResult {
     this.environments = applicationView.getEnvironments();
     this.workflows = applicationView.getWorkflows();
     this.pipelines = applicationView.getPipelines();
-    setAudits(applicationView);
+    if (includeAudits) {
+      setAudits(applicationView);
+    }
   }
 }
