@@ -1,5 +1,7 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
@@ -13,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.TEXT;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -39,8 +42,10 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_VERSION;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -63,6 +68,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
@@ -101,6 +108,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.NotFoundException;
 
 public class ArtifactStreamServiceTest extends WingsBaseTest {
   private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
@@ -143,7 +151,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldGetSupportedBuildSourceTypes() {
+  public void shouldGetSupportedBuildSourceTypesForDocker() {
     // For DOCKER Service Artifact Type
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.DOCKER).uuid(SERVICE_ID).build())
@@ -153,6 +161,58 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
     assertThat(supportedBuildSourceTypes.containsKey(CUSTOM.name())).isTrue();
     assertThat(supportedBuildSourceTypes.containsValue(CUSTOM.name())).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetSupportedBuildSourceTypesForAwsLambda() {
+    // For AWS Lambda Service Artifact Type
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.AWS_LAMBDA).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(AMAZON_S3.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(AMAZON_S3.name())).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetSupportedBuildSourceTypesForAmi() {
+    // For AWS Lambda Service Artifact Type
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.AMI).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(AMI.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(AMI.name())).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetSupportedBuildSourceTypesForOther() {
+    // For AWS Lambda Service Artifact Type
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.OTHER).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(JENKINS.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(JENKINS.name())).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetSupportedBuildSourceTypesForWar() {
+    // For AWS Lambda Service Artifact Type
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(JENKINS.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(JENKINS.name())).isTrue();
   }
 
   @Test
@@ -2717,5 +2777,195 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     createNexusArtifactStreamAtConnectorLevel("nexus2");
     List<ArtifactStreamSummary> artifactStreamSummary = artifactStreamService.listArtifactStreamSummary(APP_ID);
     assertThat(artifactStreamSummary).isEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetArtifactStreamByName() {
+    ArtifactStream savedArtifactStream = createNexusArtifactStreamAtConnectorLevel("test");
+    ArtifactStream artifactStream = artifactStreamService.getArtifactStreamByName(SETTING_ID, "test");
+    assertThat(artifactStream).isNotNull();
+    assertThat(artifactStream.getName()).isEqualTo("test");
+    assertThat(artifactStream.getAppId()).isEqualTo(GLOBAL_APP_ID);
+    assertThat(((NexusArtifactStream) savedArtifactStream).getGroupId())
+        .isEqualTo(((NexusArtifactStream) artifactStream).getGroupId());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testListByAppIdConnectorLevel() {
+    List<ArtifactStream> artifactStreams = artifactStreamService.listByAppId(GLOBAL_APP_ID);
+    assertThat(artifactStreams).size().isEqualTo(0);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testListByAppIdSettingId() {
+    ArtifactStream artifactStream1 = createNexusArtifactStreamAtConnectorLevel("nexus1");
+    ArtifactStream artifactStream2 = createNexusArtifactStreamAtConnectorLevel("nexus2");
+    ArtifactStream artifactStream3 = createNexusArtifactStream("nexus3");
+    List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(APP_ID, SETTING_ID);
+    assertThat(artifactStreams).size().isEqualTo(1);
+    assertThat(artifactStreams).extracting(ArtifactStream::getName).contains("nexus3");
+    assertThat(artifactStreams).extracting(ArtifactStream::getUuid).contains(artifactStream3.getUuid());
+    assertThat(artifactStreams)
+        .extracting(ArtifactStream::getUuid)
+        .doesNotContain(artifactStream1.getUuid(), artifactStream2.getUuid());
+  }
+
+  @Test(expected = NotFoundException.class)
+  @Category(UnitTests.class)
+  public void testShouldNotInvalidArtifactStream() {
+    ArtifactStream artifactStream = createNexusArtifactStreamAtConnectorLevel("test");
+    artifactStreamService.delete(GLOBAL_APP_ID, artifactStream.getUuid());
+    artifactStreamService.update(artifactStream, true);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void testCannotUpdateArtifactStreamType() {
+    ArtifactStream artifactStream = createNexusArtifactStreamAtConnectorLevel("test");
+    artifactStream.setArtifactStreamType(ARTIFACTORY.name());
+    artifactStreamService.update(artifactStream, true);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void testCannotUpdateMetadataDataOnlyField() {
+    ArtifactStream artifactStream = createNexusArtifactStreamAtConnectorLevel("test");
+    artifactStream.setMetadataOnly(true);
+    artifactStreamService.update(artifactStream, true);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testShouldListArtifactStreams() {
+    createNexusArtifactStreamAtConnectorLevel("test-1");
+    createNexusArtifactStreamAtConnectorLevel("test-2");
+    createNexusArtifactStreamAtConnectorLevel("test-3");
+    createNexusArtifactStream("test-4");
+    List<ArtifactStream> artifactStreams =
+        artifactStreamService.list(aPageRequest()
+                                       .addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID)
+                                       .addFilter(ArtifactStream.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID)
+                                       .addFilter(ArtifactKeys.settingId, EQ, SETTING_ID)
+                                       .build());
+    assertThat(artifactStreams)
+        .hasSize(3)
+        .extracting(ArtifactStream::getName)
+        .containsSequence("test-3", "test-2", "test-1")
+        .doesNotContain("test-4");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testShouldListArtifactStreamsWithSearchString() {
+    constructNexusArtifacts(GLOBAL_APP_ID, "test-1");
+    constructNexusArtifacts(APP_ID, "test-4");
+    constructNexusArtifacts(APP_ID, "test-5");
+    constructNexusArtifacts(GLOBAL_APP_ID, "another-5");
+    List<ArtifactStream> artifactStreams = artifactStreamService.list(
+        aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, APP_ID).build(), ACCOUNT_ID, true, "test");
+    assertThat(artifactStreams)
+        .hasSize(2)
+        .extracting(ArtifactStream::getName)
+        .containsSequence("test-5", "test-4")
+        .doesNotContain("another-5", "test-1");
+    assertThat(artifactStreams).extracting(ArtifactStream::getArtifactCount).contains(1L, 1L);
+
+    artifactStreams = artifactStreamService.list(
+        aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, APP_ID).build(), ACCOUNT_ID, true, "15");
+    assertThat(artifactStreams).isEmpty();
+  }
+
+  private void constructAmazonS3Artifacts(String appId, String name) {
+    AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
+                                                        .accountId(ACCOUNT_ID)
+                                                        .appId(appId)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("harnessapps")
+                                                        .name(name)
+                                                        .serviceId(SERVICE_ID)
+                                                        .artifactPaths(asList("dev/todolist.war"))
+                                                        .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(amazonS3ArtifactStream);
+    createArtifact(appId, name, savedArtifactSteam.getUuid());
+  }
+
+  private void constructNexusArtifacts(String appId, String name) {
+    NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
+                                                        .accountId(ACCOUNT_ID)
+                                                        .appId(appId)
+                                                        .name(name)
+                                                        .settingId(SETTING_ID)
+                                                        .jobname("docker-private")
+                                                        .groupId("wingsplugings/todolist")
+                                                        .imageName("wingsplugings/todolist")
+                                                        .serviceId(SERVICE_ID)
+                                                        .repositoryFormat(RepositoryFormat.docker.name())
+                                                        .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(nexusDockerArtifactStream);
+    createArtifact(appId, name, savedArtifactSteam.getUuid());
+  }
+
+  private void constructAmiArtifacts(String appId, String name) {
+    AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(appId)
+                                              .settingId(SETTING_ID)
+                                              .region("us-east-1")
+                                              .name(name)
+                                              .serviceId(SERVICE_ID)
+                                              .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(amiArtifactStream);
+    createArtifact(appId, name, savedArtifactSteam.getUuid());
+  }
+
+  private void createArtifact(String appId, String name, String artifactStreamId) {
+    String BUILD_NO = "buildNo";
+    Artifact.Builder artifactBuilder = anArtifact()
+                                           .withAppId(appId)
+                                           .withArtifactStreamId(artifactStreamId)
+                                           .withSettingId(SETTING_ID)
+                                           .withAccountId(ACCOUNT_ID)
+                                           .withRevision("1.0")
+                                           .withDisplayName("DISPLAY_NAME")
+                                           .withCreatedAt(System.currentTimeMillis())
+                                           .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
+
+    wingsRule.getDatastore().save(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, name)).but().build());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testShouldListArtifactStreamsWithSearchStringAndArtifactType() {
+    constructNexusArtifacts(GLOBAL_APP_ID, "test-1");
+    constructAmazonS3Artifacts(GLOBAL_APP_ID, "test-2");
+    constructAmiArtifacts(GLOBAL_APP_ID, "test-3");
+    List<ArtifactStream> artifactStreams =
+        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID).build(),
+            ACCOUNT_ID, true, "test", ArtifactType.AWS_LAMBDA, 100);
+    assertThat(artifactStreams)
+        .hasSize(1)
+        .extracting(ArtifactStream::getName)
+        .containsSequence("test-2")
+        .doesNotContain("test-1", "test-3");
+
+    artifactStreams =
+        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID).build(),
+            ACCOUNT_ID, true, "test", ArtifactType.AMI, 100);
+    assertThat(artifactStreams)
+        .hasSize(1)
+        .extracting(ArtifactStream::getName)
+        .containsSequence("test-3")
+        .doesNotContain("test-1", "test-2");
+
+    artifactStreams =
+        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID).build(),
+            ACCOUNT_ID, true, "test", ArtifactType.OTHER, 100);
+    assertThat(artifactStreams)
+        .hasSize(3)
+        .extracting(ArtifactStream::getName)
+        .containsSequence("test-3", "test-2", "test-1");
   }
 }
