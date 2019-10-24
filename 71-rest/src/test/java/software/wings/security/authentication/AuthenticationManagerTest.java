@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
@@ -21,6 +22,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
@@ -46,7 +49,11 @@ import java.util.EnumSet;
 import java.util.Optional;
 
 public class AuthenticationManagerTest extends WingsBaseTest {
-  public static final String NON_EXISTING_USER = "nonExistingUser";
+  private static final String NON_EXISTING_USER = "nonExistingUser";
+  private static final String PASSWORD_WITH_SPECIAL_CHARECTERS = "prefix:suffix:abc_+=./,!@#$%^&&*(Z)";
+  private static final String TEST_TOKEN = "TestToken";
+  private static final String USER_NAME = "testUser@test.com";
+  private static final String UUID = "TestUUID";
   @Mock private PasswordBasedAuthHandler PASSWORD_BASED_AUTH_HANDLER;
   @Mock private SamlBasedAuthHandler SAML_BASED_AUTH_HANDLER;
   @Mock private SamlClientService SAML_CLIENT_SERVICE;
@@ -59,6 +66,8 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Mock private AuthService AUTHSERVICE;
   @Mock private FeatureFlagService FEATURE_FLAG_SERVICE;
   @Mock private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
+
+  @Captor ArgumentCaptor<String> argCaptor;
 
   @Inject @InjectMocks private AuthenticationManager authenticationManager;
 
@@ -172,6 +181,35 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(user.getToken()).isEqualTo("TestToken");
     assertThat(authenticatedUser.getLastLogin() != 0L);
     assertThat(authenticatedUser.getLastLogin() <= System.currentTimeMillis());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCredentialDecoding() {
+    User mockUser = spy(new User());
+    AuthenticationResponse authenticationResponse = spy(new AuthenticationResponse(mockUser));
+    mockUser.setUuid(UUID);
+    PortalConfig portalConfig = mock(PortalConfig.class);
+    when(portalConfig.getAuthTokenExpiryInMillis()).thenReturn(System.currentTimeMillis());
+    when(MAIN_CONFIGURATION.getPortal()).thenReturn(portalConfig);
+    Account account1 = mock(Account.class);
+    when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
+    when(AUTHENTICATION_UTL.getUser(USER_NAME, WingsException.USER)).thenReturn(mockUser);
+
+    when(PASSWORD_BASED_AUTH_HANDLER.authenticate(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(authenticationResponse);
+    User authenticatedUser = mock(User.class);
+    when(authenticatedUser.getToken()).thenReturn(TEST_TOKEN);
+    when(AUTHSERVICE.generateBearerTokenForUser(mockUser)).thenReturn(authenticatedUser);
+
+    // trying with testUser@test.com:prefix:suffix:abc
+    String password = PASSWORD_WITH_SPECIAL_CHARECTERS;
+    User user = authenticationManager.defaultLogin(Base64.encodeBase64String((USER_NAME + ":" + password).getBytes()));
+
+    Mockito.verify(PASSWORD_BASED_AUTH_HANDLER, times(1)).authenticate(argCaptor.capture());
+
+    assertThat(USER_NAME).isEqualTo(argCaptor.getAllValues().get(0));
+    assertThat(password).isEqualTo(argCaptor.getAllValues().get(1));
   }
 
   @Test

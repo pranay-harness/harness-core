@@ -279,7 +279,7 @@ public class AuthenticationManager {
   }
 
   private String[] decryptBasicToken(String basicToken) {
-    String[] decryptedData = decodeBase64ToString(basicToken).split(":");
+    String[] decryptedData = decodeBase64ToString(basicToken).split(":", 2);
     if (decryptedData.length < 2) {
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
