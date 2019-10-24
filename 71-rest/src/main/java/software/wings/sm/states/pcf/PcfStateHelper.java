@@ -431,9 +431,9 @@ public class PcfStateHelper {
     String varName;
     String appName;
     Matcher m = Pattern.compile("\\(\\(([^)]+)\\)\\)").matcher(name);
+    List<String> varFiles = pcfManifestsPackage.getVariableYmls();
     while (m.find()) {
       varName = m.group(1);
-      List<String> varFiles = pcfManifestsPackage.getVariableYmls();
       for (int i = varFiles.size() - 1; i >= 0; i--) {
         Object value = getVaribleValue(varFiles.get(i), varName);
         if (value != null) {
@@ -499,8 +499,9 @@ public class PcfStateHelper {
 
   public Integer fetchMaxCountFromManifest(PcfManifestsPackage pcfManifestsPackage, Integer maxInstances) {
     Map<String, Object> applicationYamlMap = getApplicationYamlMap(pcfManifestsPackage.getManifestYml());
-    Object maxCount = applicationYamlMap.get(INSTANCE_MANIFEST_YML_ELEMENT);
+    Map<String, Object> treeMap = generateCaseInsensitiveTreeMap(applicationYamlMap);
 
+    Object maxCount = treeMap.get(INSTANCE_MANIFEST_YML_ELEMENT);
     String maxVal;
     if (maxCount instanceof Integer) {
       maxVal = maxCount.toString();
@@ -513,9 +514,19 @@ public class PcfStateHelper {
     }
 
     if (maxVal.contains("((") && maxVal.contains("))")) {
+      if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
+        throw new InvalidRequestException(
+            "No Valid Variable file Found, please verify var file is present and has valid structure");
+      }
       maxVal = finalizeSubstitution(pcfManifestsPackage, maxVal);
     }
 
     return Integer.parseInt(maxVal);
+  }
+
+  private Map<String, Object> generateCaseInsensitiveTreeMap(Map<String, Object> map) {
+    Map<String, Object> treeMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    treeMap.putAll(map);
+    return treeMap;
   }
 }

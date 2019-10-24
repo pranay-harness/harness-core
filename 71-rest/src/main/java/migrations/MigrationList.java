@@ -85,6 +85,7 @@ import migrations.all.NonWorkflowCVConfigurationMigration;
 import migrations.all.OAuthAllowedProvidersListMigration;
 import migrations.all.OauthEnabledFieldMigration;
 import migrations.all.OverrideDefaultLimits;
+import migrations.all.PcfServiceDeploymentMigration;
 import migrations.all.PcfServiceSpecificationToManifestFileMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.PrometheusCVMigration;
@@ -285,6 +286,7 @@ public class MigrationList {
         .add(Pair.of(279, SettingAttributesCategoryMigration.class))
         .add(Pair.of(280, ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes.class))
         .add(Pair.of(281, PcfServiceSpecificationToManifestFileMigration.class))
+        .add(Pair.of(282, PcfServiceDeploymentMigration.class))
         .build();
   }
 }

@@ -55,6 +55,7 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
         .isEqualTo(APPLICATION_MANIFEST_WITH_CREATE_SERVICE);
     assertThat(pcfFileTypeChecker.getManifestType(CREATE_SERVICE_PUSH_YML)).isEqualTo(CREATE_SERVICE_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType(TEST_VAR)).isEqualTo(VARIABLE_MANIFEST);
+    assertThat(pcfFileTypeChecker.getManifestType("test:val")).isNotEqualTo(VARIABLE_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isNotEqualTo(VARIABLE_MANIFEST);
   }
 }
