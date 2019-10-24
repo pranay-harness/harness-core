@@ -10,15 +10,15 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.segment.analytics.Analytics;
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import io.harness.event.handler.EventHandler;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
-import io.harness.segment.client.SegmentClientBuilder;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.app.MainConfiguration;
@@ -38,9 +38,10 @@ import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
+@NoArgsConstructor
 @Singleton
 public class AccountChangeHandler implements EventHandler {
-  @Inject private SegmentClientBuilder segmentClientBuilder;
+  @Inject private SegmentHelper segmentHelper;
   @Inject private InstanceStatService instanceStatService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private SecretManagerConfigService secretManagerConfigService;
@@ -49,9 +50,6 @@ public class AccountChangeHandler implements EventHandler {
   public AccountChangeHandler(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
   }
-
-  // needed by Guice to allow injection of this class
-  public AccountChangeHandler() {}
 
   @Override
   public void handleEvent(final Event event) {
@@ -86,7 +84,6 @@ public class AccountChangeHandler implements EventHandler {
   }
 
   private void enqueueIdentity(String accountId, String accountName) {
-    Analytics analytics = segmentClientBuilder.getInstance();
     DummySystemUser user = new DummySystemUser(accountId, accountName);
 
     Builder<String, Object> identityTraits = ImmutableMap.builder();
@@ -95,11 +92,10 @@ public class AccountChangeHandler implements EventHandler {
         IdentifyMessage.builder()
             .userId(user.getId())
             .traits(identityTraits.put("name", user.getUserName()).put("email", user.getEmail()).build());
-    analytics.enqueue(identity);
+    segmentHelper.enqueue(identity);
   }
 
   private void enqueueGroup(Account account) {
-    Analytics analytics = segmentClientBuilder.getInstance();
     String accountId = account.getUuid();
     DummySystemUser user = new DummySystemUser(accountId, account.getAccountName());
 
@@ -142,6 +138,6 @@ public class AccountChangeHandler implements EventHandler {
             .build();
     logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
     // group
-    analytics.enqueue(GroupMessage.builder(accountId).userId(user.getId()).traits(groupTraits));
+    segmentHelper.enqueue(GroupMessage.builder(accountId).userId(user.getId()).traits(groupTraits));
   }
 }

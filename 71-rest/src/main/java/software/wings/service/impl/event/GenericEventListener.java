@@ -25,8 +25,6 @@ import java.util.Set;
 public class GenericEventListener extends QueueListener<QueableEvent> implements EventListener {
   private Multimap<EventType, EventHandler> handlerRegistry;
 
-  //  @Inject private EventHandler eventHandler;
-
   public GenericEventListener() {
     super(false);
     handlerRegistry = getMultimap();
@@ -35,7 +33,6 @@ public class GenericEventListener extends QueueListener<QueableEvent> implements
   private Multimap<EventType, EventHandler> getMultimap() {
     HashMultimap<EventType, EventHandler> hashMultimap = HashMultimap.create();
     return Multimaps.synchronizedSetMultimap(hashMultimap);
-    //    return hashMultimap;
   }
 
   @Override

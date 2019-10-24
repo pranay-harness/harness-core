@@ -72,7 +72,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SegmentHandler implements EventHandler {
   private SegmentConfig segmentConfig;
-  private String apiKey;
   @Inject private SegmentHelper segmentHelper;
   @Inject private AccountService accountService;
   @Inject private UserService userService;
@@ -88,11 +87,12 @@ public class SegmentHandler implements EventHandler {
   @Inject
   public SegmentHandler(SegmentConfig segmentConfig, EventListener eventListener) {
     this.segmentConfig = segmentConfig;
-    // segment API url format take from https://segment.com/docs/sources/server/http/
-    boolean validApiUrl = StringUtils.contains(segmentConfig.getUrl(), "https://api.segment.io");
-    if (isSegmentEnabled() && validApiUrl) {
-      registerEventHandlers(eventListener);
-      this.apiKey = segmentConfig.getApiKey();
+    if (segmentConfig != null) {
+      // segment API url format take from https://segment.com/docs/sources/server/http/
+      boolean validApiUrl = StringUtils.contains(segmentConfig.getUrl(), "https://api.segment.io");
+      if (isSegmentEnabled() && validApiUrl) {
+        registerEventHandlers(eventListener);
+      }
     }
   }
 
@@ -106,11 +106,10 @@ public class SegmentHandler implements EventHandler {
   }
 
   public boolean isSegmentEnabled() {
+    if (segmentConfig == null) {
+      return false;
+    }
     return segmentConfig.isEnabled();
-  }
-
-  public String getApiKey() {
-    return apiKey;
   }
 
   @Override
@@ -235,16 +234,16 @@ public class SegmentHandler implements EventHandler {
     usersOfAccount.stream().filter(user -> isNotEmpty(user.getSegmentIdentity())).forEach(user -> {
       try {
         reportIdentity(account, user, false);
-      } catch (IOException | URISyntaxException e) {
+      } catch (URISyntaxException e) {
         logger.error("Error while updating license to all users in segment", e);
       }
     });
   }
 
-  public String reportIdentity(Account account, User user, boolean wait) throws IOException, URISyntaxException {
+  public String reportIdentity(Account account, User user, boolean wait) throws URISyntaxException {
     String userInviteUrl = utils.getUserInviteUrl(user.getEmail(), account);
     String identity = segmentHelper.createOrUpdateIdentity(
-        apiKey, user.getUuid(), user.getEmail(), user.getName(), account, userInviteUrl, user.getOauthProvider());
+        user.getUuid(), user.getEmail(), user.getName(), account, userInviteUrl, user.getOauthProvider());
     if (!identity.equals(user.getSegmentIdentity())) {
       updateUserIdentity(user, identity);
     }
@@ -264,7 +263,7 @@ public class SegmentHandler implements EventHandler {
   }
 
   public String reportIdentity(String userName, String email) throws IOException {
-    return segmentHelper.createOrUpdateIdentity(apiKey, null, email, userName, null, null, null);
+    return segmentHelper.createOrUpdateIdentity(null, email, userName, null, null, null);
   }
 
   private User updateUserEvents(User user, String event) {
@@ -307,7 +306,7 @@ public class SegmentHandler implements EventHandler {
     }
     Map<String, String> properties = new HashMap<>();
     properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
-    segmentHelper.reportTrackEvent(apiKey, identityList, eventType.name(), properties);
+    segmentHelper.reportTrackEvent(identityList, eventType.name(), properties);
     logger.info("Reported track for event {} with leads {}", eventType, identityList);
     return true;
   }
@@ -318,7 +317,7 @@ public class SegmentHandler implements EventHandler {
   }
 
   public void reportTrackEvent(Account account, String event, User user, Map<String, String> properties,
-      Map<String, Boolean> integrations) throws IOException, URISyntaxException {
+      Map<String, Boolean> integrations) throws URISyntaxException {
     String userId = user.getUuid();
     String identity = user.getSegmentIdentity();
     logger.info("Reporting track for event {} with lead {}", event, userId);
@@ -338,7 +337,7 @@ public class SegmentHandler implements EventHandler {
       properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
     }
 
-    boolean reported = segmentHelper.reportTrackEvent(apiKey, identity, event, properties, integrations);
+    boolean reported = segmentHelper.reportTrackEvent(identity, event, properties, integrations);
     if (reported) {
       updateUserEvents(user, event);
     }
@@ -346,7 +345,7 @@ public class SegmentHandler implements EventHandler {
   }
 
   public void reportTrackEvent(Account account, String event, String userId, Map<String, String> properties,
-      Map<String, Boolean> integrations) throws IOException, URISyntaxException {
+      Map<String, Boolean> integrations) throws URISyntaxException {
     String identity;
     User user = null;
     if (isNotEmpty(userId)) {
@@ -376,7 +375,7 @@ public class SegmentHandler implements EventHandler {
       properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
     }
 
-    boolean reported = segmentHelper.reportTrackEvent(apiKey, identity, event, properties, integrations);
+    boolean reported = segmentHelper.reportTrackEvent(identity, event, properties, integrations);
     if (user != null && reported) {
       updateUserEvents(user, event);
     }

@@ -7,8 +7,8 @@ import com.google.inject.Singleton;
 import com.segment.analytics.messages.TrackMessage;
 import com.segment.analytics.messages.TrackMessage.Builder;
 import io.harness.beans.EmbeddedUser;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
-import io.harness.segment.client.SegmentClientBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.mongodb.morphia.query.Query;
@@ -38,7 +38,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private AuditServiceHelper auditServiceHelper;
-  @Inject private SegmentClientBuilder segmentClientBuilder;
+  @Inject private SegmentHelper segmentHelper;
 
   @Override
   public GovernanceConfig get(String accountId) {
@@ -105,7 +105,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
                                                  .put("repeating", false)
                                                  .build());
 
-    segmentClientBuilder.getInstance().enqueue(messageBuilder);
+    segmentHelper.enqueue(messageBuilder);
   }
 
   @Override

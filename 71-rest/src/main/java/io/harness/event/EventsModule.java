@@ -45,9 +45,10 @@ public class EventsModule extends AbstractModule {
           .toInstance(new MarketoHandler(mainConfiguration.getMarketoConfig(), eventListener));
     }
 
-    if (mainConfiguration.getSegmentConfig() != null) {
-      bind(SegmentConfig.class).toInstance(mainConfiguration.getSegmentConfig());
-      SegmentHandler segmentHandler = new SegmentHandler(mainConfiguration.getSegmentConfig(), eventListener);
+    SegmentConfig segmentConfig = mainConfiguration.getSegmentConfig();
+    bind(SegmentConfig.class).toInstance(segmentConfig);
+    if (segmentConfig != null) {
+      SegmentHandler segmentHandler = new SegmentHandler(segmentConfig, eventListener);
       bind(SegmentHandler.class).annotatedWith(Names.named("SegmentHandlerAnnotation")).toInstance(segmentHandler);
       eventHandlerMapBinder.addBinding("SegmentHandler").toInstance(segmentHandler);
     }
