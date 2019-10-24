@@ -101,7 +101,7 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
   public void shouldCreateSnowTicket() throws Exception {
     Workflow snowFTWorkflow =
         aWorkflow()
-            .name("ServiceNow Functional Test")
+            .name("ServiceNow Functional Test" + System.currentTimeMillis())
             .envId(environment.getUuid())
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(

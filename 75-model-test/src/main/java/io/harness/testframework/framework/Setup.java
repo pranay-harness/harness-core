@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.exception.UnexpectedException;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -40,9 +41,10 @@ public class Setup {
     GenericType<RestResponse<User>> genericType = new GenericType<RestResponse<User>>() {};
     RestResponse<User> userRestResponse =
         Setup.portal().header("Authorization", basicAuthValue).get("/users/login").as(genericType.getType());
-    assertThat(userRestResponse).isNotNull();
-    User user = userRestResponse.getResource();
-    return user;
+    if (userRestResponse.getResource() == null) {
+      throw new UnexpectedException(String.valueOf(userRestResponse.getResponseMessages()));
+    }
+    return userRestResponse.getResource();
   }
 
   public static String getAuthToken(String email, String password) {

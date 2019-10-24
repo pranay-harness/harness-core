@@ -61,8 +61,8 @@ public class JiraCrudTest extends AbstractFunctionalTest {
   public void shouldCreateJiraStepinWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();
-    Workflow jiraWorkflow =
-        workflowUtils.buildCanaryWorkflowPostDeploymentStep("Create JIRA", environment.getUuid(), getJiraCreateNode());
+    Workflow jiraWorkflow = workflowUtils.buildCanaryWorkflowPostDeploymentStep(
+        "Create JIRA" + System.currentTimeMillis(), environment.getUuid(), getJiraCreateNode());
 
     // REST API.
     Workflow savedWorkflow =
