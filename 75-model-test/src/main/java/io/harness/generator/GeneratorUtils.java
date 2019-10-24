@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -13,6 +14,13 @@ public class GeneratorUtils {
       return persistenceIn.save();
     } catch (WingsException | DuplicateKeyException exception) {
       if (exception instanceof DuplicateKeyException || exception.getCause() instanceof DuplicateKeyException) {
+        T entity = persistenceOut.obtain();
+        if (entity != null) {
+          return entity;
+        }
+      }
+
+      if (exception instanceof DuplicateFieldException || exception.getCause() instanceof DuplicateFieldException) {
         T entity = persistenceOut.obtain();
         if (entity != null) {
           return entity;
