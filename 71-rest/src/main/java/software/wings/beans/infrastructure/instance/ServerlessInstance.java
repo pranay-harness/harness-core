@@ -70,32 +70,32 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
   private String envName;
   private EnvironmentType envType;
   private String accountId;
+  private String appName;
   private String serviceId;
   private String serviceName;
-  private String appName;
+
+  private String computeProviderId;
+  private String computeProviderName;
 
   private String infraMappingId;
   private String infraMappingName;
   private String infraMappingType;
 
-  private String computeProviderId;
-  private String computeProviderName;
+  private String lastPipelineExecutionId;
+  private String lastPipelineExecutionName;
 
-  private String lastArtifactStreamId;
-
-  private String lastArtifactId;
-  private String lastArtifactName;
-  private String lastArtifactSourceName;
-  private String lastArtifactBuildNum;
-
+  private long lastDeployedAt;
   private String lastDeployedById;
   private String lastDeployedByName;
-  private long lastDeployedAt;
+
   private String lastWorkflowExecutionId;
   private String lastWorkflowExecutionName;
 
-  private String lastPipelineExecutionId;
-  private String lastPipelineExecutionName;
+  private String lastArtifactSourceName;
+  private String lastArtifactStreamId;
+  private String lastArtifactBuildNum;
+  private String lastArtifactId;
+  private String lastArtifactName;
 
   private ServerlessInstanceInfo instanceInfo;
 
@@ -106,21 +106,16 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
   public ServerlessInstance(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, ServerlessInstanceType instanceType,
       AwsLambdaInstanceKey lambdaInstanceKey, String envId, String envName, EnvironmentType envType, String accountId,
-      String serviceId, String serviceName, String appName, String infraMappingId, String infraMappingName,
-      String infraMappingType, String computeProviderId, String computeProviderName, String lastArtifactStreamId,
-      String lastArtifactId, String lastArtifactName, String lastArtifactSourceName, String lastArtifactBuildNum,
-      String lastDeployedById, String lastDeployedByName, long lastDeployedAt, String lastWorkflowExecutionId,
-      String lastWorkflowExecutionName, String lastPipelineExecutionId, String lastPipelineExecutionName,
+      String appName, String serviceId, String serviceName, String computeProviderId, String computeProviderName,
+      String infraMappingId, String infraMappingName, String infraMappingType, String lastPipelineExecutionId,
+      String lastPipelineExecutionName, long lastDeployedAt, String lastDeployedById, String lastDeployedByName,
+      String lastWorkflowExecutionId, String lastWorkflowExecutionName, String lastArtifactSourceName,
+      String lastArtifactStreamId, String lastArtifactBuildNum, String lastArtifactId, String lastArtifactName,
       ServerlessInstanceInfo instanceInfo, boolean isDeleted, long deletedAt) {
     this.uuid = uuid;
-    this.isDeleted = isDeleted;
-    this.deletedAt = deletedAt;
     this.appId = appId;
     this.createdBy = createdBy;
     this.createdAt = createdAt;
-    this.serviceId = serviceId;
-    this.serviceName = serviceName;
-    this.appName = appName;
     this.lastUpdatedBy = lastUpdatedBy;
     this.lastUpdatedAt = lastUpdatedAt;
     this.instanceType = instanceType;
@@ -128,28 +123,29 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
     this.envId = envId;
     this.envName = envName;
     this.envType = envType;
-    this.lastWorkflowExecutionId = lastWorkflowExecutionId;
-    this.lastWorkflowExecutionName = lastWorkflowExecutionName;
-    this.lastPipelineExecutionId = lastPipelineExecutionId;
-    this.lastPipelineExecutionName = lastPipelineExecutionName;
     this.accountId = accountId;
-    this.lastArtifactId = lastArtifactId;
-    this.lastArtifactName = lastArtifactName;
-    this.lastArtifactSourceName = lastArtifactSourceName;
-    this.lastArtifactBuildNum = lastArtifactBuildNum;
-
+    this.appName = appName;
+    this.serviceId = serviceId;
+    this.serviceName = serviceName;
     this.computeProviderId = computeProviderId;
     this.computeProviderName = computeProviderName;
-    this.lastArtifactStreamId = lastArtifactStreamId;
-
-    this.lastDeployedById = lastDeployedById;
-    this.lastDeployedByName = lastDeployedByName;
-    this.lastDeployedAt = lastDeployedAt;
-
-    this.instanceInfo = instanceInfo;
-
     this.infraMappingId = infraMappingId;
     this.infraMappingName = infraMappingName;
     this.infraMappingType = infraMappingType;
+    this.lastPipelineExecutionId = lastPipelineExecutionId;
+    this.lastPipelineExecutionName = lastPipelineExecutionName;
+    this.lastDeployedAt = lastDeployedAt;
+    this.lastDeployedById = lastDeployedById;
+    this.lastDeployedByName = lastDeployedByName;
+    this.lastWorkflowExecutionId = lastWorkflowExecutionId;
+    this.lastWorkflowExecutionName = lastWorkflowExecutionName;
+    this.lastArtifactSourceName = lastArtifactSourceName;
+    this.lastArtifactStreamId = lastArtifactStreamId;
+    this.lastArtifactBuildNum = lastArtifactBuildNum;
+    this.lastArtifactId = lastArtifactId;
+    this.lastArtifactName = lastArtifactName;
+    this.instanceInfo = instanceInfo;
+    this.isDeleted = isDeleted;
+    this.deletedAt = deletedAt;
   }
 }

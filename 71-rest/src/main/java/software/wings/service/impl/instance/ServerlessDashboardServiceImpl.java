@@ -67,7 +67,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.EnvInfo;
-import software.wings.service.impl.instance.ServerlessDashboardServiceImpl.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.ServerlessDashboardService;
@@ -619,24 +618,22 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
     private EntitySummary appInfo;
     private EntitySummary serviceInfo;
     private int invocationCount;
-
-    @Data
-    @NoArgsConstructor
-    public static final class EnvType {
-      private String type;
-    }
   }
-
   @Data
   @NoArgsConstructor
   protected static final class ArtifactInfo {
     private String id;
     private String name;
+    private String sourceName;
     private String buildNo;
+    private long deployedAt;
     private String streamId;
     private String streamName;
-    private long deployedAt;
-    private String sourceName;
+  }
+  @Data
+  @NoArgsConstructor
+  public static final class EnvType {
+    private String type;
   }
 
   @Data
@@ -644,11 +641,11 @@ public class ServerlessDashboardServiceImpl implements ServerlessDashboardServic
   public static final class ServiceAggregationInfo {
     @Id private ID _id;
     private EntitySummary appInfo;
-    private EntitySummary infraMappingInfo;
     private EnvInfo envInfo;
-    private ArtifactInfo artifactInfo;
-    private List<EntitySummary> instanceInfoList;
     private int invocationCount;
+    private List<EntitySummary> instanceInfoList;
+    private ArtifactInfo artifactInfo;
+    private EntitySummary infraMappingInfo;
 
     @Data
     @NoArgsConstructor
