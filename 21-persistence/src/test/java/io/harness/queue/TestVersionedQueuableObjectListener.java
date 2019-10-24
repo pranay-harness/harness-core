@@ -3,24 +3,19 @@ package io.harness.queue;
 import com.google.inject.Singleton;
 
 @Singleton
-public class TestQueuableObjectListener extends QueueListener<TestQueuableObject> {
+public class TestVersionedQueuableObjectListener extends QueueListener<TestVersionedQueuableObject> {
   private boolean throwException;
 
-  /**
-   * Sets throw exception.
-   *
-   * @param throwException the throw exception
-   */
   public void setThrowException(boolean throwException) {
     this.throwException = throwException;
   }
 
-  TestQueuableObjectListener() {
+  TestVersionedQueuableObjectListener() {
     super(true);
   }
 
   @Override
-  public void onMessage(TestQueuableObject message) {
+  public void onMessage(TestVersionedQueuableObject message) {
     if (throwException) {
       throw new RuntimeException("Expected Exception In Test.");
     }

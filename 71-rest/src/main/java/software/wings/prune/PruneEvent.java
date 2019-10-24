@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-@Entity(value = "pruneQueue", noClassnameStored = true)
+@Entity(value = "pruneQueue2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class PruneEvent extends Queuable {
   public static final Duration DELAY = Duration.ofSeconds(5);

@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Entity;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "kmsTransitionEvent", noClassnameStored = true)
+@Entity(value = "kmsTransitionEvent2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class KmsTransitionEvent extends Queuable {
   private String entityId;
