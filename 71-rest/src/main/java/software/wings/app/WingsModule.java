@@ -293,11 +293,14 @@ import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
+import software.wings.service.impl.instance.ServerlessDashboardServiceImpl;
+import software.wings.service.impl.instance.ServerlessInstanceServiceImpl;
 import software.wings.service.impl.instance.licensing.InstanceLimitProviderImpl;
 import software.wings.service.impl.instance.licensing.InstanceUsageLimitCheckerImpl;
 import software.wings.service.impl.instance.licensing.InstanceUsageLimitExcessHandlerImpl;
 import software.wings.service.impl.instance.limits.LimitVicinityHandlerImpl;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
+import software.wings.service.impl.instance.stats.ServerlessInstanceStatServiceImpl;
 import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.ContainerSyncImpl;
@@ -481,10 +484,13 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.instance.ServerlessDashboardService;
+import software.wings.service.intfc.instance.ServerlessInstanceService;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitChecker;
 import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessHandler;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
+import software.wings.service.intfc.instance.stats.ServerlessInstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
@@ -924,6 +930,9 @@ public class WingsModule extends DependencyModule {
     bindFeatures();
 
     bind(FeatureService.class).to(FeatureServiceImpl.class);
+    bind(ServerlessInstanceService.class).to(ServerlessInstanceServiceImpl.class);
+    bind(ServerlessInstanceStatService.class).to(ServerlessInstanceStatServiceImpl.class);
+    bind(ServerlessDashboardService.class).to(ServerlessDashboardServiceImpl.class);
 
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);

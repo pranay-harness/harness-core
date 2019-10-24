@@ -2,6 +2,7 @@ package software.wings.beans.instance.dashboard;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.infrastructure.instance.InvocationCount;
 
 /**
  * @author rktummala on 01/03/18
@@ -13,4 +14,5 @@ public class InstanceSummaryStatsByService {
   private long prodCount;
   private long nonprodCount;
   private ServiceSummary serviceSummary;
+  private InvocationCount invocationCount;
 }

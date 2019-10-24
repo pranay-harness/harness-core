@@ -17,6 +17,7 @@ import software.wings.api.DeploymentSummary.DeploymentSummaryKeys;
 import software.wings.beans.Base;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.AwsLambdaDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
@@ -67,6 +68,7 @@ public class DeploymentSummary extends Base {
   private ContainerDeploymentKey containerDeploymentKey;
   private K8sDeploymentKey k8sDeploymentKey;
   private SpotinstAmiDeploymentKey spotinstAmiDeploymentKey;
+  private AwsLambdaDeploymentKey awsLambdaDeploymentKey;
 
   @Builder
   public DeploymentSummary(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
@@ -77,7 +79,7 @@ public class DeploymentSummary extends Base {
       String deployedByName, long deployedAt, DeploymentInfo deploymentInfo, PcfDeploymentKey pcfDeploymentKey,
       AwsAmiDeploymentKey awsAmiDeploymentKey, AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey,
       ContainerDeploymentKey containerDeploymentKey, SpotinstAmiDeploymentKey spotinstAmiDeploymentKey,
-      K8sDeploymentKey k8sDeploymentKey) {
+      AwsLambdaDeploymentKey awsLambdaDeploymentKey, K8sDeploymentKey k8sDeploymentKey) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.infraMappingId = infraMappingId;
@@ -101,6 +103,7 @@ public class DeploymentSummary extends Base {
     this.awsCodeDeployDeploymentKey = awsCodeDeployDeploymentKey;
     this.containerDeploymentKey = containerDeploymentKey;
     this.spotinstAmiDeploymentKey = spotinstAmiDeploymentKey;
+    this.awsLambdaDeploymentKey = awsLambdaDeploymentKey;
     this.k8sDeploymentKey = k8sDeploymentKey;
   }
 

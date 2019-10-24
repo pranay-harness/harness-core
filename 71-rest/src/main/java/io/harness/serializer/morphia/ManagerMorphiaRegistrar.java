@@ -90,6 +90,7 @@ import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.api.lambda.AwsLambdaDeploymentInfo;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
@@ -342,8 +343,10 @@ import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
+import software.wings.beans.infrastructure.instance.ServerlessInstance;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
+import software.wings.beans.infrastructure.instance.info.AwsLambdaInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
@@ -351,6 +354,7 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
@@ -928,6 +932,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PipelineGovernanceConfig.class);
     set.add(DeploymentReconRecord.class);
     set.add(ExperimentalMessageComparisonResult.class);
+    set.add(ServerlessInstance.class);
+    set.add(ServerlessInstanceStats.class);
     set.add(StackDriverMetricCVConfiguration.class);
   }
 
@@ -1026,6 +1032,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terraform.TerraformProvisionInheritPlanElement", TerraformProvisionInheritPlanElement.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
+    w.put("api.lambda.AwsLambdaDeploymentInfo", AwsLambdaDeploymentInfo.class);
     w.put("audit.EntityAuditRecord", EntityAuditRecord.class);
     w.put("beans.alert.ApprovalNeededAlert", ApprovalNeededAlert.class);
     w.put("beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);
@@ -1164,6 +1171,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.yaml.GitCommitRequest", GitCommitRequest.class);
     w.put("beans.yaml.GitDiffRequest", GitDiffRequest.class);
     w.put("beans.yaml.GitDiffResult", GitDiffResult.class);
+    w.put("beans.infrastructure.instance.info.AwsLambdaInstanceInfo", AwsLambdaInstanceInfo.class);
     w.put("beans.yaml.GitFetchFilesFromMultipleRepoResult", GitFetchFilesFromMultipleRepoResult.class);
     w.put("collect.ArtifactCollectionCallback", ArtifactCollectionCallback.class);
     w.put("delegatetasks.buildsource.BuildSourceCallback", BuildSourceCallback.class);

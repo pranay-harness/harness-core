@@ -178,6 +178,7 @@ public class AwsLambdaState extends State {
     String region = wfResponse.getRegion();
     stateExecutionData.setAliases(aliases);
     stateExecutionData.setTags(tags);
+    stateExecutionData.setLambdaFunctionMetaList(functionMetas);
     AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.builder()
                                                           .awsConfig(awsConfig)
                                                           .aliases(aliases)
@@ -305,6 +306,7 @@ public class AwsLambdaState extends State {
                                                                  .withServiceName(service.getName())
                                                                  .withAppId(app.getUuid())
                                                                  .withCommandName(getCommandName())
+                                                                 .withArtifactId(artifact.getUuid())
                                                                  .withActivityId(activity.getUuid());
 
     LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());

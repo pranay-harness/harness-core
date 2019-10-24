@@ -163,6 +163,7 @@ import software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsAppAutoScalingHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsAsgHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsCFHelperServiceDelegateImpl;
+import software.wings.service.impl.aws.delegate.AwsCloudWatchHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsCodeDeployHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEc2HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEcrHelperServiceDelegateImpl;
@@ -217,6 +218,7 @@ import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsCodeDeployHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
@@ -420,6 +422,7 @@ public class DelegateModule extends DependencyModule {
     bind(ServiceNowDelegateService.class).to(ServiceNowDelegateServiceImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
+    bind(AwsCloudWatchHelperServiceDelegate.class).to(AwsCloudWatchHelperServiceDelegateImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

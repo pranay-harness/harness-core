@@ -16,4 +16,5 @@ public interface StatsCollector {
    * @return true if at least one stat snapshot was created in database
    */
   boolean createStats(String accountId);
+  boolean createServerlessStats(String accountId);
 }

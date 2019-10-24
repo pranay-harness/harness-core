@@ -25,6 +25,7 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
+import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 
 import java.util.function.Consumer;
@@ -84,6 +85,17 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
               .build();
         }
       }
+      case LAMBDA_FUNCTION_DETAILS: {
+        try {
+          return awsLambdaHelperServiceDelegate.getFunctionDetails((AwsLambdaDetailsRequest) request);
+        } catch (Exception ex) {
+          return AwsLambdaFunctionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage(ExceptionUtils.getMessage(ex))
+              .build();
+        }
+      }
+
       default: { throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER); }
     }
   }

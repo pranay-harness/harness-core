@@ -3,6 +3,7 @@ package software.wings.api;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.beans.Tag;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.container.AwsAutoScalarConfig;
@@ -37,4 +38,6 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   // For Aws Lambda
   private List<String> aliases;
   private List<Tag> tags;
+  private List<FunctionMeta> lambdaFunctionMetaList;
+  private String artifactId;
 }

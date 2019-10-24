@@ -1,5 +1,7 @@
 package software.wings.beans.instance.dashboard;
 
+import software.wings.beans.infrastructure.instance.InvocationCount;
+
 import java.util.List;
 
 /**
@@ -9,6 +11,15 @@ public class InstanceStats {
   private long totalCount;
   // TODO rename this to instanceSummaryList
   private List<EntitySummary> entitySummaryList;
+  private InvocationCount invocationCount;
+
+  public InvocationCount getInvocationCount() {
+    return invocationCount;
+  }
+
+  public void setInvocationCount(InvocationCount invocationCount) {
+    this.invocationCount = invocationCount;
+  }
 
   public long getTotalCount() {
     return totalCount;
@@ -29,6 +40,7 @@ public class InstanceStats {
   public static final class Builder {
     private long totalCount;
     private List<EntitySummary> entitySummaryList;
+    private InvocationCount invocationCount;
 
     private Builder() {}
 
@@ -46,6 +58,11 @@ public class InstanceStats {
       return this;
     }
 
+    public Builder withInvocationCount(InvocationCount invocationCount) {
+      this.invocationCount = invocationCount;
+      return this;
+    }
+
     public Builder but() {
       return anInstanceSummaryStats().withTotalCount(totalCount).withEntitySummaryList(entitySummaryList);
     }
@@ -54,6 +71,7 @@ public class InstanceStats {
       InstanceStats instanceSummaryStats = new InstanceStats();
       instanceSummaryStats.setEntitySummaryList(entitySummaryList);
       instanceSummaryStats.setTotalCount(totalCount);
+      instanceSummaryStats.setInvocationCount(invocationCount);
       return instanceSummaryStats;
     }
   }

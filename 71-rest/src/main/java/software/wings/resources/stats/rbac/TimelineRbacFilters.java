@@ -1,15 +1,20 @@
 package software.wings.resources.stats.rbac;
 
+import static com.google.common.collect.Sets.union;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.Collections.emptySet;
 
 import com.google.common.collect.Sets;
 
+import org.apache.commons.collections4.SetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
+import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats;
+import software.wings.beans.infrastructure.instance.stats.ServerlessInstanceStats.AggregateInvocationCount;
 import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.model.InstanceTimeline.Aggregate;
 import software.wings.resources.stats.model.InstanceTimeline.DataPoint;
@@ -18,7 +23,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.UserService;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -74,6 +79,30 @@ public class TimelineRbacFilters {
         .collect(Collectors.toList());
   }
 
+  public List<ServerlessInstanceStats> filterServerlessStats(
+      List<ServerlessInstanceStats> serverlessInstanceStats, Set<String> deletedAppIds) {
+    boolean includeDeletedAppIds = userService.isAccountAdmin(accountId);
+    UserRequestContext userRequestContext = currentUser.getUserRequestContext();
+
+    if (!userRequestContext.isAppIdFilterRequired()) {
+      return serverlessInstanceStats;
+    }
+
+    final Set<String> allowedAppIds = getAssignedApps(currentUser);
+    log.info("Allowed App Ids. Account: {} User: {} Ids: {}, includeDeletedAppIds: {}", accountId,
+        currentUser.getEmail(), allowedAppIds, includeDeletedAppIds);
+    log.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
+
+    final Set<String> allowedAppIdsFinal =
+        union(allowedAppIds, includeDeletedAppIds ? SetUtils.emptyIfNull(deletedAppIds) : emptySet());
+
+    return serverlessInstanceStats.stream()
+        .map(it
+            -> new ServerlessInstanceStats(it.getTimestamp(), it.getAccountId(),
+                filterServerlessAggregates(it.getAggregateCounts(), allowedAppIdsFinal)))
+        .collect(Collectors.toList());
+  }
+
   // only show allowed appIds in aggregates
   private static List<AggregateCount> filterAggregates(List<AggregateCount> aggregates, Set<String> allowedAppIds) {
     List<AggregateCount> nonAppAggregates =
@@ -87,6 +116,13 @@ public class TimelineRbacFilters {
     List<AggregateCount> aggregateCounts = new ArrayList<>(nonAppAggregates);
     aggregateCounts.addAll(filteredAppAggregates);
     return aggregateCounts;
+  }
+
+  private static Collection<AggregateInvocationCount> filterServerlessAggregates(
+      Collection<AggregateInvocationCount> aggregates, Set<String> allowedAppIds) {
+    return aggregates.stream()
+        .filter(it -> it.getEntityType() != EntityType.APPLICATION || allowedAppIds.contains(it.getId()))
+        .collect(Collectors.toList());
   }
 
   /**
@@ -127,7 +163,7 @@ public class TimelineRbacFilters {
     Set<String> allowedAppIds = userRequestContext.getAppIds();
     if (isEmpty(allowedAppIds)) {
       log.info("No apps assigned for user. User: {}, Account: {}", user.getEmail(), accountId);
-      return Collections.emptySet();
+      return emptySet();
     }
 
     return allowedAppIds;

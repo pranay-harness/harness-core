@@ -124,8 +124,7 @@ public abstract class InstanceHandler {
     String workflowName = instanceUtil.getWorkflowName(workflowExecution.normalizedName());
     Validator.notNullCheck("WorkflowName", workflowName);
 
-    InstanceType instanceType = instanceUtil.getInstanceType(infraMappingType);
-    Validator.notNullCheck("InstanceType", instanceType);
+    validateInstanceType(infraMappingType);
 
     DeploymentSummary deploymentSummary = DeploymentSummary.builder().build();
     deploymentSummary.setAppId(workflowExecution.getAppId());
@@ -157,6 +156,11 @@ public abstract class InstanceHandler {
     deploymentSummary.setDeploymentInfo(deploymentInfo);
     setDeploymentKey(deploymentSummary, deploymentKey);
     return deploymentSummary;
+  }
+
+  protected void validateInstanceType(String infraMappingType) {
+    InstanceType instanceType = instanceUtil.getInstanceType(infraMappingType);
+    Validator.notNullCheck("InstanceType", instanceType);
   }
 
   protected abstract void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey);
