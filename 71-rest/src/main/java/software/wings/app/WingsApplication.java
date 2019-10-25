@@ -624,7 +624,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         YamlChangeSetPruneJob.add(jobScheduler);
         ExecutionLogsPruneJob.addJob(jobScheduler);
         InstancesPurgeJob.add(jobScheduler);
-        AccountIdAdditionJob.addJob(jobScheduler);
+        AccountIdAdditionJob.delete(jobScheduler);
       }
     }
   }
