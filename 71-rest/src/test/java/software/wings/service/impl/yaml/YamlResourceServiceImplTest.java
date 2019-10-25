@@ -63,7 +63,7 @@ public class YamlResourceServiceImplTest extends WingsBaseTest {
 
     applicationManifest.setKind(K8S_MANIFEST);
     try {
-      assertThat(yamlResourceService.getYamlTypeFromAppManifest(applicationManifest));
+      yamlResourceService.getYamlTypeFromAppManifest(applicationManifest);
       fail("Exception expected");
     } catch (Exception e) {
       // Do nothing, expected
@@ -81,7 +81,7 @@ public class YamlResourceServiceImplTest extends WingsBaseTest {
 
     applicationManifest.setKind(K8S_MANIFEST);
     try {
-      assertThat(yamlResourceService.getYamlTypeFromAppManifest(applicationManifest));
+      yamlResourceService.getYamlTypeFromAppManifest(applicationManifest);
       fail("Exception expected");
     } catch (Exception e) {
       // Do nothing, expected

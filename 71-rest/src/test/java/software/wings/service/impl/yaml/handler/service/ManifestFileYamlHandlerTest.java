@@ -70,7 +70,7 @@ public class ManifestFileYamlHandlerTest extends WingsBaseTest {
 
     applicationManifest.setKind(K8S_MANIFEST);
     try {
-      assertThat(manifestFileYamlHandler.getManifestFileYamlTypeFromAppManifest(applicationManifest));
+      manifestFileYamlHandler.getManifestFileYamlTypeFromAppManifest(applicationManifest);
       fail("Exception expected");
     } catch (Exception e) {
       // Do nothing, expected
@@ -88,7 +88,7 @@ public class ManifestFileYamlHandlerTest extends WingsBaseTest {
 
     applicationManifest.setKind(K8S_MANIFEST);
     try {
-      assertThat(manifestFileYamlHandler.getManifestFileYamlTypeFromAppManifest(applicationManifest));
+      manifestFileYamlHandler.getManifestFileYamlTypeFromAppManifest(applicationManifest);
       fail("Exception expected");
     } catch (Exception e) {
       // Do nothing, expected
