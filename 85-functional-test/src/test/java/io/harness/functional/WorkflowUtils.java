@@ -34,6 +34,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.ResizeStrategy;
@@ -338,6 +339,20 @@ public class WorkflowUtils {
                             .appId(service.getAppId())
                             .envId(infrastructureDefinition.getEnvId())
                             .infraDefinitionId(infrastructureDefinition.getUuid())
+                            .serviceId(service.getUuid())
+                            .workflowType(WorkflowType.ORCHESTRATION)
+                            .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
+                            .build();
+    return workflow;
+  }
+
+  public Workflow createRollingWorkflowInfraMapping(
+      String name, Service service, InfrastructureMapping infrastructureMapping) {
+    Workflow workflow = aWorkflow()
+                            .name(name + System.currentTimeMillis())
+                            .appId(service.getAppId())
+                            .envId(infrastructureMapping.getEnvId())
+                            .infraMappingId(infrastructureMapping.getUuid())
                             .serviceId(service.getUuid())
                             .workflowType(WorkflowType.ORCHESTRATION)
                             .orchestrationWorkflow(aRollingOrchestrationWorkflow().build())
