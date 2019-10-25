@@ -27,6 +27,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ResourceConstraintService;
+import software.wings.sm.states.ResourceConstraintState.AcquireMode;
 import software.wings.sm.states.ResourceConstraintState.ResourceConstraintStateKeys;
 
 import java.util.Arrays;
@@ -133,6 +134,7 @@ public class WorkflowConcurrencyHelper {
             .put(ResourceConstraintStateKeys.permits, 1)
             .put(ResourceConstraintStateKeys.holdingScope, concurrencyStrategy.getHoldingScope().name())
             .put(ResourceConstraintStateKeys.resourceUnit, concurrencyStrategy.getResourceUnit())
+            .put(ResourceConstraintStateKeys.acquireMode, AcquireMode.ENSURE)
             .put(STATE_TIMEOUT_KEY_NAME, WEEK_TIMEOUT);
     if (EmptyPredicate.isNotEmpty(concurrencyStrategy.getNotificationGroups())) {
       mapBuilder.put(ResourceConstraintStateKeys.notificationGroups, concurrencyStrategy.getNotificationGroups());

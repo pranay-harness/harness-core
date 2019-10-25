@@ -11,6 +11,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION;
 import static software.wings.sm.states.HoldingScope.PHASE;
 import static software.wings.sm.states.HoldingScope.WORKFLOW;
+import static software.wings.sm.states.ResourceConstraintState.AcquireMode.ENSURE;
 
 import com.google.inject.Inject;
 
@@ -79,6 +80,12 @@ public class ResourceConstraintState extends State {
 
   public enum NotificationEvent { BLOCKED, UNBLOCKED }
 
+  public enum AcquireMode { ACCUMULATE, ENSURE }
+
+  private int acquiredPermits;
+
+  @Getter @Setter private AcquireMode acquireMode;
+
   @Getter @Setter private List<NotificationEvent> notificationEvents;
 
   @Getter @Setter private List<String> notificationGroups;
@@ -129,6 +136,11 @@ public class ResourceConstraintState extends State {
     final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
     final Constraint constraint = resourceConstraintService.createAbstraction(resourceConstraint);
 
+    if (acquireMode == ENSURE) {
+      acquiredPermits = alreadyAcquiredPermits(holdingScope, context);
+      permits -= acquiredPermits;
+    }
+
     String releaseEntityId = null;
     switch (HoldingScope.valueOf(holdingScope)) {
       case WORKFLOW:
@@ -168,6 +180,9 @@ public class ResourceConstraintState extends State {
 
     String consumerId = generateUuid();
     try {
+      if (permits <= 0) {
+        return executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS).build();
+      }
       final Consumer.State state = constraint.registerConsumer(renderedResourceUnit, new ConsumerId(consumerId),
           permits, constraintContext, resourceConstraintService.getRegistry());
 
@@ -257,6 +272,9 @@ public class ResourceConstraintState extends State {
     stateExecutionData.setResourceConstraintCapacity(resourceConstraint.getCapacity());
     stateExecutionData.setUnit(resourceUnit);
     stateExecutionData.setUsage(permits);
+    if (acquireMode == ENSURE) {
+      stateExecutionData.setAlreadyAcquiredPermits(acquiredPermits);
+    }
     return ExecutionResponse.builder().stateExecutionData(stateExecutionData);
   }
 

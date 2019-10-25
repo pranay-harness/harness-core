@@ -9,4 +9,5 @@ public class ResourceConstraintStepExecutionSummary extends StepExecutionSummary
   @Getter @Setter private int resourceConstraintCapacity;
   @Getter @Setter private String unit;
   @Getter @Setter private int usage;
+  @Getter @Setter private int alreadyAcquiredPermits;
 }
