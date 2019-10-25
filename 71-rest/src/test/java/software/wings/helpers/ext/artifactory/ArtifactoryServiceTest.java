@@ -26,6 +26,8 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
+import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import java.io.InputStream;
 import java.util.Collections;
@@ -75,11 +77,30 @@ public class ArtifactoryServiceTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldGetDockerRepositoriesWithArtifactType() {
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, ArtifactType.DOCKER);
+    assertThat(repositories).isNotNull();
+    assertThat(repositories).containsKeys("docker");
+    assertThat(repositories).doesNotContainKeys("harness-maven");
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("docker");
     assertThat(repositories).doesNotContainKeys("harness-maven");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetRepositoriesForMavenWithPackageType() {
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, "maven");
+    assertThat(repositories).isNotNull();
+    assertThat(repositories).containsKeys("harness-maven");
+    assertThat(repositories).containsKeys("harness-maven-snapshots");
+    assertThat(repositories).doesNotContainKeys("docker");
   }
 
   @Test
@@ -235,5 +256,54 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldTestArtifactoryRunning() {
     assertThat(artifactoryService.isRunning(artifactoryConfig, null)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetRepositoriesWithRepositoryType() {
+    Map<String, String> repositories =
+        artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.docker);
+    assertThat(repositories).isNotNull();
+    assertThat(repositories).containsKeys("docker");
+    assertThat(repositories).doesNotContainKeys("harness-maven");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetMavenRepositoriesWithRepositoryType() {
+    Map<String, String> repositories =
+        artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.maven);
+    assertThat(repositories).isNotNull();
+    assertThat(repositories).containsKeys("harness-maven");
+    assertThat(repositories).doesNotContainKeys("docker");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAnyRepositoriesWithRepositoryType() {
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.any);
+    assertThat(repositories).isNotNull();
+    assertThat(repositories).containsKeys("harness-rpm");
+    assertThat(repositories).doesNotContainKeys("docker");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetFilePathsWithWildCardForAnonymousUser() {
+    List<BuildDetails> builds =
+        artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "tdlist/*/*.war", "any", 50);
+    assertThat(builds).isNotNull();
+    assertThat(builds)
+        .extracting(buildDetails -> buildDetails.getNumber())
+        .contains("tdlist/1.1/tdlist-1.1.war", "tdlist/1.2/tdlist-1.2.war");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetFilePathsForAnonymousUser() {
+    List<BuildDetails> builds =
+        artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "myartifact", "any", 50);
+    assertThat(builds).isNotNull();
+    assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("myartifact2");
   }
 }
