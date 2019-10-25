@@ -9,25 +9,25 @@ import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class WorkersConfigurationTest extends CategoryTest {
+public class ActiveConfigValidatorTest extends CategoryTest {
   @Test
   @Category(UnitTests.class)
-  public void testConfirmWorkerIsActive() {
+  public void testIsActive() {
     final WorkersConfiguration workersConfiguration = new WorkersConfiguration();
-    assertThat(workersConfiguration.confirmWorkerIsActive(WorkersConfigurationTest.class)).isTrue();
+    assertThat(workersConfiguration.confirmWorkerIsActive(ActiveConfigValidatorTest.class)).isTrue();
 
     workersConfiguration.setActive(ImmutableMap.<String, Boolean>builder().put("io.harness", false).build());
-    assertThat(workersConfiguration.confirmWorkerIsActive(WorkersConfigurationTest.class)).isFalse();
+    assertThat(workersConfiguration.confirmWorkerIsActive(ActiveConfigValidatorTest.class)).isFalse();
 
     workersConfiguration.setActive(
         ImmutableMap.<String, Boolean>builder().put("io.harness.config", true).put("io.harness", false).build());
-    assertThat(workersConfiguration.confirmWorkerIsActive(WorkersConfigurationTest.class)).isTrue();
+    assertThat(workersConfiguration.confirmWorkerIsActive(ActiveConfigValidatorTest.class)).isTrue();
 
     workersConfiguration.setActive(ImmutableMap.<String, Boolean>builder()
-                                       .put("io.harness.config.WorkersConfigurationTest", false)
+                                       .put("io.harness.config.ActiveConfigValidatorTest", false)
                                        .put("io.harness.config", true)
                                        .put("io.harness", false)
                                        .build());
-    assertThat(workersConfiguration.confirmWorkerIsActive(WorkersConfigurationTest.class)).isFalse();
+    assertThat(workersConfiguration.confirmWorkerIsActive(ActiveConfigValidatorTest.class)).isFalse();
   }
 }

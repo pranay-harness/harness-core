@@ -6,8 +6,9 @@ import static java.time.Duration.ofSeconds;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
+import io.harness.config.PublisherConfiguration;
 import io.harness.event.model.QueableEvent;
-import io.harness.mongo.MongoQueue;
+import io.harness.mongo.QueueFactory;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
 import software.wings.api.DeploymentEvent;
@@ -31,24 +32,35 @@ import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 
 public class ManagerQueueModule extends AbstractModule {
+  private PublisherConfiguration publisherConfiguration;
+
+  public ManagerQueueModule(PublisherConfiguration configuration) {
+    publisherConfiguration = configuration;
+  }
+
   @Override
   protected void configure() {
-    bind(new TypeLiteral<Queue<PruneEvent>>() {}).toInstance(new MongoQueue<>(PruneEvent.class));
-    bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class));
-    bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class));
+    bind(new TypeLiteral<Queue<PruneEvent>>() {})
+        .toInstance(QueueFactory.createQueue(PruneEvent.class, publisherConfiguration));
+    bind(new TypeLiteral<Queue<EmailData>>() {})
+        .toInstance(QueueFactory.createQueue(EmailData.class, publisherConfiguration));
+    bind(new TypeLiteral<Queue<CollectEvent>>() {})
+        .toInstance(QueueFactory.createQueue(CollectEvent.class, publisherConfiguration));
     bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
-        .toInstance(new MongoQueue<>(DeploymentEvent.class, ofMinutes(1), true));
+        .toInstance(QueueFactory.createQueue(DeploymentEvent.class, ofMinutes(1), true, publisherConfiguration));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
-        .toInstance(new MongoQueue<>(KmsTransitionEvent.class, ofSeconds(30)));
+        .toInstance(QueueFactory.createQueue(KmsTransitionEvent.class, ofSeconds(30), publisherConfiguration));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
-        .toInstance(new MongoQueue<>(ExecutionEvent.class, ofSeconds(30), true));
-    bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, ofSeconds(5), true));
+        .toInstance(QueueFactory.createQueue(ExecutionEvent.class, ofSeconds(30), true, publisherConfiguration));
+    bind(new TypeLiteral<Queue<DelayEvent>>() {})
+        .toInstance(QueueFactory.createQueue(DelayEvent.class, ofSeconds(5), true, publisherConfiguration));
     bind(new TypeLiteral<Queue<QueableEvent>>() {})
-        .toInstance(new MongoQueue<>(QueableEvent.class, ofMinutes(1), true));
+        .toInstance(QueueFactory.createQueue(QueableEvent.class, ofMinutes(1), true, publisherConfiguration));
     bind(new TypeLiteral<Queue<InstanceEvent>>() {})
-        .toInstance(new MongoQueue<>(InstanceEvent.class, ofMinutes(1), true));
+        .toInstance(QueueFactory.createQueue(InstanceEvent.class, ofMinutes(1), true, publisherConfiguration));
     bind(new TypeLiteral<Queue<DeploymentTimeSeriesEvent>>() {})
-        .toInstance(new MongoQueue<>(DeploymentTimeSeriesEvent.class, ofMinutes(1), true));
+        .toInstance(
+            QueueFactory.createQueue(DeploymentTimeSeriesEvent.class, ofMinutes(1), true, publisherConfiguration));
 
     bind(new TypeLiteral<QueueListener<PruneEvent>>() {}).to(PruneEntityListener.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);

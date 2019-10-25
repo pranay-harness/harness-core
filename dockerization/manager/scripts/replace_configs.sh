@@ -357,3 +357,12 @@ if [[ "" != "$WORKERS" ]]; then
     yq write -i $CONFIG_FILE workers.active.[$WORKER] "${WORKER_FLAG}"
   done
 fi
+
+if [[ "" != "$PUBLISHERS" ]]; then
+  IFS=',' read -ra PUBLISHER_ITEMS <<< "$PUBLISHERS"
+  for ITEM in "${PUBLISHER_ITEMS[@]}"; do
+    PUBLISHER=`echo $ITEM | awk -F= '{print $1}'`
+    PUBLISHER_FLAG=`echo $ITEM | awk -F= '{print $2}'`
+    yq write -i $CONFIG_FILE publishers.active.[$PUBLISHER] "${PUBLISHER_FLAG}"
+  done
+fi

@@ -20,6 +20,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
+import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -243,7 +244,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
   }
 
   protected void addQueueModules(List<Module> modules) {
-    modules.add(new ManagerQueueModule());
+    modules.add(new ManagerQueueModule(new PublisherConfiguration()));
   }
 
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {

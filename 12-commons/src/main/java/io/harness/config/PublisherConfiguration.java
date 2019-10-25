@@ -8,9 +8,9 @@ import java.util.Map;
 
 @Data
 @Slf4j
-public class WorkersConfiguration implements ActiveConfigValidator {
+public class PublisherConfiguration implements ActiveConfigValidator {
   @JsonProperty("active") Map<String, Boolean> active;
-  public boolean confirmWorkerIsActive(Class cls) {
+  public boolean isPublisherActive(Class cls) {
     return isActive(cls, active);
   }
 }

@@ -47,6 +47,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -287,7 +288,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new ManagerQueueModule());
+    modules.add(new ManagerQueueModule(configuration.getPublisherConfiguration()));
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));
@@ -311,6 +312,12 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       WorkersConfiguration workersConfig() {
         return configuration.getWorkers();
+      }
+
+      @Provides
+      @Singleton
+      PublisherConfiguration publisherConfiguration() {
+        return configuration.getPublisherConfiguration();
       }
     });
 
