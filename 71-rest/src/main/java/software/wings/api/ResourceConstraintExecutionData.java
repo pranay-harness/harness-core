@@ -12,6 +12,7 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
   @Getter @Setter private int resourceConstraintCapacity;
   @Getter @Setter private String unit;
   @Getter @Setter private int usage;
+  @Getter @Setter private int alreadyAcquiredPermits;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -22,6 +23,8 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
         ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
     putNotNull(executionDetails, "Unit", ExecutionDataValue.builder().displayName("Unit").value(unit).build());
     putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
+    putNotNull(executionDetails, "alreadyAcquiredPermits",
+        ExecutionDataValue.builder().displayName("Already Acquired Permits").value(alreadyAcquiredPermits).build());
     return executionDetails;
   }
 
@@ -34,6 +37,8 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
         ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
     putNotNull(executionDetails, "Unit", ExecutionDataValue.builder().displayName("Unit").value(unit).build());
     putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
+    putNotNull(executionDetails, "alreadyAcquiredPermits",
+        ExecutionDataValue.builder().displayName("Already Acquired Permits").value(alreadyAcquiredPermits).build());
     return executionDetails;
   }
 
@@ -45,6 +50,7 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
     executionSummary.setResourceConstraintCapacity(resourceConstraintCapacity);
     executionSummary.setUnit(unit);
     executionSummary.setUsage(usage);
+    executionSummary.setAlreadyAcquiredPermits(alreadyAcquiredPermits);
     return executionSummary;
   }
 }
