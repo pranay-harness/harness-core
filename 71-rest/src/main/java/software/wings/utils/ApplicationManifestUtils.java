@@ -227,14 +227,6 @@ public class ApplicationManifestUtils {
         applicationManifestService.getByServiceId(appId, serviceTemplate.getServiceId(), AppManifestKind.VALUES);
     if (serviceAppManifest != null) {
       appManifestMap.put(K8sValuesLocation.ServiceOverride, serviceAppManifest);
-    } else {
-      // Todo anshul Remove this else once the backend ServiceHelmValuesToManifestFileMigration is complete
-      // This is just a fallback mechanism in case the  ServiceHelmValuesToManifestFileMigration fails
-
-      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId(), false);
-      if (service != null && isNotBlank(service.getHelmValueYaml())) {
-        valuesFiles.put(K8sValuesLocation.ServiceOverride, service.getHelmValueYaml());
-      }
     }
 
     ApplicationManifest appManifest =
