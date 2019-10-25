@@ -35,7 +35,7 @@ public class PcfServiceDeploymentMigration implements Migration {
         if (i % 1000 == 0) {
           bulkWriteOperation.execute();
           bulkWriteOperation = collection.initializeUnorderedBulkOperation();
-          logger.info("AuditRecords: {} updated", i);
+          logger.info("Pcf Service: {} updated", i);
         }
         ++i;
 

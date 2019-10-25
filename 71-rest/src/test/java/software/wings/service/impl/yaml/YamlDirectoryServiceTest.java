@@ -2,8 +2,10 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.HarnessStringUtils.join;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -21,6 +23,7 @@ import static software.wings.beans.yaml.YamlConstants.CV_CONFIG_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
@@ -123,6 +126,7 @@ import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryNode.NodeType;
 import software.wings.yaml.directory.DirectoryPath;
+import software.wings.yaml.directory.EnvLevelYamlNode;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.directory.YamlNode;
 
@@ -764,5 +768,75 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertThat(currentFolderNode.getAppId()).isEqualTo(APP_ID);
     assertThat(currentFolderNode.getDirectoryPath().getPath()).isEqualTo(dirPath);
     return currentFolderNode;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateEnvPcfOverridesFolder() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(StoreType.Local)
+                                                  .kind(AppManifestKind.PCF_OVERRIDE)
+                                                  .envId(ENV_ID)
+                                                  .serviceId(SERVICE_ID)
+                                                  .build();
+    doReturn(emptyList()).when(applicationManifestService).getAllByEnvIdAndKind(anyString(), anyString(), any());
+
+    Environment environment = anEnvironment().name(ENV_NAME).uuid(ENV_ID).build();
+    assertThat(yamlDirectoryService.generateEnvPcfOverridesFolder(ACCOUNT_ID, environment, directoryPath)).isNull();
+
+    doReturn(applicationManifest).when(applicationManifestService).getByEnvId(anyString(), anyString(), any());
+
+    doReturn(Arrays.asList(applicationManifest))
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), any());
+    doReturn(Arrays.asList(ManifestFile.builder().fileName("a.yml").fileContent("abc").build()))
+        .when(applicationManifestService)
+        .getManifestFilesByAppManifestId(anyString(), anyString());
+
+    doReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build())
+        .when(serviceResourceService)
+        .get(anyString(), anyString(), anyBoolean());
+
+    DirectoryPath directoryPath = new DirectoryPath("Setup/Applications/App1/Environments/env1");
+    FolderNode folderNode = yamlDirectoryService.generateEnvPcfOverridesFolder(ACCOUNT_ID, environment, directoryPath);
+
+    // PCF Overrides Folder
+    assertThat(folderNode.getName()).isEqualTo(PCF_OVERRIDES_FOLDER);
+    assertThat(folderNode.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/App1/Environments/env1/PCF Overrides");
+    assertThat(folderNode.getChildren()).isNotNull();
+    assertThat(folderNode.getChildren().size()).isEqualTo(3);
+
+    // Index.yaml file for ENV Override
+    assertThat(folderNode.getChildren().get(0) instanceof EnvLevelYamlNode).isTrue();
+    assertThat(folderNode.getChildren().get(0).getName()).isEqualTo("Index.yaml");
+    assertThat(folderNode.getChildren().get(0).getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/App1/Environments/env1/PCF Overrides/Index.yaml");
+    // Existing local manifest file for ENV Override
+    assertThat(folderNode.getChildren().get(1) instanceof EnvLevelYamlNode).isTrue();
+    assertThat(folderNode.getChildren().get(1).getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/App1/Environments/env1/PCF Overrides/a.yml");
+    assertThat(folderNode.getChildren().get(1).getName()).isEqualTo("a.yml");
+
+    // For Env_Service
+    DirectoryNode directoryNode = folderNode.getChildren().get(2);
+    assertThat(directoryNode instanceof FolderNode).isTrue();
+    FolderNode envServiceFolderNode = (FolderNode) directoryNode;
+    assertThat(envServiceFolderNode.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/App1/Environments/env1/PCF Overrides/Services");
+    assertThat(envServiceFolderNode.getChildren()).isNotNull();
+    assertThat(envServiceFolderNode.getChildren().size()).isEqualTo(1);
+
+    FolderNode serviceNodeUnderEnv = (FolderNode) envServiceFolderNode.getChildren().get(0);
+    assertThat(serviceNodeUnderEnv).isNotNull();
+    assertThat(serviceNodeUnderEnv.getChildren()).isNotNull();
+    assertThat(serviceNodeUnderEnv.getChildren().size()).isEqualTo(2);
+
+    // ENV_SERVICE_OVERRIDE index.yaml
+    assertThat(serviceNodeUnderEnv.getChildren().get(0).getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/App1/Environments/env1/PCF Overrides/Services/SERVICE_NAME/Index.yaml");
+    // ENV_SERVICE_OVERRIDE local manifest file
+    assertThat(serviceNodeUnderEnv.getChildren().get(1).getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/App1/Environments/env1/PCF Overrides/Services/SERVICE_NAME/a.yml");
   }
 }

@@ -9,6 +9,7 @@ public interface YamlConstants {
   String MANIFEST_FILE_EXPRESSION = ".*";
   ;
   String YAML_EXPRESSION = ".[^/]*?\\.yaml";
+  String PCF_YAML_EXPRESSION = ".[^/]*?\\.yml";
   String ANY_EXCEPT_YAML = ".[^/]*?[^\\.yaml]";
   String YAML_FILE_NAME_PATTERN = ".*?" + PATH_DELIMITER + YAML_EXPRESSION;
   //  String SETUP_ENTITY_ID = "setup";
@@ -95,6 +96,7 @@ public interface YamlConstants {
 
   String VALUES = "VALUES";
   String VALUES_FOLDER = "Values";
+  String PCF_OVERRIDES_FOLDER = "PCF Overrides";
 
   String VALUES_YAML_KEY = "values.yaml";
 

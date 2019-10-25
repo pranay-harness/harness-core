@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.pcf.model.PcfConstants.PCF_CONFIG_FILE_EXTENSION;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
@@ -17,6 +18,8 @@ import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE;
@@ -41,6 +44,8 @@ import static software.wings.beans.yaml.YamlType.INFRA_DEFINITION;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_VALUES_SERVICE_OVERRIDE;
@@ -172,8 +177,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE, MANIFEST_FILE_VALUES_SERVICE_OVERRIDE, ENVIRONMENT, INFRA_MAPPING,
         CV_CONFIGURATION, INFRA_DEFINITION, CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE,
         APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE,
-        MANIFEST_FILE_VALUES_ENV_OVERRIDE, MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER,
-        DEPLOYMENT_TRIGGER);
+        APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE, APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE,
+        MANIFEST_FILE_VALUES_ENV_OVERRIDE, MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE,
+        MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE,
+        TRIGGER, DEPLOYMENT_TRIGGER);
   }
 
   @Override
@@ -358,6 +365,19 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         && yamlFilePath.contains(VALUES_YAML_KEY)) {
       changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE)
           .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE));
+
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(
+                   YamlConstants.PCF_OVERRIDES_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.SERVICES_FOLDER)
+        && yamlFilePath.endsWith(PCF_CONFIG_FILE_EXTENSION)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE));
+
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(YamlConstants.PCF_OVERRIDES_FOLDER + YamlConstants.PATH_DELIMITER)
+        && yamlFilePath.endsWith(PCF_CONFIG_FILE_EXTENSION)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE));
 
       return changeContextBuilder.build();
     }
@@ -573,19 +593,19 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private void invalidateUserRelatedCacheIfNeeded(String accountId, YamlType yamlType, ChangeType changeType) {
-    if (changeType.equals(ChangeType.ADD) && rbacCreateYamlTypes.contains(yamlType)) {
+    if (ChangeType.ADD.equals(changeType) && rbacCreateYamlTypes.contains(yamlType)) {
       if (yamlType.equals(YamlType.APPLICATION) || yamlType.equals(YamlType.ENVIRONMENT)) {
         authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
       } else {
         authService.evictUserPermissionCacheForAccount(accountId, true);
       }
-    } else if (changeType.equals(ChangeType.MODIFY) && rbacUpdateYamlTypes.contains(yamlType)) {
+    } else if (ChangeType.MODIFY.equals(changeType) && rbacUpdateYamlTypes.contains(yamlType)) {
       if (yamlType.equals(YamlType.ENVIRONMENT)) {
         authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
       } else {
         authService.evictUserPermissionCacheForAccount(accountId, true);
       }
-    } else if (changeType.equals(ChangeType.DELETE) && rbacDeleteYamlTypes.contains(yamlType)) {
+    } else if (ChangeType.DELETE.equals(changeType) && rbacDeleteYamlTypes.contains(yamlType)) {
       authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, true, true);
     }
   }
@@ -612,7 +632,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
 
     // If its not a yaml file, we don't have a handler for that file
-    if (!change.getFilePath().endsWith(YAML_EXTENSION) && !doesEntityUsesActualFile(change.getFilePath())) {
+    if (!change.getFilePath().endsWith(YAML_EXTENSION) && !doesEntityUsesActualFile(change.getFilePath())
+        && !isPcfOverrideFile(change.getFilePath())) {
       return;
     }
 
@@ -632,6 +653,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         // TODO
         break;
     }
+  }
+
+  private boolean isPcfOverrideFile(String filePath) {
+    return Pattern.compile(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches();
   }
 
   private boolean doesEntityUsesActualFile(String filePath) {

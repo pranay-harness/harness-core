@@ -3,6 +3,9 @@ package software.wings.service.impl.yaml.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
@@ -123,6 +126,7 @@ public class YamlHelper {
   public SettingAttribute getSettingAttribute(String accountId, String yamlFilePath) {
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
       YamlType yamlType = getSettingAttributeType(yamlFilePath);
+      notNullCheck("YamlType can not be null", yamlType);
       String settingAttributeName =
           extractParentEntityName(yamlType.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
       notNullCheck("Setting Attribute name null in the given yaml file: " + yamlFilePath, settingAttributeName);
@@ -193,8 +197,11 @@ public class YamlHelper {
   }
 
   public Service getServiceOverrideFromAppManifestPath(String appId, String yamlFilePath) {
-    String serviceOverrideName = extractParentEntityName(
-        YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    String prefixExpression = yamlFilePath.contains(PCF_OVERRIDES_FOLDER)
+        ? APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE.getPrefixExpression()
+        : APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE.getPrefixExpression();
+
+    String serviceOverrideName = extractParentEntityName(prefixExpression, yamlFilePath, PATH_DELIMITER);
     if (isNotBlank(serviceOverrideName)) {
       return serviceResourceService.getServiceByName(appId, serviceOverrideName, false);
     }
@@ -210,6 +217,15 @@ public class YamlHelper {
     if (isNotBlank(kind) || isNotBlank(kind2)) {
       return AppManifestKind.VALUES;
     }
+
+    kind = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    kind2 = extractParentEntityName(
+        YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    if (isNotBlank(kind) || isNotBlank(kind2)) {
+      return AppManifestKind.PCF_OVERRIDE;
+    }
+
     return AppManifestKind.K8S_MANIFEST;
   }
 
@@ -309,6 +325,7 @@ public class YamlHelper {
       return artifactStreamService.getArtifactStreamByName(appId, serviceId, artifactStreamName);
     } else {
       YamlType entityType = getEntityType(yamlFilePath);
+      notNullCheck("YamlType can not be null", entityType);
       if (entityType.equals(ARTIFACT_STREAM)) {
         String appId = getAppId(accountId, yamlFilePath);
         notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
@@ -323,6 +340,7 @@ public class YamlHelper {
             extractEntityNameFromYamlPath(entityType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
         notNullCheck("Artifact stream name null in the given yaml file: " + yamlFilePath, artifactStreamName);
         SettingAttribute settingAttribute = getSettingAttribute(accountId, yamlFilePath);
+        notNullCheck("SettingAttribute cant be null", settingAttribute);
         return artifactStreamService.getArtifactStreamByName(settingAttribute.getUuid(), artifactStreamName);
       }
     }

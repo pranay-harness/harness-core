@@ -9,14 +9,18 @@ import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAccess;
 import io.harness.rest.RestResponse;
@@ -38,6 +42,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -729,13 +734,39 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case SERVICE:
         return APPLICATION_MANIFEST;
       case ENV:
-        return APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
+        return getYamlTypeForEnvOverrideAllServices(applicationManifest);
       case ENV_SERVICE:
-        return APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
+        return getYamlTypeForEnvServiceOverride(applicationManifest);
       default:
         unhandled(appManifestSource);
         throw new WingsException("Unhandled app manifest type");
     }
+  }
+
+  private YamlType getYamlTypeForEnvServiceOverride(ApplicationManifest applicationManifest) {
+    notNullCheck("ApplicationManifest can not be null", applicationManifest);
+    YamlType yamlType;
+    if (AppManifestKind.VALUES.equals(applicationManifest.getKind())) {
+      yamlType = APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
+    } else if (AppManifestKind.PCF_OVERRIDE.equals(applicationManifest.getKind())) {
+      yamlType = APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
+    } else {
+      throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
+    }
+    return yamlType;
+  }
+
+  private YamlType getYamlTypeForEnvOverrideAllServices(ApplicationManifest applicationManifest) {
+    notNullCheck("ApplicationManifest can not be null", applicationManifest);
+    YamlType yamlType;
+    if (AppManifestKind.VALUES.equals(applicationManifest.getKind())) {
+      yamlType = APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
+    } else if (AppManifestKind.PCF_OVERRIDE.equals(applicationManifest.getKind())) {
+      yamlType = APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
+    } else {
+      throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
+    }
+    return yamlType;
   }
 
   @Override
