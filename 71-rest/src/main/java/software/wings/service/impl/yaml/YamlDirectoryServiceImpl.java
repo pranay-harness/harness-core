@@ -28,6 +28,7 @@ import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
@@ -1319,6 +1320,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           envFolder.addChild(valuesFolder);
         }
         // ------------------- END VALUES FILES SECTION -----------------------
+
+        // ------------------- VALUES FILES SECTION -----------------------
+        FolderNode pcfOverridesFolder = generateEnvPcfOverridesFolder(accountId, environment, envPath);
+        if (pcfOverridesFolder != null) {
+          envFolder.addChild(pcfOverridesFolder);
+        }
+        // ------------------- END VALUES FILES SECTION -----------------------
       }
     }
 
@@ -1347,6 +1355,32 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     return valuesFolder;
+  }
+
+  @VisibleForTesting
+  FolderNode generateEnvPcfOverridesFolder(String accountId, Environment env, DirectoryPath envPath) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.PCF_OVERRIDE);
+
+    if (isEmpty(applicationManifests)) {
+      return null;
+    }
+
+    DirectoryPath pcfOverridesPath = envPath.clone().add(PCF_OVERRIDES_FOLDER);
+    FolderNode pcfOverridesFolder = new FolderNode(accountId, PCF_OVERRIDES_FOLDER, ApplicationManifest.class,
+        pcfOverridesPath, env.getAppId(), yamlGitSyncService);
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), AppManifestKind.PCF_OVERRIDE);
+    addPcfOverideFolderFiles(accountId, env, pcfOverridesPath, pcfOverridesFolder, applicationManifest);
+
+    // Fetch service specific environment value overrides
+    FolderNode serviceSpecificoverridesFolder =
+        generateEnvServiceSpecificPcfOverridesFolder(accountId, env, pcfOverridesPath);
+    if (serviceSpecificoverridesFolder != null) {
+      pcfOverridesFolder.addChild(serviceSpecificoverridesFolder);
+    }
+
+    return pcfOverridesFolder;
   }
 
   private FolderNode generateEnvServiceSpecificValuesFolder(
@@ -1378,6 +1412,35 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return valuesServicesFolder;
   }
 
+  private FolderNode generateEnvServiceSpecificPcfOverridesFolder(
+      String accountId, Environment env, DirectoryPath valuesPath) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), AppManifestKind.PCF_OVERRIDE);
+
+    if (isEmpty(applicationManifests)) {
+      return null;
+    }
+
+    DirectoryPath serviceOverridesPath = valuesPath.clone().add(SERVICES_FOLDER);
+    FolderNode overridesServicesFolder = new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class,
+        serviceOverridesPath, env.getAppId(), yamlGitSyncService);
+
+    for (ApplicationManifest appManifest : applicationManifests) {
+      Service service = isNotBlank(appManifest.getServiceId())
+          ? serviceResourceService.get(env.getAppId(), appManifest.getServiceId(), false)
+          : null;
+      if (isNotBlank(appManifest.getEnvId()) && service != null) {
+        DirectoryPath serviceFolderPath = serviceOverridesPath.clone().add(service.getName());
+        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
+            serviceFolderPath, env.getAppId(), yamlGitSyncService);
+        overridesServicesFolder.addChild(serviceFolder);
+        addPcfOverideFolderFiles(accountId, env, serviceFolderPath, serviceFolder, appManifest);
+      }
+    }
+
+    return overridesServicesFolder;
+  }
+
   private void addValuesFolderFiles(String accountId, Environment env, DirectoryPath valuesPath,
       FolderNode valuesFolder, ApplicationManifest applicationManifest) {
     if (applicationManifest != null) {
@@ -1394,6 +1457,29 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             valuesFolder.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
                 manifestFile.getFileName(), ManifestFile.class, valuesPath.clone().add(manifestFile.getFileName()),
                 yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+          }
+        }
+      }
+    }
+  }
+
+  private void addPcfOverideFolderFiles(String accountId, Environment env, DirectoryPath pcfOverridesPath,
+      FolderNode valuesFolder, ApplicationManifest applicationManifest) {
+    if (applicationManifest != null) {
+      valuesFolder.addChild(new EnvLevelYamlNode(accountId, applicationManifest.getUuid(), env.getAppId(),
+          env.getUuid(), INDEX_YAML, ApplicationManifest.class, pcfOverridesPath.clone().add(INDEX_YAML),
+          yamlGitSyncService, Type.APPLICATION_MANIFEST));
+
+      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+        List<ManifestFile> manifestFiles =
+            applicationManifestService.getManifestFilesByAppManifestId(env.getAppId(), applicationManifest.getUuid());
+
+        if (isNotEmpty(manifestFiles)) {
+          for (ManifestFile manifestFile : manifestFiles) {
+            valuesFolder.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
+                manifestFile.getFileName(), ManifestFile.class,
+                pcfOverridesPath.clone().add(manifestFile.getFileName()), yamlGitSyncService,
+                Type.APPLICATION_MANIFEST_FILE));
           }
         }
       }
@@ -1882,7 +1968,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         Validator.notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
-            .append(VALUES_FOLDER)
+            .append(isPcfOverrideAppManifest(applicationManifest) ? PCF_OVERRIDES_FOLDER : VALUES_FOLDER)
             .append(PATH_DELIMITER)
             .append(SERVICES_FOLDER)
             .append(PATH_DELIMITER)
@@ -1893,7 +1979,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         Validator.notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
-            .append(VALUES_FOLDER)
+            .append(isPcfOverrideAppManifest(applicationManifest) ? PCF_OVERRIDES_FOLDER : VALUES_FOLDER)
             .toString();
 
       case SERVICE:
@@ -1914,6 +2000,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         unhandled(appManifestSource);
         throw new WingsException("Invalid application manifest type");
     }
+  }
+
+  private boolean isPcfOverrideAppManifest(ApplicationManifest applicationManifest) {
+    return AppManifestKind.PCF_OVERRIDE.equals(applicationManifest.getKind());
   }
 
   @Override

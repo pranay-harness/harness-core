@@ -598,6 +598,12 @@ public class YamlGitServiceImpl implements YamlGitService {
         || Pattern.compile(YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE.getPathExpression()).matcher(filePath).matches()
         || Pattern.compile(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE.getPathExpression())
                .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE.getPathExpression())
+               .matcher(filePath)
                .matches()) {
       return;
     }

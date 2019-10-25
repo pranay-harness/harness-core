@@ -54,4 +54,5 @@ public interface PcfConstants {
 
   String CONTEXT_APP_FINAL_ROUTES = "finalRoutes";
   String CONTEXT_APP_TEMP_ROUTES = "tempRoutes";
+  String PCF_CONFIG_FILE_EXTENSION = ".yml";
 }

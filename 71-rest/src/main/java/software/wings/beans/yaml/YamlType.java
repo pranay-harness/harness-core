@@ -24,6 +24,8 @@ import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.PCF_YAML_EXPRESSION;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PROVISIONERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
@@ -130,17 +132,35 @@ public enum YamlType {
           INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, VALUES_FOLDER),
       ApplicationManifest.class),
+
+  // All Services
   APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE(YamlConstants.VALUES,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           VALUES_FOLDER, INDEX_YAML),
       generatePath(
           PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, VALUES_FOLDER),
       ApplicationManifest.class),
+  // Service Specific
   APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           VALUES_FOLDER, SERVICES_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           VALUES_FOLDER, SERVICES_FOLDER, ANY),
+      ApplicationManifest.class),
+
+  // PCF Override All Services
+  APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          PCF_OVERRIDES_FOLDER, INDEX_YAML),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, PCF_OVERRIDES_FOLDER),
+      ApplicationManifest.class),
+  // PCF Override Specific Services
+  APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          PCF_OVERRIDES_FOLDER, SERVICES_FOLDER, ANY, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          PCF_OVERRIDES_FOLDER, SERVICES_FOLDER, ANY),
       ApplicationManifest.class),
   MANIFEST_FILE(YamlConstants.MANIFEST_FILE,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
@@ -164,6 +184,21 @@ public enum YamlType {
           VALUES_FOLDER, SERVICES_FOLDER, ANY, VALUES_YAML_KEY),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           VALUES_FOLDER, SERVICES_FOLDER, ANY),
+      ManifestFile.class),
+
+  // This defines prefix and path expression for PCF Override yml files
+  MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          PCF_OVERRIDES_FOLDER, PCF_YAML_EXPRESSION),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, PCF_OVERRIDES_FOLDER),
+      ManifestFile.class),
+  // This defines prefix and path expression for PCF Override yml files
+  MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          PCF_OVERRIDES_FOLDER, SERVICES_FOLDER, ANY, PCF_YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          PCF_OVERRIDES_FOLDER, SERVICES_FOLDER, ANY),
       ManifestFile.class),
   PROVISIONER(EntityType.PROVISIONER.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PROVISIONERS_FOLDER, YAML_EXPRESSION),

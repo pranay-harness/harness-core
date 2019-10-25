@@ -67,6 +67,19 @@ public class YamlGitServiceImplTest extends CategoryTest {
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Applications").build());
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Applications/app1/Services").build());
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Verification Providers").build());
+    gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Verification Providers").build());
+    gitFileChanges.add(
+        GitFileChange.Builder.aGitFileChange()
+            .withFilePath("Setup/Applications/App1/Environments/env1/PCF Overrides/Services/SERVICE_NAME/a.yml")
+            .build());
+    gitFileChanges.add(
+        GitFileChange.Builder.aGitFileChange()
+            .withFilePath("Setup/Applications/App1/Environments/env1/PCF Overrides/Services/SERVICE_NAME/a.yml")
+            .build());
+    gitFileChanges.add(
+        GitFileChange.Builder.aGitFileChange()
+            .withFilePath("Setup/Applications/App1/Environments/env1/PCF Overrides/Services/SERVICE_NAME/Index.yaml")
+            .build());
 
     yamlGitService.checkForValidNameSyntax(gitFileChanges);
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange()
