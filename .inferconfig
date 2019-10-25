@@ -4,6 +4,7 @@
     "20-persistence-test/",
     "75-model-test/",
     "71-rest/src/main/java/software/wings/service/impl/DelegateServiceImpl.java",
-    "81-delegate/src/main/java/io/harness/delegate/service/DelegateServiceImpl.java"
+    "81-delegate/src/main/java/io/harness/delegate/service/DelegateServiceImpl.java",
+    "12-commons/src/main/java/io/harness/logging/RestLogAppender.java"
   ]
 }
