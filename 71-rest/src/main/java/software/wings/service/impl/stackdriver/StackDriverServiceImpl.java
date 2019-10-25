@@ -27,7 +27,6 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.MLServiceUtils;
-import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -51,6 +50,17 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @Slf4j
 public class StackDriverServiceImpl implements StackDriverService {
+  private static final URL STACKDRIVER_METRICS_URL = StackDriverService.class.getResource(STACK_DRIVER_METRIC);
+  private static final String STACKDRIVER_YAML;
+  static {
+    String tmpStackDriverYaml = "";
+    try {
+      tmpStackDriverYaml = Resources.toString(STACKDRIVER_METRICS_URL, Charsets.UTF_8);
+    } catch (IOException ex) {
+      logger.info("Exception while reading StackDriver yaml", ex);
+    }
+    STACKDRIVER_YAML = tmpStackDriverYaml;
+  }
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
@@ -208,9 +218,8 @@ public class StackDriverServiceImpl implements StackDriverService {
     Map<String, List<StackDriverMetric>> stackDriverMetrics;
     YamlUtils yamlUtils = new YamlUtils();
     try {
-      URL url = CloudWatchService.class.getResource(STACK_DRIVER_METRIC);
-      String yaml = Resources.toString(url, Charsets.UTF_8);
-      stackDriverMetrics = yamlUtils.read(yaml, new TypeReference<Map<String, List<StackDriverMetric>>>() {});
+      stackDriverMetrics =
+          yamlUtils.read(STACKDRIVER_YAML, new TypeReference<Map<String, List<StackDriverMetric>>>() {});
     } catch (Exception e) {
       throw new WingsException(e);
     }
