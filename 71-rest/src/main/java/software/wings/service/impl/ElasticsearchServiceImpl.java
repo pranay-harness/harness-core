@@ -47,6 +47,7 @@ import software.wings.service.intfc.SearchService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,12 +67,12 @@ public class ElasticsearchServiceImpl implements SearchService {
     SearchHits hits = search(searchString, accountId);
     LinkedHashMap<String, List<SearchResult>> searchResult = new LinkedHashMap<>();
 
-    List<SearchResult> applicationResponseViewList = new ArrayList<>();
-    List<SearchResult> pipelineResponseViewList = new ArrayList<>();
-    List<SearchResult> workflowResponseViewList = new ArrayList<>();
-    List<SearchResult> serviceResponseViewList = new ArrayList<>();
-    List<SearchResult> environmentResponseViewList = new ArrayList<>();
-    List<SearchResult> deploymentResponseViewList = new ArrayList<>();
+    List<SearchResult> applicationSearchResults = new ArrayList<>();
+    List<SearchResult> pipelineSearchResults = new ArrayList<>();
+    List<SearchResult> workflowSearchResults = new ArrayList<>();
+    List<SearchResult> serviceSearchResults = new ArrayList<>();
+    List<SearchResult> environmentSearchResults = new ArrayList<>();
+    List<SearchResult> deploymentSearchResults = new ArrayList<>();
     ObjectMapper mapper = new ObjectMapper();
     boolean includeAudits = auditTrailFeature.isAvailableForAccount(accountId);
 
@@ -80,46 +81,51 @@ public class ElasticsearchServiceImpl implements SearchService {
       switch (EntityType.valueOf(result.get(EntityBaseViewKeys.type).toString())) {
         case APPLICATION:
           ApplicationView applicationView = mapper.convertValue(result, ApplicationView.class);
-          ApplicationSearchResult applicationSearchResult = new ApplicationSearchResult(applicationView, includeAudits);
-          applicationResponseViewList.add(applicationSearchResult);
+          ApplicationSearchResult applicationSearchResult =
+              new ApplicationSearchResult(applicationView, includeAudits, hit.getScore());
+          applicationSearchResults.add(applicationSearchResult);
           break;
         case SERVICE:
           ServiceView serviceView = mapper.convertValue(result, ServiceView.class);
-          ServiceSearchResult serviceSearchResult = new ServiceSearchResult(serviceView, includeAudits);
-          serviceResponseViewList.add(serviceSearchResult);
+          ServiceSearchResult serviceSearchResult = new ServiceSearchResult(serviceView, includeAudits, hit.getScore());
+          serviceSearchResults.add(serviceSearchResult);
           break;
         case ENVIRONMENT:
           EnvironmentView environmentView = mapper.convertValue(result, EnvironmentView.class);
-          EnvironmentSearchResult environmentSearchResult = new EnvironmentSearchResult(environmentView, includeAudits);
-          environmentResponseViewList.add(environmentSearchResult);
+          EnvironmentSearchResult environmentSearchResult =
+              new EnvironmentSearchResult(environmentView, includeAudits, hit.getScore());
+          environmentSearchResults.add(environmentSearchResult);
           break;
         case WORKFLOW:
           WorkflowView workflowView = mapper.convertValue(result, WorkflowView.class);
-          WorkflowSearchResult workflowSearchResult = new WorkflowSearchResult(workflowView, includeAudits);
-          workflowResponseViewList.add(workflowSearchResult);
+          WorkflowSearchResult workflowSearchResult =
+              new WorkflowSearchResult(workflowView, includeAudits, hit.getScore());
+          workflowSearchResults.add(workflowSearchResult);
           break;
         case PIPELINE:
           PipelineView pipelineView = mapper.convertValue(result, PipelineView.class);
-          PipelineSearchResult pipelineSearchResult = new PipelineSearchResult(pipelineView, includeAudits);
-          pipelineResponseViewList.add(pipelineSearchResult);
+          PipelineSearchResult pipelineSearchResult =
+              new PipelineSearchResult(pipelineView, includeAudits, hit.getScore());
+          pipelineSearchResults.add(pipelineSearchResult);
           break;
         case DEPLOYMENT:
           if (result.get(DeploymentViewKeys.workflowInPipeline) != null
               && result.get(DeploymentViewKeys.workflowInPipeline).equals(false)) {
             DeploymentView deploymentView = mapper.convertValue(result, DeploymentView.class);
-            DeploymentSearchResult deploymentSearchResult = new DeploymentSearchResult(deploymentView);
-            deploymentResponseViewList.add(deploymentSearchResult);
+            DeploymentSearchResult deploymentSearchResult = new DeploymentSearchResult(deploymentView, hit.getScore());
+            deploymentSearchResults.add(deploymentSearchResult);
           }
           break;
         default:
       }
     }
-    searchResult.put(ApplicationSearchEntity.TYPE, applicationResponseViewList);
-    searchResult.put(ServiceSearchEntity.TYPE, serviceResponseViewList);
-    searchResult.put(EnvironmentSearchEntity.TYPE, environmentResponseViewList);
-    searchResult.put(WorkflowSearchEntity.TYPE, workflowResponseViewList);
-    searchResult.put(PipelineSearchEntity.TYPE, pipelineResponseViewList);
-    searchResult.put(DeploymentSearchEntity.TYPE, deploymentResponseViewList);
+    searchResult.put(ApplicationSearchEntity.TYPE, applicationSearchResults);
+    searchResult.put(ServiceSearchEntity.TYPE, serviceSearchResults);
+    searchResult.put(EnvironmentSearchEntity.TYPE, environmentSearchResults);
+    searchResult.put(WorkflowSearchEntity.TYPE, workflowSearchResults);
+    searchResult.put(PipelineSearchEntity.TYPE, pipelineSearchResults);
+    sortDeploymentsWithSameNameByCreatedAtValue(deploymentSearchResults);
+    searchResult.put(DeploymentSearchEntity.TYPE, deploymentSearchResults);
 
     return new SearchResults(searchResult);
   }
@@ -154,5 +160,30 @@ public class ElasticsearchServiceImpl implements SearchService {
                                     .tieBreaker(0.7f);
     boolQueryBuilder.must(queryBuilder).filter(QueryBuilders.termQuery(EntityBaseViewKeys.accountId, accountId));
     return boolQueryBuilder;
+  }
+
+  private static int getLastIndexWithSameDeploymentName(List<SearchResult> searchResults, int startIndex) {
+    int endIndex = startIndex + 1;
+
+    while (endIndex < searchResults.size()
+        && searchResults.get(endIndex).getName().equals(searchResults.get(startIndex).getName())) {
+      endIndex++;
+    }
+    return endIndex;
+  }
+
+  private static void sortInterval(List<SearchResult> searchResults) {
+    searchResults.sort(Comparator.comparingLong(SearchResult::getCreatedAt).reversed());
+  }
+
+  private static void sortDeploymentsWithSameNameByCreatedAtValue(List<SearchResult> searchResults) {
+    int start = 0;
+    while (start < searchResults.size()) {
+      int end = getLastIndexWithSameDeploymentName(searchResults, start);
+      if (end > start) {
+        sortInterval(searchResults.subList(start, end));
+      }
+      start = end;
+    }
   }
 }

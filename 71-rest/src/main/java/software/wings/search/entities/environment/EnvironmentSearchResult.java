@@ -68,10 +68,10 @@ public class EnvironmentSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public EnvironmentSearchResult(EnvironmentView environmentView, boolean includeAudits) {
+  public EnvironmentSearchResult(EnvironmentView environmentView, boolean includeAudits, float searchScore) {
     super(environmentView.getId(), environmentView.getName(), environmentView.getDescription(),
         environmentView.getAccountId(), environmentView.getCreatedAt(), environmentView.getLastUpdatedAt(),
-        environmentView.getType(), environmentView.getCreatedBy(), environmentView.getLastUpdatedBy());
+        environmentView.getType(), environmentView.getCreatedBy(), environmentView.getLastUpdatedBy(), searchScore);
     this.appId = environmentView.getAppId();
     this.appName = environmentView.getAppName();
     this.environmentType = environmentView.getEnvironmentType();

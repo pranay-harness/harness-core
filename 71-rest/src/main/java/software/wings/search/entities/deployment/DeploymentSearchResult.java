@@ -25,10 +25,10 @@ public class DeploymentSearchResult extends SearchResult {
   private String pipelineName;
   private boolean workflowInPipeline;
 
-  public DeploymentSearchResult(DeploymentView deploymentView) {
+  public DeploymentSearchResult(DeploymentView deploymentView, float searchScore) {
     super(deploymentView.getId(), deploymentView.getName(), deploymentView.getDescription(),
         deploymentView.getAccountId(), deploymentView.getCreatedAt(), deploymentView.getLastUpdatedAt(),
-        deploymentView.getType(), deploymentView.getCreatedBy(), deploymentView.getLastUpdatedBy());
+        deploymentView.getType(), deploymentView.getCreatedBy(), deploymentView.getLastUpdatedBy(), searchScore);
     this.appId = deploymentView.getAppId();
     this.appName = deploymentView.getAppName();
     this.status = deploymentView.getStatus();

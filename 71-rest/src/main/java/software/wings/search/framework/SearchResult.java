@@ -21,4 +21,5 @@ public class SearchResult {
   private EntityType type;
   private EmbeddedUser createdBy;
   private EmbeddedUser lastUpdatedBy;
+  private float searchScore;
 }
