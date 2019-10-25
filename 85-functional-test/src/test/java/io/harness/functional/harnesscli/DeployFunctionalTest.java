@@ -1,6 +1,7 @@
 package io.harness.functional.harnesscli;
 
 import static io.harness.generator.EnvironmentGenerator.Environments.FUNCTIONAL_TEST;
+import static io.harness.generator.ServiceGenerator.Services.K8S_V2_TEST;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,6 +15,8 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureMappingGenerator;
+import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -33,6 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
@@ -58,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 public class DeployFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private WorkflowUtils workflowUtils;
+  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -75,6 +80,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   private String artifactId;
   private Service service;
   private InfrastructureDefinition infrastructureDefinition;
+  private InfrastructureMapping infrastructureMapping;
   private List<String> artifactStreamIds;
   private ArtifactStream artifactStream;
   private Environment environment;
@@ -84,7 +90,8 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   @Before
   public void setUp() throws IOException {
     owners = ownerManager.create();
-    service = serviceGenerator.ensureK8sTest(seed, owners, "k8s-service");
+
+    service = serviceGenerator.ensurePredefined(seed, owners, K8S_V2_TEST);
     appId = service.getAppId();
     accountId = getAccount().getUuid();
     environment = environmentGenerator.ensurePredefined(seed, owners, FUNCTIONAL_TEST);
@@ -94,9 +101,30 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
         bearerToken, service.getAppId(), artifactStream.getUuid());
     artifacts = ArtifactRestUtils.fetchArtifactByArtifactStream(bearerToken, appId, artifactStream.getUuid());
     artifactId = artifact.getUuid();
-    infrastructureDefinition =
-        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, "GCP_KUBERNETES", bearerToken);
+    // TODO: Uncomment this along with the Removing Ignore when InfraDefs FF is turned ON
+    //        infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(seed, owners,
+    //        "GCP_KUBERNETES", bearerToken);
+    infrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.K8S_ROLLING_TEST);
     Runtime.getRuntime().exec("harness login -u admin@harness.io -p admin -d localhost:9090");
+  }
+
+  @Test
+  @Owner(emails = ROHIT)
+  @Category(CliFunctionalTests.class)
+  public void deployWorkflowWithInfraMapping() throws IOException {
+    Workflow rollingWorkflow =
+        workflowUtils.createRollingWorkflowInfraMapping("Test-Rolling-CLI-Deployment", service, infrastructureMapping);
+
+    String workflowId = createWorkflowAndReturnId(rollingWorkflow);
+
+    String command =
+        "harness deploy --application " + appId + " --workflow " + workflowId + " --artifacts " + artifactId;
+    assertThat(deployAndCheckStatus(getCommand(Commands.DEPLOY_WORKFLOW_TEST, command), ExecutionStatus.RUNNING.name()))
+        .isTrue();
+
+    logger.info("Deleting the workflow");
+    WorkflowRestUtils.deleteWorkflow(bearerToken, workflowId, appId);
   }
 
   @Test
@@ -278,10 +306,10 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
                           .<String>getJsonObject("resource.status")
                           .equals(status));
 
-    WorkflowExecution completedWorkflowExecution =
+    WorkflowExecution runningWorkflowExecution =
         workflowExecutionService.getExecutionDetails(appId, executionId, true, null);
-    logger.info("Execution Status : " + completedWorkflowExecution.getStatus());
-    assertThat(ExecutionStatus.SUCCESS).isEqualTo(completedWorkflowExecution.getStatus());
+    logger.info("Execution Status : " + runningWorkflowExecution.getStatus());
+    assertThat(ExecutionStatus.RUNNING).isEqualTo(runningWorkflowExecution.getStatus());
 
     return true;
   }
