@@ -1,4 +1,4 @@
-package software.wings.scheduler.instance;
+package io.harness.workers.background.iterator;
 
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
