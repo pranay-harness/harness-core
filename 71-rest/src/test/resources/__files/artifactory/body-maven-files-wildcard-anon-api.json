@@ -1,0 +1,10 @@
+{
+  "results": [
+    {
+      "uri": "http://localhost:8080/artifactory/api/storage/harness-maven/tdlist/tdlist/1.1/tdlist-1.1.war"
+    },
+    {
+      "uri": "http://localhost:8080/artifactory/api/storage/harness-maven/tdlist/tdlist/1.2/tdlist-1.2.war"
+    }
+  ]
+}
