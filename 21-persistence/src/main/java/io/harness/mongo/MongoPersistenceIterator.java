@@ -3,6 +3,7 @@ package io.harness.mongo;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.threading.Morpheus.sleep;
@@ -43,6 +44,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   @Inject private final QueueController queueController;
 
   public interface Handler<T> { void handle(T entity); }
+
   public interface FilterExpander<T> { void filter(Query<T> query); }
 
   public enum SchedulingType { REGULAR, IRREGULAR, IRREGULAR_SKIP_MISSED }
@@ -222,55 +224,58 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     return query;
   }
 
-  @SuppressWarnings({"squid:S2445"}) // We are aware that the entity will be different object every time the method is
-                                     // called. This is exactly what we want.
-
+  // We are aware that the entity will be different object every time the method is
+  // called. This is exactly what we want.
+  // The theory is that ERROR type exception are unrecoverable, that is not exactly true.
+  @SuppressWarnings({"squid:S2445", "PMD", "squid:S1181"})
   @VisibleForTesting
   public void processEntity(final T entity) {
-    try {
-      semaphore.acquire();
-    } catch (InterruptedException e) {
-      logger.info("Working on entity {}.{} was interrupted", clazz.getCanonicalName(), entity.getUuid());
-      Thread.currentThread().interrupt();
-      return;
-    }
-
-    try {
-      synchronized (entity) {
-        entity.notify();
-      }
-      final Long nextIteration = entity.obtainNextIteration(fieldName);
-      if (schedulingType == REGULAR) {
-        ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
-      }
-
-      long startTime = currentTimeMillis();
-
-      long delay = nextIteration == null ? 0 : startTime - nextIteration;
-      if (delay < acceptableNoAlertDelay.toMillis()) {
-        logger.info("Working on entity {}.{} with delay {}", clazz.getCanonicalName(), entity.getUuid(), delay);
-      } else {
-        logger.error("Entity {}.{} was delayed {} which is more than the acceptable {}", clazz.getCanonicalName(),
-            entity.getUuid(), delay, acceptableNoAlertDelay.toMillis());
+    try (EntityLogContext ignore = new EntityLogContext(entity, OVERRIDE_ERROR)) {
+      try {
+        semaphore.acquire();
+      } catch (InterruptedException e) {
+        logger.info("Working on entity was interrupted");
+        Thread.currentThread().interrupt();
+        return;
       }
 
       try {
-        handler.handle(entity);
-      } catch (RuntimeException exception) {
-        logger.error("Catch and handle all exceptions in the entity handler", exception);
-      }
-
-      if (acceptableExecutionTime != null) {
-        long handleTime = currentTimeMillis() - startTime;
-        if (handleTime > acceptableExecutionTime.toMillis()) {
-          logger.error("Entity {}.{} was handled longer {} than the acceptable {}", clazz.getCanonicalName(),
-              entity.getUuid(), handleTime, acceptableExecutionTime.toMillis());
+        synchronized (entity) {
+          entity.notify();
         }
+        final Long nextIteration = entity.obtainNextIteration(fieldName);
+        if (schedulingType == REGULAR) {
+          ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
+        }
+
+        long startTime = currentTimeMillis();
+
+        long delay = nextIteration == null ? 0 : startTime - nextIteration;
+        if (delay < acceptableNoAlertDelay.toMillis()) {
+          logger.info("Working on entity with delay {}", delay);
+        } else {
+          logger.error("Working on entity with delay {} which is more than the acceptable {}", delay,
+              acceptableNoAlertDelay.toMillis());
+        }
+
+        try {
+          handler.handle(entity);
+        } catch (RuntimeException exception) {
+          logger.error("Catch and handle all exceptions in the entity handler", exception);
+        }
+
+        if (acceptableExecutionTime != null) {
+          long handleTime = currentTimeMillis() - startTime;
+          if (handleTime > acceptableExecutionTime.toMillis()) {
+            logger.error(
+                "Entity was handled longer {} than the acceptable {}", handleTime, acceptableExecutionTime.toMillis());
+          }
+        }
+      } catch (Throwable exception) {
+        logger.error("Exception while processing entity", exception);
+      } finally {
+        semaphore.release();
       }
-    } catch (RuntimeException exception) {
-      logger.error("Exception while processing entity", exception);
-    } finally {
-      semaphore.release();
     }
   }
 }
