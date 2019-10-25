@@ -43,6 +43,7 @@ import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +60,17 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class CloudWatchServiceImpl implements CloudWatchService {
+  private static final URL CLOUDWATCH_METRICS_URL = CloudWatchService.class.getResource(STATIC_CLOUD_WATCH_METRIC_URL);
+  private static final String CLOUDWATCH_YAML;
+  static {
+    String tmpCloudwatchYaml = "";
+    try {
+      tmpCloudwatchYaml = Resources.toString(CLOUDWATCH_METRICS_URL, Charsets.UTF_8);
+    } catch (IOException ex) {
+      logger.info("Exception while reading cloudwatch yaml", ex);
+    }
+    CLOUDWATCH_YAML = tmpCloudwatchYaml;
+  }
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private SecretManager secretManager;
@@ -222,9 +234,8 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics;
     YamlUtils yamlUtils = new YamlUtils();
     try {
-      URL url = CloudWatchService.class.getResource(STATIC_CLOUD_WATCH_METRIC_URL);
-      String yaml = Resources.toString(url, Charsets.UTF_8);
-      cloudWatchMetrics = yamlUtils.read(yaml, new TypeReference<Map<AwsNameSpace, List<CloudWatchMetric>>>() {});
+      cloudWatchMetrics =
+          yamlUtils.read(CLOUDWATCH_YAML, new TypeReference<Map<AwsNameSpace, List<CloudWatchMetric>>>() {});
       cloudWatchMetrics.forEach((awsNameSpace, metrics) -> metrics.forEach(cloudWatchMetric -> {
         Preconditions.checkState(isNotEmpty(cloudWatchMetric.getStatistics()),
             awsNameSpace + ":" + cloudWatchMetric.getMetricName() + " does not have statistics field defined");

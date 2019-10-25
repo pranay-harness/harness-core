@@ -74,6 +74,20 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DatadogState extends AbstractMetricAnalysisState {
   private static final int DATA_COLLECTION_RATE_MINS = 5;
+  private static final URL DATADOG_URL = DatadogState.class.getResource("/apm/datadog.yml");
+  private static final URL DATADOG_METRICS_URL = DatadogState.class.getResource("/apm/datadog_metrics.yml");
+  private static final String DATADOG_METRICS_YAML, DATADOG_YAML;
+  static {
+    String tmpDatadogMetricsYaml = "", tmpDatadogYaml = "";
+    try {
+      tmpDatadogMetricsYaml = Resources.toString(DATADOG_METRICS_URL, Charsets.UTF_8);
+      tmpDatadogYaml = Resources.toString(DATADOG_URL, Charsets.UTF_8);
+    } catch (IOException ex) {
+      logger.error("Unable to initialize datadog metrics yaml");
+    }
+    DATADOG_METRICS_YAML = tmpDatadogMetricsYaml;
+    DATADOG_YAML = tmpDatadogYaml;
+  }
 
   public DatadogState(String name) {
     super(name, StateType.DATA_DOG);
@@ -280,9 +294,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
   public static String getMetricTypeForMetric(String metricName, DatadogCVServiceConfiguration cvConfig) {
     try {
       YamlUtils yamlUtils = new YamlUtils();
-      URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
-      String yaml = Resources.toString(url, Charsets.UTF_8);
-      Map<String, List<Metric>> metricsMap = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
+
+      Map<String, List<Metric>> metricsMap =
+          yamlUtils.read(DATADOG_METRICS_YAML, new TypeReference<Map<String, List<Metric>>>() {});
       List<Metric> metrics = metricsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
       Optional<Metric> matchedMetric =
           metrics.stream().filter(metric -> metric.getMetricName().equals(metricName)).findAny();
@@ -310,10 +324,10 @@ public class DatadogState extends AbstractMetricAnalysisState {
       Optional<List<String>> metricNames, Optional<String> applicationFilter,
       Optional<Map<String, Set<Metric>>> customMetrics, Optional<DeploymentType> deploymentType) {
     YamlUtils yamlUtils = new YamlUtils();
-    URL url = DatadogState.class.getResource("/apm/datadog.yml");
+
     try {
-      String yaml = Resources.toString(url, Charsets.UTF_8);
-      Map<String, MetricInfo> metricInfos = yamlUtils.read(yaml, new TypeReference<Map<String, MetricInfo>>() {});
+      Map<String, MetricInfo> metricInfos =
+          yamlUtils.read(DATADOG_YAML, new TypeReference<Map<String, MetricInfo>>() {});
 
       if (!metricNames.isPresent()) {
         metricNames = Optional.of(new ArrayList<>());
@@ -485,10 +499,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
       Optional<Map<String, Set<Metric>>> customMetricsByTag, Optional<String> applicationFilter,
       Optional<String> hostFilter) {
     YamlUtils yamlUtils = new YamlUtils();
-    URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
     try {
-      String yaml = Resources.toString(url, Charsets.UTF_8);
-      Map<String, List<Metric>> metrics = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
+      Map<String, List<Metric>> metrics =
+          yamlUtils.read(DATADOG_METRICS_YAML, new TypeReference<Map<String, List<Metric>>>() {});
 
       if (!metricNames.isPresent()) {
         metricNames = Optional.of(new ArrayList<>());
@@ -546,10 +559,9 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   public static List<Metric> metricNames() {
     YamlUtils yamlUtils = new YamlUtils();
-    URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
     try {
-      String yaml = Resources.toString(url, Charsets.UTF_8);
-      Map<String, List<Metric>> metricsMap = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
+      Map<String, List<Metric>> metricsMap =
+          yamlUtils.read(DATADOG_METRICS_YAML, new TypeReference<Map<String, List<Metric>>>() {});
       return metricsMap.values().stream().flatMap(metric -> metric.stream()).collect(Collectors.toList());
     } catch (Exception ex) {
       throw new WingsException("Unable to load datadog metrics", ex);
