@@ -181,3 +181,8 @@ awsInstanceTypes:
   - d2.2xlarge
   - d2.4xlarge
   - d2.8xlarge
+
+publishers:
+  active:
+    io.harness: true
+    software.wings: true

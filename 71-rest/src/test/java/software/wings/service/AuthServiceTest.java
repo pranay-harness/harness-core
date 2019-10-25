@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -94,7 +95,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock private SegmentHandler segmentHandler;
   @Mock FeatureFlagService featureFlagService;
   @Mock PortalConfig portalConfig;
-  @Inject @InjectMocks MainConfiguration mainConfiguration;
+  @Inject MainConfiguration mainConfiguration;
   @Inject @InjectMocks private AuthService authService;
   private Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
@@ -107,6 +108,7 @@ public class AuthServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
+    on(mainConfiguration).set("portal", portalConfig);
     when(cacheManager.getUserCache()).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().withUuid(USER_ID).build());
 

@@ -358,3 +358,8 @@ workers:
   active:
     io.harness: true
     software.wings: true
+
+publishers:
+  active:
+    io.harness: true
+    software.wings: true
