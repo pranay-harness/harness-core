@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION;
+import static software.wings.sm.states.HoldingScope.PHASE;
 import static software.wings.sm.states.HoldingScope.WORKFLOW;
 
 import com.google.inject.Inject;
@@ -257,5 +258,29 @@ public class ResourceConstraintState extends State {
     stateExecutionData.setUnit(resourceUnit);
     stateExecutionData.setUsage(permits);
     return ExecutionResponse.builder().stateExecutionData(stateExecutionData);
+  }
+
+  int alreadyAcquiredPermits(String holdingScope, ExecutionContext executionContext) {
+    int acquiredPermits = 0;
+    String releaseEntityId;
+    String parentReleaseEntityId;
+    String appId = executionContext.fetchRequiredApp().getUuid();
+    switch (HoldingScope.valueOf(holdingScope)) {
+      case WORKFLOW:
+        releaseEntityId = ResourceConstraintService.releaseEntityId(executionContext.getWorkflowExecutionId());
+        acquiredPermits +=
+            resourceConstraintService.getAllCurrentlyAcquiredPermits(holdingScope, releaseEntityId, appId);
+        return acquiredPermits;
+      case PHASE:
+        PhaseElement phaseElement =
+            executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+        parentReleaseEntityId = ResourceConstraintService.releaseEntityId(executionContext.getWorkflowExecutionId());
+        releaseEntityId = ResourceConstraintService.releaseEntityId(
+            executionContext.getWorkflowExecutionId(), phaseElement.getPhaseName());
+        return resourceConstraintService.getAllCurrentlyAcquiredPermits(PHASE.name(), releaseEntityId, appId)
+            + resourceConstraintService.getAllCurrentlyAcquiredPermits(WORKFLOW.name(), parentReleaseEntityId, appId);
+      default:
+        throw new InvalidRequestException(String.format("Unhandled holding scope %s", holdingScope));
+    }
   }
 }
