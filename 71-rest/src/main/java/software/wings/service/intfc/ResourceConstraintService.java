@@ -61,4 +61,6 @@ public interface ResourceConstraintService extends OwnedByAccount {
   static String releaseEntityId(String workflowExecutionId, String phaseName) {
     return workflowExecutionId + "|" + phaseName;
   }
+
+  int getAllCurrentlyAcquiredPermits(String holdingScope, String releaseEntityId, String appId);
 }

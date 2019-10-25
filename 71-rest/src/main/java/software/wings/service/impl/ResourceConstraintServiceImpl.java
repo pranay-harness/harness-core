@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.allChecks;
@@ -519,5 +520,23 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         .field(ResourceConstraintInstanceKeys.state)
         .in(asList(State.ACTIVE.name(), State.BLOCKED.name()))
         .asList();
+  }
+
+  @Override
+  public int getAllCurrentlyAcquiredPermits(String holdingScope, String releaseEntityId, String appId) {
+    int currentPermits = 0;
+    List<ResourceConstraintInstance> resourceConstraintInstances =
+        wingsPersistence.createQuery(ResourceConstraintInstance.class)
+            .filter(ResourceConstraintInstanceKeys.appId, appId)
+            .filter(ResourceConstraintInstanceKeys.releaseEntityType, holdingScope)
+            .filter(ResourceConstraintInstanceKeys.releaseEntityId, releaseEntityId)
+            .project(ResourceConstraintInstanceKeys.permits, true)
+            .asList();
+    if (isNotEmpty(resourceConstraintInstances)) {
+      for (ResourceConstraintInstance constraintInstance : resourceConstraintInstances) {
+        currentPermits += constraintInstance.getPermits();
+      }
+    }
+    return currentPermits;
   }
 }

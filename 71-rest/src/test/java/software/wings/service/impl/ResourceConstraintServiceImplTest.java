@@ -7,10 +7,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static software.wings.infra.InfraDefinitionTestConstants.RESOURCE_CONSTRAINT_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
 
@@ -34,6 +36,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.sm.states.HoldingScope;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class ResourceConstraintServiceImplTest extends WingsBaseTest {
@@ -119,5 +122,31 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
             APP_ID, INFRA_MAPPING_ID, HoldingScope.WORKFLOW.name());
 
     assertThat(entityIds).isNotNull().hasSize(2);
+  }
+
+  // TODO: YOGESH use fake mongo in all tests
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAllCurrentlyAcquiredPermits() {
+    final int permits = 3;
+    ResourceConstraintInstance resourceConstraintInstance =
+        ResourceConstraintInstance.builder().permits(permits).build();
+    Query mockQuery = mock(Query.class);
+    doReturn(mockQuery).when(wingsPersistence).createQuery(any());
+    doReturn(mockQuery).when(mockQuery).filter(ResourceConstraintInstanceKeys.appId, APP_ID);
+    doReturn(mockQuery).when(mockQuery).filter(
+        ResourceConstraintInstanceKeys.releaseEntityType, HoldingScope.WORKFLOW.name());
+    doReturn(mockQuery).when(mockQuery).filter(ResourceConstraintInstanceKeys.releaseEntityId, WORKFLOW_EXECUTION_ID);
+    doReturn(mockQuery).when(mockQuery).project(ResourceConstraintInstanceKeys.permits, true);
+    doReturn(Arrays.asList(resourceConstraintInstance)).when(mockQuery).asList();
+    assertThat(resourceConstraintService.getAllCurrentlyAcquiredPermits(
+                   HoldingScope.WORKFLOW.name(), WORKFLOW_EXECUTION_ID, APP_ID))
+        .isEqualTo(permits);
+
+    // if resourceInstance is null
+    doReturn(null).when(mockQuery).asList();
+    assertThat(resourceConstraintService.getAllCurrentlyAcquiredPermits(
+                   HoldingScope.WORKFLOW.name(), WORKFLOW_EXECUTION_ID, APP_ID))
+        .isEqualTo(0);
   }
 }
