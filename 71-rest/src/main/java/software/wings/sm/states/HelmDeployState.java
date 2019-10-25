@@ -56,8 +56,6 @@ import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -901,17 +899,6 @@ public class HelmDeployState extends State {
     }
 
     applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
-
-    // ToDo anshul - Remove this piece of code once the values yaml in service has been migrated to ManifestFiles format
-    if (!appManifestMap.containsKey(K8sValuesLocation.ServiceOverride)) {
-      ServiceTemplate serviceTemplate = serviceTemplateHelper.fetchServiceTemplate(infrastructureMapping);
-      if (serviceTemplate != null) {
-        Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId(), false);
-        if (service != null && isNotBlank(service.getHelmValueYaml())) {
-          valuesFiles.put(K8sValuesLocation.ServiceOverride, service.getHelmValueYaml());
-        }
-      }
-    }
 
     logger.info("Found Values at following sources: " + valuesFiles.keySet());
     List<String> helmValueOverridesYamlFiles = getOrderedValuesYamlList(valuesFiles);
