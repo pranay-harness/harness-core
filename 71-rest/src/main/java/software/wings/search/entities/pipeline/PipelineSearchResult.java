@@ -66,10 +66,10 @@ public class PipelineSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public PipelineSearchResult(PipelineView pipelineView, boolean includeAudits) {
+  public PipelineSearchResult(PipelineView pipelineView, boolean includeAudits, float searchScore) {
     super(pipelineView.getId(), pipelineView.getName(), pipelineView.getDescription(), pipelineView.getAccountId(),
         pipelineView.getCreatedAt(), pipelineView.getLastUpdatedAt(), pipelineView.getType(),
-        pipelineView.getCreatedBy(), pipelineView.getLastUpdatedBy());
+        pipelineView.getCreatedBy(), pipelineView.getLastUpdatedBy(), searchScore);
     this.appId = pipelineView.getAppId();
     this.appName = pipelineView.getAppName();
     this.workflows = pipelineView.getWorkflows();

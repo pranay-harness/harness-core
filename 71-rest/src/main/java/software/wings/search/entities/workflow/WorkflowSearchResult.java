@@ -69,10 +69,10 @@ public class WorkflowSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public WorkflowSearchResult(WorkflowView workflowView, boolean includeAudits) {
+  public WorkflowSearchResult(WorkflowView workflowView, boolean includeAudits, float searchScore) {
     super(workflowView.getId(), workflowView.getName(), workflowView.getDescription(), workflowView.getAccountId(),
         workflowView.getCreatedAt(), workflowView.getLastUpdatedAt(), workflowView.getType(),
-        workflowView.getCreatedBy(), workflowView.getLastUpdatedBy());
+        workflowView.getCreatedBy(), workflowView.getLastUpdatedBy(), searchScore);
     this.appId = workflowView.getAppId();
     this.appName = workflowView.getAppName();
     this.workflowType = workflowView.getWorkflowType();

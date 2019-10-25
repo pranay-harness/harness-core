@@ -70,10 +70,10 @@ public class ServiceSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public ServiceSearchResult(ServiceView serviceView, boolean includeAudits) {
+  public ServiceSearchResult(ServiceView serviceView, boolean includeAudits, float searchScore) {
     super(serviceView.getId(), serviceView.getName(), serviceView.getDescription(), serviceView.getAccountId(),
         serviceView.getCreatedAt(), serviceView.getLastUpdatedAt(), serviceView.getType(), serviceView.getCreatedBy(),
-        serviceView.getLastUpdatedBy());
+        serviceView.getLastUpdatedBy(), searchScore);
     this.appId = serviceView.getAppId();
     this.appName = serviceView.getAppName();
     this.artifactType = serviceView.getArtifactType();

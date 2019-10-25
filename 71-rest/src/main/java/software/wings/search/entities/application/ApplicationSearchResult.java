@@ -52,10 +52,10 @@ public class ApplicationSearchResult extends SearchResult {
     Collections.reverse(this.audits);
   }
 
-  public ApplicationSearchResult(ApplicationView applicationView, boolean includeAudits) {
+  public ApplicationSearchResult(ApplicationView applicationView, boolean includeAudits, float searchScore) {
     super(applicationView.getId(), applicationView.getName(), applicationView.getDescription(),
         applicationView.getAccountId(), applicationView.getCreatedAt(), applicationView.getLastUpdatedAt(),
-        applicationView.getType(), applicationView.getCreatedBy(), applicationView.getLastUpdatedBy());
+        applicationView.getType(), applicationView.getCreatedBy(), applicationView.getLastUpdatedBy(), searchScore);
     this.services = applicationView.getServices();
     this.environments = applicationView.getEnvironments();
     this.workflows = applicationView.getWorkflows();
