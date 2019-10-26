@@ -76,7 +76,7 @@ public final class SearchEntityUtils {
   }
 
   public static List<Long> truncateList(List<Long> list, long value) {
-    if (list.isEmpty() || list.size() == 1) {
+    if (list.isEmpty()) {
       return list;
     }
     Collections.reverse(list);
