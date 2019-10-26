@@ -10,7 +10,6 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Poller;
 import io.harness.version.VersionInfoManager;
@@ -23,6 +22,7 @@ import java.time.Duration;
 
 @Slf4j
 public class StressTest extends PersistenceTest {
+  private static final int COUNT = 1000000;
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private Queue<TestVersionedQueuableObject> versionedQueue;
@@ -31,16 +31,15 @@ public class StressTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  @Bypass
+  //@Bypass
   public void versionedPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndex(TestVersionedQueuableObject.class);
 
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-        for (int i = 1; i <= 100000; ++i) {
+        for (int i = 1; i <= COUNT; ++i) {
           final TestVersionedQueuableObject queuableObject = new TestVersionedQueuableObject(i);
           queuableObject.setVersion("dummy");
-          queuableObject.setRunningUntil(queuableObject.getEarliestGet());
 
           persistence.save(queuableObject);
 
@@ -48,7 +47,7 @@ public class StressTest extends PersistenceTest {
             logger.info("Previous version records added: {}, still in queue {}", i, versionedQueue.count(ALL));
           }
         }
-        for (int i = 1; i <= 100000; ++i) {
+        for (int i = 1; i <= COUNT; ++i) {
           versionedQueue.send(new TestVersionedQueuableObject(i));
           if (i % 10000 == 0) {
             logger.info("Correct version records added: {} , still in the queue {}", i, versionedQueue.count(ALL));
@@ -76,13 +75,13 @@ public class StressTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  @Bypass
+  //@Bypass
   public void unversionedPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndex(TestUnversionedQueuableObject.class);
 
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-        for (int i = 1; i <= 100000; ++i) {
+        for (int i = 1; i <= COUNT; ++i) {
           final TestUnversionedQueuableObject queuableObject = new TestUnversionedQueuableObject(i);
           queuableObject.setVersion("dummy");
           unversionedQueue.send(queuableObject);
@@ -91,7 +90,7 @@ public class StressTest extends PersistenceTest {
             logger.info("Previous version records added: {}, still in queue {}", i, unversionedQueue.count(ALL));
           }
         }
-        for (int i = 1; i <= 100000; ++i) {
+        for (int i = 1; i <= COUNT; ++i) {
           unversionedQueue.send(new TestUnversionedQueuableObject(i));
           if (i % 10000 == 0) {
             logger.info("Correct version records added: {} , still in the queue {}", i, unversionedQueue.count(ALL));

@@ -15,6 +15,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.Queue.Filter;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.version.VersionInfoManager;
@@ -108,7 +109,7 @@ public class MongoQueueTest extends PersistenceTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldObtainStuckMessageWhenRunningUntilHasExpired() {
+  public void shouldObtainStuckMessageWhenEarliestGetHasExpired() {
     queue.send(new TestVersionedQueuableObject(1));
 
     queue.setHeartbeat(ZERO);
@@ -133,7 +134,7 @@ public class MongoQueueTest extends PersistenceTest {
 
     TestVersionedQueuableObject actual = getDatastore().get(TestVersionedQueuableObject.class, message.getId());
 
-    assertThat(actual.getRunningUntil()).isEqualTo(message.getRunningUntil());
+    assertThat(actual.getEarliestGet()).isEqualTo(message.getEarliestGet());
   }
 
   @Test
@@ -159,16 +160,16 @@ public class MongoQueueTest extends PersistenceTest {
     Date beforeGet = new Date();
     TestVersionedQueuableObject message = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
-    Date messageRunningUntil = message.getRunningUntil();
+    Date messageEarliestGet = message.getEarliestGet();
 
-    assertThat(messageRunningUntil).isAfter(beforeGet);
+    assertThat(messageEarliestGet).isAfter(beforeGet);
     queue.setHeartbeat(ofSeconds(20));
     queue.updateHeartbeat(message);
 
     TestVersionedQueuableObject actual = getDatastore().get(TestVersionedQueuableObject.class, message.getId());
-    log().info("Actual Timestamp of message = {}", actual.getRunningUntil());
+    log().info("Actual Timestamp of message = {}", actual.getEarliestGet());
 
-    assertThat(actual.getRunningUntil()).isAfter(messageRunningUntil);
+    assertThat(actual.getEarliestGet()).isAfter(messageEarliestGet);
 
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
@@ -239,13 +240,13 @@ public class MongoQueueTest extends PersistenceTest {
     expected.setEarliestGet(expectedEarliestGet);
     expected.setCreated(message.getCreated());
 
-    assertThat(actual).isEqualToIgnoringGivenFields(expected, "id", "runningUntil");
+    assertThat(actual).isEqualToIgnoringGivenFields(expected, QueuableKeys.id, QueuableKeys.earliestGet);
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue("id", 0, null));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(QueuableKeys.id, 0, null));
   }
 
   @Test
@@ -278,7 +279,7 @@ public class MongoQueueTest extends PersistenceTest {
     expected.setEarliestGet(expectedEarliestGet);
     expected.setCreated(actualCreated);
 
-    assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");
+    assertThat(actual).isEqualToIgnoringGivenFields(expected, QueuableKeys.id);
   }
 
   @Test

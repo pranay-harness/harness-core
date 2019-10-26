@@ -49,7 +49,6 @@ public class CollectEvent extends Queuable {
   public static final class Builder {
     private Artifact artifact;
     private String id;
-    private Date runningUntil;
     private Date earliestGet = new Date();
     private Date created = new Date();
     private int retries;
@@ -67,11 +66,6 @@ public class CollectEvent extends Queuable {
 
     public Builder withId(String id) {
       this.id = id;
-      return this;
-    }
-
-    public Builder withRunningUntil(Date runningUntil) {
-      this.runningUntil = runningUntil == null ? null : (Date) runningUntil.clone();
       return this;
     }
 
@@ -94,7 +88,6 @@ public class CollectEvent extends Queuable {
       return aCollectEvent()
           .withArtifact(artifact)
           .withId(id)
-          .withRunningUntil(runningUntil)
           .withEarliestGet(earliestGet)
           .withCreated(created)
           .withRetries(retries);
@@ -104,7 +97,6 @@ public class CollectEvent extends Queuable {
       CollectEvent collectEvent = new CollectEvent();
       collectEvent.setArtifact(artifact);
       collectEvent.setId(id);
-      collectEvent.setRunningUntil(runningUntil);
       collectEvent.setEarliestGet(earliestGet);
       collectEvent.setCreated(created);
       collectEvent.setRetries(retries);

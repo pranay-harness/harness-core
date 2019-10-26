@@ -78,15 +78,11 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     while (true) {
       final Date now = new Date();
 
-      Query<T> query = createQuery()
-                           .field(QueuableKeys.runningUntil)
-                           .lessThanOrEq(now)
-                           .field(QueuableKeys.earliestGet)
-                           .lessThanOrEq(now)
-                           .order(Sort.ascending(QueuableKeys.created));
+      Query<T> query =
+          createQuery().field(QueuableKeys.earliestGet).lessThanOrEq(now).order(Sort.ascending(QueuableKeys.created));
 
       UpdateOperations<T> updateOperations = datastore.createUpdateOperations(klass).set(
-          QueuableKeys.runningUntil, new Date(now.getTime() + heartbeat().toMillis()));
+          QueuableKeys.earliestGet, new Date(now.getTime() + heartbeat().toMillis()));
 
       T message = HPersistence.retry(() -> datastore.findAndModify(query, updateOperations));
       if (message != null) {
@@ -110,14 +106,14 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
   @Override
   public void updateHeartbeat(T message) {
-    Date runningUntil = new Date(System.currentTimeMillis() + heartbeat().toMillis());
+    Date earliestGet = new Date(System.currentTimeMillis() + heartbeat().toMillis());
 
     Query<T> query = persistence.createQuery(klass).filter(QueuableKeys.id, message.getId());
     UpdateOperations<T> updateOperations =
-        persistence.createUpdateOperations(klass).set(QueuableKeys.runningUntil, runningUntil);
+        persistence.createUpdateOperations(klass).set(QueuableKeys.earliestGet, earliestGet);
 
     if (persistence.findAndModify(query, updateOperations, HPersistence.returnOldOptions) != null) {
-      message.setRunningUntil(runningUntil);
+      message.setEarliestGet(earliestGet);
       return;
     }
 
@@ -134,9 +130,9 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
       case ALL:
         return datastore.getCount(klass);
       case RUNNING:
-        return datastore.getCount(createQuery().field(QueuableKeys.runningUntil).greaterThan(new Date()));
+        return datastore.getCount(createQuery().field(QueuableKeys.earliestGet).greaterThan(new Date()));
       case NOT_RUNNING:
-        return datastore.getCount(createQuery().field(QueuableKeys.runningUntil).lessThanOrEq(new Date()));
+        return datastore.getCount(createQuery().field(QueuableKeys.earliestGet).lessThanOrEq(new Date()));
       default:
         unhandled(filter);
     }
@@ -161,7 +157,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
     persistence.update(persistence.createQuery(klass, excludeAuthority).filter(QueuableKeys.id, id),
         persistence.createUpdateOperations(klass)
-            .set(QueuableKeys.runningUntil, earliestGet)
             .set(QueuableKeys.retries, retries)
             .set(QueuableKeys.earliestGet, earliestGet));
   }
@@ -171,7 +166,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(payload);
     payload.setGlobalContext(obtainGlobalContext());
     payload.setVersion(filterWithVersion ? versionInfoManager.getVersionInfo().getVersion() : null);
-    payload.setRunningUntil(payload.getEarliestGet());
 
     final AdvancedDatastore datastore = persistence.getDatastore(klass);
     HPersistence.retry(() -> datastore.save(payload));
