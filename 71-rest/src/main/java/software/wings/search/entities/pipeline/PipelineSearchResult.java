@@ -28,7 +28,7 @@ public class PipelineSearchResult extends SearchResult {
   private static final int MAX_ENTRIES = 3;
   private static final int DAYS_TO_RETAIN = 7;
   private static final long startTimestampToRetainFrom =
-      SearchEntityUtils.getTimestampNdaysBackInSeconds(DAYS_TO_RETAIN);
+      SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(PipelineView pipelineView) {
     if (!pipelineView.getDeployments().isEmpty()) {

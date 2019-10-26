@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Utils class for common operations
@@ -88,10 +87,6 @@ public final class SearchEntityUtils {
 
   public static long getTimestampNdaysBackInMillis(int daysToRetain) {
     return Instant.now().minus(daysToRetain, ChronoUnit.DAYS).toEpochMilli();
-  }
-
-  public static long getTimestampNdaysBackInSeconds(int daysToRetain) {
-    return TimeUnit.MILLISECONDS.toSeconds(Instant.now().minus(daysToRetain, ChronoUnit.DAYS).toEpochMilli());
   }
 
   public static Map<String, Object> convertToMap(Object object) {
