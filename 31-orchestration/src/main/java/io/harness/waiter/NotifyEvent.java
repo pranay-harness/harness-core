@@ -39,7 +39,6 @@ public class NotifyEvent extends Queuable {
     private List<String> correlationIds;
     private boolean error;
     private String id;
-    private Date runningUntil;
     private Date earliestGet = new Date();
     private Date created = new Date();
     private int retries;
@@ -70,11 +69,6 @@ public class NotifyEvent extends Queuable {
       return this;
     }
 
-    public Builder runningUntil(Date runningUntil) {
-      this.runningUntil = runningUntil == null ? null : (Date) runningUntil.clone();
-      return this;
-    }
-
     public Builder earliestGet(Date earliestGet) {
       this.earliestGet = earliestGet == null ? null : (Date) earliestGet.clone();
       return this;
@@ -96,7 +90,6 @@ public class NotifyEvent extends Queuable {
           .correlationIds(correlationIds)
           .error(error)
           .id(id)
-          .runningUntil(runningUntil)
           .earliestGet(earliestGet)
           .created(created)
           .retries(retries);
@@ -108,7 +101,6 @@ public class NotifyEvent extends Queuable {
       notifyEvent.setCorrelationIds(correlationIds);
       notifyEvent.setError(error);
       notifyEvent.setId(id);
-      notifyEvent.setRunningUntil(runningUntil);
       notifyEvent.setEarliestGet(earliestGet);
       notifyEvent.setCreated(created);
       notifyEvent.setRetries(retries);

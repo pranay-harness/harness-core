@@ -20,18 +20,13 @@ import org.mongodb.morphia.annotations.PrePersist;
 import java.util.Date;
 
 @Indexes({
-  @Index(options = @IndexOptions(name = "next2"),
-      fields = { @Field(QueuableKeys.version)
-                 , @Field(QueuableKeys.created), @Field(QueuableKeys.earliestGet) })
-  ,
-      @Index(options = @IndexOptions(name = "extra"), fields = {
-        @Field(QueuableKeys.version), @Field(QueuableKeys.earliestGet)
-      })
+  @Index(options = @IndexOptions(name = "next3"), fields = {
+    @Field(QueuableKeys.version), @Field(QueuableKeys.created)
+  })
 })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
   @Getter @Setter @Id private String id;
-  @Getter @Setter private Date runningUntil;
   @Getter @Setter private Date earliestGet = new Date();
   @Getter @Setter private Date created = new Date();
   @Getter @Setter private int retries;
