@@ -18,4 +18,5 @@ public class PcfRouteUpdateRequestConfigData {
   private boolean isStandardBlueGreen;
   private boolean downsizeOldApplication;
   private boolean isMapRoutesOperation;
+  private boolean skipRollback;
 }

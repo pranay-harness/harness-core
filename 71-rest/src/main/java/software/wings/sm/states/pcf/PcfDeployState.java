@@ -18,6 +18,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
@@ -188,17 +189,24 @@ public class PcfDeployState extends State {
     return PcfDeployStateExecutionData.builder()
         .activityId(activity.getUuid())
         .commandName(PCF_RESIZE_COMMAND)
-        .releaseName(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
+        .releaseName(getApplicationNameFromSetupContext(pcfSetupContextElement))
         .updateCount(upsizeUpdateCount)
         .updateDetails(new StringBuilder()
                            .append("{Name: ")
-                           .append(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
+                           .append(getApplicationNameFromSetupContext(pcfSetupContextElement))
                            .append(", DesiredCount: ")
                            .append(upsizeUpdateCount)
                            .append("}")
                            .toString())
         .setupContextElement(pcfSetupContextElement)
         .build();
+  }
+
+  private String getApplicationNameFromSetupContext(PcfSetupContextElement setupElement) {
+    if (setupElement == null || setupElement.getNewPcfApplicationDetails() == null) {
+      return StringUtils.EMPTY;
+    }
+    return setupElement.getNewPcfApplicationDetails().getApplicationName();
   }
 
   protected Integer getUpsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
@@ -274,7 +282,7 @@ public class PcfDeployState extends State {
         .routeMaps(pcfSetupContextElement.getRouteMaps())
         .appId(application.getUuid())
         .accountId(application.getAccountId())
-        .newReleaseName(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
+        .newReleaseName(getApplicationNameFromSetupContext(pcfSetupContextElement))
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
         .downsizeAppDetail(isEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())
                 ? null

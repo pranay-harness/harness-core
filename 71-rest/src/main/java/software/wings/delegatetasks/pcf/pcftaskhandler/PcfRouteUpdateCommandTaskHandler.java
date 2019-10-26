@@ -67,14 +67,18 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =
           pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
       if (pcfRouteUpdateConfigData.isStandardBlueGreen()) {
-        // If rollback and old app was downsized, restore it
-        restoreOldAppDuringRollbackIfNeeded(
-            executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
-        // Swap routes
-        performRouteUpdateForStandardBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
-        // if deploy and downsizeOld is true
-        downsizeOldAppDuringDeployIfRequired(
-            executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
+        if (swapRouteExecutionNeeded(pcfRouteUpdateConfigData)) {
+          // If rollback and old app was downsized, restore it
+          restoreOldAppDuringRollbackIfNeeded(
+              executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
+          // Swap routes
+          performRouteUpdateForStandardBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
+          // if deploy and downsizeOld is true
+          downsizeOldAppDuringDeployIfRequired(
+              executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
+        } else {
+          executionLogCallback.saveExecutionLog(color("# No Route Update Required In Rollback", White, Bold));
+        }
       } else {
         performRouteUpdateForSimulatedBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
       }
@@ -93,6 +97,22 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     pcfCommandExecutionResponse.setCommandExecutionStatus(pcfCommandResponse.getCommandExecutionStatus());
     pcfCommandExecutionResponse.setErrorMessage(pcfCommandResponse.getOutput());
     return pcfCommandExecutionResponse;
+  }
+
+  // This tells if routeUpdate needs to happen in Rollback.
+  // If its rollback, and routeUpdate was not executed, no need to do anything
+  @VisibleForTesting
+  boolean swapRouteExecutionNeeded(PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData) {
+    boolean executionNeeded;
+    if (pcfRouteUpdateConfigData == null) {
+      executionNeeded = false;
+    } else if (!pcfRouteUpdateConfigData.isRollback()) {
+      executionNeeded = true;
+    } else {
+      executionNeeded = !pcfRouteUpdateConfigData.isSkipRollback();
+    }
+
+    return executionNeeded;
   }
 
   @VisibleForTesting

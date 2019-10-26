@@ -38,6 +38,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
@@ -165,19 +166,18 @@ public class PcfStateHelper {
     PcfInfrastructureMapping pcfInfrastructureMapping = queueRequestData.getPcfInfrastructureMapping();
     String activityId = queueRequestData.getActivityId();
 
-    PcfCommandRequest pcfCommandRequest =
-        PcfCommandRouteUpdateRequest.builder()
-            .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
-            .commandName(queueRequestData.getCommandName())
-            .appId(app.getUuid())
-            .accountId(app.getAccountId())
-            .activityId(activityId)
-            .pcfConfig(queueRequestData.getPcfConfig())
-            .organization(pcfSetupContextElement.getPcfCommandRequest().getOrganization())
-            .space(pcfSetupContextElement.getPcfCommandRequest().getSpace())
-            .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
-            .timeoutIntervalInMin(timeoutIntervalInMinutes)
-            .build();
+    PcfCommandRequest pcfCommandRequest = PcfCommandRouteUpdateRequest.builder()
+                                              .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
+                                              .commandName(queueRequestData.getCommandName())
+                                              .appId(app.getUuid())
+                                              .accountId(app.getAccountId())
+                                              .activityId(activityId)
+                                              .pcfConfig(queueRequestData.getPcfConfig())
+                                              .organization(getOrganizationFromSetupContext(pcfSetupContextElement))
+                                              .space(getSpaceFromSetupContext(pcfSetupContextElement))
+                                              .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
+                                              .timeoutIntervalInMin(timeoutIntervalInMinutes)
+                                              .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
         getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), pcfCommandRequest,
@@ -202,6 +202,21 @@ public class PcfStateHelper {
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
+  }
+
+  String getSpaceFromSetupContext(PcfSetupContextElement setupContextElement) {
+    if (setupContextElement == null || setupContextElement.getPcfCommandRequest() == null) {
+      return StringUtils.EMPTY;
+    }
+    return setupContextElement.getPcfCommandRequest().getSpace();
+  }
+
+  public String getOrganizationFromSetupContext(PcfSetupContextElement pcfSetupContextElement) {
+    if (pcfSetupContextElement == null || pcfSetupContextElement.getPcfCommandRequest() == null) {
+      return StringUtils.EMPTY;
+    }
+
+    return pcfSetupContextElement.getPcfCommandRequest().getOrganization();
   }
 
   public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,

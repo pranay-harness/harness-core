@@ -8,7 +8,6 @@ import static software.wings.beans.Log.color;
 
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -18,24 +17,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.cloudfoundry.operations.applications.ApplicationDetail;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
-import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @NoArgsConstructor
 @Singleton
@@ -67,14 +61,17 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         commandRollbackRequest.setInstanceData(new ArrayList<>());
       }
 
-      PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                              .userName(pcfConfig.getUsername())
-                                              .password(String.valueOf(pcfConfig.getPassword()))
-                                              .endpointUrl(pcfConfig.getEndpointUrl())
-                                              .orgName(commandRollbackRequest.getOrganization())
-                                              .spaceName(commandRollbackRequest.getSpace())
-                                              .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin())
-                                              .build();
+      PcfRequestConfig pcfRequestConfig =
+          PcfRequestConfig.builder()
+              .userName(pcfConfig.getUsername())
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .orgName(commandRollbackRequest.getOrganization())
+              .spaceName(commandRollbackRequest.getSpace())
+              .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin() == null
+                      ? 10
+                      : commandRollbackRequest.getTimeoutIntervalInMin())
+              .build();
 
       // get Upsize Instance data
       List<PcfServiceData> upsizeList =
@@ -97,27 +94,6 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       pcfCommandTaskHelper.downSizeListOfInstances(
           executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated, pcfRequestConfig, downSizeList);
 
-      // This steps is only required for Simulated BG workflow
-      if (isRollbackRoutesRequired(pcfRequestConfig, commandRollbackRequest)) {
-        // Remove any routes attached during routemap phase
-        pcfCommandTaskHelper.unmapExistingRouteMaps(
-            commandRollbackRequest.getNewApplicationDetails().getApplicationName(), pcfRequestConfig,
-            executionLogCallback);
-        // Associate original routes attached during app create.
-        pcfCommandTaskHelper.mapRouteMaps(commandRollbackRequest.getNewApplicationDetails().getApplicationName(),
-            commandRollbackRequest.getNewApplicationDetails().getUrls(), pcfRequestConfig, executionLogCallback);
-
-        // Perform same activity for existing apps, those were updated with route maps.
-        if (EmptyPredicate.isNotEmpty(commandRollbackRequest.getAppsToBeDownSized())) {
-          for (PcfAppSetupTimeDetails appDetails : commandRollbackRequest.getAppsToBeDownSized()) {
-            pcfCommandTaskHelper.unmapExistingRouteMaps(
-                appDetails.getApplicationName(), pcfRequestConfig, executionLogCallback);
-            pcfCommandTaskHelper.mapRouteMaps(
-                appDetails.getApplicationName(), appDetails.getUrls(), pcfRequestConfig, executionLogCallback);
-          }
-        }
-      }
-
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
@@ -138,22 +114,5 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .errorMessage(pcfDeployCommandResponse.getOutput())
         .pcfCommandResponse(pcfDeployCommandResponse)
         .build();
-  }
-
-  private boolean isRollbackRoutesRequired(PcfRequestConfig pcfRequestConfig,
-      PcfCommandRollbackRequest pcfCommandRollbackRequest) throws PivotalClientApiException {
-    if (pcfCommandRollbackRequest.isStandardBlueGreenWorkflow()) {
-      return false;
-    }
-
-    pcfRequestConfig.setApplicationName(pcfCommandRollbackRequest.getNewApplicationDetails().getApplicationName());
-    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
-    Set<String> urls = new HashSet<>(applicationDetail.getUrls());
-
-    if (urls.containsAll(pcfCommandRollbackRequest.getNewApplicationDetails().getUrls())) {
-      return false;
-    }
-
-    return true;
   }
 }
