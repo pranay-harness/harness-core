@@ -1,4 +1,4 @@
-package software.wings.scheduler.artifact;
+package io.harness.workers.background.iterator;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;

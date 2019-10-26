@@ -1,4 +1,4 @@
-package software.wings.scheduler.artifact;
+package io.harness.workers.background.critical.iterator;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
