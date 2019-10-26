@@ -4,6 +4,7 @@ import static java.util.Collections.emptyMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
@@ -69,8 +70,8 @@ public class PcfRollbackState extends PcfDeployState {
         .activityId(activityId)
         .commandName(PCF_RESIZE_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
-        .organization(pcfSetupContextElement.getPcfCommandRequest().getOrganization())
-        .space(pcfSetupContextElement.getPcfCommandRequest().getSpace())
+        .organization(getOrgFromContext(pcfSetupContextElement))
+        .space(fetchSpaceFromContext(pcfSetupContextElement))
         .resizeStrategy(pcfSetupContextElement.getResizeStrategy())
         .routeMaps(infrastructureMapping.getRouteMaps())
         .tempRouteMaps(infrastructureMapping.getTempRouteMap())
@@ -84,6 +85,22 @@ public class PcfRollbackState extends PcfDeployState {
         .newApplicationDetails(pcfSetupContextElement.getNewPcfApplicationDetails())
         .isStandardBlueGreenWorkflow(pcfSetupContextElement.isStandardBlueGreenWorkflow())
         .build();
+  }
+
+  private String fetchSpaceFromContext(PcfSetupContextElement setupContext) {
+    if (setupContext == null || setupContext.getPcfCommandRequest() == null) {
+      return StringUtils.EMPTY;
+    }
+
+    return setupContext.getPcfCommandRequest().getSpace();
+  }
+
+  private String getOrgFromContext(PcfSetupContextElement contextElement) {
+    if (contextElement == null || contextElement.getPcfCommandRequest() == null) {
+      return StringUtils.EMPTY;
+    }
+
+    return contextElement.getPcfCommandRequest().getOrganization();
   }
 
   @Override

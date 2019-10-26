@@ -648,6 +648,21 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testSwapRouteExecutionNeeded() throws Exception {
+    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(null)).isFalse();
+    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(
+                   PcfRouteUpdateRequestConfigData.builder().isRollback(false).build()))
+        .isTrue();
+    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(
+                   PcfRouteUpdateRequestConfigData.builder().isRollback(true).skipRollback(false).build()))
+        .isTrue();
+    assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(
+                   PcfRouteUpdateRequestConfigData.builder().isRollback(true).skipRollback(true).build()))
+        .isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testCheckIfVarsFilePresent() throws Exception {
     PcfManifestsPackage manifestsPackage = PcfManifestsPackage.builder().build();
     PcfCommandSetupRequest setupRequest =

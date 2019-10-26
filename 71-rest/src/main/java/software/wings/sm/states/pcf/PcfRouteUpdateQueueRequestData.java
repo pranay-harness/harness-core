@@ -22,4 +22,5 @@ public class PcfRouteUpdateQueueRequestData {
   private String commandName;
   private PcfRouteUpdateRequestConfigData requestConfigData;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  private boolean skipRollback;
 }

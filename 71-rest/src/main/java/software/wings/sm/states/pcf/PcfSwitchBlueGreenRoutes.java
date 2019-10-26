@@ -1,8 +1,11 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.exception.WingsException.USER;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -108,9 +111,14 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .findFirst()
             .orElse(PcfSetupContextElement.builder().build());
 
+    PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement);
     if (isRollback()) {
       PcfSwapRouteRollbackContextElement pcfSwapRouteRollbackContextElement =
           context.getContextElement(ContextElementType.PCF_ROUTE_SWAP_ROLLBACK);
+
+      // it means no update route happened.
+      requestConfigData.setSkipRollback(pcfSetupContextElement == null || pcfSwapRouteRollbackContextElement == null);
+
       if (pcfSwapRouteRollbackContextElement != null
           && pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData() != null) {
         downsizeOldApps =
@@ -125,8 +133,6 @@ public class PcfSwitchBlueGreenRoutes extends State {
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
-    PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement);
-
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
         PcfRouteUpdateQueueRequestData.builder()
             .pcfConfig(pcfConfig)
@@ -134,7 +140,9 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .pcfInfrastructureMapping(pcfInfrastructureMapping)
             .activityId(activity.getUuid())
             .envId(env.getUuid())
-            .timeoutIntervalInMinutes(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+            .timeoutIntervalInMinutes(pcfSetupContextElement != null
+                    ? pcfSetupContextElement.getTimeoutIntervalInMinutes()
+                    : Integer.valueOf(5))
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
@@ -146,7 +154,8 @@ public class PcfSwitchBlueGreenRoutes extends State {
       PcfSetupContextElement pcfSetupContextElement) {
     List<String> existingAppNames;
 
-    if (EmptyPredicate.isNotEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())) {
+    if (pcfSetupContextElement != null
+        && EmptyPredicate.isNotEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())) {
       existingAppNames = pcfSetupContextElement.getAppDetailsToBeDownsized()
                              .stream()
                              .map(app -> app.getApplicationName())
@@ -156,15 +165,25 @@ public class PcfSwitchBlueGreenRoutes extends State {
     }
 
     return PcfRouteUpdateRequestConfigData.builder()
-        .newApplicatiaonName(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
+        .newApplicatiaonName(getNewApplicationName(pcfSetupContextElement))
         .existingApplicationDetails(pcfSetupContextElement.getAppDetailsToBeDownsized())
         .existingApplicationNames(existingAppNames)
-        .tempRoutes(pcfSetupContextElement.getTempRouteMap())
-        .finalRoutes(pcfSetupContextElement.getRouteMaps())
+        .tempRoutes(pcfSetupContextElement != null ? pcfSetupContextElement.getTempRouteMap() : emptyList())
+        .finalRoutes(pcfSetupContextElement != null ? pcfSetupContextElement.getRouteMaps() : emptyList())
         .isRollback(isRollback())
         .isStandardBlueGreen(true)
         .downsizeOldApplication(downsizeOldApps)
         .build();
+  }
+
+  @VisibleForTesting
+  String getNewApplicationName(PcfSetupContextElement pcfSetupContextElement) {
+    String name = EMPTY;
+    if (pcfSetupContextElement != null && pcfSetupContextElement.getNewPcfApplicationDetails() != null) {
+      name = pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName();
+    }
+
+    return name;
   }
 
   @Override
