@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DBObject;
 import io.harness.beans.WorkflowType;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -101,31 +102,37 @@ class DeploymentViewBuilder {
   }
 
   DeploymentView createDeploymentView(WorkflowExecution workflowExecution) {
-    createBaseView(workflowExecution);
-    setWorkflowInPipeline(workflowExecution);
-    setPipeline(workflowExecution);
-    setWorkflows(workflowExecution);
-    setServices(workflowExecution);
-    setEnvironments(workflowExecution);
-    return deploymentView;
+    if (wingsPersistence.get(Application.class, workflowExecution.getAppId()) != null) {
+      createBaseView(workflowExecution);
+      setWorkflowInPipeline(workflowExecution);
+      setPipeline(workflowExecution);
+      setWorkflows(workflowExecution);
+      setServices(workflowExecution);
+      setEnvironments(workflowExecution);
+      return deploymentView;
+    }
+    return null;
   }
 
   DeploymentView createDeploymentView(WorkflowExecution workflowExecution, DBObject changeDocument) {
-    createBaseView(workflowExecution);
-    setWorkflowInPipeline(workflowExecution);
-    if (changeDocument.containsField(WorkflowExecutionKeys.pipelineSummary)) {
-      setPipeline(workflowExecution);
+    if (wingsPersistence.get(Application.class, workflowExecution.getAppId()) != null) {
+      createBaseView(workflowExecution);
+      setWorkflowInPipeline(workflowExecution);
+      if (changeDocument.containsField(WorkflowExecutionKeys.pipelineSummary)) {
+        setPipeline(workflowExecution);
+      }
+      if (changeDocument.containsField(WorkflowExecutionKeys.serviceIds)) {
+        setServices(workflowExecution);
+      }
+      if (changeDocument.containsField(WorkflowExecutionKeys.workflowIds)
+          || changeDocument.containsField(WorkflowExecutionKeys.workflowId)) {
+        setWorkflows(workflowExecution);
+      }
+      if (changeDocument.containsField(WorkflowExecutionKeys.envIds)) {
+        setEnvironments(workflowExecution);
+      }
+      return deploymentView;
     }
-    if (changeDocument.containsField(WorkflowExecutionKeys.serviceIds)) {
-      setServices(workflowExecution);
-    }
-    if (changeDocument.containsField(WorkflowExecutionKeys.workflowIds)
-        || changeDocument.containsField(WorkflowExecutionKeys.workflowId)) {
-      setWorkflows(workflowExecution);
-    }
-    if (changeDocument.containsField(WorkflowExecutionKeys.envIds)) {
-      setEnvironments(workflowExecution);
-    }
-    return deploymentView;
+    return null;
   }
 }
