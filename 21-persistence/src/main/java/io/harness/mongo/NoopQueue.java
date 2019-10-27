@@ -15,7 +15,9 @@ public class NoopQueue<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public void updateHeartbeat(T message) {}
+  public void updateHeartbeat(T message) {
+    // noop
+  }
 
   @Override
   public long count(Filter filter) {
@@ -23,16 +25,24 @@ public class NoopQueue<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public void ack(T message) {}
+  public void ack(T message) {
+    // noop
+  }
 
   @Override
-  public void requeue(String id, int retries) {}
+  public void requeue(String id, int retries) {
+    // noop
+  }
 
   @Override
-  public void requeue(String id, int retries, Date earliestGet) {}
+  public void requeue(String id, int retries, Date earliestGet) {
+    // noop
+  }
 
   @Override
-  public void send(T payload) {}
+  public void send(T payload) {
+    // noop
+  }
 
   @Override
   public Duration heartbeat() {

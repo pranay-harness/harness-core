@@ -40,7 +40,6 @@ public class NotifyEvent extends Queuable {
     private boolean error;
     private String id;
     private Date earliestGet = new Date();
-    private Date created = new Date();
     private int retries;
 
     private Builder() {}
@@ -74,11 +73,6 @@ public class NotifyEvent extends Queuable {
       return this;
     }
 
-    public Builder created(Date created) {
-      this.created = created == null ? null : (Date) created.clone();
-      return this;
-    }
-
     public Builder retries(int retries) {
       this.retries = retries;
       return this;
@@ -91,7 +85,6 @@ public class NotifyEvent extends Queuable {
           .error(error)
           .id(id)
           .earliestGet(earliestGet)
-          .created(created)
           .retries(retries);
     }
 
@@ -102,7 +95,6 @@ public class NotifyEvent extends Queuable {
       notifyEvent.setError(error);
       notifyEvent.setId(id);
       notifyEvent.setEarliestGet(earliestGet);
-      notifyEvent.setCreated(created);
       notifyEvent.setRetries(retries);
       return notifyEvent;
     }
