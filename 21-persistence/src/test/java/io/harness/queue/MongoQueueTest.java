@@ -238,7 +238,6 @@ public class MongoQueueTest extends PersistenceTest {
     TestVersionedQueuableObject expected = new TestVersionedQueuableObject(0);
     expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
-    expected.setCreated(message.getCreated());
 
     assertThat(actual).isEqualToIgnoringGivenFields(expected, QueuableKeys.id, QueuableKeys.earliestGet);
   }
@@ -271,13 +270,9 @@ public class MongoQueueTest extends PersistenceTest {
 
     TestVersionedQueuableObject actual = getDatastore().find(TestVersionedQueuableObject.class).get();
 
-    Date actualCreated = actual.getCreated();
-    assertThat(actualCreated).isAfterOrEqualTo(timeBeforeSend).isBeforeOrEqualTo(new Date());
-
     TestVersionedQueuableObject expected = new TestVersionedQueuableObject(1);
     expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
     expected.setEarliestGet(expectedEarliestGet);
-    expected.setCreated(actualCreated);
 
     assertThat(actual).isEqualToIgnoringGivenFields(expected, QueuableKeys.id);
   }

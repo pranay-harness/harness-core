@@ -78,8 +78,10 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     while (true) {
       final Date now = new Date();
 
-      Query<T> query =
-          createQuery().field(QueuableKeys.earliestGet).lessThanOrEq(now).order(Sort.ascending(QueuableKeys.created));
+      Query<T> query = createQuery()
+                           .field(QueuableKeys.earliestGet)
+                           .lessThanOrEq(now)
+                           .order(Sort.ascending(QueuableKeys.earliestGet));
 
       UpdateOperations<T> updateOperations = datastore.createUpdateOperations(klass).set(
           QueuableKeys.earliestGet, new Date(now.getTime() + heartbeat().toMillis()));
