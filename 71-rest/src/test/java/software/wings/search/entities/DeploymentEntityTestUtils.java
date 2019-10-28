@@ -8,6 +8,7 @@ import com.mongodb.DBObject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.persistence.PersistentEntity;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.SSHExecutionCredential;
@@ -16,7 +17,7 @@ import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 import software.wings.search.framework.changestreams.ChangeType;
 
-public class WorkflowExecutionEntityTestUtils {
+public class DeploymentEntityTestUtils extends WingsBaseTest {
   public static ExecutionArgs createExecutionArgs(WorkflowType workflowType) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(workflowType);

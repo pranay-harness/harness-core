@@ -49,17 +49,17 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
     application.setName(appName);
     wingsPersistence.save(application);
 
-    executionArgs = WorkflowExecutionEntityTestUtils.createExecutionArgs(WorkflowType.PIPELINE);
+    executionArgs = DeploymentEntityTestUtils.createExecutionArgs(WorkflowType.PIPELINE);
     assertThat(executionArgs).isNotNull();
 
-    workflowExecution = WorkflowExecutionEntityTestUtils.createWorkflowExecution(
+    workflowExecution = DeploymentEntityTestUtils.createWorkflowExecution(
         workflowExecutionId, appId, appName, executionArgs, WorkflowType.PIPELINE, SUCCESS);
     assertThat(workflowExecution).isNotNull();
 
-    workflowExecutionInsertChangeEvent = WorkflowExecutionEntityTestUtils.createWorkflowExecutionChangeEvent(
+    workflowExecutionInsertChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
         WorkflowExecution.class, workflowExecution, ChangeType.INSERT);
 
-    workflowExecutionUpdateChangeEvent = WorkflowExecutionEntityTestUtils.createWorkflowExecutionChangeEvent(
+    workflowExecutionUpdateChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
         WorkflowExecution.class, workflowExecution, ChangeType.UPDATE);
   }
 
