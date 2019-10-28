@@ -26,24 +26,17 @@ public class TemplateUtils {
   private void processArtifactVariable(ExecutionContext context, Variable variable) {
     String expression = getExpression(variable.getValue());
     Artifact artifact = (Artifact) context.evaluateExpression(expression);
-    saveArtifactToSweepingOutput(context, variable.getName(), artifact);
+    ensureArtifactToSweepingOutput(context, variable.getName(), artifact);
   }
 
-  private void saveArtifactToSweepingOutput(ExecutionContext context, String name, Artifact artifact) {
-    if (artifact != null) {
-      // this is to avoid saving the same artifact to sweeping output at state level in case of linked command template
-      SweepingOutput sweepingOutputInput =
-          context.prepareSweepingOutputBuilder(SweepingOutput.Scope.STATE).name(name).build();
-      SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
-          sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-          sweepingOutputInput.getPhaseExecutionId(), sweepingOutputInput.getStateExecutionId());
-      if (result == null) {
-        sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutput.Scope.STATE)
-                                       .name(name)
-                                       .output(KryoUtils.asDeflatedBytes(artifact))
-                                       .build());
-      }
+  private void ensureArtifactToSweepingOutput(ExecutionContext context, String name, Artifact artifact) {
+    if (artifact == null) {
+      return;
     }
+    sweepingOutputService.ensure(context.prepareSweepingOutputBuilder(SweepingOutput.Scope.STATE)
+                                     .name(name)
+                                     .output(KryoUtils.asDeflatedBytes(artifact))
+                                     .build());
   }
 
   public String getExpression(String value) {

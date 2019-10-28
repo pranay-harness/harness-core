@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,6 +36,11 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
       throw new InvalidRequestException(
           format("Output with name %s, already saved in the context", sweepingOutput.getName()), exception);
     }
+  }
+
+  @Override
+  public void ensure(SweepingOutput sweepingOutput) {
+    wingsPersistence.saveIgnoringDuplicateKeys(asList(sweepingOutput));
   }
 
   @Override
