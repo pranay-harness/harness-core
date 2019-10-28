@@ -1,13 +1,15 @@
 package io.harness.persistence;
 
-import io.harness.mongo.HObjectFactory;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
+import io.harness.logging.AutoLogContext;
+import io.harness.mongo.CollectionLogContext;
 import org.mongodb.morphia.query.MorphiaIterator;
 
 import java.util.Iterator;
 
 // This is a simple wrapper around MorphiaIterator to provide AutoCloseable implementation
 public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
-  private String collection;
   private MorphiaIterator<T, T> iterator;
 
   public HIterator(MorphiaIterator<T, T> iterator) {
@@ -26,8 +28,9 @@ public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
 
   @Override
   public T next() {
-    HObjectFactory.getCollection().set(iterator.getCollection());
-    return HPersistence.retry(() -> iterator.next());
+    try (AutoLogContext ignore = new CollectionLogContext(iterator.getCollection(), OVERRIDE_ERROR)) {
+      return HPersistence.retry(() -> iterator.next());
+    }
   }
 
   @Override

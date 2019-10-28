@@ -18,6 +18,7 @@ import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.mapping.MappingException;
 import org.reflections.Reflections;
+import org.slf4j.MDC;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -30,8 +31,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class HObjectFactory extends DefaultCreator {
-  @Getter private static ThreadLocal<String> collection = new ThreadLocal<>();
-
   @Setter private AdvancedDatastore datastore;
 
   private static synchronized Map<String, Class> collectMorphiaInterfaceImplementers() {
@@ -117,7 +116,7 @@ public class HObjectFactory extends DefaultCreator {
     if (className.equals(actualClassName)) {
       return;
     }
-    final String collectionName = collection.get();
+    final String collectionName = MDC.get(CollectionLogContext.ID);
     if (collectionName == null) {
       logger.error("The collection was not initialized", new Exception());
       return;
@@ -126,7 +125,7 @@ public class HObjectFactory extends DefaultCreator {
     final Set<String> collections = alerted.computeIfAbsent(className, cn -> new ConcurrentHashSet<>());
     if (!collections.contains(collectionName)) {
       collections.add(collectionName);
-      logger.error("Collection {} need migration for class from {} to {}", collectionName, className, actualClassName);
+      logger.error("Need migration for class from {} to {}", className, actualClassName);
     }
   }
 
