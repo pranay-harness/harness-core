@@ -1,5 +1,6 @@
 package io.harness.persistence;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.QueryChecks.AUTHORITY;
 import static io.harness.persistence.HQuery.QueryChecks.COUNT;
 import static io.harness.persistence.HQuery.QueryChecks.VALIDATE;
@@ -8,7 +9,8 @@ import static java.lang.String.format;
 import com.google.common.collect.Sets;
 
 import com.mongodb.DBCollection;
-import io.harness.mongo.HObjectFactory;
+import io.harness.logging.AutoLogContext;
+import io.harness.mongo.CollectionLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -90,8 +92,9 @@ public class HQuery<T> extends QueryImpl<T> {
 
   @SuppressWarnings("deprecation")
   public T get(FindOptions options) {
-    HObjectFactory.getCollection().set(super.getCollection().getName());
-    return HPersistence.retry(() -> super.get(options));
+    try (AutoLogContext ignore = new CollectionLogContext(super.getCollection().getName(), OVERRIDE_ERROR)) {
+      return HPersistence.retry(() -> super.get(options));
+    }
   }
 
   public Key<T> getKey(FindOptions options) {
@@ -111,13 +114,14 @@ public class HQuery<T> extends QueryImpl<T> {
   @Override
   @SuppressWarnings("deprecation")
   public List<T> asList(FindOptions options) {
-    HObjectFactory.getCollection().set(super.getCollection().getName());
-    enforceHarnessRules();
-    return HPersistence.retry(() -> {
-      final List<T> list = super.asList(options);
-      checkListSize(list);
-      return list;
-    });
+    try (AutoLogContext ignore = new CollectionLogContext(super.getCollection().getName(), OVERRIDE_ERROR)) {
+      enforceHarnessRules();
+      return HPersistence.retry(() -> {
+        final List<T> list = super.asList(options);
+        checkListSize(list);
+        return list;
+      });
+    }
   }
 
   @Override

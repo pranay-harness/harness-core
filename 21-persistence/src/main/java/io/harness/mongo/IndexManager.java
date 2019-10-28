@@ -2,6 +2,7 @@ package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
@@ -18,6 +19,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.logging.AutoLogContext;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.persistence.HPersistence;
@@ -136,8 +138,9 @@ public class IndexManager {
         // Alert for every index that left:
         .forEach(entry -> {
           Duration passed = Duration.between(entry.getValue().getSince().toInstant(), ZonedDateTime.now().toInstant());
-          logger.error(
-              format("Index %s.%s is not used at for %d days", collection.getName(), entry.getKey(), passed.toDays()));
+          try (AutoLogContext ignore = new IndexLogContext(entry.getKey(), OVERRIDE_ERROR)) {
+            logger.error(format("Index is not used at for %d days", passed.toDays()));
+          }
         });
   }
 
@@ -181,51 +184,53 @@ public class IndexManager {
       }
 
       final DBCollection collection = primaryDatastore.getCollection(mc.getClazz());
-      if (processedCollections.contains(collection.getName())) {
-        return;
-      }
-      processedCollections.add(collection.getName());
+      try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {
+        if (processedCollections.contains(collection.getName())) {
+          return;
+        }
+        processedCollections.add(collection.getName());
 
-      Map<String, IndexCreator> creators = indexCreators(mc, collection);
+        Map<String, IndexCreator> creators = indexCreators(mc, collection);
 
-      // We should be attempting to drop indexes only if we successfully created all new ones
-      boolean okToDropIndexes = createNewIndexes(creators) == creators.size();
+        // We should be attempting to drop indexes only if we successfully created all new ones
+        boolean okToDropIndexes = createNewIndexes(creators) == creators.size();
 
-      final Map<String, Accesses> accesses = fetchIndexAccesses(collection);
+        final Map<String, Accesses> accesses = fetchIndexAccesses(collection);
 
-      if (okToDropIndexes) {
-        final List<DBObject> indexInfo = collection.getIndexInfo();
-        final List<String> obsoleteIndexes = indexInfo.stream()
-                                                 .map(obj -> obj.get("name").toString())
-                                                 .filter(name -> !"_id_".equals(name))
-                                                 .filter(name -> !creators.keySet().contains(name))
-                                                 .collect(toList());
+        if (okToDropIndexes) {
+          final List<DBObject> indexInfo = collection.getIndexInfo();
+          final List<String> obsoleteIndexes = indexInfo.stream()
+                                                   .map(obj -> obj.get("name").toString())
+                                                   .filter(name -> !"_id_".equals(name))
+                                                   .filter(name -> !creators.keySet().contains(name))
+                                                   .collect(toList());
 
-        if (isNotEmpty(obsoleteIndexes)) {
-          // Make sure that all indexes that we have are operational, we check that they have being seen since
-          // at least a day
-          final Date tooNew = tooNew();
-          okToDropIndexes = isOkToDropIndexes(tooNew, accesses, indexInfo);
+          if (isNotEmpty(obsoleteIndexes)) {
+            // Make sure that all indexes that we have are operational, we check that they have being seen since
+            // at least a day
+            final Date tooNew = tooNew();
+            okToDropIndexes = isOkToDropIndexes(tooNew, accesses, indexInfo);
 
-          if (okToDropIndexes) {
-            logger.error("Obsolete indexes: {} : {}", collection.getName(), join(", ", obsoleteIndexes));
-            obsoleteIndexes.forEach(name -> {
-              try {
-                collection.dropIndex(name);
-              } catch (RuntimeException ex) {
-                logger.error(format("Failed to drop index %s", name), ex);
-              }
-            });
+            if (okToDropIndexes) {
+              obsoleteIndexes.forEach(name -> {
+                try (AutoLogContext ignore2 = new IndexLogContext(name, OVERRIDE_ERROR)) {
+                  logger.info("Remove obsolete index");
+                  collection.dropIndex(name);
+                } catch (RuntimeException ex) {
+                  logger.error("Failed to drop index", ex);
+                }
+              });
+            }
           }
         }
-      }
 
-      try {
-        if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
-          checkForUnusedIndexes(collection, accesses);
+        try {
+          if (mc.getClazz().getAnnotation(IgnoreUnusedIndex.class) == null) {
+            checkForUnusedIndexes(collection, accesses);
+          }
+        } catch (Exception exception) {
+          logger.warn("", exception);
         }
-      } catch (Exception exception) {
-        logger.warn("", exception);
       }
     });
 
@@ -279,16 +284,16 @@ public class IndexManager {
     int created = 0;
     for (Entry<String, IndexCreator> creator : creators.entrySet()) {
       String name = creator.getKey();
-      try {
+      try (AutoLogContext ignore = new IndexLogContext(name, OVERRIDE_ERROR)) {
         final IndexCreator indexCreator = creator.getValue();
         indexCreator.create();
         created++;
       } catch (MongoCommandException mex) {
         // 86 - Index must have unique name.
         if (mex.getErrorCode() == 85 || mex.getErrorCode() == 86) {
-          logger.error("Index with name {} already exists. Always use new name when modifying an index", name, mex);
+          logger.error("Index already exists. Always use new name when modifying an index", mex);
         } else {
-          logger.error("Failed to create index {}", name, mex);
+          logger.error("Failed to create index", mex);
         }
       } catch (DuplicateKeyException exception) {
         logger.error("Because of deployment, a new index with uniqueness flag was introduced. "
@@ -296,7 +301,7 @@ public class IndexManager {
                 + "Create a migration to align the data with expectation or delete the uniqueness criteria from index",
             exception);
       } catch (RuntimeException exception) {
-        logger.error("Unexpected exception when trying to create index {}", name, exception);
+        logger.error("Unexpected exception when trying to create index", exception);
       }
     }
     return created;
@@ -316,9 +321,7 @@ public class IndexManager {
 
         final String indexName = index.options().name();
         if (isEmpty(indexName)) {
-          logger.error("Do not use default index name for collection: {}\n"
-                  + "WARNING: this index will not be created",
-              collection.getName());
+          logger.error("Do not use default index name. WARNING: this index will not be created!!!");
         } else {
           DBObject options = new BasicDBObject();
           options.put("name", indexName);
