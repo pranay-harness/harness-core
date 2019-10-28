@@ -41,6 +41,10 @@ import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.deployment.DeploymentSearchEntity;
+import software.wings.search.entities.environment.EnvironmentSearchEntity;
+import software.wings.search.entities.pipeline.PipelineSearchEntity;
+import software.wings.search.entities.service.ServiceSearchEntity;
+import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.framework.ElasticsearchDao;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntity;
@@ -160,6 +164,10 @@ public class WingsTestModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), new TypeLiteral<SearchEntity<?>>() {});
     searchEntityMultibinder.addBinding().to(ApplicationSearchEntity.class);
     searchEntityMultibinder.addBinding().to(DeploymentSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(ServiceSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(EnvironmentSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(WorkflowSearchEntity.class);
+    searchEntityMultibinder.addBinding().to(PipelineSearchEntity.class);
   }
 
   @Provides

@@ -22,6 +22,10 @@ import software.wings.features.AuditTrailFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 import software.wings.search.entities.deployment.DeploymentSearchEntity;
+import software.wings.search.entities.environment.EnvironmentSearchEntity;
+import software.wings.search.entities.pipeline.PipelineSearchEntity;
+import software.wings.search.entities.service.ServiceSearchEntity;
+import software.wings.search.entities.workflow.WorkflowSearchEntity;
 import software.wings.search.framework.ElasticsearchClient;
 import software.wings.search.framework.ElasticsearchIndexManager;
 import software.wings.search.framework.SearchResults;
@@ -46,9 +50,13 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
     String accountId = getAccount(AccountType.PAID).getUuid();
 
     when(auditTrailFeature.isAvailableForAccount(anyString())).thenReturn(true);
-    when(elasticsearchClient.search(any())).thenReturn(ElasticsearchServiceTestUtils.getDeploymentSearchResponse());
+    when(elasticsearchClient.search(any())).thenReturn(ElasticsearchServiceTestUtils.getSearchResponse());
     when(elasticsearchIndexManager.getAliasName(DeploymentSearchEntity.TYPE)).thenReturn(DeploymentSearchEntity.TYPE);
     when(elasticsearchIndexManager.getAliasName(ApplicationSearchEntity.TYPE)).thenReturn(ApplicationSearchEntity.TYPE);
+    when(elasticsearchIndexManager.getAliasName(ServiceSearchEntity.TYPE)).thenReturn(ServiceSearchEntity.TYPE);
+    when(elasticsearchIndexManager.getAliasName(EnvironmentSearchEntity.TYPE)).thenReturn(EnvironmentSearchEntity.TYPE);
+    when(elasticsearchIndexManager.getAliasName(WorkflowSearchEntity.TYPE)).thenReturn(WorkflowSearchEntity.TYPE);
+    when(elasticsearchIndexManager.getAliasName(PipelineSearchEntity.TYPE)).thenReturn(PipelineSearchEntity.TYPE);
 
     SearchResults searchResults = elasticsearchService.getSearchResults(searchString, accountId);
     assertThat(searchResults).isNotNull();

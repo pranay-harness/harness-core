@@ -1,5 +1,6 @@
 package software.wings.search.entities.application;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -35,7 +36,7 @@ public class ApplicationSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setAudits(ApplicationView applicationView) {
-    if (!applicationView.getAudits().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(applicationView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(applicationView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(applicationView);

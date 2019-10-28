@@ -1,5 +1,6 @@
 package software.wings.search.entities.workflow;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -34,7 +35,7 @@ public class WorkflowSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(WorkflowView workflowView) {
-    if (!workflowView.getDeployments().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(workflowView.getDeployments())) {
       this.deploymentsCount =
           SearchEntityUtils.truncateList(workflowView.getDeploymentTimestamps(), startTimestampToRetainFrom).size();
       removeStaleDeploymentsEntries(workflowView);
@@ -42,7 +43,7 @@ public class WorkflowSearchResult extends SearchResult {
   }
 
   private void setAudits(WorkflowView workflowView) {
-    if (!workflowView.getAudits().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(workflowView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(workflowView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(workflowView);

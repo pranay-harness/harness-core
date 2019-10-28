@@ -1,5 +1,6 @@
 package software.wings.search.entities.service;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -35,7 +36,7 @@ public class ServiceSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(ServiceView serviceView) {
-    if (!serviceView.getDeployments().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(serviceView.getDeployments())) {
       this.deploymentsCount =
           SearchEntityUtils.truncateList(serviceView.getDeploymentTimestamps(), startTimestampToRetainFrom).size();
       removeStaleDeploymentsEntries(serviceView);
@@ -43,7 +44,7 @@ public class ServiceSearchResult extends SearchResult {
   }
 
   private void setAudits(ServiceView serviceView) {
-    if (!serviceView.getAudits().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(serviceView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(serviceView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(serviceView);

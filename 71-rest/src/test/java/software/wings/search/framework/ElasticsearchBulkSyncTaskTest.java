@@ -110,7 +110,7 @@ public class ElasticsearchBulkSyncTaskTest extends WingsBaseTest {
     ArgumentCaptor<Set<SearchEntity<?>>> captor = ArgumentCaptor.forClass((Class) Set.class);
     verify(elasticsearchBulkMigrationHelper, times(1)).doBulkSync(captor.capture());
     Set<SearchEntity<?>> capturedSearchEntities = captor.getValue();
-    assertThat(capturedSearchEntities.size()).isEqualTo(2);
+    assertThat(capturedSearchEntities.size()).isEqualTo(6);
 
     ElasticsearchBulkMigrationJob shouldBeDeletedJob =
         wingsPersistence.get(ElasticsearchBulkMigrationJob.class, ApplicationSearchEntity.class.getCanonicalName());
