@@ -67,11 +67,13 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.observer.Subject;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.Queue;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import io.harness.validation.Create;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -191,6 +193,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
+  @Inject @Getter private Subject<InfrastructureMappingServiceObserver> subject = new Subject<>();
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
@@ -430,6 +433,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       eventPublishHelper.publishAccountEvent(
           accountId, AccountEvent.builder().accountEventType(AccountEventType.INFRA_MAPPING_ADDED).build(), true, true);
     }
+
+    try {
+      subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onSaved, infraMapping);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
+    }
+
     return savedInfraMapping;
   }
 
@@ -754,6 +764,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (!infraRefactor) {
       yamlPushService.pushYamlChangeSet(savedInfraMapping.getAccountId(), savedInfraMapping, updatedInfraMapping,
           Type.UPDATE, infrastructureMapping.isSyncFromGit(), isRename);
+    }
+
+    try {
+      subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onUpdated, updatedInfraMapping);
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
 
     return updatedInfraMapping;

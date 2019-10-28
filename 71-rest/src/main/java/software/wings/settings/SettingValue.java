@@ -18,7 +18,7 @@ import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 public abstract class SettingValue implements ExecutionCapabilityDemander {
-  @Getter @Setter private String type;
+  @Getter @Setter String type;
   @JsonIgnore @SchemaIgnore private transient boolean decrypted;
 
   @SchemaIgnore

@@ -20,6 +20,8 @@ import io.harness.validation.Update;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -43,6 +45,8 @@ import javax.annotation.Nullable;
  * Created by anubhaw on 1/10/17.
  */
 @JsonTypeInfo(use = Id.NAME, property = "infraMappingType")
+@NoArgsConstructor
+@RequiredArgsConstructor
 @Entity(value = "infrastructureMapping")
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true),
     fields = { @Field("appId")
@@ -59,15 +63,18 @@ public abstract class InfrastructureMapping
   public static final String INFRA_MAPPING_TYPE_KEY = "infraMappingType";
   public static final String APP_ID_KEY = "appId";
 
-  @NotEmpty private String computeProviderSettingId;
-  @NotEmpty private String envId;
-  private String serviceTemplateId;
+  @SchemaIgnore @NotEmpty @NonNull String accountId;
+  @NotEmpty @NonNull String infraMappingType;
+  @NotEmpty @NonNull String computeProviderType;
+  @NotEmpty @NonNull String computeProviderSettingId;
+  @NotEmpty @NonNull String envId;
+
+  @NotEmpty @NonNull String deploymentType;
+
+  String serviceTemplateId;
 
   @NotEmpty(groups = {Update.class}) private String serviceId;
 
-  @NotEmpty private String computeProviderType;
-  @NotEmpty private String infraMappingType;
-  @NotEmpty private String deploymentType;
   @SchemaIgnore private String computeProviderName;
 
   @EntityName private String name;
@@ -75,8 +82,6 @@ public abstract class InfrastructureMapping
 
   // auto populate name
   @SchemaIgnore private boolean autoPopulate = true;
-
-  @SchemaIgnore @NotEmpty private String accountId;
 
   @Nullable private String provisionerId;
 
@@ -86,10 +91,6 @@ public abstract class InfrastructureMapping
   private String infrastructureDefinitionId;
   private boolean sample;
 
-  /**
-   * Instantiates a new Infrastructure mapping.
-   */
-  public InfrastructureMapping() {}
   /**
    * Instantiates a new Infrastructure mapping.
    *
@@ -238,7 +239,7 @@ public abstract class InfrastructureMapping
   @SchemaIgnore
   @Override
   public String getAppId() {
-    return super.getAppId();
+    return appId;
   }
 
   @SchemaIgnore

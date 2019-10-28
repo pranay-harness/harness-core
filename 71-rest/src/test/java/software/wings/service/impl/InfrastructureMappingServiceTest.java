@@ -62,9 +62,12 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.ClusterRecordHandler;
+import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.observer.Subject;
 import io.harness.persistence.HQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -175,6 +178,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private AzureHelperService azureHelperService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
+  @Mock private ClusterRecordServiceImpl clusterService;
+  @Mock private Subject<ClusterRecordHandler> clusterSubject;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -280,6 +285,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     assertThat(returnedInfrastructureMapping.getUuid()).isEqualTo(INFRA_MAPPING_ID);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
+    verify(clusterSubject).fireInform(any(), any());
   }
 
   @Test

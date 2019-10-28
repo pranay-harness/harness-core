@@ -34,6 +34,22 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     super(InfrastructureMappingType.DIRECT_KUBERNETES.name());
   }
 
+  @lombok.Builder
+  public DirectKubernetesInfrastructureMapping(String accountId, String infraMappingType, String cloudProviderType,
+      String cloudProviderId, String namespace, String appId, String envId, String deploymentType,
+      String serviceTemplateId) {
+    this();
+    this.accountId = accountId;
+    super.infraMappingType = infraMappingType;
+    this.computeProviderType = cloudProviderType;
+    this.computeProviderSettingId = cloudProviderId;
+    this.namespace = namespace;
+    this.appId = appId;
+    this.envId = envId;
+    this.deploymentType = deploymentType;
+    this.serviceTemplateId = serviceTemplateId;
+  }
+
   @Override
   public void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {

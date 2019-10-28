@@ -104,7 +104,7 @@ public class SettingAttribute extends Base implements NameAccess {
   public static final String VALUE_TYPE_KEY = "value.type";
 
   @NotEmpty private String envId = GLOBAL_ENV_ID;
-  @NotEmpty private String accountId;
+  @NotEmpty String accountId;
   @NotEmpty @EntityName @Trimmed private String name;
   @Valid private SettingValue value;
   @Valid @Transient private ConnectivityValidationAttributes validationAttributes;

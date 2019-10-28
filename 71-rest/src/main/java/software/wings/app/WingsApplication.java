@@ -47,6 +47,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.event.EventsModule;
@@ -139,6 +140,7 @@ import software.wings.service.impl.BarrierServiceImpl;
 import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
+import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
@@ -150,6 +152,7 @@ import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
@@ -568,6 +571,13 @@ public class WingsApplication extends Application<MainConfiguration> {
     AuditServiceHelper auditServiceHelper =
         (AuditServiceHelper) injector.getInstance(Key.get(AuditServiceHelper.class));
     auditServiceHelper.getEntityCrudSubject().register(auditService);
+
+    ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));
+    InfrastructureMappingServiceImpl infrastructureMappingService =
+        (InfrastructureMappingServiceImpl) injector.getInstance(Key.get(InfrastructureMappingService.class));
+    infrastructureMappingService.getSubject().register(clusterRecordHandler);
+    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
+    settingsService.getSubject().register(clusterRecordHandler);
 
     registerSharedObservers(injector);
   }

@@ -22,6 +22,7 @@ import static software.wings.beans.GitConfig.GIT_USER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.ENV_ID_KEY;
 import static software.wings.beans.SettingAttribute.NAME_KEY;
+import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.common.PathConstants.BACKUP_PATH;
@@ -180,6 +181,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private WorkflowService workflowService;
   @Inject private Queue<PruneEvent> pruneQueue;
+
+  @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
 
   @Override
   public PageResponse<SettingAttribute> list(
@@ -772,6 +775,15 @@ public class SettingsServiceImpl implements SettingsService {
       pruneQueue.send(new PruneEvent(SettingAttribute.class, appId, settingAttribute.getUuid()));
     }
     boolean deleted = wingsPersistence.delete(settingAttribute);
+
+    try {
+      if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
+        subject.fireInform(SettingAttributeObxxxxxxxx:onDeleted, settingAttribute);
+      }
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
+    }
+
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
       yamlPushService.pushYamlChangeSet(accountId, settingAttribute, null, Type.DELETE, syncFromGit, false);
       cacheManager.getNewRelicApplicationCache().remove(settingAttribute.getUuid());

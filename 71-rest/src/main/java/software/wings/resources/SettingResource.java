@@ -10,9 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
@@ -26,9 +24,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.perpetualtask.k8s.watch.K8WatchPerpetualTaskClientParams;
 import io.harness.perpetualtask.k8s.watch.K8sClusterConfigFactory;
-import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +54,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -113,9 +108,7 @@ public class SettingResource {
   @Inject private YamlGitService yamlGitService;
   @Inject private AccountService accountService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private K8sWatchPerpetualTaskServiceClient k8SWatchPerpetualTaskServiceClient;
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
-  @Inject private FeatureFlagService featureFlagService;
 
   /**
    * List.
@@ -190,7 +183,9 @@ public class SettingResource {
         ((CustomArtifactServerConfig) variable.getValue()).setAccountId(variable.getAccountId());
       }
     }
-    variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
+    if (null != variable.getValue()) {
+      variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
+    }
   }
 
   /**
@@ -207,18 +202,7 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
     prePruneSettingAttribute(appId, accountId, variable);
     SettingAttribute savedSettingAttribute = settingsService.save(variable);
-    // the following IF statement is for testing purpose only
-    if (featureFlagService.isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
-      if (CLOUD_PROVIDER == savedSettingAttribute.getCategory()
-          && "KUBERNETES_CLUSTER".equals(savedSettingAttribute.getValue().getType())) {
-        K8WatchPerpetualTaskClientParams podWatchParams =
-            new K8WatchPerpetualTaskClientParams(savedSettingAttribute.getUuid(), "Pod");
-        k8SWatchPerpetualTaskServiceClient.create(savedSettingAttribute.getAccountId(), podWatchParams);
-        K8WatchPerpetualTaskClientParams nodeWatchParams =
-            new K8WatchPerpetualTaskClientParams(savedSettingAttribute.getUuid(), "Node");
-        k8SWatchPerpetualTaskServiceClient.create(savedSettingAttribute.getAccountId(), nodeWatchParams);
-      }
-    }
+
     return new RestResponse<>(savedSettingAttribute);
   }
 
@@ -395,10 +379,6 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse delete(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
-    if (featureFlagService.isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
-      // TODO(Tang) change this delete from perpetual task
-      k8SWatchPerpetualTaskServiceClient.delete(null, null);
-    }
     settingsService.delete(appId, attrId);
     return new RestResponse();
   }
