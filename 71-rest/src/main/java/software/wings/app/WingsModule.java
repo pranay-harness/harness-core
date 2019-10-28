@@ -13,6 +13,8 @@ import com.google.inject.name.Names;
 import io.harness.OrchestrationModule;
 import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.CCMSettingServiceImpl;
+import io.harness.ccm.cluster.ClusterRecordService;
+import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -745,6 +747,7 @@ public class WingsModule extends DependencyModule {
 
     bind(LoginSettingsService.class).to(LoginSettingsServiceImpl.class);
     bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
+    bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 

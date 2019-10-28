@@ -1,5 +1,8 @@
 package io.harness.serializer.morphia;
 
+import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
@@ -935,6 +938,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ServerlessInstance.class);
     set.add(ServerlessInstanceStats.class);
     set.add(StackDriverMetricCVConfiguration.class);
+    set.add(ClusterRecord.class);
   }
 
   @Override
@@ -942,6 +946,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     final HelperPut h = (name, clazz) -> map.put(PKG_HARNESS + name, clazz);
 
     h.put("marketplace.gcp.events.AccountActiveEvent", AccountActiveEvent.class);
+    h.put("ccm.cluster.entities.DirectKubernetesCluster", DirectKubernetesCluster.class);
+    h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);
 
     final HelperPut w = (name, clazz) -> map.put(PKG_WINGS + name, clazz);
 

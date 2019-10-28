@@ -191,16 +191,16 @@ public class SettingValidationService {
 
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
-    if (wingsPersistence.createQuery(SettingAttribute.class)
-            .filter(SettingAttributeKeys.accountId, settingAttribute.getAccountId())
-            .filter("appId", settingAttribute.getAppId())
-            .filter(SettingAttributeKeys.envId, settingAttribute.getEnvId())
-            .field(Mapper.ID_KEY)
-            .notEqual(settingAttribute.getUuid())
-            .filter(SettingAttributeKeys.name, settingAttribute.getName())
-            .filter(SettingAttributeKeys.category, settingAttribute.getCategory())
-            .get()
-        != null) {
+    SettingAttribute sa = wingsPersistence.createQuery(SettingAttribute.class)
+                              .filter(SettingAttributeKeys.accountId, settingAttribute.getAccountId())
+                              .filter("appId", settingAttribute.getAppId())
+                              .filter(SettingAttributeKeys.envId, settingAttribute.getEnvId())
+                              .field(Mapper.ID_KEY)
+                              .notEqual(settingAttribute.getUuid())
+                              .filter(SettingAttributeKeys.name, settingAttribute.getName())
+                              .filter(SettingAttributeKeys.category, settingAttribute.getCategory())
+                              .get();
+    if (sa != null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args",
               "The name " + settingAttribute.getName() + " already exists in " + settingAttribute.getCategory() + ".");
@@ -326,7 +326,8 @@ public class SettingValidationService {
                                                         .namespace(namespace)
                                                         .build();
     try {
-      delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+      ContainerService containerService = delegateProxyFactory.get(ContainerService.class, syncTaskContext);
+      containerService.validate(containerServiceParams);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
