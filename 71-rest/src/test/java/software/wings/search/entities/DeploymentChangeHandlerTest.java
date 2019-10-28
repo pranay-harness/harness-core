@@ -19,6 +19,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.WorkflowExecution;
 import software.wings.search.entities.deployment.DeploymentChangeHandler;
@@ -38,14 +39,21 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   private ChangeEvent workflowExecutionInsertChangeEvent;
   private ChangeEvent workflowExecutionUpdateChangeEvent;
   private String workflowExecutionId = generateUuid();
+  private String appId = generateUuid();
+  private String appName = "DeploymentChangeHandlerApplication" + System.currentTimeMillis();
 
   @Before
   public void setup() throws IOException {
+    Application application = new Application();
+    application.setUuid(appId);
+    application.setName(appName);
+    wingsPersistence.save(application);
+
     executionArgs = WorkflowExecutionEntityTestUtils.createExecutionArgs(WorkflowType.PIPELINE);
     assertThat(executionArgs).isNotNull();
 
     workflowExecution = WorkflowExecutionEntityTestUtils.createWorkflowExecution(
-        workflowExecutionId, executionArgs, WorkflowType.PIPELINE, SUCCESS);
+        workflowExecutionId, appId, appName, executionArgs, WorkflowType.PIPELINE, SUCCESS);
     assertThat(workflowExecution).isNotNull();
 
     workflowExecutionInsertChangeEvent = WorkflowExecutionEntityTestUtils.createWorkflowExecutionChangeEvent(

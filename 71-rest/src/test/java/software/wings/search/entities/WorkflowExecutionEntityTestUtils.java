@@ -2,8 +2,6 @@ package software.wings.search.entities;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.APP_NAME;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -29,11 +27,11 @@ public class WorkflowExecutionEntityTestUtils {
     return executionArgs;
   }
 
-  public static WorkflowExecution createWorkflowExecution(String workflowExecutionId, ExecutionArgs executionArgs,
-      WorkflowType workflowType, ExecutionStatus executionStatus) {
+  public static WorkflowExecution createWorkflowExecution(String workflowExecutionId, String appId, String appName,
+      ExecutionArgs executionArgs, WorkflowType workflowType, ExecutionStatus executionStatus) {
     return WorkflowExecution.builder()
-        .appId(APP_ID)
-        .appName(APP_NAME)
+        .appId(appId)
+        .appName(appName)
         .envType(NON_PROD)
         .status(executionStatus)
         .workflowType(workflowType)
