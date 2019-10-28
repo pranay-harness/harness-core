@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -31,6 +32,7 @@ import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -46,7 +48,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Validator;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -117,7 +118,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
           context.getContextElement(ContextElementType.PCF_ROUTE_SWAP_ROLLBACK);
 
       // it means no update route happened.
-      requestConfigData.setSkipRollback(pcfSetupContextElement == null || pcfSwapRouteRollbackContextElement == null);
+      requestConfigData.setSkipRollback(pcfSwapRouteRollbackContextElement == null);
 
       if (pcfSwapRouteRollbackContextElement != null
           && pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData() != null) {
@@ -140,9 +141,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .pcfInfrastructureMapping(pcfInfrastructureMapping)
             .activityId(activity.getUuid())
             .envId(env.getUuid())
-            .timeoutIntervalInMinutes(pcfSetupContextElement != null
-                    ? pcfSetupContextElement.getTimeoutIntervalInMinutes()
-                    : Integer.valueOf(5))
+            .timeoutIntervalInMinutes(firstNonNull(pcfSetupContextElement.getTimeoutIntervalInMinutes(), 5))
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
@@ -158,15 +157,16 @@ public class PcfSwitchBlueGreenRoutes extends State {
         && EmptyPredicate.isNotEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())) {
       existingAppNames = pcfSetupContextElement.getAppDetailsToBeDownsized()
                              .stream()
-                             .map(app -> app.getApplicationName())
+                             .map(PcfAppSetupTimeDetails::getApplicationName)
                              .collect(toList());
     } else {
-      existingAppNames = Collections.EMPTY_LIST;
+      existingAppNames = emptyList();
     }
 
     return PcfRouteUpdateRequestConfigData.builder()
         .newApplicatiaonName(getNewApplicationName(pcfSetupContextElement))
-        .existingApplicationDetails(pcfSetupContextElement.getAppDetailsToBeDownsized())
+        .existingApplicationDetails(
+            pcfSetupContextElement != null ? pcfSetupContextElement.getAppDetailsToBeDownsized() : null)
         .existingApplicationNames(existingAppNames)
         .tempRoutes(pcfSetupContextElement != null ? pcfSetupContextElement.getTempRouteMap() : emptyList())
         .finalRoutes(pcfSetupContextElement != null ? pcfSetupContextElement.getRouteMaps() : emptyList())
