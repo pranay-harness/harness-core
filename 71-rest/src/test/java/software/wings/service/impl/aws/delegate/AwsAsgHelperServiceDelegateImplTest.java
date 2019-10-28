@@ -36,6 +36,7 @@ import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,6 +60,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
   @Mock private EncryptionService mockEncryptionService;
   @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsAsgHelperServiceDelegateImpl awsAsgHelperServiceDelegate;
 
   @Test
@@ -72,6 +74,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribeAutoScalingGroupsResult().withAutoScalingGroups(groups))
         .when(mockClient)
         .describeAutoScalingGroups(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     List<String> result = awsAsgHelperServiceDelegate.listAutoScalingGroupNames(
         AwsConfig.builder().build(), Collections.emptyList(), "us-east-1");
     assertThat(result).isNotNull();
@@ -94,6 +97,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(singletonList(new com.amazonaws.services.ec2.model.Instance().withInstanceId("id1")))
         .when(mockAwsEc2HelperServiceDelegate)
         .listEc2Instances(any(), anyList(), anyList(), anyString());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     List<com.amazonaws.services.ec2.model.Instance> instanceList =
         awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
             AwsConfig.builder().build(), emptyList(), "us-east-1", "name");
@@ -112,6 +116,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
                  new AutoScalingGroup().withAutoScalingGroupName("asgName")))
         .when(mockClient)
         .describeAutoScalingGroups(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     AutoScalingGroup autoScalingGroup = awsAsgHelperServiceDelegate.getAutoScalingGroup(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName");
     assertThat(autoScalingGroup).isNotNull();
@@ -128,6 +133,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
                  new LaunchConfiguration().withLaunchConfigurationName("lcName")))
         .when(mockClient)
         .describeLaunchConfigurations(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     LaunchConfiguration launchConfiguration = awsAsgHelperServiceDelegate.getLaunchConfiguration(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "lcName");
     assertThat(launchConfiguration).isNotNull();
@@ -140,6 +146,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
     doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.deleteLaunchConfig(AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName");
     verify(mockClient).deleteLaunchConfiguration(any());
   }
@@ -151,6 +158,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new CreateLaunchConfigurationResult()).when(mockClient).createLaunchConfiguration(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     CreateLaunchConfigurationResult result = awsAsgHelperServiceDelegate.createLaunchConfiguration(
         AwsConfig.builder().build(), emptyList(), "us-east-1", new CreateLaunchConfigurationRequest());
     assertThat(result).isNotNull();
@@ -164,6 +172,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new CreateAutoScalingGroupResult()).when(mockClient).createAutoScalingGroup(any());
     LogCallback mockCallback = mock(LogCallback.class);
+    doNothing().when(mockTracker).trackASGCall(anyString());
     CreateAutoScalingGroupResult result = awsAsgHelperServiceDelegate.createAutoScalingGroup(
         AwsConfig.builder().build(), emptyList(), "us-east-1", new CreateAutoScalingGroupRequest(), mockCallback);
     assertThat(result).isNotNull();
@@ -176,6 +185,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     LogCallback mockCallback = mock(LogCallback.class);
+    doNothing().when(mockTracker).trackASGCall(anyString());
     try {
       doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
       awsAsgHelperServiceDelegate.deleteAutoScalingGroups(
@@ -200,6 +210,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
                  new AutoScalingGroup().withAutoScalingGroupName("name2").withDesiredCapacity(2)))
         .when(mockClient)
         .describeAutoScalingGroups(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     Map<String, Integer> result = awsAsgHelperServiceDelegate.getDesiredCapacitiesOfAsgs(
         AwsConfig.builder().build(), emptyList(), "us-east-1", asList("name1", "name2"));
     assertThat(result).isNotNull();
@@ -218,6 +229,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribeAutoScalingGroupsResult().withAutoScalingGroups(new AutoScalingGroup().withMinSize(2)))
         .when(mockClient)
         .describeAutoScalingGroups(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "foo", 1, mockCallback);
     verify(mockClient).updateAutoScalingGroup(any());
@@ -234,6 +246,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
                  new AutoScalingGroup().withAutoScalingGroupName("foo")))
         .when(mockClient)
         .describeAutoScalingGroups(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.setMinInstancesForAsg(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "foo", 1, mockCallback);
     verify(mockClient).updateAutoScalingGroup(any());
@@ -248,6 +261,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doReturn(new SetDesiredCapacityResult()).when(mockClient).setDesiredCapacity(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     try {
       doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
       awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
@@ -268,6 +282,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
         .listEc2Instances(any(), anyList(), anyList(), anyString());
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     boolean result = awsAsgHelperServiceDelegate.allInstanceInReadyState(
         AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList("id"), mockCallback);
     assertThat(result).isFalse();
@@ -284,6 +299,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.registerAsgWithClassicLBs(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("classicLbs"), mockCallback);
     verify(mockClient).attachLoadBalancers(any());
@@ -297,6 +313,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.registerAsgWithTargetGroups(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("targetGroups"), mockCallback);
     verify(mockClient).attachLoadBalancerTargetGroups(any());
@@ -310,6 +327,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("targetGroups"), mockCallback);
     verify(mockClient).detachLoadBalancerTargetGroups(any());
@@ -323,6 +341,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("classicLBs"), mockCallback);
     verify(mockClient).detachLoadBalancers(any());
@@ -351,6 +370,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
                                    .withValue(format("%s__2", INFRA_MAPPING_ID)))))
         .when(awsAsgHelperServiceDelegate)
         .listAllAsgs(any(), anyList(), anyString());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     AwsAsgGetRunningCountData data = awsAsgHelperServiceDelegate.getCurrentlyRunningInstanceCount(
         AwsConfig.builder().build(), emptyList(), "us-east-1", INFRA_MAPPING_ID);
     assertThat(data.getAsgName()).isEqualTo("Name_2");
@@ -370,6 +390,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribePoliciesResult().withScalingPolicies(new ScalingPolicy().withPolicyName("policy")))
         .when(mockClient)
         .describePolicies(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     List<String> jSONs = awsAsgHelperServiceDelegate.getScalingPolicyJSONs(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "asg", mockCallback);
     assertThat(jSONs).isNotNull();
@@ -387,6 +408,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribePoliciesResult().withScalingPolicies(new ScalingPolicy().withPolicyName("policy")))
         .when(mockClient)
         .describePolicies(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "asg", mockCallback);
     verify(mockClient).deletePolicy(any());
@@ -401,6 +423,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doReturn(new PutScalingPolicyResult().withPolicyARN("arn")).when(mockClient).putScalingPolicy(any());
+    doNothing().when(mockTracker).trackASGCall(anyString());
     awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(AwsConfig.builder().build(), emptyList(), "us-east-1", "asg",
         singletonList(
             "{\"autoScalingGroupName\":null,\"policyName\":\"policy\",\"policyARN\":null,\"policyType\":null,\"adjustmentType\":null,\"minAdjustmentStep\":null,\"minAdjustmentMagnitude\":null,\"scalingAdjustment\":null,\"cooldown\":null,\"stepAdjustments\":[],\"metricAggregationType\":null,\"estimatedInstanceWarmup\":null,\"alarms\":[],\"targetTrackingConfiguration\":null}"),

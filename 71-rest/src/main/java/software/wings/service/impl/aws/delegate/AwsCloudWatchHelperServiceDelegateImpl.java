@@ -52,6 +52,7 @@ public class AwsCloudWatchHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsConfig);
+      tracker.trackCloudWatchCall("Get Metric Statistics");
       return cloudWatchClient.getMetricStatistics(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);

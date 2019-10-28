@@ -27,6 +27,7 @@ import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
+import io.harness.aws.AwsCallTracker;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -41,6 +42,7 @@ import java.util.UUID;
 class AwsHelperServiceDelegateBase {
   @VisibleForTesting static final String HARNESS_AUTOSCALING_GROUP_TAG = "HARNESS_REVISION";
   @Inject protected EncryptionService encryptionService;
+  @Inject protected AwsCallTracker tracker;
 
   protected void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
@@ -76,7 +78,9 @@ class AwsHelperServiceDelegateBase {
           amazonClientException, USER);
     } else {
       logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonClientException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
+          .addParam("message",
+              amazonClientException.getMessage() != null ? amazonClientException.getMessage() : "Exception Message");
     }
   }
 

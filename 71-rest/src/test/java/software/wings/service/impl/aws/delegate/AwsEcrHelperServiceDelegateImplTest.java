@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -12,6 +13,7 @@ import com.amazonaws.services.ecr.model.AuthorizationData;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenResult;
 import com.amazonaws.services.ecr.model.Repository;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,6 +28,7 @@ import java.util.Collections;
 
 public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsEcrHelperServiceDelegateImpl awsEcrHelperServiceDelegate;
 
   @Test
@@ -37,6 +40,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribeRepositoriesResult().withRepositories(new Repository().withRepositoryUri("uri")))
         .when(mockClient)
         .describeRepositories(any());
+    doNothing().when(mockTracker).trackECRCall(anyString());
     String uri = awsEcrHelperServiceDelegate.getEcrImageUrl(
         AwsConfig.builder().build(), Collections.emptyList(), "us-east-1", "imageName");
     assertThat(uri).isEqualTo("uri");
@@ -52,6 +56,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
                  new AuthorizationData().withAuthorizationToken("token")))
         .when(mockClient)
         .getAuthorizationToken(any());
+    doNothing().when(mockTracker).trackECRCall(anyString());
     String token = awsEcrHelperServiceDelegate.getAmazonEcrAuthToken(
         AwsConfig.builder().build(), Collections.emptyList(), "account", "us-east-1");
     assertThat(token).isEqualTo("token");

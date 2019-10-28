@@ -24,6 +24,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetDescription;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealth;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetHealthDescription;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import org.junit.Test;
@@ -41,6 +42,7 @@ import java.util.Map;
 
 public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsElbHelperServiceDelegateImpl awsElbHelperServiceDelegate;
 
   @Test
@@ -55,6 +57,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
                      new LoadBalancerDescription().withLoadBalancerName("lb2")))
         .when(mockClassicClient)
         .describeLoadBalancers(any());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     List<String> classisLbNames =
         awsElbHelperServiceDelegate.listClassicLoadBalancers(AwsConfig.builder().build(), emptyList(), "us-east-1");
     assertThat(classisLbNames).isNotNull();
@@ -75,6 +79,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
                  new LoadBalancer().withLoadBalancerName("lb3").withType("network")))
         .when(mockV2Client)
         .describeLoadBalancers(any());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     List<AwsLoadBalancerDetails> appLbNames = awsElbHelperServiceDelegate.listApplicationLoadBalancerDetails(
         AwsConfig.builder().build(), emptyList(), "us-east-1");
     assertThat(appLbNames).isNotNull();
@@ -97,6 +103,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
                  new LoadBalancer().withLoadBalancerName("lb3").withType("network")))
         .when(mockV2Client)
         .describeLoadBalancers(any());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     List<AwsLoadBalancerDetails> appLbNames = awsElbHelperServiceDelegate.listElasticLoadBalancerDetails(
         AwsConfig.builder().build(), emptyList(), "us-east-1");
     assertThat(appLbNames).isNotNull();
@@ -121,6 +129,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockv2Client)
         .describeLoadBalancers(any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     List<AwsLoadBalancerDetails> appLbNames = awsElbHelperServiceDelegate.listNetworkLoadBalancerDetails(
         AwsConfig.builder().build(), emptyList(), "us-east-1");
     assertThat(appLbNames).isNotNull();
@@ -143,6 +153,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribeLoadBalancersResult().withLoadBalancers(new LoadBalancer().withLoadBalancerArn("arn1")))
         .when(mockV2Client)
         .describeLoadBalancers(any());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     Map<String, String> result = awsElbHelperServiceDelegate.listTargetGroupsForAlb(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "lbName");
     assertThat(result).isNotNull();
@@ -164,6 +176,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockClassicClient)
         .describeInstanceHealth(any());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     boolean result = awsElbHelperServiceDelegate.allInstancesRegistered(
         mockClassicClient, singletonList("id"), "classicLb", mockCallback);
     assertThat(result).isFalse();
@@ -188,6 +202,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
                 .withTarget(new TargetDescription().withId("id"))))
         .when(mockV2Client)
         .describeTargetHealth(any());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     boolean result = awsElbHelperServiceDelegate.allTargetsRegistered(
         mockV2Client, singletonList("id"), "targetGroup", mockCallback);
     assertThat(result).isFalse();
@@ -209,6 +225,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .doReturn(new DescribeTargetHealthResult())
         .when(mockV2Client)
         .describeTargetHealth(any());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     boolean result = awsElbHelperServiceDelegate.allTargetsDeRegistered(
         mockV2Client, singletonList("id"), "targetGroup", mockCallback);
     assertThat(result).isFalse();
@@ -229,6 +247,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(mockClassicClient)
         .describeInstanceHealth(any());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     boolean result = awsElbHelperServiceDelegate.allInstancesDeRegistered(
         mockClassicClient, singletonList("id"), "classicLb", mockCallback);
     assertThat(result).isFalse();
@@ -251,6 +271,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new CreateTargetGroupResult().withTargetGroups(new TargetGroup().withTargetGroupArn("arn1")))
         .when(mockV2Client)
         .createTargetGroup(any());
+    doNothing().when(mockTracker).trackELBCall(anyString());
+    doNothing().when(mockTracker).trackClassicELBCall(anyString());
     awsElbHelperServiceDelegate.cloneTargetGroup(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "arn", "stageTargetGroup");
     verify(mockV2Client).createTargetGroup(any());

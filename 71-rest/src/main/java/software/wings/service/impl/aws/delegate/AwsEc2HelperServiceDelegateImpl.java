@@ -60,6 +60,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackEC2Call("Get Ec2 client");
       getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
@@ -77,6 +78,7 @@ public class AwsEc2HelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig);
+      tracker.trackEC2Call("List Ec2 regions");
       return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -91,6 +93,7 @@ public class AwsEc2HelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
+      tracker.trackEC2Call("List VPCs");
       return amazonEC2Client
           .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter("state").withValues("available")))
           .getVpcs()
@@ -116,6 +119,7 @@ public class AwsEc2HelperServiceDelegateImpl
         filters.add(new Filter("vpc-id", vpcIds));
       }
       filters.add(new Filter("state").withValues("available"));
+      tracker.trackEC2Call("List Subnets");
       return amazonEC2Client.describeSubnets(new DescribeSubnetsRequest().withFilters(filters))
           .getSubnets()
           .stream()
@@ -142,6 +146,7 @@ public class AwsEc2HelperServiceDelegateImpl
         if (isNotEmpty(vpcIds)) {
           filters.add(new Filter("vpc-id", vpcIds));
         }
+        tracker.trackEC2Call("List SGs");
         DescribeSecurityGroupsResult describeSecurityGroupsResult = amazonEC2Client.describeSecurityGroups(
             new DescribeSecurityGroupsRequest().withNextToken(nextToken).withFilters(filters));
         List<SecurityGroup> securityGroups = describeSecurityGroupsResult.getSecurityGroups();
@@ -165,6 +170,7 @@ public class AwsEc2HelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
         AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
+        tracker.trackEC2Call("List Tags");
         DescribeTagsResult describeTagsResult =
             amazonEC2Client.describeTags(new DescribeTagsRequest()
                                              .withNextToken(nextToken)
@@ -191,6 +197,7 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         DescribeInstancesRequest describeInstancesRequest =
             new DescribeInstancesRequest().withNextToken(nextToken).withFilters(filters);
+        tracker.trackEC2Call("List Ec2 instances");
         DescribeInstancesResult describeInstancesResult =
             getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
@@ -218,6 +225,7 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         DescribeInstancesRequest describeInstancesRequest =
             new DescribeInstancesRequest().withNextToken(nextToken).withInstanceIds(instanceIds);
+        tracker.trackEC2Call("List Ec2 instances");
         DescribeInstancesResult describeInstancesResult =
             getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
@@ -242,6 +250,7 @@ public class AwsEc2HelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       DescribeImagesRequest request = new DescribeImagesRequest().withImageIds(amiId);
+      tracker.trackEC2Call("List Images");
       DescribeImagesResult result = amazonEC2Client.describeImages(request);
       List<Image> images = result.getImages();
       if (isNotEmpty(images)) {

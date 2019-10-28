@@ -63,6 +63,7 @@ public class AwsEcsHelperServiceDelegateImpl
       String nextToken = null;
       do {
         ListClustersRequest listClustersRequest = new ListClustersRequest().withNextToken(nextToken);
+        tracker.trackECSCall("List Clusters");
         ListClustersResult listClustersResult = getAmazonEcsClient(region, awsConfig).listClusters(listClustersRequest);
         result.addAll(listClustersResult.getClusterArns().stream().map(this ::getIdFromArn).collect(toList()));
         nextToken = listClustersResult.getNextToken();
@@ -87,6 +88,7 @@ public class AwsEcsHelperServiceDelegateImpl
       do {
         ListServicesRequest listServicesRequest =
             new ListServicesRequest().withCluster(cluster).withNextToken(nextToken);
+        tracker.trackECSCall("List Services");
         ListServicesResult listServicesResult = client.listServices(listServicesRequest);
         List<String> arnsBatch = listServicesResult.getServiceArns();
         if (isNotEmpty(arnsBatch)) {
@@ -105,6 +107,7 @@ public class AwsEcsHelperServiceDelegateImpl
         }
         DescribeServicesRequest describeServicesRequest =
             new DescribeServicesRequest().withCluster(cluster).withServices(arnsBatch).withInclude(TAGS);
+        tracker.trackECSCall("Describe Services");
         DescribeServicesResult describeServicesResult = client.describeServices(describeServicesRequest);
         allServices.addAll(describeServicesResult.getServices());
       }
@@ -131,6 +134,7 @@ public class AwsEcsHelperServiceDelegateImpl
         if (null != service) {
           listTasksRequest.withServiceName(service);
         }
+        tracker.trackECSCall("List Tasks");
         ListTasksResult listTasksResult = client.listTasks(listTasksRequest);
         List<String> arnsBatch = listTasksResult.getTaskArns();
         if (isNotEmpty(arnsBatch)) {
@@ -165,6 +169,7 @@ public class AwsEcsHelperServiceDelegateImpl
         }
         DescribeTasksRequest describeTasksRequest =
             new DescribeTasksRequest().withCluster(cluster).withTasks(arnsBatch).withInclude(TaskField.TAGS);
+        tracker.trackECSCall("Describe Tasks");
         DescribeTasksResult describeTasksResult = client.describeTasks(describeTasksRequest);
         allTasks.addAll(describeTasksResult.getTasks());
       }
@@ -191,6 +196,7 @@ public class AwsEcsHelperServiceDelegateImpl
                                                                           .withCluster(cluster)
                                                                           .withStatus(containerInstanceStatus)
                                                                           .withNextToken(nextToken);
+        tracker.trackECSCall("List Container Instances");
         ListContainerInstancesResult listContainerInstancesResult =
             client.listContainerInstances(listContainerInstancesRequest);
         List<String> arnsBatch = listContainerInstancesResult.getContainerInstanceArns();
@@ -212,6 +218,7 @@ public class AwsEcsHelperServiceDelegateImpl
         DescribeContainerInstancesRequest describeContainerInstancesRequest =
             new DescribeContainerInstancesRequest().withCluster(cluster).withContainerInstances(arnsBatch).withInclude(
                 ContainerInstanceField.TAGS);
+        tracker.trackECSCall("Describe Containers");
         DescribeContainerInstancesResult describeContainerInstancesResult =
             client.describeContainerInstances(describeContainerInstancesRequest);
         allContainerInstance.addAll(describeContainerInstancesResult.getContainerInstances());

@@ -4,6 +4,8 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -11,6 +13,7 @@ import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.GetTemplateResult;
 import com.amazonaws.services.cloudformation.model.GetTemplateSummaryResult;
 import com.amazonaws.services.cloudformation.model.ParameterDeclaration;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,6 +29,7 @@ import java.util.List;
 
 public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsCFHelperServiceDelegateImpl awsCFHelperServiceDelegate;
 
   @Test
@@ -39,6 +43,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
                  new ParameterDeclaration().withParameterKey("k2").withParameterType("t2").withDefaultValue("d2")))
         .when(mockClient)
         .getTemplateSummary(any());
+    doNothing().when(mockTracker).trackCFCall(anyString());
     List<AwsCFTemplateParamsData> paramsData = awsCFHelperServiceDelegate.getParamsData(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "url", "body", null, null, null);
     assertThat(paramsData).isNotNull();
@@ -60,6 +65,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), any());
     doReturn(new GetTemplateResult().withTemplateBody("body")).when(mockClient).getTemplate(any());
+    doNothing().when(mockTracker).trackCFCall(anyString());
     String body = awsCFHelperServiceDelegate.getStackBody(AwsConfig.builder().build(), "us-east-1", "stackId");
     assertThat(body).isEqualTo("body");
   }
@@ -70,6 +76,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), any());
     doReturn(new GetTemplateSummaryResult().withCapabilities("c1", "c2")).when(mockClient).getTemplateSummary(any());
+    doNothing().when(mockTracker).trackCFCall(anyString());
     List<String> capabilities =
         awsCFHelperServiceDelegate.getCapabilities(AwsConfig.builder().build(), "us-east-1", "foo", "body");
     assertThat(capabilities).isNotNull();

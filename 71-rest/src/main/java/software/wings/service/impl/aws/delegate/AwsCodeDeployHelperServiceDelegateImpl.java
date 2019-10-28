@@ -67,6 +67,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
         listApplicationsRequest = new ListApplicationsRequest().withNextToken(nextToken);
         listApplicationsResult =
             getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).listApplications(listApplicationsRequest);
+        tracker.trackCDCall("Get Applications");
         applications.addAll(listApplicationsResult.getApplications());
         nextToken = listApplicationsResult.getNextToken();
       } while (nextToken != null);
@@ -90,6 +91,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       ListDeploymentConfigsRequest listDeploymentConfigsRequest;
       do {
         listDeploymentConfigsRequest = new ListDeploymentConfigsRequest().withNextToken(nextToken);
+        tracker.trackCDCall("List Deployment Configs");
         listDeploymentConfigsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
                                           .listDeploymentConfigs(listDeploymentConfigsRequest);
         deploymentConfigurations.addAll(listDeploymentConfigsResult.getDeploymentConfigsList());
@@ -116,6 +118,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       do {
         listDeploymentGroupsRequest =
             new ListDeploymentGroupsRequest().withNextToken(nextToken).withApplicationName(appName);
+        tracker.trackCDCall("List Deployment Groups");
         listDeploymentGroupsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
                                          .listDeploymentGroups(listDeploymentGroupsRequest);
         deploymentGroups.addAll(listDeploymentGroupsResult.getDeploymentGroups());
@@ -145,6 +148,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
                                              .withNextToken(nextToken)
                                              .withDeploymentId(deploymentId)
                                              .withInstanceStatusFilter(asList(InstanceStatus.Succeeded.name()));
+        tracker.trackCDCall("List Deployment Instances");
         listDeploymentInstancesResult = amazonCodeDeployClient.listDeploymentInstances(listDeploymentInstancesRequest);
         instanceIds.addAll(listDeploymentInstancesResult.getInstancesList());
         nextToken = listDeploymentInstancesResult.getNextToken();
@@ -177,6 +181,7 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptedDataDetails);
       GetDeploymentGroupRequest getDeploymentGroupRequest =
           new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(deploymentGroupName);
+      tracker.trackCDCall("Get Deployment Group");
       GetDeploymentGroupResult getDeploymentGroupResult =
           getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).getDeploymentGroup(getDeploymentGroupRequest);
       DeploymentGroupInfo deploymentGroupInfo = getDeploymentGroupResult.getDeploymentGroupInfo();

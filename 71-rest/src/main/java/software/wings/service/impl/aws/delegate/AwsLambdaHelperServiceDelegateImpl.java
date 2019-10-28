@@ -106,6 +106,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       if (isNotEmpty(request.getPayload())) {
         invokeRequest.setPayload(request.getPayload());
       }
+      tracker.trackLambdaCall("Invoke Function");
       InvokeResult invokeResult = lambdaClient.invoke(invokeRequest);
       logger.info("Lambda invocation result: " + invokeResult.toString());
       AwsLambdaExecuteFunctionResponseBuilder responseBuilder = AwsLambdaExecuteFunctionResponse.builder();
@@ -147,6 +148,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       ListFunctionsResult listFunctionsResult = null;
       String nextMarker = null;
       do {
+        tracker.trackLambdaCall("List Functions");
         listFunctionsResult =
             lambdaClient.listFunctions(new ListFunctionsRequest().withMaxItems(100).withMarker(nextMarker));
         functionConfigurations.addAll(listFunctionsResult.getFunctions());
@@ -240,6 +242,7 @@ public class AwsLambdaHelperServiceDelegateImpl
     if (isNotEmpty(evaluatedAliases)) {
       evaluatedAliases.forEach(alias -> {
         logCallback.saveExecutionLog(format("Creating Function Alias: [%s]", alias));
+        tracker.trackLambdaCall("Create Function Alias");
         CreateAliasResult createAliasResult = lambdaClient.createAlias(new CreateAliasRequest()
                                                                            .withFunctionName(functionName)
                                                                            .withFunctionVersion(functionVersion)
@@ -254,6 +257,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       List<String> updateAlias, ExecutionLogCallback logCallback) {
     updateAlias.forEach(alias -> {
       logCallback.saveExecutionLog(format("Updating Function Alias: [%s]", alias));
+      tracker.trackLambdaCall("Update Function Alias");
       UpdateAliasResult updateAliasResult = lambdaClient.updateAlias(
           new UpdateAliasRequest().withFunctionName(functionName).withFunctionVersion(functionArn).withName(alias));
       logCallback.saveExecutionLog(format("Updated Function Alias with name:[%s], arn:[%s]",
@@ -302,6 +306,7 @@ public class AwsLambdaHelperServiceDelegateImpl
     GetFunctionResult functionResult = null;
     try {
       logCallback.saveExecutionLog(format("Testing existence of function with name: [%s]", functionName));
+      tracker.trackLambdaCall("Get Function");
       functionResult = lambdaClient.getFunction(new GetFunctionRequest().withFunctionName(functionName));
     } catch (ResourceNotFoundException exception) {
       // Function does not exist
@@ -314,6 +319,7 @@ public class AwsLambdaHelperServiceDelegateImpl
         try {
           logCallback.saveExecutionLog(
               format("Testing alternate function name: [%s] for existence", alternateNormalizedFunctionName));
+          tracker.trackLambdaCall("Get Function");
           functionResult =
               lambdaClient.getFunction(new GetFunctionRequest().withFunctionName(alternateNormalizedFunctionName));
         } catch (ResourceNotFoundException exception) {
@@ -343,6 +349,7 @@ public class AwsLambdaHelperServiceDelegateImpl
               .withTimeout(functionParams.getTimeout())
               .withMemorySize(functionParams.getMemory())
               .withVpcConfig(vpcConfig);
+      tracker.trackLambdaCall("Create Function");
       CreateFunctionResult createFunctionResult = lambdaClient.createFunction(createFunctionRequest);
       logCallback.saveExecutionLog(format("Function [%s] published with version [%s] successfully", functionName,
                                        createFunctionResult.getVersion()),
@@ -360,6 +367,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       logCallback.saveExecutionLog(format("Function: [%s] exists. Update and Publish", functionName));
       logCallback.saveExecutionLog(
           format("Existing Lambda Function Code Sha256: [%s].", functionResult.getConfiguration().getCodeSha256()));
+      tracker.trackLambdaCall("Update Function Code");
       UpdateFunctionCodeResult updateFunctionCodeResultDryRun =
           lambdaClient.updateFunctionCode(new UpdateFunctionCodeRequest()
                                               .withFunctionName(functionName)
@@ -375,6 +383,7 @@ public class AwsLambdaHelperServiceDelegateImpl
                                                                   .withFunctionName(functionName)
                                                                   .withS3Bucket(functionParams.getBucket())
                                                                   .withS3Key(functionParams.getKey());
+        tracker.trackLambdaCall("Update Function code");
         UpdateFunctionCodeResult updateFunctionCodeResult = lambdaClient.updateFunctionCode(updateFunctionCodeRequest);
         logCallback.saveExecutionLog("Function code updated successfully", INFO);
         logCallback.saveExecutionLog(
@@ -393,6 +402,7 @@ public class AwsLambdaHelperServiceDelegateImpl
               .withTimeout(functionParams.getTimeout())
               .withMemorySize(functionParams.getMemory())
               .withVpcConfig(vpcConfig);
+      tracker.trackLambdaCall("Update Function Configuration");
       UpdateFunctionConfigurationResult updateFunctionConfigurationResult =
           lambdaClient.updateFunctionConfiguration(updateFunctionConfigurationRequest);
       logCallback.saveExecutionLog("Function configuration updated successfully", INFO);
@@ -401,6 +411,7 @@ public class AwsLambdaHelperServiceDelegateImpl
           new PublishVersionRequest()
               .withFunctionName(updateFunctionConfigurationResult.getFunctionName())
               .withCodeSha256(updateFunctionConfigurationResult.getCodeSha256());
+      tracker.trackLambdaCall("Publish Function Version");
       PublishVersionResult publishVersionResult = lambdaClient.publishVersion(publishVersionRequest);
       logCallback.saveExecutionLog(format("Published new version: [%s]", publishVersionResult.getVersion()));
       logCallback.saveExecutionLog(format("Published function ARN: [%s]", publishVersionResult.getFunctionArn()));
@@ -449,6 +460,7 @@ public class AwsLambdaHelperServiceDelegateImpl
     Map<String, String> existingTags = functionResult.getTags();
     if (isNotEmpty(existingTags)) {
       logCallback.saveExecutionLog(format("Untagging existing tags from the function: [%s]", functionArn));
+      tracker.trackLambdaCall("Untag Function");
       lambdaClient.untagResource(
           new UntagResourceRequest()
               .withResource(functionArn)
@@ -459,6 +471,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       return;
     }
     logCallback.saveExecutionLog(format("Executing tagging for function: [%s]", functionArn));
+    tracker.trackLambdaCall("Tag Function");
     lambdaClient.tagResource(new TagResourceRequest().withResource(functionArn).withTags(functionTags));
   }
 
@@ -471,6 +484,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       final AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
       try {
+        tracker.trackLambdaCall("Get Function");
         getFunctionResult = lambdaClient.getFunction(
             new GetFunctionRequest().withFunctionName(request.getFunctionName()).withQualifier(request.getQualifier()));
       } catch (ResourceNotFoundException rnfe) {
@@ -485,6 +499,7 @@ public class AwsLambdaHelperServiceDelegateImpl
         if (Strings.isNotEmpty(getFunctionResult.getConfiguration().getVersion())) {
           listAliasRequest.withFunctionVersion(getFunctionResult.getConfiguration().getVersion());
         }
+        tracker.trackLambdaCall("List Function Aliases");
         listAliasesResult = lambdaClient.listAliases(listAliasRequest);
       }
       return AwsLambdaDetailsResponse.from(getFunctionResult, listAliasesResult);

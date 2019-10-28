@@ -4,6 +4,8 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -12,6 +14,7 @@ import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListInstanceProfilesResult;
 import com.amazonaws.services.identitymanagement.model.ListRolesResult;
 import com.amazonaws.services.identitymanagement.model.Role;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,6 +30,7 @@ import java.util.Map;
 
 public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsIamHelperServiceDelegateImpl awsIamHelperServiceDelegate;
 
   @Test
@@ -39,6 +43,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
                  new Role().withArn("a1").withRoleName("n1"), new Role().withArn("a2").withRoleName("n2")))
         .when(mockClient)
         .listRoles(any());
+    doNothing().when(mockTracker).trackIAMCall(anyString());
     Map<String, String> result = awsIamHelperServiceDelegate.listIAMRoles(AwsConfig.builder().build(), emptyList());
     assertThat(result).isNotNull();
     assertThat(result.size()).isEqualTo(2);
@@ -56,6 +61,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
             new InstanceProfile().withInstanceProfileName("name2")))
         .when(mockClient)
         .listInstanceProfiles(any());
+    doNothing().when(mockTracker).trackIAMCall(anyString());
     List<String> result = awsIamHelperServiceDelegate.listIamInstanceRoles(AwsConfig.builder().build(), emptyList());
     assertThat(result).isNotNull();
     assertThat(result.size()).isEqualTo(2);

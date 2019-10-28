@@ -1,8 +1,11 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -23,6 +26,7 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,9 +42,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by anubhaw on 3/3/17.
- */
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
@@ -63,6 +64,9 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
     doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), any());
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackCFCall(anyString());
+    on(service).set("tracker", mockTracker);
     service.updateStack(region, request, AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build());
     verify(mockClient).updateStack(request);
   }
@@ -78,6 +82,9 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
     doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), any());
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackCFCall(anyString());
+    on(service).set("tracker", mockTracker);
     service.deleteStack(region, request, AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build());
     verify(mockClient).deleteStack(request);
   }
@@ -95,6 +102,9 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), any());
     DescribeStacksResult result = new DescribeStacksResult().withStacks(new Stack().withStackName(stackName));
     doReturn(result).when(mockClient).describeStacks(request);
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackCFCall(anyString());
+    on(service).set("tracker", mockTracker);
     DescribeStacksResult actual =
         service.describeStacks(region, request, AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build());
     assertThat(actual).isNotNull();
@@ -116,6 +126,9 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     DescribeStackEventsResult result =
         new DescribeStackEventsResult().withStackEvents(new StackEvent().withStackName(stackName).withEventId("id"));
     doReturn(result).when(mockClient).describeStackEvents(request);
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackCFCall(anyString());
+    on(service).set("tracker", mockTracker);
     List<StackEvent> events = service.getAllStackEvents(
         region, request, AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build());
     assertThat(events).isNotNull();
@@ -135,6 +148,9 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
     doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), any());
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackCFCall(anyString());
+    on(service).set("tracker", mockTracker);
     service.createStack(region, request, AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build());
     verify(mockClient).createStack(request);
   }
@@ -152,6 +168,9 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), any());
     DescribeStacksResult result = new DescribeStacksResult().withStacks(new Stack().withStackName(stackName));
     doReturn(result).when(mockClient).describeStacks(request);
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackCFCall(anyString());
+    on(service).set("tracker", mockTracker);
     List<Stack> stacks =
         service.getAllStacks(region, request, AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build());
     assertThat(stacks).isNotNull();
@@ -205,6 +224,9 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     Set<String> completedActivities = new HashSet<>();
 
     AwsHelperService awsHelperService = new AwsHelperService();
+    AwsCallTracker mockTracker = mock(AwsCallTracker.class);
+    doNothing().when(mockTracker).trackASGCall(anyString());
+    on(awsHelperService).set("tracker", mockTracker);
     awsHelperService.describeAutoScalingGroupActivities(
         client, "TestAutoScalingGroup", completedActivities, logCallback, false);
 

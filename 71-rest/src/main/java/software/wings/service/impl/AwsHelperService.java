@@ -159,6 +159,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
+import io.harness.aws.AwsCallTracker;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -198,12 +199,14 @@ public class AwsHelperService {
   @Inject private TimeLimiter timeLimiter;
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
   @Inject private AwsUtils awsUtils;
+  @Inject private AwsCallTracker tracker;
 
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
   public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackEC2Call("Describe Regions");
       getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
@@ -218,6 +221,7 @@ public class AwsHelperService {
       getAmazonEc2Client(
           Regions.US_EAST_1.getName(), AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build())
           .describeRegions();
+      tracker.trackEC2Call("Describe Regions");
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");
@@ -276,6 +280,7 @@ public class AwsHelperService {
     String url = ecrConfig.getEcrUrl();
     // Example: https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
     String awsAccount = url.substring(8, url.indexOf('.'));
+    tracker.trackECRCall("Get Auth Token");
     return ecrClient
         .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
         .getAuthorizationData()
@@ -377,6 +382,7 @@ public class AwsHelperService {
     AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region.getName(), awsConfig);
 
     String instanceId;
+    tracker.trackEC2Call("Describe Instances");
     DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
         new DescribeInstancesRequest().withFilters(new Filter("private-dns-name").withValues(hostName + "*")));
     instanceId = describeInstancesResult.getReservations()
@@ -387,6 +393,7 @@ public class AwsHelperService {
                      .orElse(null);
 
     if (isBlank(instanceId)) {
+      tracker.trackEC2Call("Describe Instances");
       describeInstancesResult = amazonEC2Client.describeInstances(
           new DescribeInstancesRequest().withFilters(new Filter("private-ip-address").withValues(hostName)));
       instanceId = describeInstancesResult.getReservations()
@@ -398,6 +405,7 @@ public class AwsHelperService {
     }
 
     if (isBlank(instanceId)) {
+      tracker.trackEC2Call("Describe Instances");
       describeInstancesResult = amazonEC2Client.describeInstances(
           new DescribeInstancesRequest().withFilters(new Filter("dns-name").withValues(hostName + "*")));
       instanceId = describeInstancesResult.getReservations()
@@ -409,6 +417,7 @@ public class AwsHelperService {
     }
 
     if (isBlank(instanceId)) {
+      tracker.trackEC2Call("Describe Instances");
       describeInstancesResult = amazonEC2Client.describeInstances(
           new DescribeInstancesRequest().withFilters(new Filter("ip-address").withValues(hostName)));
       instanceId = describeInstancesResult.getReservations()
@@ -424,6 +433,7 @@ public class AwsHelperService {
   public List<Bucket> listS3Buckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackS3Call("List Buckets");
       return getAmazonS3Client("us-east-1", awsConfig).listBuckets();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -437,6 +447,7 @@ public class AwsHelperService {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackS3Call("Get Object");
       return getAmazonS3Client(getBucketRegion(awsConfig, encryptionDetails, bucketName), awsConfig)
           .getObject(bucketName, key);
     } catch (AmazonServiceException amazonServiceException) {
@@ -451,6 +462,7 @@ public class AwsHelperService {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackS3Call("Get Object Metadata");
       return getAmazonS3Client(getBucketRegion(awsConfig, encryptionDetails, bucketName), awsConfig)
           .getObjectMetadata(bucketName, key);
     } catch (AmazonServiceException amazonServiceException) {
@@ -465,6 +477,7 @@ public class AwsHelperService {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, ListObjectsV2Request listObjectsV2Request) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackS3Call("Get Bucket Region");
       AmazonS3Client amazonS3Client = getAmazonS3Client(
           getBucketRegion(awsConfig, encryptionDetails, listObjectsV2Request.getBucketName()), awsConfig);
       return amazonS3Client.listObjectsV2(listObjectsV2Request);
@@ -495,7 +508,9 @@ public class AwsHelperService {
           amazonClientException, USER);
     } else {
       logger.error("Unhandled aws exception");
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonClientException.getMessage());
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
+          .addParam("message",
+              amazonClientException.getMessage() != null ? amazonClientException.getMessage() : "Exception Message");
     }
   }
 
@@ -538,6 +553,7 @@ public class AwsHelperService {
       ListDeploymentGroupsRequest listDeploymentGroupsRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackCDCall("List Deployment Groups");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .listDeploymentGroups(listDeploymentGroupsRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -552,6 +568,7 @@ public class AwsHelperService {
       String region, ListApplicationsRequest listApplicationsRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackCDCall("List Applications");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).listApplications(listApplicationsRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -566,6 +583,7 @@ public class AwsHelperService {
       ListDeploymentConfigsRequest listDeploymentConfigsRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackCDCall("List Deployment Configs");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .listDeploymentConfigs(listDeploymentConfigsRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -580,6 +598,7 @@ public class AwsHelperService {
       String region, GetDeploymentRequest getDeploymentRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackCDCall("Get Deployment");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).getDeployment(getDeploymentRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -593,6 +612,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, String region, GetDeploymentGroupRequest getDeploymentGroupRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackCDCall("Get Deployment Group");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .getDeploymentGroup(getDeploymentGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -607,6 +627,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, String region, CreateDeploymentRequest createDeploymentRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackCDCall("Create Deployment");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig).createDeployment(createDeploymentRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -621,6 +642,7 @@ public class AwsHelperService {
       ListDeploymentInstancesRequest listDeploymentInstancesRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackCDCall("List Deployment Instances");
       return getAmazonCodeDeployClient(Regions.fromName(region), awsConfig)
           .listDeploymentInstances(listDeploymentInstancesRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -645,6 +667,7 @@ public class AwsHelperService {
       String region, DescribeInstancesRequest describeInstancesRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackEC2Call("Describe Instances");
       return getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -659,6 +682,7 @@ public class AwsHelperService {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig);
+      tracker.trackEC2Call("Describe Images");
       return amazonEc2Client.describeImages(describeImagesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -672,6 +696,7 @@ public class AwsHelperService {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig);
+      tracker.trackEC2Call("List Regions");
       return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -693,6 +718,7 @@ public class AwsHelperService {
       do {
         encryptionService.decrypt(awsConfig, encryptionDetails);
         AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
+        tracker.trackEC2Call("Describe Tags");
 
         DescribeTagsResult describeTagsResult = amazonEC2Client.describeTags(
             new DescribeTagsRequest()
@@ -714,6 +740,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, CreateClusterRequest createClusterRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Create Cluster");
       return getAmazonEcsClient(region, awsConfig).createCluster(createClusterRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -727,6 +754,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, DescribeClustersRequest describeClustersRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Describe Cluster");
       return getAmazonEcsClient(region, awsConfig).describeClusters(describeClustersRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -740,6 +768,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, ListClustersRequest listClustersRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("List Clusters");
       return getAmazonEcsClient(region, awsConfig).listClusters(listClustersRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -752,6 +781,7 @@ public class AwsHelperService {
   public RegisterTaskDefinitionResult registerTaskDefinition(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
+    tracker.trackECSCall("Register Task Definition");
     return getAmazonEcsClient(region, awsConfig).registerTaskDefinition(registerTaskDefinitionRequest);
   }
 
@@ -759,6 +789,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, ListServicesRequest listServicesRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("List Services");
       return getAmazonEcsClient(region, awsConfig).listServices(listServicesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -772,6 +803,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, DescribeServicesRequest describeServicesRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Describe Services");
       return getAmazonEcsClient(region, awsConfig).describeServices(describeServicesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -807,6 +839,7 @@ public class AwsHelperService {
   public CreateServiceResult createService(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, CreateServiceRequest createServiceRequest) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
+    tracker.trackECSCall("Create Service");
     return getAmazonEcsClient(region, awsConfig).createService(createServiceRequest);
   }
 
@@ -814,6 +847,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, UpdateServiceRequest updateServiceRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Update Service");
       return getAmazonEcsClient(region, awsConfig).updateService(updateServiceRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -827,6 +861,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, DeleteServiceRequest deleteServiceRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Delete Service");
       return getAmazonEcsClient(region, awsConfig).deleteService(deleteServiceRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -840,6 +875,7 @@ public class AwsHelperService {
       ListTasksRequest listTasksRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("List Tasks");
       return getAmazonEcsClient(region, awsConfig).listTasks(listTasksRequest);
     } catch (ClusterNotFoundException ex) {
       throw new WingsException(ErrorCode.AWS_CLUSTER_NOT_FOUND).addParam("message", ExceptionUtils.getMessage(ex));
@@ -857,6 +893,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, DescribeTaskDefinitionRequest describeTaskDefinitionRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Desscribe Task Definition");
       return getAmazonEcsClient(region, awsConfig).describeTaskDefinition(describeTaskDefinitionRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -870,6 +907,7 @@ public class AwsHelperService {
       List<EncryptedDataDetail> encryptionDetails, DescribeTasksRequest describeTasksRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Describe Tasks");
       return getAmazonEcsClient(region, awsConfig).describeTasks(describeTasksRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -884,6 +922,7 @@ public class AwsHelperService {
       DescribeContainerInstancesRequest describeContainerInstancesRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECSCall("Describe Container Instances");
       return getAmazonEcsClient(region, awsConfig).describeContainerInstances(describeContainerInstancesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -897,6 +936,7 @@ public class AwsHelperService {
       ListImagesRequest listImagesRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackECRCall("List Images");
       return getAmazonEcrClient(awsConfig, region).listImages(listImagesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -909,6 +949,7 @@ public class AwsHelperService {
   public ListImagesResult listEcrImages(
       EcrConfig ecrConfig, List<EncryptedDataDetail> encryptedDataDetails, ListImagesRequest listImagesRequest) {
     try {
+      tracker.trackECRCall("List Images");
       return getAmazonEcrClient(ecrConfig, encryptedDataDetails).listImages(listImagesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -921,6 +962,7 @@ public class AwsHelperService {
   public DescribeRepositoriesResult listRepositories(EcrConfig ecrConfig,
       List<EncryptedDataDetail> encryptedDataDetails, DescribeRepositoriesRequest describeRepositoriesRequest) {
     try {
+      tracker.trackECRCall("List Repositories");
       return getAmazonEcrClient(ecrConfig, encryptedDataDetails).describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -933,6 +975,7 @@ public class AwsHelperService {
   public DescribeRepositoriesResult listRepositories(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
     try {
+      tracker.trackECRCall("List Repositories");
       encryptionService.decrypt(awsConfig, encryptionDetails);
       return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -946,6 +989,7 @@ public class AwsHelperService {
   public List<LoadBalancerDescription> getLoadBalancerDescriptions(
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
+      tracker.trackClassicELBCall("Describe Load Balancers");
       encryptionService.decrypt(awsConfig, encryptionDetails);
       return getClassicElbClient(Regions.fromName(region), awsConfig)
           .describeLoadBalancers(
@@ -967,6 +1011,7 @@ public class AwsHelperService {
           getAmazonElasticLoadBalancingClient(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest = new DescribeTargetGroupsRequest().withPageSize(5);
       describeTargetGroupsRequest.withTargetGroupArns(targetGroupArn);
+      tracker.trackELBCall("Describe Target Groups");
       List<TargetGroup> targetGroupList =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest).getTargetGroups();
       if (isNotEmpty(targetGroupList)) {
@@ -988,6 +1033,7 @@ public class AwsHelperService {
     try {
       executionLogCallback.saveExecutionLog(
           format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
+      tracker.trackASGCall("Set ASG Desired Capacity");
       amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
                                                      .withAutoScalingGroupName(autoScalingGroupName)
                                                      .withDesiredCapacity(desiredCapacity));
@@ -1101,6 +1147,7 @@ public class AwsHelperService {
       DescribeInstancesResult describeInstancesResult;
 
       do {
+        tracker.trackEC2Call("Describe Instances.");
         describeInstancesResult = amazonEc2Client.describeInstances(describeInstancesRequest);
         describeInstancesResult.getReservations().forEach(
             reservation -> instanceList.addAll(reservation.getInstances()));
@@ -1118,11 +1165,15 @@ public class AwsHelperService {
 
   public List<String> listInstanceIdsFromAutoScalingGroup(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
-    return getAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName)
-        .getInstances()
-        .stream()
-        .map(com.amazonaws.services.autoscaling.model.Instance::getInstanceId)
-        .collect(toList());
+    AutoScalingGroup group = getAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
+    if (group != null) {
+      return group.getInstances()
+          .stream()
+          .map(com.amazonaws.services.autoscaling.model.Instance::getInstanceId)
+          .collect(toList());
+    } else {
+      return emptyList();
+    }
   }
 
   public List<String> listClassicLoadBalancers(
@@ -1146,6 +1197,7 @@ public class AwsHelperService {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Create ASG");
       return amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
       if (amazonAutoScalingClient != null && logCallback != null) {
@@ -1164,6 +1216,7 @@ public class AwsHelperService {
       DescribeAutoScalingGroupsRequest autoScalingGroupsRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackASGCall("Describe ASGs");
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       return amazonAutoScalingClient.describeAutoScalingGroups(autoScalingGroupsRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -1181,6 +1234,7 @@ public class AwsHelperService {
       return;
     }
     try {
+      tracker.trackASGCall("Describe Scaling Activities");
       DescribeScalingActivitiesResult activitiesResult = amazonAutoScalingClient.describeScalingActivities(
           new DescribeScalingActivitiesRequest().withAutoScalingGroupName(autoScalingGroupName));
       List<Activity> activities = activitiesResult.getActivities();
@@ -1223,6 +1277,7 @@ public class AwsHelperService {
       do {
         ListMetricsRequest request = new ListMetricsRequest();
         request.withNextToken(nextToken);
+        tracker.trackCloudWatchCall("List Metrics");
         ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics(request);
         nextToken = listMetricsResult.getNextToken();
         rv.addAll(listMetricsResult.getMetrics());
@@ -1247,6 +1302,7 @@ public class AwsHelperService {
       String nextToken = null;
       do {
         listMetricsRequest.withNextToken(nextToken);
+        tracker.trackCloudWatchCall("List Metrics");
         ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics(listMetricsRequest);
         nextToken = listMetricsResult.getNextToken();
         rv.addAll(listMetricsResult.getMetrics());
@@ -1267,6 +1323,7 @@ public class AwsHelperService {
     try {
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient elbClient =
           getClassicElbClient(region, awsConfig);
+      tracker.trackClassicELBCall("Register Instances");
       return elbClient
           .registerInstancesWithLoadBalancer(
               new RegisterInstancesWithLoadBalancerRequest()
@@ -1288,6 +1345,7 @@ public class AwsHelperService {
     try {
       com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient elbClient =
           getClassicElbClient(region, awsConfig);
+      tracker.trackClassicELBCall("De register Instances");
       return elbClient
           .deregisterInstancesFromLoadBalancer(
               new DeregisterInstancesFromLoadBalancerRequest()
@@ -1308,6 +1366,7 @@ public class AwsHelperService {
     try {
       AmazonCloudFormationClient cloudFormationClient =
           getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
+      tracker.trackCFCall("Create Stack");
       return cloudFormationClient.createStack(createStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1321,6 +1380,7 @@ public class AwsHelperService {
     try {
       AmazonCloudFormationClient cloudFormationClient =
           getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
+      tracker.trackCFCall("Update Stack");
       return cloudFormationClient.updateStack(updateStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1335,6 +1395,7 @@ public class AwsHelperService {
     try {
       AmazonCloudFormationClient cloudFormationClient =
           getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
+      tracker.trackCFCall("Describe Stacks");
       return cloudFormationClient.describeStacks(describeStacksRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1352,6 +1413,7 @@ public class AwsHelperService {
       String nextToken = null;
       do {
         describeStacksRequest.withNextToken(nextToken);
+        tracker.trackCFCall("Describe Stacks");
         DescribeStacksResult result = cloudFormationClient.describeStacks(describeStacksRequest);
         nextToken = result.getNextToken();
         stacks.addAll(result.getStacks());
@@ -1374,6 +1436,7 @@ public class AwsHelperService {
       String nextToken = null;
       do {
         describeStackEventsRequest.withNextToken(nextToken);
+        tracker.trackCFCall("Describe Stack Events");
         DescribeStackEventsResult result = cloudFormationClient.describeStackEvents(describeStackEventsRequest);
         nextToken = result.getNextToken();
         stacksEvents.addAll(result.getStackEvents());
@@ -1391,6 +1454,7 @@ public class AwsHelperService {
     try {
       AmazonCloudFormationClient cloudFormationClient =
           getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
+      tracker.trackCFCall("Delete Stack");
       cloudFormationClient.deleteStack(deleteStackRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -1403,6 +1467,7 @@ public class AwsHelperService {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackS3Call("Get Bucket Versioning Configuration");
       BucketVersioningConfiguration bucketVersioningConfiguration =
           getAmazonS3Client(getBucketRegion(awsConfig, encryptionDetails, bucketName), awsConfig)
               .getBucketVersioningConfiguration(bucketName);
@@ -1470,12 +1535,14 @@ public class AwsHelperService {
   public TagResourceResult tagService(String region, List<EncryptedDataDetail> encryptedDataDetails,
       TagResourceRequest tagResourceRequest, AwsConfig awsConfig) {
     encryptionService.decrypt(awsConfig, encryptedDataDetails);
+    tracker.trackECSCall("Tag Resource");
     return getAmazonEcsClient(region, awsConfig).tagResource(tagResourceRequest);
   }
 
   public UntagResourceResult untagService(String region, List<EncryptedDataDetail> encryptedDataDetails,
       UntagResourceRequest untagResourceRequest, AwsConfig awsConfig) {
     encryptionService.decrypt(awsConfig, encryptedDataDetails);
+    tracker.trackECSCall("Untag Resource");
     return getAmazonEcsClient(region, awsConfig).untagResource(untagResourceRequest);
   }
 }
