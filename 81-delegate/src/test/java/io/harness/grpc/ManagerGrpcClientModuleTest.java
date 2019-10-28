@@ -1,5 +1,6 @@
 package io.harness.grpc;
 
+import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -7,7 +8,6 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.grpc.ManagerGrpcClientModule.Config;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
@@ -25,7 +25,7 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = OwnerRule.AVMOHAN)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForIpAddressAuthority() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("1.0.42104").build());
@@ -35,7 +35,7 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = OwnerRule.AVMOHAN)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForInvalidVersion() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("${build.fullVersion}").build());
@@ -45,7 +45,7 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = OwnerRule.AVMOHAN)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForValidVersion() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("1.0.42104").build());

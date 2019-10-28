@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Lifecycle;
@@ -31,16 +31,16 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class EventServiceIntegrationTest extends CategoryTest {
+public class EventServiceApplicationTest extends CategoryTest {
   @Rule public final EventServiceTestRule eventServiceTestRule = new EventServiceTestRule();
 
-  @Inject HPersistence hPersistence;
+  @Inject private HPersistence hPersistence;
 
   @Inject private EventPublisher eventPublisher;
 
   @Test
   @Owner(emails = AVMOHAN, resent = false)
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   @RealMongo
   public void shouldEventuallyPersistPublishedEvent() throws Exception {
     hPersistence.save(

@@ -32,17 +32,20 @@ public class PublisherModule extends AbstractModule {
     this.config = config;
   }
 
+  @Singleton
+  static class NoopEventPublisher extends EventPublisher {
+    @Override
+    protected void publish(PublishMessage publishMessage) {
+      // No-op
+    }
+  }
+
   @Override
   protected void configure() {
     if (config.publishTarget == null) {
       // EventPublisher optional for delegate start-up
       logger.info("EventPublisher configuration not present. Injecting Noop publisher");
-      bind(EventPublisher.class)
-          .toProvider(() -> new EventPublisher() {
-            @Override
-            public void publish(PublishMessage publishMessage) {}
-          })
-          .in(Singleton.class);
+      bind(EventPublisher.class).to(NoopEventPublisher.class);
     } else {
       bind(EventPublisher.class).to(EventPublisherChronicleImpl.class);
     }
