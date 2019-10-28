@@ -119,6 +119,7 @@ public class AwsElbHelperServiceDelegateImpl
         com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersResult describeLoadBalancersResult =
             getClassicElbClient(Regions.fromName(region), awsConfig)
                 .describeLoadBalancers(describeLoadBalancersRequest);
+        tracker.trackClassicELBCall("Get LB descriptions");
         result.addAll(describeLoadBalancersResult.getLoadBalancerDescriptions()
                           .stream()
                           .map(LoadBalancerDescription::getLoadBalancerName)
@@ -163,6 +164,7 @@ public class AwsElbHelperServiceDelegateImpl
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         DescribeLoadBalancersRequest describeLoadBalancersRequest =
             new DescribeLoadBalancersRequest().withMarker(nextMarker).withPageSize(400);
+        tracker.trackELBCall("Describe Load Balancers");
         DescribeLoadBalancersResult describeLoadBalancersResult =
             amazonElasticLoadBalancingClient.describeLoadBalancers(describeLoadBalancersRequest);
         result.addAll(describeLoadBalancersResult.getLoadBalancers()
@@ -206,6 +208,7 @@ public class AwsElbHelperServiceDelegateImpl
       if (isNotBlank(loadBalancerName)) {
         DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest();
         request.withNames(loadBalancerName);
+        tracker.trackELBCall("Describe Load Balancers");
         loadBalancerArn = amazonElasticLoadBalancingClient.describeLoadBalancers(request)
                               .getLoadBalancers()
                               .get(0)
@@ -219,6 +222,7 @@ public class AwsElbHelperServiceDelegateImpl
         if (loadBalancerArn != null) {
           describeTargetGroupsRequest.withLoadBalancerArn(loadBalancerArn);
         }
+        tracker.trackELBCall("Describe Target Groups");
         DescribeTargetGroupsResult describeTargetGroupsResult =
             amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
         describeTargetGroupsResult.getTargetGroups().forEach(
@@ -243,6 +247,7 @@ public class AwsElbHelperServiceDelegateImpl
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
+      tracker.trackClassicELBCall("Describe Target Group");
       DescribeTargetGroupsResult describeTargetGroupsResult =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
 
@@ -267,6 +272,7 @@ public class AwsElbHelperServiceDelegateImpl
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withNames(targetGroupName);
+      tracker.trackELBCall("Describe Target Group");
       DescribeTargetGroupsResult describeTargetGroupsResult =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest);
 
@@ -295,6 +301,7 @@ public class AwsElbHelperServiceDelegateImpl
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
       DescribeLoadBalancersRequest describeLoadBalancersRequest =
           new DescribeLoadBalancersRequest().withNames(loadBalancerName);
+      tracker.trackELBCall("Desribe Load Balancer");
       DescribeLoadBalancersResult describeLoadBalancersResult =
           amazonElasticLoadBalancingClient.describeLoadBalancers(describeLoadBalancersRequest);
 
@@ -347,6 +354,7 @@ public class AwsElbHelperServiceDelegateImpl
       return true;
     }
     DescribeInstanceHealthRequest request = new DescribeInstanceHealthRequest().withLoadBalancerName(classicLB);
+    tracker.trackClassicELBCall("Describe Instance Health");
     DescribeInstanceHealthResult result = amazonElasticLoadBalancingClient.describeInstanceHealth(request);
     List<InstanceState> instances = result.getInstanceStates();
     if (isEmpty(instances)) {
@@ -396,6 +404,7 @@ public class AwsElbHelperServiceDelegateImpl
       return true;
     }
     DescribeInstanceHealthRequest request = new DescribeInstanceHealthRequest().withLoadBalancerName(classicLB);
+    tracker.trackClassicELBCall("Describe Instance Healths");
     DescribeInstanceHealthResult result = amazonElasticLoadBalancingClient.describeInstanceHealth(request);
     List<InstanceState> instances = result.getInstanceStates();
     if (isEmpty(instances)) {
@@ -447,6 +456,7 @@ public class AwsElbHelperServiceDelegateImpl
       return true;
     }
     DescribeTargetHealthRequest request = new DescribeTargetHealthRequest().withTargetGroupArn(targetGroupARN);
+    tracker.trackELBCall("Describe Target Health");
     DescribeTargetHealthResult result = amazonElasticLoadBalancingClient.describeTargetHealth(request);
     List<TargetHealthDescription> healthDescriptions = result.getTargetHealthDescriptions();
     if (isEmpty(healthDescriptions)) {
@@ -497,6 +507,7 @@ public class AwsElbHelperServiceDelegateImpl
       return true;
     }
     DescribeTargetHealthRequest request = new DescribeTargetHealthRequest().withTargetGroupArn(targetGroupARN);
+    tracker.trackELBCall("Describe Target Health");
     DescribeTargetHealthResult result = amazonElasticLoadBalancingClient.describeTargetHealth(request);
     List<TargetHealthDescription> healthDescriptions = result.getTargetHealthDescriptions();
     if (isEmpty(healthDescriptions)) {
@@ -522,6 +533,7 @@ public class AwsElbHelperServiceDelegateImpl
         getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
     DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest().withNames(loadBalancerName);
 
+    tracker.trackELBCall("Describe Load Balancers");
     DescribeLoadBalancersResult result = amazonElasticLoadBalancingClient.describeLoadBalancers(request);
     if (EmptyPredicate.isEmpty(result.getLoadBalancers())) {
       throw new WingsException(
@@ -533,6 +545,7 @@ public class AwsElbHelperServiceDelegateImpl
 
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
+    tracker.trackELBCall("Describe Listeners");
     DescribeListenersResult listenerResult =
         client.describeListeners(new DescribeListenersRequest().withLoadBalancerArn(elbArn));
 
@@ -558,6 +571,7 @@ public class AwsElbHelperServiceDelegateImpl
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    tracker.trackELBCall("Describe Listener");
     DescribeListenersResult listenerResult =
         client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
     if (EmptyPredicate.isEmpty(listenerResult.getListeners())) {
@@ -581,6 +595,7 @@ public class AwsElbHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancingClient client =
           getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+      tracker.trackELBCall("Describe Target Groups");
       DescribeTargetGroupsRequest describeTargetGroupsRequest =
           new DescribeTargetGroupsRequest().withTargetGroupArns(targetGroupArn);
       DescribeTargetGroupsResult describeTargetGroupsResult = client.describeTargetGroups(describeTargetGroupsRequest);
@@ -608,6 +623,7 @@ public class AwsElbHelperServiceDelegateImpl
               .withUnhealthyThresholdCount(sourceTargetGroup.getUnhealthyThresholdCount());
 
       CreateTargetGroupResult createTargetGroupResult = client.createTargetGroup(createTargetGroupRequest);
+      tracker.trackELBCall("Create Target Group");
       return createTargetGroupResult.getTargetGroups().get(0);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -636,6 +652,7 @@ public class AwsElbHelperServiceDelegateImpl
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    tracker.trackELBCall("Create Listener");
 
     CreateListenerResult result = client.createListener(createListenerRequest);
     return result.getListeners().get(0);
@@ -647,15 +664,19 @@ public class AwsElbHelperServiceDelegateImpl
     encryptionService.decrypt(awsConfig, encryptionDetails);
 
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    tracker.trackELBCall("Describe Listeners");
     DescribeListenersResult prodListenerResult =
         client.describeListeners(new DescribeListenersRequest().withListenerArns(prodListenerArn));
+    tracker.trackELBCall("Describe Listeners");
     DescribeListenersResult stageListenerResult =
         client.describeListeners(new DescribeListenersRequest().withListenerArns(stageListenerArn));
     Listener prodListener = prodListenerResult.getListeners().get(0);
     Listener stageListener = stageListenerResult.getListeners().get(0);
+    tracker.trackELBCall("Modify Listeners");
     client.modifyListener(new ModifyListenerRequest()
                               .withListenerArn(prodListener.getListenerArn())
                               .withDefaultActions(stageListener.getDefaultActions()));
+    tracker.trackELBCall("Modify Listeners");
     client.modifyListener(new ModifyListenerRequest()
                               .withListenerArn(stageListener.getListenerArn())
                               .withDefaultActions(prodListener.getDefaultActions()));
@@ -669,15 +690,19 @@ public class AwsElbHelperServiceDelegateImpl
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
     lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
+      tracker.trackELBCall("Describe Listeners");
       DescribeListenersResult prodListenerResult = client.describeListeners(
           new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getProdListenerArn()));
+      tracker.trackELBCall("Describe Listeners");
       DescribeListenersResult stageListenerResult = client.describeListeners(
           new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getStageListenerArn()));
       Listener prodListener = prodListenerResult.getListeners().get(0);
       Listener stageListener = stageListenerResult.getListeners().get(0);
+      tracker.trackELBCall("Modify Listeners");
       client.modifyListener(new ModifyListenerRequest()
                                 .withListenerArn(prodListener.getListenerArn())
                                 .withDefaultActions(stageListener.getDefaultActions()));
+      tracker.trackELBCall("Modify Listeners");
       client.modifyListener(new ModifyListenerRequest()
                                 .withListenerArn(stageListener.getListenerArn())
                                 .withDefaultActions(prodListener.getDefaultActions()));
@@ -688,6 +713,7 @@ public class AwsElbHelperServiceDelegateImpl
   public DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String listenerArn, String region) {
     AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    tracker.trackELBCall("Describe Listeners");
     return client.describeListeners(new DescribeListenersRequest().withListenerArns(listenerArn));
   }
 

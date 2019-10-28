@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -20,6 +21,7 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,6 +41,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
   @Mock private AwsUtils mockAwsUtils;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsCodeDeployHelperServiceDelegateImpl awsCodeDeployHelperServiceDelegate;
 
   @Test
@@ -48,6 +51,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(mockClient).when(awsCodeDeployHelperServiceDelegate).getAmazonCodeDeployClient(any(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new ListApplicationsResult().withApplications("app1", "app2")).when(mockClient).listApplications(any());
+    doNothing().when(mockTracker).trackCDCall(anyString());
     List<String> applications =
         awsCodeDeployHelperServiceDelegate.listApplications(AwsConfig.builder().build(), emptyList(), "us-east-1");
     assertThat(applications).isNotNull();
@@ -65,6 +69,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new ListDeploymentConfigsResult().withDeploymentConfigsList("c1", "c2"))
         .when(mockClient)
         .listDeploymentConfigs(any());
+    doNothing().when(mockTracker).trackCDCall(anyString());
     List<String> configs = awsCodeDeployHelperServiceDelegate.listDeploymentConfiguration(
         AwsConfig.builder().build(), emptyList(), "us-east-1");
     assertThat(configs).isNotNull();
@@ -82,6 +87,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new ListDeploymentGroupsResult().withDeploymentGroups("g1", "g2"))
         .when(mockClient)
         .listDeploymentGroups(any());
+    doNothing().when(mockTracker).trackCDCall(anyString());
     List<String> groups = awsCodeDeployHelperServiceDelegate.listDeploymentGroups(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "app");
     assertThat(groups).isNotNull();
@@ -102,6 +108,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(Lists.newArrayList(new Instance().withInstanceId("i1"), new Instance().withInstanceId("13")))
         .when(mockAwsEc2HelperServiceDelegate)
         .listEc2Instances(any(), anyList(), anyString(), anyList());
+    doNothing().when(mockTracker).trackCDCall(anyString());
     List<Instance> result = awsCodeDeployHelperServiceDelegate.listDeploymentInstances(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "id");
     assertThat(result).isNotNull();
@@ -120,6 +127,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
                      new S3Location().withBucket("bucket").withKey("key").withBundleType("type")))))
         .when(mockClient)
         .getDeploymentGroup(any());
+    doNothing().when(mockTracker).trackCDCall(anyString());
     AwsCodeDeployS3LocationData s3LocationData = awsCodeDeployHelperServiceDelegate.listAppRevision(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "app", "group");
     assertThat(s3LocationData).isNotNull();

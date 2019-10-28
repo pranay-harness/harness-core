@@ -32,6 +32,7 @@ import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import org.junit.Test;
@@ -55,6 +56,7 @@ import java.util.Map;
 
 public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
   @Test
@@ -67,6 +69,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
                  StandardCharsets.UTF_8.encode("payload")))
         .when(mockClient)
         .invoke(any());
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
     awsLambdaHelperServiceDelegate.executeFunction(AwsLambdaExecuteFunctionRequest.builder()
                                                        .awsConfig(AwsConfig.builder().build())
                                                        .encryptionDetails(emptyList())
@@ -108,6 +111,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
             .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
             .functionParams(singletonList(AwsLambdaFunctionParams.builder().functionName("fxName").build()))
             .build();
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
     awsLambdaHelperServiceDelegate.executeWf(request, mockCallBack);
     verify(mockClient).createFunction(any());
     verify(mockClient).createAlias(any());
@@ -147,6 +151,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
                                             .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
                                             .functionParams(singletonList(AwsLambdaFunctionParams.builder().build()))
                                             .build();
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
     awsLambdaHelperServiceDelegate.executeWf(request, mockCallBack);
     verify(mockClient, times(2)).updateFunctionCode(any());
     verify(mockClient).updateFunctionConfiguration(any());
@@ -167,6 +172,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     Map<String, String> finalTags = ImmutableMap.of("k2", "v2");
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString());
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
     awsLambdaHelperServiceDelegate.tagExistingFunction(getFunctionResult, finalTags, mockCallBack, mockClient);
     verify(mockClient).untagResource(any());
     verify(mockClient).tagResource(any());
@@ -195,6 +201,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
 
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
     final AwsLambdaDetailsRequest awsLambdaDetailsRequest = AwsLambdaDetailsRequest.builder().loadAliases(true).build();
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
     final AwsLambdaDetailsResponse functionDetails =
         awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest);
     assertThat(functionDetails.getLambdaDetails().getLastModified()).isNotNull();
@@ -226,6 +233,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     doThrow(new ResourceNotFoundException("resource not found"))
         .when(mockClient)
         .getFunction(any(GetFunctionRequest.class));
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
     final AwsLambdaDetailsResponse functionDetails =
         awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest);
     assertThat(functionDetails.getLambdaDetails()).isNull();

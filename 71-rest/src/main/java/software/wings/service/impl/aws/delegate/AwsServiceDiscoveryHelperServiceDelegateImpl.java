@@ -37,12 +37,14 @@ public class AwsServiceDiscoveryHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AWSServiceDiscovery client = getAmazonServiceDiscoveryClient(region, awsConfig);
+      tracker.trackSDSCall("Get Service");
       GetServiceResult getServiceResult = client.getService(new GetServiceRequest().withId(serviceId));
       if (getServiceResult == null || getServiceResult.getService() == null) {
         return "";
       }
       Service service = getServiceResult.getService();
       String namespaceId = service.getDnsConfig().getNamespaceId();
+      tracker.trackSDSCall("Get NameSpace");
       GetNamespaceResult getNamespaceResult = client.getNamespace(new GetNamespaceRequest().withId(namespaceId));
       if (getNamespaceResult == null || getNamespaceResult.getNamespace() == null) {
         return "";

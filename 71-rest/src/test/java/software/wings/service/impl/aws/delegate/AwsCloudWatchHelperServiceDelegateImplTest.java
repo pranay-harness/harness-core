@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -15,6 +16,7 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import io.harness.CategoryTest;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -33,6 +35,7 @@ import software.wings.service.intfc.security.EncryptionService;
 
 public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   @Mock private EncryptionService mockEncryptionService;
+  @Mock private AwsCallTracker mockTracker;
 
   @Spy @InjectMocks private AwsCloudWatchHelperServiceDelegateImpl awsCloudWatchHelperServiceDelegate;
 
@@ -49,6 +52,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
     doReturn(amazonCloudWatchClientMock)
         .when(awsCloudWatchHelperServiceDelegate)
         .getAwsCloudWatchClient(anyString(), any(AwsConfig.class));
+    doNothing().when(mockTracker).trackCloudWatchCall(anyString());
 
     final GetMetricStatisticsResult getMetricStatisticsResult = new GetMetricStatisticsResult();
     final Datapoint datapoint = new Datapoint();
@@ -74,6 +78,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
     doReturn(amazonCloudWatchClientMock)
         .when(awsCloudWatchHelperServiceDelegate)
         .getAwsCloudWatchClient(anyString(), any(AwsConfig.class));
+    doNothing().when(mockTracker).trackCloudWatchCall(anyString());
 
     doThrow(new AmazonServiceException(""))
         .when(amazonCloudWatchClientMock)

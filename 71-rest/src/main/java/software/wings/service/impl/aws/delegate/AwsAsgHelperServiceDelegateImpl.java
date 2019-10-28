@@ -118,6 +118,7 @@ public class AwsAsgHelperServiceDelegateImpl
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Describe ASGs");
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
           amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
       if (describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()) {
@@ -152,6 +153,7 @@ public class AwsAsgHelperServiceDelegateImpl
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Describe Autoscaling Group");
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
           amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
       if (!describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()) {
@@ -171,6 +173,7 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Describe Launch Configuration");
       return amazonAutoScalingClient
           .describeLaunchConfigurations(
               new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launchConfigName))
@@ -200,6 +203,7 @@ public class AwsAsgHelperServiceDelegateImpl
       do {
         describeAutoScalingGroupsRequest =
             new DescribeAutoScalingGroupsRequest().withMaxRecords(100).withNextToken(nextToken);
+        tracker.trackASGCall("Describe Autoscaling Group");
         describeAutoScalingGroupsResult =
             amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
         result.addAll(describeAutoScalingGroupsResult.getAutoScalingGroups());
@@ -220,6 +224,7 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Delete Launch Config");
       amazonAutoScalingClient.deleteLaunchConfiguration(
           new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(autoScalingGroupName));
     } catch (AmazonServiceException amazonServiceException) {
@@ -235,6 +240,7 @@ public class AwsAsgHelperServiceDelegateImpl
       CreateLaunchConfigurationRequest createLaunchConfigurationRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
+      tracker.trackASGCall("Create Launch Config");
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       return amazonAutoScalingClient.createLaunchConfiguration(createLaunchConfigurationRequest);
     } catch (AmazonServiceException amazonServiceException) {
@@ -253,6 +259,7 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Create Autoscaling Group");
       return amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
       if (amazonAutoScalingClient != null && logCallback != null) {
@@ -274,6 +281,7 @@ public class AwsAsgHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       autoScalingGroups.forEach(autoScalingGroup -> {
         try {
+          tracker.trackASGCall("Delete Autoscaling Group");
           amazonAutoScalingClient.deleteAutoScalingGroup(
               new DeleteAutoScalingGroupRequest().withAutoScalingGroupName(autoScalingGroup.getAutoScalingGroupName()));
           waitForAutoScalingGroupToBeDeleted(amazonAutoScalingClient, autoScalingGroup, callback);
@@ -283,6 +291,7 @@ public class AwsAsgHelperServiceDelegateImpl
           logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
         }
         try {
+          tracker.trackASGCall("Delete Launch Config");
           amazonAutoScalingClient.deleteLaunchConfiguration(
               new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(
                   autoScalingGroup.getLaunchConfigurationName()));
@@ -311,6 +320,7 @@ public class AwsAsgHelperServiceDelegateImpl
       DescribeAutoScalingGroupsResult result = null;
       do {
         request = new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asgs).withNextToken(nextToken);
+        tracker.trackASGCall("Describe ASGs");
         result = amazonAutoScalingClient.describeAutoScalingGroups(request);
         List<AutoScalingGroup> groups = result.getAutoScalingGroups();
         groups.forEach(group -> { capacities.put(group.getAutoScalingGroupName(), group.getDesiredCapacity()); });
@@ -334,6 +344,7 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       logCallback.saveExecutionLog(
           format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
+      tracker.trackASGCall("Set ASG Desired Capacity");
       amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
                                                      .withAutoScalingGroupName(autoScalingGroupName)
                                                      .withDesiredCapacity(desiredCapacity));
@@ -358,6 +369,7 @@ public class AwsAsgHelperServiceDelegateImpl
       }
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Describe Autoscaling Group");
       DescribeAutoScalingGroupsRequest request =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
@@ -369,6 +381,7 @@ public class AwsAsgHelperServiceDelegateImpl
           format("Setting min capacity of Asg[%s] to [%d]", autoScalingGroupName, minCapacity));
       UpdateAutoScalingGroupRequest updateAutoScalingGroupRequest =
           new UpdateAutoScalingGroupRequest().withAutoScalingGroupName(autoScalingGroupName).withMinSize(minCapacity);
+      tracker.trackASGCall("Update Autoscaling Group");
       amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
       logCallback.saveExecutionLog(
@@ -387,6 +400,7 @@ public class AwsAsgHelperServiceDelegateImpl
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       DescribeAutoScalingGroupsRequest request =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
+      tracker.trackASGCall("Describe Autoscaling Groups");
       DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
       List<AutoScalingGroup> autoScalingGroups = result.getAutoScalingGroups();
       if (isEmpty(autoScalingGroups)) {
@@ -401,6 +415,7 @@ public class AwsAsgHelperServiceDelegateImpl
             new UpdateAutoScalingGroupRequest()
                 .withAutoScalingGroupName(autoScalingGroupName)
                 .withMinSize(desiredCapacity);
+        tracker.trackASGCall("Update Autoscaling Group");
         amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
       } else if (desiredCapacity > autoScalingGroup.getMaxSize()) {
         logCallback.saveExecutionLog(
@@ -410,6 +425,7 @@ public class AwsAsgHelperServiceDelegateImpl
             new UpdateAutoScalingGroupRequest()
                 .withAutoScalingGroupName(autoScalingGroupName)
                 .withMaxSize(desiredCapacity);
+        tracker.trackASGCall("Update Autoscaling Group");
         amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
       }
     } catch (AmazonServiceException amazonServiceException) {
@@ -427,6 +443,7 @@ public class AwsAsgHelperServiceDelegateImpl
       timeLimiter.callWithTimeout(() -> {
         Set<String> completedActivities = new HashSet<>();
         while (true) {
+          tracker.trackASGCall("Describe Autoscaling Group");
           DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(
               new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
                   autoScalingGroup.getAutoScalingGroupName()));
@@ -455,6 +472,7 @@ public class AwsAsgHelperServiceDelegateImpl
       return;
     }
     try {
+      tracker.trackASGCall("Describe ASG activities");
       DescribeScalingActivitiesResult activitiesResult = amazonAutoScalingClient.describeScalingActivities(
           new DescribeScalingActivitiesRequest().withAutoScalingGroupName(autoScalingGroupName));
       List<Activity> activities = activitiesResult.getActivities();
@@ -543,6 +561,7 @@ public class AwsAsgHelperServiceDelegateImpl
         return;
       }
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Attach LB Target Groups");
       AttachLoadBalancerTargetGroupsRequest request =
           new AttachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
               targetGroupARNs);
@@ -565,6 +584,7 @@ public class AwsAsgHelperServiceDelegateImpl
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       AttachLoadBalancersRequest request =
           new AttachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
+      tracker.trackASGCall("Attach Load Balancers");
       amazonAutoScalingClient.attachLoadBalancers(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -585,6 +605,7 @@ public class AwsAsgHelperServiceDelegateImpl
       DetachLoadBalancerTargetGroupsRequest request =
           new DetachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
               targetGroupARNs);
+      tracker.trackASGCall("Detach Load Balancer Target Groups");
       amazonAutoScalingClient.detachLoadBalancerTargetGroups(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -601,6 +622,7 @@ public class AwsAsgHelperServiceDelegateImpl
         logCallback.saveExecutionLog(format("No classic load balancers to detach to: [%s]", asgName));
         return;
       }
+      tracker.trackASGCall("Detach Load Balancers");
       AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
       DetachLoadBalancersRequest request =
           new DetachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
@@ -675,6 +697,7 @@ public class AwsAsgHelperServiceDelegateImpl
     DescribePoliciesResult result = null;
     do {
       request = new DescribePoliciesRequest().withAutoScalingGroupName(asgName).withNextToken(nextToken);
+      tracker.trackASGCall("Describe ASG Policies");
       result = amazonAutoScalingClient.describePolicies(request);
       if (isNotEmpty(result.getScalingPolicies())) {
         scalingPolicies.addAll(result.getScalingPolicies());
@@ -726,6 +749,7 @@ public class AwsAsgHelperServiceDelegateImpl
         logCallback.saveExecutionLog(format("Found scaling policy: [%s]. Deleting it.", scalingPolicy.getPolicyARN()));
         DeletePolicyRequest deletePolicyRequest =
             new DeletePolicyRequest().withAutoScalingGroupName(asgName).withPolicyName(scalingPolicy.getPolicyARN());
+        tracker.trackASGCall("Delete ASG Policies");
         amazonAutoScalingClient.deletePolicy(deletePolicyRequest);
       });
     } catch (AmazonServiceException amazonServiceException) {
@@ -778,6 +802,7 @@ public class AwsAsgHelperServiceDelegateImpl
                     .withScalingAdjustment(scalingPolicy.getScalingAdjustment())
                     .withStepAdjustments(scalingPolicy.getStepAdjustments())
                     .withTargetTrackingConfiguration(scalingPolicy.getTargetTrackingConfiguration());
+            tracker.trackASGCall("Put ASG Scaling Policy");
             PutScalingPolicyResult putScalingPolicyResult =
                 amazonAutoScalingClient.putScalingPolicy(putScalingPolicyRequest);
             logCallback.saveExecutionLog(

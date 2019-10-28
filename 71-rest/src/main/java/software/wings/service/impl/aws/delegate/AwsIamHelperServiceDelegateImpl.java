@@ -46,6 +46,7 @@ public class AwsIamHelperServiceDelegateImpl
       do {
         AmazonIdentityManagementClient amazonIdentityManagementClient = getAmazonIdentityManagementClient(awsConfig);
         ListRolesRequest listRolesRequest = new ListRolesRequest().withMaxItems(400).withMarker(nextMarker);
+        tracker.trackIAMCall("List Roles");
         ListRolesResult listRolesResult = amazonIdentityManagementClient.listRoles(listRolesRequest);
         listRolesResult.getRoles().forEach(role -> result.put(role.getArn(), role.getRoleName()));
         nextMarker = listRolesResult.getMarker();
@@ -69,6 +70,7 @@ public class AwsIamHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
         listInstanceProfilesRequest = new ListInstanceProfilesRequest().withMarker(nextMarker);
+        tracker.trackIAMCall("List Instance Profiles");
         listInstanceProfilesResult =
             getAmazonIdentityManagementClient(awsConfig).listInstanceProfiles(listInstanceProfilesRequest);
         result.addAll(listInstanceProfilesResult.getInstanceProfiles()

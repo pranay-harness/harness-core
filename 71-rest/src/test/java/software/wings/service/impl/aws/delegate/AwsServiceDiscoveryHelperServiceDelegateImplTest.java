@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -14,6 +15,7 @@ import com.amazonaws.services.servicediscovery.model.GetNamespaceResult;
 import com.amazonaws.services.servicediscovery.model.GetServiceResult;
 import com.amazonaws.services.servicediscovery.model.Namespace;
 import com.amazonaws.services.servicediscovery.model.Service;
+import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,6 +28,7 @@ import software.wings.service.intfc.security.EncryptionService;
 
 public class AwsServiceDiscoveryHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
+  @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsServiceDiscoveryHelperServiceDelegateImpl awsServiceDiscoveryHelperServiceDelegate;
 
   @Test
@@ -43,6 +46,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImplTest extends WingsBaseT
     doReturn(new GetNamespaceResult().withNamespace(new Namespace().withName("namespaceName")))
         .when(mockClient)
         .getNamespace(any());
+    doNothing().when(mockTracker).trackSDSCall(anyString());
     String val = awsServiceDiscoveryHelperServiceDelegate.getRecordValueForService(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "id");
     assertThat(val).isEqualTo("serviceName.namespaceName");

@@ -61,6 +61,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       } else {
         request.withTemplateBody(data);
       }
+      tracker.trackCFCall("Get Template Summary");
       GetTemplateSummaryResult result = client.getTemplateSummary(request);
       List<ParameterDeclaration> parameters = result.getParameters();
       if (isNotEmpty(parameters)) {
@@ -86,6 +87,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
     try {
       AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
       GetTemplateRequest getTemplateRequest = new GetTemplateRequest().withStackName(stackId);
+      tracker.trackCFCall("Get Template");
       GetTemplateResult getTemplateResult = client.getTemplate(getTemplateRequest);
       return getTemplateResult.getTemplateBody();
     } catch (AmazonEC2Exception amazonEC2Exception) {
@@ -106,6 +108,7 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       } else {
         request.withTemplateBody(data);
       }
+      tracker.trackCFCall("Get Template Summary");
       GetTemplateSummaryResult result = client.getTemplateSummary(request);
       return result.getCapabilities();
     } catch (AmazonServiceException amazonServiceException) {

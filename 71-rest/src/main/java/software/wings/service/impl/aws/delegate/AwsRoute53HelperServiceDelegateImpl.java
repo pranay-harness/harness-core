@@ -41,6 +41,7 @@ public class AwsRoute53HelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonRoute53 client = getAmazonRoute53Client(region, awsConfig);
+      tracker.trackR53Call("List Hosted Zones");
       ListHostedZonesResult listHostedZonesResult = client.listHostedZones();
       List<HostedZone> hostedZones = listHostedZonesResult.getHostedZones();
       if (isNotEmpty(hostedZones)) {
@@ -84,6 +85,7 @@ public class AwsRoute53HelperServiceDelegateImpl
                           .withSetIdentifier("Harness-Green")
                           .withWeight((long) greenServiceWeight)
                           .withResourceRecords(new ResourceRecord().withValue(greenServiceRecord)))));
+      tracker.trackR53Call("Upsert Resource Record Sets");
       client.changeResourceRecordSets(changeResourceRecordSetsRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
