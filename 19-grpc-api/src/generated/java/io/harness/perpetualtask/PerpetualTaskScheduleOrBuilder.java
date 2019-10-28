@@ -8,27 +8,51 @@ public interface PerpetualTaskScheduleOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskSchedule)
     com.google.protobuf.MessageOrBuilder {
   /**
+   * <pre>
+   * Interval between successive iterations
+   * </pre>
+   *
    * <code>.google.protobuf.Duration interval = 1;</code>
    */
   boolean hasInterval();
   /**
+   * <pre>
+   * Interval between successive iterations
+   * </pre>
+   *
    * <code>.google.protobuf.Duration interval = 1;</code>
    */
   com.google.protobuf.Duration getInterval();
   /**
+   * <pre>
+   * Interval between successive iterations
+   * </pre>
+   *
    * <code>.google.protobuf.Duration interval = 1;</code>
    */
   com.google.protobuf.DurationOrBuilder getIntervalOrBuilder();
 
   /**
+   * <pre>
+   * Timeout for one iteration of the task
+   * </pre>
+   *
    * <code>.google.protobuf.Duration timeout = 2;</code>
    */
   boolean hasTimeout();
   /**
+   * <pre>
+   * Timeout for one iteration of the task
+   * </pre>
+   *
    * <code>.google.protobuf.Duration timeout = 2;</code>
    */
   com.google.protobuf.Duration getTimeout();
   /**
+   * <pre>
+   * Timeout for one iteration of the task
+   * </pre>
+   *
    * <code>.google.protobuf.Duration timeout = 2;</code>
    */
   com.google.protobuf.DurationOrBuilder getTimeoutOrBuilder();

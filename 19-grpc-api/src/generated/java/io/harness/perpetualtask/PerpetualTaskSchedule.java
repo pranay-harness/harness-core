@@ -103,18 +103,30 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
   public static final int INTERVAL_FIELD_NUMBER = 1;
   private com.google.protobuf.Duration interval_;
   /**
+   * <pre>
+   * Interval between successive iterations
+   * </pre>
+   *
    * <code>.google.protobuf.Duration interval = 1;</code>
    */
   public boolean hasInterval() {
     return interval_ != null;
   }
   /**
+   * <pre>
+   * Interval between successive iterations
+   * </pre>
+   *
    * <code>.google.protobuf.Duration interval = 1;</code>
    */
   public com.google.protobuf.Duration getInterval() {
     return interval_ == null ? com.google.protobuf.Duration.getDefaultInstance() : interval_;
   }
   /**
+   * <pre>
+   * Interval between successive iterations
+   * </pre>
+   *
    * <code>.google.protobuf.Duration interval = 1;</code>
    */
   public com.google.protobuf.DurationOrBuilder getIntervalOrBuilder() {
@@ -124,18 +136,30 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
   public static final int TIMEOUT_FIELD_NUMBER = 2;
   private com.google.protobuf.Duration timeout_;
   /**
+   * <pre>
+   * Timeout for one iteration of the task
+   * </pre>
+   *
    * <code>.google.protobuf.Duration timeout = 2;</code>
    */
   public boolean hasTimeout() {
     return timeout_ != null;
   }
   /**
+   * <pre>
+   * Timeout for one iteration of the task
+   * </pre>
+   *
    * <code>.google.protobuf.Duration timeout = 2;</code>
    */
   public com.google.protobuf.Duration getTimeout() {
     return timeout_ == null ? com.google.protobuf.Duration.getDefaultInstance() : timeout_;
   }
   /**
+   * <pre>
+   * Timeout for one iteration of the task
+   * </pre>
+   *
    * <code>.google.protobuf.Duration timeout = 2;</code>
    */
   public com.google.protobuf.DurationOrBuilder getTimeoutOrBuilder() {
@@ -474,12 +498,20 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder> intervalBuilder_;
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public boolean hasInterval() {
       return intervalBuilder_ != null || interval_ != null;
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public com.google.protobuf.Duration getInterval() {
@@ -490,6 +522,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public Builder setInterval(com.google.protobuf.Duration value) {
@@ -506,6 +542,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public Builder setInterval(com.google.protobuf.Duration.Builder builderForValue) {
@@ -519,6 +559,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public Builder mergeInterval(com.google.protobuf.Duration value) {
@@ -536,6 +580,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public Builder clearInterval() {
@@ -550,6 +598,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public com.google.protobuf.Duration.Builder getIntervalBuilder() {
@@ -557,6 +609,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return getIntervalFieldBuilder().getBuilder();
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     public com.google.protobuf.DurationOrBuilder getIntervalOrBuilder() {
@@ -567,6 +623,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
+     * <pre>
+     * Interval between successive iterations
+     * </pre>
+     *
      * <code>.google.protobuf.Duration interval = 1;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
@@ -585,12 +645,20 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,
         com.google.protobuf.DurationOrBuilder> timeoutBuilder_;
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public boolean hasTimeout() {
       return timeoutBuilder_ != null || timeout_ != null;
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public com.google.protobuf.Duration getTimeout() {
@@ -601,6 +669,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public Builder setTimeout(com.google.protobuf.Duration value) {
@@ -617,6 +689,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public Builder setTimeout(com.google.protobuf.Duration.Builder builderForValue) {
@@ -630,6 +706,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public Builder mergeTimeout(com.google.protobuf.Duration value) {
@@ -647,6 +727,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public Builder clearTimeout() {
@@ -661,6 +745,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public com.google.protobuf.Duration.Builder getTimeoutBuilder() {
@@ -668,6 +756,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       return getTimeoutFieldBuilder().getBuilder();
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     public com.google.protobuf.DurationOrBuilder getTimeoutOrBuilder() {
@@ -678,6 +770,10 @@ public final class PerpetualTaskSchedule extends com.google.protobuf.GeneratedMe
       }
     }
     /**
+     * <pre>
+     * Timeout for one iteration of the task
+     * </pre>
+     *
      * <code>.google.protobuf.Duration timeout = 2;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Duration, com.google.protobuf.Duration.Builder,

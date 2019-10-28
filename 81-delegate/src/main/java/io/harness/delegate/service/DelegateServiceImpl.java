@@ -222,8 +222,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcementService;
-  @Inject(optional = true) @Named("perpetualTaskExecutor") private ScheduledExecutorService perpetualTaskExecutor;
-  @Inject(optional = true) private PerpetualTaskWorker perpetualTaskWorker;
   @Inject private ExecutorService syncExecutorService;
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -968,8 +966,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void startTaskPolling() {
     taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (delegateConfiguration.isEnablePerpetualTasks()) {
-      perpetualTaskExecutor.scheduleWithFixedDelay(
-          perpetualTaskWorker::handleTasks, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
+      injector.getInstance(PerpetualTaskWorker.class).startAsync();
     }
   }
 

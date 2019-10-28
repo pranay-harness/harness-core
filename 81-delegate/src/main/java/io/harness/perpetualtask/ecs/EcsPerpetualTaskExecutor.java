@@ -71,7 +71,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private static final String ECS_OS_TYPE = "ecs.os-type";
 
   @Override
-  public boolean startTask(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
+  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
     try {
       EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
       String clusterName = ecsPerpetualTaskParams.getClusterName();
@@ -477,7 +477,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean stopTask(PerpetualTaskId taskId, PerpetualTaskParams params) throws Exception {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) throws Exception {
     EcsPerpetualTaskParams taskParams = getTaskParams(params);
     cache.invalidate(taskParams.getClusterName());
     return true;

@@ -47,7 +47,7 @@ public class PerpetualTaskLifecycleManager {
 
   void stopTask() {
     try {
-      perpetualTaskExecutor.stopTask(taskId, params);
+      perpetualTaskExecutor.cleanup(taskId, params);
     } catch (Exception ex) {
       logger.error("Error while stopping task ", ex);
     }
@@ -55,7 +55,7 @@ public class PerpetualTaskLifecycleManager {
 
   private Void call() throws Exception {
     boolean taskStarted =
-        perpetualTaskExecutor.startTask(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
+        perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
     if (taskStarted) {
       perpetualTaskServiceGrpcClient.publishHeartbeat(taskId);
     }
