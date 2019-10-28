@@ -90,6 +90,7 @@ public class EventPublisherTest extends CategoryTest {
   @After
   public void tearDown() throws Exception {
     FileUtils.cleanDirectory(new File(QUEUE_FILE_PATH));
+    eventPublisher.shutdown();
     server.shutdown();
     server.awaitTermination();
   }

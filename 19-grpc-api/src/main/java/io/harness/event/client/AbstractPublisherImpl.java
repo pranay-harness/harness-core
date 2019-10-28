@@ -81,14 +81,6 @@ abstract class AbstractPublisherImpl extends EventPublisher {
     close();
   }
 
-  public long getAcceptedCount() {
-    return acceptedCount.get();
-  }
-
-  public long getSentCount() {
-    return sentCount.get();
-  }
-
   // Implementations need to implement the below methods.
   /**
    * Enqueue the message to be published eventually. (should be thread-safe)
