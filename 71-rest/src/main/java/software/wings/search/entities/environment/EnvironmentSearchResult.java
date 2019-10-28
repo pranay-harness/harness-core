@@ -1,5 +1,6 @@
 package software.wings.search.entities.environment;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -33,7 +34,7 @@ public class EnvironmentSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(EnvironmentView environmentView) {
-    if (!environmentView.getDeployments().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(environmentView.getDeployments())) {
       this.deploymentsCount =
           SearchEntityUtils.truncateList(environmentView.getDeploymentTimestamps(), startTimestampToRetainFrom).size();
       removeStaleDeploymentsEntries(environmentView);
@@ -41,7 +42,7 @@ public class EnvironmentSearchResult extends SearchResult {
   }
 
   private void setAudits(EnvironmentView environmentView) {
-    if (!environmentView.getAudits().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(environmentView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(environmentView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(environmentView);

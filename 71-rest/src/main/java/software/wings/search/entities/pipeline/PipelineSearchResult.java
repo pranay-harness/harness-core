@@ -1,5 +1,6 @@
 package software.wings.search.entities.pipeline;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,7 @@ public class PipelineSearchResult extends SearchResult {
       SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setDeployments(PipelineView pipelineView) {
-    if (!pipelineView.getDeployments().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(pipelineView.getDeployments())) {
       this.deploymentsCount =
           SearchEntityUtils.truncateList(pipelineView.getDeploymentTimestamps(), startTimestampToRetainFrom).size();
       removeStaleDeploymentsEntries(pipelineView);
@@ -39,7 +40,7 @@ public class PipelineSearchResult extends SearchResult {
   }
 
   private void setAudits(PipelineView pipelineView) {
-    if (!pipelineView.getAudits().isEmpty()) {
+    if (EmptyPredicate.isNotEmpty(pipelineView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(pipelineView.getAuditTimestamps(), startTimestampToRetainFrom).size();
       removeStaleAuditEntries(pipelineView);

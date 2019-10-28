@@ -14,24 +14,64 @@ import org.elasticsearch.search.internal.InternalSearchResponse;
 import software.wings.beans.EntityType;
 import software.wings.search.entities.application.ApplicationView;
 import software.wings.search.entities.deployment.DeploymentView;
+import software.wings.search.entities.environment.EnvironmentView;
+import software.wings.search.entities.pipeline.PipelineView;
+import software.wings.search.entities.service.ServiceView;
+import software.wings.search.entities.workflow.WorkflowView;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.util.stream.Stream;
 
 public class ElasticsearchServiceTestUtils {
-  static float score = 0.2345f;
+  private static float score = 0.2345f;
+  private static ObjectMapper mapper = new ObjectMapper();
 
-  public static ApplicationView createApplicationView() {
+  private static ApplicationView createApplicationView() {
     ApplicationView applicationView = new ApplicationView();
-    applicationView.setId("appId");
+    applicationView.setId("appId" + System.currentTimeMillis());
     applicationView.setName("appName");
     applicationView.setType(EntityType.APPLICATION);
     applicationView.setCreatedAt(System.currentTimeMillis());
     return applicationView;
   }
 
-  public static DeploymentView createDeploymentView() {
+  private static ServiceView createServiceView() {
+    ServiceView serviceView = new ServiceView();
+    serviceView.setId("serviceId" + System.currentTimeMillis());
+    serviceView.setName("serviceName");
+    serviceView.setCreatedAt(System.currentTimeMillis());
+    serviceView.setType(EntityType.SERVICE);
+    return serviceView;
+  }
+
+  private static EnvironmentView createEnvironmentView() {
+    EnvironmentView environmentView = new EnvironmentView();
+    environmentView.setId("envId" + System.currentTimeMillis());
+    environmentView.setName("envName");
+    environmentView.setCreatedAt(System.currentTimeMillis());
+    environmentView.setType(EntityType.ENVIRONMENT);
+    return environmentView;
+  }
+
+  private static WorkflowView createWorkflowView() {
+    WorkflowView workflowView = new WorkflowView();
+    workflowView.setId("workflowId" + System.currentTimeMillis());
+    workflowView.setName("workflowName");
+    workflowView.setCreatedAt(System.currentTimeMillis());
+    workflowView.setType(EntityType.WORKFLOW);
+    return workflowView;
+  }
+
+  private static PipelineView createPipelineView() {
+    PipelineView pipelineView = new PipelineView();
+    pipelineView.setId("pipelineId" + System.currentTimeMillis());
+    pipelineView.setName("pipelineName");
+    pipelineView.setCreatedAt(System.currentTimeMillis());
+    pipelineView.setType(EntityType.PIPELINE);
+    return pipelineView;
+  }
+
+  private static DeploymentView createDeploymentView() {
     DeploymentView deploymentView = new DeploymentView();
     deploymentView.setId("deploymentId" + System.currentTimeMillis());
     deploymentView.setName("name");
@@ -41,18 +81,8 @@ public class ElasticsearchServiceTestUtils {
     return deploymentView;
   }
 
-  public static byte[] serialize(Object obj) throws IOException {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    ObjectOutputStream os = new ObjectOutputStream(out);
-    os.writeObject(obj);
-    return out.toByteArray();
-  }
-
-  public static SearchResponse getDeploymentSearchResponse() {
-    ShardSearchFailure[] shardFailures = new ShardSearchFailure[0];
+  private static SearchHit[] getDeploymentSearchHits() {
     try {
-      ObjectMapper mapper = new ObjectMapper();
-
       DeploymentView deploymentView = createDeploymentView();
       BytesReference source = new BytesArray(mapper.writeValueAsBytes(deploymentView));
       SearchHit searchHit = new SearchHit(1);
@@ -65,16 +95,96 @@ public class ElasticsearchServiceTestUtils {
       searchHit1.score(score);
       searchHit1.sourceRef(source1);
 
-      SearchHit[] hits = new SearchHit[] {searchHit, searchHit1};
-      SearchHits searchHits = new SearchHits(hits, new TotalHits(2, Relation.GREATER_THAN_OR_EQUAL_TO), score);
-      InternalSearchResponse internalSearchResponse =
-          new InternalSearchResponse(searchHits, null, null, null, false, false, 1);
-
-      return new SearchResponse(
-          internalSearchResponse, "scrollId", 1, 1, 0, 10000, shardFailures, new Clusters(1, 1, 0));
-
+      return new SearchHit[] {searchHit, searchHit1};
     } catch (IOException e) {
-      return null;
+      return new SearchHit[] {};
     }
+  }
+
+  private static SearchHit[] getApplicationSearchHits() {
+    try {
+      ApplicationView applicationView = createApplicationView();
+      BytesReference source = new BytesArray(mapper.writeValueAsBytes(applicationView));
+      SearchHit searchHit = new SearchHit(1);
+      searchHit.score(score);
+      searchHit.sourceRef(source);
+
+      return new SearchHit[] {searchHit};
+    } catch (IOException e) {
+      return new SearchHit[] {};
+    }
+  }
+
+  private static SearchHit[] getServiceSearchHits() {
+    try {
+      ServiceView serviceView = createServiceView();
+      BytesReference source = new BytesArray(mapper.writeValueAsBytes(serviceView));
+      SearchHit searchHit = new SearchHit(1);
+      searchHit.score(score);
+      searchHit.sourceRef(source);
+
+      return new SearchHit[] {searchHit};
+    } catch (IOException e) {
+      return new SearchHit[] {};
+    }
+  }
+
+  private static SearchHit[] getEnvironmentSearchHits() {
+    try {
+      EnvironmentView environmentView = createEnvironmentView();
+      BytesReference source = new BytesArray(mapper.writeValueAsBytes(environmentView));
+      SearchHit searchHit = new SearchHit(1);
+      searchHit.score(score);
+      searchHit.sourceRef(source);
+
+      return new SearchHit[] {searchHit};
+    } catch (IOException e) {
+      return new SearchHit[] {};
+    }
+  }
+
+  private static SearchHit[] getWorkflowSearchHits() {
+    try {
+      WorkflowView workflowView = createWorkflowView();
+      BytesReference source = new BytesArray(mapper.writeValueAsBytes(workflowView));
+      SearchHit searchHit = new SearchHit(1);
+      searchHit.score(score);
+      searchHit.sourceRef(source);
+
+      return new SearchHit[] {searchHit};
+    } catch (IOException e) {
+      return new SearchHit[] {};
+    }
+  }
+
+  private static SearchHit[] getPipelineSearchHits() {
+    try {
+      PipelineView pipelineView = createPipelineView();
+      BytesReference source = new BytesArray(mapper.writeValueAsBytes(pipelineView));
+      SearchHit searchHit = new SearchHit(1);
+      searchHit.score(score);
+      searchHit.sourceRef(source);
+
+      return new SearchHit[] {searchHit};
+    } catch (IOException e) {
+      return new SearchHit[] {};
+    }
+  }
+
+  private static SearchHit[] getSearchHits() {
+    return Stream
+        .of(getApplicationSearchHits(), getDeploymentSearchHits(), getEnvironmentSearchHits(), getPipelineSearchHits(),
+            getWorkflowSearchHits(), getServiceSearchHits())
+        .flatMap(Stream::of)
+        .toArray(SearchHit[] ::new);
+  }
+
+  public static SearchResponse getSearchResponse() {
+    ShardSearchFailure[] shardFailures = new ShardSearchFailure[0];
+    SearchHits searchHits = new SearchHits(getSearchHits(), new TotalHits(2, Relation.GREATER_THAN_OR_EQUAL_TO), score);
+    InternalSearchResponse internalSearchResponse =
+        new InternalSearchResponse(searchHits, null, null, null, false, false, 1);
+
+    return new SearchResponse(internalSearchResponse, "scrollId", 1, 1, 0, 10000, shardFailures, new Clusters(1, 1, 0));
   }
 }
