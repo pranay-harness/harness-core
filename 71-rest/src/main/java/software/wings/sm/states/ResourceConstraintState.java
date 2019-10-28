@@ -13,6 +13,7 @@ import static software.wings.sm.states.HoldingScope.PHASE;
 import static software.wings.sm.states.HoldingScope.WORKFLOW;
 import static software.wings.sm.states.ResourceConstraintState.AcquireMode.ENSURE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -265,8 +266,8 @@ public class ResourceConstraintState extends State {
     notificationService.sendNotificationAsync(notification, asList(notificationRule));
   }
 
-  private ExecutionResponseBuilder executionResponseBuilder(
-      ResourceConstraint resourceConstraint, String resourceUnit) {
+  @VisibleForTesting
+  ExecutionResponseBuilder executionResponseBuilder(ResourceConstraint resourceConstraint, String resourceUnit) {
     ResourceConstraintExecutionData stateExecutionData = new ResourceConstraintExecutionData();
     stateExecutionData.setResourceConstraintName(resourceConstraint.getName());
     stateExecutionData.setResourceConstraintCapacity(resourceConstraint.getCapacity());
@@ -279,16 +280,16 @@ public class ResourceConstraintState extends State {
   }
 
   int alreadyAcquiredPermits(String holdingScope, ExecutionContext executionContext) {
-    int acquiredPermits = 0;
+    int currentlyAcquiredPermits = 0;
     String releaseEntityId;
     String parentReleaseEntityId;
     String appId = executionContext.fetchRequiredApp().getUuid();
     switch (HoldingScope.valueOf(holdingScope)) {
       case WORKFLOW:
         releaseEntityId = ResourceConstraintService.releaseEntityId(executionContext.getWorkflowExecutionId());
-        acquiredPermits +=
+        currentlyAcquiredPermits +=
             resourceConstraintService.getAllCurrentlyAcquiredPermits(holdingScope, releaseEntityId, appId);
-        return acquiredPermits;
+        return currentlyAcquiredPermits;
       case PHASE:
         PhaseElement phaseElement =
             executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);

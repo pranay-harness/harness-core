@@ -1,6 +1,10 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -8,21 +12,31 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.distribution.constraint.Constraint;
+import io.harness.exception.InvalidRequestException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
+import software.wings.api.ResourceConstraintExecutionData;
 import software.wings.beans.Application;
+import software.wings.beans.ResourceConstraint;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
+import software.wings.sm.states.ResourceConstraintState.AcquireMode;
 
 public class ResourceConstraintStateTest extends WingsBaseTest {
   @Mock ExecutionContextImpl executionContext;
   @Mock ResourceConstraintService resourceConstraintService;
-  @InjectMocks ResourceConstraintState state = new ResourceConstraintState("rcs");
+  @Mock AppService applicationService;
+
+  @InjectMocks @Spy ResourceConstraintState state = new ResourceConstraintState("rcs");
 
   private String phaseName;
 
@@ -54,5 +68,41 @@ public class ResourceConstraintStateTest extends WingsBaseTest {
     int permits_4 = state.alreadyAcquiredPermits(HoldingScope.PHASE.name(), executionContext);
     assertThat(permits_3).isEqualTo(1);
     assertThat(permits_4).isEqualTo(2);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void alreadyAcquiredPermits_error() {
+    state.alreadyAcquiredPermits(HoldingScope.PIPELINE.name(), executionContext);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void testExecute_error() {
+    doReturn("accountid").when(applicationService).getAccountIdByAppId(anyString());
+    doReturn(Constraint.builder().build())
+        .when(resourceConstraintService)
+        .createAbstraction(any(ResourceConstraint.class));
+
+    doReturn(mock(ResourceConstraint.class)).when(resourceConstraintService).get(anyString(), anyString());
+    doReturn(2).when(state).alreadyAcquiredPermits(any(), any());
+
+    state.setAcquireMode(AcquireMode.ENSURE);
+    state.setHoldingScope("PIPELINE");
+    state.execute(executionContext);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testExecutionResponseBuilder() {
+    final ResourceConstraint resourceConstraint = ResourceConstraint.builder().build();
+    state.setAcquireMode(AcquireMode.ENSURE);
+    state.setPermits(10);
+
+    final ExecutionResponseBuilder executionResponseBuilder =
+        state.executionResponseBuilder(resourceConstraint, "resoourceunit");
+    final ResourceConstraintExecutionData stateExecutionData =
+        (ResourceConstraintExecutionData) executionResponseBuilder.build().getStateExecutionData();
+    assertThat(stateExecutionData.getUsage()).isEqualTo(10);
   }
 }
