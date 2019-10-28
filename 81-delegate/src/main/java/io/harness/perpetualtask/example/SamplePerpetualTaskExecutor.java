@@ -13,14 +13,14 @@ import java.time.Instant;
 @Slf4j
 public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Override
-  public boolean startTask(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
+  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
     SamplePerpetualTaskParams sampleParams = params.getCustomizedParams().unpack(SamplePerpetualTaskParams.class);
     logger.info("Hello there !! {} ", sampleParams.getCountry());
     return true;
   }
 
   @Override
-  public boolean stopTask(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
     return true;
   }
 }

@@ -19,7 +19,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
 
   @Override
-  public boolean startTask(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
+  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
     K8sWatchTaskParams watchTaskParams = params.getCustomizedParams().unpack(K8sWatchTaskParams.class);
     String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
     taskWatchIdMap.put(taskId.getId(), watchId);
@@ -28,7 +28,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean stopTask(PerpetualTaskId taskId, PerpetualTaskParams params) {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
     if (null != taskWatchIdMap.get(taskId.getId())) {
       String watchId = taskWatchIdMap.get(taskId.getId());
       logger.info("Stopping the watch with id {}", watchId);

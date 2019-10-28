@@ -14,7 +14,7 @@ import org.junit.experimental.categories.Category;
 
 public class AnyUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(emails = AVMOHAN, resent = false)
   @Category(UnitTests.class)
   public void testToFqcnGivesCorrectClassName() throws Exception {
     Any any = Any.pack(Lifecycle.newBuilder().build());
@@ -22,7 +22,7 @@ public class AnyUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(emails = AVMOHAN, resent = false)
   @Category(UnitTests.class)
   public void testToClassGivesCorrectClass() throws Exception {
     Any any = Any.pack(Lifecycle.newBuilder().build());

@@ -1,9 +1,10 @@
 package io.harness.perpetualtask.ecs;
 
+import io.harness.perpetualtask.PerpetualTaskClientParams;
 import lombok.Value;
 
 @Value
-public class EcsPerpetualTaskClientParams {
+public class EcsPerpetualTaskClientParams implements PerpetualTaskClientParams {
   private String region;
   private String settingId;
   private String clusterName;

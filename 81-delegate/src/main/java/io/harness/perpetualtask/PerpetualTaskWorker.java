@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,7 +23,9 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Slf4j
-public class PerpetualTaskWorker {
+public class PerpetualTaskWorker extends AbstractScheduledService {
+  private static final long POLL_INTERVAL_SECONDS = 3;
+
   private final TimeLimiter timeLimiter;
   private Set<PerpetualTaskId> assignedTasks;
   private Map<String, PerpetualTaskExecutor> factoryMap;
@@ -40,7 +43,7 @@ public class PerpetualTaskWorker {
     scheduledService = Executors.newSingleThreadScheduledExecutor();
   }
 
-  public void handleTasks() {
+  private void handleTasks() {
     try {
       updateAssignedTaskIds();
       stopCancelledTasks();
@@ -102,5 +105,15 @@ public class PerpetualTaskWorker {
         stopTask(taskId);
       }
     }
+  }
+
+  @Override
+  protected void runOneIteration() throws Exception {
+    handleTasks();
+  }
+
+  @Override
+  protected Scheduler scheduler() {
+    return Scheduler.newFixedDelaySchedule(0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
   }
 }

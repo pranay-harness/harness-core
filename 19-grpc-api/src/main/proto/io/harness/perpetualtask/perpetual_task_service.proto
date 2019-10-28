@@ -21,7 +21,9 @@ message PerpetualTaskParams {
 
 // schedule persists in mongodb
 message PerpetualTaskSchedule {
+  // Interval between successive iterations
   google.protobuf.Duration interval = 1;
+  // Timeout for one iteration of the task
   google.protobuf.Duration timeout = 2;
 }
 
