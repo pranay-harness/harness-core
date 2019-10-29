@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import software.wings.search.framework.SearchDistributedLock.SearchDistributedLo
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +24,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PerpetualSearchLocker {
   @Inject WingsPersistence wingsPersistence;
-  @Inject private ScheduledExecutorService scheduledExecutorService;
+  private ScheduledExecutorService scheduledExecutorService =
+      Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat("search-heartbeat-%d").build());
 
   private boolean isLockAcquired(String lockName, String uuid) {
     Query<SearchDistributedLock> query = wingsPersistence.createQuery(SearchDistributedLock.class)
@@ -46,12 +49,18 @@ public class PerpetualSearchLocker {
 
   public ScheduledFuture acquireLock(String lockName, String uuid, LockTimeoutCallback lockTimeoutCallback)
       throws InterruptedException {
+    int retryIntervalinMS = 1000;
+    int readinessWaitTimeinMS = 5000;
     if (!isLockAcquired(lockName, uuid)) {
       logger.info("Attempting to acquire lock");
       boolean isLockAcquired = false;
       while (!isLockAcquired) {
-        Thread.sleep(1000);
+        Thread.sleep(retryIntervalinMS);
         isLockAcquired = tryToAcquireLock(lockName, uuid);
+        if (isLockAcquired) {
+          Thread.sleep(readinessWaitTimeinMS);
+          isLockAcquired = isLockAcquired(lockName, uuid);
+        }
       }
     }
     logger.info("Search lock acquired");

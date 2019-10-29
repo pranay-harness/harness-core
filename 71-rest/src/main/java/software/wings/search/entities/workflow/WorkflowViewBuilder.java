@@ -54,7 +54,6 @@ class WorkflowViewBuilder {
   private static final String WORKFLOW_ID_KEY = "workflowId";
   private static final int DAYS_TO_RETAIN = 7;
   private static final int MAX_RELATED_ENTITIES_COUNT = 3;
-  private WorkflowView workflowView;
 
   private void populateServicesInWorkflow(Workflow workflow) {
     if (workflow.getOrchestration() != null) {
@@ -64,7 +63,7 @@ class WorkflowViewBuilder {
     }
   }
 
-  private void setDeploymentsAndDeploymentTimestamps(Workflow workflow) {
+  private void setDeploymentsAndDeploymentTimestamps(Workflow workflow, WorkflowView workflowView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<Long> deploymentTimestamps = new ArrayList<>();
     List<RelatedDeploymentView> deployments = new ArrayList<>();
@@ -91,24 +90,24 @@ class WorkflowViewBuilder {
     workflowView.setDeploymentTimestamps(deploymentTimestamps);
   }
 
-  private void createBaseView(Workflow workflow) {
+  private WorkflowView createBaseView(Workflow workflow) {
     String orchestrationWorkflowType = null;
     if (workflow.getOrchestration() != null && workflow.getOrchestration().getOrchestrationWorkflowType() != null) {
       orchestrationWorkflowType = workflow.getOrchestration().getOrchestrationWorkflowType().name();
     }
-    this.workflowView = new WorkflowView(workflow.getUuid(), workflow.getName(), workflow.getDescription(),
-        workflow.getAccountId(), workflow.getCreatedAt(), workflow.getLastUpdatedAt(), EntityType.WORKFLOW,
-        workflow.getCreatedBy(), workflow.getLastUpdatedBy(), workflow.getAppId(), orchestrationWorkflowType);
+    return new WorkflowView(workflow.getUuid(), workflow.getName(), workflow.getDescription(), workflow.getAccountId(),
+        workflow.getCreatedAt(), workflow.getLastUpdatedAt(), EntityType.WORKFLOW, workflow.getCreatedBy(),
+        workflow.getLastUpdatedBy(), workflow.getAppId(), orchestrationWorkflowType);
   }
 
-  private void setApplicationName(Workflow workflow) {
+  private void setApplicationName(Workflow workflow, WorkflowView workflowView) {
     if (workflow.getAppId() != null) {
       Application application = wingsPersistence.get(Application.class, workflow.getAppId());
       workflowView.setAppName(application.getName());
     }
   }
 
-  private void setEnvironment(Workflow workflow) {
+  private void setEnvironment(Workflow workflow, WorkflowView workflowView) {
     boolean isEnvironmentTemplatized = false;
     if (workflow.getTemplateExpressions() != null) {
       for (TemplateExpression templateExpression : workflow.getTemplateExpressions()) {
@@ -125,7 +124,7 @@ class WorkflowViewBuilder {
     }
   }
 
-  private void setServices(Workflow workflow) {
+  private void setServices(Workflow workflow, WorkflowView workflowView) {
     Set<EntityInfo> serviceInfos = new HashSet<>();
     populateServicesInWorkflow(workflow);
     boolean isServiceTemplatized = false;
@@ -163,7 +162,7 @@ class WorkflowViewBuilder {
     return workflowIds;
   }
 
-  private void setAuditsAndAuditTimestamps(Workflow workflow) {
+  private void setAuditsAndAuditTimestamps(Workflow workflow, WorkflowView workflowView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
@@ -197,7 +196,7 @@ class WorkflowViewBuilder {
     workflowView.setAuditTimestamps(auditTimestamps);
   }
 
-  private void setPipelines(Workflow workflow) {
+  private void setPipelines(Workflow workflow, WorkflowView workflowView) {
     Set<EntityInfo> pipelines = new HashSet<>();
     try (HIterator<Pipeline> iterator =
              new HIterator<>(wingsPersistence.createQuery(Pipeline.class)
@@ -216,13 +215,13 @@ class WorkflowViewBuilder {
 
   WorkflowView createWorkflowView(Workflow workflow) {
     if (wingsPersistence.get(Application.class, workflow.getAppId()) != null) {
-      createBaseView(workflow);
-      setApplicationName(workflow);
-      setEnvironment(workflow);
-      setServices(workflow);
-      setPipelines(workflow);
-      setDeploymentsAndDeploymentTimestamps(workflow);
-      setAuditsAndAuditTimestamps(workflow);
+      WorkflowView workflowView = createBaseView(workflow);
+      setApplicationName(workflow, workflowView);
+      setEnvironment(workflow, workflowView);
+      setServices(workflow, workflowView);
+      setPipelines(workflow, workflowView);
+      setDeploymentsAndDeploymentTimestamps(workflow, workflowView);
+      setAuditsAndAuditTimestamps(workflow, workflowView);
       return workflowView;
     }
     return null;
@@ -230,17 +229,17 @@ class WorkflowViewBuilder {
 
   WorkflowView createWorkflowView(Workflow workflow, DBObject changeDocument) {
     if (wingsPersistence.get(Application.class, workflow.getAppId()) != null) {
-      createBaseView(workflow);
+      WorkflowView workflowView = createBaseView(workflow);
       if (changeDocument.containsField(WorkflowKeys.appId)) {
-        setApplicationName(workflow);
+        setApplicationName(workflow, workflowView);
       }
       if (changeDocument.containsField(WorkflowKeys.envId)
           || changeDocument.containsField(WorkflowKeys.templateExpressions)) {
-        setEnvironment(workflow);
+        setEnvironment(workflow, workflowView);
       }
       if (changeDocument.containsField(WorkflowKeys.orchestration)
           || changeDocument.containsField(WorkflowKeys.templateExpressions)) {
-        setServices(workflow);
+        setServices(workflow, workflowView);
       }
       return workflowView;
     }

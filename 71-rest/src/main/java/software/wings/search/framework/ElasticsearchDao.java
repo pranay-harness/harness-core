@@ -55,7 +55,7 @@ public class ElasticsearchDao implements SearchDao {
     updateRequest.setRefreshPolicy(RefreshPolicy.WAIT_UNTIL);
     try {
       UpdateResponse updateResponse = elasticsearchClient.update(updateRequest);
-      return updateResponse.status() == RestStatus.OK || updateResponse.status() == RestStatus.OK;
+      return updateResponse.status() == RestStatus.OK || updateResponse.status() == RestStatus.CREATED;
     } catch (ElasticsearchException e) {
       logger.error(String.format("Error while updating document %s in index %s", entityJson, indexName), e);
     } catch (IOException e) {

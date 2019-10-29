@@ -2,6 +2,7 @@ package software.wings.search.framework.changestreams;
 
 import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectionName;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
 import com.mongodb.DBObject;
@@ -9,19 +10,22 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
-import io.harness.manage.ManagedExecutorService;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import software.wings.app.MainConfiguration;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
@@ -35,8 +39,8 @@ import java.util.concurrent.Future;
 @Slf4j
 public class ChangeTracker {
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private ManagedExecutorService managedExecutorService;
   @Inject private ChangeEventFactory changeEventFactory;
+  private ExecutorService executorService;
   private Set<ChangeTrackingTask> changeTrackingTasks;
   private Set<Future<?>> changeTrackingTasksFuture;
   private MongoDatabase mongoDatabase;
@@ -44,7 +48,8 @@ public class ChangeTracker {
 
   private MongoClientURI mongoClientUri() {
     final String mongoClientUrl = mainConfiguration.getMongoConnectionFactory().getUri();
-    return new MongoClientURI(mongoClientUrl, MongoClientOptions.builder(MongoModule.mongoClientOptions));
+    return new MongoClientURI(mongoClientUrl,
+        MongoClientOptions.builder(MongoModule.mongoClientOptions).readPreference(ReadPreference.secondaryPreferred()));
   }
 
   private void connectToMongoDatabase() {
@@ -70,23 +75,31 @@ public class ChangeTracker {
   }
 
   private Future<?> openChangeStreams(Set<ChangeTrackingInfo<?>> changeTrackingInfos) {
+    executorService =
+        Executors.newFixedThreadPool(8, new ThreadFactoryBuilder().setNameFormat("change-tracker-%d").build());
     CountDownLatch latch = new CountDownLatch(changeTrackingInfos.size());
     createChangeStreamTasks(changeTrackingInfos, latch);
     changeTrackingTasksFuture = new HashSet<>();
 
-    for (ChangeTrackingTask changeTrackingTask : changeTrackingTasks) {
-      Future f = managedExecutorService.submit(changeTrackingTask);
-      changeTrackingTasksFuture.add(f);
-    }
-
-    return managedExecutorService.submit(() -> {
-      try {
-        latch.await();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        logger.error("Change tracker stopped", e);
+    if (!executorService.isShutdown()) {
+      for (ChangeTrackingTask changeTrackingTask : changeTrackingTasks) {
+        Future f = executorService.submit(changeTrackingTask);
+        changeTrackingTasksFuture.add(f);
       }
-    });
+
+      Future<?> f = executorService.submit(() -> {
+        try {
+          latch.await();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          logger.error("Change tracker stopped", e);
+        }
+      });
+
+      executorService.shutdown();
+      return f;
+    }
+    return ConcurrentUtils.constantFuture(false);
   }
 
   private boolean shouldProcessChange(ChangeStreamDocument<DBObject> changeStreamDocument) {
@@ -115,6 +128,11 @@ public class ChangeTracker {
     for (Future<?> f : changeTrackingTasksFuture) {
       f.cancel(true);
     }
-    mongoClient.close();
+    if (executorService != null) {
+      executorService.shutdownNow();
+    }
+    if (mongoClient != null) {
+      mongoClient.close();
+    }
   }
 }

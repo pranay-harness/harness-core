@@ -137,7 +137,6 @@ public class ElasticsearchServiceImpl implements SearchService {
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(boolQueryBuilder).size(MAX_RESULTS);
     searchRequest.source(searchSourceBuilder);
     searchRequest.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
-
     SearchResponse searchResponse = elasticsearchClient.search(searchRequest);
     logger.info("Search results, time taken : {}, number of hits: {}, accountID: {}", searchResponse.getTook(),
         searchResponse.getHits().getTotalHits(), accountId);

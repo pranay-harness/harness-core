@@ -20,6 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.search.entities.application.ApplicationSearchEntity;
 
@@ -37,9 +38,14 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testSearchEntityBulkMigration() throws IOException {
+    Account account = new Account();
+    String accountId = wingsPersistence.save(account);
+    account.setUuid(accountId);
+
     Application application = new Application();
     application.setName("first application");
     application.setDescription("Application to test bulk sync");
+    application.setAccountId(accountId);
     String applicationUuid = wingsPersistence.save(application);
     application.setUuid(applicationUuid);
 

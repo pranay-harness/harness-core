@@ -1,11 +1,16 @@
 package software.wings.search.framework;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 import lombok.extern.slf4j.Slf4j;
+import software.wings.dl.WingsPersistence;
 
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The job responsible to maintain sync
@@ -17,16 +22,28 @@ import java.util.concurrent.ScheduledFuture;
 
 @Slf4j
 public class ElasticsearchSyncJob implements Runnable {
-  @Inject private ElasticsearchBulkSyncTask elasticsearchBulkSyncTask;
-  @Inject private ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask;
-  @Inject private PerpetualSearchLocker perpetualSearchLocker;
-  private ScheduledFuture scheduledFuture;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private Provider<ElasticsearchBulkSyncTask> elasticsearchBulkSyncTaskProvider;
+  @Inject private Provider<ElasticsearchRealtimeSyncTask> elasticsearchRealtimeSyncTaskProvider;
+  @Inject private Provider<PerpetualSearchLocker> perpetualSearchLockerProvider;
+  private ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask;
+  private ScheduledExecutorService scheduledExecutorService;
+  private ScheduledFuture searchLock;
 
   public void run() {
     try {
+      PerpetualSearchLocker perpetualSearchLocker = perpetualSearchLockerProvider.get();
+      ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = elasticsearchBulkSyncTaskProvider.get();
+      scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+      elasticsearchRealtimeSyncTask = elasticsearchRealtimeSyncTaskProvider.get();
       String uuid = UUID.randomUUID().toString();
-      scheduledFuture = perpetualSearchLocker.acquireLock(ElasticsearchSyncJob.class.getName(), uuid, this ::stop);
+
+      searchLock = perpetualSearchLocker.acquireLock(ElasticsearchSyncJob.class.getName(), uuid, this ::stop);
       logger.info("Starting search synchronization now");
+
+      SearchSyncHeartbeat searchSyncHeartbeat =
+          new SearchSyncHeartbeat(wingsPersistence, ElasticsearchSyncJob.class.getName(), uuid);
+      scheduledExecutorService.scheduleAtFixedRate(searchSyncHeartbeat, 30, 30, TimeUnit.MINUTES);
 
       ElasticsearchBulkSyncTaskResult elasticsearchBulkSyncTaskResult = elasticsearchBulkSyncTask.run();
       if (elasticsearchBulkSyncTaskResult.isSuccessful()) {
@@ -44,10 +61,12 @@ public class ElasticsearchSyncJob implements Runnable {
   }
 
   public void stop() {
-    if (scheduledFuture != null) {
-      logger.info("Cancelling search monitor future");
-      scheduledFuture.cancel(true);
+    logger.info("Cancelling search monitor future");
+    if (searchLock != null) {
+      searchLock.cancel(true);
     }
+    scheduledExecutorService.shutdownNow();
+    logger.info("Stopping realtime synchronization");
     elasticsearchRealtimeSyncTask.stop();
   }
 }

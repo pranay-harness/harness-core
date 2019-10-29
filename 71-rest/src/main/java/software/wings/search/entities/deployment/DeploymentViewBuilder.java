@@ -28,23 +28,22 @@ import java.util.Set;
 @Singleton
 class DeploymentViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
-  private DeploymentView deploymentView;
 
-  private void createBaseView(WorkflowExecution workflowExecution) {
-    this.deploymentView =
-        new DeploymentView(workflowExecution.getUuid(), workflowExecution.getName(), workflowExecution.getCreatedAt(),
-            workflowExecution.getCreatedBy(), workflowExecution.getAppId(), workflowExecution.getStatus(),
-            workflowExecution.getAppName(), EntityType.DEPLOYMENT, workflowExecution.getAccountId());
+  private DeploymentView createBaseView(WorkflowExecution workflowExecution) {
+    return new DeploymentView(workflowExecution.getUuid(), workflowExecution.getName(),
+        workflowExecution.getCreatedAt(), workflowExecution.getCreatedBy(), workflowExecution.getAppId(),
+        workflowExecution.getStatus(), workflowExecution.getAppName(), EntityType.DEPLOYMENT,
+        workflowExecution.getAccountId());
   }
 
-  private void setPipeline(WorkflowExecution workflowExecution) {
+  private void setPipeline(WorkflowExecution workflowExecution, DeploymentView deploymentView) {
     if (workflowExecution.getPipelineSummary() != null) {
       deploymentView.setPipelineId(workflowExecution.getPipelineSummary().getPipelineId());
       deploymentView.setPipelineName(workflowExecution.getPipelineSummary().getPipelineName());
     }
   }
 
-  private void setServices(WorkflowExecution workflowExecution) {
+  private void setServices(WorkflowExecution workflowExecution, DeploymentView deploymentView) {
     if (workflowExecution.getServiceIds() != null) {
       Set<EntityInfo> services = new HashSet<>();
       for (String serviceId : workflowExecution.getServiceIds()) {
@@ -58,7 +57,7 @@ class DeploymentViewBuilder {
     }
   }
 
-  private void setEnvironments(WorkflowExecution workflowExecution) {
+  private void setEnvironments(WorkflowExecution workflowExecution, DeploymentView deploymentView) {
     if (workflowExecution.getEnvIds() != null) {
       Set<EntityInfo> environments = new HashSet<>();
       for (String environmentId : workflowExecution.getEnvIds()) {
@@ -72,14 +71,14 @@ class DeploymentViewBuilder {
     }
   }
 
-  private void setWorkflowInPipeline(WorkflowExecution workflowExecution) {
+  private void setWorkflowInPipeline(WorkflowExecution workflowExecution, DeploymentView deploymentView) {
     if (workflowExecution.getWorkflowType().equals(WorkflowType.ORCHESTRATION)
         && workflowExecution.getPipelineExecutionId() != null) {
       deploymentView.setWorkflowInPipeline(true);
     }
   }
 
-  private void setWorkflows(WorkflowExecution workflowExecution) {
+  private void setWorkflows(WorkflowExecution workflowExecution, DeploymentView deploymentView) {
     if (workflowExecution.getWorkflowType().equals(WorkflowType.PIPELINE)
         && workflowExecution.getWorkflowIds() != null) {
       Set<EntityInfo> workflows = new HashSet<>();
@@ -103,12 +102,12 @@ class DeploymentViewBuilder {
 
   DeploymentView createDeploymentView(WorkflowExecution workflowExecution) {
     if (wingsPersistence.get(Application.class, workflowExecution.getAppId()) != null) {
-      createBaseView(workflowExecution);
-      setWorkflowInPipeline(workflowExecution);
-      setPipeline(workflowExecution);
-      setWorkflows(workflowExecution);
-      setServices(workflowExecution);
-      setEnvironments(workflowExecution);
+      DeploymentView deploymentView = createBaseView(workflowExecution);
+      setWorkflowInPipeline(workflowExecution, deploymentView);
+      setPipeline(workflowExecution, deploymentView);
+      setWorkflows(workflowExecution, deploymentView);
+      setServices(workflowExecution, deploymentView);
+      setEnvironments(workflowExecution, deploymentView);
       return deploymentView;
     }
     return null;
@@ -116,20 +115,20 @@ class DeploymentViewBuilder {
 
   DeploymentView createDeploymentView(WorkflowExecution workflowExecution, DBObject changeDocument) {
     if (wingsPersistence.get(Application.class, workflowExecution.getAppId()) != null) {
-      createBaseView(workflowExecution);
-      setWorkflowInPipeline(workflowExecution);
+      DeploymentView deploymentView = createBaseView(workflowExecution);
+      setWorkflowInPipeline(workflowExecution, deploymentView);
       if (changeDocument.containsField(WorkflowExecutionKeys.pipelineSummary)) {
-        setPipeline(workflowExecution);
+        setPipeline(workflowExecution, deploymentView);
       }
       if (changeDocument.containsField(WorkflowExecutionKeys.serviceIds)) {
-        setServices(workflowExecution);
+        setServices(workflowExecution, deploymentView);
       }
       if (changeDocument.containsField(WorkflowExecutionKeys.workflowIds)
           || changeDocument.containsField(WorkflowExecutionKeys.workflowId)) {
-        setWorkflows(workflowExecution);
+        setWorkflows(workflowExecution, deploymentView);
       }
       if (changeDocument.containsField(WorkflowExecutionKeys.envIds)) {
-        setEnvironments(workflowExecution);
+        setEnvironments(workflowExecution, deploymentView);
       }
       return deploymentView;
     }

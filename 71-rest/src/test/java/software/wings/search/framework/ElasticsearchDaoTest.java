@@ -54,7 +54,6 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
     assertThat(updateRequest.docAsUpsert()).isEqualTo(true);
     assertThat(updateRequest.retryOnConflict()).isEqualTo(3);
     assertThat(updateRequest.getRefreshPolicy()).isEqualTo(RefreshPolicy.WAIT_UNTIL);
-    verify(updateResponse, times(1)).status();
 
     when(elasticsearchClient.update(any())).thenThrow(new IOException());
     isSuccessful = elasticsearchDao.upsertDocument(entityType, entityId, entityJson);
