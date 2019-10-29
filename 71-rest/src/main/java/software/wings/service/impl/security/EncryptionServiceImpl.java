@@ -9,10 +9,12 @@ import static io.harness.reflection.ReflectionUtils.getFieldByName;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.SimpleEncryption;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
@@ -25,7 +27,11 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 /**
  * Created by rsingh on 10/18/17.
@@ -33,7 +39,15 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class EncryptionServiceImpl implements EncryptionService {
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  private SecretManagementDelegateService secretManagementDelegateService;
+  private ExecutorService threadPoolExecutor;
+
+  @Inject
+  public EncryptionServiceImpl(SecretManagementDelegateService secretManagementDelegateService,
+      @Named("asyncExecutor") ExecutorService threadPoolExecutor) {
+    this.secretManagementDelegateService = secretManagementDelegateService;
+    this.threadPoolExecutor = threadPoolExecutor;
+  }
 
   @Override
   public EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -71,8 +85,32 @@ public class EncryptionServiceImpl implements EncryptionService {
   }
 
   @Override
+  public List<EncryptableSettingWithEncryptionDetails> decrypt(
+      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList) {
+    List<Future<EncryptableSetting>> futures = new ArrayList<>();
+    for (EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails :
+        encryptableSettingWithEncryptionDetailsList) {
+      EncryptableSetting encryptableSetting = encryptableSettingWithEncryptionDetails.getEncryptableSetting();
+      futures.add(threadPoolExecutor.submit(
+          () -> decrypt(encryptableSetting, encryptableSettingWithEncryptionDetails.getEncryptedDataDetails())));
+    }
+
+    for (int i = 0; i < encryptableSettingWithEncryptionDetailsList.size(); i++) {
+      try {
+        EncryptableSetting encryptableSetting = futures.get(i).get();
+        encryptableSettingWithEncryptionDetailsList.get(i).setEncryptableSetting(encryptableSetting);
+      } catch (ExecutionException | InterruptedException e) {
+        throw new SecretManagementException(
+            ENCRYPT_DECRYPT_ERROR, "Failed to batch process decryption request of encrypted settings", USER);
+      }
+    }
+
+    return encryptableSettingWithEncryptionDetailsList;
+  }
+
+  @Override
   public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) {
-    switch (encryptedDataDetail.getEncryptedData().getEncryptionType()) {
+    switch (encryptedDataDetail.getEncryptionConfig().getEncryptionType()) {
       case LOCAL:
         SimpleEncryption encryption = new SimpleEncryption(encryptedDataDetail.getEncryptedData().getEncryptionKey());
         return encryption.decryptChars(encryptedDataDetail.getEncryptedData().getEncryptedValue());

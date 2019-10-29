@@ -142,10 +142,6 @@ public class WingsTestModule extends AbstractModule {
         .toInstance(ThreadPool.create(4, 8, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build()));
     bind(ExecutorService.class)
-        .annotatedWith(Names.named("asyncExecutor"))
-        .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("async-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
-    bind(ExecutorService.class)
         .annotatedWith(Names.named("artifactExecutor"))
         .toInstance(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()

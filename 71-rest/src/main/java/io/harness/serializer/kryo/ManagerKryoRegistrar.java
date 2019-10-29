@@ -17,6 +17,7 @@ import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.ccm.CCMConfig;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -1386,5 +1387,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaDetailsRequest.class, 7255);
     kryo.register(AwsLambdaDetailsResponse.class, 7256);
     kryo.register(AwsLambdaDetails.class, 7257);
+    kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
   }
 }

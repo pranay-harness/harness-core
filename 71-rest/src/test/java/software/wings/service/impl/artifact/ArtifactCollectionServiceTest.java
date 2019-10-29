@@ -46,6 +46,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
@@ -531,7 +532,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                             .withAccountId(ACCOUNT_ID)
                                             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    doNothing().when(managerDecryptionService).decrypt(any(), any());
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(artifact, WORKFLOW_EXECUTION_ID);
     assertThat(imageDetails).isNotNull();
     assertThat(imageDetails.getName()).isEqualTo(IMAGE_NAME);
@@ -568,7 +569,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
             .withAccountId(ACCOUNT_ID)
             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    doNothing().when(managerDecryptionService).decrypt(any(), any());
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(artifact, WORKFLOW_EXECUTION_ID);
     assertThat(imageDetails).isNotNull();
     assertThat(imageDetails.getName()).isEqualTo(IMAGE_NAME);
@@ -682,7 +683,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactoryArtifactStream);
-    doNothing().when(managerDecryptionService).decrypt(any(), any());
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(artifact, WORKFLOW_EXECUTION_ID);
     assertThat(imageDetails).isNotNull();
     assertThat(imageDetails.getName()).isEqualTo("server/busybox");
@@ -731,7 +732,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
-    doNothing().when(managerDecryptionService).decrypt(any(), any());
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     ImageDetails imageDetails = artifactCollectionUtils.fetchContainerImageDetails(artifact, WORKFLOW_EXECUTION_ID);
     assertThat(imageDetails).isNotNull();
     assertThat(imageDetails.getName()).isEqualTo("nexusUrl/busybox");
@@ -982,7 +983,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
             .withAccountId(ACCOUNT_ID)
             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    doNothing().when(managerDecryptionService).decrypt(any(), any());
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     String dockerConfig = artifactCollectionUtils.getDockerConfig(ARTIFACT_STREAM_ID);
     assertThat(dockerConfig).isEqualTo("");
   }
@@ -1007,7 +1008,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
                                             .withAccountId(ACCOUNT_ID)
                                             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    doNothing().when(managerDecryptionService).decrypt(any(), any());
+    doNothing().when(managerDecryptionService).decrypt(any(EncryptableSetting.class), any());
     String dockerConfig = artifactCollectionUtils.getDockerConfig(ARTIFACT_STREAM_ID);
     assertThat(dockerConfig).isNotEqualTo("");
   }

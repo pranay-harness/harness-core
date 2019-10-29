@@ -39,7 +39,7 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void initSplunkService() throws IllegalAccessException {
     SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());
-    FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(), true);
+    FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(null, null), true);
     splunkDelegateService.initSplunkService(config, Lists.emptyList());
     verify(splunkDelegateService, times(1)).initSplunkServiceWithToken(config);
     verify(splunkDelegateService, times(1)).initSplunkServiceWithBasicAuth(config);
@@ -50,7 +50,7 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
   public void initSplunkServiceOnlyToken() throws IllegalAccessException {
     SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());
     when(splunkDelegateService.initSplunkServiceWithToken(config)).thenReturn(Mockito.mock(Service.class));
-    FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(), true);
+    FieldUtils.writeField(splunkDelegateService, "encryptionService", new EncryptionServiceImpl(null, null), true);
     splunkDelegateService.initSplunkService(config, Lists.emptyList());
     verify(splunkDelegateService, times(1)).initSplunkServiceWithToken(config);
     verify(splunkDelegateService, times(1)).initSplunkServiceWithBasicAuth(config);

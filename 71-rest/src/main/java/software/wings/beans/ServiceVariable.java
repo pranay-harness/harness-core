@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -56,6 +57,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"encryptedValue", "encryptedBy"})
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ServiceVariableKeys")
 @Entity(value = "serviceVariables", noClassnameStored = true)
