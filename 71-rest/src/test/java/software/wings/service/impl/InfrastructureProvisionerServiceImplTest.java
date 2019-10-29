@@ -45,12 +45,14 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
@@ -63,9 +65,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
@@ -76,6 +80,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,6 +96,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock AwsCFHelperServiceManager awsCFHelperServiceManager;
   @Mock ServiceResourceService serviceResourceService;
   @Mock SettingsService settingService;
+  @Mock ResourceLookupService resourceLookupService;
+  @Mock AppService appService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Test
@@ -389,5 +396,45 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThat(idToSettingAttributeMapping).hasSize(2);
     assertThat(idToSettingAttributeMapping.get("id1")).isEqualTo(settingAttribute1);
     assertThat(idToSettingAttributeMapping.get("id2")).isEqualTo(settingAttribute2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldListDetails() {
+    InfrastructureProvisionerServiceImpl ipService = spy(new InfrastructureProvisionerServiceImpl());
+    Reflect.on(ipService).set("resourceLookupService", resourceLookupService);
+    Reflect.on(ipService).set("appService", appService);
+    PageRequest<InfrastructureProvisioner> infraProvisionerPageRequest = new PageRequest<>();
+    PageResponse<InfrastructureProvisioner> infraProvisionerPageResponse = new PageResponse<>();
+    TerraformInfrastructureProvisioner provisioner =
+        TerraformInfrastructureProvisioner.builder()
+            .sourceRepoSettingId("settingId")
+            .mappingBlueprints(
+                Collections.singletonList(InfrastructureMappingBlueprint.builder().serviceId("serviceId").build()))
+            .build();
+    infraProvisionerPageResponse.setResponse(Collections.singletonList(provisioner));
+    doReturn(infraProvisionerPageResponse)
+        .when(resourceLookupService)
+        .listWithTagFilters(infraProvisionerPageRequest, null, EntityType.PROVISIONER, true);
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
+    HashSet<String> settingAttributeIds = new HashSet<>(Collections.singletonList("settingId"));
+    Map<String, SettingAttribute> idToSettingAttributeMapping = new HashMap<>();
+    doReturn(idToSettingAttributeMapping)
+        .when(ipService)
+        .getIdToSettingAttributeMapping(ACCOUNT_ID, settingAttributeIds);
+    HashSet<String> servicesIds = new HashSet<>(Collections.singletonList("serviceId"));
+    Map<String, Service> idToServiceMapping = new HashMap<>();
+    doReturn(idToServiceMapping).when(ipService).getIdToServiceMapping(APP_ID, servicesIds);
+    InfrastructureProvisionerDetails infrastructureProvisionerDetails =
+        InfrastructureProvisionerDetails.builder().build();
+    doReturn(infrastructureProvisionerDetails)
+        .when(ipService)
+        .details(provisioner, idToSettingAttributeMapping, idToServiceMapping);
+
+    PageResponse<InfrastructureProvisionerDetails> infraProvisionerDetailsPageResponse =
+        ipService.listDetails(infraProvisionerPageRequest, true, null, APP_ID);
+
+    assertThat(infraProvisionerDetailsPageResponse.getResponse()).hasSize(1);
+    assertThat(infraProvisionerDetailsPageResponse.getResponse().get(0)).isEqualTo(infrastructureProvisionerDetails);
   }
 }
