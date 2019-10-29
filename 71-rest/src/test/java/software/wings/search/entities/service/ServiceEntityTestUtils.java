@@ -22,6 +22,8 @@ public class ServiceEntityTestUtils {
   private static DBObject getServiceChanges() {
     BasicDBObject basicDBObject = new BasicDBObject();
     basicDBObject.put("name", "edited_name");
+    basicDBObject.put("appId", "appId");
+
     return basicDBObject;
   }
 

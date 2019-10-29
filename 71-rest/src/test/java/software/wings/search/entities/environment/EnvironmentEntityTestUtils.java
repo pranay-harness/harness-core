@@ -21,6 +21,8 @@ public class EnvironmentEntityTestUtils {
   private static DBObject getEnvironmentChanges() {
     BasicDBObject basicDBObject = new BasicDBObject();
     basicDBObject.put("name", "edited_name");
+    basicDBObject.put("appId", "appId");
+
     return basicDBObject;
   }
 
