@@ -2,6 +2,9 @@ package software.wings.scheduler.artifact;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -13,7 +16,9 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
+import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,11 +35,16 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.service.intfc.PermitService;
 
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ArtifactCollectionHandler.class, ExceptionLogger.class, Logger.class})
+@PrepareForTest(
+    {ArtifactCollectionHandler.class, ExceptionLogger.class, Logger.class, PersistenceIteratorFactory.class})
 public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
+  @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private PermitService permitService;
   @InjectMocks @Inject private ArtifactCollectionHandler artifactCollectionHandler;
 
@@ -90,5 +100,18 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
     assertThat(wingsException).isNotNull();
     assertThat(wingsException.calcRecursiveContextObjects().values().size()).isEqualTo(2);
     assertThat(wingsException.calcRecursiveContextObjects().values()).contains(ACCOUNT_ID, ARTIFACT_STREAM_ID);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testRegisterIterators() {
+    // setup mock
+    when(persistenceIteratorFactory.createIterator(any(), any()))
+        .thenReturn(MongoPersistenceIterator.<ArtifactStream>builder().build());
+
+    ScheduledThreadPoolExecutor executor = mock(ScheduledThreadPoolExecutor.class);
+    artifactCollectionHandler.registerIterators(executor);
+
+    verify(executor).scheduleAtFixedRate(any(), anyLong(), anyLong(), any(TimeUnit.class));
   }
 }
