@@ -2,6 +2,7 @@ package io.harness.perpetualtask.example;
 
 import com.google.inject.Singleton;
 
+import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
@@ -13,8 +14,9 @@ import java.time.Instant;
 @Slf4j
 public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Override
-  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
-    SamplePerpetualTaskParams sampleParams = params.getCustomizedParams().unpack(SamplePerpetualTaskParams.class);
+  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+    SamplePerpetualTaskParams sampleParams =
+        AnyUtils.unpack(params.getCustomizedParams(), SamplePerpetualTaskParams.class);
     logger.info("Hello there !! {} ", sampleParams.getCountry());
     return true;
   }
