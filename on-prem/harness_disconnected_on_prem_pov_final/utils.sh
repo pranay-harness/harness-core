@@ -30,7 +30,6 @@ function stopDockerContainer(){
         echo "Killing container "$CONTAINERNAME
         docker kill $CONTAINERNAME
     fi
-
 }
 
 function stopContainers(){
