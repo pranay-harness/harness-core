@@ -26,6 +26,7 @@ public class InfraDefinitionSampleDataProvider {
             .envId(envId)
             .infrastructure(
                 DirectKubernetesInfrastructure.builder().cloudProviderId(cloudProviderId).namespace(namespace).build())
+            .sample(true)
             .build();
     return infrastructureDefinitionService.save(infrastructureDefinition, true);
   }
