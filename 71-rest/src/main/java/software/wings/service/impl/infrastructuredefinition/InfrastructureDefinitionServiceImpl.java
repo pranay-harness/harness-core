@@ -183,6 +183,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Slf4j
 public class InfrastructureDefinitionServiceImpl implements InfrastructureDefinitionService {
+  public static final String NULL = "null";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -634,7 +635,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
             && ExpressionEvaluator.containsVariablePattern((String) entry.getValue())) {
           String expression = (String) entry.getValue();
           String renderedValue = context.renderExpression(expression);
-          if ((expression.equals(renderedValue) || renderedValue == null)
+          if ((expression.equals(renderedValue) || renderedValue == null || NULL.equals(renderedValue))
               && !isIgnored(ignoredExpressions, expression)) {
             throw new InvalidRequestException(format("Unable to resolve expression : \"%s\"", expression), USER);
           }

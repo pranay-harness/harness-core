@@ -3,6 +3,7 @@ package software.wings.infra;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.expression.Expression;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +21,8 @@ import java.util.List;
 @Builder
 public class PcfInfraStructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   private String cloudProviderId;
-  @IncludeFieldMap private String organization;
-  @IncludeFieldMap private String space;
+  @Expression @IncludeFieldMap private String organization;
+  @Expression @IncludeFieldMap private String space;
   private List<String> tempRouteMap;
   private List<String> routeMaps;
 
