@@ -5,22 +5,17 @@ import io.harness.expression.LateBindingValue;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 
 @Builder
 public class SweepingOutputValue implements LateBindingValue {
-  private String name;
-  private String appId;
-  private String pipelineExecutionId;
-  private String workflowExecutionId;
-  private String phaseExecutionId;
-  private String stateExecutionId;
-
   private SweepingOutputService sweepingOutputService;
+
+  private SweepingOutputInquiry sweepingOutputInquiry;
 
   @Override
   public Object bind() {
-    SweepingOutput sweepingOutput = sweepingOutputService.find(
-        appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId);
+    SweepingOutput sweepingOutput = sweepingOutputService.find(sweepingOutputInquiry);
     if (sweepingOutput == null) {
       return null;
     }

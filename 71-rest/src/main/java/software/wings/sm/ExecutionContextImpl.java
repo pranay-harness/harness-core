@@ -96,6 +96,8 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
@@ -342,10 +344,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private Map<String, Artifact> getArtifactMapForPhase() {
-    SweepingOutput sweepingOutputInput = prepareSweepingOutputBuilder(Scope.PHASE).name("artifacts").build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
-        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-        sweepingOutputInput.getPhaseExecutionId(), null);
+    SweepingOutputInquiry sweepingOutputInput = prepareSweepingOutputInquiryBuilder().name("artifacts").build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput);
 
     if (result == null) {
       return null;
@@ -810,11 +810,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     contextMap.put("context",
         SweepingOutputFunctor.builder()
             .sweepingOutputService(sweepingOutputService)
-            .appId(sweepingOutput.getAppId())
-            .pipelineExecutionId(sweepingOutput.getPipelineExecutionId())
-            .workflowExecutionId(sweepingOutput.getWorkflowExecutionId())
-            .phaseExecutionId(sweepingOutput.getPhaseExecutionId())
-            .stateExecutionId(sweepingOutput.getStateExecutionId())
+            .sweepingOutputInquiryBuilder(SweepingOutputInquiry.builder()
+                                              .appId(sweepingOutput.getAppId())
+                                              .pipelineExecutionId(sweepingOutput.getPipelineExecutionId())
+                                              .workflowExecutionId(sweepingOutput.getWorkflowExecutionId())
+                                              .phaseExecutionId(sweepingOutput.getPhaseExecutionId())
+                                              .stateExecutionId(sweepingOutput.getStateExecutionId()))
             .build());
 
     contextMap.put("harnessShellUtils", SubstitutionFunctor.builder().build());
@@ -1038,6 +1039,27 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return sweepingOutputBuilder.uuid(generateUuid());
   }
 
+  @Override
+  public SweepingOutputInquiryBuilder prepareSweepingOutputInquiryBuilder() {
+    SweepingOutputInquiryBuilder builder = SweepingOutputInquiry.builder().appId(getAppId());
+
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    builder.pipelineExecutionId(workflowStandardParams == null || workflowStandardParams.getWorkflowElement() == null
+            ? null
+            : workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid());
+
+    String workflowExecutionId = getWorkflowExecutionId();
+    builder.workflowExecutionId(getWorkflowExecutionId());
+
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    String phaseExecutionId =
+        phaseElement == null ? null : workflowExecutionId + phaseElement.getUuid() + phaseElement.getPhaseName();
+    builder.phaseExecutionId(phaseExecutionId);
+
+    builder.stateExecutionId(stateExecutionInstance.getUuid());
+    return builder;
+  }
+
   public void populateNamespaceInInfraMappingElement(
       InfrastructureMapping infrastructureMapping, InfraMappingElementBuilder builder) {
     DeploymentType deploymentType =
@@ -1169,9 +1191,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (phaseElement == null) {
       return null;
     }
-    SweepingOutput sweepingOutput = sweepingOutputService.find(getAppId(),
-        InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid(), null,
-        phaseElement.getWorkflowExecutionId(), phaseElement.getPhaseExecutionIdForSweepingOutput(), null);
+    SweepingOutputInquiry sweepingOutputInquiry =
+        prepareSweepingOutputInquiryBuilder()
+            .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid())
+            .build();
+    SweepingOutput sweepingOutput = sweepingOutputService.find(sweepingOutputInquiry);
     return sweepingOutput == null ? null : (String) KryoUtils.asInflatedObject(sweepingOutput.getOutput());
   }
 }

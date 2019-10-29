@@ -254,9 +254,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
-    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
-             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
-        .thenReturn(sweepingOutput);
+    when(sweepingOutputService.find(any())).thenReturn(sweepingOutput);
 
     ServiceCommand serviceCommand =
         aServiceCommand()

@@ -10,22 +10,18 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import software.wings.exception.SweepingOutputException;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class SweepingOutputFunctor extends LateBindingMap {
-  private String appId;
-  private String pipelineExecutionId;
-  private String workflowExecutionId;
-  private String phaseExecutionId;
-  private String stateExecutionId;
+  SweepingOutputInquiryBuilder sweepingOutputInquiryBuilder;
 
   private transient SweepingOutputService sweepingOutputService;
 
   public Object output(String name) {
-    SweepingOutput sweepingOutput = sweepingOutputService.find(
-        appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId);
+    SweepingOutput sweepingOutput = sweepingOutputService.find(sweepingOutputInquiryBuilder.name(name).build());
     if (sweepingOutput == null) {
       throw new SweepingOutputException(format("Missing sweeping output %s", name));
     }

@@ -31,6 +31,7 @@ import software.wings.service.impl.aws.model.AwsAmiAllPhaseRollbackData;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
@@ -133,11 +134,9 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   }
 
   private boolean allPhaseRollbackDone(ExecutionContext context) {
-    SweepingOutput sweepingOutputInput =
-        context.prepareSweepingOutputBuilder(Scope.WORKFLOW).name(AWS_AMI_ALL_PHASE_ROLLBACK_NAME).build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
-        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-        sweepingOutputInput.getPhaseExecutionId(), sweepingOutputInput.getStateExecutionId());
+    SweepingOutputInquiry sweepingOutputInquiry =
+        context.prepareSweepingOutputInquiryBuilder().name(AWS_AMI_ALL_PHASE_ROLLBACK_NAME).build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInquiry);
     if (result == null) {
       return false;
     }

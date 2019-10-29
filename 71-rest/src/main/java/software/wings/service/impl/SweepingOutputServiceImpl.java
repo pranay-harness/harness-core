@@ -43,23 +43,21 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     wingsPersistence.saveIgnoringDuplicateKeys(asList(sweepingOutput));
   }
 
-  @Override
-  public SweepingOutput find(String appId, String name, String pipelineExecutionId, String workflowExecutionId,
-      String phaseExecutionId, String stateExecutionId) {
+  public SweepingOutput find(SweepingOutputInquiry sweepingOutputInquiry) {
     final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
-                                            .filter(SweepingOutputKeys.appId, appId)
-                                            .filter(SweepingOutputKeys.name, name);
+                                            .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
+                                            .filter(SweepingOutputKeys.name, sweepingOutputInquiry.getName());
 
     final CriteriaContainerImpl workflowCriteria =
-        query.criteria(SweepingOutputKeys.workflowExecutionId).equal(workflowExecutionId);
+        query.criteria(SweepingOutputKeys.workflowExecutionId).equal(sweepingOutputInquiry.getWorkflowExecutionId());
     final CriteriaContainerImpl phaseCriteria =
-        query.criteria(SweepingOutputKeys.phaseExecutionId).equal(phaseExecutionId);
+        query.criteria(SweepingOutputKeys.phaseExecutionId).equal(sweepingOutputInquiry.getPhaseExecutionId());
     final CriteriaContainerImpl stateCriteria =
-        query.criteria(SweepingOutputKeys.stateExecutionId).equal(stateExecutionId);
+        query.criteria(SweepingOutputKeys.stateExecutionId).equal(sweepingOutputInquiry.getStateExecutionId());
 
-    if (pipelineExecutionId != null) {
+    if (sweepingOutputInquiry.getPipelineExecutionId() != null) {
       final CriteriaContainerImpl pipelineCriteria =
-          query.criteria(SweepingOutputKeys.pipelineExecutionId).equal(pipelineExecutionId);
+          query.criteria(SweepingOutputKeys.pipelineExecutionId).equal(sweepingOutputInquiry.getPipelineExecutionId());
       query.or(pipelineCriteria, workflowCriteria, phaseCriteria, stateCriteria);
     } else {
       query.or(workflowCriteria, phaseCriteria, stateCriteria);

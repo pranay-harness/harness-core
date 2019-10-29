@@ -1,6 +1,8 @@
 package software.wings.service.intfc;
 
 import io.harness.beans.SweepingOutput;
+import lombok.Builder;
+import lombok.Value;
 
 import javax.validation.Valid;
 
@@ -9,6 +11,16 @@ public interface SweepingOutputService {
 
   void ensure(@Valid SweepingOutput sweepingOutput);
 
-  SweepingOutput find(String appId, String name, String pipelineExecutionId, String workflowExecutionId,
-      String phaseExecutionId, String stateExecutionId);
+  @Value
+  @Builder
+  class SweepingOutputInquiry {
+    String appId;
+    String name;
+    String pipelineExecutionId;
+    String workflowExecutionId;
+    String phaseExecutionId;
+    String stateExecutionId;
+  }
+
+  SweepingOutput find(SweepingOutputInquiry inquiry);
 }
