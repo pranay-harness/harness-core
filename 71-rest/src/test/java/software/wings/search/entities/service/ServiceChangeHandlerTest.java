@@ -1,4 +1,4 @@
-package software.wings.search.entities;
+package software.wings.search.entities.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -19,10 +19,9 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
-import software.wings.search.entities.pipeline.PipelineChangeHandler;
-import software.wings.search.entities.pipeline.PipelineSearchEntity;
-import software.wings.search.entities.pipeline.PipelineView.PipelineViewKeys;
+import software.wings.search.entities.SearchEntityTestUtils;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
+import software.wings.search.entities.service.ServiceView.ServiceViewKeys;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
@@ -30,10 +29,10 @@ import software.wings.search.framework.changestreams.ChangeType;
 import java.io.IOException;
 import java.util.Map;
 
-public class PipelineChangeHandlerTest extends WingsBaseTest {
+public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
-  @Inject @InjectMocks private PipelineChangeHandler pipelineChangeHandler;
+  @Inject @InjectMocks private ServiceChangeHandler serviceChangeHandler;
 
   private AuditHeader deleteAuditHeader;
   private AuditHeader nonDeleteAuditHeader;
@@ -45,25 +44,25 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     deleteAuditHeader =
-        SearchEntityTestUtils.createAuditHeader(EntityType.PIPELINE.name(), documentId, ChangeType.DELETE.name());
+        SearchEntityTestUtils.createAuditHeader(EntityType.SERVICE.name(), documentId, ChangeType.DELETE.name());
     assertThat(deleteAuditHeader).isNotNull();
     assertThat(deleteAuditHeader.getEntityAuditRecords()).isNotNull();
 
     nonDeleteAuditHeader =
-        SearchEntityTestUtils.createAuditHeader(EntityType.PIPELINE.name(), documentId, ChangeType.INSERT.name());
+        SearchEntityTestUtils.createAuditHeader(EntityType.SERVICE.name(), documentId, ChangeType.INSERT.name());
     assertThat(nonDeleteAuditHeader).isNotNull();
     assertThat(nonDeleteAuditHeader.getEntityAuditRecords()).isNotNull();
 
     deleteChangeEvent = SearchEntityTestUtils.createAuditHeaderChangeEvent(AuditHeader.class, deleteAuditHeader,
-        ChangeType.UPDATE, EntityType.PIPELINE.name(), Type.DELETE.name(), documentId);
+        ChangeType.UPDATE, EntityType.SERVICE.name(), Type.DELETE.name(), documentId);
     assertThat(deleteChangeEvent).isNotNull();
 
     nonDeleteChangeEvent = SearchEntityTestUtils.createAuditHeaderChangeEvent(AuditHeader.class, nonDeleteAuditHeader,
-        ChangeType.UPDATE, EntityType.PIPELINE.name(), Type.CREATE.name(), documentId);
+        ChangeType.UPDATE, EntityType.SERVICE.name(), Type.CREATE.name(), documentId);
     assertThat(nonDeleteChangeEvent).isNotNull();
 
     nonDeleteEntityAuditRecord =
-        SearchEntityTestUtils.createEntityAuditRecord(EntityType.PIPELINE.name(), documentId, ChangeType.INSERT.name());
+        SearchEntityTestUtils.createEntityAuditRecord(EntityType.SERVICE.name(), documentId, ChangeType.INSERT.name());
     assertThat(nonDeleteEntityAuditRecord).isNotNull();
   }
 
@@ -71,20 +70,20 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Owner(emails = UJJAWAL)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
-    boolean isSuccessful = pipelineChangeHandler.handleChange(deleteChangeEvent);
+    boolean isSuccessful = serviceChangeHandler.handleChange(deleteChangeEvent);
     assertThat(isSuccessful).isNotNull();
     assertThat(isSuccessful).isTrue();
 
     Map<String, Object> auditViewMap =
         relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
 
-    when(searchDao.addTimestamp(PipelineSearchEntity.TYPE, PipelineViewKeys.auditTimestamps, documentId,
+    when(searchDao.addTimestamp(ServiceSearchEntity.TYPE, ServiceViewKeys.auditTimestamps, documentId,
              nonDeleteAuditHeader.getCreatedAt(), 7))
         .thenReturn(true);
     when(searchDao.appendToListInSingleDocument(
-             PipelineSearchEntity.TYPE, PipelineViewKeys.audits, documentId, auditViewMap, 3))
+             ServiceSearchEntity.TYPE, ServiceViewKeys.audits, documentId, auditViewMap, 3))
         .thenReturn(true);
-    boolean result = pipelineChangeHandler.handleChange(nonDeleteChangeEvent);
+    boolean result = serviceChangeHandler.handleChange(nonDeleteChangeEvent);
     assertThat(result).isNotNull();
     assertThat(result).isTrue();
   }

@@ -1,4 +1,4 @@
-package software.wings.search.entities;
+package software.wings.search.entities.related;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.mongodb.BasicDBObject;

@@ -1,5 +1,7 @@
-package software.wings.search.entities;
+package software.wings.search.entities.application;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.search.framework.changestreams.ChangeEvent;
@@ -15,6 +17,12 @@ public class ApplicationEntityTestUtils {
     return application;
   }
 
+  public static DBObject getApplicationChanges() {
+    BasicDBObject basicDBObject = new BasicDBObject();
+    basicDBObject.put("name", "edited_name");
+    return basicDBObject;
+  }
+
   public static ChangeEvent createApplicationChangeEvent(Application application, ChangeType changeType) {
     ChangeEventBuilder changeEventBuilder = ChangeEvent.builder();
     changeEventBuilder = changeEventBuilder.changeType(changeType)
@@ -22,6 +30,10 @@ public class ApplicationEntityTestUtils {
                              .token("token")
                              .uuid(application.getUuid())
                              .entityType(Application.class);
+
+    if (changeType.equals(ChangeType.UPDATE)) {
+      changeEventBuilder = changeEventBuilder.changes(getApplicationChanges());
+    }
     return changeEventBuilder.build();
   }
 }
