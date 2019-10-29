@@ -133,6 +133,7 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
@@ -144,6 +145,7 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.AppDynamicsState;
@@ -233,6 +235,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private CVActivityLogService cvActivityLogService;
   @Inject private CVTaskService cvTaskService;
   @Inject private DataCollectionInfoService dataCollectionInfoService;
+  @Inject private StateExecutionService stateExecutionService;
 
   private static final int PAGE_LIMIT = 999;
   private static final int START_OFFSET = 0;
@@ -2466,5 +2469,88 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         stateExecutionMap.size() == 1, "more than one entries in the stateExecutionMap for " + stateExecutionId);
 
     return (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+  }
+
+  @Override
+  public List<CVCertifiedDetailsForWorkflowState> getCVCertifiedDetailsForWorkflow(
+      String accountId, String appId, String workflowExecutionId) {
+    return getStateExecutionsFromCVMetadataList(
+        accountId, appId, ContinuousVerificationExecutionMetaDataKeys.workflowExecutionId, workflowExecutionId);
+  }
+
+  @Override
+  public List<CVCertifiedDetailsForWorkflowState> getCVCertifiedDetailsForPipeline(
+      String accountId, String appId, String pipelineExecutionId) {
+    return getStateExecutionsFromCVMetadataList(
+        accountId, appId, ContinuousVerificationExecutionMetaDataKeys.pipelineExecutionId, pipelineExecutionId);
+  }
+
+  private List<CVCertifiedDetailsForWorkflowState> getStateExecutionsFromCVMetadataList(
+      String accountId, String appId, String fieldName, String fieldValue) {
+    List<ContinuousVerificationExecutionMetaData> cvList = new ArrayList<>();
+    List<CVCertifiedDetailsForWorkflowState> cvCertifiedList = new ArrayList<>();
+    try (HIterator<ContinuousVerificationExecutionMetaData> cvListIterator =
+             new HIterator<>(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+                                 .filter(fieldName, fieldValue)
+                                 .filter(ContinuousVerificationExecutionMetaDataKeys.accountId, accountId)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.stateExecutionId, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.phaseName, true)
+                                 .project("appId", true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.appName, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.workflowId, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.workflowExecutionId, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.workflowName, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.pipelineId, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.pipelineExecutionId, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.pipelineName, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.serviceId, true)
+                                 .project(ContinuousVerificationExecutionMetaDataKeys.serviceName, true)
+                                 .fetch())) {
+      while (cvListIterator.hasNext()) {
+        cvList.add(cvListIterator.next());
+      }
+    }
+
+    if (isNotEmpty(cvList)) {
+      List<String> stateExecutionIds = new ArrayList<>();
+      Map<String, CVCertifiedDetailsForWorkflowState> stateExecIdCVCertifiedMap = new HashMap<>();
+      cvList.forEach(cvMetadata -> {
+        stateExecutionIds.add(cvMetadata.getStateExecutionId());
+        stateExecIdCVCertifiedMap.put(cvMetadata.getStateExecutionId(),
+            CVCertifiedDetailsForWorkflowState.builder()
+                .phaseName(cvMetadata.getPhaseName())
+                .workflowId(cvMetadata.getWorkflowId())
+                .workflowExecutionId(cvMetadata.getWorkflowExecutionId())
+                .workflowName(cvMetadata.getWorkflowName())
+                .pipelineId(cvMetadata.getPipelineId())
+                .pipelineExecutionId(cvMetadata.getPipelineExecutionId())
+                .pipelineName(cvMetadata.getPipelineName())
+                .stateExecutionId(cvMetadata.getStateExecutionId())
+                .build());
+      });
+      PageRequest<StateExecutionInstance> stateExecutionInstancePageRequest =
+          PageRequestBuilder.aPageRequest()
+              .addFilter(StateExecutionInstanceKeys.uuid, Operator.IN, stateExecutionIds.toArray())
+              .addFilter(StateExecutionInstanceKeys.appId, Operator.EQ, appId)
+              .addFieldsIncluded(StateExecutionInstanceKeys.uuid, StateExecutionInstanceKeys.stateType,
+                  StateExecutionInstanceKeys.status, StateExecutionInstanceKeys.stateName,
+                  StateExecutionInstanceKeys.executionName)
+              .build();
+
+      PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse =
+          stateExecutionService.list(stateExecutionInstancePageRequest);
+
+      List<StateExecutionInstance> cvStates = stateExecutionInstancePageResponse.getResponse();
+
+      cvStates.forEach(state -> {
+        CVCertifiedDetailsForWorkflowState cvCertifiedDetailsForWorkflowState =
+            stateExecIdCVCertifiedMap.get(state.getUuid());
+        if (cvCertifiedDetailsForWorkflowState != null) {
+          cvCertifiedDetailsForWorkflowState.setExecutionDetails(state);
+          cvCertifiedList.add(cvCertifiedDetailsForWorkflowState);
+        }
+      });
+    }
+    return cvCertifiedList;
   }
 }

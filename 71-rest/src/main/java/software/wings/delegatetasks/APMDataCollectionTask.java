@@ -265,7 +265,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return output;
     }
 
-    private String collect(Call<Object> request, String urlToLog) {
+    private String collect(Call<Object> request, String urlToLog, String bodyToLog) {
       Response<Object> response;
       try {
         if (urlToLog.contains("api_key")) {
@@ -283,12 +283,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         apiCallLog.addFieldToRequest(
             ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        if (request.request().body() != null) {
-          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                           .name("body")
-                                           .type(FieldType.TEXT)
-                                           .value(request.request().body().toString())
-                                           .build());
+        if (bodyToLog != null) {
+          apiCallLog.addFieldToRequest(
+              ThirdPartyApiCallField.builder().name("body").type(FieldType.TEXT).value(bodyToLog).build());
         }
         try {
           response = request.execute();
@@ -363,7 +360,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             callabels.add(
                 ()
                     -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
-                        collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap), baseUrl + url),
+                        collect(
+                            getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap), baseUrl + url, null),
                         metricInfos));
 
           } else {
@@ -373,7 +371,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                       -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
                           collect(getAPMRestClient(baseUrl).postCollect(
                                       url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap()),
-                              baseUrl + url),
+                              baseUrl + url, resolvedBody),
                           metricInfos));
             });
           }
@@ -389,7 +387,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 -> callabels.add(()
                                      -> new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME,
                                          collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
-                                             baseUrl + curUrl),
+                                             baseUrl + curUrl, null),
                                          metricInfos)));
           }
         } else {
@@ -407,7 +405,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
                               collect(
                                   getAPMRestClient(baseUrl).postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap),
-                                  baseUrl + curUrl),
+                                  baseUrl + curUrl, resolvedBody),
                               metricInfos)));
             } else {
               curUrls.forEach(curUrl
@@ -415,7 +413,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
                               collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap),
-                                  baseUrl + curUrl),
+                                  baseUrl + curUrl, null),
                               metricInfos)));
             }
           }
@@ -431,7 +429,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                       ()
                           -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
                               collect(getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap),
-                                  baseUrl + curUrls.get(index)),
+                                  baseUrl + curUrls.get(index), null),
                               metricInfos)));
         } else {
           IntStream.range(0, curUrls.size()).forEach(index -> {
@@ -441,7 +439,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                         -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
                             collect(getAPMRestClient(baseUrl).postCollect(curUrls.get(index), headersBiMap,
                                         optionsBiMap, new JSONObject(resolvedBody).toMap()),
-                                baseUrl + curUrls.get(index)),
+                                baseUrl + curUrls.get(index), resolvedBody),
                             metricInfos)));
           });
         }

@@ -19,6 +19,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.CVCertifiedDetailsForWorkflowState;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
@@ -27,6 +28,7 @@ import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.Instant;
+import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -130,5 +132,23 @@ public class ContinuousVerificationResource {
       @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
     return new RestResponse<>(
         cvManagerService.createCVTask247(cvConfigId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_CV_CERTIFIED_DETAILS_WORKFLOW)
+  @Timed
+  public RestResponse<List<CVCertifiedDetailsForWorkflowState>> getCVCertifiedLabelsForWorkflow(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(cvManagerService.getCVCertifiedDetailsForWorkflow(accountId, appId, workflowExecutionId));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_CV_CERTIFIED_DETAILS_PIPELINE)
+  @Timed
+  public RestResponse<List<CVCertifiedDetailsForWorkflowState>> getCVCertifiedLabelsForPipeline(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("pipelineExecutionId") String pipelineExecutionId) {
+    return new RestResponse<>(cvManagerService.getCVCertifiedDetailsForWorkflow(accountId, appId, pipelineExecutionId));
   }
 }
