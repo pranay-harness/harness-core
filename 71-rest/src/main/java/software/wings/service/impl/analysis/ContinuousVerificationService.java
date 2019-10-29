@@ -68,4 +68,10 @@ public interface ContinuousVerificationService {
   boolean createCVTask247(String cvTaskId, Instant startTime, Instant endTime);
 
   VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId);
+
+  List<CVCertifiedDetailsForWorkflowState> getCVCertifiedDetailsForWorkflow(
+      String accountId, String appId, String workflowExecutionId);
+
+  List<CVCertifiedDetailsForWorkflowState> getCVCertifiedDetailsForPipeline(
+      String accountId, String appId, String pipelineExecutionId);
 }

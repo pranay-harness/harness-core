@@ -77,6 +77,8 @@ public class VerificationConstants {
   public static final String GET_SAMPLE_FEEDBACK_L2 = "/sample-feedback-l2";
   public static final String GET_L2_TO_CLASSIFY = "/l2-records-to-label";
   public static final String SAVE_LABELED_L2_FEEDBACK = "/save-labeled-feedback-l2";
+  public static final String GET_CV_CERTIFIED_DETAILS_WORKFLOW = "/cv-certified-details-workflow";
+  public static final String GET_CV_CERTIFIED_DETAILS_PIPELINE = "/cv-certified-details-pipeline";
   public static final String LAMBDA_HOST_NAME = "LAMBDA_HOST";
   public static final String DEFAULT_GROUP_NAME = "default";
   public static final String ECS_HOST_NAME = "ECS_HOST";
