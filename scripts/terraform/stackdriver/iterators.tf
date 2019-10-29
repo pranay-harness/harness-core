@@ -6,6 +6,11 @@ resource "google_logging_metric" "iterators_working_on_entity" {
     metric_kind = "DELTA"
     value_type = "INT64"
     labels {
+      key = "account"
+      value_type = "STRING"
+      description = "The account the entity belongs"
+    }
+    labels {
       key = "entity"
       value_type = "STRING"
       description = "The class of the entity to operate over"
@@ -13,7 +18,7 @@ resource "google_logging_metric" "iterators_working_on_entity" {
     labels {
       key = "thread_pool"
       value_type = "STRING"
-      description = "The class of the entity to operate over"
+      description = "The thread pool the entity is processed in"
     }
   }
   label_extractors = {
@@ -39,7 +44,7 @@ resource "google_logging_metric" "iterators_delays" {
       description = "The class of the entity to operate over"
     }
   }
-  value_extractor = "REGEXP_EXTRACT(jsonPayload.message, \".*?with delay ([0-9]+).*?\")"
+  value_extractor = "EXTRACT(jsonPayload.harness.delay)"
   bucket_options {
     explicit_buckets {
       bounds = [1000, 30000, 60000, 300000, 1500000, 3000000, 6000000]

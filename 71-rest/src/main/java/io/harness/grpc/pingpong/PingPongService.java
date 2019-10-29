@@ -10,8 +10,8 @@ import io.harness.event.PingPongServiceGrpc.PingPongServiceImplBase;
 import io.harness.event.Pong;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.service.impl.AccountLogContext;
 
 @Slf4j
 public class PingPongService extends PingPongServiceImplBase {

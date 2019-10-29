@@ -22,6 +22,7 @@ import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -35,7 +36,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.TaskType;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.AccountLogContext;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 

@@ -251,11 +251,14 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         long startTime = currentTimeMillis();
 
         long delay = nextIteration == null ? 0 : startTime - nextIteration;
-        if (delay < acceptableNoAlertDelay.toMillis()) {
-          logger.info("Working on entity with delay {}", delay);
-        } else {
-          logger.error("Working on entity with delay {} which is more than the acceptable {}", delay,
-              acceptableNoAlertDelay.toMillis());
+
+        try (DelayLogContext ignore2 = new DelayLogContext(delay, OVERRIDE_ERROR)) {
+          if (delay < acceptableNoAlertDelay.toMillis()) {
+            logger.info("Working on entity");
+          } else {
+            logger.error(
+                "Working on entity but the delay is more than the acceptable {}", acceptableNoAlertDelay.toMillis());
+          }
         }
 
         try {

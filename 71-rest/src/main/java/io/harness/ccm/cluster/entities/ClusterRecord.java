@@ -1,6 +1,7 @@
 package io.harness.ccm.cluster.entities;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -11,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.entityinterface.AccountAccess;
 
 @Data
 @Builder

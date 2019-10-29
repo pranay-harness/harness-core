@@ -8,6 +8,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.migration.MigrationJobInstance;
 import io.harness.mongo.MorphiaMove;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAccess;
@@ -29,6 +30,7 @@ import java.util.Set;
 public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(AccountAccess.class);
     set.add(CreatedAtAccess.class);
     set.add(CreatedAtAware.class);
     set.add(CreatedByAccess.class);

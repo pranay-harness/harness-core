@@ -99,6 +99,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
 import io.harness.network.Http;
+import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
