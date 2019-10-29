@@ -18,9 +18,13 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
@@ -48,7 +52,12 @@ import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Builder;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -57,7 +66,10 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateSt
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
@@ -66,6 +78,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock WingsPersistence wingsPersistence;
@@ -76,6 +89,8 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock InfrastructureMappingService infrastructureMappingService;
   @Mock FeatureFlagService featureFlagService;
   @Mock AwsCFHelperServiceManager awsCFHelperServiceManager;
+  @Mock ServiceResourceService serviceResourceService;
+  @Mock SettingsService settingService;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Test
@@ -330,5 +345,49 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(properties, contextMap, true, TerraformInfrastructureProvisioner.VARIABLE_KEY);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetIdToServiceMapping() {
+    PageRequest<Service> servicePageRequest = new PageRequest<>();
+    servicePageRequest.addFilter(Service.APP_ID_KEY, Operator.EQ, APP_ID);
+    Set<String> serviceIds = Sets.newHashSet(Arrays.asList("id1", "id2"));
+    servicePageRequest.addFilter(ServiceKeys.uuid, Operator.IN, serviceIds.toArray());
+    PageResponse<Service> services = new PageResponse<>();
+    Service service1 = Service.builder().name("service1").uuid("id1").build();
+    Service service2 = Service.builder().name("service2").uuid("id2").build();
+    services.setResponse(Arrays.asList(service1, service2));
+    when(serviceResourceService.list(servicePageRequest, false, false, false, null)).thenReturn(services);
+
+    Map<String, Service> idToServiceMapping = ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+                                                  .getIdToServiceMapping(APP_ID, serviceIds);
+
+    assertThat(idToServiceMapping).hasSize(2);
+    assertThat(idToServiceMapping.get("id1")).isEqualTo(service1);
+    assertThat(idToServiceMapping.get("id2")).isEqualTo(service2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetIdToSettingAttributeMapping() {
+    PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
+    settingAttributePageRequest.addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, ACCOUNT_ID);
+    settingAttributePageRequest.addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT);
+    Set<String> settingAttributeIds = Sets.newHashSet(Arrays.asList("id1", "id2"));
+    settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
+    PageResponse<SettingAttribute> settingAttributePageResponse = new PageResponse<>();
+    SettingAttribute settingAttribute1 = Builder.aSettingAttribute().withUuid("id1").build();
+    SettingAttribute settingAttribute2 = Builder.aSettingAttribute().withUuid("id2").build();
+    settingAttributePageResponse.setResponse(Arrays.asList(settingAttribute1, settingAttribute2));
+    when(settingService.list(settingAttributePageRequest, null, null)).thenReturn(settingAttributePageResponse);
+
+    Map<String, SettingAttribute> idToSettingAttributeMapping =
+        ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+            .getIdToSettingAttributeMapping(ACCOUNT_ID, settingAttributeIds);
+
+    assertThat(idToSettingAttributeMapping).hasSize(2);
+    assertThat(idToSettingAttributeMapping.get("id1")).isEqualTo(settingAttribute1);
+    assertThat(idToSettingAttributeMapping.get("id2")).isEqualTo(settingAttribute2);
   }
 }
