@@ -1,4 +1,4 @@
-package software.wings.search.entities;
+package software.wings.search.entities.deployment;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -22,8 +22,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.WorkflowExecution;
-import software.wings.search.entities.deployment.DeploymentChangeHandler;
-import software.wings.search.entities.deployment.DeploymentSearchEntity;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;

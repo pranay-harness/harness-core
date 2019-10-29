@@ -1,4 +1,4 @@
-package software.wings.search.entities;
+package software.wings.search.entities.environment;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -19,10 +19,9 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
+import software.wings.search.entities.SearchEntityTestUtils;
+import software.wings.search.entities.environment.EnvironmentView.EnvironmentViewKeys;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
-import software.wings.search.entities.workflow.WorkflowChangeHandler;
-import software.wings.search.entities.workflow.WorkflowSearchEntity;
-import software.wings.search.entities.workflow.WorkflowView.WorkflowViewKeys;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
@@ -30,10 +29,10 @@ import software.wings.search.framework.changestreams.ChangeType;
 import java.io.IOException;
 import java.util.Map;
 
-public class WorkflowChangeHandlerTest extends WingsBaseTest {
+public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
-  @Inject @InjectMocks private WorkflowChangeHandler workflowChangeHandler;
+  @Inject @InjectMocks private EnvironmentChangeHandler environmentChangeHandler;
 
   private AuditHeader deleteAuditHeader;
   private AuditHeader nonDeleteAuditHeader;
@@ -44,47 +43,47 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
 
   @Before
   public void setup() throws IOException {
+    nonDeleteEntityAuditRecord = SearchEntityTestUtils.createEntityAuditRecord(
+        EntityType.ENVIRONMENT.name(), documentId, ChangeType.INSERT.name());
+    assertThat(nonDeleteEntityAuditRecord).isNotNull();
+
     deleteAuditHeader =
-        SearchEntityTestUtils.createAuditHeader(EntityType.WORKFLOW.name(), documentId, ChangeType.DELETE.name());
+        SearchEntityTestUtils.createAuditHeader(EntityType.ENVIRONMENT.name(), documentId, ChangeType.DELETE.name());
     assertThat(deleteAuditHeader).isNotNull();
     assertThat(deleteAuditHeader.getEntityAuditRecords()).isNotNull();
 
     nonDeleteAuditHeader =
-        SearchEntityTestUtils.createAuditHeader(EntityType.WORKFLOW.name(), documentId, ChangeType.INSERT.name());
+        SearchEntityTestUtils.createAuditHeader(EntityType.ENVIRONMENT.name(), documentId, ChangeType.INSERT.name());
     assertThat(nonDeleteAuditHeader).isNotNull();
     assertThat(nonDeleteAuditHeader.getEntityAuditRecords()).isNotNull();
 
     deleteChangeEvent = SearchEntityTestUtils.createAuditHeaderChangeEvent(AuditHeader.class, deleteAuditHeader,
-        ChangeType.UPDATE, EntityType.WORKFLOW.name(), Type.DELETE.name(), documentId);
+        ChangeType.UPDATE, EntityType.ENVIRONMENT.name(), Type.DELETE.name(), documentId);
     assertThat(deleteChangeEvent).isNotNull();
 
     nonDeleteChangeEvent = SearchEntityTestUtils.createAuditHeaderChangeEvent(AuditHeader.class, nonDeleteAuditHeader,
-        ChangeType.UPDATE, EntityType.WORKFLOW.name(), Type.CREATE.name(), documentId);
+        ChangeType.UPDATE, EntityType.ENVIRONMENT.name(), Type.CREATE.name(), documentId);
     assertThat(nonDeleteChangeEvent).isNotNull();
-
-    nonDeleteEntityAuditRecord =
-        SearchEntityTestUtils.createEntityAuditRecord(EntityType.WORKFLOW.name(), documentId, ChangeType.INSERT.name());
-    assertThat(nonDeleteEntityAuditRecord).isNotNull();
   }
 
   @Test
   @Owner(emails = UJJAWAL)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
-    boolean isSuccessful = workflowChangeHandler.handleChange(deleteChangeEvent);
+    boolean isSuccessful = environmentChangeHandler.handleChange(deleteChangeEvent);
     assertThat(isSuccessful).isNotNull();
     assertThat(isSuccessful).isTrue();
 
     Map<String, Object> auditViewMap =
         relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
 
-    when(searchDao.addTimestamp(WorkflowSearchEntity.TYPE, WorkflowViewKeys.auditTimestamps, documentId,
+    when(searchDao.addTimestamp(EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.auditTimestamps, documentId,
              nonDeleteAuditHeader.getCreatedAt(), 7))
         .thenReturn(true);
     when(searchDao.appendToListInSingleDocument(
-             WorkflowSearchEntity.TYPE, WorkflowViewKeys.audits, documentId, auditViewMap, 3))
+             EnvironmentSearchEntity.TYPE, EnvironmentViewKeys.audits, documentId, auditViewMap, 3))
         .thenReturn(true);
-    boolean result = workflowChangeHandler.handleChange(nonDeleteChangeEvent);
+    boolean result = environmentChangeHandler.handleChange(nonDeleteChangeEvent);
     assertThat(result).isNotNull();
     assertThat(result).isTrue();
   }

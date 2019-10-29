@@ -1,4 +1,4 @@
-package software.wings.search.entities;
+package software.wings.search.entities.deployment;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;

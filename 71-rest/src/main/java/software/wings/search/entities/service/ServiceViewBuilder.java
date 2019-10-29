@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Singleton
-public class ServiceViewBuilder {
+class ServiceViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   private static final int DAYS_TO_RETAIN = 7;
@@ -191,7 +191,7 @@ public class ServiceViewBuilder {
     }
   }
 
-  public ServiceView createServiceView(Service service) {
+  ServiceView createServiceView(Service service) {
     if (wingsPersistence.get(Application.class, service.getAppId()) != null) {
       ServiceView serviceView = createBaseView(service);
       setAuditsAndAuditTimestamps(service, serviceView);

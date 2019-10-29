@@ -1,4 +1,4 @@
-package software.wings.search.entities;
+package software.wings.search.entities.environment;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

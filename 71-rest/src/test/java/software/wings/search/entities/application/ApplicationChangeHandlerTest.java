@@ -1,4 +1,4 @@
-package software.wings.search.entities;
+package software.wings.search.entities.application;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,27 +27,23 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
-import software.wings.search.entities.application.ApplicationChangeHandler;
-import software.wings.search.entities.application.ApplicationSearchEntity;
-import software.wings.search.entities.application.ApplicationView;
+import software.wings.search.entities.SearchEntityTestUtils;
 import software.wings.search.entities.application.ApplicationView.ApplicationViewKeys;
-import software.wings.search.entities.application.ApplicationViewBuilder;
+import software.wings.search.entities.environment.EnvironmentEntityTestUtils;
+import software.wings.search.entities.pipeline.PipelineEntityTestUtils;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
-import software.wings.search.entities.service.ServiceViewBuilder;
+import software.wings.search.entities.service.ServiceEntityTestUtils;
+import software.wings.search.entities.workflow.WorkflowEntityTestUtils;
 import software.wings.search.framework.EntityInfo.EntityInfoKeys;
 import software.wings.search.framework.SearchDao;
-import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 
 public class ApplicationChangeHandlerTest extends WingsBaseTest {
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
-  @Inject private ApplicationViewBuilder applicationViewBuilder;
-  @Inject private ServiceViewBuilder serviceViewBuilder;
   @Mock private SearchDao searchDao;
 
   @Inject @InjectMocks private ApplicationChangeHandler applicationChangeHandler;
@@ -141,13 +137,9 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testApplicationInsertChange() {
-    ApplicationView applicationViewInsert = applicationViewBuilder.createApplicationView(application, false);
-    Optional<String> applicationViewInsertJson = SearchEntityUtils.convertToJson(applicationViewInsert);
-
     ChangeEvent applicationInsertChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.INSERT);
-    when(searchDao.upsertDocument(ApplicationSearchEntity.TYPE, documentId, applicationViewInsertJson.get()))
-        .thenReturn(true);
+    when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(documentId), any())).thenReturn(true);
     boolean isInsertSuccessful = applicationChangeHandler.handleChange(applicationInsertChangeEvent);
     assertThat(isInsertSuccessful).isNotNull();
     assertThat(isInsertSuccessful).isTrue();
@@ -167,12 +159,9 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
-    ApplicationView applicationViewUpdate = applicationViewBuilder.createApplicationView(application, true);
-    Optional<String> applicationViewUpdateJson = SearchEntityUtils.convertToJson(applicationViewUpdate);
     ChangeEvent applicationUpdateChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.UPDATE);
-    when(searchDao.upsertDocument(ApplicationSearchEntity.TYPE, documentId, applicationViewUpdateJson.get()))
-        .thenReturn(true);
+    when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(documentId), any())).thenReturn(true);
     boolean isUpdateSuccessful = applicationChangeHandler.handleChange(applicationUpdateChangeEvent);
     assertThat(isUpdateSuccessful).isNotNull();
     assertThat(isUpdateSuccessful).isTrue();
