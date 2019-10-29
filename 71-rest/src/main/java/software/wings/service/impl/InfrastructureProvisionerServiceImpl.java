@@ -253,7 +253,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return wingsPersistence.query(InfrastructureProvisioner.class, requestBuilder.build());
   }
 
-  private InfrastructureProvisionerDetails details(InfrastructureProvisioner provisioner,
+  InfrastructureProvisionerDetails details(InfrastructureProvisioner provisioner,
       Map<String, SettingAttribute> idToSettingAttributeMapping, Map<String, Service> idToServiceMapping) {
     final InfrastructureProvisionerDetailsBuilder detailsBuilder =
         InfrastructureProvisionerDetails.builder()
