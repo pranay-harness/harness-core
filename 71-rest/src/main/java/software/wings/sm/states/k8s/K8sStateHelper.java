@@ -95,6 +95,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -438,10 +439,8 @@ public class K8sStateHelper {
   }
 
   public K8sElement getK8sElement(ExecutionContext context) {
-    SweepingOutput sweepingOutputInput = context.prepareSweepingOutputBuilder(Scope.WORKFLOW).name("k8s").build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
-        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-        sweepingOutputInput.getPhaseExecutionId(), sweepingOutputInput.getStateExecutionId());
+    SweepingOutputInquiry sweepingOutputInquiry = context.prepareSweepingOutputInquiryBuilder().name("k8s").build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInquiry);
     if (result == null) {
       return null;
     }

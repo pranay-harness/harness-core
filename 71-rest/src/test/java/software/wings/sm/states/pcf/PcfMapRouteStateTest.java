@@ -211,9 +211,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
-    when(sweepingOutputService.find(APP_ID, outputName, null, phaseElement.getWorkflowExecutionId(),
-             phaseElement.getPhaseExecutionIdForSweepingOutput(), null))
-        .thenReturn(sweepingOutput);
+    when(sweepingOutputService.find(any())).thenReturn(sweepingOutput);
     ServiceCommand serviceCommand =
         aServiceCommand()
             .withCommand(aCommand().withCommandType(CommandType.SETUP).withName("Setup Service Cluster").build())

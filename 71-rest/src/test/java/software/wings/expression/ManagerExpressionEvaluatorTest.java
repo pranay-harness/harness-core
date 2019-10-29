@@ -22,6 +22,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -107,15 +108,17 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
                                        .build());
 
-    Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                      .put("context",
-                                          SweepingOutputFunctor.builder()
-                                              .sweepingOutputService(sweepingOutputService)
-                                              .appId(appId)
-                                              .pipelineExecutionId(pipelineExecutionId)
-                                              .workflowExecutionId(followingWorkflowExecutionId)
-                                              .build())
-                                      .build();
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder()
+            .put("context",
+                SweepingOutputFunctor.builder()
+                    .sweepingOutputService(sweepingOutputService)
+                    .sweepingOutputInquiryBuilder(SweepingOutputInquiry.builder()
+                                                      .appId(appId)
+                                                      .pipelineExecutionId(pipelineExecutionId)
+                                                      .workflowExecutionId(followingWorkflowExecutionId))
+                    .build())
+            .build();
 
     assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").foo}", context)).isEqualTo("bar");
     assertThat(expressionEvaluator.substitute("${context.jenkins.foo}", context)).isEqualTo("bar");
@@ -143,16 +146,19 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
                                        .build());
 
-    Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                      .put("workflow",
-                                          SweepingOutputValue.builder()
-                                              .sweepingOutputService(sweepingOutputService)
-                                              .name("workflow")
-                                              .appId(appId)
-                                              .pipelineExecutionId(pipelineExecutionId)
-                                              .workflowExecutionId(followingWorkflowExecutionId)
-                                              .build())
-                                      .build();
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder()
+            .put("workflow",
+                SweepingOutputValue.builder()
+                    .sweepingOutputService(sweepingOutputService)
+                    .sweepingOutputInquiry(SweepingOutputInquiry.builder()
+                                               .name("workflow")
+                                               .appId(appId)
+                                               .pipelineExecutionId(pipelineExecutionId)
+                                               .workflowExecutionId(followingWorkflowExecutionId)
+                                               .build())
+                    .build())
+            .build();
 
     assertThat(expressionEvaluator.substitute("${workflow.foo}", context)).isEqualTo("bar");
   }

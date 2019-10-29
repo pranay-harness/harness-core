@@ -19,6 +19,7 @@ import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest.SpotInstCommandRequestBuilder;
 import software.wings.service.impl.spotinst.SpotinstAllPhaseRollbackData;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
@@ -74,11 +75,9 @@ public class SpotInstRollbackState extends SpotInstDeployState {
 
   @Override
   protected boolean allPhaseRollbackDone(ExecutionContext context) {
-    SweepingOutput sweepingOutputInput =
-        context.prepareSweepingOutputBuilder(Scope.WORKFLOW).name(ELASTI_GROUP_ALL_PHASE_ROLLBACK).build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput.getAppId(), sweepingOutputInput.getName(),
-        sweepingOutputInput.getPipelineExecutionId(), sweepingOutputInput.getWorkflowExecutionId(),
-        sweepingOutputInput.getPhaseExecutionId(), sweepingOutputInput.getStateExecutionId());
+    SweepingOutputInquiry sweepingOutputInquiry =
+        context.prepareSweepingOutputInquiryBuilder().name(ELASTI_GROUP_ALL_PHASE_ROLLBACK).build();
+    SweepingOutput result = sweepingOutputService.find(sweepingOutputInquiry);
     if (result == null) {
       return false;
     }
