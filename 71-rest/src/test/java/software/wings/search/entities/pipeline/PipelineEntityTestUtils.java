@@ -21,6 +21,8 @@ public class PipelineEntityTestUtils {
   private static DBObject getPipelineChanges() {
     BasicDBObject basicDBObject = new BasicDBObject();
     basicDBObject.put("name", "edited_name");
+    basicDBObject.put("appId", "appId");
+
     return basicDBObject;
   }
 

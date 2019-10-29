@@ -46,6 +46,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
     application.setUuid(appId);
     application.setName(appName);
     wingsPersistence.save(application);
+    assertThat(application).isNotNull();
 
     executionArgs = DeploymentEntityTestUtils.createExecutionArgs(WorkflowType.PIPELINE);
     assertThat(executionArgs).isNotNull();

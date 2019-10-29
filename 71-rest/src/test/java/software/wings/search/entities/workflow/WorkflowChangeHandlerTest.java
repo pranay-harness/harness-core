@@ -48,11 +48,11 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   @Inject @InjectMocks private WorkflowChangeHandler workflowChangeHandler;
 
-  private static final String APP_NAME = "ApplicationHandlerTestForApplication" + System.currentTimeMillis();
-  private static final String SERVICE_NAME = "ApplicationHandlerTestForService" + System.currentTimeMillis();
-  private static final String ENVIRONMENT_NAME = "ApplicationHandlerTestForEnvironment" + System.currentTimeMillis();
-  private static final String WORKFLOW_NAME = "ApplicationHandlerTestForWorkflow" + System.currentTimeMillis();
-  private static final String PIPELINE_NAME = "ApplicationHandlerTestForPipeline" + System.currentTimeMillis();
+  private static final String APP_NAME = "WorkflowHandlerTestForApplication" + System.currentTimeMillis();
+  private static final String SERVICE_NAME = "WorkflowHandlerTestForService" + System.currentTimeMillis();
+  private static final String ENVIRONMENT_NAME = "WorkflowHandlerTestForEnvironment" + System.currentTimeMillis();
+  private static final String WORKFLOW_NAME = "WorkflowHandlerTestForWorkflow" + System.currentTimeMillis();
+  private static final String PIPELINE_NAME = "WorkflowHandlerTestForPipeline" + System.currentTimeMillis();
 
   private AuditHeader deleteAuditHeader;
   private AuditHeader nonDeleteAuditHeader;
@@ -73,6 +73,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     application = ApplicationEntityTestUtils.createApplication(getAccount(AccountType.PAID), appId, APP_NAME);
+    wingsPersistence.save(application);
     assertThat(application).isNotNull();
 
     service = ServiceEntityTestUtils.createService(getAccount(AccountType.PAID), appId, serviceId, SERVICE_NAME);

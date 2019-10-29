@@ -21,6 +21,9 @@ public class WorkflowEntityTestUtils {
   private static DBObject getWorkflowChanges() {
     BasicDBObject basicDBObject = new BasicDBObject();
     basicDBObject.put("name", "edited_name");
+    basicDBObject.put("appId", "appId");
+    basicDBObject.put("envId", "envId");
+
     return basicDBObject;
   }
 

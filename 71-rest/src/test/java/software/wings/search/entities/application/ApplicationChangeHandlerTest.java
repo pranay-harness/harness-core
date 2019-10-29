@@ -73,21 +73,26 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     application = ApplicationEntityTestUtils.createApplication(getAccount(AccountType.PAID), documentId, APP_NAME);
+    wingsPersistence.save(application);
     assertThat(application).isNotNull();
 
     service = ServiceEntityTestUtils.createService(getAccount(AccountType.PAID), documentId, serviceId, SERVICE_NAME);
+    wingsPersistence.save(service);
     assertThat(service).isNotNull();
 
     environment = EnvironmentEntityTestUtils.createEnvironment(
         getAccount(AccountType.PAID), documentId, environmentId, ENVIRONMENT_NAME);
+    wingsPersistence.save(environment);
     assertThat(environment).isNotNull();
 
     workflow =
         WorkflowEntityTestUtils.createWorkflow(getAccount(AccountType.PAID), documentId, workflowId, WORKFLOW_NAME);
+    wingsPersistence.save(workflow);
     assertThat(workflow).isNotNull();
 
     pipeline =
         PipelineEntityTestUtils.createPipeline(getAccount(AccountType.PAID), documentId, pipelineId, PIPELINE_NAME);
+    wingsPersistence.save(pipeline);
     assertThat(pipeline).isNotNull();
 
     deleteAuditHeader =
@@ -130,7 +135,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              ApplicationSearchEntity.TYPE, ApplicationViewKeys.audits, documentId, auditViewMap, 3))
         .thenReturn(true);
     boolean result = applicationChangeHandler.handleChange(nonDeleteAuditHeaderChangeEvent);
-    assertThat(result).isNotNull();
     assertThat(result).isTrue();
   }
 
@@ -141,7 +145,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.INSERT);
     when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(documentId), any())).thenReturn(true);
     boolean isInsertSuccessful = applicationChangeHandler.handleChange(applicationInsertChangeEvent);
-    assertThat(isInsertSuccessful).isNotNull();
     assertThat(isInsertSuccessful).isTrue();
   }
 
@@ -152,7 +155,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.DELETE);
     when(searchDao.deleteDocument(ApplicationSearchEntity.TYPE, documentId)).thenReturn(true);
     boolean isDeleteSuccessful = applicationChangeHandler.handleChange(applicationDeleteChangeEvent);
-    assertThat(isDeleteSuccessful).isNotNull();
     assertThat(isDeleteSuccessful).isTrue();
   }
 
@@ -163,7 +165,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.UPDATE);
     when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(documentId), any())).thenReturn(true);
     boolean isUpdateSuccessful = applicationChangeHandler.handleChange(applicationUpdateChangeEvent);
-    assertThat(isUpdateSuccessful).isNotNull();
     assertThat(isUpdateSuccessful).isTrue();
   }
 
@@ -175,7 +176,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.services), eq(service.getAppId()), anyMap()))
         .thenReturn(true);
     boolean isInsertSuccessful = applicationChangeHandler.handleChange(serviceInsertChangeEvent);
-    assertThat(isInsertSuccessful).isNotNull();
     assertThat(isInsertSuccessful).isTrue();
   }
 
@@ -187,7 +187,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.services), any()))
         .thenReturn(true);
     boolean isDeleteSuccessful = applicationChangeHandler.handleChange(serviceDeleteChangeEvent);
-    assertThat(isDeleteSuccessful).isNotNull();
     assertThat(isDeleteSuccessful).isTrue();
   }
 
@@ -199,7 +198,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              anyString(), anyString(), eq(EntityInfoKeys.name)))
         .thenReturn(true);
     boolean isUpdateSuccessful = applicationChangeHandler.handleChange(serviceUpdateChangeEvent);
-    assertThat(isUpdateSuccessful).isNotNull();
     assertThat(isUpdateSuccessful).isTrue();
   }
 
@@ -212,7 +210,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(environment.getAppId()), anyMap()))
         .thenReturn(true);
     boolean isInsertSuccessful = applicationChangeHandler.handleChange(environmentInsertChangeEvent);
-    assertThat(isInsertSuccessful).isNotNull();
     assertThat(isInsertSuccessful).isTrue();
   }
 
@@ -225,7 +222,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.environments), any()))
         .thenReturn(true);
     boolean isDeleteSuccessful = applicationChangeHandler.handleChange(environmentDeleteChangeEvent);
-    assertThat(isDeleteSuccessful).isNotNull();
     assertThat(isDeleteSuccessful).isTrue();
   }
 
@@ -238,7 +234,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              anyString(), anyString(), eq(EntityInfoKeys.name)))
         .thenReturn(true);
     boolean isUpdateSuccessful = applicationChangeHandler.handleChange(environmentUpdateChangeEvent);
-    assertThat(isUpdateSuccessful).isNotNull();
     assertThat(isUpdateSuccessful).isTrue();
   }
 
@@ -251,7 +246,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.workflows), eq(workflow.getAppId()), anyMap()))
         .thenReturn(true);
     boolean isInsertSuccessful = applicationChangeHandler.handleChange(workflowInsertChangeEvent);
-    assertThat(isInsertSuccessful).isNotNull();
     assertThat(isInsertSuccessful).isTrue();
   }
 
@@ -264,7 +258,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.workflows), any()))
         .thenReturn(true);
     boolean isDeleteSuccessful = applicationChangeHandler.handleChange(workflowDeleteChangeEvent);
-    assertThat(isDeleteSuccessful).isNotNull();
     assertThat(isDeleteSuccessful).isTrue();
   }
 
@@ -277,7 +270,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              anyString(), anyString(), eq(EntityInfoKeys.name)))
         .thenReturn(true);
     boolean isUpdateSuccessful = applicationChangeHandler.handleChange(workflowUpdateChangeEvent);
-    assertThat(isUpdateSuccessful).isNotNull();
     assertThat(isUpdateSuccessful).isTrue();
   }
 
@@ -290,7 +282,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.pipelines), eq(pipeline.getAppId()), anyMap()))
         .thenReturn(true);
     boolean isInsertSuccessful = applicationChangeHandler.handleChange(pipelineInsertChangeEvent);
-    assertThat(isInsertSuccessful).isNotNull();
     assertThat(isInsertSuccessful).isTrue();
   }
 
@@ -303,7 +294,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.pipelines), any()))
         .thenReturn(true);
     boolean isDeleteSuccessful = applicationChangeHandler.handleChange(pipelineDeleteChangeEvent);
-    assertThat(isDeleteSuccessful).isNotNull();
     assertThat(isDeleteSuccessful).isTrue();
   }
 
@@ -316,7 +306,6 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
              anyString(), anyString(), eq(EntityInfoKeys.name)))
         .thenReturn(true);
     boolean isUpdateSuccessful = applicationChangeHandler.handleChange(pipelineUpdateChangeEvent);
-    assertThat(isUpdateSuccessful).isNotNull();
     assertThat(isUpdateSuccessful).isTrue();
   }
 }
