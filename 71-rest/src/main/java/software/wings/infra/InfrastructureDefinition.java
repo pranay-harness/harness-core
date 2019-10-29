@@ -59,6 +59,7 @@ public class InfrastructureDefinition implements PersistentEntity, UuidAware, Na
   @NotNull private InfraMappingInfrastructureProvider infrastructure;
   private List<String> scopedToServices;
   @NotNull private String envId;
+  private boolean sample;
 
   @JsonIgnore
   public InfrastructureMapping getInfraMapping() {

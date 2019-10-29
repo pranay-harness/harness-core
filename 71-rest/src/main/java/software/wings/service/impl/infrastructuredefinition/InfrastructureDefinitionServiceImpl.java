@@ -62,6 +62,7 @@ import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -83,6 +84,8 @@ import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -204,6 +207,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private Queue<PruneEvent> pruneQueue;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureDefinitionHelper infrastructureDefinitionHelper;
+  @Inject private EventPublishHelper eventPublishHelper;
 
   private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
       new EnumMap<>(CloudProviderType.class);
@@ -327,6 +331,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     infrastructureDefinition.setUuid(uuid);
     if (!migration) {
       yamlPushService.pushYamlChangeSet(accountId, null, infrastructureDefinition, Type.CREATE, false, false);
+    }
+    if (!infrastructureDefinition.isSample()) {
+      eventPublishHelper.publishAccountEvent(accountId,
+          AccountEvent.builder().accountEventType(AccountEventType.INFRA_DEFINITION_ADDED).build(), true, true);
     }
     return infrastructureDefinition;
   }
