@@ -10,6 +10,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
+import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Poller;
 import io.harness.version.VersionInfoManager;
@@ -31,7 +32,7 @@ public class StressTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  //@Bypass
+  @Bypass
   public void versionedPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndex(TestVersionedQueuableObject.class);
@@ -75,7 +76,7 @@ public class StressTest extends PersistenceTest {
   @Test
   @Category(UnitTests.class)
   @RealMongo
-  //@Bypass
+  @Bypass
   public void unversionedPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndex(TestUnversionedQueuableObject.class);

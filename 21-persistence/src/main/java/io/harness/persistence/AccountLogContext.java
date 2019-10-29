@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package io.harness.persistence;
 
 import io.harness.logging.AutoLogContext;
 
