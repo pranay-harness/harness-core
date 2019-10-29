@@ -34,7 +34,7 @@ public class GoogleKubernetesEngine
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
-  @Expression private String namespace;
+  @IncludeFieldMap @Expression private String namespace;
   @Expression private String releaseName;
   private Map<String, String> expressions;
 

@@ -134,6 +134,22 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldFailOnStringNullRenderedValueOfExpression() {
+    String wrongVariable = "${WRONG_VARIABLE}";
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .infrastructure(GoogleKubernetesEngine.builder().namespace(wrongVariable).build())
+            .build();
+    when(executionContext.renderExpression(wrongVariable)).thenReturn("null");
+
+    assertThatThrownBy(
+        () -> infrastructureDefinitionService.renderExpression(infrastructureDefinition, executionContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(wrongVariable);
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldResolveExpressions() {
     String workflowVariable = "abc-${workflow.variables.var}";
     String value = "value";
