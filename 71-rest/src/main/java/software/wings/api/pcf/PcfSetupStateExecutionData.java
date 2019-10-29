@@ -66,9 +66,10 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
           ExecutionDataValue.builder().value(pcfCommandRequest.getSpace()).displayName("Space").build());
     }
 
-    if (isNotEmpty(routeMaps)) {
+    List<String> urls = isStandardBlueGreen ? tempRouteMaps : routeMaps;
+    if (isNotEmpty(urls)) {
       putNotNull(executionDetails, "routeMaps",
-          ExecutionDataValue.builder().value(String.valueOf(routeMaps)).displayName("Route Maps").build());
+          ExecutionDataValue.builder().value(String.valueOf(urls)).displayName("Routes").build());
     }
 
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
