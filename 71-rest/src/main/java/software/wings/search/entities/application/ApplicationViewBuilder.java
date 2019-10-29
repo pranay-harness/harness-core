@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ApplicationViewBuilderKeys")
-class ApplicationViewBuilder {
+public class ApplicationViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   private static final int DAYS_TO_RETAIN = 7;
@@ -150,7 +150,7 @@ class ApplicationViewBuilder {
     applicationView.setAuditTimestamps(auditTimestamps);
   }
 
-  ApplicationView createApplicationView(Application application, boolean updateOnly) {
+  public ApplicationView createApplicationView(Application application, boolean updateOnly) {
     ApplicationView applicationView = createBaseView(application);
     if (!updateOnly) {
       setWorkflows(application, applicationView);

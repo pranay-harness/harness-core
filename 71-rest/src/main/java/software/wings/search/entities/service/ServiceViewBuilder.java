@@ -191,7 +191,7 @@ public class ServiceViewBuilder {
     }
   }
 
-  ServiceView createServiceView(Service service) {
+  public ServiceView createServiceView(Service service) {
     if (wingsPersistence.get(Application.class, service.getAppId()) != null) {
       ServiceView serviceView = createBaseView(service);
       setAuditsAndAuditTimestamps(service, serviceView);
