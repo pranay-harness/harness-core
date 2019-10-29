@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,6 @@ import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -166,9 +164,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
 
     SettingAttribute settingAttribute = null;
     String serverConfigId = analysisServerConfigId;
@@ -255,7 +251,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
     }
     String eventsUrl = FETCH_EVENTS_URL.replace(":projectId:", projectId);
     if (isNotEmpty(releaseStage)) {
-      eventsUrl += "&release_stage=" + releaseStage;
+      eventsUrl += "&filters[app.release_stage][][type]=eq&filters[app.release_stage][][value]=" + releaseStage;
     }
     logDefinition.put(eventsUrl, new HashMap<>());
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
