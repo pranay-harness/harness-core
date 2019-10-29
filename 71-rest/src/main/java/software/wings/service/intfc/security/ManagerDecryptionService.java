@@ -1,5 +1,6 @@
 package software.wings.service.intfc.security;
 
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 
@@ -10,4 +11,7 @@ import java.util.List;
  */
 public interface ManagerDecryptionService {
   void decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails);
+
+  void decrypt(
+      String accountId, List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList);
 }

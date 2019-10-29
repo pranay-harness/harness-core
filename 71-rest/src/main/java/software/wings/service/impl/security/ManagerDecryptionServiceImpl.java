@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.security.SimpleEncryption;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +35,12 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
-  @Inject private DelegateProxyFactory delegateProxyFactory;
+  private DelegateProxyFactory delegateProxyFactory;
+
+  @Inject
+  public ManagerDecryptionServiceImpl(DelegateProxyFactory delegateProxyFactory) {
+    this.delegateProxyFactory = delegateProxyFactory;
+  }
 
   @Override
   public void decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -78,18 +85,63 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
     try {
       EncryptableSetting decrypted =
           delegateProxyFactory.get(EncryptionService.class, syncTaskContext).decrypt(object, nonLocalEncryptedDetails);
-      for (EncryptedDataDetail encryptedDataDetail : nonLocalEncryptedDetails) {
-        Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
-        if (f != null) {
-          f.setAccessible(true);
-          f.set(object, f.get(decrypted));
-        }
-      }
-      object.setDecrypted(true);
+      replaceEncryptedFieldsWithDecryptedValues(nonLocalEncryptedDetails, object, decrypted);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), e, USER);
     }
+  }
+
+  @Override
+  public void decrypt(
+      String accountId, List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList) {
+    if (isEmpty(encryptableSettingWithEncryptionDetailsList)) {
+      return;
+    }
+
+    logger.info("Batch decrypting {} encrypted settings", encryptableSettingWithEncryptionDetailsList.size());
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build();
+    try {
+      List<EncryptableSettingWithEncryptionDetails> detailsList =
+          delegateProxyFactory.get(EncryptionService.class, syncTaskContext)
+              .decrypt(encryptableSettingWithEncryptionDetailsList);
+
+      Map<String, EncryptableSetting> detailsMap =
+          detailsList.stream().collect(Collectors.toMap(EncryptableSettingWithEncryptionDetails::getDetailId,
+              EncryptableSettingWithEncryptionDetails::getEncryptableSetting));
+
+      for (EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails :
+          encryptableSettingWithEncryptionDetailsList) {
+        EncryptableSetting encryptableSetting = encryptableSettingWithEncryptionDetails.getEncryptableSetting();
+        EncryptableSetting decryptedSetting = detailsMap.get(encryptableSettingWithEncryptionDetails.getDetailId());
+        if (decryptedSetting == null) {
+          // Should not happen.
+          throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR,
+              "Did not find any matching decrypted setting for encryptable setting " + encryptableSetting, USER);
+        }
+
+        List<EncryptedDataDetail> encryptedDataDetails =
+            encryptableSettingWithEncryptionDetails.getEncryptedDataDetails();
+        replaceEncryptedFieldsWithDecryptedValues(encryptedDataDetails, encryptableSetting, decryptedSetting);
+      }
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), e, USER);
+    }
+  }
+
+  private void replaceEncryptedFieldsWithDecryptedValues(List<EncryptedDataDetail> encryptedDataDetails,
+      EncryptableSetting encryptedSetting, EncryptableSetting decryptedSetting) throws Exception {
+    for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+      Field f = getFieldByName(encryptedSetting.getClass(), encryptedDataDetail.getFieldName());
+      if (f != null) {
+        f.setAccessible(true);
+        f.set(encryptedSetting, f.get(decryptedSetting));
+      }
+    }
+    encryptedSetting.setDecrypted(true);
   }
 }

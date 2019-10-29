@@ -54,7 +54,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
 
   @Before
   public void setUp() throws IllegalAccessException {
-    FieldUtils.writeField(artifactoryService, "encryptionService", new EncryptionServiceImpl(), true);
+    FieldUtils.writeField(artifactoryService, "encryptionService", new EncryptionServiceImpl(null, null), true);
   }
 
   @Test

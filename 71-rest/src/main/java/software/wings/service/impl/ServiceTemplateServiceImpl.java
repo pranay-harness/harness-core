@@ -26,6 +26,9 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -64,6 +67,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -659,15 +663,51 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private void obtainEncryptedValues(String appId, String workflowExecutionId, List<ServiceVariable> serviceVariables) {
     String accountId = appService.get(appId).getAccountId();
-    serviceVariables.forEach(serviceVariable -> {
-      if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-        if (isEmpty(serviceVariable.getAccountId())) {
-          serviceVariable.setAccountId(accountId);
+    if (featureFlagService.isEnabled(FeatureName.BATCH_SECRET_DECRYPTION, accountId)) {
+      Map<EncryptionConfig, List<EncryptableSettingWithEncryptionDetails>> encryptableSettingDetailsMap =
+          new HashMap<>();
+      serviceVariables.forEach(serviceVariable -> {
+        if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+          if (isEmpty(serviceVariable.getAccountId())) {
+            serviceVariable.setAccountId(accountId);
+          }
+
+          List<EncryptedDataDetail> encryptedDataDetails =
+              secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId);
+          if (isNotEmpty(encryptedDataDetails)) {
+            EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails =
+                EncryptableSettingWithEncryptionDetails.builder()
+                    .encryptableSetting(serviceVariable)
+                    .encryptedDataDetails(encryptedDataDetails)
+                    .build();
+            EncryptionConfig encryptionConfig = encryptedDataDetails.get(0).getEncryptionConfig();
+            List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList =
+                encryptableSettingDetailsMap.get(encryptionConfig);
+            if (encryptableSettingWithEncryptionDetailsList == null) {
+              encryptableSettingWithEncryptionDetailsList = new ArrayList<>();
+              encryptableSettingDetailsMap.put(encryptionConfig, encryptableSettingWithEncryptionDetailsList);
+            }
+            encryptableSettingWithEncryptionDetailsList.add(encryptableSettingWithEncryptionDetails);
+          }
         }
-        managerDecryptionService.decrypt(
-            serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
+      });
+      // PL-3926: Run batch decrypt through one single delegate task if feature enabled. Also break down the full list
+      // by smaller batches aggregated by the same secret manager.
+      for (List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList :
+          encryptableSettingDetailsMap.values()) {
+        managerDecryptionService.decrypt(accountId, encryptableSettingWithEncryptionDetailsList);
       }
-    });
+    } else {
+      serviceVariables.forEach(serviceVariable -> {
+        if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+          if (isEmpty(serviceVariable.getAccountId())) {
+            serviceVariable.setAccountId(accountId);
+          }
+          managerDecryptionService.decrypt(
+              serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
+        }
+      });
+    }
   }
 
   @Override

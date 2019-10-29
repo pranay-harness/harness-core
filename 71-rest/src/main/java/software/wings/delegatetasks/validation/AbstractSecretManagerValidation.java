@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.task.utils.KmsUtils;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -66,6 +67,11 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
         for (Object detail : details) {
           if (detail instanceof EncryptedDataDetail) {
             return ((EncryptedDataDetail) detail).getEncryptionConfig();
+          } else if (detail instanceof EncryptableSettingWithEncryptionDetails) {
+            return ((EncryptableSettingWithEncryptionDetails) detail)
+                .getEncryptedDataDetails()
+                .get(0)
+                .getEncryptionConfig();
           }
         }
       }

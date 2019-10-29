@@ -1,5 +1,6 @@
 package software.wings.service.intfc.security;
 
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.TaskType;
@@ -14,6 +15,10 @@ import java.util.List;
 public interface EncryptionService {
   @DelegateTaskType(TaskType.SECRET_DECRYPT)
   EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails);
+
+  @DelegateTaskType(TaskType.BATCH_SECRET_DECRYPT)
+  List<EncryptableSettingWithEncryptionDetails> decrypt(
+      List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetailsList);
 
   @DelegateTaskType(TaskType.SECRET_DECRYPT_REF)
   char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException;
