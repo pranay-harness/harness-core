@@ -50,16 +50,15 @@ class EnvironmentViewBuilder {
   private static final String ENV_ID_KEY = "envId";
   private static final int DAYS_TO_RETAIN = 7;
   private static final int MAX_RELATED_ENTITIES_COUNT = 3;
-  private EnvironmentView environmentView;
 
-  private void createBaseView(Environment environment) {
-    this.environmentView = new EnvironmentView(environment.getUuid(), environment.getName(),
-        environment.getDescription(), environment.getAccountId(), environment.getCreatedAt(),
-        environment.getLastUpdatedAt(), EntityType.ENVIRONMENT, environment.getCreatedBy(),
-        environment.getLastUpdatedBy(), environment.getAppId(), environment.getEnvironmentType());
+  private EnvironmentView createBaseView(Environment environment) {
+    return new EnvironmentView(environment.getUuid(), environment.getName(), environment.getDescription(),
+        environment.getAccountId(), environment.getCreatedAt(), environment.getLastUpdatedAt(), EntityType.ENVIRONMENT,
+        environment.getCreatedBy(), environment.getLastUpdatedBy(), environment.getAppId(),
+        environment.getEnvironmentType());
   }
 
-  private void setWorkflows(Environment environment) {
+  private void setWorkflows(Environment environment, EnvironmentView environmentView) {
     Set<EntityInfo> workflows = new HashSet<>();
     try (HIterator<Workflow> iterator = new HIterator<>(wingsPersistence.createQuery(Workflow.class)
                                                             .field(WorkflowKeys.appId)
@@ -75,7 +74,7 @@ class EnvironmentViewBuilder {
     environmentView.setWorkflows(workflows);
   }
 
-  private void setAuditsAndTimestamps(Environment environment) {
+  private void setAuditsAndTimestamps(Environment environment, EnvironmentView environmentView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
@@ -109,7 +108,7 @@ class EnvironmentViewBuilder {
     environmentView.setAuditTimestamps(auditTimestamps);
   }
 
-  private void setDeploymentsAndDeploymentTimestamps(Environment environment) {
+  private void setDeploymentsAndDeploymentTimestamps(Environment environment, EnvironmentView environmentView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<Long> deploymentTimestamps = new ArrayList<>();
     List<RelatedDeploymentView> deployments = new ArrayList<>();
@@ -139,7 +138,7 @@ class EnvironmentViewBuilder {
     environmentView.setDeployments(deployments);
   }
 
-  private void setPipelines(Environment environment) {
+  private void setPipelines(Environment environment, EnvironmentView environmentView) {
     Set<EntityInfo> pipelines = new HashSet<>();
     try (HIterator<Pipeline> iterator =
              new HIterator<>(wingsPersistence.createQuery(Pipeline.class)
@@ -156,7 +155,7 @@ class EnvironmentViewBuilder {
     environmentView.setPipelines(pipelines);
   }
 
-  private void setApplicationName(Environment environment) {
+  private void setApplicationName(Environment environment, EnvironmentView environmentView) {
     if (environment.getAppId() != null) {
       Application application = wingsPersistence.get(Application.class, environment.getAppId());
       environmentView.setAppName(application.getName());
@@ -182,12 +181,12 @@ class EnvironmentViewBuilder {
 
   EnvironmentView createEnvironmentView(Environment environment) {
     if (wingsPersistence.get(Application.class, environment.getAppId()) != null) {
-      createBaseView(environment);
-      setAuditsAndTimestamps(environment);
-      setDeploymentsAndDeploymentTimestamps(environment);
-      setWorkflows(environment);
-      setPipelines(environment);
-      setApplicationName(environment);
+      EnvironmentView environmentView = createBaseView(environment);
+      setAuditsAndTimestamps(environment, environmentView);
+      setDeploymentsAndDeploymentTimestamps(environment, environmentView);
+      setWorkflows(environment, environmentView);
+      setPipelines(environment, environmentView);
+      setApplicationName(environment, environmentView);
       return environmentView;
     }
     return null;
@@ -195,9 +194,9 @@ class EnvironmentViewBuilder {
 
   EnvironmentView createEnvironmentView(Environment environment, DBObject changeDocument) {
     if (wingsPersistence.get(Application.class, environment.getAppId()) != null) {
-      createBaseView(environment);
+      EnvironmentView environmentView = createBaseView(environment);
       if (changeDocument.containsField(WorkflowKeys.appId)) {
-        setApplicationName(environment);
+        setApplicationName(environment, environmentView);
       }
       return environmentView;
     }

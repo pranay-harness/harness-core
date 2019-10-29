@@ -98,6 +98,7 @@ public class ElasticsearchIndexManager {
     AliasActions aliasAction = new AliasActions(Type.ADD).index(indexName).alias(aliasName);
     request.addAliasAction(aliasAction);
     try {
+      logger.info("Attaching index {} to alias {}", indexName, aliasName);
       AcknowledgedResponse indicesAliasesResponse = elasticsearchClient.updateAliases(request);
       return indicesAliasesResponse.isAcknowledged();
     } catch (IOException e) {

@@ -47,17 +47,16 @@ import java.util.concurrent.TimeUnit;
 class ApplicationViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
-  private ApplicationView applicationView;
   private static final int DAYS_TO_RETAIN = 7;
   private static final int MAX_RELATED_ENTITIES_COUNT = 3;
 
-  private void createBaseView(Application application) {
-    applicationView = new ApplicationView(application.getUuid(), application.getName(), application.getDescription(),
+  private ApplicationView createBaseView(Application application) {
+    return new ApplicationView(application.getUuid(), application.getName(), application.getDescription(),
         application.getAccountId(), application.getCreatedAt(), application.getLastUpdatedAt(), EntityType.APPLICATION,
         application.getCreatedBy(), application.getLastUpdatedBy());
   }
 
-  private void setServices(Application application) {
+  private void setServices(Application application, ApplicationView applicationView) {
     Set<EntityInfo> services = new HashSet<>();
     try (HIterator<Service> iterator = new HIterator<>(wingsPersistence.createQuery(Service.class)
                                                            .field(ServiceKeys.appId)
@@ -72,7 +71,7 @@ class ApplicationViewBuilder {
     applicationView.setServices(services);
   }
 
-  private void setWorkflows(Application application) {
+  private void setWorkflows(Application application, ApplicationView applicationView) {
     Set<EntityInfo> workflows = new HashSet<>();
     try (HIterator<Workflow> iterator = new HIterator<>(wingsPersistence.createQuery(Workflow.class)
                                                             .field(WorkflowKeys.appId)
@@ -87,7 +86,7 @@ class ApplicationViewBuilder {
     applicationView.setWorkflows(workflows);
   }
 
-  private void setEnvironments(Application application) {
+  private void setEnvironments(Application application, ApplicationView applicationView) {
     Set<EntityInfo> environments = new HashSet<>();
     try (HIterator<Environment> iterator = new HIterator<>(wingsPersistence.createQuery(Environment.class)
                                                                .field(EnvironmentKeys.appId)
@@ -102,7 +101,7 @@ class ApplicationViewBuilder {
     applicationView.setEnvironments(environments);
   }
 
-  private void setPipelines(Application application) {
+  private void setPipelines(Application application, ApplicationView applicationView) {
     Set<EntityInfo> pipelines = new HashSet<>();
     try (HIterator<Pipeline> iterator = new HIterator<>(wingsPersistence.createQuery(Pipeline.class)
                                                             .field(PipelineKeys.appId)
@@ -117,7 +116,7 @@ class ApplicationViewBuilder {
     applicationView.setPipelines(pipelines);
   }
 
-  private void setAuditsAndAuditTimestamps(Application application) {
+  private void setAuditsAndAuditTimestamps(Application application, ApplicationView applicationView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
@@ -152,13 +151,13 @@ class ApplicationViewBuilder {
   }
 
   ApplicationView createApplicationView(Application application, boolean updateOnly) {
-    createBaseView(application);
+    ApplicationView applicationView = createBaseView(application);
     if (!updateOnly) {
-      setWorkflows(application);
-      setEnvironments(application);
-      setPipelines(application);
-      setServices(application);
-      setAuditsAndAuditTimestamps(application);
+      setWorkflows(application, applicationView);
+      setEnvironments(application, applicationView);
+      setPipelines(application, applicationView);
+      setServices(application, applicationView);
+      setAuditsAndAuditTimestamps(application, applicationView);
     }
     return applicationView;
   }

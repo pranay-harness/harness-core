@@ -47,7 +47,6 @@ import java.util.concurrent.TimeUnit;
 public class ServiceViewBuilder {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
-  private ServiceView serviceView;
   private static final int DAYS_TO_RETAIN = 7;
   private static final int MAX_RELATED_ENTITIES_COUNT = 3;
 
@@ -77,14 +76,13 @@ public class ServiceViewBuilder {
     return new ArrayList<>(uniqueServiceIds);
   }
 
-  private void createBaseView(Service service) {
-    this.serviceView =
-        new ServiceView(service.getUuid(), service.getName(), service.getDescription(), service.getAccountId(),
-            service.getCreatedAt(), service.getLastUpdatedAt(), EntityType.SERVICE, service.getCreatedBy(),
-            service.getLastUpdatedBy(), service.getAppId(), service.getArtifactType(), service.getDeploymentType());
+  private ServiceView createBaseView(Service service) {
+    return new ServiceView(service.getUuid(), service.getName(), service.getDescription(), service.getAccountId(),
+        service.getCreatedAt(), service.getLastUpdatedAt(), EntityType.SERVICE, service.getCreatedBy(),
+        service.getLastUpdatedBy(), service.getAppId(), service.getArtifactType(), service.getDeploymentType());
   }
 
-  private void setAuditsAndAuditTimestamps(Service service) {
+  private void setAuditsAndAuditTimestamps(Service service, ServiceView serviceView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
@@ -119,7 +117,7 @@ public class ServiceViewBuilder {
     serviceView.setAudits(audits);
   }
 
-  private void setDeploymentsAndDeploymentTimestamps(Service service) {
+  private void setDeploymentsAndDeploymentTimestamps(Service service, ServiceView serviceView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<Long> deploymentTimestamps = new ArrayList<>();
     List<RelatedDeploymentView> deployments = new ArrayList<>();
@@ -165,7 +163,7 @@ public class ServiceViewBuilder {
     return pipelines;
   }
 
-  private void setWorkflowsAndPipelines(Service service) {
+  private void setWorkflowsAndPipelines(Service service, ServiceView serviceView) {
     Set<EntityInfo> workflows = new HashSet<>();
     Set<EntityInfo> pipelines = new HashSet<>();
     try (
@@ -186,7 +184,7 @@ public class ServiceViewBuilder {
     serviceView.setPipelines(pipelines);
   }
 
-  private void setApplicationName(Service service) {
+  private void setApplicationName(Service service, ServiceView serviceView) {
     if (service.getAppId() != null) {
       Application application = wingsPersistence.get(Application.class, service.getAppId());
       serviceView.setAppName(application.getName());
@@ -195,11 +193,11 @@ public class ServiceViewBuilder {
 
   ServiceView createServiceView(Service service) {
     if (wingsPersistence.get(Application.class, service.getAppId()) != null) {
-      createBaseView(service);
-      setAuditsAndAuditTimestamps(service);
-      setDeploymentsAndDeploymentTimestamps(service);
-      setApplicationName(service);
-      setWorkflowsAndPipelines(service);
+      ServiceView serviceView = createBaseView(service);
+      setAuditsAndAuditTimestamps(service, serviceView);
+      setDeploymentsAndDeploymentTimestamps(service, serviceView);
+      setApplicationName(service, serviceView);
+      setWorkflowsAndPipelines(service, serviceView);
       return serviceView;
     }
     return null;
@@ -207,9 +205,9 @@ public class ServiceViewBuilder {
 
   ServiceView createServiceView(Service service, DBObject changeDocument) {
     if (wingsPersistence.get(Application.class, service.getAppId()) != null) {
-      createBaseView(service);
+      ServiceView serviceView = createBaseView(service);
       if (changeDocument.containsField(ServiceViewKeys.appId)) {
-        setApplicationName(service);
+        setApplicationName(service, serviceView);
       }
       return serviceView;
     }

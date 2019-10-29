@@ -36,7 +36,7 @@ public class ElasticsearchSyncService implements Managed {
   public void stop() {
     if (featureFlagService.isGlobalEnabled(FeatureName.SEARCH)) {
       elasticsearchSyncJobFuture.cancel(true);
-      scheduledExecutorService.shutdown();
+      scheduledExecutorService.shutdownNow();
     }
   }
 }

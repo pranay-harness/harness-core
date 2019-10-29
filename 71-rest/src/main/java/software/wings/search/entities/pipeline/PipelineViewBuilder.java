@@ -49,7 +49,6 @@ class PipelineViewBuilder {
   @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   private static final int MAX_RELATED_ENTITIES_COUNT = 3;
   private static final int DAYS_TO_RETAIN = 7;
-  private PipelineView pipelineView;
 
   private void populateServices(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestration();
@@ -57,13 +56,13 @@ class PipelineViewBuilder {
         serviceResourceService.fetchServicesByUuids(workflow.getAppId(), orchestrationWorkflow.getServiceIds()));
   }
 
-  private void createBaseView(Pipeline pipeline) {
-    this.pipelineView = new PipelineView(pipeline.getUuid(), pipeline.getName(), pipeline.getDescription(),
-        pipeline.getAccountId(), pipeline.getCreatedAt(), pipeline.getLastUpdatedAt(), EntityType.PIPELINE,
-        pipeline.getCreatedBy(), pipeline.getLastUpdatedBy(), pipeline.getAppId());
+  private PipelineView createBaseView(Pipeline pipeline) {
+    return new PipelineView(pipeline.getUuid(), pipeline.getName(), pipeline.getDescription(), pipeline.getAccountId(),
+        pipeline.getCreatedAt(), pipeline.getLastUpdatedAt(), EntityType.PIPELINE, pipeline.getCreatedBy(),
+        pipeline.getLastUpdatedBy(), pipeline.getAppId());
   }
 
-  private void setAuditsAndAuditTimestamps(Pipeline pipeline) {
+  private void setAuditsAndAuditTimestamps(Pipeline pipeline, PipelineView pipelineView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<RelatedAuditView> audits = new ArrayList<>();
     List<Long> auditTimestamps = new ArrayList<>();
@@ -97,7 +96,7 @@ class PipelineViewBuilder {
     pipelineView.setAuditTimestamps(auditTimestamps);
   }
 
-  private void setDeploymentsAndDeploymentTimestamps(Pipeline pipeline) {
+  private void setDeploymentsAndDeploymentTimestamps(Pipeline pipeline, PipelineView pipelineView) {
     long startTimestamp = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     List<Long> deploymentTimestamps = new ArrayList<>();
     List<RelatedDeploymentView> deployments = new ArrayList<>();
@@ -133,14 +132,14 @@ class PipelineViewBuilder {
     return null;
   }
 
-  private void setApplicationName(Pipeline pipeline) {
+  private void setApplicationName(Pipeline pipeline, PipelineView pipelineView) {
     Application application = getApplication(pipeline);
     if (application != null) {
       pipelineView.setAppName(application.getName());
     }
   }
 
-  private void setServicesAndWorkflows(Pipeline pipeline) {
+  private void setServicesAndWorkflows(Pipeline pipeline, PipelineView pipelineView) {
     String worklowIdKey = "workflowId";
     if (pipeline.getPipelineStages() != null) {
       Set<EntityInfo> workflows = new HashSet<>();
@@ -169,11 +168,11 @@ class PipelineViewBuilder {
 
   PipelineView createPipelineView(Pipeline pipeline) {
     if (getApplication(pipeline) != null) {
-      createBaseView(pipeline);
-      setApplicationName(pipeline);
-      setServicesAndWorkflows(pipeline);
-      setDeploymentsAndDeploymentTimestamps(pipeline);
-      setAuditsAndAuditTimestamps(pipeline);
+      PipelineView pipelineView = createBaseView(pipeline);
+      setApplicationName(pipeline, pipelineView);
+      setServicesAndWorkflows(pipeline, pipelineView);
+      setDeploymentsAndDeploymentTimestamps(pipeline, pipelineView);
+      setAuditsAndAuditTimestamps(pipeline, pipelineView);
       return pipelineView;
     }
     return null;
@@ -181,12 +180,12 @@ class PipelineViewBuilder {
 
   PipelineView createPipelineView(Pipeline pipeline, DBObject changeDocument) {
     if (getApplication(pipeline) != null) {
-      createBaseView(pipeline);
+      PipelineView pipelineView = createBaseView(pipeline);
       if (changeDocument.containsField(PipelineKeys.appId)) {
-        setApplicationName(pipeline);
+        setApplicationName(pipeline, pipelineView);
       }
       if (changeDocument.containsField(PipelineKeys.pipelineStages)) {
-        setServicesAndWorkflows(pipeline);
+        setServicesAndWorkflows(pipeline, pipelineView);
       }
       return pipelineView;
     }
