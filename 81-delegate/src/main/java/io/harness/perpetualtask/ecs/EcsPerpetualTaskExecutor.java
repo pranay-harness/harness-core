@@ -33,6 +33,7 @@ import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.event.payloads.ReservedResource;
 import io.harness.exception.WingsException;
+import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -71,7 +72,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private static final String ECS_OS_TYPE = "ecs.os-type";
 
   @Override
-  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
+  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
     try {
       EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
       String clusterName = ecsPerpetualTaskParams.getClusterName();
@@ -109,8 +110,8 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
     return true;
   }
 
-  private EcsPerpetualTaskParams getTaskParams(PerpetualTaskParams params) throws Exception {
-    return params.getCustomizedParams().unpack(EcsPerpetualTaskParams.class);
+  private EcsPerpetualTaskParams getTaskParams(PerpetualTaskParams params) {
+    return AnyUtils.unpack(params.getCustomizedParams(), EcsPerpetualTaskParams.class);
   }
 
   private void publishEcsClusterSyncEvent(String clusterName, Set<String> activeEc2InstanceIds,
@@ -477,7 +478,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @Override
-  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) throws Exception {
+  public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskParams params) {
     EcsPerpetualTaskParams taskParams = getTaskParams(params);
     cache.invalidate(taskParams.getClusterName());
     return true;

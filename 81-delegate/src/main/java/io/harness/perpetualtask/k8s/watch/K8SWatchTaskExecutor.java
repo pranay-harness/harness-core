@@ -3,6 +3,7 @@ package io.harness.perpetualtask.k8s.watch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
@@ -19,8 +20,8 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
 
   @Override
-  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) throws Exception {
-    K8sWatchTaskParams watchTaskParams = params.getCustomizedParams().unpack(K8sWatchTaskParams.class);
+  public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
+    K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
     String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
     taskWatchIdMap.put(taskId.getId(), watchId);
     logger.info("Created a watch with id {}.", watchId);

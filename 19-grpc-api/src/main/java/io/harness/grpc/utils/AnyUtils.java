@@ -1,8 +1,10 @@
 package io.harness.grpc.utils;
 
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import io.harness.exception.DataFormatException;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -24,5 +26,16 @@ public class AnyUtils {
     @SuppressWarnings("unchecked") // Any can only contain Message
     Class<? extends Message> clazz = (Class<? extends Message>) Class.forName(toFqcn(any));
     return clazz;
+  }
+
+  /**
+   * Wrap Any::unpack, suppressing the checked exception.
+   */
+  public <T extends Message> T unpack(Any any, Class<T> clazz) {
+    try {
+      return any.unpack(clazz);
+    } catch (InvalidProtocolBufferException e) {
+      throw new DataFormatException("Unable to parse as valid protobuf", e);
+    }
   }
 }
