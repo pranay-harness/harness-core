@@ -100,7 +100,7 @@ public class InfrastructureProvisionerResource {
     if (appId != null) {
       pageRequest.addFilter("appId", EQ, appId);
     }
-    return new RestResponse<>(infrastructureProvisionerService.listDetails(pageRequest, withTags, tagFilter));
+    return new RestResponse<>(infrastructureProvisionerService.listDetails(pageRequest, withTags, tagFilter, appId));
   }
 
   @POST

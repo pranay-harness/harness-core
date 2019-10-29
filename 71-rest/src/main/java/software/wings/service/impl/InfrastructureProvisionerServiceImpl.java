@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -67,7 +66,10 @@ import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.InfrastructureProvisionerDetails.InfrastructureProvisionerDetailsBuilder;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TaskType;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
@@ -99,6 +101,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -108,9 +111,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -248,7 +253,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     return wingsPersistence.query(InfrastructureProvisioner.class, requestBuilder.build());
   }
 
-  private InfrastructureProvisionerDetails details(InfrastructureProvisioner provisioner) {
+  private InfrastructureProvisionerDetails details(InfrastructureProvisioner provisioner,
+      Map<String, SettingAttribute> idToSettingAttributeMapping, Map<String, Service> idToServiceMapping) {
     final InfrastructureProvisionerDetailsBuilder detailsBuilder =
         InfrastructureProvisionerDetails.builder()
             .uuid(provisioner.getUuid())
@@ -262,7 +268,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           (TerraformInfrastructureProvisioner) provisioner;
 
       final SettingAttribute settingAttribute =
-          settingService.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
+          idToSettingAttributeMapping.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
 
       if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
         detailsBuilder.repository(((GitConfig) settingAttribute.getValue()).getRepoUrl());
@@ -283,22 +289,72 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       detailsBuilder.services(provisioner.getMappingBlueprints()
                                   .stream()
                                   .map(InfrastructureMappingBlueprint::getServiceId)
-                                  .map(serviceId -> serviceResourceService.get(provisioner.getAppId(), serviceId))
+                                  .map(serviceId -> idToServiceMapping.get(serviceId))
                                   .collect(toMap(service -> service.getName(), service -> service.getUuid())));
     }
 
     return detailsBuilder.build();
   }
 
+  Map<String, Service> getIdToServiceMapping(String appId, Set<String> servicesIds) {
+    PageRequest<Service> servicePageRequest = new PageRequest<>();
+    servicePageRequest.addFilter(Service.APP_ID_KEY, Operator.EQ, appId);
+    servicePageRequest.addFilter(ServiceKeys.uuid, Operator.IN, servicesIds.toArray());
+
+    PageResponse<Service> services = serviceResourceService.list(servicePageRequest, false, false, false, null);
+
+    Map<String, Service> idToServiceMapping = new HashMap<>();
+    for (Service service : services.getResponse()) {
+      idToServiceMapping.put(service.getUuid(), service);
+    }
+    return idToServiceMapping;
+  }
+
+  Map<String, SettingAttribute> getIdToSettingAttributeMapping(String accountId, Set<String> settingAttributeIds) {
+    PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
+    settingAttributePageRequest.addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, accountId);
+    settingAttributePageRequest.addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT);
+    settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
+
+    PageResponse<SettingAttribute> settingAttributes = settingService.list(settingAttributePageRequest, null, null);
+
+    Map<String, SettingAttribute> idToSettingAttributeMapping = new HashMap<>();
+    for (SettingAttribute settingAttribute : settingAttributes.getResponse()) {
+      idToSettingAttributeMapping.put(settingAttribute.getUuid(), settingAttribute);
+    }
+    return idToSettingAttributeMapping;
+  }
+
   @Override
   public PageResponse<InfrastructureProvisionerDetails> listDetails(
-      PageRequest<InfrastructureProvisioner> pageRequest, boolean withTags, String tagFilter) {
-    return aPageResponse()
-        .withResponse(resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.PROVISIONER, withTags)
-                          .stream()
-                          .map(item -> details(item))
-                          .collect(toList()))
-        .build();
+      PageRequest<InfrastructureProvisioner> pageRequest, boolean withTags, String tagFilter, @NotEmpty String appId) {
+    PageResponse<InfrastructureProvisioner> pageResponse =
+        resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.PROVISIONER, withTags);
+
+    Set<String> settingAttributeIds = new HashSet<>();
+    Set<String> servicesIds = new HashSet<>();
+    for (InfrastructureProvisioner infrastructureProvisioner : pageResponse.getResponse()) {
+      if (infrastructureProvisioner instanceof TerraformInfrastructureProvisioner) {
+        settingAttributeIds.add(
+            ((TerraformInfrastructureProvisioner) infrastructureProvisioner).getSourceRepoSettingId());
+      }
+      infrastructureProvisioner.getMappingBlueprints()
+          .stream()
+          .map(InfrastructureMappingBlueprint::getServiceId)
+          .forEach(servicesIds::add);
+    }
+
+    Map<String, SettingAttribute> idToSettingAttributeMapping =
+        getIdToSettingAttributeMapping(appService.getAccountIdByAppId(appId), settingAttributeIds);
+    Map<String, Service> idToServiceMapping = getIdToServiceMapping(appId, servicesIds);
+
+    PageResponse<InfrastructureProvisionerDetails> infrastructureProvisionerDetails = new PageResponse<>();
+    infrastructureProvisionerDetails.setResponse(
+        pageResponse.getResponse()
+            .stream()
+            .map(item -> details(item, idToSettingAttributeMapping, idToServiceMapping))
+            .collect(toList()));
+    return infrastructureProvisionerDetails;
   }
 
   @Override
