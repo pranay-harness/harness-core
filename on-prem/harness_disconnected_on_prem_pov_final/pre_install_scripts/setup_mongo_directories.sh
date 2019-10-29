@@ -55,6 +55,7 @@ mv ${runtime_dir}/config/mongo/add_first_user.js $runtime_dir/mongo/scripts
 mv ${runtime_dir}/config/mongo/add_learning_engine_secret.js $runtime_dir/mongo/scripts
 mv ${runtime_dir}/config/mongo/publish_version.js $runtime_dir/mongo/scripts
 
+chmod 777 -R ${runtime_dir}
 chown -R 999 $runtime_dir/mongo/*
 chmod 777 $runtime_dir/mongo/$mongodb_data_dir
 

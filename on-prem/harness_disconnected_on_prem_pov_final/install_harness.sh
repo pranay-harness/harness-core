@@ -418,6 +418,7 @@ function startUp(){
     loadDockerImages
     if [[ ${newinstallation} == "true" ]];then
         setUpMongoDBFirstTime
+        stopDockerContainer "mongoContainer"
     else
         echo "Not seeding Mongo, existing installation found "
     fi
