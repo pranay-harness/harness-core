@@ -89,7 +89,7 @@ mv .mailmap.tmp .mailmap
 
 echo $EXECPTION_COMMITS exceptions
 
-if [ $EXECPTION_COMMITS -gt 200 ]
+if [ $EXECPTION_COMMITS -gt 201 ]
 then
     echo "You bringing commit with excepted author that is no longer allowed"
     exit 1
