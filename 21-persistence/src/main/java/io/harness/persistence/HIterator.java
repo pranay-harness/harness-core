@@ -34,6 +34,8 @@ public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
   }
 
   @Override
+  // This is just wrapper around the morphia iterator, it cannot be reused anyways
+  @SuppressWarnings("squid:S4348")
   public Iterator<T> iterator() {
     return this;
   }
