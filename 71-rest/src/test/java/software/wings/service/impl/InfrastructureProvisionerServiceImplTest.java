@@ -377,10 +377,20 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void shouldGetIdToServiceMappingForEmptyServiceIds() {
+    Map<String, Service> idToServiceMapping = ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+                                                  .getIdToServiceMapping(APP_ID, Collections.emptySet());
+
+    assertThat(idToServiceMapping).isEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldGetIdToSettingAttributeMapping() {
     PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
     settingAttributePageRequest.addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, ACCOUNT_ID);
-    settingAttributePageRequest.addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT);
+    settingAttributePageRequest.addFilter(
+        SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT.name());
     Set<String> settingAttributeIds = Sets.newHashSet(Arrays.asList("id1", "id2"));
     settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
     PageResponse<SettingAttribute> settingAttributePageResponse = new PageResponse<>();
@@ -396,6 +406,16 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThat(idToSettingAttributeMapping).hasSize(2);
     assertThat(idToSettingAttributeMapping.get("id1")).isEqualTo(settingAttribute1);
     assertThat(idToSettingAttributeMapping.get("id2")).isEqualTo(settingAttribute2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldGetIdToSettingAttributeMappingForEmptySettingAttributeIds() {
+    Map<String, SettingAttribute> idToSettingAttributeMapping =
+        ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
+            .getIdToSettingAttributeMapping(ACCOUNT_ID, Collections.emptySet());
+
+    assertThat(idToSettingAttributeMapping).isEmpty();
   }
 
   @Test
@@ -423,6 +443,42 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
         .when(ipService)
         .getIdToSettingAttributeMapping(ACCOUNT_ID, settingAttributeIds);
     HashSet<String> servicesIds = new HashSet<>(Collections.singletonList("serviceId"));
+    Map<String, Service> idToServiceMapping = new HashMap<>();
+    doReturn(idToServiceMapping).when(ipService).getIdToServiceMapping(APP_ID, servicesIds);
+    InfrastructureProvisionerDetails infrastructureProvisionerDetails =
+        InfrastructureProvisionerDetails.builder().build();
+    doReturn(infrastructureProvisionerDetails)
+        .when(ipService)
+        .details(provisioner, idToSettingAttributeMapping, idToServiceMapping);
+
+    PageResponse<InfrastructureProvisionerDetails> infraProvisionerDetailsPageResponse =
+        ipService.listDetails(infraProvisionerPageRequest, true, null, APP_ID);
+
+    assertThat(infraProvisionerDetailsPageResponse.getResponse()).hasSize(1);
+    assertThat(infraProvisionerDetailsPageResponse.getResponse().get(0)).isEqualTo(infrastructureProvisionerDetails);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldListDetailsForEmptyInfraMappingBlueprints() {
+    InfrastructureProvisionerServiceImpl ipService = spy(new InfrastructureProvisionerServiceImpl());
+    Reflect.on(ipService).set("resourceLookupService", resourceLookupService);
+    Reflect.on(ipService).set("appService", appService);
+    PageRequest<InfrastructureProvisioner> infraProvisionerPageRequest = new PageRequest<>();
+    PageResponse<InfrastructureProvisioner> infraProvisionerPageResponse = new PageResponse<>();
+    TerraformInfrastructureProvisioner provisioner =
+        TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").build();
+    infraProvisionerPageResponse.setResponse(Collections.singletonList(provisioner));
+    doReturn(infraProvisionerPageResponse)
+        .when(resourceLookupService)
+        .listWithTagFilters(infraProvisionerPageRequest, null, EntityType.PROVISIONER, true);
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
+    HashSet<String> settingAttributeIds = new HashSet<>(Collections.singletonList("settingId"));
+    Map<String, SettingAttribute> idToSettingAttributeMapping = new HashMap<>();
+    doReturn(idToSettingAttributeMapping)
+        .when(ipService)
+        .getIdToSettingAttributeMapping(ACCOUNT_ID, settingAttributeIds);
+    HashSet<String> servicesIds = new HashSet<>();
     Map<String, Service> idToServiceMapping = new HashMap<>();
     doReturn(idToServiceMapping).when(ipService).getIdToServiceMapping(APP_ID, servicesIds);
     InfrastructureProvisionerDetails infrastructureProvisionerDetails =
