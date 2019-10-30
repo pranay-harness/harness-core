@@ -145,7 +145,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
       logger.error("Error in InitCommandUnit", e);
     }
     commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
-        ? context.executeCommandString("chmod 0744 " + executionStagingDir + "/*")
+        ? context.executeCommandString("chmod 0700 " + executionStagingDir + "/*")
         : commandExecutionStatus;
     StringBuffer envVariablesFromHost = new StringBuffer();
     commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
