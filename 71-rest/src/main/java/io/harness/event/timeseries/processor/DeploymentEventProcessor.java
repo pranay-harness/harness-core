@@ -42,7 +42,7 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
    * 	ROLLBACK_DURATION BIGINT
    */
   String insert_prepared_statement_sql =
-      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO DEPLOYMENT (EXECUTIONID,STARTTIME,ENDTIME,ACCOUNTID,APPID,TRIGGERED_BY,TRIGGER_ID,STATUS,SERVICES,WORKFLOWS,CLOUDPROVIDERS,ENVIRONMENTS,PIPELINE,DURATION,ARTIFACTS,ENVTYPES,PARENT_EXECUTION,STAGENAME,ROLLBACK_DURATION, INSTANCES_DEPLOYED) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject DataFetcherUtils utils;
@@ -54,9 +54,8 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
       boolean successfulInsert = false;
       int retryCount = 0;
       while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
-        try (
-            Connection dbConnection = timeScaleDBService.getDBConnection();
-            PreparedStatement insertPreparedStatement = dbConnection.prepareStatement(insert_prepared_statement_sql);) {
+        try (Connection dbConnection = timeScaleDBService.getDBConnection();
+             PreparedStatement insertPreparedStatement = dbConnection.prepareStatement(insert_prepared_statement_sql)) {
           /**
            *  EXECUTIONID TEXT NOT NULL,
            * 	STARTTIME TIMESTAMP NOT NULL,
@@ -123,6 +122,12 @@ public class DeploymentEventProcessor implements EventProcessor<TimeSeriesEventI
           }
 
           insertPreparedStatement.setLong(19, rollbackDuration);
+
+          Integer instancesDeployed = eventInfo.getIntegerData().get(EventProcessor.INSTANCES_DEPLOYED);
+          if (instancesDeployed == null) {
+            instancesDeployed = 0;
+          }
+          insertPreparedStatement.setInt(20, instancesDeployed);
 
           insertPreparedStatement.execute();
           successfulInsert = true;

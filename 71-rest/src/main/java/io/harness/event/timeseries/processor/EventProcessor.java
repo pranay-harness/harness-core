@@ -48,6 +48,7 @@ public interface EventProcessor<T extends EventInfo> {
   String INFRAMAPPINGID = "INFRAMAPPINGID";
   String CLOUDPROVIDERID = "CLOUDPROVIDERID";
   String INSTANCECOUNT = "INSTANCECOUNT";
+  String INSTANCES_DEPLOYED = "INSTANCES_DEPLOYED";
   String INSTANCETYPE = "INSTANCETYPE";
 
   void processEvent(T eventInfo);

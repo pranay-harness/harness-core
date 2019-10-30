@@ -607,8 +607,6 @@ public class InstanceHelper {
     }
 
     String infraMappingId = infraMapping.getUuid();
-    InfrastructureMappingType infraMappingType =
-        Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
     try (AcquiredLock lock =
              persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
       if (lock == null) {

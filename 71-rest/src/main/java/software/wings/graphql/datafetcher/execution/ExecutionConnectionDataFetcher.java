@@ -77,11 +77,6 @@ public class ExecutionConnectionDataFetcher
     return updatedFilters;
   }
 
-  //  @Override
-  //  public String getAccountId() {
-  //    return null;
-  //  }
-
   @Override
   protected QLExecutionFilter generateFilter(DataFetchingEnvironment environment, String key, String value) {
     QLIdFilter idFilter = QLIdFilter.builder()

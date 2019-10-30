@@ -137,23 +137,6 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
     mockResultSet();
   }
 
-  private void reset() throws SQLException {
-    when(resultSet.next()).then((Answer<Boolean>) invocation -> {
-      switch (count[0]) {
-        case 0:
-          count[0]++;
-          return true;
-        default:
-          return false;
-      }
-    });
-
-    when(resultSet.getInt(anyString())).thenReturn(10);
-    when(resultSet.getLong(anyString())).thenReturn(20L);
-
-    resetValues();
-  }
-
   @Test
   @Category(UnitTests.class)
   public void testSinglePointDataWithNoFilter() {

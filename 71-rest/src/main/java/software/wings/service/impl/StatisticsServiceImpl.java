@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -21,7 +20,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.time.EpochUtils;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
@@ -112,6 +110,18 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   private AggregatedDayStats merge(AggregatedDayStats prodAggStats, AggregatedDayStats nonProdAggStats) {
+    if (prodAggStats == null && nonProdAggStats == null) {
+      return new AggregatedDayStats();
+    }
+
+    if (prodAggStats == null) {
+      return nonProdAggStats;
+    }
+
+    if (nonProdAggStats == null) {
+      return prodAggStats;
+    }
+
     List<DayStat> dayStats = new ArrayList<>(prodAggStats.getDaysStats().size());
 
     IntStream.range(0, prodAggStats.getDaysStats().size()).forEach(idx -> {
@@ -154,30 +164,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                            .filter(ExecutionStatus.negativeStatuses()::contains)
                            .count();
         for (WorkflowExecution workflowExecution : wflExecutions) {
-          if ((workflowExecution.getWorkflowType() == ORCHESTRATION)
-              && workflowExecution.getServiceExecutionSummaries() != null) {
-            instanceCount += workflowExecution.getServiceExecutionSummaries()
-                                 .stream()
-                                 .map(ElementExecutionSummary::getInstancesCount)
-                                 .mapToInt(i -> i)
-                                 .sum();
-          } else if (workflowExecution.getWorkflowType() == PIPELINE && workflowExecution.getPipelineExecution() != null
-              && isNotEmpty(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
-            for (PipelineStageExecution pipelineStageExecution :
-                workflowExecution.getPipelineExecution().getPipelineStageExecutions()) {
-              if (pipelineStageExecution == null || pipelineStageExecution.getWorkflowExecutions() == null) {
-                continue;
-              }
-              instanceCount +=
-                  pipelineStageExecution.getWorkflowExecutions()
-                      .stream()
-                      .filter(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries() != null)
-                      .flatMap(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries().stream())
-                      .map(ElementExecutionSummary::getInstancesCount)
-                      .mapToInt(i -> i)
-                      .sum();
-            }
-          }
+          instanceCount += workflowExecutionService.getInstancesDeployedFromExecution(workflowExecution);
         }
       }
 

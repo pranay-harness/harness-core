@@ -21,7 +21,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo.DataPoint;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
-import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class UsageMetricsEventPublisher {
   @Inject EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
-  @Inject CVConfigurationService cvConfigurationService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private Queue<DeploymentTimeSeriesEvent> deploymentTimeSeriesEventQueue;
   SimpleDateFormat sdf;
 
@@ -59,9 +59,11 @@ public class UsageMetricsEventPublisher {
 
   public DeploymentTimeSeriesEvent constructDeploymentTimeSeriesEvent(
       String accountId, WorkflowExecution workflowExecution) {
+    logger.info("Reporting execution for executionId:" + workflowExecution.getUuid());
     Map<String, String> stringData = new HashMap<>();
     Map<String, List<String>> listData = new HashMap<>();
     Map<String, Long> longData = new HashMap<>();
+    Map<String, Integer> integerData = new HashMap<>();
     stringData.put(EventProcessor.EXECUTIONID, workflowExecution.getUuid());
     stringData.put(EventProcessor.STATUS, workflowExecution.getStatus().name());
     if (workflowExecution.getPipelineExecution() != null) {
@@ -109,12 +111,15 @@ public class UsageMetricsEventPublisher {
     stringData.put(EventProcessor.ACCOUNTID, accountId);
     longData.put(EventProcessor.DURATION, workflowExecution.getDuration());
     longData.put(EventProcessor.ROLLBACK_DURATION, workflowExecution.getRollbackDuration());
+    int instancesDeployed = workflowExecutionService.getInstancesDeployedFromExecution(workflowExecution);
+    integerData.put(EventProcessor.INSTANCES_DEPLOYED, instancesDeployed);
 
     TimeSeriesEventInfo eventInfo = TimeSeriesEventInfo.builder()
                                         .accountId(accountId)
                                         .stringData(stringData)
                                         .listData(listData)
                                         .longData(longData)
+                                        .integerData(integerData)
                                         .build();
     if (isEmpty(eventInfo.getListData())) {
       logger.info("TimeSeriesEventInfo has listData empty eventInfo=[{}]", eventInfo);

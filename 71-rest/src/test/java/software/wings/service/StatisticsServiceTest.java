@@ -47,9 +47,9 @@ import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DaySta
 import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
-import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -58,9 +58,9 @@ import java.util.List;
 
 public class StatisticsServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private WingsPersistence wingsPersistence;
 
+  @Mock private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject @InjectMocks private StatisticsService statisticsService;
 
   @Mock private HIterator<WorkflowExecution> executionIterator;
@@ -70,6 +70,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(asList(APP_ID));
     when(appService.getAppsByAccountId(ACCOUNT_ID)).thenReturn(asList(anApplication().uuid(APP_ID).build()));
     when(workflowExecutionService.obtainWorkflowExecutionIterator(anyList(), anyLong())).thenReturn(executionIterator);
+    when(workflowExecutionService.getInstancesDeployedFromExecution(any(WorkflowExecution.class))).thenCallRealMethod();
   }
 
   @Test
@@ -134,14 +135,14 @@ public class StatisticsServiceTest extends WingsBaseTest {
     AggregatedDayStats aggregatedProdDayStats = deploymentStatistics.getStatsMap().get(PROD);
     AggregatedDayStats aggregatedNonProdDayStats = deploymentStatistics.getStatsMap().get(NON_PROD);
 
-    assertAggregatedDatyStats(getStartEpoch(), aggregatedProdDayStats, aggregatedNonProdDayStats);
+    assertAggregatedDayStats(getStartEpoch(), aggregatedProdDayStats, aggregatedNonProdDayStats);
   }
 
   private long getStartEpoch() {
     return getEndEpoch(29);
   }
 
-  private void assertAggregatedDatyStats(
+  private void assertAggregatedDayStats(
       long startEpoch, AggregatedDayStats aggregatedProdDayStats, AggregatedDayStats aggregatedNonProdDayStats) {
     assertThat(aggregatedNonProdDayStats.getFailedCount()).isEqualTo(2);
     assertThat(aggregatedNonProdDayStats.getInstancesCount()).isEqualTo(2);

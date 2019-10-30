@@ -35,7 +35,8 @@ public class DeploymentStatsQueryMetaData {
     ENVTYPE("ENVTYPE", DataType.STRING, QLFilterKind.ARRAY),
     STARTTIME("STARTTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
-    ROLLBACK_DURATION("ROLLBACK_DURATION", DataType.LONG, QLFilterKind.SIMPLE);
+    ROLLBACK_DURATION("ROLLBACK_DURATION", DataType.LONG, QLFilterKind.SIMPLE),
+    INSTANCES_DEPLOYED("INSTANCES_DEPLOYED", DataType.INTEGER, QLFilterKind.SIMPLE);
 
     private DataType dataType;
     private String fieldName;

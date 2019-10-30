@@ -206,4 +206,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   ConcurrentExecutionResponse fetchConcurrentExecutions(String appId, String workflowExecutionId, String unit);
 
   Map<String, Object> extractServiceInfrastructureDetails(String appId, WorkflowExecution execution);
+
+  int getInstancesDeployedFromExecution(WorkflowExecution workflowExecution);
 }
