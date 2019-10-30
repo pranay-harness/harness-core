@@ -47,7 +47,10 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.ccm.CCMPerpetualTaskHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
+import io.harness.ccm.cluster.ClusterRecordService;
+import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.event.EventsModule;
@@ -578,6 +581,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     infrastructureMappingService.getSubject().register(clusterRecordHandler);
     SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
     settingsService.getSubject().register(clusterRecordHandler);
+
+    CCMPerpetualTaskHandler ccmPerpetualTaskHandler = injector.getInstance(Key.get(CCMPerpetualTaskHandler.class));
+    ClusterRecordServiceImpl clusterRecordService =
+        (ClusterRecordServiceImpl) injector.getInstance(Key.get(ClusterRecordService.class));
+    clusterRecordService.getSubject().register(ccmPerpetualTaskHandler);
 
     registerSharedObservers(injector);
   }

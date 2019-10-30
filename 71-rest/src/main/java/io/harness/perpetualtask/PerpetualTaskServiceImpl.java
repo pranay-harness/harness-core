@@ -57,6 +57,11 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
+  public boolean resetTask(String accountId, String taskId) {
+    return perpetualTaskRecordDao.resetDelegateId(accountId, taskId);
+  }
+
+  @Override
   public boolean deleteTask(String accountId, String taskId) {
     return perpetualTaskRecordDao.remove(accountId, taskId);
   }
@@ -66,6 +71,12 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     String accountId = DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current());
     logger.debug("Account id: {}", accountId);
     return perpetualTaskRecordDao.listAssignedTaskIds(delegateId, accountId);
+  }
+
+  @Override
+  public PerpetualTaskType getPerpetualTaskType(String taskId) {
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
+    return perpetualTaskRecord.getPerpetualTaskType();
   }
 
   @Override

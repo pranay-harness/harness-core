@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import com.google.inject.Inject;
+
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import org.junit.Before;
@@ -23,7 +25,7 @@ import software.wings.beans.StringValue;
 
 public class ClusterRecordHandlerTest extends WingsBaseTest {
   @Mock ClusterRecordService clusterRecordService;
-  @Spy @InjectMocks private ClusterRecordHandler handler = new ClusterRecordHandler(clusterRecordService);
+  @Inject @InjectMocks @Spy private ClusterRecordHandler handler;
 
   private String accountId = "ACCOUNT_ID";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";

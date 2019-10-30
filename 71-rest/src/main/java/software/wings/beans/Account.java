@@ -534,6 +534,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setWhitelistedDomains(whitelistedDomains);
       account.setLastLicenseExpiryReminderSentAt(lastLicenseExpiryReminderSentAt);
       account.setOauthEnabled(oauthEnabled);
+      account.setCloudCostEnabled(cloudCostEnabled);
       return account;
     }
   }

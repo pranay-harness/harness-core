@@ -654,6 +654,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute, boolean pushToGit) {
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
+    SettingAttribute prevSettingAttribute = existingSetting;
 
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
@@ -715,6 +716,15 @@ public class SettingsServiceImpl implements SettingsService {
     if (updatedSettingAttribute.getValue() instanceof CloudCostAware) {
       ccmSettingService.maskCCMConfig(updatedSettingAttribute);
     }
+
+    try {
+      if (CLOUD_PROVIDER == settingAttribute.getCategory()) {
+        subject.fireInform(SettingAttributeObxxxxxxxx:onUpdated, prevSettingAttribute, settingAttribute);
+      }
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Cloud Providers.", e);
+    }
+
     return updatedSettingAttribute;
   }
 
