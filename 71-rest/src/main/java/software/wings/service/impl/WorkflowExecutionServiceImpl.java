@@ -2849,6 +2849,35 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public int getInstancesDeployedFromExecution(WorkflowExecution workflowExecution) {
+    int instanceCount = 0;
+    if ((workflowExecution.getWorkflowType() == ORCHESTRATION)
+        && workflowExecution.getServiceExecutionSummaries() != null) {
+      instanceCount += workflowExecution.getServiceExecutionSummaries()
+                           .stream()
+                           .map(ElementExecutionSummary::getInstancesCount)
+                           .mapToInt(i -> i)
+                           .sum();
+    } else if (workflowExecution.getWorkflowType() == PIPELINE && workflowExecution.getPipelineExecution() != null
+        && isNotEmpty(workflowExecution.getPipelineExecution().getPipelineStageExecutions())) {
+      for (PipelineStageExecution pipelineStageExecution :
+          workflowExecution.getPipelineExecution().getPipelineStageExecutions()) {
+        if (pipelineStageExecution == null || pipelineStageExecution.getWorkflowExecutions() == null) {
+          continue;
+        }
+        instanceCount += pipelineStageExecution.getWorkflowExecutions()
+                             .stream()
+                             .filter(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries() != null)
+                             .flatMap(workflowExecution1 -> workflowExecution1.getServiceExecutionSummaries().stream())
+                             .map(ElementExecutionSummary::getInstancesCount)
+                             .mapToInt(i -> i)
+                             .sum();
+      }
+    }
+    return instanceCount;
+  }
+
+  @Override
   public Set<WorkflowExecutionBaseline> markBaseline(String appId, String workflowExecutionId, boolean isBaseline) {
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);

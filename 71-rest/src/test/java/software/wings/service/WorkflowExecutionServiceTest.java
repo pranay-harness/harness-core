@@ -18,6 +18,7 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -65,11 +66,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.InstanceElement;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactVariable;
+import software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder;
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
@@ -536,6 +539,13 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   public void shouldFetchDeploymentMetadata() {
     validateFetchDeploymentMetadata(false, false);
   }
+  @Test
+  @Category(UnitTests.class)
+  public void testInstancesDeployedFromExecution() {
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    int instancesDeployed = workflowExecutionService.getInstancesDeployedFromExecution(workflowExecution);
+    assertThat(instancesDeployed).isEqualTo(1);
+  }
 
   @Test
   @Category(UnitTests.class)
@@ -601,6 +611,23 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     verify(workflowExecutionServiceHelper).fetchWorkflowVariables(APP_ID, executionArgs, null);
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void testInstancesDeployedFromPipelineExecution() {
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    PipelineStageExecution pipelineStageExecution =
+        PipelineStageExecution.builder().workflowExecutions(asList(workflowExecution)).build();
+
+    PipelineExecution pipelineExecution = PipelineExecution.Builder.aPipelineExecution()
+                                              .withWorkflowType(WorkflowType.PIPELINE)
+                                              .withPipelineStageExecutions(asList(pipelineStageExecution))
+                                              .build();
+    WorkflowExecution parentWorkflowExecution =
+        WorkflowExecution.builder().pipelineExecution(pipelineExecution).workflowType(WorkflowType.PIPELINE).build();
+    int instancesDeployed = workflowExecutionService.getInstancesDeployedFromExecution(parentWorkflowExecution);
+    assertThat(instancesDeployed).isEqualTo(1);
+  }
+
   private PipelineExecution createPipelineExecution(ApprovalStateExecutionData approvalStateExecutionData) {
     PipelineStageExecution pipelineStageExecution = PipelineStageExecution.builder()
                                                         .status(ExecutionStatus.PAUSED)
@@ -639,6 +666,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         .status(ExecutionStatus.PAUSED)
         .workflowType(WorkflowType.ORCHESTRATION)
         .uuid(generateUuid())
+        .serviceExecutionSummaries(
+            asList(ElementExecutionSummaryBuilder.anElementExecutionSummary()
+                       .withInstanceStatusSummaries(asList(
+                           anInstanceStatusSummary()
+                               .withInstanceElement(
+                                   InstanceElement.Builder.anInstanceElement().uuid("id1").podName("pod").build())
+                               .build()))
+                       .build()))
         .build();
   }
 

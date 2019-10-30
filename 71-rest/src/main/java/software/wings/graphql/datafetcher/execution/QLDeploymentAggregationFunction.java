@@ -10,4 +10,5 @@ public class QLDeploymentAggregationFunction {
   QLCountAggregateOperation count;
   QLDurationAggregateOperation duration;
   QLDurationAggregateOperation rollbackDuration;
+  QLCountAggregateOperation instancesDeployed;
 }

@@ -37,6 +37,7 @@ import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData.QLAggregatedDataBuilder;
 import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
+import software.wings.graphql.schema.type.aggregation.QLCountAggregateOperation;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLDataPoint.QLDataPointBuilder;
@@ -527,6 +528,12 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
               .rollbackDuration(
                   QLNumberFilter.builder().operator(QLNumberOperator.GREATER_THAN).values(new Number[] {0}).build())
               .build());
+    }
+    if (aggregateFunction != null && aggregateFunction.getInstancesDeployed() != null) {
+      FunctionCall functionCall = getFunctionCall(aggregateFunction.getInstancesDeployed());
+      selectQuery.addCustomColumns(functionCall.addColumnParams(schema.getInstancesDeployed()),
+          DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName());
+      fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
     }
 
     selectQuery.addCustomFromTable(schema.getDeploymentTable());
@@ -1188,6 +1195,15 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         return FunctionCall.avg();
       default:
         return FunctionCall.max();
+    }
+  }
+
+  private FunctionCall getFunctionCall(QLCountAggregateOperation operation) {
+    switch (operation) {
+      case SUM:
+        return FunctionCall.sum();
+      default:
+        return FunctionCall.sum();
     }
   }
 
