@@ -10,7 +10,7 @@ import com.google.inject.Singleton;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.EventType;
-import io.harness.event.model.QueableEvent;
+import io.harness.event.model.GenericEvent;
 import io.harness.queue.QueueListener;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +22,7 @@ import java.util.Set;
  */
 @Singleton
 @Slf4j
-public class GenericEventListener extends QueueListener<QueableEvent> implements EventListener {
+public class GenericEventListener extends QueueListener<GenericEvent> implements EventListener {
   private Multimap<EventType, EventHandler> handlerRegistry;
 
   public GenericEventListener() {
@@ -36,7 +36,7 @@ public class GenericEventListener extends QueueListener<QueableEvent> implements
   }
 
   @Override
-  public void onMessage(QueableEvent event) {
+  public void onMessage(GenericEvent event) {
     Collection<EventHandler> eventHandlers = handlerRegistry.get(event.getEvent().getEventType());
 
     if (isEmpty(eventHandlers)) {

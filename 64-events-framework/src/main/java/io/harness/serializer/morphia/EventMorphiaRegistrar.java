@@ -1,6 +1,6 @@
 package io.harness.serializer.morphia;
 
-import io.harness.event.model.QueableEvent;
+import io.harness.event.model.GenericEvent;
 import io.harness.morphia.MorphiaRegistrar;
 
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.Set;
 public class EventMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(QueableEvent.class);
+    set.add(GenericEvent.class);
   }
 
   @Override

@@ -13,7 +13,7 @@ metrics:
 
   - collector_queues_count:
       check_interval:   10      # seconds
-      query:            "db.collectorQueue.find({}).count()"
+      query:            "db.collectorQueue2.find({}).count()"
 
   - delay_queues_count:
       check_interval:   10      # seconds
@@ -29,7 +29,7 @@ metrics:
 
   - email_queues_count:
       check_interval:   10      # seconds
-      query:            "db.emailQueue.find({}).count()"
+      query:            "db.emailQueue2.find({}).count()"
 
   - execution_queues_count:
       check_interval:   10      # seconds
@@ -45,7 +45,7 @@ metrics:
 
   - kms_transition_queues_count:
       check_interval:   10      # seconds
-      query:            "db.kmsTransitionEvent.find({}).count()"
+      query:            "db.kmsTransitionEvent2.find({}).count()"
 
   - notify_queues_count:
       check_interval:   10      # seconds
@@ -53,7 +53,7 @@ metrics:
 
   - prune_queues_count:
       check_interval:   10      # seconds
-      query:            "db.pruneQueue.find({}).count()"
+      query:            "db.pruneQueue2.find({}).count()"
 
   - generic_queues_count:
       check_interval:   10      # seconds
