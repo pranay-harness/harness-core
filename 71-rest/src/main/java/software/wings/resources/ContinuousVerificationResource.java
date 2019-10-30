@@ -149,6 +149,6 @@ public class ContinuousVerificationResource {
   public RestResponse<List<CVCertifiedDetailsForWorkflowState>> getCVCertifiedLabelsForPipeline(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
       @QueryParam("pipelineExecutionId") String pipelineExecutionId) {
-    return new RestResponse<>(cvManagerService.getCVCertifiedDetailsForWorkflow(accountId, appId, pipelineExecutionId));
+    return new RestResponse<>(cvManagerService.getCVCertifiedDetailsForPipeline(accountId, appId, pipelineExecutionId));
   }
 }
