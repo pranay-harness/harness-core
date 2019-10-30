@@ -51,7 +51,7 @@ public class OnpremSignupHandler implements SignupHandler {
   }
 
   private void validateDeployMode() {
-    if (!mainConfiguration.getDeployMode().equals(DeployMode.ONPREM)) {
+    if (!DeployMode.isOnPrem(mainConfiguration.getDeployMode().toString())) {
       throw new SignupException("Method only allowed in case of Onprem deployments");
     }
   }
