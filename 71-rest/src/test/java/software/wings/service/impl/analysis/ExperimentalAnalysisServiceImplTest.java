@@ -1,11 +1,11 @@
 package software.wings.service.impl.analysis;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.metrics.RiskLevel.LOW;
 import static software.wings.metrics.RiskLevel.MEDIUM;
-import static software.wings.metrics.RiskLevel.NA;
 
 import com.google.inject.Inject;
 
@@ -108,36 +108,20 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testGetExperimentalMetricAnalysisSummaryWithoutMismatchData() {
+  public void testGetExperimentalMetricAnalysisSummary_WithoutMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))
         .thenReturn(getExperimentalRecord(Lists.newArrayList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)));
     when(timeSeriesMLAnalysisRecordService.getLastAnalysisRecord(anyString()))
         .thenReturn(getAnalysisRecord(Lists.newArrayList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)));
 
-    ExperimentalMetricRecord record =
-        experimentalAnalysisService.getExperimentalMetricAnalysisSummary(stateExecutionId, stateType, expName);
-    assertThat(record).isNotNull();
-    assertThat(record.getRiskLevel()).isEqualByComparingTo(LOW);
-    assertThat(record.getExperimentalRiskLevel()).isEqualByComparingTo(NA);
-    assertThat(record.isMismatch()).isEqualTo(false);
-    assertThat(record.getMetricAnalysis().size()).isEqualTo(3);
-    for (int i = 0; i < 3; i++) {
-      assertThat(record.getMetricAnalysis().get(i).getRiskLevel()).isEqualByComparingTo(LOW);
-      assertThat(record.getMetricAnalysis().get(i).getExperimentalRiskLevel()).isEqualByComparingTo(NA);
-      assertThat(record.getMetricAnalysis().get(i).isMismatch()).isEqualTo(false);
-      assertThat(record.getMetricAnalysis().get(i).getMetricValues().size()).isEqualTo(4);
-      for (int j = 0; j < 3; j++) {
-        assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).getRiskLevel()).isEqualByComparingTo(LOW);
-        assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).getExperimentalRiskLevel())
-            .isEqualByComparingTo(NA);
-        assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).isMismatch()).isEqualTo(false);
-      }
-    }
+    assertThatThrownBy(
+        () -> experimentalAnalysisService.getExperimentalMetricAnalysisSummary(stateExecutionId, stateType, expName))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   @Category(UnitTests.class)
-  public void testGetExperimentalMetricAnalysisSummaryWithMismatchData() {
+  public void testGetExperimentalMetricAnalysisSummary_WithMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))
         .thenReturn(getExperimentalRecord(Lists.newArrayList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)));
     when(timeSeriesMLAnalysisRecordService.getLastAnalysisRecord(anyString()))
@@ -149,33 +133,14 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
     assertThat(record.getRiskLevel()).isEqualByComparingTo(LOW);
     assertThat(record.getExperimentalRiskLevel()).isEqualByComparingTo(MEDIUM);
     assertThat(record.isMismatch()).isEqualTo(true);
-    assertThat(record.getMetricAnalysis().size()).isEqualTo(3);
-    for (int i = 0; i < 3; i++) {
-      if (i == 0) {
-        assertThat(record.getMetricAnalysis().get(i).getRiskLevel()).isEqualByComparingTo(LOW);
-        assertThat(record.getMetricAnalysis().get(i).getExperimentalRiskLevel()).isEqualByComparingTo(MEDIUM);
-        assertThat(record.getMetricAnalysis().get(i).isMismatch()).isEqualTo(true);
-      } else {
-        assertThat(record.getMetricAnalysis().get(i).getRiskLevel()).isEqualByComparingTo(LOW);
-        assertThat(record.getMetricAnalysis().get(i).getExperimentalRiskLevel()).isEqualByComparingTo(NA);
-        assertThat(record.getMetricAnalysis().get(i).isMismatch()).isEqualTo(false);
-      }
-      assertThat(record.getMetricAnalysis().get(i).getMetricValues().size()).isEqualTo(4);
-      for (int j = 0; j < 4; j++) {
-        if (i == 0 && j == 3) {
-          assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).getRiskLevel())
-              .isEqualByComparingTo(LOW);
-          assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).getExperimentalRiskLevel())
-              .isEqualByComparingTo(MEDIUM);
-          assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).isMismatch()).isEqualTo(true);
-        } else {
-          assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).getRiskLevel())
-              .isEqualByComparingTo(LOW);
-          assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).getExperimentalRiskLevel())
-              .isEqualByComparingTo(NA);
-          assertThat(record.getMetricAnalysis().get(i).getMetricValues().get(j).isMismatch()).isEqualTo(false);
-        }
-      }
-    }
+    assertThat(record.getMetricAnalysis().size()).isEqualTo(1);
+    assertThat(record.getMetricAnalysis().get(0).getRiskLevel()).isEqualByComparingTo(LOW);
+    assertThat(record.getMetricAnalysis().get(0).getExperimentalRiskLevel()).isEqualByComparingTo(MEDIUM);
+    assertThat(record.getMetricAnalysis().get(0).isMismatch()).isEqualTo(true);
+    assertThat(record.getMetricAnalysis().get(0).getMetricValues().size()).isEqualTo(1);
+    assertThat(record.getMetricAnalysis().get(0).getMetricValues().get(0).getRiskLevel()).isEqualByComparingTo(LOW);
+    assertThat(record.getMetricAnalysis().get(0).getMetricValues().get(0).getExperimentalRiskLevel())
+        .isEqualByComparingTo(MEDIUM);
+    assertThat(record.getMetricAnalysis().get(0).getMetricValues().get(0).isMismatch()).isEqualTo(true);
   }
 }
