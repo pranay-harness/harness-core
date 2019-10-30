@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AmiServiceImpl implements AmiService {
   private static final String AMI_RESOURCE_FILTER_PREFIX = "ami-";
+  private static final long AMI_MAX_RESULTS = 1000;
   @Inject private AwsHelperService awsHelperService;
 
   @Override
@@ -45,11 +46,24 @@ public class AmiServiceImpl implements AmiService {
     describeImagesResult =
         awsHelperService.desribeEc2Images(awsConfig, encryptionDetails, region, describeImagesRequest);
     logger.info("Sorting on creation time");
-    Collections.sort(describeImagesResult.getImages(), Comparator.comparing(Image::getCreationDate));
-    describeImagesResult.getImages()
-        .stream()
-        .filter(image -> image != null && isNotBlank(image.getName()))
-        .forEach(image -> constructBuildDetails(buildDetails, image));
+    Collections.sort(
+        describeImagesResult.getImages(), Collections.reverseOrder(Comparator.comparing(Image::getCreationDate)));
+
+    int numberOfNewImages = describeImagesResult.getImages().size();
+    List<Image> limitedImages = describeImagesResult.getImages()
+                                    .stream()
+                                    .filter(image -> image != null && isNotBlank(image.getName()))
+                                    .limit(AMI_MAX_RESULTS)
+                                    .collect(Collectors.toList());
+
+    int fetchedImages = limitedImages.size();
+
+    if (numberOfNewImages != fetchedImages) {
+      logger.warn("Fetching top {} images only due to limit constrained ", AMI_MAX_RESULTS);
+    }
+    Collections.reverse(limitedImages);
+
+    limitedImages.forEach(image -> constructBuildDetails(buildDetails, image));
     if (buildDetails.isEmpty()) {
       logger.info("No images found matching with the given Region {}, and filters {}", region, filters);
     } else {
