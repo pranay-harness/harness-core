@@ -297,6 +297,9 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   Map<String, Service> getIdToServiceMapping(String appId, Set<String> servicesIds) {
+    if (isEmpty(servicesIds)) {
+      return Collections.emptyMap();
+    }
     PageRequest<Service> servicePageRequest = new PageRequest<>();
     servicePageRequest.addFilter(Service.APP_ID_KEY, Operator.EQ, appId);
     servicePageRequest.addFilter(ServiceKeys.uuid, Operator.IN, servicesIds.toArray());
@@ -311,9 +314,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   Map<String, SettingAttribute> getIdToSettingAttributeMapping(String accountId, Set<String> settingAttributeIds) {
+    if (isEmpty(settingAttributeIds)) {
+      return Collections.emptyMap();
+    }
     PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
     settingAttributePageRequest.addFilter(SettingAttribute.ACCOUNT_ID_KEY, Operator.EQ, accountId);
-    settingAttributePageRequest.addFilter(SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT);
+    settingAttributePageRequest.addFilter(
+        SettingAttribute.VALUE_TYPE_KEY, Operator.EQ, SettingVariableTypes.GIT.name());
     settingAttributePageRequest.addFilter(SettingAttributeKeys.uuid, Operator.IN, settingAttributeIds.toArray());
 
     PageResponse<SettingAttribute> settingAttributes = settingService.list(settingAttributePageRequest, null, null);
@@ -328,8 +335,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public PageResponse<InfrastructureProvisionerDetails> listDetails(
       PageRequest<InfrastructureProvisioner> pageRequest, boolean withTags, String tagFilter, @NotEmpty String appId) {
+    final long apiStartTime = System.currentTimeMillis();
     PageResponse<InfrastructureProvisioner> pageResponse =
         resourceLookupService.listWithTagFilters(pageRequest, tagFilter, EntityType.PROVISIONER, withTags);
+
+    logger.info(
+        format("Time taken in fetching listWithTagFilters : [%s] ms", System.currentTimeMillis() - apiStartTime));
+    long startTime = System.currentTimeMillis();
 
     Set<String> settingAttributeIds = new HashSet<>();
     Set<String> servicesIds = new HashSet<>();
@@ -338,15 +350,24 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         settingAttributeIds.add(
             ((TerraformInfrastructureProvisioner) infrastructureProvisioner).getSourceRepoSettingId());
       }
-      infrastructureProvisioner.getMappingBlueprints()
-          .stream()
-          .map(InfrastructureMappingBlueprint::getServiceId)
-          .forEach(servicesIds::add);
+      if (isNotEmpty(infrastructureProvisioner.getMappingBlueprints())) {
+        infrastructureProvisioner.getMappingBlueprints()
+            .stream()
+            .map(InfrastructureMappingBlueprint::getServiceId)
+            .forEach(servicesIds::add);
+      }
     }
 
     Map<String, SettingAttribute> idToSettingAttributeMapping =
         getIdToSettingAttributeMapping(appService.getAccountIdByAppId(appId), settingAttributeIds);
+
+    logger.info(
+        format("Time taken in getIdToSettingAttributeMapping : [%s] ms", System.currentTimeMillis() - startTime));
+    startTime = System.currentTimeMillis();
+
     Map<String, Service> idToServiceMapping = getIdToServiceMapping(appId, servicesIds);
+    logger.info(format("Time taken in idToServiceMapping : [%s] ms", System.currentTimeMillis() - startTime));
+    startTime = System.currentTimeMillis();
 
     PageResponse<InfrastructureProvisionerDetails> infrastructureProvisionerDetails = new PageResponse<>();
     infrastructureProvisionerDetails.setResponse(
@@ -354,6 +375,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .stream()
             .map(item -> details(item, idToSettingAttributeMapping, idToServiceMapping))
             .collect(toList()));
+    logger.info(format("Time taken in setting details : [%s] ms", System.currentTimeMillis() - startTime));
+    logger.info(format("Time taken by details api : [%s] ms", System.currentTimeMillis() - apiStartTime));
     return infrastructureProvisionerDetails;
   }
 
