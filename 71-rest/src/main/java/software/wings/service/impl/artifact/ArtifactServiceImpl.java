@@ -29,6 +29,7 @@ import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.REJECTED;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.Artifact.Status.WAITING;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
@@ -722,12 +723,18 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream) {
     // TODO: ASR: update with accountId
     Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
-                                        .project(ArtifactKeys.metadata, true)
-                                        .project(ArtifactKeys.revision, true)
                                         .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
                                         .field(ArtifactKeys.status)
                                         .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
                                         .disableValidation();
+
+    if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
+      artifactQuery.project(ArtifactKeys.revision, true);
+    } else {
+      artifactQuery.project(ArtifactKeys.metadata, true);
+      artifactQuery.project(ArtifactKeys.revision, true);
+    }
+
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       return artifactQuery;
     }

@@ -2,18 +2,30 @@ package software.wings.helpers.ext.ami;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
+import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.Filter;
-import io.harness.CategoryTest;
+import com.amazonaws.services.ec2.model.Image;
+import com.amazonaws.services.ec2.model.Tag;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.impl.AwsHelperService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public class AmiServiceImplTest extends CategoryTest {
+public class AmiServiceImplTest extends WingsBaseTest {
+  @Mock private AwsHelperService awsHelperService;
   @Test
   @Category(UnitTests.class)
   public void testGetFiltersWithNullEmptyValues() {
@@ -37,6 +49,41 @@ public class AmiServiceImplTest extends CategoryTest {
     assertThat(filters.get(1).getName()).isEqualTo("state");
     assertThat(filters.get(1).getValues().size()).isEqualTo(1);
     assertThat(filters.get(1).getValues().get(0)).isEqualTo("available");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFetchAMIBuilds() {
+    AmiServiceImpl amiServiceImpl = new AmiServiceImpl();
+    on(amiServiceImpl).set("awsHelperService", awsHelperService);
+    List<Image> images = asList(new Image()
+                                    .withImageId("1")
+                                    .withName("Image1")
+                                    .withCreationDate("1")
+                                    .withOwnerId("1")
+                                    .withImageType("AMI")
+                                    .withTags(new Tag().withKey("abc").withValue("efg")),
+        new Image()
+            .withImageId("2")
+            .withName("Image2")
+            .withCreationDate("2")
+            .withOwnerId("2")
+            .withImageType("AMI")
+            .withTags(new Tag().withKey("abc1").withValue("efg1")));
+
+    when(awsHelperService.desribeEc2Images(any(), any(), any(), any()))
+        .thenReturn(new DescribeImagesResult().withImages(images));
+    AwsConfig awsConfig = AwsConfig.builder()
+                              .accessKey("AKIAJLEKM45P4PO5QUFQ")
+                              .secretKey("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".toCharArray())
+                              .build();
+
+    List<String> builds = amiServiceImpl.getBuilds(awsConfig, null, "US-east", null, null, 50)
+                              .stream()
+                              .map(BuildDetails::getNumber)
+
+                              .collect(Collectors.toList());
+    assertThat(builds).isEqualTo(asList("Image1", "Image2"));
   }
 
   @Test
