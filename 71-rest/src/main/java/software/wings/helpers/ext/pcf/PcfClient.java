@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
+import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.reactor.ConnectionContext;
@@ -45,5 +46,7 @@ public interface PcfClient {
   List<String> getRoutesForSpace(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException;
   Optional<Route> getRouteMap(PcfRequestConfig pcfRequestConfig, String route)
+      throws PivotalClientApiException, InterruptedException;
+  List<Domain> getAllDomainsForSpace(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException;
 }

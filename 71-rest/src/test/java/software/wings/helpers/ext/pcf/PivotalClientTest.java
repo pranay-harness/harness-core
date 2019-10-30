@@ -4,10 +4,14 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,6 +22,8 @@ import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
+import org.cloudfoundry.operations.domains.Domain;
+import org.cloudfoundry.operations.domains.Status;
 import org.cloudfoundry.operations.organizations.OrganizationDetail;
 import org.cloudfoundry.operations.organizations.OrganizationQuota;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
@@ -38,6 +44,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -550,5 +557,87 @@ public class PivotalClientTest extends WingsBaseTest {
     verify(client).pushUsingPcfSdk(pcfRequestCaptor.capture(), any());
     PcfRequestConfig captorValueConfig = pcfRequestCaptor.getValue();
     assertThat(captorValueConfig).isEqualTo(pcfRequestConfig);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testFindRoutesNeedToBeCreated() throws Exception {
+    List<String> routes = new ArrayList<>();
+    String path1 = "myapp.cfapps.io";
+    String path2 = "myapp.cfapps.io/path";
+    String path3 = "myapp2.cfapps.io";
+    String space = "space";
+
+    routes.add(path1);
+    Route route = Route.builder().id("id").host("myapp").domain("cfapps.io").space(space).build();
+
+    List<String> routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route));
+    assertThat(routeToBeCreated).isNotNull();
+    assertThat(routeToBeCreated).isEmpty();
+
+    routes.clear();
+    routes.add(path2);
+    Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("path").space(space).build();
+    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route1));
+    assertThat(routeToBeCreated).isNotNull();
+    assertThat(routeToBeCreated).isEmpty();
+
+    routes.clear();
+    routes.add(path1);
+    routes.add(path2);
+    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route1, route));
+    assertThat(routeToBeCreated).isNotNull();
+    assertThat(routeToBeCreated).isEmpty();
+
+    routes.add(path3);
+    routeToBeCreated = pcfClient.findRoutesNeedToBeCreated(routes, Arrays.asList(route1, route));
+    assertThat(routeToBeCreated).isNotNull();
+    assertThat(routeToBeCreated).isNotEmpty();
+    assertThat(routeToBeCreated.size()).isEqualTo(1);
+    assertThat(routeToBeCreated.get(0)).isEqualTo(path3);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testMapRoutesForApplication() throws Exception {
+    PcfClientImpl pcfClient1 = spy(PcfClientImpl.class);
+    String space = "space1";
+    Route route = Route.builder().id("id").host("myapp").domain("cfapps.io").space(space).build();
+    Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("path").space(space).build();
+
+    doReturn(Arrays.asList(route, route1)).when(pcfClient1).getRouteMapsByNames(anyList(), any());
+    doNothing().when(pcfClient1).mapRouteMapForApp(any(), any());
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().spaceName(space).build();
+
+    List<String> routes = new ArrayList<>();
+    String path1 = "myapp.cfapps.io";
+    String path2 = "myapp.cfapps.io/path";
+    String path3 = "myapp2.cfapps.io/P1";
+    routes.add(path1);
+    routes.add(path2);
+    // All mapping routes exists
+    pcfClient1.mapRoutesForApplication(pcfRequestConfig, routes);
+    verify(pcfClient1, never()).getAllDomainsForSpace(any());
+
+    routes.add(path3);
+    doNothing()
+        .when(pcfClient1)
+        .createRouteMap(any(), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
+    doNothing().when(pcfClient1).mapRouteMapForApp(any(), any());
+    doReturn(Arrays.asList(Domain.builder().id("id1").name("cfapps.io").status(Status.SHARED).build()))
+        .when(pcfClient1)
+        .getAllDomainsForSpace(any());
+
+    // 1 mapping route needs to be created
+    pcfClient1.mapRoutesForApplication(pcfRequestConfig, routes);
+    ArgumentCaptor<String> hostCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> domainCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
+    verify(pcfClient1)
+        .createRouteMap(any(), hostCaptor.capture(), domainCaptor.capture(), pathCaptor.capture(), anyBoolean(),
+            anyBoolean(), anyInt());
+    assertThat(hostCaptor.getValue()).isEqualTo("myapp2");
+    assertThat(domainCaptor.getValue()).isEqualTo("cfapps.io");
+    assertThat(pathCaptor.getValue()).isEqualTo("P1");
   }
 }

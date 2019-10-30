@@ -55,4 +55,7 @@ public interface PcfConstants {
   String CONTEXT_APP_FINAL_ROUTES = "finalRoutes";
   String CONTEXT_APP_TEMP_ROUTES = "tempRoutes";
   String PCF_CONFIG_FILE_EXTENSION = ".yml";
+  String PCF_ROUTE_PATH_SEPARATOR = "/";
+  String PCF_ROUTE_HOST_AND_DOMAIN_SEPARATOR = ".";
+  String PCF_TCP_ROUTE_PORT_SEPARATOR = ":";
 }
