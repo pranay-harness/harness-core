@@ -1095,11 +1095,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
 
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
-    deploymentFreezeChecker.check(accountId);
-    checkPreDeploymentConditions(accountId, appId);
-
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
@@ -1133,6 +1128,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setEnvId(resolveEnvId);
       workflowExecution.setEnvIds(Collections.singletonList(resolveEnvId));
     }
+
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
+        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
+    deploymentFreezeChecker.check(accountId);
+    checkPreDeploymentConditions(accountId, appId);
+
     workflowExecution.setWorkflowId(workflowId);
     workflowExecution.setWorkflowIds(asList(workflowId));
     workflowExecution.setName(workflow.getName());
