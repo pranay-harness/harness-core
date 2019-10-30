@@ -7,7 +7,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
 import io.harness.config.PublisherConfiguration;
-import io.harness.event.model.QueableEvent;
+import io.harness.event.model.GenericEvent;
 import io.harness.mongo.QueueFactory;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
@@ -54,8 +54,8 @@ public class ManagerQueueModule extends AbstractModule {
         .toInstance(QueueFactory.createQueue(ExecutionEvent.class, ofSeconds(30), true, publisherConfiguration));
     bind(new TypeLiteral<Queue<DelayEvent>>() {})
         .toInstance(QueueFactory.createQueue(DelayEvent.class, ofSeconds(5), true, publisherConfiguration));
-    bind(new TypeLiteral<Queue<QueableEvent>>() {})
-        .toInstance(QueueFactory.createQueue(QueableEvent.class, ofMinutes(1), true, publisherConfiguration));
+    bind(new TypeLiteral<Queue<GenericEvent>>() {})
+        .toInstance(QueueFactory.createQueue(GenericEvent.class, ofMinutes(1), true, publisherConfiguration));
     bind(new TypeLiteral<Queue<InstanceEvent>>() {})
         .toInstance(QueueFactory.createQueue(InstanceEvent.class, ofMinutes(1), true, publisherConfiguration));
     bind(new TypeLiteral<Queue<DeploymentTimeSeriesEvent>>() {})
@@ -69,7 +69,7 @@ public class ManagerQueueModule extends AbstractModule {
     bind(new TypeLiteral<QueueListener<DeploymentEvent>>() {}).to(DeploymentEventListener.class);
     bind(new TypeLiteral<QueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
     bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
-    bind(new TypeLiteral<QueueListener<QueableEvent>>() {}).to(GenericEventListener.class);
+    bind(new TypeLiteral<QueueListener<GenericEvent>>() {}).to(GenericEventListener.class);
     bind(new TypeLiteral<QueueListener<InstanceEvent>>() {}).to(InstanceEventListener.class);
     bind(new TypeLiteral<QueueListener<DeploymentTimeSeriesEvent>>() {}).to(DeploymentTimeSeriesEventListener.class);
   }

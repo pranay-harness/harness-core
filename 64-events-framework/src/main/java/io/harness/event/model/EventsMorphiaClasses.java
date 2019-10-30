@@ -8,5 +8,5 @@ import java.util.Set;
 
 @UtilityClass
 public class EventsMorphiaClasses {
-  public static final Set<Class> classes = ImmutableSet.<Class>of(QueableEvent.class);
+  public static final Set<Class> classes = ImmutableSet.<Class>of(GenericEvent.class);
 }
