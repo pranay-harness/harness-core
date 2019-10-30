@@ -4,8 +4,11 @@ import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
+import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -34,6 +37,7 @@ import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.cloudfoundry.operations.applications.StartApplicationRequest;
 import org.cloudfoundry.operations.applications.StopApplicationRequest;
 import org.cloudfoundry.operations.applications.Task;
+import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.organizations.OrganizationDetail;
 import org.cloudfoundry.operations.organizations.OrganizationInfoRequest;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
@@ -677,6 +681,7 @@ public class PcfClientImpl implements PcfClient {
   // End Application apis
 
   // Start Rout Map Apis
+
   /**
    * Get Route Application by entire route path
    */
@@ -738,6 +743,38 @@ public class PcfClientImpl implements PcfClient {
                                                 .toString());
       }
       return routes;
+    }
+  }
+
+  public List<Domain> getAllDomainsForSpace(PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    logger.info(new StringBuilder()
+                    .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
+                    .append("Getting Domains for Space: ")
+                    .append(pcfRequestConfig.getSpaceName())
+                    .toString());
+
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+    List<Domain> domains = new ArrayList<>();
+
+    try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
+      operationsWrapper.getCloudFoundryOperations().domains().list().subscribe(domains::add, throwable -> {
+        exceptionOccured.set(true);
+        handleException(throwable, "getAllDomainsForSpace", errorBuilder);
+        latch.countDown();
+      }, latch::countDown);
+
+      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
+      if (exceptionOccured.get()) {
+        throw new PivotalClientApiException(new StringBuilder()
+                                                .append("Exception occurred while getting domains for space: ")
+                                                .append(pcfRequestConfig.getApplicationName())
+                                                .append(", Error: " + errorBuilder.toString())
+                                                .toString());
+      }
+      return domains;
     }
   }
 
@@ -877,18 +914,72 @@ public class PcfClientImpl implements PcfClient {
                     .toString());
 
     List<Route> routeList = getRouteMapsByNames(routes, pcfRequestConfig);
+    List<String> routesNeedToBeCreated = findRoutesNeedToBeCreated(routes, routeList);
+
+    if (isNotEmpty(routesNeedToBeCreated)) {
+      List<Domain> allDomainsForSpace = getAllDomainsForSpace(pcfRequestConfig);
+      Set<String> domainNames = allDomainsForSpace.stream().map(domain -> domain.getName()).collect(toSet());
+      createRoutesThatDoNotExists(routesNeedToBeCreated, domainNames, pcfRequestConfig);
+      routeList = getRouteMapsByNames(routes, pcfRequestConfig);
+    }
     for (Route route : routeList) {
       mapRouteMapForApp(pcfRequestConfig, route);
     }
   }
 
+  private void createRoutesThatDoNotExists(List<String> routesNeedToBeCreated, Set<String> domainNames,
+      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
+    for (String routeToCreate : routesNeedToBeCreated) {
+      createRouteFromPath(routeToCreate, pcfRequestConfig, domainNames);
+    }
+  }
+
+  @VisibleForTesting
+  void createRouteFromPath(String routeToCreate, PcfRequestConfig pcfRequestConfig, Set<String> domainNames)
+      throws PivotalClientApiException, InterruptedException {
+    boolean validRoute = false;
+    String domainNameUsed = EMPTY;
+    for (String domainName : domainNames) {
+      if (routeToCreate.contains(domainName)) {
+        validRoute = true;
+        domainNameUsed = domainName;
+        break;
+      }
+    }
+
+    if (!validRoute) {
+      throw new PivotalClientApiException(new StringBuilder(128)
+                                              .append("Invalid Route Name: ")
+                                              .append(routeToCreate)
+                                              .append(", used domain not present in this space")
+                                              .toString());
+    }
+
+    int domainStartIndex = routeToCreate.indexOf(domainNameUsed);
+    String hostName = domainStartIndex == 0 ? null : routeToCreate.substring(0, domainStartIndex - 1);
+
+    String path = null;
+    int indexForPath = routeToCreate.indexOf(PCF_ROUTE_PATH_SEPARATOR);
+    if (indexForPath != -1) {
+      path = routeToCreate.substring(indexForPath + 1);
+    }
+
+    createRouteMap(pcfRequestConfig, hostName, domainNameUsed, path, false, false, null);
+  }
+
+  @VisibleForTesting
+  List<String> findRoutesNeedToBeCreated(List<String> routes, List<Route> routeList) {
+    Set<String> routesExisting = routeList.stream().map(route -> getPathFromRouteMap(route)).collect(toSet());
+    return routes.stream().filter(route -> !routesExisting.contains(route)).collect(toList());
+  }
+
   @VisibleForTesting
   String getPathFromRouteMap(Route route) {
     return new StringBuilder()
-        .append(StringUtils.isBlank(route.getHost()) ? StringUtils.EMPTY : route.getHost() + ".")
+        .append(StringUtils.isBlank(route.getHost()) ? EMPTY : route.getHost() + ".")
         .append(route.getDomain())
-        .append(StringUtils.isBlank(route.getPath()) ? StringUtils.EMPTY : "/" + route.getPath())
-        .append(StringUtils.isBlank(route.getPort()) ? StringUtils.EMPTY : ":" + Integer.parseInt(route.getPort()))
+        .append(StringUtils.isBlank(route.getPath()) ? EMPTY : "/" + route.getPath())
+        .append(StringUtils.isBlank(route.getPort()) ? EMPTY : ":" + Integer.parseInt(route.getPort()))
         .toString();
   }
 
