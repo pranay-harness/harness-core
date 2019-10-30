@@ -306,7 +306,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
             .getAbsolutePath();
     verify(scriptSshExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
-    verify(scriptSshExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
+    verify(scriptSshExecutor).executeCommandString("chmod 0700 /tmp/ACTIVITY_ID/*", false);
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
@@ -398,7 +398,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         .isEqualTo("/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/home/tomcat' harness"
             + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"));
 
-    verify(scriptSshExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
+    verify(scriptSshExecutor).executeCommandString("chmod 0700 /tmp/ACTIVITY_ID/*", false);
   }
 
   /**
