@@ -1,5 +1,7 @@
 package io.harness.waiter;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -28,7 +30,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "waitQueues", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class WaitQueue implements PersistentEntity, UuidAccess, CreatedAtAccess {
-  public static final Duration TTL = Duration.ofDays(14);
+  public static final Duration TTL = ofDays(14);
 
   @Id @NotNull private String uuid;
   @Indexed @NotNull private long createdAt;

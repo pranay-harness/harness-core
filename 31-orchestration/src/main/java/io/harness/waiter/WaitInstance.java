@@ -1,5 +1,7 @@
 package io.harness.waiter;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.PersistentEntity;
@@ -26,15 +28,12 @@ import java.util.List;
 @Entity(value = "waitInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class WaitInstance implements PersistentEntity, UuidAccess {
-  public static final Duration TTL = WaitQueue.TTL.plusDays(7);
+  public static final Duration TTL = ofDays(21);
   public static final Duration AfterFinishTTL = Duration.ofHours(1);
 
   @Id private String uuid;
   private List<String> correlationIds;
   private NotifyCallback callback;
-
-  // TODO: seems unused anymore
-  private long timeoutMsec;
 
   private ExecutionStatus status = ExecutionStatus.NEW;
   private long callbackProcessingAt;

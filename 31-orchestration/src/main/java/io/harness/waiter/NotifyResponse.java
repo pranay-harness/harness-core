@@ -1,5 +1,7 @@
 package io.harness.waiter;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
@@ -27,7 +29,7 @@ import java.util.Date;
 @Entity(value = "notifyResponses", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class NotifyResponse<T extends ResponseData> implements PersistentEntity, UuidAccess, CreatedAtAccess {
-  public static final Duration TTL = WaitQueue.TTL.plusDays(7);
+  public static final Duration TTL = ofDays(21);
 
   @Id private String uuid;
   @Indexed private long createdAt;
