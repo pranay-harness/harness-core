@@ -1,19 +1,17 @@
-variable "projectId" {
-  type    = string
-  default = "qa-setup"
+variable "credentialsFile" {
+  type    = "string"
 }
 
 variable "deployment" {
-  type    = string
-  default = "qa"
+  type = "string"
 }
 
-variable "credentialsFile" {
-  type    = string
+variable "projectId" {
+  type = "string"
 }
 
 provider "google" {
-  credentials = "${file(var.credentialsFile)}"
+  credentials = var.credentialsFile
   project = var.projectId
 }
 
@@ -36,7 +34,7 @@ locals {
   ])
 
 
-  filter_prefx = (var.projectId == "qa-setup" ?
-    local.qa_filter_prefix :
-    (var.deployment == "prod" ? local.prod_filter_prefix : local.freemium_filter_prefix))
+  filter_prefx = (var.deployment == "qa"   ? local.qa_filter_prefix :
+                 (var.deployment == "prod" ? local.prod_filter_prefix :
+                                               local.freemium_filter_prefix))
 }

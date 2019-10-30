@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -62,7 +63,7 @@ import java.util.Set;
 @Entity(value = "artifactStream")
 @HarnessEntity(exportable = true)
 public abstract class ArtifactStream
-    extends Base implements ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
+    extends Base implements AccountAccess, ArtifactSourceable, PersistentRegularIterable, NameAccess, KeywordsAware {
   protected static final String dateFormat = "HHMMSS";
 
   @Transient private String artifactStreamId;
