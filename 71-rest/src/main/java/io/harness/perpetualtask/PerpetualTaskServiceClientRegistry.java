@@ -9,5 +9,5 @@ public class PerpetualTaskServiceClientRegistry {
 
   public PerpetualTaskServiceClient getClient(PerpetualTaskType type) {
     return clientMap.get(type);
-  };
+  }
 }

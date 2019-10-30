@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Indexed;
 public class PerpetualTaskRecord
     implements PersistentEntity, UuidAware, PersistentRegularIterable, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
-  String accountId;
+  @Indexed String accountId;
   PerpetualTaskType perpetualTaskType;
   PerpetualTaskClientContext clientContext;
   long intervalSeconds;

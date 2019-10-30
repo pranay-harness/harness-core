@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import com.google.inject.Inject;
 
@@ -38,17 +39,14 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpsert() {
     clusterRecordService.upsert(clusterRecord);
-    verify(subject).fireInform(any(), eq(clusterRecord));
+    verify(subject, times(0)).fireInform(any(), eq(clusterRecord));
+    clusterRecordService.upsert(clusterRecord);
+    verify(subject, times(1)).fireInform(any(), eq(clusterRecord));
   }
 
   @Test
   @Category(UnitTests.class)
-  public void testDelete() {
-    // should fail to delete non-existing Clusters
-    Boolean pass1 = clusterRecordService.delete(accountId, cloudProviderId);
-    assertThat(pass1).isFalse();
-
-    // should delete existing Clusters
+  public void shouldDeleteExistingClusters() {
     clusterRecordService.upsert(clusterRecord);
     Boolean pass2 = clusterRecordService.delete(accountId, cloudProviderId);
     assertThat(pass2).isTrue();

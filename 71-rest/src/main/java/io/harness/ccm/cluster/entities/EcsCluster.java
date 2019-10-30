@@ -3,6 +3,7 @@ package io.harness.ccm.cluster.entities;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,10 @@ public class EcsCluster implements Cluster {
   final String region;
   final String clusterName;
 
+  public static final String cloudProviderField = ClusterRecordKeys.cluster + "." + EcsClusterKeys.cloudProviderId;
+  public static final String regionField = ClusterRecordKeys.cluster + "." + EcsClusterKeys.region;
+  public static final String clusterNameField = ClusterRecordKeys.cluster + "." + EcsClusterKeys.clusterName;
+
   @Builder
   public EcsCluster(String cloudProviderId, String region, String clusterName) {
     this.cloudProviderId = cloudProviderId;
@@ -33,11 +38,11 @@ public class EcsCluster implements Cluster {
 
   @Override
   public Query addRequiredQueryFilters(Query<ClusterRecord> query) {
-    return query.field("cluster.cloudProviderId")
+    return query.field(cloudProviderField)
         .equal(this.getCloudProviderId())
-        .field("cluster.region")
+        .field(regionField)
         .equal(this.getRegion())
-        .field("cluster.clusterName")
+        .field(clusterNameField)
         .equal(this.getClusterName());
   }
 }

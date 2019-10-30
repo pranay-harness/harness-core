@@ -1,5 +1,7 @@
 package io.harness.ccm.cluster;
 
+import com.google.inject.Singleton;
+
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -10,6 +12,7 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 
+@Singleton
 @UtilityClass
 public class ClusterRecordUtils {
   static ClusterRecord from(InfrastructureMapping infraMapping) {
@@ -26,6 +29,7 @@ public class ClusterRecordUtils {
         cluster = EcsCluster.builder()
                       .cloudProviderId(ecsInfraMapping.getComputeProviderSettingId())
                       .region(ecsInfraMapping.getRegion())
+                      .clusterName(ecsInfraMapping.getClusterName())
                       .build();
         break;
       default:

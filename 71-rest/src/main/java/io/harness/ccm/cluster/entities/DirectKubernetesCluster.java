@@ -3,6 +3,7 @@ package io.harness.ccm.cluster.entities;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,9 @@ import org.mongodb.morphia.query.Query;
 public class DirectKubernetesCluster implements Cluster {
   final String cloudProviderId;
 
+  public static final String cloudProviderIdField =
+      ClusterRecordKeys.cluster + "." + DirectKubernetesClusterKeys.cloudProviderId;
+
   @Builder
   public DirectKubernetesCluster(String cloudProviderId) {
     this.cloudProviderId = cloudProviderId;
@@ -29,6 +33,6 @@ public class DirectKubernetesCluster implements Cluster {
 
   @Override
   public Query addRequiredQueryFilters(Query<ClusterRecord> query) {
-    return query.field("cluster.cloudProviderId").equal(this.getCloudProviderId());
+    return query.field(cloudProviderIdField).equal(this.getCloudProviderId());
   }
 }

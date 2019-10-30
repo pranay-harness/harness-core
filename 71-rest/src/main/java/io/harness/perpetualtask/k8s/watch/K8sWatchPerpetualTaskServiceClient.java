@@ -7,6 +7,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
+import io.harness.ccm.cluster.entities.Cluster;
+import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -50,8 +52,12 @@ public class K8sWatchPerpetualTaskServiceClient
   }
 
   @Override
+  public boolean reset(String accountId, String taskId) {
+    return perpetualTaskService.resetTask(accountId, taskId);
+  }
+
+  @Override
   public boolean delete(String accountId, String taskId) {
-    // TODO(Tang) delete
     return perpetualTaskService.deleteTask(accountId, taskId);
   }
 
@@ -92,5 +98,10 @@ public class K8sWatchPerpetualTaskServiceClient
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
         .build();
+  }
+
+  public static K8WatchPerpetualTaskClientParams from(Cluster cluster, String k8sResourceKind) {
+    return new K8WatchPerpetualTaskClientParams(
+        ((DirectKubernetesCluster) cluster).getCloudProviderId(), k8sResourceKind);
   }
 }
