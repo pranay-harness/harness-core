@@ -22,15 +22,14 @@ resource "google_logging_metric" "iterators_working_on_entity" {
     }
   }
   label_extractors = {
+    "account": "EXTRACT(jsonPayload.harness.accountId)",
     "entity": "EXTRACT(jsonPayload.harness.class)",
     "thread_pool": "EXTRACT(jsonPayload.thread)",
   }
 }
 
 resource "google_logging_metric" "iterators_delays" {
-  name = join("_", [
-    var.deployment,
-    "iterators_delays"])
+  name = join("_", [var.deployment, "iterators_delays"])
   filter = join("\n", [
     local.filter_prefx,
     "\"Working on entity\""])
