@@ -28,6 +28,7 @@ import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -65,8 +66,11 @@ public class StatisticsServiceImpl implements StatisticsService {
         PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.PROD)));
     deploymentStats.getStatsMap().put(
         NON_PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.NON_PROD)));
+
+    Validator.notNullCheck("Non Production Deployment stats", deploymentStats.getStatsMap().get(NON_PROD));
     deploymentStats.getStatsMap().put(
         ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
+
     return deploymentStats;
   }
 

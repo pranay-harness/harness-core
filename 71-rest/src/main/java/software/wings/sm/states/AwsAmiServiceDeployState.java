@@ -155,7 +155,9 @@ public class AwsAmiServiceDeployState extends State {
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
 
     Application app = workflowStandardParams.getApp();
+    notNullCheck("Application", app);
     Environment env = workflowStandardParams.getEnv();
+    notNullCheck("Environment", env);
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
@@ -478,6 +480,7 @@ public class AwsAmiServiceDeployState extends State {
         (AwsAmiDeployStateExecutionData) context.getStateExecutionData();
 
     Application app = workflowStandardParams.getApp();
+    Validator.notNullCheck("Application", app);
 
     Activity activity = activityService.get(awsAmiDeployStateExecutionData.getActivityId(), app.getUuid());
     Validator.notNullCheck("Activity", activity);
@@ -487,6 +490,7 @@ public class AwsAmiServiceDeployState extends State {
 
     String serviceId = phaseElement.getServiceElement().getUuid();
     Environment env = workflowStandardParams.getEnv();
+    Validator.notNullCheck("Environment", env);
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);

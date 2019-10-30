@@ -1218,8 +1218,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
     }
 
-    Delegate existingDelegate =
-        delegateQuery.project(DelegateKeys.status, true).project(DelegateKeys.delegateProfileId, true).get();
+    Delegate existingDelegate = delegateQuery.project(DelegateKeys.status, true)
+                                    .project(DelegateKeys.delegateProfileId, true)
+                                    .project(DelegateKeys.description, true)
+                                    .get();
     if (existingDelegate != null && existingDelegate.getStatus() == Status.DELETED) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
@@ -1256,6 +1258,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
       delegate.setDelegateProfileId(existingDelegate.getDelegateProfileId());
+      delegate.setDescription(existingDelegate.getDescription());
       if (ECS.equals(delegate.getDelegateType())) {
         registeredDelegate = updateEcsDelegate(delegate, false);
       } else {
@@ -2541,7 +2544,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   /**
-   * Copy {SCOPE/TAG/PROFILE/KEYWORDS} into new delegate
+   * Copy {SCOPE/TAG/PROFILE/KEYWORDS/DESCRIPTION } into new delegate
    */
   private void initNewDelegateWithExistingDelegate(Delegate delegate, Delegate existingInactiveDelegate) {
     delegate.setExcludeScopes(existingInactiveDelegate.getExcludeScopes());
@@ -2549,6 +2552,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     delegate.setDelegateProfileId(existingInactiveDelegate.getDelegateProfileId());
     delegate.setTags(existingInactiveDelegate.getTags());
     delegate.setKeywords(existingInactiveDelegate.getKeywords());
+    delegate.setDescription(existingInactiveDelegate.getDescription());
   }
 
   private Delegate updateAllDelegatesIfECSType(
