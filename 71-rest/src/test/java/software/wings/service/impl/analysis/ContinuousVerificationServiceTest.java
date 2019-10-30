@@ -8,9 +8,11 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rest.RestResponse;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.resources.ContinuousVerificationResource;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.Builder;
@@ -25,6 +27,7 @@ import java.util.Map;
 
 public class ContinuousVerificationServiceTest extends WingsBaseTest {
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private ContinuousVerificationResource continuousVerificationResource;
 
   @Test
   @Category(UnitTests.class)
@@ -113,6 +116,44 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testGetCVCertifiedDetailsForWorkflowFromResource() {
+    String accountId = generateUuid();
+    String appId = generateUuid();
+    String stateExecutionId1 = wingsPersistence.save(Builder.aStateExecutionInstance()
+                                                         .stateType(StateType.ELK.name())
+                                                         .appId(appId)
+                                                         .status(ExecutionStatus.SUCCESS)
+                                                         .build());
+    String stateExecutionId2 = wingsPersistence.save(Builder.aStateExecutionInstance()
+                                                         .stateType(StateType.NEW_RELIC.name())
+                                                         .appId(appId)
+                                                         .status(ExecutionStatus.FAILED)
+                                                         .build());
+
+    String workflowExecutionId = generateUuid();
+    wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
+                              .accountId(accountId)
+                              .stateExecutionId(stateExecutionId1)
+                              .workflowExecutionId(workflowExecutionId)
+                              .build());
+    wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
+                              .accountId(accountId)
+                              .stateExecutionId(stateExecutionId2)
+                              .workflowExecutionId(workflowExecutionId)
+                              .build());
+
+    RestResponse<List<CVCertifiedDetailsForWorkflowState>> result =
+        continuousVerificationResource.getCVCertifiedLabelsForWorkflow(accountId, appId, workflowExecutionId);
+    List<CVCertifiedDetailsForWorkflowState> stateExecutionInstances = result.getResource();
+    assertThat(stateExecutionInstances).isNotEmpty();
+    assertThat(stateExecutionInstances.size()).isEqualTo(2);
+    List<String> states = Arrays.asList("ELK", "NEW_RELIC");
+    assertThat(stateExecutionInstances.get(0).getExecutionDetails().getStateType()).isIn(states);
+    assertThat(stateExecutionInstances.get(1).getExecutionDetails().getStateType()).isIn(states);
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testGetCVCertifiedDetailsForPipeline() {
     String accountId = generateUuid();
     String appId = generateUuid();
@@ -152,6 +193,50 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     assertThat(stateExecutionInstances.get(1).getExecutionDetails().getStateType()).isIn(states);
     assertThat(stateExecutionInstances.get(0).getPhaseName()).isEqualTo("Phase 1");
     assertThat(stateExecutionInstances.get(1).getPhaseName()).isEqualTo("Phase 1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetCVCertifiedDetailsForPipelineFromResource() {
+    String accountId = generateUuid();
+    String appId = generateUuid();
+    String stateExecutionId1 = wingsPersistence.save(Builder.aStateExecutionInstance()
+                                                         .stateType(StateType.SPLUNKV2.name())
+                                                         .appId(appId)
+                                                         .status(ExecutionStatus.SUCCESS)
+                                                         .build());
+    String stateExecutionId2 = wingsPersistence.save(Builder.aStateExecutionInstance()
+                                                         .stateType(StateType.APP_DYNAMICS.name())
+                                                         .status(ExecutionStatus.FAILED)
+                                                         .appId(appId)
+                                                         .build());
+
+    String workflowExecutionId = generateUuid(), pipelineExecutionId = generateUuid();
+    wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
+                              .accountId(accountId)
+                              .stateExecutionId(stateExecutionId1)
+                              .pipelineExecutionId(pipelineExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .phaseName("Phase 1")
+                              .build());
+    wingsPersistence.save(ContinuousVerificationExecutionMetaData.builder()
+                              .accountId(accountId)
+                              .stateExecutionId(stateExecutionId2)
+                              .pipelineExecutionId(pipelineExecutionId)
+                              .workflowExecutionId(workflowExecutionId)
+                              .phaseName("Phase 1")
+                              .build());
+
+    RestResponse<List<CVCertifiedDetailsForWorkflowState>> stateExecutionInstances =
+        continuousVerificationResource.getCVCertifiedLabelsForPipeline(accountId, appId, pipelineExecutionId);
+    List<CVCertifiedDetailsForWorkflowState> result = stateExecutionInstances.getResource();
+    List<String> states = Arrays.asList("SPLUNKV2", "APP_DYNAMICS");
+    assertThat(result).isNotEmpty();
+    assertThat(result.size()).isEqualTo(2);
+    assertThat(result.get(0).getExecutionDetails().getStateType()).isIn(states);
+    assertThat(result.get(1).getExecutionDetails().getStateType()).isIn(states);
+    assertThat(result.get(0).getPhaseName()).isEqualTo("Phase 1");
+    assertThat(result.get(1).getPhaseName()).isEqualTo("Phase 1");
   }
 
   @Test
