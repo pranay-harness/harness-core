@@ -29,7 +29,9 @@ import org.mongodb.morphia.utils.IndexType;
   ,
       @Index(fields = {
         @Field("analysisMinute"), @Field("mismatched"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "ExperimentalMetricListIdx"))
+      }, options = @IndexOptions(name = "ExperimentalMetricListIdx")), @Index(fields = {
+        @Field("analysisMinute"), @Field("stateExecutionId")
+      }, options = @IndexOptions(name = "analysisMinStateExecutionIdIndex"))
 })
 @Data
 @Builder
