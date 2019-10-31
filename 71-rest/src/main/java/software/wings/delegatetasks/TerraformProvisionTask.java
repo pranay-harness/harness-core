@@ -183,6 +183,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       downloadTfStateFile(parameters, scriptDirectory);
 
       boolean entityIdTfVarFileCreated = false;
+      logger.info(format("Text Variables found in task params: [%s]", parameters.getVariables()));
       if (isNotEmpty(parameters.getVariables()) || isNotEmpty(parameters.getEncryptedVariables())) {
         try (BufferedWriter writer =
                  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tfVariablesFile), "UTF-8"))) {
