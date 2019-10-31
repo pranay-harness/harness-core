@@ -146,6 +146,15 @@ public class PcfStateHelperTest extends WingsBaseTest {
       + "      - route: app.harness.io\n"
       + "      - route: qa.harness.io\n";
 
+  public static final String INVALID_ROUTES_MANIFEST_YAML_CONTENT = "  applications:\n"
+      + "  - name : ${APPLICATION_NAME}\n"
+      + "    memory: 850M\n"
+      + "    instances : ${INSTANCE_COUNT}\n"
+      + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
+      + "    path: ${FILE_LOCATION}\n"
+      + "    routes:\n"
+      + "      -route: app.harness.io\n";
+
   public static final String MANIFEST_YAML_CONTENT_With_NO_ROUTE = "  applications:\n"
       + "  - name : ${APPLICATION_NAME}\n"
       + "    memory: 850M\n"
@@ -485,6 +494,15 @@ public class PcfStateHelperTest extends WingsBaseTest {
     routes = pcfStateHelper.getRouteMaps(MANIFEST_YAML_CONTENT_With_NO_ROUTE, infrastructureMapping);
     assertThat(routes).isNotNull();
     assertThat(routes.size()).isEqualTo(0);
+
+    // Test 5: no-route in manifest, routes should be empty, ignore inframap routes
+    infrastructureMapping.setRouteMaps(null);
+    try {
+      pcfStateHelper.getRouteMaps(INVALID_ROUTES_MANIFEST_YAML_CONTENT, infrastructureMapping);
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertThat(e instanceof InvalidRequestException).isTrue();
+    }
   }
 
   @Test

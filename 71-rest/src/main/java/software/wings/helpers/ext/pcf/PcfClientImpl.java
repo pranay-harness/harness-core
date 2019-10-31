@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -969,8 +970,12 @@ public class PcfClientImpl implements PcfClient {
 
   @VisibleForTesting
   List<String> findRoutesNeedToBeCreated(List<String> routes, List<Route> routeList) {
-    Set<String> routesExisting = routeList.stream().map(route -> getPathFromRouteMap(route)).collect(toSet());
-    return routes.stream().filter(route -> !routesExisting.contains(route)).collect(toList());
+    if (isNotEmpty(routes)) {
+      Set<String> routesExisting = routeList.stream().map(route -> getPathFromRouteMap(route)).collect(toSet());
+      return routes.stream().filter(route -> !routesExisting.contains(route)).collect(toList());
+    }
+
+    return emptyList();
   }
 
   @VisibleForTesting
