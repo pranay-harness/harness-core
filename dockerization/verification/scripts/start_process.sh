@@ -21,7 +21,9 @@ export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError 
 
 if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
     tar -xvzf AppServerAgent-4.5.0.23604.tar.gz
-    JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/AppServerAgent-4.5.0.23604/javaagent.jar -Dappdynamics.jvm.shutdown.mark.node.as.historical=true -Dappdynamics.agent.nodeName="$(hostname)
+    node_name="-Dappdynamics.agent.nodeName=$(hostname)"
+    JAVA_OPTS=$JAVA_OPTS" -Dcapsule.jvm.args=-javaagent:/opt/harness/AppServerAgent-4.5.0.23604/javaagent.jar -Dappdynamics.jvm.shutdown.mark.node.as.historical=true"
+    JAVA_OPTS="$JAVA_OPTS $node_name"
     echo "Using Appdynamics java agent"
 fi
 
