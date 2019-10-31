@@ -121,14 +121,18 @@ public class EnvState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (disableAssertion != null && disableAssertion.equals("true")) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped")
+          .stateExecutionData(anEnvStateExecutionData().build())
+          .build();
+    }
+
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    workflowStandardParams.setEnvId(envId);
     String appId = workflowStandardParams.getAppId();
-
     Workflow workflow = workflowService.readWorkflowWithoutServices(appId, workflowId);
-
-    EnvStateExecutionData envStateExecutionData =
-        anEnvStateExecutionData().withWorkflowId(workflowId).withEnvId(envId).build();
+    EnvStateExecutionData envStateExecutionData = anEnvStateExecutionData().withWorkflowId(workflowId).build();
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
@@ -150,8 +154,12 @@ public class EnvState extends State {
               .build();
         }
       } catch (Exception e) {
-        logger.info("Skip Assertion Evaluation Failed : {}", e.getMessage());
-        envStateExecutionData.setSkipAssertionResponse("Assertion Evaluation failed : " + e.getMessage());
+        logger.error("Skip Assertion Evaluation Failed", e);
+        return ExecutionResponse.builder()
+            .executionStatus(FAILED)
+            .errorMessage("Skip Assertion Evaluation Failed : " + e.getMessage())
+            .stateExecutionData(envStateExecutionData)
+            .build();
       }
     }
 
