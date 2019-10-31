@@ -2,6 +2,11 @@
 
 set +e
 
+# Check commit message if there's a single commit
+if [[ $(git rev-list --count $ghprbActualCommit ^master)  -eq 1 ]]; then
+    ghprbPullTitle=$(git log -1 --format="%s" $ghprbActualCommit)
+fi
+
 PR_MESSAGE=`echo "${ghprbPullTitle}" | grep -iE '\[(CCM|CD|CE|DOC|ER|HAR|LE|PL|SEC|SWAT)-[0-9]+]:'`
 
 if [ -z "$PR_MESSAGE" ]
