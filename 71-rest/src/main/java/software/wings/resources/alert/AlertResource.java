@@ -19,7 +19,6 @@ import retrofit2.http.Body;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
@@ -53,7 +52,6 @@ public class AlertResource {
   @GET
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   public RestResponse<PageResponse<Alert>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Alert> request) {
     request.addFilter(AlertKeys.type, Operator.NOT_IN, ALERT_TYPES_TO_NOT_SHOW_UNDER_BELL_ICON.toArray());

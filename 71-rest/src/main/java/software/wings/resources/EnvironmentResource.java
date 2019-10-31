@@ -26,7 +26,6 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -79,7 +78,6 @@ public class EnvironmentResource {
   @ListAPI(ENVIRONMENT)
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   public RestResponse<PageResponse<Environment>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Environment> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags) {

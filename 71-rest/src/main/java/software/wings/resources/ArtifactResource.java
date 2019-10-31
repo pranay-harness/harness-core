@@ -17,7 +17,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -90,7 +89,6 @@ public class ArtifactResource {
   @Path("/v2")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   public RestResponse<PageResponse<Artifact>> listArtifactsByServiceId(@QueryParam("serviceId") String serviceId,
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
     return new RestResponse<>(artifactService.listSortByBuildNo(serviceId, pageRequest));

@@ -16,7 +16,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
@@ -62,7 +61,6 @@ public class AppResource {
   @ListAPI(APPLICATION)
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
       @QueryParam("accountId") String accountId, @QueryParam("appIds") List<String> appIds,
       @QueryParam("details") @DefaultValue("true") boolean details, @QueryParam("tagFilter") String tagFilter,
