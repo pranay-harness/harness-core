@@ -66,7 +66,7 @@ public class DeployInfoFunctionalTest extends AbstractFunctionalTest {
     accountId = getAccount().getUuid();
     infrastructureDefinition =
         infrastructureDefinitionGenerator.ensurePredefined(seed, owners, "GCP_KUBERNETES", bearerToken);
-    Runtime.getRuntime().exec("harness login -u admin@harness.io -p admin -d localhost:9090");
+    harnesscliHelper.loginToCLI();
   }
 
   @Test
