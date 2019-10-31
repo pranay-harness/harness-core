@@ -43,6 +43,8 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
         @Field("appId"), @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt")
       }, options = @IndexOptions(name = "instance_index5", background = true)), @Index(fields = {
         @Field("accountId"), @Field("isDeleted")
+      }, options = @IndexOptions(name = "instance_index6", background = true)), @Index(fields = {
+        @Field("accountId"), @Field("createdAt"), @Field("deletedAt")
       }, options = @IndexOptions(name = "instance_index7", background = true)), @Index(fields = {
         @Field("appId"), @Field("serviceId"), @Field("isDeleted")
       }, options = @IndexOptions(name = "instance_index8", background = true))
