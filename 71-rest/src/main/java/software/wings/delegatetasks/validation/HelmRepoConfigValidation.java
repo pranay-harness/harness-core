@@ -99,7 +99,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateGcsHelmRepoConfig() {
-    return isHelmInstalled() && isChartMuseumInstalled();
+    return isHelmInstalled() && isChartMuseumInstalled() && validateContainerParams();
   }
 
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {
@@ -110,11 +110,15 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private boolean validateHttpHelmRepoConfig(HelmRepoConfig helmRepoConfig) {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
 
-    return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl());
+    return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl()) && validateContainerParams();
+  }
+
+  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters() {
+    return (HelmValuesFetchTaskParameters) getParameters()[0];
   }
 
   private boolean validateAmazonS3HelmRepoConfig() {
-    return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL);
+    return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL) && validateContainerParams();
   }
 
   private boolean isConnectableHttpUrl(String url) {
@@ -152,7 +156,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private String getCriteriaForEmptyHelmRepoConfigInValuesFetch() {
-    HelmValuesFetchTaskParameters valuesTaskParams = (HelmValuesFetchTaskParameters) getParameters()[0];
+    HelmValuesFetchTaskParameters valuesTaskParams = getHelmValuesFetchTaskParameters();
     HelmChartConfigParams helmChartConfigTaskParams = valuesTaskParams.getHelmChartConfigTaskParams();
 
     StringBuilder builder = new StringBuilder(64).append("DIRECT_HELM_REPO: ");
@@ -181,7 +185,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
         return repoConfigTaskParams.getHelmRepoConfig();
 
       case HELM_VALUES_FETCH:
-        HelmValuesFetchTaskParameters valuesTaskParams = (HelmValuesFetchTaskParameters) getParameters()[0];
+        HelmValuesFetchTaskParameters valuesTaskParams = getHelmValuesFetchTaskParameters();
         return valuesTaskParams.getHelmChartConfigTaskParams().getHelmRepoConfig();
 
       default:
@@ -213,7 +217,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateEmptyHelmRepoConfig() {
-    HelmValuesFetchTaskParameters valuesTaskParams = (HelmValuesFetchTaskParameters) getParameters()[0];
+    HelmValuesFetchTaskParameters valuesTaskParams = getHelmValuesFetchTaskParameters();
     ContainerServiceParams containerServiceParams = valuesTaskParams.getContainerServiceParams();
 
     logger.info("Running validation for empty helm repo config ");
@@ -228,7 +232,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(commandRequest);
       if (helmCommandResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
-        validated = containerValidationHelper.validateContainerServiceParams(containerServiceParams);
+        validated = validateContainerParams();
         logger.info("Helm containerServiceParams validation result. Validated: " + validated);
       }
     } catch (Exception e) {
@@ -238,5 +242,14 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
     logger.info("HelmRepoConfigValidation result. Validated: " + validated);
 
     return validated;
+  }
+
+  /*
+  This function validates the containers parameters based on the cloud provider.
+  @return boolean returns true if validation succeeds, false otherwise.
+   */
+  private boolean validateContainerParams() {
+    return containerValidationHelper.validateContainerServiceParams(
+        getHelmValuesFetchTaskParameters().getContainerServiceParams());
   }
 }
