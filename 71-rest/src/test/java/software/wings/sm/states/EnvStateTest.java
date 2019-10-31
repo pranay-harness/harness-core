@@ -28,6 +28,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.OwnerRule.Owner;
+import org.apache.commons.jexl3.JexlException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -96,7 +97,6 @@ public class EnvStateTest extends WingsBaseTest {
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getWorkflowId()).isEqualTo(WORKFLOW_ID);
     assertThat(stateExecutionData.getWorkflowExecutionId()).isEqualTo(WORKFLOW_EXECUTION_ID);
-    assertThat(stateExecutionData.getEnvId()).isEqualTo(ENV_ID);
   }
 
   @Test
@@ -110,6 +110,36 @@ public class EnvStateTest extends WingsBaseTest {
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
+    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldSkipDisabledStepWithAssertion() {
+    String disableAssertion = "${app.name}==\"APP_NAME\"";
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    envState.setDisableAssertion(disableAssertion);
+    when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(true);
+    ExecutionResponse executionResponse = envState.execute(context);
+    verify(workflowExecutionService, times(0))
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
+    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldFailIfAssertionException() {
+    String disableAssertion = "${app.name]==\"APP_NAME\"";
+    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    envState.setDisableAssertion(disableAssertion);
+    when(context.evaluateExpression(eq(disableAssertion), any())).thenThrow(JexlException.class);
+    ExecutionResponse executionResponse = envState.execute(context);
+    verify(workflowExecutionService, times(0))
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
 

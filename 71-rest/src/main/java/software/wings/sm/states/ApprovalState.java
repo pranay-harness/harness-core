@@ -172,28 +172,18 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                                                    .timeoutMillis(getTimeoutMillis())
                                                    .variables(getVariables())
                                                    .build();
-
-    if (isNotEmpty(disableAssertion)) {
-      try {
-        boolean assertionResult = (boolean) context.evaluateExpression(
-            disableAssertion, StateExecutionContext.builder().stateExecutionData(executionData).build());
-        if (assertionResult) {
-          return ExecutionResponse.builder()
-              .executionStatus(SKIPPED)
-              .errorMessage(getName() + " step in " + context.getPipelineStageName()
-                  + " has been skipped based on assertion expression [" + disableAssertion + "]")
-              .stateExecutionData(executionData)
-              .build();
-        }
-      } catch (Exception e) {
-        logger.info("Skip Assertion Evaluation Failed : {}", e.getMessage());
-        executionData.setSkipAssertionResponse("Assertion Evaluation failed : " + e.getMessage());
-      }
+    if (disableAssertion != null && disableAssertion.equals("true")) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped")
+          .stateExecutionData(executionData)
+          .build();
     }
 
     setPipelineVariables(context);
 
     Application app = context.getApp();
+
     Map<String, String> placeholderValues = getPlaceholderValues(context, "", PAUSED);
     // Open an alert
     ApprovalNeededAlert approvalNeededAlert = ApprovalNeededAlert.builder()
