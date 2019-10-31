@@ -7,13 +7,17 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
+import com.amazonaws.services.cloudwatch.model.GetMetricDataRequest;
+import com.amazonaws.services.cloudwatch.model.GetMetricDataResult;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import io.harness.beans.ExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.model.request.AwsCloudWatchMetricDataRequest;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
+import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataResponse;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
 import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
 
@@ -47,6 +51,20 @@ public class AwsCloudWatchHelperServiceDelegateImpl
         .build();
   }
 
+  @Override
+  public AwsCloudWatchMetricDataResponse getMetricData(AwsCloudWatchMetricDataRequest request) {
+    GetMetricDataRequest metricDataRequest = new GetMetricDataRequest()
+                                                 .withStartTime(request.getStartTime())
+                                                 .withEndTime(request.getEndTime())
+                                                 .withMetricDataQueries(request.getMetricDataQueries());
+    GetMetricDataResult metricDataResult =
+        getMetricData(metricDataRequest, request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
+    return AwsCloudWatchMetricDataResponse.builder()
+        .metricDataResults(metricDataResult.getMetricDataResults())
+        .executionStatus(ExecutionStatus.SUCCESS)
+        .build();
+  }
+
   private GetMetricStatisticsResult getMetricStatistics(GetMetricStatisticsRequest request, final AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
@@ -62,8 +80,22 @@ public class AwsCloudWatchHelperServiceDelegateImpl
     return null;
   }
 
+  private GetMetricDataResult getMetricData(
+      GetMetricDataRequest request, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsConfig);
+      return cloudWatchClient.getMetricData(request);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return null;
+  }
+
   @VisibleForTesting
-  public AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
+  AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
     AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClientBuilder.standard().withRegion(region);
     attachCredentials(builder, awsConfig);
     return (AmazonCloudWatchClient) builder.build();

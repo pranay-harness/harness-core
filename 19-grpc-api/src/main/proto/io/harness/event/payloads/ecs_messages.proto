@@ -48,6 +48,24 @@ message EcsContainerInstanceLifecycle {
   Lifecycle lifecycle = 1;
 }
 
+message EcsUtilization {
+  string cluster_arn = 1;
+  string cluster_name = 2;
+  // Empty in case of cluster level metrics
+  string service_arn = 3;
+  // Empty in case of cluster level metrics
+  string service_name = 4;
+  message MetricValue {
+    // CPUUtilization, MemoryUtilization
+    string metric_name = 1;
+    // Maximum, Average
+    string statistic = 2;
+    repeated google.protobuf.Timestamp timestamps = 3;
+    repeated double values = 4;
+  }
+  repeated MetricValue metric_values = 5;
+}
+
 message EcsSyncEvent {
   string cluster_arn = 1;
   repeated string active_ec2_instance_arns = 2;

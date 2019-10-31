@@ -40,6 +40,14 @@ public final class EcsMessages {
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_event_payloads_EcsContainerInstanceLifecycle_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_event_payloads_EcsUtilization_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_event_payloads_EcsUtilization_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_event_payloads_EcsUtilization_MetricValue_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_event_payloads_EcsUtilization_MetricValue_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_event_payloads_EcsSyncEvent_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_event_payloads_EcsSyncEvent_fieldAccessorTable;
@@ -76,12 +84,20 @@ public final class EcsMessages {
         + "arness.event.payloads.ReservedResource\"X"
         + "\n\035EcsContainerInstanceLifecycle\0227\n\tlifec"
         + "ycle\030\001 \001(\0132$.io.harness.event.payloads.L"
-        + "ifecycle\"\305\001\n\014EcsSyncEvent\022\023\n\013cluster_arn"
-        + "\030\001 \001(\t\022 \n\030active_ec2_instance_arns\030\002 \003(\t"
-        + "\022&\n\036active_container_instance_arns\030\003 \003(\t"
-        + "\022\030\n\020active_task_arns\030\004 \003(\t\022<\n\030last_proce"
-        + "ssed_timestamp\030\005 \001(\0132\032.google.protobuf.T"
-        + "imestampB\002P\001b\006proto3"};
+        + "ifecycle\"\253\002\n\016EcsUtilization\022\023\n\013cluster_a"
+        + "rn\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\023\n\013servic"
+        + "e_arn\030\003 \001(\t\022\024\n\014service_name\030\004 \001(\t\022L\n\rmet"
+        + "ric_values\030\005 \003(\01325.io.harness.event.payl"
+        + "oads.EcsUtilization.MetricValue\032u\n\013Metri"
+        + "cValue\022\023\n\013metric_name\030\001 \001(\t\022\021\n\tstatistic"
+        + "\030\002 \001(\t\022.\n\ntimestamps\030\003 \003(\0132\032.google.prot"
+        + "obuf.Timestamp\022\016\n\006values\030\004 \003(\001\"\305\001\n\014EcsSy"
+        + "ncEvent\022\023\n\013cluster_arn\030\001 \001(\t\022 \n\030active_e"
+        + "c2_instance_arns\030\002 \003(\t\022&\n\036active_contain"
+        + "er_instance_arns\030\003 \003(\t\022\030\n\020active_task_ar"
+        + "ns\030\004 \003(\t\022<\n\030last_processed_timestamp\030\005 \001"
+        + "(\0132\032.google.protobuf.TimestampB\002P\001b\006prot"
+        + "o3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -161,7 +177,29 @@ public final class EcsMessages {
             new java.lang.String[] {
                 "Lifecycle",
             });
-    internal_static_io_harness_event_payloads_EcsSyncEvent_descriptor = getDescriptor().getMessageTypes().get(7);
+    internal_static_io_harness_event_payloads_EcsUtilization_descriptor = getDescriptor().getMessageTypes().get(7);
+    internal_static_io_harness_event_payloads_EcsUtilization_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_event_payloads_EcsUtilization_descriptor,
+            new java.lang.String[] {
+                "ClusterArn",
+                "ClusterName",
+                "ServiceArn",
+                "ServiceName",
+                "MetricValues",
+            });
+    internal_static_io_harness_event_payloads_EcsUtilization_MetricValue_descriptor =
+        internal_static_io_harness_event_payloads_EcsUtilization_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_event_payloads_EcsUtilization_MetricValue_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_event_payloads_EcsUtilization_MetricValue_descriptor,
+            new java.lang.String[] {
+                "MetricName",
+                "Statistic",
+                "Timestamps",
+                "Values",
+            });
+    internal_static_io_harness_event_payloads_EcsSyncEvent_descriptor = getDescriptor().getMessageTypes().get(8);
     internal_static_io_harness_event_payloads_EcsSyncEvent_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_event_payloads_EcsSyncEvent_descriptor,
