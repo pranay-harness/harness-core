@@ -21,6 +21,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -35,7 +36,9 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -65,6 +68,7 @@ public class ApplicationManifestUtils {
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   public Map<K8sValuesLocation, ApplicationManifest> getOverrideApplicationManifests(
       ExecutionContext context, AppManifestKind appManifestKind) {
@@ -105,11 +109,26 @@ public class ApplicationManifestUtils {
       ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = getGitFetchFileConfigMap(context, app, appManifestMap);
 
+    String infrastructureMappingId = context.fetchInfraMappingId();
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(app.getAppId(), infrastructureMappingId);
+
+    ContainerServiceParams containerServiceParams = null;
+    if (infrastructureMappingId != null) {
+      InfrastructureMapping infraMapping =
+          infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
+      if (infraMapping instanceof ContainerInfrastructureMapping) {
+        containerServiceParams = containerDeploymentManagerHelper.getContainerServiceParams(
+            (ContainerInfrastructureMapping) infraMapping, "", context);
+      }
+    }
+
     return GitFetchFilesTaskParams.builder()
         .accountId(app.getAccountId())
         .appId(app.getUuid())
         .isFinalState(isRemoteFetchRequiredForManifest(appManifestMap))
         .gitFetchFilesConfigMap(gitFetchFileConfigMap)
+        .containerServiceParams(containerServiceParams)
         .build();
   }
 

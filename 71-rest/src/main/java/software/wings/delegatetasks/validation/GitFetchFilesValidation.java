@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
+  @Inject private ContainerValidationHelper containerValidationHelper;
 
   public GitFetchFilesValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
@@ -31,6 +33,16 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
+    // Run validation task for container service parameters
+    logger.info("Running validation for task {} for container service parameters", delegateTaskId);
+
+    if (getContainerServiceParams() != null) {
+      if (!containerValidationHelper.validateContainerServiceParams(getContainerServiceParams())) {
+        logger.info("Failed validation for task {} for container service parameters", delegateTaskId);
+        return taskValidationResult(false);
+      }
+    }
+
     logger.info("Running validation for task {} for repo {}", delegateTaskId, getRepoUrls());
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap =
         ((GitFetchFilesTaskParams) getParameters()[0]).getGitFetchFilesConfigMap();
@@ -42,8 +54,15 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
         return taskValidationResult(false);
       }
     }
-
     return taskValidationResult(true);
+  }
+
+  private ContainerServiceParams getContainerServiceParams() {
+    GitFetchFilesTaskParams parameters = (GitFetchFilesTaskParams) getParameters()[0];
+    if (parameters.getContainerServiceParams() == null) {
+      logger.info("Container Service Parameters is null for task {}", delegateTaskId);
+    }
+    return parameters.getContainerServiceParams();
   }
 
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {

@@ -4,6 +4,7 @@ import io.harness.delegate.task.TaskParameters;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.Map;
 
@@ -16,4 +17,5 @@ public class GitFetchFilesTaskParams implements TaskParameters {
   private boolean isFinalState;
   private AppManifestKind appManifestKind;
   private Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap;
+  private final ContainerServiceParams containerServiceParams;
 }
