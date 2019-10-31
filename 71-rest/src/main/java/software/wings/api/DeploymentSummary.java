@@ -37,6 +37,14 @@ import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDe
       },
       options = @IndexOptions(name = "accountId_containerDeploymentInfo", background = true))
   ,
+      @Index(fields =
+          {
+            @Field(DeploymentSummaryKeys.CONTAINER_KEY_SERVICE_NAME)
+            , @Field(DeploymentSummaryKeys.infraMappingId),
+                @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
+          },
+          options = @IndexOptions(name = "containerSvcName_inframappingId_createdAt", background = true)),
+
       @Index(fields = {
         @Field(DeploymentSummaryKeys.accountId)
         , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
@@ -115,5 +123,6 @@ public class DeploymentSummary extends Base {
         "deploymentInfo.containerSvcName";
     public static final String CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES = "deploymentInfo.clusterName";
     public static final String RELEASE_NAME_K8S_DEPLOYMENT_INFO = "deploymentInfo.releaseName";
+    public static final String CONTAINER_KEY_SERVICE_NAME = "containerDeploymentKey.containerServiceName";
   }
 }
