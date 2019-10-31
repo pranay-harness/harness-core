@@ -355,6 +355,10 @@ public class PcfSetupState extends State {
     // routes mentioned in manifest will we swapped in the end after verification.
     // So, we need to resolve these values manually if they are referencing vars.yml
     if (blueGreen) {
+      if (isEmpty(routeMaps)) {
+        throw new InvalidRequestException(
+            "Final Routes can not be empty for BG deployment. Make sure manifest contains routes. no-route or random-route cant be used for BG as well.");
+      }
       routeMaps = pcfStateHelper.applyVarsYmlSubstitutionIfApplicable(routeMaps, pcfManifestsPackage);
     }
     routeMaps = routeMaps.stream().map(routeMap -> context.renderExpression(routeMap)).collect(toList());

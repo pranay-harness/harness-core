@@ -334,8 +334,15 @@ public class PcfStateHelper {
     Map<String, Object> applicationConfigMap = getApplicationYamlMap(applicationManifestYmlContent);
 
     // fetch Routes element from application config
-    final List<Map<String, String>> routeMapsInYaml =
-        (List<Map<String, String>>) applicationConfigMap.get(ROUTES_MANIFEST_YML_ELEMENT);
+    final List<Map<String, String>> routeMapsInYaml = new ArrayList<>();
+    try {
+      Object routeMaps = applicationConfigMap.get(ROUTES_MANIFEST_YML_ELEMENT);
+      if (routeMaps != null) {
+        routeMapsInYaml.addAll((List<Map<String, String>>) routeMaps);
+      }
+    } catch (Exception e) {
+      throw new InvalidRequestException("Invalid Route Format In Manifest");
+    }
 
     // routes is not mentioned in Manifest
     if (isEmpty(routeMapsInYaml)) {

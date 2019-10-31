@@ -5,9 +5,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -65,6 +67,7 @@ import io.harness.beans.SweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -635,6 +638,23 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfSetupState.fetchRouteMaps(
                    context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
         .containsExactly(r1);
+
+    pcfSetupState.setBlueGreen(true);
+    doReturn(emptyList()).when(pcfStateHelper).getRouteMaps(anyString(), any());
+    doReturn(emptyList()).when(pcfStateHelper).applyVarsYmlSubstitutionIfApplicable(anyList(), any());
+    try {
+      pcfSetupState.fetchRouteMaps(
+          context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build());
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertThat(e instanceof InvalidRequestException).isTrue();
+    }
+
+    pcfSetupState.setBlueGreen(false);
+    doReturn(emptyList()).when(pcfStateHelper).applyVarsYmlSubstitutionIfApplicable(anyList(), any());
+    assertThat(pcfSetupState.fetchRouteMaps(
+                   context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
+        .isEmpty();
   }
 
   private void assertCommandUnits(List<CommandUnit> commandUnits, Set<String> commandUnitsList) {
