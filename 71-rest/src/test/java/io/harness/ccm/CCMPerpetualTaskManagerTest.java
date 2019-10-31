@@ -4,6 +4,7 @@ import static io.harness.perpetualtask.PerpetualTaskType.K8S_WATCH;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
@@ -116,6 +117,10 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldDeletePerpetualTaskForCluster() {
+    manager.createPerpetualTasks(clusterRecord);
+    manager.deletePerpetualTasks(clusterRecord);
+    verify(clusterRecordService, never()).removePerpetualTaskId(isA(ClusterRecord.class), anyString());
+
     manager.createPerpetualTasks(clusterRecord);
     String[] tasks = {podTaskId, nodeTaskId};
     clusterRecord.setPerpetualTaskIds(tasks);

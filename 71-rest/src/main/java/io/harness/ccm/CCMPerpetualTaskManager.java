@@ -21,6 +21,7 @@ import software.wings.beans.SettingAttribute;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 public class CCMPerpetualTaskManager {
@@ -114,7 +115,8 @@ public class CCMPerpetualTaskManager {
 
   // delete all of the perpetual tasks associated with the Cluster
   public boolean deletePerpetualTasks(ClusterRecord clusterRecord) {
-    List<String> taskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
+    List<String> taskIds =
+        Arrays.asList(Optional.ofNullable(clusterRecord.getPerpetualTaskIds()).orElse(new String[0]));
     if (!isNull(taskIds)) {
       for (String taskId : taskIds) {
         PerpetualTaskType type = perpetualTaskService.getPerpetualTaskType(taskId);
