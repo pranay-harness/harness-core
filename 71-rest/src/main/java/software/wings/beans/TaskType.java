@@ -325,6 +325,8 @@ public enum TaskType {
   CLOUD_WATCH_COLLECT_METRIC_DATA(
       TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AwsConnectionValidation.class),
   CLOUD_WATCH_METRIC_DATA_FOR_NODE(TaskGroup.CLOUD_WATCH, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
+  CLOUD_WATCH_GENERIC_METRIC_STATISTICS(
+      TaskGroup.CLOUD_WATCH, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   CLOUD_WATCH_GENERIC_METRIC_DATA(TaskGroup.CLOUD_WATCH, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   CLOUD_WATCH_COLLECT_24_7_METRIC_DATA(
       TaskGroup.GUARD_24x7, CloudWatchDataCollectionTask.class, AwsConnectionValidation.class),
