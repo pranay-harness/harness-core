@@ -24,7 +24,6 @@ import software.wings.beans.Pipeline;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
@@ -77,7 +76,6 @@ public class PipelineResource {
   @GET
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   public RestResponse<PageResponse<Pipeline>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Pipeline> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,

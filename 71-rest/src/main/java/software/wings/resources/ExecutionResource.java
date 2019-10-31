@@ -51,7 +51,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
@@ -103,7 +102,6 @@ public class ExecutionResource {
   @ExceptionMetered
   @AuthRule(permissionType = DEPLOYMENT, action = READ, parameterName = "orchestrationId", dbFieldName = "workflowId",
       dbCollectionName = "software.wings.beans.WorkflowExecution", skipAuth = true)
-  @ExternalFacingApiAuth
   public RestResponse<PageResponse<WorkflowExecution>>
   listExecutions(@QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds,
       @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
@@ -163,7 +161,6 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
-  @ExternalFacingApiAuth
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("excludeFromAggregation") Set<String> excludeFromAggregation) {
@@ -186,7 +183,6 @@ public class ExecutionResource {
   @ExceptionMetered
   // We are handling the check programmatically for now, since we don't have enough info in the query / path parameters
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
-  @ExternalFacingApiAuth
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
@@ -294,7 +290,6 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/approval")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
       @QueryParam("stateExecutionId") String stateExecutionId,
@@ -333,7 +328,6 @@ public class ExecutionResource {
   @Path("workflow-variables")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<WorkflowVariablesMetadata> getWorkflowVariables(@QueryParam("appId") String appId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
@@ -345,7 +339,6 @@ public class ExecutionResource {
   @Path("deployment-metadata")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<DeploymentMetadata> getDeploymentMetadata(@QueryParam("appId") String appId,
       @QueryParam("withDefaultArtifact") boolean withDefaultArtifact,

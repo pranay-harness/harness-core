@@ -34,7 +34,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -91,7 +90,6 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SERVICE)
-  @ExternalFacingApiAuth
   public RestResponse<PageResponse<Service>> list(@QueryParam("appId") String appId,
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
       @BeanParam PageRequest<Service> pageRequest, @QueryParam("details") @DefaultValue("true") boolean details) {
