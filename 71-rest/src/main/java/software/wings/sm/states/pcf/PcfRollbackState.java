@@ -59,7 +59,7 @@ public class PcfRollbackState extends PcfDeployState {
                                  .append("}\n")
                                  .toString());
 
-        instanceData.addAll(pcfDeployContextElement.getInstanceData());
+        instanceData.add(pcfServiceData);
       });
     }
 
