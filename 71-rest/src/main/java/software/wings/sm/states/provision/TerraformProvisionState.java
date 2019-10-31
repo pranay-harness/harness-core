@@ -8,8 +8,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -480,9 +482,9 @@ public abstract class TerraformProvisionState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .async(true)
-            .accountId(executionContext.getApp().getAccountId())
+            .accountId(requireNonNull(executionContext.getApp()).getAccountId())
             .waitId(activityId)
-            .appId(executionContext.getApp().getAppId())
+            .appId(requireNonNull(executionContext.getApp()).getAppId())
             .envId(executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
             .tags(getRenderedTaskTags(delegateTag, executionContext))
             .data(TaskData.builder()
@@ -603,10 +605,13 @@ public abstract class TerraformProvisionState extends State {
         setTfVarFiles(tfVarFiles);
       }
     } else {
+      logger.info(format("Variables before filtering: %s", getAllVariables()));
       final List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
+      logger.info(format("Variables after filtering: %s", validVariables));
 
       variables = infrastructureProvisionerService.extractTextVariables(validVariables, context);
+      logger.info(format("Variables after extracting text type: %s", variables));
       encryptedVariables =
           infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
 
@@ -720,8 +725,8 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    Application app = requireNonNull(executionContext.getApp());
+    Environment env = requireNonNull(((ExecutionContextImpl) executionContext).getEnv());
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
