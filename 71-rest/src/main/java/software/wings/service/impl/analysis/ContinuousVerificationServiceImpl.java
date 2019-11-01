@@ -21,6 +21,7 @@ import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
@@ -62,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
@@ -117,6 +119,7 @@ import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord.NewRelicMetricDataRecordKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -1600,21 +1603,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     try {
       final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
-              .appId(appId)
               .correlationId(analysisContext.getCorrelationId())
-              .workflowExecutionId(analysisContext.getWorkflowExecutionId())
               .stateExecutionInstanceId(stateExecutionId)
               .serverConfigId(analysisContext.getAnalysisServerConfigId())
-              .timeDuration(analysisContext.getTimeDuration())
               .canaryNewHostNames(analysisContext.getTestNodes() != null
                       ? new HashSet<>(analysisContext.getTestNodes().keySet())
                       : null)
               .lastExecutionNodes(analysisContext.getControlNodes() != null
                       ? new HashSet<>(analysisContext.getControlNodes().keySet())
                       : null)
-              .delegateTaskId(analysisContext.getDelegateTaskId())
-              .mlAnalysisType(analysisContext.getAnalysisType())
               .query(analysisContext.getQuery())
+              .baselineExecutionId(analysisContext.getPrevWorkflowExecutionId())
+              .comparisonStrategy(analysisContext.getComparisonStrategy())
               .build();
       stateAnalysisExecutionData.setStatus(status);
 
@@ -1758,11 +1758,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private StateExecutionData getExecutionData(CVConfiguration cvConfiguration, String waitId, int timeDuration) {
     return VerificationStateAnalysisExecutionData.builder()
-        .appId(cvConfiguration.getAppId())
-        .workflowExecutionId(null)
         .stateExecutionInstanceId(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid())
         .serverConfigId(cvConfiguration.getConnectorId())
-        .timeDuration(timeDuration)
         .canaryNewHostNames(new HashSet<>())
         .lastExecutionNodes(new HashSet<>())
         .correlationId(waitId)
@@ -2389,7 +2386,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .stateExecutionInstanceId(context.getStateExecutionId())
         .serverConfigId(context.getAnalysisServerConfigId())
         .query(context.getQuery())
-        .timeDuration((int) TimeUnit.MINUTES.toMillis(1))
         .canaryNewHostNames(canaryNewHostNames)
         .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes.keySet()))
         .correlationId(context.getCorrelationId())
@@ -2465,10 +2461,93 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return null;
     }
 
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                          .get();
+    if (analysisContext == null) {
+      logger.info("No analysis context found for {}", stateExecutionId);
+      return null;
+    }
+
     Preconditions.checkState(
         stateExecutionMap.size() == 1, "more than one entries in the stateExecutionMap for " + stateExecutionId);
 
-    return (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+    final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
+        (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+    setProgress(stateAnalysisExecutionData, analysisContext);
+    setRemainingtTime(stateAnalysisExecutionData, analysisContext);
+    if (!ExecutionStatus.isBrokeStatus(stateAnalysisExecutionData.getStatus())) {
+      stateAnalysisExecutionData.setErrorMsg(null);
+    }
+    return stateAnalysisExecutionData;
+  }
+
+  private void setProgress(
+      VerificationStateAnalysisExecutionData stateAnalysisExecutionData, AnalysisContext analysisContext) {
+    final String stateExecutionId = stateAnalysisExecutionData.getStateExecutionInstanceId();
+    int numOfAnalysis = (int) wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+                            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+                            .count();
+
+    if (numOfAnalysis == 0) {
+      numOfAnalysis = (int) wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+                          .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+                          .count();
+    }
+
+    stateAnalysisExecutionData.setProgressPercentage((numOfAnalysis * 100) / analysisContext.getTimeDuration());
+  }
+
+  private void setRemainingtTime(
+      VerificationStateAnalysisExecutionData stateAnalysisExecutionData, AnalysisContext analysisContext) {
+    final String stateExecutionId = stateAnalysisExecutionData.getStateExecutionInstanceId();
+    long timeTakenPerMinAnalysis = 0;
+    int numOfAnalysis = 0;
+    TimeSeriesMLAnalysisRecord firstAnalysisRecord = getAnalysisRecord(stateExecutionId, OrderType.ASC);
+    if (firstAnalysisRecord != null) {
+      numOfAnalysis = (int) wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+                          .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+                          .count();
+      TimeSeriesMLAnalysisRecord lastAnalysisRecord = getAnalysisRecord(stateExecutionId, OrderType.DESC);
+      timeTakenPerMinAnalysis =
+          (lastAnalysisRecord.getCreatedAt() - firstAnalysisRecord.getCreatedAt()) / numOfAnalysis;
+    } else {
+      NewRelicMetricAnalysisRecord firstLocalAnalysisRecord = getLocalAnalysisRecord(stateExecutionId, OrderType.ASC);
+      if (firstLocalAnalysisRecord != null) {
+        numOfAnalysis = (int) wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+                            .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+                            .count();
+        NewRelicMetricAnalysisRecord lastAnalysisRecord = getLocalAnalysisRecord(stateExecutionId, OrderType.DESC);
+        timeTakenPerMinAnalysis =
+            (lastAnalysisRecord.getCreatedAt() - firstLocalAnalysisRecord.getCreatedAt()) / numOfAnalysis;
+      }
+    }
+
+    if (timeTakenPerMinAnalysis <= 0) {
+      stateAnalysisExecutionData.setRemainingMinutes(
+          analysisContext.getTimeDuration() + DELAY_MINUTES + 1 - numOfAnalysis);
+      return;
+    }
+
+    int analysisRemaining = analysisContext.getTimeDuration() - numOfAnalysis;
+    stateAnalysisExecutionData.setRemainingMinutes(Math.max(analysisContext.getTimeDuration() - numOfAnalysis,
+        TimeUnit.MILLISECONDS.toMinutes(analysisRemaining * timeTakenPerMinAnalysis)));
+  }
+
+  private TimeSeriesMLAnalysisRecord getAnalysisRecord(String stateExecutionId, OrderType orderType) {
+    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
+        .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+        .order(orderType == OrderType.ASC ? Sort.ascending(MetricAnalysisRecordKeys.analysisMinute)
+                                          : Sort.descending(MetricAnalysisRecordKeys.analysisMinute))
+        .get();
+  }
+
+  private NewRelicMetricAnalysisRecord getLocalAnalysisRecord(String stateExecutionId, OrderType orderType) {
+    return wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
+        .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
+        .order(orderType == OrderType.ASC ? Sort.ascending(NewRelicMetricAnalysisRecordKeys.analysisMinute)
+                                          : Sort.descending(NewRelicMetricAnalysisRecordKeys.analysisMinute))
+        .get();
   }
 
   @Override

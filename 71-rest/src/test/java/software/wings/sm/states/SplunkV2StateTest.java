@@ -293,7 +293,6 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
             .stateExecutionInstanceId(stateExecutionId)
             .serverConfigId(UUID.randomUUID().toString())
             .query(splunkState.getQuery())
-            .timeDuration(Integer.parseInt(splunkState.getTimeDuration()))
             .canaryNewHostNames(Sets.newHashSet("test1", "test2"))
             .lastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"))
             .build();
@@ -325,7 +324,6 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
             .stateExecutionInstanceId(stateExecutionId)
             .serverConfigId(UUID.randomUUID().toString())
             .query(splunkState.getQuery())
-            .timeDuration(Integer.parseInt(splunkState.getTimeDuration()))
             .canaryNewHostNames(Sets.newHashSet("test1", "test2"))
             .lastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"))
             .build();

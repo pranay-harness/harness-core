@@ -105,6 +105,7 @@ import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
@@ -115,6 +116,8 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVTask;
+import software.wings.verification.VerificationDataAnalysisResponse;
+import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -796,6 +799,12 @@ public abstract class AbstractAnalysisState extends State {
     }
   }
 
+  protected boolean isDemoPath(AnalysisContext analysisContext) {
+    return featureFlagService.isEnabled(FeatureName.CV_DEMO, analysisContext.getAccountId())
+        && (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
+               || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod"));
+  }
+
   protected void generateDemoThirdPartyApiCallLogs(
       String accountId, String stateExecutionId, boolean failedState, String demoRequestBody, String demoResponseBody) {
     List<ThirdPartyApiCallLog> thirdPartyApiCallLogs = new ArrayList<>();
@@ -952,6 +961,56 @@ public abstract class AbstractAnalysisState extends State {
     }
 
     return false;
+  }
+
+  protected ExecutionResponse createExecutionResponse(AnalysisContext context, ExecutionStatus status, String message) {
+    final VerificationStateAnalysisExecutionData executionData =
+        VerificationStateAnalysisExecutionData.builder()
+            .stateExecutionInstanceId(context.getStateExecutionId())
+            .serverConfigId(context.getAnalysisServerConfigId())
+            .baselineExecutionId(context.getPrevWorkflowExecutionId())
+            .canaryNewHostNames(
+                isEmpty(context.getTestNodes()) ? Collections.emptySet() : context.getTestNodes().keySet())
+            .lastExecutionNodes(
+                isEmpty(context.getControlNodes()) ? Collections.emptySet() : context.getControlNodes().keySet())
+            .correlationId(context.getCorrelationId())
+            .query(context.getQuery())
+            .comparisonStrategy(getComparisonStrategy())
+            .build();
+    executionData.setStatus(status);
+    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status, true);
+    cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId()).info(message);
+    return ExecutionResponse.builder()
+        .async(false)
+        .executionStatus(status)
+        .stateExecutionData(executionData)
+        .errorMessage(message)
+        .build();
+  }
+
+  protected ExecutionResponse getDemoExecutionResponse(AnalysisContext analysisContext) {
+    boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
+    if (failedState) {
+      return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
+    } else {
+      return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
+    }
+  }
+
+  protected abstract ExecutionResponse generateAnalysisResponse(
+      AnalysisContext context, ExecutionStatus status, String message);
+
+  protected ExecutionResponse getErrorExecutionResponse(
+      ExecutionContext executionContext, VerificationDataAnalysisResponse executionResponse) {
+    getLogger().info(
+        "for {} got failed execution response {}", executionContext.getStateExecutionInstanceId(), executionResponse);
+    continuousVerificationService.setMetaDataExecutionStatus(
+        executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
+    return ExecutionResponse.builder()
+        .executionStatus(executionResponse.getExecutionStatus())
+        .stateExecutionData(executionResponse.getStateExecutionData())
+        .errorMessage(executionResponse.getStateExecutionData().getErrorMsg())
+        .build();
   }
 
   protected String getEnvId(ExecutionContext executionContext) {

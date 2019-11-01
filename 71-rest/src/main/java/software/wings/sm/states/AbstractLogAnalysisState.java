@@ -142,16 +142,12 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       saveMetaDataForDashboard(analysisContext.getAccountId(), executionContext);
 
       Set<String> canaryNewHostNames = analysisContext.getTestNodes().keySet();
-      if (isDemoPath(analysisContext.getAccountId())) {
+      if (isDemoPath(analysisContext)) {
         boolean failedState = settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
         generateDemoActivityLogs(activityLogger, failedState);
         generateDemoThirdPartyApiCallLogs(
             analysisContext.getAccountId(), analysisContext.getStateExecutionId(), failedState);
-        if (failedState) {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
-        } else {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
-        }
+        return getDemoExecutionResponse(analysisContext);
       }
 
       if (isEmpty(canaryNewHostNames)) {
@@ -202,17 +198,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       final VerificationStateAnalysisExecutionData executionData =
           VerificationStateAnalysisExecutionData.builder()
-              .appId(analysisContext.getAppId())
-              .serviceId(getPhaseServiceId(executionContext))
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
               .baselineExecutionId(baselineWorkflowExecutionId)
               .serverConfigId(getAnalysisServerConfigId())
               .query(getRenderedQuery())
-              .timeDuration(Integer.parseInt(getTimeDuration()))
               .canaryNewHostNames(canaryNewHostNames)
               .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
               .correlationId(analysisContext.getCorrelationId())
-              .mlAnalysisType(MLAnalysisType.LOG_ML)
+              .comparisonStrategy(getComparisonStrategy())
               .build();
 
       executionData.setStatus(ExecutionStatus.RUNNING);
@@ -269,8 +262,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                   .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
                                   .serverConfigId(getAnalysisServerConfigId())
                                   .query(getRenderedQuery())
-                                  .timeDuration(Integer.parseInt(getTimeDuration()))
-                                  .delegateTaskId(delegateTaskId)
+                                  .comparisonStrategy(getComparisonStrategy())
                                   .build())
           .build();
     }
@@ -294,14 +286,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         (VerificationDataAnalysisResponse) response.values().iterator().next();
 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {
-      getLogger().info("got failed execution response {}", executionResponse);
-      continuousVerificationService.setMetaDataExecutionStatus(
-          executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus(), true);
-      return ExecutionResponse.builder()
-          .executionStatus(executionResponse.getExecutionStatus())
-          .stateExecutionData(executionResponse.getStateExecutionData())
-          .errorMessage(executionResponse.getStateExecutionData().getErrorMsg())
-          .build();
+      return getErrorExecutionResponse(executionContext, executionResponse);
     } else {
       AnalysisContext context =
           wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
@@ -397,23 +382,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       AnalysisContext context, ExecutionStatus status, String message) {
     analysisService.createAndSaveSummary(
         context.getStateType(), context.getAppId(), context.getStateExecutionId(), context.getQuery(), message);
-
-    VerificationStateAnalysisExecutionData executionData = VerificationStateAnalysisExecutionData.builder()
-                                                               .stateExecutionInstanceId(context.getStateExecutionId())
-                                                               .serverConfigId(context.getAnalysisServerConfigId())
-                                                               .query(context.getQuery())
-                                                               .timeDuration(context.getTimeDuration())
-                                                               .correlationId(context.getCorrelationId())
-                                                               .build();
-    executionData.setStatus(status);
-    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status, true);
-    cvActivityLogService.getLoggerByStateExecutionId(context.getStateExecutionId()).info(message);
-    return ExecutionResponse.builder()
-        .async(false)
-        .executionStatus(status)
-        .stateExecutionData(executionData)
-        .errorMessage(message)
-        .build();
+    return createExecutionResponse(context, status, message);
   }
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {

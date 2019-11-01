@@ -1,6 +1,7 @@
 package software.wings;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -22,6 +23,9 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureFlag.FeatureFlagKeys;
+import software.wings.beans.FeatureName;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LicenseInfo;
@@ -37,6 +41,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -69,6 +74,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   @Inject protected EncryptionService encryptionService;
   @Inject protected Queue<KmsTransitionEvent> transitionKmsQueue;
   @Inject protected SettingsService settingsService;
+  @Inject protected FeatureFlagService featureFlagService;
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
@@ -321,5 +327,13 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
         .withEnvId(UUID.randomUUID().toString())
         .withName(UUID.randomUUID().toString())
         .build();
+  }
+
+  protected void enableFeatureFlag(FeatureName featureName) {
+    featureFlagService.initializeFeatureFlags();
+    wingsPersistence.update(
+        wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter(FeatureFlagKeys.name, featureName),
+        wingsPersistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, true));
+    assertThat(featureFlagService.isEnabledReloadCache(featureName, generateUuid())).isTrue();
   }
 }

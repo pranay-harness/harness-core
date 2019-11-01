@@ -402,7 +402,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                     ? timeSeriesMLAnalysisRecord.getBaseLineExecutionId()
                     : newRelicMetricAnalysisRecord.getBaseLineExecutionId())
             .metricAnalyses(new ArrayList<>())
-            .progressPercentage(getProgress(stateExecutionId))
             .build();
 
     List<NewRelicMetricAnalysis> metricAnalyses = new ArrayList<>();
@@ -453,7 +452,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       }
     }
 
-    if (newRelicMetricAnalysisRecord != null) {
+    if (newRelicMetricAnalysisRecord != null && isNotEmpty(newRelicMetricAnalysisRecord.getMetricAnalyses())) {
       for (NewRelicMetricAnalysis newRelicMetricAnalysis : newRelicMetricAnalysisRecord.getMetricAnalyses()) {
         String tag = isEmpty(newRelicMetricAnalysis.getTag()) ? ContinuousVerificationServiceImpl.HARNESS_DEFAULT_TAG
                                                               : newRelicMetricAnalysis.getTag();
@@ -520,30 +519,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     } else {
       deploymentTimeSeriesAnalysis.setRiskLevel(RiskLevel.LOW);
     }
-  }
-
-  private int getProgress(String stateExecutionId) {
-    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
-                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                          .get();
-    if (analysisContext == null) {
-      return 0;
-    }
-
-    int numOfAnalysis = (int) wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority)
-                            .filter(MetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-                            .count()
-        + (int) wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
-              .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-              .count();
-
-    if (numOfAnalysis == 0) {
-      numOfAnalysis = (int) wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority)
-                          .filter(NewRelicMetricAnalysisRecordKeys.stateExecutionId, stateExecutionId)
-                          .count();
-    }
-
-    return (numOfAnalysis * 100) / analysisContext.getTimeDuration();
   }
 
   @Override

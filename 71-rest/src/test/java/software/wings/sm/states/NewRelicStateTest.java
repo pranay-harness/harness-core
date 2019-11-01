@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -40,6 +41,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -327,7 +329,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
     NewRelicState spyNewRelicState = spy(newRelicState);
     doReturn(false).when(spyNewRelicState).isEligibleForPerMinuteTask(accountId);
-    doReturn(false).when(spyNewRelicState).isDemoPath(accountId);
+    doReturn(false).when(spyNewRelicState).isDemoPath(any(AnalysisContext.class));
 
     doReturn(asList(TemplateExpression.builder()
                         .fieldName("analysisServerConfigId")

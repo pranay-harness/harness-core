@@ -591,17 +591,13 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
         final VerificationStateAnalysisExecutionData executionData =
             VerificationStateAnalysisExecutionData.builder()
-                .appId(context.getAppId())
-                .workflowExecutionId(context.getWorkflowExecutionId())
                 .stateExecutionInstanceId(context.getStateExecutionId())
                 .serverConfigId(context.getAnalysisServerConfigId())
-                .timeDuration(context.getTimeDuration())
                 .canaryNewHostNames(context.getTestNodes().keySet())
                 .lastExecutionNodes(
                     context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes().keySet())
                 .correlationId(context.getCorrelationId())
                 .analysisMinute(analysisMinute)
-                .mlAnalysisType(MLAnalysisType.TIME_SERIES)
                 .build();
         executionData.setStatus(status);
         if (error) {

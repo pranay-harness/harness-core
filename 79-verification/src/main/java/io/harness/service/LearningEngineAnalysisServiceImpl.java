@@ -511,18 +511,14 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
       final VerificationStateAnalysisExecutionData executionData =
           VerificationStateAnalysisExecutionData.builder()
-              .appId(analysisContext.getAppId())
-              .workflowExecutionId(analysisContext.getWorkflowExecutionId())
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
               .serverConfigId(analysisContext.getAnalysisServerConfigId())
-              .timeDuration(analysisContext.getTimeDuration())
               .canaryNewHostNames(analysisContext.getTestNodes() == null ? Collections.emptySet()
                                                                          : analysisContext.getTestNodes().keySet())
               .lastExecutionNodes(analysisContext.getControlNodes() == null
                       ? Collections.emptySet()
                       : analysisContext.getControlNodes().keySet())
               .correlationId(analysisContext.getCorrelationId())
-              .mlAnalysisType(analysisContext.getAnalysisType())
               .build();
       executionData.setStatus(ExecutionStatus.ERROR);
       executionData.setErrorMsg(learningEngineError.getErrorMsg());

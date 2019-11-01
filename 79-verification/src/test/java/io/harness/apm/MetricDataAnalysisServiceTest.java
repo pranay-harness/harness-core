@@ -246,7 +246,6 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
-    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(20);
     assertThat(metricsAnalysis.getTotal()).isEqualTo(total);
     assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
 
@@ -257,7 +256,6 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
-    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(20);
     assertThat(metricsAnalysis.getTotal()).isEqualTo(total);
     assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
     assertThat(metricsAnalysis.getMetricAnalyses()).isEqualTo(metricAnalyses);
@@ -304,7 +302,6 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
-    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(10);
     assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
     verifyNodeData(metricsAnalysis, Optional.of("error"));
   }
@@ -398,7 +395,6 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertThat(metricsAnalysis).isNotNull();
     assertThat(metricsAnalysis.getStateExecutionId()).isEqualTo(stateExecutionId);
     assertThat(metricsAnalysis.getBaseLineExecutionId()).isNull();
-    assertThat(metricsAnalysis.getProgressPercentage()).isEqualTo(20);
     assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
     verifyNodeData(metricsAnalysis, Optional.of("error"));
   }
