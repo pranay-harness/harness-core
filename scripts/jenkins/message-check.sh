@@ -3,7 +3,7 @@
 set +e
 
 # Check commit message if there's a single commit
-if [[ $(git rev-list --count $ghprbActualCommit ^master)  -eq 1 ]]; then
+if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then
     ghprbPullTitle=$(git log -1 --format="%s" $ghprbActualCommit)
 fi
 
