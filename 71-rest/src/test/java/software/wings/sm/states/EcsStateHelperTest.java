@@ -164,7 +164,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).build();
     Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
-    doReturn(application).when(mockContext).getApp();
+    doReturn(application).when(mockContext).fetchRequiredApp();
     doReturn(environment).when(mockContext).getEnv();
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(mockParams).when(mockContext).getContextElement(any());
@@ -284,7 +284,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     doReturn(mockParams).when(mockContext).getContextElement(any());
     Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
     Environment env = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
-    doReturn(app).when(mockParams).getApp();
+    doReturn(app).when(mockParams).fetchRequiredApp();
     doReturn(env).when(mockParams).getEnv();
     Artifact artifact = anArtifact().build();
     doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());
@@ -543,7 +543,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     doReturn(mockParams).when(mockContext).getContextElement(any());
     Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
     Environment env = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
-    doReturn(app).when(mockParams).getApp();
+    doReturn(app).when(mockParams).fetchRequiredApp();
     doReturn(env).when(mockParams).getEnv();
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
