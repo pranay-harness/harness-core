@@ -82,8 +82,9 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
 
   @Override
   public PcfSetupExecutionSummary getStepExecutionSummary() {
-    PcfSetupExecutionSummaryBuilder builder = PcfSetupExecutionSummary.builder().maxInstanceCount(
-        useCurrentRunningInstanceCount ? currentRunningInstanceCount : maxInstanceCount);
+    Integer count = useCurrentRunningInstanceCount ? currentRunningInstanceCount : maxInstanceCount;
+    PcfSetupExecutionSummaryBuilder builder =
+        PcfSetupExecutionSummary.builder().maxInstanceCount(count == null ? 0 : count);
 
     if (pcfCommandRequest != null) {
       builder.organization(pcfCommandRequest.getOrganization()).space(pcfCommandRequest.getSpace());
