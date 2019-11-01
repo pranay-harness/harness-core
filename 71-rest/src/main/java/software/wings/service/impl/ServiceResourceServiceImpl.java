@@ -33,7 +33,6 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.valueOf;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -98,6 +97,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -383,10 +383,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void sendNotificationAsync(Service savedService, NotificationMessageType entityCreateNotification) {
-    notificationService.sendNotificationAsync(anInformationNotification()
-                                                  .withAppId(savedService.getAppId())
-                                                  .withNotificationTemplateId(entityCreateNotification.name())
-                                                  .withNotificationTemplateVariables(ImmutableMap.of(
+    notificationService.sendNotificationAsync(InformationNotification.builder()
+                                                  .appId(savedService.getAppId())
+                                                  .notificationTemplateId(entityCreateNotification.name())
+                                                  .notificationTemplateVariables(ImmutableMap.of(
                                                       "ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
                                                   .build());
   }

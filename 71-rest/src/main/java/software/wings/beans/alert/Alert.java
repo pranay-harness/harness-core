@@ -49,6 +49,7 @@ public class Alert implements PersistentEntity, UuidAware, CreatedAtAware, Updat
   private AlertType type;
   private AlertStatus status;
   private String title;
+  private String resolutionTitle;
   private AlertCategory category;
   private AlertSeverity severity;
   private AlertData alertData;

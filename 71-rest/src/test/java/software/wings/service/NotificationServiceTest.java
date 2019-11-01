@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.EntityType.ARTIFACT;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationAction.NotificationActionType.APPROVE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -87,8 +86,10 @@ public class NotificationServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGet() {
+    final InformationNotification informationNotification = InformationNotification.builder().appId(APP_ID).build();
+    informationNotification.setUuid(NOTIFICATION_ID);
     when(wingsPersistence.getWithAppId(Notification.class, APP_ID, NOTIFICATION_ID))
-        .thenReturn(anInformationNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+        .thenReturn(informationNotification);
     Notification notification = notificationService.get(APP_ID, NOTIFICATION_ID);
     assertThat(notification)
         .isInstanceOf(Notification.class)
@@ -103,11 +104,11 @@ public class NotificationServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSendNotificationAsync() {
     InformationNotification notification =
-        anInformationNotification()
-            .withAppId(APP_ID)
-            .withEnvironmentId(ENV_ID)
-            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
-            .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", APP_NAME))
+        InformationNotification.builder()
+            .appId(APP_ID)
+            .environmentId(ENV_ID)
+            .notificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
+            .notificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", APP_NAME))
             .build();
     notificationService.sendNotificationAsync(notification);
     verify(wingsPersistence).save(notification);

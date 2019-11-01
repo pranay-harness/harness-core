@@ -35,7 +35,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.MANUAL_INTERVENTION_NEEDED_NOTIFICATION;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
@@ -82,6 +81,7 @@ import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -713,11 +713,11 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);
     notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(app.getName())
-            .withAccountId(app.getAccountId())
-            .withNotificationTemplateId(MANUAL_INTERVENTION_NEEDED_NOTIFICATION.name())
-            .withNotificationTemplateVariables(placeholderValues)
+        InformationNotification.builder()
+            .appId(app.getName())
+            .accountId(app.getAccountId())
+            .notificationTemplateId(MANUAL_INTERVENTION_NEEDED_NOTIFICATION.name())
+            .notificationTemplateVariables(placeholderValues)
             .build(),
         notificationRules);
   }

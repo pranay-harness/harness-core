@@ -16,7 +16,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.utils.Misc.getDurationString;
@@ -116,13 +115,13 @@ public class WorkflowNotificationHelper {
 
     Notification notification;
     if (status == SUCCESS || status == PAUSED || status == RESUMED) {
-      notification = anInformationNotification()
-                         .withAccountId(app.getAccountId())
-                         .withAppId(app.getUuid())
-                         .withEntityId(context.getWorkflowExecutionId())
-                         .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-                         .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
-                         .withNotificationTemplateVariables(placeHolderValues)
+      notification = InformationNotification.builder()
+                         .accountId(app.getAccountId())
+                         .appId(app.getUuid())
+                         .entityId(context.getWorkflowExecutionId())
+                         .entityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+                         .notificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                         .notificationTemplateVariables(placeHolderValues)
                          .build();
     } else {
       notification = aFailureNotification()
@@ -163,13 +162,13 @@ public class WorkflowNotificationHelper {
 
     Notification notification;
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
-      notification = anInformationNotification()
-                         .withAccountId(app.getAccountId())
-                         .withAppId(app.getUuid())
-                         .withEntityId(context.getWorkflowExecutionId())
-                         .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-                         .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
-                         .withNotificationTemplateVariables(placeHolderValues)
+      notification = InformationNotification.builder()
+                         .accountId(app.getAccountId())
+                         .appId(app.getUuid())
+                         .entityId(context.getWorkflowExecutionId())
+                         .entityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+                         .notificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                         .notificationTemplateVariables(placeHolderValues)
                          .build();
     } else if (status.equals(FAILED)) {
       notification = aFailureNotification()
@@ -228,11 +227,11 @@ public class WorkflowNotificationHelper {
         throw new IllegalArgumentException("Unknown workflow type: " + context.getWorkflowType());
     }
 
-    InformationNotification notification = anInformationNotification()
-                                               .withAppId(GLOBAL_APP_ID)
-                                               .withAccountId(accountId)
-                                               .withNotificationTemplateId(notificationMessageType.name())
-                                               .withNotificationTemplateVariables(placeHolderValues)
+    InformationNotification notification = InformationNotification.builder()
+                                               .appId(GLOBAL_APP_ID)
+                                               .accountId(accountId)
+                                               .notificationTemplateId(notificationMessageType.name())
+                                               .notificationTemplateVariables(placeHolderValues)
                                                .build();
 
     notificationService.sendNotificationAsync(notification, rules);

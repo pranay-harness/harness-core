@@ -21,4 +21,9 @@ public class KmsSetupAlert implements AlertData {
   public String buildTitle() {
     return message;
   }
+
+  @Override
+  public String buildResolutionTitle() {
+    return "Incident Resolved (" + message + ")";
+  }
 }

@@ -24,7 +24,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
@@ -67,6 +66,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -286,11 +286,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   private void sendNotifaction(Environment savedEnvironment, NotificationMessageType entityCreateNotification) {
     notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAccountId(appService.getAccountIdByAppId(savedEnvironment.getAppId()))
-            .withAppId(savedEnvironment.getAppId())
-            .withNotificationTemplateId(entityCreateNotification.name())
-            .withNotificationTemplateVariables(
+        InformationNotification.builder()
+            .accountId(appService.getAccountIdByAppId(savedEnvironment.getAppId()))
+            .appId(savedEnvironment.getAppId())
+            .notificationTemplateId(entityCreateNotification.name())
+            .notificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
             .build());
   }

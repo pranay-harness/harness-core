@@ -2,7 +2,6 @@ package software.wings.beans.loginSettings;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.USER_LOCKED_NOTIFICATION;
 
 import com.google.common.collect.ImmutableMap;
@@ -16,6 +15,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.passay.PasswordData;
 import software.wings.beans.Account;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
@@ -221,10 +221,10 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
 
     List<UserGroup> userGroupsToNotify = userLockoutPolicy.getUserGroupsToNotify();
     if (userGroupsToNotify != null) {
-      Notification notification = anInformationNotification()
-                                      .withNotificationTemplateId(USER_LOCKED_NOTIFICATION.name())
-                                      .withNotificationTemplateVariables(ImmutableMap.of("lockedUser", user.getEmail()))
-                                      .withAccountId(user.getDefaultAccountId())
+      Notification notification = InformationNotification.builder()
+                                      .notificationTemplateId(USER_LOCKED_NOTIFICATION.name())
+                                      .notificationTemplateVariables(ImmutableMap.of("lockedUser", user.getEmail()))
+                                      .accountId(user.getDefaultAccountId())
                                       .build();
 
       userGroupsToNotify.forEach(userGroup -> {

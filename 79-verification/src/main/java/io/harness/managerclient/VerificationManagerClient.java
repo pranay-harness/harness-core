@@ -74,6 +74,10 @@ public interface VerificationManagerClient {
   Call<RestResponse<Boolean>> triggerCVAlert(
       @Query("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData);
 
+  @POST("alerts/close-cv-alert")
+  Call<RestResponse<Boolean>> closeCVAlert(
+      @Query("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData);
+
   @GET("logml" + LogAnalysisResource.GET_FEEDBACK_LIST_LE)
   Call<RestResponse<List<CVFeedbackRecord>>> getFeedbackList(
       @Query("cvConfigId") String cvConfigId, @Query("stateExecutionId") String stateExecutionId);

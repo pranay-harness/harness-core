@@ -72,4 +72,12 @@ public class AlertResource {
       @QueryParam("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData) {
     return new RestResponse<>(continuousVerificationService.openAlert(cvConfigId, alertData));
   }
+
+  @POST
+  @Path("/close-cv-alert")
+  @LearningEngineAuth
+  public RestResponse<Boolean> closeCVAlert(
+      @QueryParam("cvConfigId") String cvConfigId, @Body ContinuousVerificationAlertData alertData) {
+    return new RestResponse<>(continuousVerificationService.closeAlert(cvConfigId, alertData));
+  }
 }

@@ -50,6 +50,7 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import software.wings.alerts.AlertStatus;
 import software.wings.beans.FeatureName;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
@@ -1528,8 +1529,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return;
     }
     if (riskScore <= cvConfiguration.getAlertThreshold()) {
-      logger.info("for {} the risk {} is lower than the threshold {}. No alerts will be triggered.", cvConfigId,
+      logger.info("for {} the risk {} is lower than the threshold {}. All open alerts will be closed.", cvConfigId,
           riskScore, cvConfiguration.getAlertThreshold());
+
+      verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.closeCVAlert(cvConfigId,
+          ContinuousVerificationAlertData.builder()
+              .riskScore(riskScore)
+              .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+              .alertStatus(AlertStatus.Closed)
+              .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+              .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
+              .build()));
       return;
     }
 
@@ -1538,6 +1548,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         ContinuousVerificationAlertData.builder()
             .riskScore(riskScore)
             .mlAnalysisType(MLAnalysisType.TIME_SERIES)
+            .alertStatus(AlertStatus.Open)
             .analysisStartTime(TimeUnit.MINUTES.toMillis(analysisMinute - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
             .analysisEndTime(TimeUnit.MINUTES.toMillis(analysisMinute))
             .build()));

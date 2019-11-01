@@ -4,7 +4,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION;
 
@@ -23,6 +22,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.alert.AlertType;
@@ -315,11 +315,11 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
 
     notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(GLOBAL_APP_ID)
-            .withAccountId(accountId)
-            .withNotificationTemplateId(SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION.name())
-            .withNotificationTemplateVariables(ImmutableMap.of("SSO_PROVIDER_NAME", settings.getDisplayName(),
+        InformationNotification.builder()
+            .appId(GLOBAL_APP_ID)
+            .accountId(accountId)
+            .notificationTemplateId(SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION.name())
+            .notificationTemplateVariables(ImmutableMap.of("SSO_PROVIDER_NAME", settings.getDisplayName(),
                 "SSO_PROVIDER_TYPE", settings.getType().name(), "SSO_PROVIDER_URL", settings.getUrl(), "DELEGATE_HOSTS",
                 hostNamesForDelegates, "DELEGATE_HOSTS_HTML", hostNamesForDelegatesHtml))
             .build(),

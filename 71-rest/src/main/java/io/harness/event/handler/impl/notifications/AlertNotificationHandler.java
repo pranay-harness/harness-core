@@ -1,6 +1,7 @@
 package io.harness.event.handler.impl.notifications;
 
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static io.harness.event.model.EventType.CLOSE_ALERT;
+import static io.harness.event.model.EventType.OPEN_ALERT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -15,11 +16,11 @@ import io.harness.event.model.EventType;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertNotificationRule;
@@ -37,8 +38,8 @@ import java.util.Map;
 
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class AlertNotificationHandler implements EventHandler {
-  private static final Logger log = LoggerFactory.getLogger(AlertNotificationHandler.class);
   private static final Pair<Boolean, Alert> INVALID_EVENT = new Pair<>(false, null);
 
   @Inject private NotificationDispatcherService notificationDispatcher;
@@ -46,7 +47,7 @@ public class AlertNotificationHandler implements EventHandler {
   @Inject private AlertNotificationRuleService ruleService;
 
   public AlertNotificationHandler(EventListener eventListener) {
-    eventListener.registerEventHandler(this, Sets.newHashSet(EventType.OPEN_ALERT));
+    eventListener.registerEventHandler(this, Sets.newHashSet(OPEN_ALERT, CLOSE_ALERT));
   }
 
   private static Map<AlertType, NotificationMessageType> alertTypeNotificationMessageTypeMap = new HashMap<>();
@@ -64,13 +65,13 @@ public class AlertNotificationHandler implements EventHandler {
       return;
     }
 
-    handleAlert(validEvent.getValue());
+    handleAlert(validEvent.getValue(), event.getEventType());
   }
 
-  private void handleAlert(Alert alert) {
+  private void handleAlert(Alert alert, EventType alertEventType) {
     String accountId = alert.getAccountId();
 
-    log.info("Got an alert event. alertType={} , category={} , accountId={}", alert.getType(), alert.getCategory(),
+    logger.info("Got an alert event. alertType={} , category={} , accountId={}", alert.getType(), alert.getCategory(),
         accountId);
 
     List<AlertNotificationRule> allRules = ruleService.getAll(accountId);
@@ -87,41 +88,44 @@ public class AlertNotificationHandler implements EventHandler {
     }
 
     if (defaultRules.size() != 1) {
-      log.error(
+      logger.error(
           "Every account should have one default rule. accountId={} defaultRules={}", accountId, defaultRules.size());
     }
 
     boolean notificationSent = false;
     for (AlertNotificationRule rule : nonDefaultRules) {
       if (ruleChecker.doesAlertSatisfyRule(alert, rule)) {
-        notificationSent = sendNotification(accountId, alert, rule);
+        notificationSent = sendNotification(accountId, alert, rule, alertEventType);
       } else {
-        log.debug("Alert did not satisfy rule. accountId={} rule={} alert={}", accountId, rule, alert);
+        logger.debug("Alert did not satisfy rule. accountId={} rule={} alert={}", accountId, rule, alert);
       }
     }
 
     if (!notificationSent && CollectionUtils.isNotEmpty(defaultRules)) {
-      sendNotification(accountId, alert, defaultRules.get(0));
+      sendNotification(accountId, alert, defaultRules.get(0), alertEventType);
     }
   }
 
-  private boolean sendNotification(String accountId, Alert alert, AlertNotificationRule rule) {
+  private boolean sendNotification(
+      String accountId, Alert alert, AlertNotificationRule rule, EventType alertEventType) {
     try {
       NotificationMessageType messageType = alertTypeNotificationMessageTypeMap.getOrDefault(
           alert.getType(), NotificationMessageType.GENERIC_ALERT_NOTIFICATION);
 
       Notification notification =
-          anInformationNotification()
-              .withAccountId(accountId)
-              .withNotificationTemplateId(messageType.name())
-              .withNotificationTemplateVariables(ImmutableMap.of("alert_message", alert.getTitle()))
-              .withDisplayText(alert.getTitle())
+          InformationNotification.builder()
+              .accountId(accountId)
+              .notificationTemplateId(messageType.name())
+              .notificationTemplateVariables(ImmutableMap.of(
+                  "alert_message", CLOSE_ALERT.equals(alertEventType) ? alert.getResolutionTitle() : alert.getTitle()))
+              .displayText(CLOSE_ALERT.equals(alertEventType) ? alert.getResolutionTitle() : alert.getTitle())
+              .eventType(alertEventType)
               .build();
 
       notificationDispatcher.dispatch(notification, Collections.singletonList(rule));
       return true;
     } catch (Exception e) {
-      log.error("Error dispatching notification. accountId={} Alert: {} Rule: {}", accountId, alert, rule, e);
+      logger.error("Error dispatching notification. accountId={} Alert: {} Rule: {}", accountId, alert, rule, e);
       return false;
     }
   }
@@ -136,7 +140,8 @@ public class AlertNotificationHandler implements EventHandler {
 
     EventData eventData = event.getEventData();
     if (null == eventData || null == eventData.getEventInfo()) {
-      log.error("Expected some alert event data. Check with the publisher to see why data was not sent. eventType={}",
+      logger.error(
+          "Expected some alert event data. Check with the publisher to see why data was not sent. eventType={}",
           eventType);
       return INVALID_EVENT;
     }
@@ -147,14 +152,14 @@ public class AlertNotificationHandler implements EventHandler {
       String accountId = alert.getAccountId();
 
       if (StringUtils.isEmpty(accountId)) {
-        log.error("Account ID not present in alert. Can't send notification for it. alertType={}, category={}",
+        logger.error("Account ID not present in alert. Can't send notification for it. alertType={}, category={}",
             alert.getType(), alert.getCategory());
         return INVALID_EVENT;
       } else {
         return new Pair<>(true, alert);
       }
     } else {
-      log.error("Invalid event. Could not cast. eventType={}, class={}", eventType,
+      logger.error("Invalid event. Could not cast. eventType={}, class={}", eventType,
           eventData.getEventInfo().getClass().getCanonicalName());
       return INVALID_EVENT;
     }

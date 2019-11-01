@@ -60,6 +60,8 @@ public interface ContinuousVerificationService {
 
   boolean openAlert(String cvConfigId, ContinuousVerificationAlertData alertData);
 
+  boolean closeAlert(String cvConfigId, ContinuousVerificationAlertData alertData);
+
   List<ContinuousVerificationExecutionMetaData> getCVDeploymentData(
       PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 

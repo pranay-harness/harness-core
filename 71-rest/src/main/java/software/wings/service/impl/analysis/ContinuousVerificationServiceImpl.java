@@ -65,6 +65,7 @@ import org.json.JSONObject;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.APMFetchConfig;
+import software.wings.alerts.AlertStatus;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.app.MainConfiguration;
@@ -2436,13 +2437,27 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Preconditions.checkNotNull(cvConfiguration, "No config found with id " + cvConfigId);
     Preconditions.checkNotNull(alertData, "Invalid alert data");
     alertData.setCvConfiguration(cvConfiguration);
+    alertData.setAlertStatus(AlertStatus.Open);
     alertData.setPortalUrl(isNotEmpty(mainConfiguration.getApiUrl()) ? mainConfiguration.getApiUrl()
                                                                      : mainConfiguration.getPortal().getUrl());
-    alertData.setAccountId(appService.getAccountIdByAppId(cvConfiguration.getAppId()));
+    alertData.setAccountId(cvConfiguration.getAccountId());
 
     logger.info("Opening alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
-    alertService.openAlert(appService.getAccountIdByAppId(cvConfiguration.getAppId()), cvConfiguration.getAppId(),
-        CONTINUOUS_VERIFICATION_ALERT, alertData);
+    alertService.openAlert(
+        cvConfiguration.getAccountId(), cvConfiguration.getAppId(), CONTINUOUS_VERIFICATION_ALERT, alertData);
+    return true;
+  }
+
+  @Override
+  public boolean closeAlert(String cvConfigId, ContinuousVerificationAlertData alertData) {
+    final CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    Preconditions.checkNotNull(cvConfiguration, "No config found with id " + cvConfigId);
+    Preconditions.checkNotNull(alertData, "Invalid alert data");
+    alertData.setCvConfiguration(cvConfiguration);
+    alertData.setAlertStatus(AlertStatus.Closed);
+    logger.info("closing alert with riskscore {} for {}", alertData.getRiskScore(), cvConfiguration);
+    alertService.closeAllAlerts(
+        cvConfiguration.getAccountId(), cvConfiguration.getAppId(), CONTINUOUS_VERIFICATION_ALERT, alertData);
     return true;
   }
 
