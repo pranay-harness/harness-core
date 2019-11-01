@@ -109,6 +109,7 @@ public class HostValidationServiceImpl implements HostValidationService {
       response.setStatus(ExecutionStatus.FAILED.name());
       response.setErrorCode(errorCode.name());
       response.setErrorDescription(errorCode.getDescription());
+      logger.error("Failed to validate Host: ", jschEx);
     }
     return response;
   }
