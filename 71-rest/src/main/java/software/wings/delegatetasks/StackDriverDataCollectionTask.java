@@ -342,9 +342,10 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           if (newRelicMetricDataRecord.getValues() == null) {
             newRelicMetricDataRecord.setValues(new HashMap<>());
           }
+
           newRelicMetricDataRecord.getValues().put(dataFetchParameters.getMetric(), value);
 
-          rv.put(dataFetchParameters.getDimensionValue(), timeStamp, newRelicMetricDataRecord);
+          rv.put(dataFetchParameters.getNameSpace(), timeStamp, newRelicMetricDataRecord);
         }));
       }
     }

@@ -104,6 +104,7 @@ import migrations.all.SetNamespaceInContainerInstanceInfo;
 import migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SettingAttributesCategoryMigration;
+import migrations.all.StackdriverServiceGuardMetricsGroupingMigration;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SweepingStateMigration;
 import migrations.all.SystemTemplateGalleryMigration;
@@ -286,6 +287,7 @@ public class MigrationList {
         .add(Pair.of(280, ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes.class))
         .add(Pair.of(281, PcfServiceSpecificationToManifestFileMigration.class))
         .add(Pair.of(282, PcfServiceDeploymentMigration.class))
+        .add(Pair.of(283, StackdriverServiceGuardMetricsGroupingMigration.class))
         .build();
   }
 }
