@@ -20,7 +20,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
@@ -835,11 +834,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   private void sendNotificationForUserGroupApproval(List<String> approvalUserGroups, String appId, String accountId,
       NotificationMessageType notificationMessageType, Map<String, String> placeHolderValues) {
     NotificationRule rule = NotificationRuleBuilder.aNotificationRule().withUserGroupIds(approvalUserGroups).build();
-    InformationNotification notification = anInformationNotification()
-                                               .withAppId(appId)
-                                               .withAccountId(accountId)
-                                               .withNotificationTemplateId(notificationMessageType.name())
-                                               .withNotificationTemplateVariables(placeHolderValues)
+    InformationNotification notification = InformationNotification.builder()
+                                               .appId(appId)
+                                               .accountId(accountId)
+                                               .notificationTemplateId(notificationMessageType.name())
+                                               .notificationTemplateVariables(placeHolderValues)
                                                .build();
 
     notificationService.sendNotificationAsync(notification, Collections.singletonList(rule));

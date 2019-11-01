@@ -75,6 +75,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
@@ -289,6 +290,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
         .then(invocation -> {
           Object[] args = invocation.getArguments();
           managerVerificationService.openAlert((String) args[0], (ContinuousVerificationAlertData) args[1]);
+          Call<RestResponse<Boolean>> restCall = mock(Call.class);
+          when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+          return restCall;
+        });
+
+    when(verificationManagerClient.closeCVAlert(anyString(), any(ContinuousVerificationAlertData.class)))
+        .then(invocation -> {
+          Object[] args = invocation.getArguments();
+          managerVerificationService.closeAlert((String) args[0], (ContinuousVerificationAlertData) args[1]);
           Call<RestResponse<Boolean>> restCall = mock(Call.class);
           when(restCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
           return restCall;
@@ -1069,13 +1079,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // throw alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 10);
-    List<Alert> alerts;
-    int tryCount = 0;
-    do {
-      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-      tryCount++;
-      sleep(ofMillis(500));
-    } while (alerts.isEmpty() && tryCount < 1000);
+    waitForAlert(1);
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
 
     assertThat(alerts).hasSize(1);
     final Alert alert = alerts.get(0);
@@ -1098,16 +1103,47 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
     assertThat(alerts).hasSize(1);
 
-    // diff minute should throw another alert
+    // diff minute within an hour should not throw an alert
     continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 20);
-    do {
-      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-      tryCount++;
-      sleep(ofMillis(500));
-    } while (alerts.size() < 2 && tryCount < 10);
+    waitForAlert(1);
+
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertThat(alerts).hasSize(1);
+    alerts.forEach(cvAlert -> assertThat(cvAlert.getStatus()).isEqualTo(AlertStatus.Open));
+
+    // diff minute after an hour should trigger an alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 80);
+    waitForAlert(2);
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
     assertThat(alerts).hasSize(2);
+    alerts.forEach(cvAlert -> assertThat(cvAlert.getStatus()).isEqualTo(AlertStatus.Open));
+
+    // diff minute within an hour of last alert should not trigger an alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 90);
+    waitForAlert(2);
+
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertThat(alerts).hasSize(2);
+    alerts.forEach(cvAlert -> assertThat(cvAlert.getStatus()).isEqualTo(AlertStatus.Open));
+
+    // less risk score should close all the alerts
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.4, 90);
+    waitForAlert(2);
+    alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    assertThat(alerts).hasSize(2);
+    alerts.forEach(cvAlert -> assertThat(cvAlert.getStatus()).isEqualTo(AlertStatus.Closed));
+
+    // new risk should open another alert
+    continuousVerificationService.triggerTimeSeriesAlertIfNecessary(configId, 0.6, 90);
+    waitForAlert(3);
+    assertThat(wingsPersistence.createQuery(Alert.class, excludeAuthority)
+                   .filter(AlertKeys.status, AlertStatus.Closed)
+                   .count())
+        .isEqualTo(2);
+    assertThat(
+        wingsPersistence.createQuery(Alert.class, excludeAuthority).filter(AlertKeys.status, AlertStatus.Open).count())
+        .isEqualTo(1);
   }
 
   @Test
@@ -1146,13 +1182,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // throw alert
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 10);
-    List<Alert> alerts;
-    int tryCount = 0;
-    do {
-      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-      tryCount++;
-      sleep(ofMillis(500));
-    } while (alerts.size() < 2 && tryCount < 10);
+    waitForAlert(2);
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
 
     assertThat(alerts).hasSize(2);
     Set<String> alertAnomalies = new HashSet<>();
@@ -1188,11 +1219,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     // diff minute should throw another alert
     continuousVerificationService.triggerLogAnalysisAlertIfNecessary(configId, logMLAnalysisRecord, 30);
-    do {
-      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
-      tryCount++;
-      sleep(ofMillis(500));
-    } while (alerts.size() < 4 && tryCount < 1000);
+    waitForAlert(4);
 
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
     assertThat(alerts).hasSize(4);
@@ -2312,5 +2339,15 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(task).isNotNull();
     assertThat(currentMinute - task.getAnalysis_minute()).isLessThanOrEqualTo(120); // brings it within the 2hour range.
     assertThat(task.getTest_input_url()).isNotNull();
+  }
+
+  private void waitForAlert(int expectedNumOfAlerts) {
+    int tryCount = 0;
+    List<Alert> alerts;
+    do {
+      alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+      tryCount++;
+      sleep(ofMillis(500));
+    } while (alerts.size() < expectedNumOfAlerts && tryCount < 10);
   }
 }

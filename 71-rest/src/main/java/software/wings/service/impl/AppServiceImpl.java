@@ -13,7 +13,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
@@ -54,6 +53,7 @@ import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.Role;
 import software.wings.beans.Service;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -188,11 +188,11 @@ public class AppServiceImpl implements AppService {
   }
 
   private void sendNotification(Application application, NotificationMessageType entityCreateNotification) {
-    notificationService.sendNotificationAsync(anInformationNotification()
-                                                  .withAppId(application.getUuid())
-                                                  .withAccountId(application.getAccountId())
-                                                  .withNotificationTemplateId(entityCreateNotification.name())
-                                                  .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE",
+    notificationService.sendNotificationAsync(InformationNotification.builder()
+                                                  .appId(application.getUuid())
+                                                  .accountId(application.getAccountId())
+                                                  .notificationTemplateId(entityCreateNotification.name())
+                                                  .notificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE",
                                                       "Application", "ENTITY_NAME", application.getName()))
                                                   .build());
   }

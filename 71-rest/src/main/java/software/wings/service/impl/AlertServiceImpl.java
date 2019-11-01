@@ -41,6 +41,7 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.Alert;
@@ -63,6 +64,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -78,6 +80,8 @@ public class AlertServiceImpl implements AlertService {
       NoEligibleDelegates, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT,
       USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError,
       InvalidKMS, CONTINUOUS_VERIFICATION_ALERT);
+  private static final List<AlertType> CLOSED_ALERT_TYPES_TO_NOTIFY_ON =
+      ImmutableList.of(CONTINUOUS_VERIFICATION_ALERT, InvalidKMS);
   private static final Iterable<AlertStatus> STATUS_ACTIVE = ImmutableSet.of(Open, Pending);
 
   @Inject private WingsPersistence wingsPersistence;
@@ -113,6 +117,11 @@ public class AlertServiceImpl implements AlertService {
   }
 
   @Override
+  public void closeAllAlerts(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    executorService.submit(() -> findAllExistingAlerts(accountId, appId, alertType, alertData).forEach(this ::close));
+  }
+
+  @Override
   public void closeAlertsOfType(String accountId, String appId, AlertType alertType) {
     executorService.submit(() -> findExistingAlertsOfType(accountId, appId, alertType).forEach(this ::close));
   }
@@ -138,6 +147,7 @@ public class AlertServiceImpl implements AlertService {
                   .status(Pending)
                   .alertData(alertData)
                   .title(alertData.buildTitle())
+                  .resolutionTitle(alertData.buildResolutionTitle())
                   .category(alertType.getCategory())
                   .severity(alertType.getSeverity())
                   .triggerCount(0)
@@ -177,6 +187,19 @@ public class AlertServiceImpl implements AlertService {
             Event.builder().eventData(alertEventData(alert)).eventType(EventType.OPEN_ALERT).build());
       } else {
         logger.info("No alert event will be published in event queue. Type: {}", alert.getType());
+      }
+    } catch (Exception e) {
+      logger.error("Could not publish alert event. Alert: {}", alert);
+    }
+  }
+
+  private void publishCloseEvent(Alert alert) {
+    try {
+      if (CLOSED_ALERT_TYPES_TO_NOTIFY_ON.contains(alert.getType())) {
+        eventPublisher.publishEvent(
+            Event.builder().eventData(alertEventData(alert)).eventType(EventType.CLOSE_ALERT).build());
+      } else {
+        logger.info("No close alert event will be published in event queue. Type: {}", alert.getType());
       }
     } catch (Exception e) {
       logger.error("Could not publish alert event. Alert: {}", alert);
@@ -223,6 +246,29 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
+    for (Alert alert : alertQuery) {
+      injector.injectMembers(alert.getAlertData());
+      if (alertData.matches(alert.getAlertData())) {
+        return Optional.of(alert);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private List<Alert> findAllExistingAlerts(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
+    List<Alert> alerts = new ArrayList<>();
+    for (Alert alert : alertQuery) {
+      injector.injectMembers(alert.getAlertData());
+      if (alertData.matches(alert.getAlertData())) {
+        alerts.add(alert);
+      }
+    }
+    return alerts;
+  }
+
+  private Query<Alert> getAlertsQuery(String accountId, String appId, AlertType alertType, AlertData alertData) {
     if (!alertType.getAlertDataClass().isAssignableFrom(alertData.getClass())) {
       String errorMsg = format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
           alertType.getAlertDataClass().getName(), alertData.getClass().getName());
@@ -238,13 +284,7 @@ public class AlertServiceImpl implements AlertService {
       alertQuery.filter(AlertKeys.appId, appId);
     }
     injector.injectMembers(alertData);
-    for (Alert alert : alertQuery) {
-      injector.injectMembers(alert.getAlertData());
-      if (alertData.matches(alert.getAlertData())) {
-        return Optional.of(alert);
-      }
-    }
-    return Optional.empty();
+    return alertQuery;
   }
 
   private Iterable<Alert> findExistingAlertsOfType(String accountId, String appId, AlertType alertType) {
@@ -263,18 +303,21 @@ public class AlertServiceImpl implements AlertService {
     long now = System.currentTimeMillis();
     Date expiration = Date.from(OffsetDateTime.now().plusDays(5).toInstant());
 
-    wingsPersistence.update(wingsPersistence.createQuery(Alert.class)
-                                .filter(AlertKeys.uuid, alert.getUuid())
-                                .filter(AlertKeys.accountId, alert.getAccountId()),
+    final UpdateResults updateResults = wingsPersistence.update(wingsPersistence.createQuery(Alert.class)
+                                                                    .filter(AlertKeys.uuid, alert.getUuid())
+                                                                    .filter(AlertKeys.accountId, alert.getAccountId()),
         wingsPersistence.createUpdateOperations(Alert.class)
             .set(AlertKeys.status, Closed)
             .set(AlertKeys.closedAt, now)
             .set(AlertKeys.validUntil, expiration));
 
-    alert.setStatus(Closed);
-    alert.setClosedAt(now);
-    alert.setValidUntil(expiration);
-    logger.info("Alert closed after {} : {}", getDurationString(alert.getCreatedAt(), now), alert);
+    if (updateResults.getUpdatedCount() > 0) {
+      logger.info("Alert closed after {} : {}", getDurationString(alert.getCreatedAt(), now), alert);
+      alert.setStatus(Closed);
+      alert.setClosedAt(now);
+      alert.setValidUntil(expiration);
+      publishCloseEvent(alert);
+    }
   }
 
   @Override

@@ -22,6 +22,8 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication, OwnedB
 
   void closeAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 
+  void closeAllAlerts(String accountId, String appId, AlertType alertType, AlertData alertData);
+
   void closeAlertsOfType(String accountId, String appId, AlertType alertType);
 
   void activeDelegateUpdated(String accountId, String delegateId);

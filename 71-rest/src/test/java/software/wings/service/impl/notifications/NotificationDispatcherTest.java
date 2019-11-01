@@ -3,7 +3,6 @@ package software.wings.service.impl.notifications;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -70,13 +69,13 @@ public class NotificationDispatcherTest extends WingsBaseTest {
     emailTemplate.setSubject(ENTITY_CREATE_NOTIFICATION.name());
     when(notificationMessageResolver.getEmailTemplate(ENTITY_CREATE_NOTIFICATION.name())).thenReturn(emailTemplate);
 
-    InformationNotification notification = anInformationNotification()
-                                               .withAccountId(ACCOUNT_ID)
-                                               .withAppId(APP_ID)
-                                               .withEntityId(WORKFLOW_EXECUTION_ID)
-                                               .withEntityType(ORCHESTRATED_DEPLOYMENT)
-                                               .withNotificationTemplateId(ENTITY_CREATE_NOTIFICATION.name())
-                                               .withNotificationTemplateVariables(ImmutableMap.of("WORKFLOW_NAME",
+    InformationNotification notification = InformationNotification.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .appId(APP_ID)
+                                               .entityId(WORKFLOW_EXECUTION_ID)
+                                               .entityType(ORCHESTRATED_DEPLOYMENT)
+                                               .notificationTemplateId(ENTITY_CREATE_NOTIFICATION.name())
+                                               .notificationTemplateVariables(ImmutableMap.of("WORKFLOW_NAME",
                                                    WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "DATE", "DATE"))
                                                .build();
 
@@ -105,13 +104,13 @@ public class NotificationDispatcherTest extends WingsBaseTest {
     emailTemplate.setSubject(ENTITY_CREATE_NOTIFICATION.name());
     when(notificationMessageResolver.getEmailTemplate(ENTITY_CREATE_NOTIFICATION.name())).thenReturn(emailTemplate);
 
-    InformationNotification notification = anInformationNotification()
-                                               .withAccountId(ACCOUNT_ID)
-                                               .withAppId(APP_ID)
-                                               .withEntityId(WORKFLOW_EXECUTION_ID)
-                                               .withEntityType(ORCHESTRATED_DEPLOYMENT)
-                                               .withNotificationTemplateId(ENTITY_CREATE_NOTIFICATION.name())
-                                               .withNotificationTemplateVariables(ImmutableMap.of("WORKFLOW_NAME",
+    InformationNotification notification = InformationNotification.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .appId(APP_ID)
+                                               .entityId(WORKFLOW_EXECUTION_ID)
+                                               .entityType(ORCHESTRATED_DEPLOYMENT)
+                                               .notificationTemplateId(ENTITY_CREATE_NOTIFICATION.name())
+                                               .notificationTemplateVariables(ImmutableMap.of("WORKFLOW_NAME",
                                                    WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "DATE", "DATE"))
                                                .build();
 

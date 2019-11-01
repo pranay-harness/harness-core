@@ -26,6 +26,7 @@ public enum EventType {
   CV_META_DATA,
 
   OPEN_ALERT,
+  CLOSE_ALERT,
 
   NEW_TRIAL_SIGNUP,
   LICENSE_UPDATE,

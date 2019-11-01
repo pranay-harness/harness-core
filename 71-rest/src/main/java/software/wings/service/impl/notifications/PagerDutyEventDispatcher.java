@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.event.model.EventType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Notification;
 import software.wings.common.NotificationMessageResolver;
@@ -35,6 +36,10 @@ public class PagerDutyEventDispatcher {
     }
 
     for (Notification notification : notifications) {
+      if (EventType.CLOSE_ALERT.equals(notification.getEventType())) {
+        logger.info("ignoring close alert for pager duty {}", notification);
+        continue;
+      }
       PagerDutyTemplate pagerDutySummaryTemplate =
           notificationMessageResolver.getPagerDutyTemplate(notification.getNotificationTemplateId());
       if (pagerDutySummaryTemplate == null) {
