@@ -267,6 +267,7 @@ public class EcsStateHelper {
     DelegateTask delegateTask =
         getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.ECS_COMMAND_TASK, activityId, envId,
             ecsInfrastructureMapping.getUuid(), new Object[] {ecsCommandRequest, encryptedDataDetails}, 10);
+    delegateTask.setTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null);
 
     delegateService.queueTask(delegateTask);
 
@@ -279,7 +280,7 @@ public class EcsStateHelper {
 
   public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,
       CommandUnitType commandUnitType, ActivityService activityService) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
     ActivityBuilder activityBuilder = getActivityBuilder(
@@ -405,7 +406,7 @@ public class EcsStateHelper {
 
     ImageDetails imageDetails =
         artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
-    Application app = workflowStandardParams.getApp();
+    Application app = workflowStandardParams.fetchRequiredApp();
     Environment env = workflowStandardParams.getEnv();
 
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
@@ -616,7 +617,7 @@ public class EcsStateHelper {
       ServiceResourceService serviceResourceService, InfrastructureMappingService infrastructureMappingService,
       SettingsService settingsService, SecretManager secretManager) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Application app = workflowStandardParams.getApp();
+    Application app = workflowStandardParams.fetchRequiredApp();
     Environment env = workflowStandardParams.getEnv();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();

@@ -105,7 +105,7 @@ public class ContainerDeploymentManagerHelper {
     String serviceId = phaseElement.getServiceElement().getUuid();
     String appId = context.getAppId();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams.getEnv().getUuid();
+    String envId = workflowStandardParams.fetchRequiredEnv().getUuid();
 
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0);
