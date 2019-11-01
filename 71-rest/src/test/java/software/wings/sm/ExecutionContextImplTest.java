@@ -477,11 +477,11 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     ExecutionContextImpl context = prepareSweepingExecutionContext(appId, null, workflowExecutionId, null, null, null);
     final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.PIPELINE).build();
-    assertThat(sweepingOutput1.getWorkflowExecutionId()).isEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getWorkflowExecutionIds()).containsExactly(workflowExecutionId);
     assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);
 
     final SweepingOutput sweepingOutput2 = context.prepareSweepingOutputBuilder(null).build();
-    assertThat(sweepingOutput2.getWorkflowExecutionId()).isEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getWorkflowExecutionIds()).containsExactly(workflowExecutionId);
     assertThat(sweepingOutput2.getAppId()).isEqualTo(appId);
   }
 
@@ -496,7 +496,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         prepareSweepingExecutionContext(appId, pipelineExecutionId, workflowExecutionId, null, null, null);
     final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.WORKFLOW).build();
     assertThat(sweepingOutput1.getPipelineExecutionId()).isNotEqualTo(pipelineExecutionId);
-    assertThat(sweepingOutput1.getWorkflowExecutionId()).isEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getWorkflowExecutionIds()).containsExactly(workflowExecutionId);
     assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);
   }
 
@@ -513,7 +513,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         prepareSweepingExecutionContext(appId, pipelineExecutionId, workflowExecutionId, phaseId, null, phaseName);
     final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.PHASE).build();
     assertThat(sweepingOutput1.getPipelineExecutionId()).isNotEqualTo(pipelineExecutionId);
-    assertThat(sweepingOutput1.getWorkflowExecutionId()).isNotEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getWorkflowExecutionIds()).hasSize(1);
+    assertThat(sweepingOutput1.getWorkflowExecutionIds()).doesNotContain(workflowExecutionId);
     assertThat(sweepingOutput1.getPhaseExecutionId()).isEqualTo(workflowExecutionId + phaseId + phaseName);
     assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);
   }
@@ -532,7 +533,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
         prepareSweepingExecutionContext(appId, pipelineExecutionId, workflowExecutionId, phaseId, stateId, phaseName);
     final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.STATE).build();
     assertThat(sweepingOutput1.getPipelineExecutionId()).isNotEqualTo(pipelineExecutionId);
-    assertThat(sweepingOutput1.getWorkflowExecutionId()).isNotEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getWorkflowExecutionIds()).hasSize(1);
+    assertThat(sweepingOutput1.getWorkflowExecutionIds()).doesNotContain(workflowExecutionId);
     assertThat(sweepingOutput1.getPhaseExecutionId()).isNotEqualTo(workflowExecutionId + phaseId + phaseName);
     assertThat(sweepingOutput1.getStateExecutionId()).isEqualTo(stateId);
     assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);

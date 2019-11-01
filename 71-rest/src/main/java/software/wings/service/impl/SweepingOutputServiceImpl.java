@@ -16,6 +16,7 @@ import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SweepingOutputService;
 
@@ -43,13 +44,28 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     wingsPersistence.saveIgnoringDuplicateKeys(asList(sweepingOutput));
   }
 
+  @Override
+  public void copyOutputsForAnotherWorkflowExecution(
+      String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId) {
+    if (fromWorkflowExecutionId.equals(toWorkflowExecutionId)) {
+      return;
+    }
+    final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
+                                            .filter(SweepingOutputKeys.appId, appId)
+                                            .filter(SweepingOutputKeys.workflowExecutionIds, fromWorkflowExecutionId);
+
+    UpdateOperations<SweepingOutput> ops = wingsPersistence.createUpdateOperations(SweepingOutput.class);
+    ops.addToSet(SweepingOutputKeys.workflowExecutionIds, toWorkflowExecutionId);
+    wingsPersistence.update(query, ops);
+  }
+
   public SweepingOutput find(SweepingOutputInquiry sweepingOutputInquiry) {
     final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
                                             .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
                                             .filter(SweepingOutputKeys.name, sweepingOutputInquiry.getName());
 
     final CriteriaContainerImpl workflowCriteria =
-        query.criteria(SweepingOutputKeys.workflowExecutionId).equal(sweepingOutputInquiry.getWorkflowExecutionId());
+        query.criteria(SweepingOutputKeys.workflowExecutionIds).equal(sweepingOutputInquiry.getWorkflowExecutionId());
     final CriteriaContainerImpl phaseCriteria =
         query.criteria(SweepingOutputKeys.phaseExecutionId).equal(sweepingOutputInquiry.getPhaseExecutionId());
     final CriteriaContainerImpl stateCriteria =
@@ -62,7 +78,6 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     } else {
       query.or(workflowCriteria, phaseCriteria, stateCriteria);
     }
-
     return query.get();
   }
 
