@@ -440,10 +440,11 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
-  public void markJobScheduled(AnalysisContext verificationAnalysisTask) {
+  public void markJobStatus(AnalysisContext verificationAnalysisTask, ExecutionStatus executionStatus) {
+    logger.info(
+        "Marking job as {} for stateExecutionId : {}", executionStatus, verificationAnalysisTask.getStateExecutionId());
     wingsPersistence.updateField(
-        AnalysisContext.class, verificationAnalysisTask.getUuid(), "executionStatus", ExecutionStatus.SUCCESS);
-    logger.info("Marking job as SUCCESS for stateExecutionId : {}", verificationAnalysisTask.getStateExecutionId());
+        AnalysisContext.class, verificationAnalysisTask.getUuid(), "executionStatus", executionStatus);
   }
 
   @Override

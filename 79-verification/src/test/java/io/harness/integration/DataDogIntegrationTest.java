@@ -283,8 +283,8 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new WorkflowTimeSeriesAnalysisJob
-        .MetricAnalysisGenerator(
-            timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
+        .MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+            Optional.of(jobExecutionContext))
         .run();
 
     // TODO I know....

@@ -1402,7 +1402,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         JobExecutionContext jobExecutionContext, String delegateTaskId, LearningEngineService learningEngineService,
         VerificationManagerClient client, VerificationManagerClientHelper managerClient,
         WingsPersistence wingsPersistence) {
-      super(analysisService, context, jobExecutionContext, learningEngineService, client, managerClient,
+      super(analysisService, context, Optional.of(jobExecutionContext), learningEngineService, client, managerClient,
           dataStoreService);
       this.wingsPersistence = wingsPersistence;
       stateExecutionId = context.getStateExecutionId();

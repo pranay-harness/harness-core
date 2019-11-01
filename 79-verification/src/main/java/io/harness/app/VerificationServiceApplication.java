@@ -28,6 +28,7 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFL
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
@@ -52,6 +53,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.beans.ExecutionStatus;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -59,6 +61,8 @@ import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.jobs.sg247.collection.ServiceGuardDataCollectionJob;
 import io.harness.jobs.sg247.logs.ServiceGuardLogAnalysisJob;
 import io.harness.jobs.workflow.collection.CVDataCollectionJob;
+import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
+import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
@@ -94,6 +98,9 @@ import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
+import software.wings.service.impl.analysis.MLAnalysisType;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -222,7 +229,9 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     registerHealthChecks(environment, injector);
 
-    registerIterators(injector);
+    registerWorkflowIterators(injector);
+
+    registerServiceGuardIterators(injector);
 
     initializeServiceTaskPoll(injector);
 
@@ -305,7 +314,41 @@ public class VerificationServiceApplication extends Application<VerificationServ
     environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
   }
 
-  private void registerIterators(Injector injector) {
+  private void registerWorkflowIterators(Injector injector) {
+    final ScheduledThreadPoolExecutor workflowVerificationExecutor = new ScheduledThreadPoolExecutor(
+        5, new ThreadFactoryBuilder().setNameFormat("Iterator-workflow-verification").build());
+    registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowTimeSeriesAnalysisJob(),
+        AnalysisContextKeys.timeSeriesAnalysisIteration, MLAnalysisType.TIME_SERIES, ofMinutes(1), 4);
+    registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowLogAnalysisJob(),
+        AnalysisContextKeys.logAnalysisIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
+  }
+
+  private void registerWorkflowIterator(Injector injector, ScheduledThreadPoolExecutor workflowVerificationExecutor,
+      Handler<AnalysisContext> handler, String iteratorFieldName, MLAnalysisType analysisType, Duration interval,
+      int maxAllowedThreads) {
+    injector.injectMembers(handler);
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<AnalysisContext>builder()
+            .clazz(AnalysisContext.class)
+            .fieldName(iteratorFieldName)
+            .targetInterval(interval)
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(workflowVerificationExecutor)
+            .semaphore(new Semaphore(maxAllowedThreads))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.filter(AnalysisContextKeys.analysisType, analysisType)
+                       .field(AnalysisContextKeys.executionStatus)
+                       .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    workflowVerificationExecutor.scheduleAtFixedRate(
+        () -> dataCollectionIterator.process(ProcessMode.PUMP), 0, 5, TimeUnit.SECONDS);
+  }
+
+  private void registerServiceGuardIterators(Injector injector) {
     final ScheduledThreadPoolExecutor serviceGuardExecutor =
         new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-ServiceGuard").build());
     registerIterator(injector, serviceGuardExecutor, new ServiceGuardDataCollectionJob(),

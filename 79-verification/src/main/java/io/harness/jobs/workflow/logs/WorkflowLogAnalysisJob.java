@@ -1,5 +1,7 @@
 package io.harness.jobs.workflow.logs;
 
+import static software.wings.beans.FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON;
+
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -9,6 +11,7 @@ import io.harness.jobs.LogMLAnalysisGenerator;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -27,16 +30,18 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowLogAnalysisJob implements Job {
+public class WorkflowLogAnalysisJob implements Job, Handler<AnalysisContext> {
   @Transient @Inject private LogAnalysisService analysisService;
 
   @Transient @Inject private LearningEngineService learningEngineService;
 
+  @Inject private VerificationManagerClient verificationManagerClient;
   @Transient @Inject private VerificationManagerClientHelper managerClientHelper;
   @Transient @Inject private VerificationManagerClient managerClient;
 
@@ -47,12 +52,19 @@ public class WorkflowLogAnalysisJob implements Job {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
-      new WorkflowLogAnalysisJob
-          .LogAnalysisTask(analysisService, context, jobExecutionContext, learningEngineService, managerClient,
-              managerClientHelper, dataStoreService)
-          .call();
-      logger.info("Finish log analysis cron " + context.getStateExecutionId());
+      if (!managerClientHelper
+               .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                   WORKFLOW_VERIFICATION_REMOVE_CRON, context.getAccountId()))
+               .getResource()) {
+        logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
+        new WorkflowLogAnalysisJob
+            .LogAnalysisTask(analysisService, context, Optional.of(jobExecutionContext), learningEngineService,
+                managerClient, managerClientHelper, dataStoreService)
+            .call();
+        logger.info("Finish log analysis cron " + context.getStateExecutionId());
+      } else {
+        logger.info("{} flag is enabled, it will be handled by iterators", WORKFLOW_VERIFICATION_REMOVE_CRON);
+      }
     } catch (Exception ex) {
       logger.warn("Log analysis cron failed with error", ex);
       try {
@@ -63,12 +75,31 @@ public class WorkflowLogAnalysisJob implements Job {
     }
   }
 
+  @Override
+  public void handle(AnalysisContext analysisContext) {
+    if (!managerClientHelper
+             .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                 WORKFLOW_VERIFICATION_REMOVE_CRON, analysisContext.getAccountId()))
+             .getResource()) {
+      logger.info("{} flag is disabled, it will be handled by cron", WORKFLOW_VERIFICATION_REMOVE_CRON);
+      return;
+    }
+    if (ExecutionStatus.QUEUED.equals(analysisContext.getExecutionStatus())) {
+      learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
+    }
+
+    new WorkflowLogAnalysisJob
+        .LogAnalysisTask(analysisService, analysisContext, Optional.empty(), learningEngineService, managerClient,
+            managerClientHelper, dataStoreService)
+        .call();
+  }
+
   @AllArgsConstructor
   public static class LogAnalysisTask implements Callable<Long> {
     private LogAnalysisService analysisService;
 
     private AnalysisContext context;
-    private JobExecutionContext jobExecutionContext;
+    private Optional<JobExecutionContext> jobExecutionContext;
     private LearningEngineService learningEngineService;
     private VerificationManagerClient managerClient;
     private VerificationManagerClientHelper managerClientHelper;
@@ -137,6 +168,7 @@ public class WorkflowLogAnalysisJob implements Job {
         boolean createExperiment;
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
+          learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
           return -1L;
         }
 
@@ -219,7 +251,9 @@ public class WorkflowLogAnalysisJob implements Job {
               logger.error("Send notification failed for log analysis manager", e);
             } finally {
               try {
-                jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+                if (jobExecutionContext.isPresent()) {
+                  jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
+                }
               } catch (Exception e) {
                 logger.error("Delete cron failed", e);
               }
