@@ -21,7 +21,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
-import io.harness.waiter.WaitQueue.WaitQueueKeys;
+import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 
@@ -98,16 +98,18 @@ public class Notifier implements Runnable {
     Map<String, List<String>> waitInstances = new HashMap<>();
 
     // Get wait queue entries
-    try (HIterator<WaitQueue> iterator = new HIterator<>(persistence.createQuery(WaitQueue.class, excludeAuthority)
-                                                             .field(WaitQueueKeys.correlationId)
-                                                             .in(correlationIds)
-                                                             .fetch())) {
-      while (iterator.hasNext()) {
-        // process distinct set of wait instanceIds
-        final WaitQueue waitQueue = iterator.next();
-        final String waitInstanceId = waitQueue.getWaitInstanceId();
-        waitInstances.computeIfAbsent(waitInstanceId, key -> new ArrayList<String>()).add(waitQueue.getCorrelationId());
-        correlationIds.remove(waitQueue.getCorrelationId());
+    try (
+        HIterator<WaitInstance> iterator = new HIterator<>(persistence.createQuery(WaitInstance.class, excludeAuthority)
+                                                               .field(WaitInstanceKeys.correlationIds)
+                                                               .in(correlationIds)
+                                                               .fetch())) {
+      for (WaitInstance waitInstance : iterator) {
+        if (correlationIds.containsAll(waitInstance.getCorrelationIds())) {
+          final String waitInstanceId = waitInstance.getUuid();
+          waitInstances.computeIfAbsent(waitInstanceId, key -> new ArrayList<String>())
+              .addAll(waitInstance.getCorrelationIds());
+        }
+        correlationIds.removeAll(waitInstance.getCorrelationIds());
       }
     }
 
