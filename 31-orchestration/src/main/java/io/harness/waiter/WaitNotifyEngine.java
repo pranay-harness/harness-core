@@ -8,7 +8,6 @@ import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -21,7 +20,6 @@ import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,11 +62,6 @@ public class WaitNotifyEngine {
     return notify(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
 
-  // If we get duplicate key exception this means that this correlation id was already handled. In rare cases
-  // the delegate might get confused and send the response twice. Ignore few DuplicateKeyException per hour.
-  // If more are observed that's alarming.
-  static RateLimiter duplicateKeyExceptionRateLimiter = RateLimiter.create(8.0 / Duration.ofHours(1).getSeconds());
-
   private <T extends ResponseData> String notify(String correlationId, T response, boolean error) {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
@@ -93,9 +86,7 @@ public class WaitNotifyEngine {
 
       return notificationId;
     } catch (DuplicateKeyException exception) {
-      if (!duplicateKeyExceptionRateLimiter.tryAcquire()) {
-        logger.error("Unexpected rate of DuplicateKeyException per correlation", exception);
-      }
+      logger.warn("Unexpected rate of DuplicateKeyException per correlation", exception);
     } catch (Exception exception) {
       logger.error("Failed to notify for response of type " + response.getClass().getSimpleName(), exception);
     }
