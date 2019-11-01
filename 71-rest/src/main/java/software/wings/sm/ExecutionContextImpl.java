@@ -805,17 +805,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     contextMap.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements(), workflowExecutionId));
 
-    final SweepingOutput sweepingOutput = prepareSweepingOutputBuilder(null).build();
-
     contextMap.put("context",
         SweepingOutputFunctor.builder()
             .sweepingOutputService(sweepingOutputService)
-            .sweepingOutputInquiryBuilder(SweepingOutputInquiry.builder()
-                                              .appId(sweepingOutput.getAppId())
-                                              .pipelineExecutionId(sweepingOutput.getPipelineExecutionId())
-                                              .workflowExecutionId(sweepingOutput.getWorkflowExecutionId())
-                                              .phaseExecutionId(sweepingOutput.getPhaseExecutionId())
-                                              .stateExecutionId(sweepingOutput.getStateExecutionId()))
+            .sweepingOutputInquiryBuilder(prepareSweepingOutputInquiryBuilder())
             .build());
 
     contextMap.put("harnessShellUtils", SubstitutionFunctor.builder().build());

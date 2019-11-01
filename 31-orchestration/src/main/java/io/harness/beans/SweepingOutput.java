@@ -7,6 +7,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -19,6 +20,7 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 @Value
@@ -33,21 +35,21 @@ import javax.validation.constraints.NotNull;
   ,
       @Index(options = @IndexOptions(name = "uniqueWorkflowExecution", unique = true), fields = {
         @Field(SweepingOutputKeys.appId)
-        , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionId)
+        , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.workflowExecutionIds)
       }), @Index(options = @IndexOptions(name = "uniquePhaseExecution", unique = true), fields = {
         @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.phaseExecutionId)
       }), @Index(options = @IndexOptions(name = "uniqueStateExecution", unique = true), fields = {
         @Field(SweepingOutputKeys.appId), @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId)
       })
 })
-@Entity(value = "sweepingOutput", noClassnameStored = true)
+@Entity(value = "sweepingOutput2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SweepingOutputKeys")
 public class SweepingOutput implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   private String appId;
   private String pipelineExecutionId;
-  private String workflowExecutionId;
+  @Singular private List<String> workflowExecutionIds;
   private String phaseExecutionId;
   private String stateExecutionId;
 

@@ -23,4 +23,7 @@ public interface SweepingOutputService {
   }
 
   SweepingOutput find(SweepingOutputInquiry inquiry);
+
+  void copyOutputsForAnotherWorkflowExecution(
+      String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId);
 }
