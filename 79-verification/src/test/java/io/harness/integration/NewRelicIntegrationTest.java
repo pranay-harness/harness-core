@@ -96,6 +96,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -670,8 +671,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(
-        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        Optional.of(jobExecutionContext))
         .run();
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -803,8 +804,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(
-        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        Optional.of(jobExecutionContext))
         .run();
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -939,8 +940,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(
-        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        Optional.of(jobExecutionContext))
         .run();
 
     Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -1100,8 +1101,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(
-        timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext, jobExecutionContext)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        Optional.of(jobExecutionContext))
         .run();
 
     // TODO I know....

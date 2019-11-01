@@ -2,10 +2,10 @@ package io.harness.jobs.workflow.timeseries;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.beans.FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -13,7 +13,9 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
@@ -52,6 +54,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -59,20 +62,12 @@ import java.util.Set;
  */
 @DisallowConcurrentExecution
 @Slf4j
-public class WorkflowTimeSeriesAnalysisJob implements Job {
+public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisContext> {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
 
+  @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private VerificationManagerClientHelper managerClientHelper;
-
-  @VisibleForTesting
-  @Inject
-  public WorkflowTimeSeriesAnalysisJob(TimeSeriesAnalysisService timeSeriesAnalysisService,
-      LearningEngineService learningEngineService, VerificationManagerClientHelper managerClientHelper) {
-    this.timeSeriesAnalysisService = timeSeriesAnalysisService;
-    this.learningEngineService = learningEngineService;
-    this.managerClientHelper = managerClientHelper;
-  }
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
@@ -81,12 +76,19 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      logger.info("Executing Workflow timeseries Analysis job for context : {}", context);
-      new WorkflowTimeSeriesAnalysisJob
-          .MetricAnalysisGenerator(
-              timeSeriesAnalysisService, learningEngineService, managerClientHelper, context, jobExecutionContext)
-          .run();
-      logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
+      if (!managerClientHelper
+               .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                   WORKFLOW_VERIFICATION_REMOVE_CRON, context.getAccountId()))
+               .getResource()) {
+        logger.info("Executing Workflow timeseries Analysis job for context : {}", context);
+        new WorkflowTimeSeriesAnalysisJob
+            .MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClientHelper, context,
+                Optional.of(jobExecutionContext))
+            .run();
+        logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
+      } else {
+        logger.info("{} flag is enabled, it will be handled by iterators", WORKFLOW_VERIFICATION_REMOVE_CRON);
+      }
     } catch (Exception ex) {
       logger.warn("Metric analysis cron failed with error", ex);
       try {
@@ -97,9 +99,28 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
     }
   }
 
+  @Override
+  public void handle(AnalysisContext analysisContext) {
+    if (!managerClientHelper
+             .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                 WORKFLOW_VERIFICATION_REMOVE_CRON, analysisContext.getAccountId()))
+             .getResource()) {
+      logger.info("{} flag is disabled, it will be handled by cron", WORKFLOW_VERIFICATION_REMOVE_CRON);
+      return;
+    }
+    if (ExecutionStatus.QUEUED.equals(analysisContext.getExecutionStatus())) {
+      learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
+    }
+
+    new WorkflowTimeSeriesAnalysisJob
+        .MetricAnalysisGenerator(
+            timeSeriesAnalysisService, learningEngineService, managerClientHelper, analysisContext, Optional.empty())
+        .run();
+  }
+
   public static class MetricAnalysisGenerator implements Runnable {
     public static final int COMPARATIVE_ANALYSIS_DURATION = 30;
-    private final JobExecutionContext jobExecutionContext;
+    private final Optional<JobExecutionContext> jobExecutionContext;
     private final Map<String, String> testNodes;
     private final Map<String, String> controlNodes;
     private final TimeSeriesAnalysisService analysisService;
@@ -110,7 +131,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
 
     public MetricAnalysisGenerator(TimeSeriesAnalysisService service, LearningEngineService learningEngineService,
         VerificationManagerClientHelper managerClientHelper, AnalysisContext context,
-        JobExecutionContext jobExecutionContext) {
+        Optional<JobExecutionContext> jobExecutionContext) {
       this.analysisService = service;
       this.learningEngineService = learningEngineService;
       this.managerClientHelper = managerClientHelper;
@@ -321,6 +342,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
         // Check whether workflow state is valid or not.
         if (!learningEngineService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.info("for {} state is no longer valid", context.getStateExecutionId());
+          learningEngineService.markJobStatus(context, ExecutionStatus.SUCCESS);
           completeCron = true;
           return;
         }
@@ -451,7 +473,9 @@ public class WorkflowTimeSeriesAnalysisJob implements Job {
               logger.error("Send notification failed for new relic analysis manager", e);
             } finally {
               try {
-                jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
+                if (jobExecutionContext.isPresent()) {
+                  jobExecutionContext.get().getScheduler().deleteJob(jobExecutionContext.get().getJobDetail().getKey());
+                }
               } catch (Exception e) {
                 logger.error("Delete cron failed", e);
               }

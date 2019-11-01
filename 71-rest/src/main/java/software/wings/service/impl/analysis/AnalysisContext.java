@@ -5,6 +5,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.iterator.PersistentRegularIterable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,9 +34,15 @@ import java.util.stream.Collectors;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 @Indexes({
-  @Index(fields = {
-    @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("serviceId"), @Field("executionStatus")
-  }, options = @IndexOptions(unique = true, name = "taskUniqueIdx"))
+  @Index(fields = { @Field("stateExecutionId")
+                    , @Field("executionStatus") },
+      options = @IndexOptions(unique = true, name = "task_Unique_Idx"))
+  ,
+      @Index(fields = {
+        @Field("analysisType"), @Field("executionStatus"), @Field("timeSeriesAnalysisIteration")
+      }, options = @IndexOptions(name = "timeSeriesAnalysisIterationIdx")), @Index(fields = {
+        @Field("analysisType"), @Field("executionStatus"), @Field("logAnalysisIteration")
+      }, options = @IndexOptions(name = "logAnalysisIterationIdx"))
 })
 @Data
 @FieldNameConstants(innerTypeName = "AnalysisContextKeys")
@@ -44,7 +51,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "verificationServiceTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class AnalysisContext extends Base {
+public class AnalysisContext extends Base implements PersistentRegularIterable {
   private String accountId;
   private String workflowId;
   private String workflowExecutionId;
@@ -82,6 +89,8 @@ public class AnalysisContext extends Base {
   private DataCollectionInfo dataCollectionInfo;
 
   private int retry;
+  @Indexed private Long timeSeriesAnalysisIteration;
+  @Indexed private Long logAnalysisIteration;
 
   @JsonIgnore
   @SchemaIgnore
@@ -157,5 +166,33 @@ public class AnalysisContext extends Base {
         .accountId(accountId)
         .stateType(stateType)
         .build();
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    if (AnalysisContextKeys.timeSeriesAnalysisIteration.equals(fieldName)) {
+      this.timeSeriesAnalysisIteration = nextIteration;
+      return;
+    }
+
+    if (AnalysisContextKeys.logAnalysisIteration.equals(fieldName)) {
+      this.logAnalysisIteration = nextIteration;
+      return;
+    }
+
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (AnalysisContextKeys.timeSeriesAnalysisIteration.equals(fieldName)) {
+      return this.timeSeriesAnalysisIteration;
+    }
+
+    if (AnalysisContextKeys.logAnalysisIteration.equals(fieldName)) {
+      return this.logAnalysisIteration;
+    }
+
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 }

@@ -292,9 +292,4 @@ public class ServiceGuardAccountPoller {
   private void cleanUpAfterDeletionOfEntity() {
     cvConfigurationService.deleteStaleConfigs();
   }
-
-  @VisibleForTesting
-  public void setQuartzScheduler(PersistentScheduler jobScheduler) {
-    this.jobScheduler = jobScheduler;
-  }
 }

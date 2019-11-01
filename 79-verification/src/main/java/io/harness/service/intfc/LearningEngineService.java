@@ -43,7 +43,7 @@ public interface LearningEngineService {
 
   AnalysisContext getNextVerificationAnalysisTask(ServiceApiVersion serviceApiVersion);
 
-  void markJobScheduled(AnalysisContext verificationAnalysisTask);
+  void markJobStatus(AnalysisContext verificationAnalysisTask, ExecutionStatus executionStatus);
   void checkAndUpdateFailedLETask(String stateExecutionId, int analysisMinute);
 
   boolean isStateValid(String appId, String stateExecutionId);

@@ -638,7 +638,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
 
     AnalysisContext savedContext = wingsPersistence.createQuery(AnalysisContext.class).get();
 
-    learningEngineService.markJobScheduled(savedContext);
+    learningEngineService.markJobStatus(savedContext, ExecutionStatus.SUCCESS);
 
     AnalysisContext updatedContext = wingsPersistence.createQuery(AnalysisContext.class).get();
 
