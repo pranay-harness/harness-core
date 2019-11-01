@@ -318,6 +318,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(context).set("serviceResourceService", serviceResourceService);
     on(context).set("infrastructureMappingService", infrastructureMappingService);
     on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("settingsService", settingsService);
 
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))

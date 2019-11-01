@@ -46,6 +46,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import software.wings.api.DeploymentType;
 import software.wings.api.InfraMappingElement;
+import software.wings.api.InfraMappingElement.CloudProvider;
 import software.wings.api.InfraMappingElement.Helm;
 import software.wings.api.InfraMappingElement.InfraMappingElementBuilder;
 import software.wings.api.InfraMappingElement.Kubernetes;
@@ -69,6 +70,7 @@ import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
@@ -1097,12 +1099,28 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           ? pcfInfrastructureMapping.getTempRouteMap().get(0)
           : StringUtils.EMPTY;
 
-      builder.pcf(Pcf.builder().route(route).tempRoute(tempRoute).build());
+      CloudProvider cloudProvider = generateCloudProviderElement(infrastructureMapping);
+      builder.pcf(Pcf.builder()
+                      .route(route)
+                      .tempRoute(tempRoute)
+                      .organization(pcfInfrastructureMapping.getOrganization())
+                      .space(pcfInfrastructureMapping.getSpace())
+                      .cloudProvider(cloudProvider)
+                      .build());
     } else if (DeploymentType.HELM.name().equals(phaseElement.getDeploymentType())) {
       builder.helm(Helm.builder()
                        .shortId(infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z'))
                        .build());
     }
+  }
+
+  private CloudProvider generateCloudProviderElement(InfrastructureMapping infrastructureMapping) {
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    if (settingAttribute == null) {
+      return null;
+    }
+
+    return CloudProvider.builder().name(settingAttribute.getName()).build();
   }
 
   @Override

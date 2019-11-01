@@ -254,13 +254,13 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetPrefix() {
     Set<String> names = new HashSet<>();
-    names.add("App__Account__dev__");
+    names.add("App__Account__dev");
 
     assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1"))).isTrue();
     assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1"))).isFalse();
 
     names.clear();
-    names.add("App__Login__dev__");
+    names.add("App__Login__dev");
     assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Account__dev__1"))).isFalse();
     assertThat(names.contains(pcfCommandTaskHelper.getAppPrefix("App__Login__dev__1"))).isTrue();
   }

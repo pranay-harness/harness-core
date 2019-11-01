@@ -17,6 +17,9 @@ public class InfraMappingElement {
   public static class Pcf {
     private String route;
     private String tempRoute;
+    private CloudProvider cloudProvider;
+    private String organization;
+    private String space;
   }
 
   @Data
@@ -31,5 +34,11 @@ public class InfraMappingElement {
   public static class Helm {
     private String shortId;
     private String releaseName;
+  }
+
+  @Data
+  @Builder
+  public static class CloudProvider {
+    private String name;
   }
 }

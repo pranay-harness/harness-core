@@ -132,6 +132,10 @@ public abstract class ExpressionBuilder {
   protected static final String INFRA_HELM_SHORTID = "infra.helm.shortId";
   protected static final String INFRA_HELM_RELEASENAME = "infra.helm.releaseName";
 
+  protected static final String INFRA_PCF_ORG = "infra.pcf.organization";
+  protected static final String INFRA_PCF_SPACE = "infra.pcf.space";
+  protected static final String INFRA_PCF_CLOUDPROVIDER_NAME = "infra.pcf.cloudProvider.name";
+
   protected static final String APPROVEDBY_NAME = "approvedBy.name";
   protected static final String APPROVEDBY_EMAIL = "approvedBy.email";
 
@@ -240,7 +244,8 @@ public abstract class ExpressionBuilder {
       case PCF_ROLLBACK:
       case PCF_MAP_ROUTE:
       case PCF_UNMAP_ROUTE:
-        expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF, PCF_APP_NAME, PCF_OLD_APP_NAME));
+        expressions.addAll(
+            asList(INFRA_PCF_ORG, INFRA_PCF_SPACE, INFRA_PCF_CLOUDPROVIDER_NAME, PCF_APP_NAME, PCF_OLD_APP_NAME));
         break;
       case HELM_DEPLOY:
       case HELM_ROLLBACK:
