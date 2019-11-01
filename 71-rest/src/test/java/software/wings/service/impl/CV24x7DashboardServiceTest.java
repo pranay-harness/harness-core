@@ -23,7 +23,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
-import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
@@ -180,11 +179,6 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     firstRec.setUnknown_clusters(unknownClusters);
     firstRec.compressLogAnalysisRecord();
     return firstRec;
-  }
-
-  private void enableFeatureFlag(FeatureName featureName) {
-    FeatureFlag flag = FeatureFlag.builder().enabled(true).name(featureName.name()).build();
-    wingsPersistence.save(flag);
   }
 
   private SplunkAnalysisCluster getRandomClusterEvent() {

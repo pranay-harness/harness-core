@@ -304,7 +304,6 @@ public class LogMLAnalysisGenerator implements Runnable {
               .stateExecutionInstanceId(context.getStateExecutionId())
               .serverConfigId(context.getAnalysisServerConfigId())
               .query(context.getQuery())
-              .timeDuration(context.getTimeDuration())
               .canaryNewHostNames(context.getTestNodes().keySet())
               .lastExecutionNodes(
                   context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())

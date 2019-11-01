@@ -1660,14 +1660,13 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public void testListConfigurations() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     String testUuid = generateUuid();
     logger.info("testUuid {}", testUuid);
-    int numOfApplications = 5;
-    int numOfEnvs = 10;
+    int numOfApplications = 2;
+    int numOfEnvs = 3;
 
     for (int i = 0; i < numOfApplications; i++) {
       for (int j = 0; j < numOfEnvs; j++) {
@@ -1690,16 +1689,12 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       }
     }
     assertThat(wingsPersistence.createQuery(CVConfiguration.class)
-                   .filter(CVConfigurationKeys.accountId, accountId)
                    .filter(CVConfigurationKeys.name, "NRTestConfig" + testUuid)
-                   .asList()
-                   .size())
+                   .count())
         .isEqualTo(numOfApplications * numOfEnvs);
     assertThat(wingsPersistence.createQuery(CVConfiguration.class)
-                   .filter(CVConfigurationKeys.accountId, accountId)
                    .filter(CVConfigurationKeys.name, "SumoTestConfig" + testUuid)
-                   .asList()
-                   .size())
+                   .count())
         .isEqualTo(numOfApplications * numOfEnvs);
 
     // ask for all the cvConfigs for 1 app
@@ -1747,10 +1742,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 2; j++) {
         final int index = i * 2 * 2 + j * 2;
-        assertThat(cvConfigurations.get(index).getAppId()).isEqualTo("app" + i + testUuid);
-        assertThat(cvConfigurations.get(index).getEnvId()).isEqualTo("env" + j + testUuid);
-        assertThat(cvConfigurations.get(index + 1).getAppId()).isEqualTo("app" + i + testUuid);
-        assertThat(cvConfigurations.get(index + 1).getEnvId()).isEqualTo("env" + j + testUuid);
+        assertThat(cvConfigurations.get(index).getAppId()).isEqualTo("app" + j + testUuid);
+        assertThat(cvConfigurations.get(index).getEnvId()).isEqualTo("env" + i + testUuid);
+        assertThat(cvConfigurations.get(index + 1).getAppId()).isEqualTo("app" + j + testUuid);
+        assertThat(cvConfigurations.get(index + 1).getEnvId()).isEqualTo("env" + i + testUuid);
       }
     }
   }

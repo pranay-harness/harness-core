@@ -1447,7 +1447,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
                 logger.error("Verification L1 => L2 cluster failed", ex);
                 final VerificationStateAnalysisExecutionData executionData =
-                    VerificationStateAnalysisExecutionData.builder().mlAnalysisType(MLAnalysisType.LOG_ML).build();
+                    VerificationStateAnalysisExecutionData.builder().build();
                 executionData.setStatus(ExecutionStatus.ERROR);
                 executionData.setErrorMsg(ex.getMessage());
                 logger.info(
@@ -1495,13 +1495,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .stateExecutionInstanceId(context.getStateExecutionId())
               .serverConfigId(context.getAnalysisServerConfigId())
               .query(context.getQuery())
-              .timeDuration(context.getTimeDuration())
               .canaryNewHostNames(context.getTestNodes().keySet())
               .lastExecutionNodes(
                   context.getControlNodes() == null ? Collections.emptySet() : context.getControlNodes().keySet())
               .correlationId(context.getCorrelationId())
               .analysisMinute(logAnalysisMinute)
-              .mlAnalysisType(MLAnalysisType.LOG_ML)
               .build();
 
       logAnalysisExecutionData.setStatus(status);

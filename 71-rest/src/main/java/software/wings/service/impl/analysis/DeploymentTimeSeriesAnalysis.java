@@ -16,7 +16,6 @@ public class DeploymentTimeSeriesAnalysis {
   private String baseLineExecutionId;
   private String message;
   private RiskLevel riskLevel;
-  private int progressPercentage;
   private int total;
   private List<NewRelicMetricAnalysis> metricAnalyses;
 }
