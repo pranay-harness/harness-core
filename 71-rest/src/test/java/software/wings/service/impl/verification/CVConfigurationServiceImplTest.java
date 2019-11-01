@@ -256,7 +256,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
         (StackDriverMetricCVConfiguration) cvConfiguration;
     assertThat(stackDriverMetricCVConfiguration).isNotNull();
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions()).isNotNull();
-    assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions().size()).isEqualTo(1);
+    assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions().size()).isEqualTo(3);
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions().get(0).getFilter()).isNotBlank();
   }
 
@@ -421,10 +421,24 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
                                                  .filterJson(paramsForStackDriver)
                                                  .metricName("metricName")
                                                  .metricType("INFRA")
-                                                 .txnName("Group")
+                                                 .txnName("TransactionName1")
                                                  .build();
+    StackDriverMetricDefinition definition1 = StackDriverMetricDefinition.builder()
+                                                  .filterJson(paramsForStackDriver)
+                                                  .metricName("metricName2")
+                                                  .metricType("INFRA")
+                                                  .txnName("TransactionName2")
+                                                  .build();
+    StackDriverMetricDefinition definition2 = StackDriverMetricDefinition.builder()
+                                                  .filterJson(paramsForStackDriver)
+                                                  .metricName("metricName3")
+                                                  .metricType("INFRA")
+                                                  .txnName("TransactionName2")
+                                                  .build();
     StackDriverMetricCVConfiguration configuration =
-        StackDriverMetricCVConfiguration.builder().metricDefinitions(Arrays.asList(definition)).build();
+        StackDriverMetricCVConfiguration.builder()
+            .metricDefinitions(Arrays.asList(definition, definition1, definition2))
+            .build();
     configuration.setAccountId(accountId);
     configuration.setStateType(StateType.STACK_DRIVER);
     configuration.setEnvId(generateUuid());
