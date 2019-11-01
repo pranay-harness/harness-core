@@ -52,8 +52,9 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                      .lastHeartbeat(Instant.now().toEpochMilli())
                                      .delegateId("")
                                      .build();
-
-    return perpetualTaskRecordDao.save(record);
+    String taskId = perpetualTaskRecordDao.save(record);
+    logger.info("Created a perpetual task with id={}.", taskId);
+    return taskId;
   }
 
   @Override
@@ -63,7 +64,11 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
 
   @Override
   public boolean deleteTask(String accountId, String taskId) {
-    return perpetualTaskRecordDao.remove(accountId, taskId);
+    boolean hasDeleted = perpetualTaskRecordDao.remove(accountId, taskId);
+    if (hasDeleted) {
+      logger.info("Deleted the perpetual task with id={}", taskId);
+    }
+    return hasDeleted;
   }
 
   @Override
