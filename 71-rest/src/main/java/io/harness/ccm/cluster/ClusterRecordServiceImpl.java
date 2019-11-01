@@ -27,9 +27,13 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   public ClusterRecord upsert(ClusterRecord clusterRecord) {
     ClusterRecord prevClusterRecord = clusterRecordDao.get(clusterRecord);
     ClusterRecord upsertedClusterRecord = clusterRecordDao.upsertCluster(clusterRecord);
-    logger.info("Upserted the {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
-        upsertedClusterRecord.getUuid());
+
     if (!isNull(prevClusterRecord)) {
+      logger.info("Updated the existing {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
+          upsertedClusterRecord.getUuid());
+    } else {
+      logger.info("Upserted a new {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
+          upsertedClusterRecord.getUuid());
       try {
         subject.fireInform(ClusterRecordObxxxxxxxx:onUpserted, clusterRecord);
       } catch (Exception e) {

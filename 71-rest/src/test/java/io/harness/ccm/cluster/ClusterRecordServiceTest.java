@@ -37,11 +37,18 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testUpsert() {
-    clusterRecordService.upsert(clusterRecord);
-    verify(subject, times(0)).fireInform(any(), eq(clusterRecord));
+  public void shouldInformUponUpsert() {
     clusterRecordService.upsert(clusterRecord);
     verify(subject, times(1)).fireInform(any(), eq(clusterRecord));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotInformUponUpdate() {
+    clusterRecordService.upsert(clusterRecord);
+    verify(subject, times(1)).fireInform(any(), eq(clusterRecord));
+    clusterRecordService.upsert(clusterRecord);
+    verify(subject, times(1)).fireInform(any(), eq(clusterRecord)); // instead of 2
   }
 
   @Test
