@@ -60,7 +60,7 @@ public class ArtifactsFunctionalTest extends AbstractFunctionalTest {
   public void getArtifactsTest() throws IOException {
     String command = "harness get artifacts --service " + serviceId;
     List<String> getArtifactsOutput = harnesscliHelper.executeCLICommand(command);
-    assertThat(getArtifactsOutput.get(1).contains(artifactStream.getName()));
+    assertThat(getArtifactsOutput.get(1)).isEqualTo(artifactStream.getName());
   }
 
   @Test
