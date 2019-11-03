@@ -327,26 +327,25 @@ public class SecretManagerTest extends CategoryTest {
   public void getEncryptionDetails() {
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, ACCOUNT_ID)).thenReturn(true);
     JenkinsConfig jenkinsConfig = getJenkinsConfig(ACCOUNT_ID);
-    EncryptedRecordData mockEncryptedRecordData = mock(EncryptedRecordData.class);
-    EncryptedData mockEncryptedData = mock(EncryptedData.class);
-    when(mockEncryptedData.getEncryptionType()).thenReturn(EncryptionType.KMS);
+    EncryptedRecordData encryptedRecordData = EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build();
     String kmsId = UUIDGenerator.generateUuid();
-    when(mockEncryptedData.getKmsId()).thenReturn(kmsId);
+    EncryptedData mockEncryptedData = EncryptedData.builder().kmsId(kmsId).encryptionType(EncryptionType.KMS).build();
     KmsConfig kmsConfig = mock(KmsConfig.class);
     when(kmsConfig.isGlobalKms()).thenReturn(true);
+    when(kmsConfig.getEncryptionType()).thenReturn(EncryptionType.KMS);
     when(secretManagerConfigService.getSecretManager(ACCOUNT_ID, kmsId)).thenReturn(kmsConfig);
     when(wingsPersistence.get(EncryptedData.class, jenkinsConfig.getEncryptedPassword())).thenReturn(mockEncryptedData);
     when(kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
              any(EncryptedData.class), any(KmsConfig.class)))
-        .thenReturn(mockEncryptedRecordData);
+        .thenReturn(encryptedRecordData);
     when(localEncryptionService.getEncryptionConfig(ACCOUNT_ID))
         .thenReturn(LocalEncryptionConfig.builder().uuid(ACCOUNT_ID).build());
     when(secretManagerConfigService.getDefaultSecretManager(ACCOUNT_ID)).thenReturn(mock(KmsConfig.class));
 
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(jenkinsConfig);
     assertThat(encryptedDataDetails.size()).isEqualTo(1);
-    assertThat(encryptedDataDetails.get(0).getEncryptedData()).isEqualTo(mockEncryptedRecordData);
-    assertThat(encryptedDataDetails.get(0).getEncryptionConfig().getEncryptionType()).isEqualTo(EncryptionType.LOCAL);
+    assertThat(encryptedDataDetails.get(0).getEncryptedData()).isEqualTo(encryptedRecordData);
+    assertThat(encryptedDataDetails.get(0).getEncryptionConfig().getEncryptionType()).isEqualTo(EncryptionType.KMS);
   }
 
   private JenkinsConfig getJenkinsConfig(String accountId) {

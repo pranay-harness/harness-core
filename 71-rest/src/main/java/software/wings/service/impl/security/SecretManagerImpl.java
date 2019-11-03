@@ -58,6 +58,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
@@ -408,8 +409,13 @@ public class SecretManagerImpl implements SecretManager {
             encryptedRecordData = kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
                 encryptedData, (KmsConfig) encryptionConfig);
 
-            encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
-            logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData);
+            // The encryption type will be set to LOCAL only if manager was able to decrypt.
+            // If the decryption failed, we need to retain the kms encryption config, otherwise delegate task would
+            // fail.
+            if (encryptedRecordData.getEncryptionType().equals(LOCAL)) {
+              encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+              logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData);
+            }
           } else {
             encryptedRecordData = SecretManager.buildRecordData(encryptedData);
           }
@@ -1186,7 +1192,7 @@ public class SecretManagerImpl implements SecretManager {
         secretTexts.add(secretText);
       }
     } catch (IOException e) {
-      throw new WingsException(e);
+      throw new InvalidRequestException("Error while importing secrets for accountId " + accountId, e);
     } finally {
       try {
         if (reader != null) {
@@ -1666,7 +1672,7 @@ public class SecretManagerImpl implements SecretManager {
       output.flush();
       return output.toByteArray();
     } catch (IOException e) {
-      throw new SecretManagementException(INVALID_ARGUMENT, e, USER).addParam("args", "Failed to get content");
+      throw new SecretManagementException(INVALID_ARGUMENT, "Failed to get content", e, USER);
     } finally {
       // Delete temporary file if it exists.
       if (file != null && file.exists()) {
