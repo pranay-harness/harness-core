@@ -9,10 +9,10 @@ import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
-
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.isRetryable;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -62,7 +62,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Singleton
 @Slf4j
 public class KmsEncryptDecryptClient {
-  private static final int DEFAULT_KMS_TIMEOUT = 10; // in seconds
+  private static final int DEFAULT_KMS_TIMEOUT = 20; // in seconds
   private TimeLimiter timeLimiter;
 
   // Caffeine cache is a high performance java cache just like Guava Cache. Below is the benchmark result
@@ -117,10 +117,10 @@ public class KmsEncryptDecryptClient {
           .encryptionKey(randomEncryptionKey)
           .encryptedValue(reEncryptedValue)
           .build();
-    } catch (SecretManagementDelegateException e) {
-      logger.warn("Failed to decrypt secret " + encryptedRecord + " with secret manager " + kmsConfig.getName()
-              + ". Falling back to decrypt this secret using delegate",
-          e);
+    } catch (DelegateRetryableException | SecretManagementDelegateException e) {
+      logger.warn(
+          "Failed to decrypt secret {} with secret manager {}. Falling back to decrypt this secret using delegate",
+          encryptedRecord.getUuid(), kmsConfig.getUuid(), e);
       // This means we are falling back to use delegate to decrypt.
       return SecretManager.buildRecordData(encryptedRecord);
     }
@@ -181,19 +181,24 @@ public class KmsEncryptDecryptClient {
   }
 
   public byte[] getPlainTextKeyFromKMS(KmsConfig kmsConfig, String encryptionKey) {
-    final AWSKMS kmsClient = getKmsClient(kmsConfig);
+    AWSKMS kmsClient = null;
+    try {
+      kmsClient = getKmsClient(kmsConfig);
 
-    DecryptRequest decryptRequest =
-        new DecryptRequest().withCiphertextBlob(StandardCharsets.ISO_8859_1.encode(encryptionKey));
-    ByteBuffer plainTextKey = kmsClient.decrypt(decryptRequest).getPlaintext();
-
-    // Shutdown the KMS client so as to prevent resource leaking,
-    kmsClient.shutdown();
-
-    return getByteArray(plainTextKey);
+      DecryptRequest decryptRequest =
+          new DecryptRequest().withCiphertextBlob(StandardCharsets.ISO_8859_1.encode(encryptionKey));
+      ByteBuffer plainTextKey = kmsClient.decrypt(decryptRequest).getPlaintext();
+      return getByteArray(plainTextKey);
+    } finally {
+      if (kmsClient != null) {
+        // Shutdown the KMS client so as to prevent resource leaking,
+        kmsClient.shutdown();
+      }
+    }
   }
 
-  private AWSKMS getKmsClient(KmsConfig kmsConfig) {
+  @VisibleForTesting
+  AWSKMS getKmsClient(KmsConfig kmsConfig) {
     return AWSKMSClientBuilder.standard()
         .withCredentials(new AWSStaticCredentialsProvider(
             new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
@@ -201,7 +206,9 @@ public class KmsEncryptDecryptClient {
         .build();
   }
 
-  private EncryptedRecord encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
+  private EncryptedRecord encryptInternal(String accountId, char[] value, KmsConfig kmsConfig)
+      throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException,
+             NoSuchPaddingException {
     long startTime = System.currentTimeMillis();
     logger.info("Encrypting one secret in account {} with KMS secret manager '{}'", accountId, kmsConfig.getName());
 
@@ -226,10 +233,11 @@ public class KmsEncryptDecryptClient {
         .build();
   }
 
-  private char[] decryptInternal(EncryptedRecord data, KmsConfig kmsConfig) throws Exception {
+  private char[] decryptInternal(EncryptedRecord data, KmsConfig kmsConfig)
+      throws InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException,
+             NoSuchPaddingException {
     long startTime = System.currentTimeMillis();
     logger.info("Decrypting secret {} with KMS secret manager '{}'", data.getUuid(), kmsConfig.getName());
-
     KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
     // HAR-9752: Caching KMS encryption key to plain text key mapping to reduce KMS decrypt call volume.
     byte[] encryptedPlainTextKey = kmsEncryptionKeyCache.get(cacheKey, key -> {
@@ -250,8 +258,10 @@ public class KmsEncryptDecryptClient {
     return kmsEncryptionKeyCache.getIfPresent(cacheKey);
   }
 
-  private char[] decryptInternalIfCached(EncryptedRecord data, byte[] encryptedPlainTextKey, long startTime)
-      throws Exception {
+  @VisibleForTesting
+  char[] decryptInternalIfCached(EncryptedRecord data, byte[] encryptedPlainTextKey, long startTime)
+      throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException,
+             NoSuchPaddingException {
     KmsEncryptionKeyCacheKey cacheKey = new KmsEncryptionKeyCacheKey(data.getUuid(), data.getEncryptionKey());
     byte[] plainTextKey = decryptPlainTextKey(encryptedPlainTextKey, cacheKey.uuid);
     String decrypted = decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey, "AES"));
@@ -284,7 +294,8 @@ public class KmsEncryptDecryptClient {
     return simpleEncryption.encrypt(plainTextKey);
   }
 
-  private byte[] decryptPlainTextKey(byte[] encryptedPlainTextKey, String localEncryptionKey) {
+  @VisibleForTesting
+  byte[] decryptPlainTextKey(byte[] encryptedPlainTextKey, String localEncryptionKey) {
     SimpleEncryption simpleEncryption = new SimpleEncryption(localEncryptionKey);
     return simpleEncryption.decrypt(encryptedPlainTextKey);
   }

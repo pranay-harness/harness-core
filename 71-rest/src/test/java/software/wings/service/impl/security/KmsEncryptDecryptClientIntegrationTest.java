@@ -22,7 +22,7 @@ import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 /**
  * @author marklu on 10/7/19
  */
-public class KmsEncryptDecryptClientTest extends CategoryTest {
+public class KmsEncryptDecryptClientIntegrationTest extends CategoryTest {
   private static final String QA_KMS_REGION = "us-east-1";
 
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
