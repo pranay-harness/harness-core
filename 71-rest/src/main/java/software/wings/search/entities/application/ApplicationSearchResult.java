@@ -32,10 +32,9 @@ public class ApplicationSearchResult extends SearchResult {
   private Integer auditsCount = 0;
   private static final int MAX_ENTRIES = 3;
   private static final int DAYS_TO_RETAIN = 7;
-  private static final long startTimestampToRetainFrom =
-      SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
 
   private void setAudits(ApplicationView applicationView) {
+    long startTimestampToRetainFrom = SearchEntityUtils.getTimestampNdaysBackInMillis(DAYS_TO_RETAIN);
     if (EmptyPredicate.isNotEmpty(applicationView.getAudits())) {
       this.auditsCount =
           SearchEntityUtils.truncateList(applicationView.getAuditTimestamps(), startTimestampToRetainFrom).size();

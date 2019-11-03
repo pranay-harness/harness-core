@@ -31,6 +31,7 @@ import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -56,10 +57,12 @@ public class PipelineChangeHandler implements ChangeHandler {
         && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
+      Map<String, Boolean> isAffectedResourceHandled = new HashMap<>();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
         if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())
             && entityAuditRecord.getAffectedResourceId() != null
-            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
+            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())
+            && !isAffectedResourceHandled.containsKey(entityAuditRecord.getAffectedResourceId())) {
           String fieldToUpdate = PipelineViewKeys.audits;
           String documentToUpdate = entityAuditRecord.getAffectedResourceId();
           String auditTimestampField = PipelineViewKeys.auditTimestamps;
@@ -69,7 +72,7 @@ public class PipelineChangeHandler implements ChangeHandler {
               auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
           result &= searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
               auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-          break;
+          isAffectedResourceHandled.put(entityAuditRecord.getAffectedResourceId(), true);
         }
       }
       return result;

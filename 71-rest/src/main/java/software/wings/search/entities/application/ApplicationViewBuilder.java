@@ -9,7 +9,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Sort;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
-import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
@@ -32,7 +31,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Builder class to build Materialized View of
@@ -123,7 +121,7 @@ class ApplicationViewBuilder {
     try (HIterator<AuditHeader> iterator = new HIterator<>(wingsPersistence.createQuery(AuditHeader.class)
                                                                .field(AuditHeaderKeys.accountId)
                                                                .equal(application.getAccountId())
-                                                               .field("entityAuditRecords.entityId")
+                                                               .field("entityAuditRecords.appId")
                                                                .equal(application.getUuid())
                                                                .field(ApplicationKeys.createdAt)
                                                                .greaterThanOrEq(startTimestamp)
@@ -131,17 +129,10 @@ class ApplicationViewBuilder {
                                                                .fetch())) {
       while (iterator.hasNext()) {
         final AuditHeader auditHeader = iterator.next();
-        for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getAffectedResourceType().equals(EntityType.APPLICATION.name())
-              && entityAuditRecord.getAffectedResourceId() != null
-              && entityAuditRecord.getAffectedResourceId().equals(application.getUuid())) {
-            if (audits.size() < MAX_RELATED_ENTITIES_COUNT) {
-              audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader, entityAuditRecord));
-            }
-            auditTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(auditHeader.getCreatedAt()));
-            break;
-          }
+        if (audits.size() < MAX_RELATED_ENTITIES_COUNT) {
+          audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader));
         }
+        auditTimestamps.add(auditHeader.getCreatedAt());
       }
     }
     Collections.reverse(audits);

@@ -2,18 +2,17 @@ package software.wings.search.entities.service;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import software.wings.beans.Account;
 import software.wings.beans.Service;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 import software.wings.search.framework.changestreams.ChangeType;
 
 public class ServiceEntityTestUtils {
-  public static Service createService(Account account, String appId, String serviceId, String serviceName) {
+  public static Service createService(String accountId, String appId, String serviceId, String serviceName) {
     Service service = new Service();
     service.setUuid(serviceId);
     service.setAppId(appId);
-    service.setAccountId(account.getUuid());
+    service.setAccountId(accountId);
     service.setName(serviceName);
     service.setK8sV2(true);
     return service;

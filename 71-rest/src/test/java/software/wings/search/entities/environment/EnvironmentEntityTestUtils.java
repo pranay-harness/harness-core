@@ -2,18 +2,17 @@ package software.wings.search.entities.environment;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import software.wings.beans.Account;
 import software.wings.beans.Environment;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 import software.wings.search.framework.changestreams.ChangeType;
 
 public class EnvironmentEntityTestUtils {
-  public static Environment createEnvironment(Account account, String appId, String envId, String envName) {
+  public static Environment createEnvironment(String accountId, String appId, String envId, String envName) {
     Environment environment = new Environment();
     environment.setUuid(envId);
     environment.setAppId(appId);
-    environment.setAccountId(account.getUuid());
+    environment.setAccountId(accountId);
     environment.setName(envName);
     return environment;
   }
