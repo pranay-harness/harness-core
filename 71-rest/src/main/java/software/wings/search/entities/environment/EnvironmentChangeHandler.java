@@ -34,6 +34,7 @@ import software.wings.search.framework.changestreams.ChangeType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -228,10 +229,12 @@ public class EnvironmentChangeHandler implements ChangeHandler {
         && changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
+      Map<String, Boolean> isAffectedResourceHandled = new HashMap<>();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
         if (entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())
             && entityAuditRecord.getAffectedResourceId() != null
-            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
+            && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())
+            && !isAffectedResourceHandled.containsKey(entityAuditRecord.getAffectedResourceId())) {
           String fieldToUpdate = EnvironmentViewKeys.audits;
           String documentToUpdate = entityAuditRecord.getAffectedResourceId();
           String auditTimestampField = EnvironmentViewKeys.auditTimestamps;
@@ -243,7 +246,7 @@ public class EnvironmentChangeHandler implements ChangeHandler {
           result = result
               && searchDao.appendToListInSingleDocument(EnvironmentSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                      auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-          break;
+          isAffectedResourceHandled.put(entityAuditRecord.getAffectedResourceId(), true);
         }
       }
       return result;

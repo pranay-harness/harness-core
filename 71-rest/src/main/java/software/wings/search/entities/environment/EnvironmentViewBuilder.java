@@ -31,10 +31,11 @@ import software.wings.search.framework.SearchEntityUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Builder class to build Materialized View of
@@ -89,15 +90,17 @@ class EnvironmentViewBuilder {
                                                                .fetch())) {
       while (iterator.hasNext()) {
         final AuditHeader auditHeader = iterator.next();
+        Map<String, Boolean> isAffectedResourceHandled = new HashMap<>();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
           if (entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())
               && entityAuditRecord.getAffectedResourceId() != null
-              && entityAuditRecord.getAffectedResourceId().equals(environment.getUuid())) {
+              && entityAuditRecord.getAffectedResourceId().equals(environment.getUuid())
+              && !isAffectedResourceHandled.containsKey(entityAuditRecord.getAffectedResourceId())) {
             if (audits.size() < MAX_RELATED_ENTITIES_COUNT) {
               audits.add(relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader, entityAuditRecord));
             }
-            auditTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(auditHeader.getCreatedAt()));
-            break;
+            auditTimestamps.add(auditHeader.getCreatedAt());
+            isAffectedResourceHandled.put(entityAuditRecord.getAffectedResourceId(), true);
           }
         }
       }
@@ -128,7 +131,7 @@ class EnvironmentViewBuilder {
           if (deployments.size() < MAX_RELATED_ENTITIES_COUNT) {
             deployments.add(new RelatedDeploymentView(workflowExecution));
           }
-          deploymentTimestamps.add(TimeUnit.MILLISECONDS.toSeconds(workflowExecution.getCreatedAt()));
+          deploymentTimestamps.add(workflowExecution.getCreatedAt());
         }
       }
     }

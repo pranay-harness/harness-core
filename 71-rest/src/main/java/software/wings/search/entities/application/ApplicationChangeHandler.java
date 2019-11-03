@@ -9,10 +9,8 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.Application;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
-import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Service;
@@ -20,6 +18,7 @@ import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.search.entities.application.ApplicationView.ApplicationViewKeys;
+import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
 import software.wings.search.framework.ChangeHandler;
 import software.wings.search.framework.EntityInfo;
@@ -29,8 +28,12 @@ import software.wings.search.framework.SearchEntityUtils;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The handler which will maintain the application document
@@ -54,22 +57,24 @@ public class ApplicationChangeHandler implements ChangeHandler {
       boolean result = true;
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
+        Set<String> toBeProcessedAppIds = new HashSet<>();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getEntityType().equals(EntityType.APPLICATION.name())
-              && entityAuditRecord.getAffectedResourceId() != null
-              && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())) {
-            String fieldToUpdate = ApplicationViewKeys.audits;
-            String filterId = entityAuditRecord.getAffectedResourceId();
-            Map<String, Object> auditRelatedEntityViewMap =
-                relatedAuditViewBuilder.getAuditRelatedEntityViewMap(auditHeader, entityAuditRecord);
-            String auditTimestampField = ApplicationViewKeys.auditTimestamps;
-            result &= searchDao.addTimestamp(ApplicationSearchEntity.TYPE, auditTimestampField, filterId,
-                auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
-            result &= searchDao.appendToListInSingleDocument(
-                ApplicationSearchEntity.TYPE, fieldToUpdate, filterId, auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
-            break;
+          toBeProcessedAppIds.add(entityAuditRecord.getAppId());
+        }
+        for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
+          if (entityAuditRecord.getAffectedResourceOperation().equals(ChangeType.DELETE.name())) {
+            toBeProcessedAppIds.remove(entityAuditRecord.getAppId());
           }
         }
+        String fieldToUpdate = ApplicationViewKeys.audits;
+        List<String> filterIds = new ArrayList<>(toBeProcessedAppIds);
+        RelatedAuditView relatedAuditView = relatedAuditViewBuilder.getAuditRelatedEntityView(auditHeader);
+        Map<String, Object> auditRelatedEntityViewMap = SearchEntityUtils.convertToMap(relatedAuditView);
+        String auditTimestampField = ApplicationViewKeys.auditTimestamps;
+        result &= searchDao.addTimestamp(
+            ApplicationSearchEntity.TYPE, auditTimestampField, filterIds, auditHeader.getCreatedAt(), DAYS_TO_RETAIN);
+        result &= searchDao.appendToListInMultipleDocuments(
+            ApplicationSearchEntity.TYPE, fieldToUpdate, filterIds, auditRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);
       }
       return result;
     }

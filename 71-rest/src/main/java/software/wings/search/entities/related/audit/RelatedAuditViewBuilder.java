@@ -6,11 +6,21 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
+import software.wings.beans.EntityType;
 
 import java.util.Map;
 
 @Singleton
 public class RelatedAuditViewBuilder {
+  public RelatedAuditView getAuditRelatedEntityView(AuditHeader auditHeader) {
+    String createdBy = null;
+    if (auditHeader.getCreatedBy() != null) {
+      createdBy = auditHeader.getCreatedBy().getName();
+    }
+    return new RelatedAuditView(auditHeader.getUuid(), createdBy, auditHeader.getCreatedAt(), auditHeader.getAppId(),
+        auditHeader.getAppId(), null, EntityType.APPLICATION.name());
+  }
+
   public RelatedAuditView getAuditRelatedEntityView(AuditHeader auditHeader, EntityAuditRecord entityAuditRecord) {
     String createdBy = null;
     if (auditHeader.getCreatedBy() != null) {

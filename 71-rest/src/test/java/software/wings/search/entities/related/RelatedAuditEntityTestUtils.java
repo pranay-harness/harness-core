@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import io.harness.beans.EmbeddedUser;
-import io.harness.persistence.PersistentEntity;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.HttpMethod;
@@ -15,12 +14,13 @@ import software.wings.search.framework.changestreams.ChangeType;
 import java.util.Arrays;
 
 public class RelatedAuditEntityTestUtils {
-  public static AuditHeader createAuditHeader(String entityType, String entityId, String operationType) {
+  public static AuditHeader createAuditHeader(
+      String auditHeaderId, String accountId, String appId, String entityId, String entityType, String operationType) {
     EmbeddedUser user = EmbeddedUser.builder().name("testing").build();
 
     AuditHeader auditHeader =
         AuditHeader.Builder.anAuditHeader()
-            .withAppId(generateUuid())
+            .withUuid(auditHeaderId)
             .withUrl("http://localhost:9090/wings/catalogs")
             .withResourcePath("catalogs")
             .withRequestMethod(HttpMethod.GET)
@@ -39,48 +39,52 @@ public class RelatedAuditEntityTestUtils {
             .withCreatedAt(System.currentTimeMillis())
             .withCreatedBy(user)
             .build();
-    auditHeader.setEntityAuditRecords(Arrays.asList(createEntityAuditRecord(entityType, entityId, operationType)));
+    auditHeader.setAccountId(accountId);
+    auditHeader.setEntityAuditRecords(
+        Arrays.asList(createEntityAuditRecord(appId, entityId, entityType, operationType)));
     return auditHeader;
   }
 
-  public static EntityAuditRecord createEntityAuditRecord(String entityType, String entityId, String operationType) {
+  public static EntityAuditRecord createEntityAuditRecord(
+      String appId, String entityId, String entityType, String operationType) {
     return EntityAuditRecord.builder()
         .entityId(entityId)
         .entityName("name")
-        .entityType(entityType)
         .operationType(operationType)
         .affectedResourceOperation(operationType)
         .affectedResourceId(entityId)
         .affectedResourceType(entityType)
+        .appId(appId)
         .build();
   }
 
-  public static DBObject getAuditHeaderChanges(String auditEntityType, String operationType, String auditEntityId) {
+  public static DBObject getAuditHeaderChanges(String appId, String auditEntityId, String operationType) {
     BasicDBObject entityAuditRecord = new BasicDBObject();
     entityAuditRecord.put("entityId", auditEntityId);
     entityAuditRecord.put("entityName", "name");
-    entityAuditRecord.put("entityType", auditEntityType);
-    entityAuditRecord.put("appId", generateUuid());
+    entityAuditRecord.put("appId", appId);
     entityAuditRecord.put("appName", "appName");
     entityAuditRecord.put("affectedResourceOperation", operationType);
     entityAuditRecord.put("affectedResourceId", auditEntityId);
     entityAuditRecord.put("affectedResourceName", "name");
-    entityAuditRecord.put("affectedResourceType", auditEntityType);
 
     BasicDBObject changes = new BasicDBObject();
     changes.put("entityAuditRecords", Arrays.asList(entityAuditRecord));
     return changes;
   }
 
-  public static <T extends PersistentEntity> ChangeEvent<T> createAuditHeaderChangeEvent(Class<T> entityType,
-      T fullDocument, ChangeType changeType, String auditEntityType, String operationType, String auditEntityId) {
-    ChangeEventBuilder<T> changeEventBuilder = ChangeEvent.builder();
+  public static ChangeEvent createAuditHeaderChangeEvent(
+      AuditHeader auditHeader, String appId, ChangeType changeType, String auditEntityId, String operationType) {
+    ChangeEventBuilder changeEventBuilder = ChangeEvent.builder();
     changeEventBuilder = changeEventBuilder.token("token")
                              .uuid(generateUuid())
-                             .entityType(entityType)
-                             .fullDocument(fullDocument)
+                             .entityType(AuditHeader.class)
                              .changeType(changeType)
-                             .changes(getAuditHeaderChanges(auditEntityType, operationType, auditEntityId));
+                             .fullDocument(auditHeader);
+
+    if (changeType.equals(ChangeType.UPDATE)) {
+      changeEventBuilder = changeEventBuilder.changes(getAuditHeaderChanges(appId, auditEntityId, operationType));
+    }
     return changeEventBuilder.build();
   }
 }

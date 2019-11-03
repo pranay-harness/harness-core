@@ -3,6 +3,8 @@ package software.wings.search.entities.application;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -18,7 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
-import software.wings.audit.EntityAuditRecord;
+import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
@@ -27,11 +29,10 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
-import software.wings.search.entities.SearchEntityTestUtils;
 import software.wings.search.entities.application.ApplicationView.ApplicationViewKeys;
 import software.wings.search.entities.environment.EnvironmentEntityTestUtils;
 import software.wings.search.entities.pipeline.PipelineEntityTestUtils;
-import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
+import software.wings.search.entities.related.RelatedAuditEntityTestUtils;
 import software.wings.search.entities.service.ServiceEntityTestUtils;
 import software.wings.search.entities.workflow.WorkflowEntityTestUtils;
 import software.wings.search.framework.EntityInfo.EntityInfoKeys;
@@ -40,10 +41,8 @@ import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
 import java.io.IOException;
-import java.util.Map;
 
 public class ApplicationChangeHandlerTest extends WingsBaseTest {
-  @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   @Mock private SearchDao searchDao;
 
   @Inject @InjectMocks private ApplicationChangeHandler applicationChangeHandler;
@@ -63,8 +62,10 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   private AuditHeader nonDeleteAuditHeader;
   private ChangeEvent deleteAuditHeaderChangeEvent;
   private ChangeEvent nonDeleteAuditHeaderChangeEvent;
-  private EntityAuditRecord nonDeleteEntityAuditRecord;
-  private String documentId = generateUuid();
+  private Account account = getAccount(AccountType.PAID);
+  private String nonDeleteAuditHeaderId = generateUuid();
+  private String deleteAuditHeaderId = generateUuid();
+  private String appId = generateUuid();
   private String serviceId = generateUuid();
   private String environmentId = generateUuid();
   private String workflowId = generateUuid();
@@ -72,67 +73,63 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
 
   @Before
   public void setup() throws IOException {
-    application = ApplicationEntityTestUtils.createApplication(getAccount(AccountType.PAID), documentId, APP_NAME);
+    application = ApplicationEntityTestUtils.createApplication(account.getUuid(), appId, APP_NAME);
     wingsPersistence.save(application);
     assertThat(application).isNotNull();
 
-    service = ServiceEntityTestUtils.createService(getAccount(AccountType.PAID), documentId, serviceId, SERVICE_NAME);
+    service = ServiceEntityTestUtils.createService(account.getUuid(), appId, serviceId, SERVICE_NAME);
     wingsPersistence.save(service);
     assertThat(service).isNotNull();
 
-    environment = EnvironmentEntityTestUtils.createEnvironment(
-        getAccount(AccountType.PAID), documentId, environmentId, ENVIRONMENT_NAME);
+    environment =
+        EnvironmentEntityTestUtils.createEnvironment(account.getUuid(), appId, environmentId, ENVIRONMENT_NAME);
     wingsPersistence.save(environment);
     assertThat(environment).isNotNull();
 
-    workflow =
-        WorkflowEntityTestUtils.createWorkflow(getAccount(AccountType.PAID), documentId, workflowId, WORKFLOW_NAME);
+    workflow = WorkflowEntityTestUtils.createWorkflow(account.getUuid(), appId, workflowId, WORKFLOW_NAME);
     wingsPersistence.save(workflow);
     assertThat(workflow).isNotNull();
 
-    pipeline =
-        PipelineEntityTestUtils.createPipeline(getAccount(AccountType.PAID), documentId, pipelineId, PIPELINE_NAME);
+    pipeline = PipelineEntityTestUtils.createPipeline(account.getUuid(), appId, pipelineId, PIPELINE_NAME);
     wingsPersistence.save(pipeline);
     assertThat(pipeline).isNotNull();
 
-    deleteAuditHeader =
-        SearchEntityTestUtils.createAuditHeader(EntityType.APPLICATION.name(), documentId, ChangeType.DELETE.name());
+    deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
+        deleteAuditHeaderId, account.getUuid(), appId, appId, EntityType.APPLICATION.name(), Type.DELETE.name());
+    wingsPersistence.save(deleteAuditHeader);
     assertThat(deleteAuditHeader).isNotNull();
-    assertThat(deleteAuditHeader.getEntityAuditRecords()).isNotNull();
 
-    nonDeleteAuditHeader =
-        SearchEntityTestUtils.createAuditHeader(EntityType.APPLICATION.name(), documentId, Type.CREATE.name());
+    nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
+        nonDeleteAuditHeaderId, account.getUuid(), appId, appId, EntityType.APPLICATION.name(), Type.UPDATE.name());
+    wingsPersistence.save(nonDeleteAuditHeader);
     assertThat(nonDeleteAuditHeader).isNotNull();
-    assertThat(nonDeleteAuditHeader.getEntityAuditRecords()).isNotNull();
 
-    deleteAuditHeaderChangeEvent = SearchEntityTestUtils.createAuditHeaderChangeEvent(AuditHeader.class,
-        deleteAuditHeader, ChangeType.UPDATE, EntityType.APPLICATION.name(), Type.DELETE.name(), documentId);
+    deleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
+        deleteAuditHeader, appId, ChangeType.UPDATE, application.getUuid(), Type.DELETE.name());
     assertThat(deleteAuditHeaderChangeEvent).isNotNull();
 
-    nonDeleteAuditHeaderChangeEvent = SearchEntityTestUtils.createAuditHeaderChangeEvent(AuditHeader.class,
-        nonDeleteAuditHeader, ChangeType.UPDATE, EntityType.APPLICATION.name(), Type.CREATE.name(), documentId);
+    nonDeleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
+        nonDeleteAuditHeader, appId, ChangeType.UPDATE, application.getUuid(), Type.UPDATE.name());
     assertThat(nonDeleteAuditHeaderChangeEvent).isNotNull();
-
-    nonDeleteEntityAuditRecord = SearchEntityTestUtils.createEntityAuditRecord(
-        EntityType.APPLICATION.name(), documentId, ChangeType.UPDATE.name());
-    assertThat(nonDeleteEntityAuditRecord).isNotNull();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
+    when(searchDao.addTimestamp(
+             eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.auditTimestamps), anyList(), anyLong(), eq(7)))
+        .thenReturn(true);
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.audits), anyList(), anyMap(), eq(3)))
+        .thenReturn(true);
     boolean isSuccessful = applicationChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
-    assertThat(isSuccessful).isNotNull();
     assertThat(isSuccessful).isTrue();
 
-    Map<String, Object> auditViewMap =
-        relatedAuditViewBuilder.getAuditRelatedEntityViewMap(nonDeleteAuditHeader, nonDeleteEntityAuditRecord);
-
-    when(searchDao.addTimestamp(ApplicationSearchEntity.TYPE, ApplicationViewKeys.auditTimestamps, documentId,
-             nonDeleteAuditHeader.getCreatedAt(), 7))
+    when(searchDao.addTimestamp(
+             eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.auditTimestamps), anyList(), anyLong(), eq(7)))
         .thenReturn(true);
-    when(searchDao.appendToListInSingleDocument(
-             ApplicationSearchEntity.TYPE, ApplicationViewKeys.audits, documentId, auditViewMap, 3))
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(ApplicationSearchEntity.TYPE), eq(ApplicationViewKeys.audits), anyList(), anyMap(), eq(3)))
         .thenReturn(true);
     boolean result = applicationChangeHandler.handleChange(nonDeleteAuditHeaderChangeEvent);
     assertThat(result).isTrue();
@@ -143,7 +140,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   public void testApplicationInsertChange() {
     ChangeEvent applicationInsertChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.INSERT);
-    when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(documentId), any())).thenReturn(true);
+    when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(appId), any())).thenReturn(true);
     boolean isInsertSuccessful = applicationChangeHandler.handleChange(applicationInsertChangeEvent);
     assertThat(isInsertSuccessful).isTrue();
   }
@@ -153,7 +150,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   public void testApplicationDeleteChange() {
     ChangeEvent applicationDeleteChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.DELETE);
-    when(searchDao.deleteDocument(ApplicationSearchEntity.TYPE, documentId)).thenReturn(true);
+    when(searchDao.deleteDocument(ApplicationSearchEntity.TYPE, appId)).thenReturn(true);
     boolean isDeleteSuccessful = applicationChangeHandler.handleChange(applicationDeleteChangeEvent);
     assertThat(isDeleteSuccessful).isTrue();
   }
@@ -163,7 +160,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
         ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.UPDATE);
-    when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(documentId), any())).thenReturn(true);
+    when(searchDao.upsertDocument(eq(ApplicationSearchEntity.TYPE), eq(appId), any())).thenReturn(true);
     boolean isUpdateSuccessful = applicationChangeHandler.handleChange(applicationUpdateChangeEvent);
     assertThat(isUpdateSuccessful).isTrue();
   }

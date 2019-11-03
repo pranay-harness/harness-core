@@ -2,17 +2,16 @@ package software.wings.search.entities.application;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 import software.wings.search.framework.changestreams.ChangeType;
 
 public class ApplicationEntityTestUtils {
-  public static Application createApplication(Account account, String appId, String appName) {
+  public static Application createApplication(String accountId, String appId, String appName) {
     Application application = new Application();
     application.setName(appName);
-    application.setAccountId(account.getUuid());
+    application.setAccountId(accountId);
     application.setUuid(appId);
     return application;
   }
