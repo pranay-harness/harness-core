@@ -1,7 +1,6 @@
 package software.wings.search.entities.pipeline;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
@@ -12,7 +11,6 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -108,7 +106,6 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = pipelineChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
