@@ -20,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.ExceptionLogger;
@@ -271,5 +272,48 @@ public class ManifestHelperTest extends CategoryTest {
           .containsExactly("Invalid values file. Error parsing YAML. Line 1, column 9: "
               + "Expected a 'block end' but found: scalar. @[<>].");
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetWorkloadsForCanary() {
+    KubernetesResource deployment = KubernetesResource.builder()
+                                        .resourceId(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build())
+                                        .build();
+
+    List<KubernetesResource> kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+
+    KubernetesResource statefulSet =
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().kind(Kind.StatefulSet.name()).build())
+            .build();
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+
+    KubernetesResource daemonSet = KubernetesResource.builder()
+                                       .resourceId(KubernetesResourceId.builder().kind(Kind.DaemonSet.name()).build())
+                                       .build();
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet, daemonSet));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+
+    List<KubernetesResource> deploymentDirectApply = ManifestHelper.processYaml("apiVersion: apps/v1\n"
+        + "kind: Deployment\n"
+        + "metadata:\n"
+        + "  name: deployment\n"
+        + "  annotations:\n"
+        + "    harness.io/direct-apply: true\n"
+        + "spec:\n"
+        + "  replicas: 1");
+
+    kubernetesResources =
+        ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
   }
 }
