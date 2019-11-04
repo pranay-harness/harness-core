@@ -1,5 +1,7 @@
 package io.harness.ccm.cluster;
 
+import static java.util.Objects.isNull;
+
 import com.google.inject.Singleton;
 
 import io.harness.ccm.cluster.entities.Cluster;
@@ -16,6 +18,7 @@ import software.wings.beans.InfrastructureMappingType;
 @UtilityClass
 public class ClusterRecordUtils {
   static ClusterRecord from(InfrastructureMapping infraMapping) {
+    ClusterRecord clusterRecord = null;
     Cluster cluster = null;
 
     switch (InfrastructureMappingType.valueOf(infraMapping.getInfraMappingType())) {
@@ -36,6 +39,10 @@ public class ClusterRecordUtils {
         break;
     }
 
-    return ClusterRecord.builder().accountId(infraMapping.getAccountId()).cluster(cluster).build();
+    if (!isNull(cluster)) {
+      clusterRecord = ClusterRecord.builder().accountId(infraMapping.getAccountId()).cluster(cluster).build();
+    }
+
+    return clusterRecord;
   }
 }
