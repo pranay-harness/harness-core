@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STABLE;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
@@ -15,7 +16,9 @@ import com.google.inject.name.Named;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +60,8 @@ public class BuildSourceCallback implements NotifyCallback {
   private String permitId;
   private String settingId;
   private List<BuildDetails> builds;
+  private static final int MAX_ARTIFACTS_COLLECTION_FOR_WARN = 100;
+  private static final int MAX_LOGS = 2000;
 
   @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient ArtifactService artifactService;
@@ -129,9 +134,19 @@ public class BuildSourceCallback implements NotifyCallback {
       }
       List<Artifact> artifacts = processBuilds(artifactStream);
 
+      if (artifacts.size() > MAX_ARTIFACTS_COLLECTION_FOR_WARN) {
+        logger.warn("Collected {} artifacts in single collection", artifacts.size());
+      }
       if (isNotEmpty(artifacts)) {
-        logger.info("[{}] new artifacts collected for artifactStreamId {}",
-            artifacts.stream().map(Artifact::getBuildNo).collect(Collectors.toList()), artifactStream.getUuid());
+        artifacts.stream().limit(MAX_LOGS).forEach(artifact -> {
+          try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+               AutoLogContext ignore2 = new ArtifactStreamLogContext(
+                   artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
+            logger.info("Build number {} new artifacts collected for artifactStreamId {}", artifact.getBuildNo(),
+                artifactStream.getUuid());
+          }
+        });
+
         if (isUnstable) {
           updatePermit(artifactStream, false);
           return;
