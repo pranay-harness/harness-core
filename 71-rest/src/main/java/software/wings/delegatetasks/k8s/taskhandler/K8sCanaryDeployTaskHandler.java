@@ -2,7 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
+import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanary;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static java.util.Arrays.asList;
@@ -216,7 +216,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
 
-  private boolean prepareForCanary(K8sDelegateTaskParams k8sDelegateTaskParams,
+  @VisibleForTesting
+  boolean prepareForCanary(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters, ExecutionLogCallback executionLogCallback) {
     try {
       markVersionedResources(resources);
@@ -224,12 +225,13 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
 
-      List<KubernetesResource> workloads = getWorkloads(resources);
+      List<KubernetesResource> workloads = getWorkloadsForCanary(resources);
 
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {
           executionLogCallback.saveExecutionLog(
-              "\nNo workload found in the Manifests. Can't do Canary Deployment.", ERROR, FAILURE);
+              "\nNo workload found in the Manifests. Can't do Canary Deployment. Canary only supports workload of kind Deployment",
+              ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
               "\nMore than one workloads found in the Manifests. Canary deploy supports only one workload. Others should be marked with annotation "

@@ -825,7 +825,7 @@ public class K8sTaskHelper {
     }
   }
 
-  public static String getResourcesInTableFormat(List<KubernetesResource> resources) {
+  public String getResourcesInTableFormat(List<KubernetesResource> resources) {
     int maxKindLength = 16;
     int maxNameLength = 36;
     for (KubernetesResource resource : resources) {
