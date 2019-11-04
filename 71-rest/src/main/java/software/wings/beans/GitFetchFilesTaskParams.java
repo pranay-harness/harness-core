@@ -18,4 +18,5 @@ public class GitFetchFilesTaskParams implements TaskParameters {
   private AppManifestKind appManifestKind;
   private Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap;
   private final ContainerServiceParams containerServiceParams;
+  private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
 }

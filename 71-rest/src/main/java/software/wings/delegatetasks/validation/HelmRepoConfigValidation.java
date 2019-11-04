@@ -99,7 +99,10 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateGcsHelmRepoConfig() {
-    return isHelmInstalled() && isChartMuseumInstalled() && validateContainerParams();
+    if (getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
+      return isHelmInstalled() && isChartMuseumInstalled() && validateContainerParams();
+    }
+    return isHelmInstalled() && isChartMuseumInstalled();
   }
 
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {
@@ -109,8 +112,11 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   private boolean validateHttpHelmRepoConfig(HelmRepoConfig helmRepoConfig) {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
-
-    return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl()) && validateContainerParams();
+    if (getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
+      return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl())
+          && validateContainerParams();
+    }
+    return isHelmInstalled() && isConnectableHttpUrl(httpHelmRepoConfig.getChartRepoUrl());
   }
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters() {
@@ -118,7 +124,11 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   }
 
   private boolean validateAmazonS3HelmRepoConfig() {
-    return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL) && validateContainerParams();
+    if (getHelmValuesFetchTaskParameters().isBindTaskFeatureSet()) {
+      return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL)
+          && validateContainerParams();
+    }
+    return isHelmInstalled() && isChartMuseumInstalled() && isConnectableHttpUrl(AWS_URL);
   }
 
   private boolean isConnectableHttpUrl(String url) {

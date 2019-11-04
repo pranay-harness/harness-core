@@ -33,19 +33,24 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
+    GitFetchFilesTaskParams parameters = (GitFetchFilesTaskParams) getParameters()[0];
+
     // Run validation task for container service parameters
     logger.info("Running validation for task {} for container service parameters", delegateTaskId);
+    ContainerServiceParams containerServiceParams = parameters.getContainerServiceParams();
 
-    if (getContainerServiceParams() != null) {
-      if (!containerValidationHelper.validateContainerServiceParams(getContainerServiceParams())) {
+    if (containerServiceParams == null) {
+      logger.info("Container Service Parameters is null for task {}", delegateTaskId);
+    } else {
+      if (parameters.isBindTaskFeatureSet()
+          && !containerValidationHelper.validateContainerServiceParams(containerServiceParams)) {
         logger.info("Failed validation for task {} for container service parameters", delegateTaskId);
         return taskValidationResult(false);
       }
     }
 
     logger.info("Running validation for task {} for repo {}", delegateTaskId, getRepoUrls());
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap =
-        ((GitFetchFilesTaskParams) getParameters()[0]).getGitFetchFilesConfigMap();
+    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = parameters.getGitFetchFilesConfigMap();
 
     for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {
       GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
@@ -55,14 +60,6 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
       }
     }
     return taskValidationResult(true);
-  }
-
-  private ContainerServiceParams getContainerServiceParams() {
-    GitFetchFilesTaskParams parameters = (GitFetchFilesTaskParams) getParameters()[0];
-    if (parameters.getContainerServiceParams() == null) {
-      logger.info("Container Service Parameters is null for task {}", delegateTaskId);
-    }
-    return parameters.getContainerServiceParams();
   }
 
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {

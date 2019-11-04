@@ -51,6 +51,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -100,6 +101,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -155,6 +157,7 @@ public class HelmDeployState extends State {
   @Inject private K8sStateHelper k8sStateHelper;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private HelmHelper helmHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -437,6 +440,7 @@ public class HelmDeployState extends State {
 
   protected Activity createActivity(ExecutionContext executionContext, List<CommandUnit> commandUnits) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
+    notNullCheck("Application", app);
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
@@ -993,6 +997,11 @@ public class HelmDeployState extends State {
 
     String evaluatedCommandFlags = obtainCommandFlags(context);
 
+    boolean isBindTaskFeatureSet = false;
+    if (featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, context.getAccountId())) {
+      isBindTaskFeatureSet = true;
+    }
+
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
         HelmValuesFetchTaskParameters.builder()
             .accountId(context.getAccountId())
@@ -1001,6 +1010,7 @@ public class HelmDeployState extends State {
             .helmCommandFlags(evaluatedCommandFlags)
             .containerServiceParams(containerServiceParams)
             .workflowExecutionId(context.getWorkflowExecutionId())
+            .isBindTaskFeatureSet(isBindTaskFeatureSet)
             .build();
 
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
