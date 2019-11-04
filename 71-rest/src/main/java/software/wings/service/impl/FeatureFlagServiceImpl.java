@@ -26,6 +26,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,25 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   public boolean isEnabledReloadCache(FeatureName featureName, String accountId) {
     cache.clear();
     return isEnabled(featureName, accountId);
+  }
+
+  @Override
+  public void enableAccount(FeatureName featureName, String accountId) {
+    FeatureFlag featureFlag =
+        wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name()).get();
+
+    if (featureFlag == null) {
+      featureFlag = FeatureFlag.builder().name(featureName.name()).accountIds(Collections.singleton(accountId)).build();
+    } else {
+      Set<String> accountIds = featureFlag.getAccountIds();
+      if (accountIds == null) {
+        accountIds = Collections.singleton(accountId);
+      } else {
+        accountIds.add(accountId);
+      }
+      featureFlag.setAccountIds(accountIds);
+    }
+    wingsPersistence.save(featureFlag);
   }
 
   @Override
