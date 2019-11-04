@@ -726,7 +726,6 @@ public abstract class TerraformProvisionState extends State {
 
   private String createActivity(ExecutionContext executionContext) {
     Application app = requireNonNull(executionContext.getApp());
-    Environment env = requireNonNull(((ExecutionContextImpl) executionContext).getEnv());
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
@@ -755,6 +754,7 @@ public abstract class TerraformProvisionState extends State {
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
+      Environment env = requireNonNull(((ExecutionContextImpl) executionContext).getEnv());
       activityBuilder.environmentId(env.getUuid())
           .environmentName(env.getName())
           .environmentType(env.getEnvironmentType());
