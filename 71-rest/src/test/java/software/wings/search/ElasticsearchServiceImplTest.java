@@ -1,6 +1,5 @@
 package software.wings.search;
 
-import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -10,7 +9,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,7 +41,6 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
   public void setup() throws IOException {}
 
   @Test
-  @Owner(emails = UJJAWAL)
   @Category(UnitTests.class)
   public void testGetSearchResults() throws IOException {
     String searchString = "value";
