@@ -44,8 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class PersistenceRule
-    implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin, BypassRuleMixin {
+public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
   ClosingFactory closingFactory;
   @Getter private AdvancedDatastore datastore;
 
@@ -140,10 +139,6 @@ public class PersistenceRule
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    if (bypass(frameworkMethod)) {
-      return noopStatement();
-    }
-
     return applyInjector(statement, frameworkMethod, target);
   }
 }

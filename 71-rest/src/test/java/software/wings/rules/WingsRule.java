@@ -34,7 +34,6 @@ import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
-import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -84,7 +83,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
+public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
   protected ClosingFactory closingFactory = new ClosingFactory();
 
   protected Injector injector;
@@ -95,16 +94,8 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
   private static final String JWT_PASSWORD_SECRET = "123456789";
 
-  /* (non-Javadoc)
-   * @see org.junit.rules.MethodRule#apply(org.junit.runners.model.Statement, org.junit.runners.model.FrameworkMethod,
-   * java.lang.Object)
-   */
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    if (bypass(frameworkMethod)) {
-      return noopStatement();
-    }
-
     Statement wingsStatement = new Statement() {
       @Override
       public void evaluate() throws Throwable {

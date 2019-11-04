@@ -1,6 +1,7 @@
 package io.harness.queue;
 
 import static io.harness.queue.Queue.Filter.ALL;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -10,11 +11,12 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.BypassRuleMixin.Bypass;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Poller;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -30,9 +32,10 @@ public class StressTest extends PersistenceTest {
   @Inject private Queue<TestUnversionedQueuableObject> unversionedQueue;
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
-  @Bypass
+  @Ignore("Bypass this test, it is not for running regularly")
   public void versionedPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndex(TestVersionedQueuableObject.class);
@@ -74,9 +77,10 @@ public class StressTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
-  @Bypass
+  @Ignore("Bypass this test, it is not for running regularly")
   public void unversionedPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndex(TestUnversionedQueuableObject.class);

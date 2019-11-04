@@ -33,8 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class OrchestrationRule
-    implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin, BypassRuleMixin {
+public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
   ClosingFactory closingFactory;
   private AdvancedDatastore datastore;
 
@@ -104,10 +103,6 @@ public class OrchestrationRule
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    if (bypass(frameworkMethod)) {
-      return noopStatement();
-    }
-
     return applyInjector(statement, frameworkMethod, target);
   }
 }
