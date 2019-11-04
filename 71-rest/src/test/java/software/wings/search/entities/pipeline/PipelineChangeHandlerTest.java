@@ -82,7 +82,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
     environment = EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
     assertThat(environment).isNotNull();
 
-    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, WORKFLOW_NAME);
+    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
     assertThat(environment).isNotNull();
 
     pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);

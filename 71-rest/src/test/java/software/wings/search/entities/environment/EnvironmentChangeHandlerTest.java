@@ -3,6 +3,7 @@ package software.wings.search.entities.environment;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -38,6 +39,8 @@ import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
@@ -83,7 +86,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
     pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
     assertThat(pipeline).isNotNull();
 
-    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, WORKFLOW_NAME);
+    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
@@ -159,6 +162,108 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
         EnvironmentEntityTestUtils.createEnvironmentChangeEvent(environment, ChangeType.UPDATE);
     when(searchDao.upsertDocument(eq(EnvironmentSearchEntity.TYPE), eq(environmentId), any())).thenReturn(true);
     boolean isUpdateSuccessful = environmentChangeHandler.handleChange(environmentUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPipelineUpdateChange() {
+    ChangeEvent serviceUpdateChangeEvent =
+        PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
+    when(searchDao.updateListInMultipleDocuments(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.pipelines),
+             anyString(), anyString(), anyString()))
+        .thenReturn(true);
+    boolean isUpdateSuccessful = environmentChangeHandler.handleChange(serviceUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPipelineDeleteChange() {
+    ChangeEvent serviceUpdateChangeEvent =
+        PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.DELETE);
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.pipelines), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.pipelines), anyList(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = environmentChangeHandler.handleChange(serviceUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testApplicationUpdateChange() {
+    ChangeEvent applicationUpdateChangeEvent =
+        ApplicationEntityTestUtils.createApplicationChangeEvent(application, ChangeType.UPDATE);
+
+    when(searchDao.updateKeyInMultipleDocuments(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.appName), anyString(), anyString(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = environmentChangeHandler.handleChange(applicationUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowUpdateChange() {
+    ChangeEvent workflowUpdateChangeEvent =
+        WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.workflows), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.workflows), anyList(), anyMap()))
+        .thenReturn(true);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.workflows), anyList(), anyString()))
+        .thenReturn(true);
+    when(searchDao.updateListInMultipleDocuments(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.workflows),
+             anyString(), anyString(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = environmentChangeHandler.handleChange(workflowUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowInsertChange() {
+    ChangeEvent workflowInsertChangeEvent =
+        WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.INSERT);
+
+    when(searchDao.appendToListInSingleDocument(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.workflows), anyString(), anyMap()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = environmentChangeHandler.handleChange(workflowInsertChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowDeleteChange() {
+    ChangeEvent workflowDeleteChangeEvent =
+        WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.DELETE);
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.workflows), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.workflows), anyList(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = environmentChangeHandler.handleChange(workflowDeleteChangeEvent);
     assertThat(isUpdateSuccessful).isTrue();
   }
 }

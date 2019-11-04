@@ -86,7 +86,8 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
     wingsPersistence.save(environment);
     assertThat(environment).isNotNull();
 
-    workflow = WorkflowEntityTestUtils.createWorkflow(account.getUuid(), appId, workflowId, WORKFLOW_NAME);
+    workflow =
+        WorkflowEntityTestUtils.createWorkflow(account.getUuid(), appId, workflowId, environmentId, WORKFLOW_NAME);
     wingsPersistence.save(workflow);
     assertThat(workflow).isNotNull();
 

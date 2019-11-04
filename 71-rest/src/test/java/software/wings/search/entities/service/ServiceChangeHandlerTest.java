@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -40,6 +41,8 @@ import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeType;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServiceChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
@@ -81,7 +84,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
     environment = EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
     assertThat(environment).isNotNull();
 
-    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, WORKFLOW_NAME);
+    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
     assertThat(environment).isNotNull();
 
     pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
@@ -156,15 +159,35 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
     boolean isUpdateSuccessful = serviceChangeHandler.handleChange(serviceUpdateChangeEvent);
     assertThat(isUpdateSuccessful).isTrue();
   }
+
   @Test
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
     when(searchDao.updateListInMultipleDocuments(
-             eq(ServiceSearchEntity.TYPE), anyString(), anyString(), anyString(), anyString()))
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.pipelines), anyString(), anyString(), anyString()))
         .thenReturn(true);
     boolean isUpdateSuccessful = serviceChangeHandler.handleChange(serviceUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPipelineDeleteChange() {
+    ChangeEvent serviceDeleteChangeEvent =
+        PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.DELETE);
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.pipelines), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.pipelines), anyList(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = serviceChangeHandler.handleChange(serviceDeleteChangeEvent);
     assertThat(isUpdateSuccessful).isTrue();
   }
 
@@ -188,11 +211,55 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
 
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.workflows), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.workflows), anyList(), anyMap()))
+        .thenReturn(true);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.workflows), anyList(), anyString()))
+        .thenReturn(true);
     when(searchDao.updateListInMultipleDocuments(
-             eq(ServiceSearchEntity.TYPE), anyString(), anyString(), anyString(), anyString()))
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.workflows), anyString(), anyString(), anyString()))
         .thenReturn(true);
 
     boolean isUpdateSuccessful = serviceChangeHandler.handleChange(workflowUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowInsertChange() {
+    ChangeEvent workflowInsertChangeEvent =
+        WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.INSERT);
+
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.workflows), anyList(), anyMap()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = serviceChangeHandler.handleChange(workflowInsertChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowDeleteChange() {
+    ChangeEvent workflowDeleteChangeEvent =
+        WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.DELETE);
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.workflows), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.workflows), anyList(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = serviceChangeHandler.handleChange(workflowDeleteChangeEvent);
     assertThat(isUpdateSuccessful).isTrue();
   }
 }
