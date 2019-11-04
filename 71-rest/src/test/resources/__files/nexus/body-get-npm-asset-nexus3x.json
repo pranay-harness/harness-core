@@ -1,6 +1,6 @@
 {
   "items" : [ {
-    "downloadUrl" : "https://nexus3.harness.io/repository/harness-npm/npm-app1/-/npm-app1-1.0.0.tgz",
+    "downloadUrl" : "http://localhost:8881/nexus/repository/harness-npm/npm-app1/-/npm-app1-1.0.0.tgz",
     "path" : "npm-app1/-/npm-app1-1.0.0.tgz",
     "id" : "aGFybmVzcy1ucG06MzZlM2RlYzhkZTUyOGM5YmM3NzFkMzBiMTU3OTU0MDE",
     "repository" : "harness-npm",

@@ -7,7 +7,7 @@
     "name" : "NuGet.Sample.Package",
     "version" : "1.0.0.0",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.0",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.0",
       "path" : "NuGet.Sample.Package/1.0.0.0",
       "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWI3MDkyYTJlYTJlYjAxYTlm",
       "repository" : "nuget-hosted",
@@ -25,7 +25,7 @@
     "name" : "NuGet.Sample.Package",
     "version" : "1.0.0.18279",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.18279",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.18279",
       "path" : "NuGet.Sample.Package/1.0.0.18279",
       "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWJhYjRjYTIyM2Q5YWU3NDQ2",
       "repository" : "nuget-hosted",
