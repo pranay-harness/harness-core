@@ -8,12 +8,14 @@ import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuil
 import software.wings.search.framework.changestreams.ChangeType;
 
 public class WorkflowEntityTestUtils {
-  public static Workflow createWorkflow(String accountId, String appId, String workflowId, String workflowName) {
+  public static Workflow createWorkflow(
+      String accountId, String appId, String workflowId, String envId, String workflowName) {
     Workflow workflow = new Workflow();
     workflow.setUuid(workflowId);
     workflow.setAppId(appId);
     workflow.setAccountId(accountId);
     workflow.setName(workflowName);
+    workflow.setEnvId(envId);
     return workflow;
   }
 
@@ -26,12 +28,12 @@ public class WorkflowEntityTestUtils {
     return basicDBObject;
   }
 
-  public static ChangeEvent createWorkflowChangeEvent(Workflow environment, ChangeType changeType) {
+  public static ChangeEvent createWorkflowChangeEvent(Workflow workflow, ChangeType changeType) {
     ChangeEventBuilder changeEventBuilder = ChangeEvent.builder();
     changeEventBuilder = changeEventBuilder.changeType(changeType)
-                             .fullDocument(environment)
+                             .fullDocument(workflow)
                              .token("token")
-                             .uuid(environment.getUuid())
+                             .uuid(workflow.getUuid())
                              .entityType(Workflow.class);
 
     if (changeType.equals(ChangeType.UPDATE)) {

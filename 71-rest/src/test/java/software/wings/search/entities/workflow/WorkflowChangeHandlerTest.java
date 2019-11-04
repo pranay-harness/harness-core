@@ -81,6 +81,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
     assertThat(service).isNotNull();
 
     environment = EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
+    wingsPersistence.save(environment);
     assertThat(environment).isNotNull();
 
     pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
@@ -125,7 +126,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
-    Workflow workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, WORKFLOW_NAME);
+    Workflow workflow =
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowInsertChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.INSERT);
@@ -137,7 +139,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
-    Workflow workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, WORKFLOW_NAME);
+    Workflow workflow =
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowDeleteChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.DELETE);
@@ -149,7 +152,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
-    Workflow workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, WORKFLOW_NAME);
+    Workflow workflow =
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
