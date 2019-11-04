@@ -60,8 +60,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 @Slf4j
-public class GraphQLRule
-    implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin, BypassRuleMixin {
+public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
   ClosingFactory closingFactory;
   @Getter private AdvancedDatastore datastore;
   @Getter private GraphQL graphQL;
@@ -160,10 +159,6 @@ public class GraphQLRule
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    if (bypass(frameworkMethod)) {
-      return noopStatement();
-    }
-
     return applyInjector(statement, frameworkMethod, target);
   }
 }

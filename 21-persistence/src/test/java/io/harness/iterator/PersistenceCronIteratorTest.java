@@ -3,6 +3,7 @@ package io.harness.iterator;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,11 +20,12 @@ import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
-import io.harness.rule.BypassRuleMixin.Bypass;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -134,8 +136,9 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
-  @Bypass
+  @Ignore("Bypass this test, it is not for running regularly")
   public void testNextReturnsJustAdded() throws IOException {
     assertThatCode(() -> {
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {

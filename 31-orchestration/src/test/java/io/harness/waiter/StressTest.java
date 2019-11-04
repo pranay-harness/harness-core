@@ -1,6 +1,7 @@
 package io.harness.waiter;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.GEORGE;
 
 import com.google.inject.Inject;
 
@@ -9,12 +10,13 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
-import io.harness.rule.BypassRuleMixin.Bypass;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -30,9 +32,10 @@ public class StressTest extends OrchestrationTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
-  @Bypass
+  @Ignore("Bypass this test, it is not for running regularly")
   public void stress() throws IOException {
     persistence.ensureIndex(NotifyEvent.class);
     persistence.ensureIndex(WaitInstance.class);

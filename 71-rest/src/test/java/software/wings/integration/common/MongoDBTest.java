@@ -1,15 +1,17 @@
 package software.wings.integration.common;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.rule.BypassRuleMixin.Bypass;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
@@ -29,10 +31,11 @@ public class MongoDBTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Test
+  @Owner(emails = GEORGE)
   @Category(UnitTests.class)
   // this test was used to validate mongo setting for dirty reads
   // there is no need it to be run again and again
-  @Bypass
+  @Ignore("Bypass this test, it is not for running regularly")
   public void dirtyReads() {
     Concurrent.test(10, t -> {
       try {
