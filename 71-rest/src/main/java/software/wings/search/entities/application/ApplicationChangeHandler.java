@@ -59,10 +59,13 @@ public class ApplicationChangeHandler implements ChangeHandler {
       if (changeEvent.getChanges().containsField(AuditHeaderKeys.entityAuditRecords)) {
         Set<String> toBeProcessedAppIds = new HashSet<>();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          toBeProcessedAppIds.add(entityAuditRecord.getAppId());
+          if (entityAuditRecord.getAppId() != null) {
+            toBeProcessedAppIds.add(entityAuditRecord.getAppId());
+          }
         }
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getAffectedResourceOperation().equals(ChangeType.DELETE.name())) {
+          if (entityAuditRecord.getAppId() != null
+              && entityAuditRecord.getAffectedResourceOperation().equals(ChangeType.DELETE.name())) {
             toBeProcessedAppIds.remove(entityAuditRecord.getAppId());
           }
         }
