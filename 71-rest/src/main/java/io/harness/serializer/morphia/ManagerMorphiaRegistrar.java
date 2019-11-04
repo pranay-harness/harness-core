@@ -612,6 +612,7 @@ import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.StackDriverLogState;
 import software.wings.sm.states.StackDriverState;
+import software.wings.sm.states.StagingOriginalExecution;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
@@ -1383,6 +1384,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.SubWorkflowState", SubWorkflowState.class);
     w.put("sm.states.SumoLogicAnalysisState", SumoLogicAnalysisState.class);
     w.put("sm.states.WaitState", WaitState.class);
+    w.put("sm.states.StagingOriginalExecution", StagingOriginalExecution.class);
     w.put("sm.WorkflowStandardParams", WorkflowStandardParams.class);
     w.put("verification.appdynamics.AppDynamicsCVServiceConfiguration", AppDynamicsCVServiceConfiguration.class);
     w.put("verification.cloudwatch.CloudWatchCVServiceConfiguration", CloudWatchCVServiceConfiguration.class);
