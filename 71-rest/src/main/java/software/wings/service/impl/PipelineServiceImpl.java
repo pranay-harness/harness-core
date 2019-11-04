@@ -44,7 +44,6 @@ import io.harness.beans.PageResponse;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -335,8 +334,8 @@ public class PipelineServiceImpl implements PipelineService {
       throw new InvalidRequestException(
           format("Pipeline associated as a trigger action to triggers [%s]", join(", ", triggerNames)), USER);
     }
-    throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, USER)
-        .addParam("message", format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
+    throw new InvalidRequestException(
+        format("Pipeline:[%s] couldn't be deleted", pipeline.getName()), PIPELINE_EXECUTION_IN_PROGRESS, USER);
   }
 
   @Override
@@ -827,6 +826,11 @@ public class PipelineServiceImpl implements PipelineService {
                 pipelineVariable.setValue(variable.getName());
               }
               pipelineVariables.add(pipelineVariable);
+            } else {
+              Variable storedVar = getContainedVariable(pipelineVariables, variableName);
+              if (storedVar != null && ENVIRONMENT.equals(storedVar.obtainEntityType())) {
+                updateRelatedFieldEnvironment(infraRefator, workflowVariables, pseWorkflowVariables, storedVar);
+              }
             }
           }
         }
@@ -836,7 +840,6 @@ public class PipelineServiceImpl implements PipelineService {
 
   void populateParentFields(Variable pipelineVariable, EntityType entityType, List<Variable> workflowVariables,
       String originalVarName, Map<String, String> pseWorkflowVariables) {
-    Map<String, String> parentFields;
     if (workflowVariables == null) {
       return;
     }
@@ -958,12 +961,16 @@ public class PipelineServiceImpl implements PipelineService {
             Arrays.stream(relatedFields.split(",")).filter(t -> t.equals(originalVarName)).findFirst();
         if (relatedField.isPresent()) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          pipelineVariable.getMetadata().put(Variable.ENV_ID, relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            pipelineVariable.getMetadata().put(Variable.ENV_ID, relatedVarValue);
+          }
         }
       } else if (SERVICE.equals(var.obtainEntityType())) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
-          pipelineVariable.getMetadata().put(Variable.SERVICE_ID, relatedVarValue);
+          if (!matchesVariablePattern(relatedVarValue)) {
+            pipelineVariable.getMetadata().put(Variable.SERVICE_ID, relatedVarValue);
+          }
         }
       }
     }
@@ -979,15 +986,31 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private void setRelatedFieldEnvironment(boolean infraRefator, List<Variable> workflowVariables,
+  private void setRelatedFieldEnvironment(boolean infraRefactor, List<Variable> workflowVariables,
       Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
-    if (infraRefator) {
+    if (infraRefactor) {
       pipelineVariable.getMetadata().put(
           "relatedField", join(",", getInfraDefVariables(workflowVariables, pseWorkflowVariables)));
 
     } else {
       pipelineVariable.getMetadata().put(
           "relatedField", join(",", getInfraVariables(workflowVariables, pseWorkflowVariables)));
+    }
+  }
+
+  void updateRelatedFieldEnvironment(boolean infraRefactor, List<Variable> workflowVariables,
+      Map<String, String> pseWorkflowVariables, Variable pipelineVariable) {
+    if (infraRefactor) {
+      String currentRelatedFields = (String) pipelineVariable.getMetadata().get("relatedField");
+      pipelineVariable.getMetadata().put("relatedField",
+          StringUtils.join(
+              currentRelatedFields, ",", join(",", getInfraDefVariables(workflowVariables, pseWorkflowVariables))));
+
+    } else {
+      String currentRelatedFields = (String) pipelineVariable.getMetadata().get("relatedField");
+      pipelineVariable.getMetadata().put("relatedField",
+          StringUtils.join(
+              currentRelatedFields, ",", join(",", getInfraVariables(workflowVariables, pseWorkflowVariables))));
     }
   }
 
@@ -1073,6 +1096,13 @@ public class PipelineServiceImpl implements PipelineService {
   private boolean contains(List<Variable> pipelineVariables, String name) {
     return pipelineVariables.stream().anyMatch(
         variable -> variable != null && variable.getName() != null && variable.getName().equals(name));
+  }
+
+  private Variable getContainedVariable(List<Variable> pipelineVariables, String name) {
+    return pipelineVariables.stream()
+        .filter(variable -> variable != null && variable.getName() != null && variable.getName().equals(name))
+        .findFirst()
+        .orElse(null);
   }
 
   @Override

@@ -309,4 +309,24 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     Assertions.assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> pipelineServiceImpl.save(pipeline));
   }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateRelatedFieldsEnvironmentInfraMapping() throws Exception {
+    List<Variable> workflowVariables = asList(aVariable().entityType(SERVICE).name("Service").build(),
+        aVariable().entityType(ENVIRONMENT).name("Environment").build(),
+        aVariable().entityType(INFRASTRUCTURE_MAPPING).name("ServiceInfra_ECS").value("${infra}").build());
+
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put(Variable.RELATED_FIELD, "infra");
+    metadata.put(Variable.ENTITY_TYPE, ENVIRONMENT);
+    Variable pipelineVariable = aVariable().entityType(ENVIRONMENT).name("Environment").metadata(metadata).build();
+    Map<String, String> pseWorkflowVariables = new HashMap<>();
+    pseWorkflowVariables.put("Service", "Service 2");
+    pseWorkflowVariables.put("Environment", "Environment");
+    pseWorkflowVariables.put("ServiceInfra_ECS", "${infra2}");
+
+    pipelineServiceImpl.updateRelatedFieldEnvironment(false, workflowVariables, pseWorkflowVariables, pipelineVariable);
+    assertThat(pipelineVariable.getMetadata().get("relatedField")).isEqualTo("infra,infra2");
+  }
 }

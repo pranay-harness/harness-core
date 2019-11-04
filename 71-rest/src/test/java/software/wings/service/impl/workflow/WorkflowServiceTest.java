@@ -15,6 +15,7 @@ import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -444,6 +445,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .build());
     when(userGroupService.getDefaultUserGroup(Mockito.anyString()))
         .thenReturn(UserGroup.builder().uuid("some-user-group-id").build());
+    when(featureFlagService.isEnabled(eq(FeatureName.DEFAULT_ARTIFACT), any())).thenReturn(true);
     Role role = aRole()
                     .withRoleType(RoleType.ACCOUNT_ADMIN)
                     .withUuid(ROLE_ID)
@@ -3528,6 +3530,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStream))
         .thenReturn(anArtifact().withUuid(ARTIFACT_ID).build());
     when(artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStreamArtifactory)).thenReturn(null);
+    when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);
 
     ArtifactVariable artifactVariable1 = ArtifactVariable.builder().entityType(SERVICE).entityId(SERVICE_ID).build();
     ArtifactVariable artifactVariable2 = ArtifactVariable.builder()
@@ -3571,6 +3574,31 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(artifactVariable4.getArtifactStreamSummaries().get(1).getDefaultArtifact()).isNull();
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotUpdateDefaultArtifactWithFFOff() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+
+    ArtifactStream artifactStream = DockerArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactService.fetchLastCollectedApprovedArtifactSorted(artifactStream))
+        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).build());
+    when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);
+
+    ArtifactVariable artifactVariable2 = ArtifactVariable.builder()
+                                             .entityType(SERVICE)
+                                             .entityId(SERVICE_ID)
+                                             .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+                                             .build();
+    when(featureFlagService.isEnabled(FeatureName.DEFAULT_ARTIFACT, ACCOUNT_ID)).thenReturn(false);
+    workflowService.updateArtifactVariables(APP_ID, null, asList(artifactVariable2), true, null);
+
+    assertThat(artifactVariable2.getArtifactStreamSummaries()).isNotNull();
+    assertThat(artifactVariable2.getArtifactStreamSummaries().size()).isEqualTo(1);
+    assertThat(artifactVariable2.getArtifactStreamSummaries().get(0).getArtifactStreamId())
+        .isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(artifactVariable2.getArtifactStreamSummaries().get(0).getDefaultArtifact()).isEqualTo(null);
+  }
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateArtifactVariablesWithDefaultArtifactAndExecution() {
