@@ -79,7 +79,7 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.harness.exception.WingsException;
+import io.harness.exception.UnexpectedException;
 import io.harness.serializer.JsonUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
@@ -157,6 +157,7 @@ import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.StackDriverLogState;
 import software.wings.sm.states.StackDriverState;
+import software.wings.sm.states.StagingOriginalExecution;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
@@ -419,6 +420,9 @@ public enum StateType implements StateTypeDescriptor {
   PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
+
+  STAGING_ORIGINAL_EXECUTION(
+      StagingOriginalExecution.class, StencilCategory.STAGING_ORIGINAL_EXECUTION, asList(), NONE),
 
   AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, COMMANDS, AWS_CODE_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
@@ -736,7 +740,7 @@ public enum StateType implements StateTypeDescriptor {
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
-      throw new WingsException("Error in initializing StateType-" + file, exception);
+      throw new UnexpectedException("Error in initializing StateType-" + file, exception);
     }
   }
 
