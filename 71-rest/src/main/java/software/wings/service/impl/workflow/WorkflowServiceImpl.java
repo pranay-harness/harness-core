@@ -1107,8 +1107,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (workflowExecutionService.workflowExecutionsRunning(
             workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
-      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, USER)
-          .addParam("message", format("Workflow: [%s] couldn't be deleted", workflow.getName()));
+      throw new InvalidRequestException(
+          format("Workflow: [%s] couldn't be deleted", workflow.getName()), WORKFLOW_EXECUTION_IN_PROGRESS, USER);
     }
 
     List<String> triggerNames;
@@ -2037,8 +2037,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (isEmpty(artifactVariable.getAllowedList())) {
         continue;
       }
+      String accountId = appService.getAccountIdByAppId(appId);
 
-      if (withDefaultArtifact && workflowExecution == null && artifactVariable.getAllowedList().size() == 1) {
+      if (withDefaultArtifact && workflowExecution == null && artifactVariable.getAllowedList().size() == 1
+          && featureFlagService.isEnabled(FeatureName.DEFAULT_ARTIFACT, accountId)) {
         // Set default artifact as last collected artifact.
         String artifactStreamId = artifactVariable.getAllowedList().get(0);
         ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
