@@ -22,6 +22,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -42,6 +43,7 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -69,6 +71,7 @@ public class ApplicationManifestUtils {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public Map<K8sValuesLocation, ApplicationManifest> getOverrideApplicationManifests(
       ExecutionContext context, AppManifestKind appManifestKind) {
@@ -109,11 +112,11 @@ public class ApplicationManifestUtils {
       ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = getGitFetchFileConfigMap(context, app, appManifestMap);
 
+    ContainerServiceParams containerServiceParams = null;
     String infrastructureMappingId = context.fetchInfraMappingId();
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getAppId(), infrastructureMappingId);
 
-    ContainerServiceParams containerServiceParams = null;
     if (infrastructureMappingId != null) {
       InfrastructureMapping infraMapping =
           infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
@@ -123,12 +126,18 @@ public class ApplicationManifestUtils {
       }
     }
 
+    boolean isBindTaskFeatureSet = false;
+    if (featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, app.getAccountId())) {
+      isBindTaskFeatureSet = true;
+    }
+
     return GitFetchFilesTaskParams.builder()
         .accountId(app.getAccountId())
         .appId(app.getUuid())
         .isFinalState(isRemoteFetchRequiredForManifest(appManifestMap))
         .gitFetchFilesConfigMap(gitFetchFileConfigMap)
         .containerServiceParams(containerServiceParams)
+        .isBindTaskFeatureSet(isBindTaskFeatureSet)
         .build();
   }
 
