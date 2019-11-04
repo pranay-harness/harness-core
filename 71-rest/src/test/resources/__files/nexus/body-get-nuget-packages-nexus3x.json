@@ -7,7 +7,7 @@
     "name" : "NuGet.Sample.Package",
     "version" : "1.0.0.0",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.0",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.0",
       "path" : "NuGet.Sample.Package/1.0.0.0",
       "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWI3MDkyYTJlYTJlYjAxYTlm",
       "repository" : "nuget-hosted",
@@ -25,7 +25,7 @@
     "name" : "AdamsLair.Duality.Samples.InputHandling",
     "version" : "3.0.1",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/nuget-hosted/AdamsLair.Duality.Samples.InputHandling/3.0.1",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/AdamsLair.Duality.Samples.InputHandling/3.0.1",
       "path" : "AdamsLair.Duality.Samples.InputHandling/3.0.1",
       "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWI3Y2M0ZTc0NGMxM2VmMDI5",
       "repository" : "nuget-hosted",
@@ -43,7 +43,7 @@
     "name" : "NuGet.Sample.Package",
     "version" : "1.0.0.18279",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.18279",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.18279",
       "path" : "NuGet.Sample.Package/1.0.0.18279",
       "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWJhYjRjYTIyM2Q5YWU3NDQ2",
       "repository" : "nuget-hosted",
@@ -61,7 +61,7 @@
     "name" : "AdamsLair.Duality.Samples.BasicMenu",
     "version" : "3.0.1",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/nuget-hosted/AdamsLair.Duality.Samples.BasicMenu/3.0.1",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/AdamsLair.Duality.Samples.BasicMenu/3.0.1",
       "path" : "AdamsLair.Duality.Samples.BasicMenu/3.0.1",
       "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWIxOWY2NWRjZjU4MTdlOWEx",
       "repository" : "nuget-hosted",
@@ -79,7 +79,7 @@
     "name" : "NuGet.Package.Sample",
     "version" : "1.0.0.2",
     "assets" : [ {
-      "downloadUrl" : "https://nexus3.harness.io/repository/nuget-hosted/NuGet.Package.Sample/1.0.0.2",
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Package.Sample/1.0.0.2",
       "path" : "NuGet.Package.Sample/1.0.0.2",
       "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWIwZGExY2M2OWIyZDhkNjZl",
       "repository" : "nuget-hosted",

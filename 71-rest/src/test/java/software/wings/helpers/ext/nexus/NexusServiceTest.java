@@ -17,6 +17,7 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.ListNotifyResponseData;
@@ -1150,9 +1151,9 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails).hasSize(3).extracting(BuildDetails::getNumber).contains("1.0.3", "1.0.4", "1.0.5");
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
-  public void shouldDownloadArtifactNPMNexus3() {
+  public void shouldFileNotFoundDownloadArtifactNPMNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes =
         ArtifactStreamAttributes.builder().repositoryFormat(RepositoryFormat.npm.name()).build();
     Map<String, String> artifactMetadata = new HashMap<>();
@@ -1169,9 +1170,9 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName()).isEqualTo("npm-app1-1.0.0.tgz");
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
-  public void shouldDownloadArtifactMavenNexus3() {
+  public void shouldFileNotFoundDownloadArtifactMavenNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.maven.name())
                                                             .jobName("maven-releases")
@@ -1190,16 +1191,16 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName()).isEqualTo("myartifact-1.0.war");
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
-  public void shouldDownloadArtifactNPMNexus2() {
+  public void shouldThrowExceptionDownloadArtifactNPMNexus2() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.npm.name())
                                                             .repositoryName("npmjs")
                                                             .build();
     Map<String, String> artifactMetadata = new HashMap<>();
     artifactMetadata.put(
-        ArtifactMetadataKeys.url, "https://nexus2.harness.io/content/repositories/npmjs/abbrev/-/abbrev-1.0.3.tgz");
+        ArtifactMetadataKeys.url, "http://localhost:8881/nexus/content/repositories/npmjs/abbrev/-/abbrev-1.0.3.tgz");
     artifactMetadata.put(ArtifactMetadataKeys.buildNo, "1.0.3");
 
     DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("FILE_ID").build();
@@ -1211,9 +1212,9 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName()).isEqualTo("abbrev-1.0.3.tgz");
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Category(UnitTests.class)
-  public void shouldDownloadArtifactNugetNexus2() {
+  public void shouldFileNotFoundDownloadArtifactNugetNexus2() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
                                                             .repositoryFormat(RepositoryFormat.nuget.name())
                                                             .repositoryName("MyNuGet")

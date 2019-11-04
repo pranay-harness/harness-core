@@ -1,7 +1,7 @@
 {
   "items": [
     {
-      "downloadUrl": "https://nexus3.harness.io/repository/maven-releases/mygroup/myartifact/7.0/myartifact-7.0-binary.jar",
+      "downloadUrl": "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/7.0/myartifact-7.0-binary.jar",
       "path": "mygroup/myartifact/7.0/myartifact-7.0-binary.jar",
       "id": "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjYzMThjZTUxYWRlNzI3NmE",
       "repository": "maven-releases",

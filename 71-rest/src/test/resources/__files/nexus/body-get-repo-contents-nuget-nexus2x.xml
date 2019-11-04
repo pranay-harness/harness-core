@@ -2,7 +2,7 @@
     <data>
         <content-item>
             <resourceURI>
-                https://nexus2.harness.io/service/local/repositories/MyNuGet/content/NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg
+                http://localhost:8881/nexus/service/local/repositories/MyNuGet/content/NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg
             </resourceURI>
             <relativePath>
                 /NuGet.Sample.Package/1.0.0.18279/NuGet.Sample.Package-1.0.0.18279.nupkg

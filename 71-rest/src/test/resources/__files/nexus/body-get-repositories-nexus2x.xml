@@ -2,10 +2,10 @@
     <data>
         <repositories-item>
             <resourceURI>
-                https://nexus2.harness.io/service/local/repositories/Todolist_Snapshots
+               http://localhost:8881/nexus/service/local/repositories/Todolist_Snapshots
             </resourceURI>
             <contentResourceURI>
-                https://nexus2.harness.io/content/repositories/Todolist_Snapshots
+               http://localhost:8881/nexus/content/repositories/Todolist_Snapshots
             </contentResourceURI>
             <id>Todolist_Snapshots</id>
             <name>Todolist Snapshots</name>
@@ -22,10 +22,10 @@
         </repositories-item>
         <repositories-item>
             <resourceURI>
-                https://nexus2.harness.io/service/local/repositories/MyNuGet
+               http://localhost:8881/nexus/service/local/repositories/MyNuGet
             </resourceURI>
             <contentResourceURI>
-                https://nexus2.harness.io/content/repositories/MyNuGet
+               http://localhost:8881/nexus/content/repositories/MyNuGet
             </contentResourceURI>
             <id>MyNuGet</id>
             <name>MyNuGet</name>
@@ -41,10 +41,10 @@
         </repositories-item>
         <repositories-item>
             <resourceURI>
-                https://nexus2.harness.io/service/local/repositories/harness-npm
+               http://localhost:8881/nexus/service/local/repositories/harness-npm
             </resourceURI>
             <contentResourceURI>
-                https://nexus2.harness.io/content/repositories/harness-npm
+               http://localhost:8881/nexus/content/repositories/harness-npm
             </contentResourceURI>
             <id>harness-npm</id>
             <name>harness-npm</name>
