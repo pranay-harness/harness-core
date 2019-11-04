@@ -9,4 +9,6 @@ public interface FeatureFlagService {
   void initializeFeatureFlags();
 
   boolean isEnabledReloadCache(FeatureName featureName, String accountId);
+
+  void enableAccount(FeatureName infraMappingRefactor, String accountId);
 }

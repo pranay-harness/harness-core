@@ -27,6 +27,7 @@ import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
@@ -61,6 +62,7 @@ import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
@@ -86,6 +88,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private SetInfraDefinitionPipelines setInfraDefinitionPipelines;
   @Inject private SetInfraDefinitionWorkflows setInfraDefinitionWorkflows;
   @Inject private MigrateDelegateScopesToInfraDefinition migrateDelegateScopesToInfraDefinition;
+  @Inject private FeatureFlagService featureFlagService;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
   // Accounts Migrated "jDOmhrFmSOGZJ1C91UC_hg", "SAsyUUHTTImuYSZ35HPDvw", "-oSRX0KNRni3wCdyoesp8Q",
@@ -180,6 +183,10 @@ public class InfraMappingToDefinitionMigration implements Migration {
       migrateDelegateScopesToInfraDefinition.migrate(account);
 
       logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
+
+      logger.info(format("Enabling feature flag for accountId : [%s]", accountId));
+      featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
+      logger.info(format("Enabled feature flag for accountId : [%s]", accountId));
     }
   }
 
