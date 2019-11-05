@@ -9,11 +9,11 @@ import com.google.inject.Singleton;
 
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
-import io.harness.governance.pipeline.model.PipelineGovernanceRule;
-import io.harness.governance.pipeline.model.Restriction;
-import io.harness.governance.pipeline.model.Tag;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
+import io.harness.governance.pipeline.service.model.Restriction;
+import io.harness.governance.pipeline.service.model.Tag;
 import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
 import software.wings.beans.HarnessTagLink;

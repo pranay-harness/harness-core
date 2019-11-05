@@ -3,9 +3,9 @@ package software.wings.resources.governance;
 import com.google.inject.Inject;
 
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.PipelineGovernanceReportEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;

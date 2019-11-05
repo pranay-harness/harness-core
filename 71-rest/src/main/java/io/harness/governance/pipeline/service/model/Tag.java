@@ -1,4 +1,4 @@
-package io.harness.governance.pipeline.model;
+package io.harness.governance.pipeline.service.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Value;

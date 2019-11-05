@@ -5,7 +5,7 @@ import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.marketplace.gcp.events.AccountActiveEvent;
 import io.harness.marketplace.gcp.events.GcpMarketplaceEvent;
 import io.harness.morphia.MorphiaRegistrar;

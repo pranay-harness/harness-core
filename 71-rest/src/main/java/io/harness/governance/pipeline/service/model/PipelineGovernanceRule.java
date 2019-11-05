@@ -1,4 +1,4 @@
-package io.harness.governance.pipeline.model;
+package io.harness.governance.pipeline.service.model;
 
 import io.harness.data.structure.CollectionUtils;
 import lombok.Value;

@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 
 import io.harness.govern.Switch;
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
-import io.harness.governance.pipeline.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Workflow;
 import software.wings.features.api.Usage;

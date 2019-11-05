@@ -1,8 +1,8 @@
 package io.harness.governance.pipeline.service;
 
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
-import io.harness.governance.pipeline.model.PipelineGovernanceRule;
-import io.harness.governance.pipeline.model.Tag;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
+import io.harness.governance.pipeline.service.model.Tag;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.entityinterface.TagAware;

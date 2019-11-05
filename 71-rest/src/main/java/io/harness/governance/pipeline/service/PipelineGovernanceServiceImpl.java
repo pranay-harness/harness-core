@@ -2,8 +2,8 @@ package io.harness.governance.pipeline.service;
 
 import com.google.inject.Inject;
 
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig.PipelineGovernanceConfigKeys;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig.PipelineGovernanceConfigKeys;
 import io.harness.persistence.HQuery;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;

@@ -1,4 +1,4 @@
-package io.harness.governance.pipeline.model;
+package io.harness.governance.pipeline.service.model;
 
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
