@@ -55,9 +55,17 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.genericEvent.find({}).count()"
 
-  - state_execution_instances_document_size:
+  - state_wait_instances_count:
       check_interval:   10      # seconds
-      query:            "db.stateExecutionInstances.stats().avgObjSize"
+      query:            "db.waitInstances.find({}).count()"
+
+  - state_wait_instance_errors_count:
+      check_interval:   10      # seconds
+      query:            "db.waitInstanceErrors.find({}).count()"
+
+  - state_wait_instance_errors_document_size:
+      check_interval:   10      # seconds
+      query:            "db.waitInstanceErrors.stats().avgObjSize"
 
   - whitelist_count:
       check_interval:   10      # seconds
