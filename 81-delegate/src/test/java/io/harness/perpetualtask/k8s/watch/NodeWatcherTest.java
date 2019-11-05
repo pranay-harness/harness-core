@@ -76,6 +76,7 @@ public class NodeWatcherTest extends CategoryTest {
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
+      assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(toInstant(nodeEvent.getTimestamp())).isEqualTo(creationTime);
     });
@@ -92,6 +93,7 @@ public class NodeWatcherTest extends CategoryTest {
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(Timestamp.class));
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
       assertThat(nodeEvent.getNodeUid()).isEqualTo(UID);
+      assertThat(nodeEvent.getNodeName()).isEqualTo(NAME);
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       // approximate check as the time is measured within the NodeWatcher code.
       assertThat(toInstant(nodeEvent.getTimestamp())).isCloseTo(now(), within(5, ChronoUnit.SECONDS));
