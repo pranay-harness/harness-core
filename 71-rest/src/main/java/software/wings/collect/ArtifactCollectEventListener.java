@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -17,6 +18,8 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
@@ -74,7 +78,11 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
     Artifact artifact = message.getArtifact();
     String accountId = artifact.getAccountId();
     try {
-      logger.info("Received artifact collection event for artifactId {}", artifact.getUuid());
+      try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+           AutoLogContext ignore2 = new ArtifactStreamLogContext(
+               artifact.getArtifactStreamId(), artifact.getArtifactStreamType(), OVERRIDE_ERROR)) {
+        logger.info("Received artifact collection event for artifactId {}", artifact.getUuid());
+      }
 
       artifactService.updateStatus(artifact.getUuid(), accountId, Status.RUNNING, ContentStatus.DOWNLOADING);
 

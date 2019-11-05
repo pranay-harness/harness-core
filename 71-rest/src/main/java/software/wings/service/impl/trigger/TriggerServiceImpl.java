@@ -10,6 +10,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
@@ -51,7 +52,9 @@ import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationEx
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Builder;
 import lombok.Value;
@@ -700,7 +703,11 @@ public class TriggerServiceImpl implements TriggerService {
   private WorkflowExecution triggerPipelineDeployment(
       Trigger trigger, TriggerExecution triggerExecution, ExecutionArgs executionArgs) {
     WorkflowExecution workflowExecution;
-    logger.info("Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
+    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Triggering  execution of appId {} with  pipeline id {} , trigger type {}", trigger.getAppId(),
+          trigger.getWorkflowId(), trigger.getCondition().getConditionType().name());
+    }
     resolveTriggerPipelineVariables(trigger, executionArgs);
     executionArgs.setPipelineId(trigger.getWorkflowId());
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
@@ -861,8 +868,11 @@ public class TriggerServiceImpl implements TriggerService {
 
   private WorkflowExecution triggerOrchestrationDeployment(
       Trigger trigger, ExecutionArgs executionArgs, TriggerExecution triggerExecution) {
-    logger.info("Triggering  workflow execution of appId {} with with workflow id {}", trigger.getAppId(),
-        trigger.getWorkflowId());
+    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Triggering workflow execution of appId {} with with workflow id {} , trigger type {}",
+          trigger.getAppId(), trigger.getWorkflowId(), trigger.getCondition().getConditionType().name());
+    }
 
     Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
     notNullCheck("Workflow was deleted", workflow, USER);
