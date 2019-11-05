@@ -3,7 +3,7 @@ package io.harness.governance.pipeline.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.governance.pipeline.model.Tag;
+import io.harness.governance.pipeline.service.model.Tag;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;

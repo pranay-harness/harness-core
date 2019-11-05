@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.governance.pipeline.model.Restriction;
-import io.harness.governance.pipeline.model.Restriction.RestrictionType;
-import io.harness.governance.pipeline.model.Tag;
+import io.harness.governance.pipeline.service.model.Restriction;
+import io.harness.governance.pipeline.service.model.Restriction.RestrictionType;
+import io.harness.governance.pipeline.service.model.Tag;
 import io.harness.persistence.UuidAccess;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -7,45 +7,38 @@ import static software.wings.beans.Account.Builder.anAccount;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.IntegrationTests;
-import io.harness.governance.pipeline.model.MatchType;
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
-import io.harness.governance.pipeline.model.PipelineGovernanceRule;
-import io.harness.governance.pipeline.model.Restriction;
-import io.harness.governance.pipeline.model.Restriction.RestrictionType;
+import io.harness.category.element.UnitTests;
+import io.harness.governance.pipeline.service.model.MatchType;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
+import io.harness.governance.pipeline.service.model.Restriction;
+import io.harness.governance.pipeline.service.model.Restriction.RestrictionType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.dl.WingsPersistence;
-import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.IntegrationTestUtils;
 import software.wings.service.intfc.AccountService;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegrationTest {
+public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   @Inject private PipelineGovernanceService pipelineGovernanceService;
   @Inject private WingsPersistence persistence;
   @Inject private AccountService accountService;
 
   private final String SOME_ACCOUNT_ID =
-      randomAlphanumeric(5) + "-some-account-id-" + PipelineGovernanceServiceImplIntegrationTest.class.getSimpleName();
+      randomAlphanumeric(5) + "-some-account-id-" + PipelineGovernanceServiceImplTest.class.getSimpleName();
 
-  private boolean indexesEnsured;
   private boolean accountAdded;
 
   @Before
-  public void init() throws Exception {
-    if (!indexesEnsured && !IntegrationTestUtils.isManagerRunning(client)) {
-      persistence.getDatastore(PipelineGovernanceConfig.class).ensureIndexes(PipelineGovernanceConfig.class);
-      indexesEnsured = true;
-    }
-
+  public void init() {
     if (!accountAdded) {
       long tooFarTime = 1998195261000L;
       LicenseInfo licenseInfo =
@@ -65,7 +58,7 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testList() {
     List<PipelineGovernanceConfig> initialList = pipelineGovernanceService.list(SOME_ACCOUNT_ID);
 
@@ -79,7 +72,7 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testUpdate() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
         null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList());
@@ -104,7 +97,7 @@ public class PipelineGovernanceServiceImplIntegrationTest extends BaseIntegratio
   }
 
   @Test
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testAdd() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
         null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList());

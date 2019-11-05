@@ -3,8 +3,8 @@ package software.wings.features;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import software.wings.beans.EntityType;
 import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.ComplianceByRemovingUsage;

@@ -1,7 +1,7 @@
 package io.harness.governance.pipeline.enforce;
 
 import io.harness.data.structure.CollectionUtils;
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import lombok.Value;
 
 import java.util.List;
@@ -12,7 +12,8 @@ import java.util.List;
 @Value
 public class PipelineReportCard {
   /**
-   * this is just a restricted version of {@link io.harness.governance.pipeline.model.PipelineGovernanceConfig} model
+   * this is just a restricted version of {@link io.harness.governance.pipeline.service.model.PipelineGovernanceConfig}
+   * model
    */
   @Value
   static class GovernanceStandard {

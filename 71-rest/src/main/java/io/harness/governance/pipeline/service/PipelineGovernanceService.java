@@ -1,6 +1,6 @@
 package io.harness.governance.pipeline.service;
 
-import io.harness.governance.pipeline.model.PipelineGovernanceConfig;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 
 import java.util.List;
 

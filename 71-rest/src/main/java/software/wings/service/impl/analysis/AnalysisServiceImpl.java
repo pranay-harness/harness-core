@@ -648,8 +648,14 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     for (LogMLFeedbackRecord logMLFeedbackRecord : logMLFeedbackRecords) {
-      userFeedbackMap.get(logMLFeedbackRecord.getClusterType())
-          .put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
+      final Map<Integer, LogMLFeedbackRecord> feedbackRecordMap =
+          userFeedbackMap.get(logMLFeedbackRecord.getClusterType());
+
+      if (null != feedbackRecordMap) {
+        feedbackRecordMap.put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
+      } else {
+        logger.error("feedbackRecordMap is null for key: {}", logMLFeedbackRecord);
+      }
     }
 
     return userFeedbackMap;
