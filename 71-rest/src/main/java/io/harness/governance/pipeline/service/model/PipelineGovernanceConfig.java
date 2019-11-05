@@ -27,7 +27,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 /**
  * Entity representing a pipeline governance standard.
  */
-
 @Value
 @Entity(value = "pipelineGovernanceConfigs")
 @HarnessEntity(exportable = true)
@@ -41,12 +40,13 @@ public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
   @Nonnull private String description;
   @Nonnull private List<PipelineGovernanceRule> rules;
   @Nonnull private List<Restriction> restrictions;
+  private boolean enabled;
 
   @JsonCreator
   public PipelineGovernanceConfig(@Nullable @JsonProperty("uuid") String uuid,
       @JsonProperty("accountId") String accountId, @JsonProperty("name") String name,
       @JsonProperty("description") String description, @JsonProperty("rules") List<PipelineGovernanceRule> rules,
-      @JsonProperty("restrictions") List<Restriction> restrictions) {
+      @JsonProperty("restrictions") List<Restriction> restrictions, @JsonProperty("enabled") boolean enabled) {
     if (null == uuid) {
       this.uuid = UUIDGenerator.generateUuid();
     } else {
@@ -58,6 +58,7 @@ public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess {
     this.name = name;
     this.rules = rules;
     this.restrictions = restrictions;
+    this.enabled = enabled;
   }
 
   public List<PipelineGovernanceRule> getRules() {

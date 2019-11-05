@@ -1,11 +1,14 @@
 package io.harness.governance.pipeline.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.governance.pipeline.enforce.PipelineReportCard;
+import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.model.Restriction;
 import io.harness.governance.pipeline.service.model.Restriction.RestrictionType;
 import io.harness.governance.pipeline.service.model.Tag;
@@ -16,8 +19,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.Pipeline;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.PipelineService;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +33,9 @@ import java.util.List;
 
 public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
   @Mock private HarnessTagService harnessTagService;
+  @Mock private PipelineGovernanceService pipelineGovernanceService;
+  @Mock private PipelineService pipelineService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject @InjectMocks private PipelineGovernanceReportEvaluator pipelineGovernanceReportEvaluator;
 
@@ -36,7 +46,7 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
   public void testIsConfigValidForApp() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Arrays.asList(tagLink("color", "red"), tagLink("env", "prod")));
-    Mockito.when(harnessTagService.fetchTagsForEntity(Mockito.eq(SOME_ACCOUNT_ID), Mockito.any(UuidAccess.class)))
+    when(harnessTagService.fetchTagsForEntity(Mockito.eq(SOME_ACCOUNT_ID), Mockito.any(UuidAccess.class)))
         .thenReturn(pageResponse);
 
     final List<Restriction> restrictions = new LinkedList<>();
@@ -77,6 +87,27 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
     configValidForApp =
         pipelineGovernanceReportEvaluator.isConfigValidForApp(SOME_ACCOUNT_ID, restrictions, "some-app-id");
     assertThat(configValidForApp).as("should pass because there are no restrictions").isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetPipelineReportCard_emptyIfNoEnabledStandards() {
+    String appId = "some-app-id";
+    String pipelineId = "some-pipeline-id";
+
+    final boolean standardEnabled = false;
+    final PipelineGovernanceConfig config = new PipelineGovernanceConfig(null, SOME_ACCOUNT_ID, "some-name",
+        "some-desc", Collections.emptyList(), Collections.emptyList(), standardEnabled);
+    when(pipelineGovernanceService.list(SOME_ACCOUNT_ID)).thenReturn(Collections.singletonList(config));
+    when(featureFlagService.isEnabled(FeatureName.PIPELINE_GOVERNANCE_DRAFT, SOME_ACCOUNT_ID)).thenReturn(true);
+
+    final Pipeline mockPipeline = Pipeline.builder().name("some-pipeline").build();
+    when(pipelineService.readPipelineWithResolvedVariables(Mockito.eq(appId), Mockito.eq(pipelineId), Mockito.anyMap()))
+        .thenReturn(mockPipeline);
+
+    final List<PipelineReportCard> pipelineReports =
+        pipelineGovernanceReportEvaluator.getPipelineReportCard(SOME_ACCOUNT_ID, appId, pipelineId);
+    assertThat(pipelineReports).isEmpty();
   }
 
   private HarnessTagLink tagLink(String key, String value) {

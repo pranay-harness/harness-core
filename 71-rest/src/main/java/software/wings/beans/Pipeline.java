@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -105,6 +107,11 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
         .failureStrategies(failureStrategies)
         .stateEtaMap(stateEtaMap)
         .build();
+  }
+
+  @Nonnull
+  public List<String> getWorkflowIds() {
+    return CollectionUtils.emptyIfNull(workflowIds);
   }
 
   @Override
