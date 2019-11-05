@@ -3,7 +3,9 @@ package software.wings.search.entities.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,10 +30,12 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.search.entities.application.ApplicationEntityTestUtils;
 import software.wings.search.entities.environment.EnvironmentEntityTestUtils;
 import software.wings.search.entities.pipeline.PipelineEntityTestUtils;
 import software.wings.search.entities.related.RelatedAuditEntityTestUtils;
+import software.wings.search.entities.related.RelatedDeploymentEntityTestUtils;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
 import software.wings.search.entities.service.ServiceView.ServiceViewKeys;
 import software.wings.search.entities.workflow.WorkflowEntityTestUtils;
@@ -59,6 +64,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   private Workflow workflow;
   private Pipeline pipeline;
   private AuditHeader deleteAuditHeader;
+  private WorkflowExecution workflowExecution;
   private AuditHeader nonDeleteAuditHeader;
   private ChangeEvent deleteAuditHeaderChangeEvent;
   private ChangeEvent nonDeleteAuditHeaderChangeEvent;
@@ -70,33 +76,44 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   private String environmentId = generateUuid();
   private String workflowId = generateUuid();
   private String pipelineId = generateUuid();
+  private String workflowExecutionId = generateUuid();
+
   @Before
   public void setup() throws IOException {
     application = ApplicationEntityTestUtils.createApplication(accountId, appId, APP_NAME);
-    wingsPersistence.save(application);
     assertThat(application).isNotNull();
+    wingsPersistence.save(application);
 
     service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
     assertThat(service).isNotNull();
+    wingsPersistence.save(service);
 
     environment = EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
     assertThat(environment).isNotNull();
+    wingsPersistence.save(environment);
 
     workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
-    assertThat(environment).isNotNull();
+    assertThat(workflow).isNotNull();
+    wingsPersistence.save(workflow);
 
     pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
     assertThat(pipeline).isNotNull();
+    wingsPersistence.save(pipeline);
+
+    workflowExecution = RelatedDeploymentEntityTestUtils.createWorkflowExecution(
+        workflowExecutionId, appId, serviceId, environmentId, workflowId, pipelineId, WorkflowType.ORCHESTRATION);
+    assertThat(workflowExecution).isNotNull();
+    wingsPersistence.save(workflowExecution);
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         deleteAuditHeaderId, accountId, appId, serviceId, EntityType.SERVICE.name(), Type.DELETE.name());
-    wingsPersistence.save(deleteAuditHeader);
     assertThat(deleteAuditHeader).isNotNull();
+    wingsPersistence.save(deleteAuditHeader);
 
     nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         nonDeleteAuditHeaderId, accountId, appId, serviceId, EntityType.SERVICE.name(), Type.UPDATE.name());
-    wingsPersistence.save(nonDeleteAuditHeader);
     assertThat(nonDeleteAuditHeader).isNotNull();
+    wingsPersistence.save(nonDeleteAuditHeader);
 
     deleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         deleteAuditHeader, appId, ChangeType.UPDATE, serviceId, Type.DELETE.name());
@@ -257,6 +274,47 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
         .thenReturn(true);
 
     boolean isUpdateSuccessful = serviceChangeHandler.handleChange(workflowDeleteChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowExecutionInsertChange() {
+    ChangeEvent workflowExecutionInsertChangeEvent =
+        RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.INSERT);
+
+    when(searchDao.addTimestamp(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.deploymentTimestamps), anyList(), anyLong(), anyInt()))
+        .thenReturn(true);
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.deployments), anyList(), anyMap(), anyInt()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = serviceChangeHandler.handleChange(workflowExecutionInsertChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowExecutionUpdateChange() {
+    ChangeEvent workflowExecutionUpdateChangeEvent =
+        RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.UPDATE);
+
+    when(searchDao.updateListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.deployments), anyString(), anyString(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = serviceChangeHandler.handleChange(workflowExecutionUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowExecutionChange() {
+    ChangeEvent workflowExecutionDeleteChangeEvent =
+        RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.DELETE);
+
+    boolean isUpdateSuccessful = serviceChangeHandler.handleChange(workflowExecutionDeleteChangeEvent);
     assertThat(isUpdateSuccessful).isTrue();
   }
 }
