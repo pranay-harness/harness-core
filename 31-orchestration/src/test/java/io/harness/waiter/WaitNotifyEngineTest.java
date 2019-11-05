@@ -6,7 +6,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 
 import com.google.inject.Inject;
 
@@ -67,11 +66,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-      assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
-          .hasSize(1)
-          .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId, uuid));
-
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.notify(uuid, data);
 
@@ -95,11 +89,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
-
-      assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
-          .hasSize(1)
-          .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId, uuid));
 
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.notify(uuid, data);
@@ -134,11 +123,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid1, uuid2, uuid3);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
-
-      assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
-          .hasSize(3)
-          .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId, uuid1), tuple(waitInstanceId, uuid2), tuple(waitInstanceId, uuid3));
 
       ResponseData data1 = StringNotifyResponseData.builder().data("response-" + uuid1).build();
 
@@ -197,11 +181,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .hasSize(3)
           .extracting(WaitInstance::getUuid)
           .containsExactly(waitInstanceId1, waitInstanceId2, waitInstanceId3);
-
-      assertThat(persistence.createQuery(WaitQueue.class, excludeAuthority).asList())
-          .hasSize(3)
-          .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
-          .containsExactly(tuple(waitInstanceId1, uuid), tuple(waitInstanceId2, uuid), tuple(waitInstanceId3, uuid));
 
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.notify(uuid, data);

@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
@@ -17,11 +16,16 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
-import io.harness.waiter.WaitQueue.WaitQueueKeys;
+import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
+import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
@@ -30,64 +34,30 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class WaitNotifyEngine {
-  private static final long NO_TIMEOUT = 0L;
-
   @Inject private HPersistence wingsPersistence;
-
   @Inject private Queue<NotifyEvent> notifyQueue;
 
-  /**
-   * Wait for all.
-   *
-   * @param callback       the callback
-   * @param correlationIds the correlation ids
-   * @return the string
-   */
   public String waitForAll(NotifyCallback callback, String... correlationIds) {
-    return waitForAll(NO_TIMEOUT, callback, correlationIds);
-  }
-
-  /**
-   * Allows a task to register a callback to wait for when given correlationIds and done.
-   *
-   * @param timeoutMsec    timeout for wait in milliseconds.
-   * @param callback       function to be executed when all correlationIds are completed.
-   * @param correlationIds list of ids to wait for.
-   * @return id of WaitInstance.
-   */
-  public String waitForAll(long timeoutMsec, NotifyCallback callback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
     if (logger.isDebugEnabled()) {
       logger.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
     }
 
-    // It is important we to save the wait instance first and then the wait queues. From now on we will
-    // assume that wait queue without an instance is a zombie and we are going to remove it.
-    String waitInstanceId = wingsPersistence.save(
-        WaitInstance.builder().uuid(generateUuid()).callback(callback).correlationIds(asList(correlationIds)).build());
+    final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder().uuid(generateUuid()).callback(callback);
 
-    // create queue
-    for (String correlationId : correlationIds) {
-      wingsPersistence.save(WaitQueue.builder()
-                                .uuid(generateUuid())
-                                .createdAt(currentTimeMillis())
-                                .waitInstanceId(waitInstanceId)
-                                .correlationId(correlationId)
-                                .build());
+    if (correlationIds.length == 1) {
+      waitInstanceBuilder.correlationIds(Collections.singletonList(correlationIds[0]));
+    } else {
+      // In case of multiple items, we have to make sure that all of them are unique
+      Set<String> set = new HashSet<>();
+      Collections.addAll(set, correlationIds);
+      waitInstanceBuilder.correlationIds(new ArrayList<>(set));
     }
 
-    return waitInstanceId;
+    return wingsPersistence.save(waitInstanceBuilder.build());
   }
 
-  /**
-   * Notifies WaitNotifyEngine when a correlationId is finished.
-   *
-   * @param <T>           ResponseObject type should be serializable.
-   * @param correlationId id which is finished.
-   * @param response      response object for the task.
-   * @return id of notification response object.
-   */
   public <T extends ResponseData> String notify(String correlationId, T response) {
     return notify(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
@@ -107,12 +77,12 @@ public class WaitNotifyEngine {
                                                         .error(error)
                                                         .build());
 
-      final List<WaitQueue> waitQueues = wingsPersistence.createQuery(WaitQueue.class, excludeAuthority)
-                                             .filter(WaitQueueKeys.correlationId, correlationId)
-                                             .asList();
+      final List<WaitInstance> waitInstances = wingsPersistence.createQuery(WaitInstance.class, excludeAuthority)
+                                                   .filter(WaitInstanceKeys.correlationIds, correlationId)
+                                                   .asList();
 
-      waitQueues.forEach(waitQueue
-          -> notifyQueue.send(aNotifyEvent().waitInstanceId(waitQueue.getWaitInstanceId()).error(error).build()));
+      waitInstances.forEach(
+          waitInstance -> notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).error(error).build()));
 
       return notificationId;
     } catch (DuplicateKeyException exception) {

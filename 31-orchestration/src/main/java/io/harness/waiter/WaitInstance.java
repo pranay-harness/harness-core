@@ -32,7 +32,7 @@ public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final Duration AfterFinishTTL = Duration.ofHours(1);
 
   @Id private String uuid;
-  private List<String> correlationIds;
+  @Indexed private List<String> correlationIds;
   private NotifyCallback callback;
 
   private ExecutionStatus status = ExecutionStatus.NEW;
