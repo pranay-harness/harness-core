@@ -63,7 +63,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
     List<PipelineGovernanceConfig> initialList = pipelineGovernanceService.list(SOME_ACCOUNT_ID);
 
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
-        null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList());
+        null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList(), true);
 
     pipelineGovernanceService.add(SOME_ACCOUNT_ID, config);
 
@@ -75,7 +75,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
-        null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList());
+        null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList(), true);
 
     PipelineGovernanceConfig addedConfig = pipelineGovernanceService.add(SOME_ACCOUNT_ID, config);
 
@@ -85,7 +85,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
     PipelineGovernanceConfig newConfig =
         new PipelineGovernanceConfig(null, SOME_ACCOUNT_ID, "name-new", "description-new",
             Collections.singletonList(new PipelineGovernanceRule(Collections.emptyList(), MatchType.ALL, 10, "")),
-            restrictions);
+            restrictions, true);
     PipelineGovernanceConfig newlyAdded =
         pipelineGovernanceService.update(SOME_ACCOUNT_ID, addedConfig.getUuid(), newConfig);
 
@@ -100,7 +100,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAdd() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
-        null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList());
+        null, SOME_ACCOUNT_ID, "name", "description", Collections.emptyList(), Collections.emptyList(), true);
 
     PipelineGovernanceConfig addedConfig = pipelineGovernanceService.add(SOME_ACCOUNT_ID, config);
     assertThat(addedConfig.getUuid()).isNotNull();
