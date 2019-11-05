@@ -340,19 +340,24 @@ public class WorkflowPhase implements UuidAccess {
 
   public String fetchServiceTemplatizedName() {
     TemplateExpression serviceTemplateExpression = fetchServiceTemplateExpression();
-    return WorkflowServiceTemplateHelper.getName(serviceTemplateExpression.getExpression(), EntityType.SERVICE);
+
+    return serviceTemplateExpression == null
+        ? null
+        : WorkflowServiceTemplateHelper.getName(serviceTemplateExpression.getExpression());
   }
 
   public String fetchInfraMappingTemplatizedName() {
     TemplateExpression infraTemplateExpression = fetchInfraMappingTemplateExpression();
-    return WorkflowServiceTemplateHelper.getName(
-        infraTemplateExpression.getExpression(), EntityType.INFRASTRUCTURE_MAPPING);
+    return infraTemplateExpression == null
+        ? null
+        : WorkflowServiceTemplateHelper.getName(infraTemplateExpression.getExpression());
   }
 
   public String fetchInfraDefinitionTemplatizedName() {
     TemplateExpression infraTemplateExpression = fetchInfraDefinitonTemplateExpression();
-    return WorkflowServiceTemplateHelper.getName(
-        infraTemplateExpression.getExpression(), EntityType.INFRASTRUCTURE_DEFINITION);
+    return infraTemplateExpression == null
+        ? null
+        : WorkflowServiceTemplateHelper.getName(infraTemplateExpression.getExpression());
   }
 
   private boolean checkFieldTemplatized(String fieldName) {

@@ -16,9 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import software.wings.api.DeploymentType;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
@@ -536,9 +534,8 @@ public class WorkflowServiceTemplateHelper {
     }
   }
 
-  public static String getName(String expression, EntityType entityType) {
-    String variable = ManagerExpressionEvaluator.getName(expression);
-    return variable == null ? null : validateAndGetVariable(variable, entityType);
+  public static String getName(String expression) {
+    return ManagerExpressionEvaluator.getName(expression);
   }
 
   public static String validateAndGetVariable(String variable, EntityType entityType) {
@@ -548,8 +545,7 @@ public class WorkflowServiceTemplateHelper {
     Matcher matcher = ManagerExpressionEvaluator.variableNamePattern.matcher(variable);
     if (entityType != null) {
       if (!matcher.matches()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "Template variable:[" + variable + "] contains special characters");
+        throw new InvalidRequestException("Template variable:[" + variable + "] contains special characters", USER);
       }
     }
     return variable;

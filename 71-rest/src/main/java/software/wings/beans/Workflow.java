@@ -286,7 +286,8 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
 
   public String fetchEnvTemplatizedName() {
     TemplateExpression envTemplateExpression = fetchEnvTemplateExpression();
-    return WorkflowServiceTemplateHelper.getName(envTemplateExpression.getExpression(), EntityType.ENVIRONMENT);
+    return envTemplateExpression == null ? null
+                                         : WorkflowServiceTemplateHelper.getName(envTemplateExpression.getExpression());
   }
 
   private TemplateExpression fetchEnvTemplateExpression() {

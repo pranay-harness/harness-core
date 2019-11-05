@@ -858,6 +858,14 @@ public class WorkflowServiceTestHelper {
         .build();
   }
 
+  public static TemplateExpression prepareInfraDefTemplateExpression() {
+    return TemplateExpression.builder()
+        .fieldName("infraDefinitionId")
+        .expression("${InfraDef_SSH}")
+        .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_DEFINITION"))
+        .build();
+  }
+
   public static GraphNode constructHttpTemplateStep() {
     return GraphNode.builder()
         .type(StateType.HTTP.name())
