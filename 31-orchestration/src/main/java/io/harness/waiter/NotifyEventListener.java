@@ -70,7 +70,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     WaitInstance waitInstance = fetchForProcessingWaitInstance(waitInstanceId, now);
 
     if (waitInstance == null) {
-      // This instance is already handled.
+      logger.error("Double notification for the same waitInstance: {}", waitInstanceId);
       return;
     }
 
