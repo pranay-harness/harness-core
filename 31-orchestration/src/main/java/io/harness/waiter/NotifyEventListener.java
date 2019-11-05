@@ -1,7 +1,9 @@
 package io.harness.waiter;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -16,6 +18,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
+import io.harness.waiter.WaitQueue.WaitQueueKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -26,6 +29,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,7 +50,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
   FindAndModifyOptions findAndModifyOptions =
       new FindAndModifyOptions().writeConcern(WriteConcern.MAJORITY).upsert(false).returnNew(false);
 
-  private WaitInstance fetchForProcessingWaitInstance(String waitInstanceId, long now) {
+  private WaitInstance getWaitInstance(String waitInstanceId, long now) {
     final long limit = now - MAX_CALLBACK_PROCESSING_TIME.toMillis();
 
     final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class)
@@ -69,36 +73,49 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
     String waitInstanceId = message.getWaitInstanceId();
 
-    WaitInstance waitInstance = persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                    .filter(WaitInstanceKeys.uuid, waitInstanceId)
-                                    .get();
+    List<WaitQueue> waitQueues = persistence.createQuery(WaitQueue.class, excludeAuthority)
+                                     .filter(WaitQueueKeys.waitInstanceId, waitInstanceId)
+                                     .asList();
 
-    if (waitInstance == null) {
-      logger.warn("No waitInstance with id:[{}] skipping ...", waitInstanceId);
+    if (isEmpty(waitQueues)) {
+      logger.warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
       return;
     }
 
-    if (isNotEmpty(message.getCorrelationIds())) {
-      if (message.getCorrelationIds().size() < waitInstance.getCorrelationIds().size()) {
-        logger.info("Some of the correlationIds still needs to be waited, waitInstanceId: [{}]", waitInstanceId);
+    List<String> correlationIds = message.getCorrelationIds();
+    if (isNotEmpty(correlationIds)) {
+      Set<String> correlationIdSet = new HashSet<>(correlationIds);
+      List<String> missingCorrelationIds = waitQueues.stream()
+                                               .map(WaitQueue::getCorrelationId)
+                                               .filter(s -> !correlationIdSet.contains(s))
+                                               .collect(toList());
+      if (isNotEmpty(missingCorrelationIds)) {
+        logger.info("Some of the correlationIds still needs to be waited, waitInstanceId: [{}], correlationIds: {}",
+            waitInstanceId, missingCorrelationIds);
         return;
       }
     }
 
-    final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                                                     .field(ID_KEY)
-                                                     .in(waitInstance.getCorrelationIds())
-                                                     .asList();
+    final List<NotifyResponse> notifyResponses =
+        persistence.createQuery(NotifyResponse.class, excludeAuthority)
+            .field(ID_KEY)
+            .in(waitQueues.stream().map(WaitQueue::getCorrelationId).collect(toList()))
+            .asList();
 
     Set<String> correlationIdSet = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
-    if (notifyResponses.size() != waitInstance.getCorrelationIds().size()) {
+    if (notifyResponses.size() != waitQueues.size()) {
+      List<String> missingCorrelationIds = waitQueues.stream()
+                                               .map(WaitQueue::getCorrelationId)
+                                               .filter(s -> !correlationIdSet.contains(s))
+                                               .collect(toList());
       logger.warn(
-          "some notifyResponses for not found. Skipping the callback for the waitInstanceId: [{}]", waitInstanceId);
+          "notifyResponses for the correlationIds: {} not found. skipping the callback for the waitInstanceId: [{}]",
+          missingCorrelationIds, waitInstanceId);
       return;
     }
 
     final long now = System.currentTimeMillis();
-    waitInstance = fetchForProcessingWaitInstance(waitInstanceId, now);
+    WaitInstance waitInstance = getWaitInstance(waitInstanceId, now);
     if (waitInstance == null) {
       // This instance is already handled.
       return;
@@ -161,9 +178,10 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
     UpdateOperations<NotifyResponse> notifyResponseUpdate =
         persistence.createUpdateOperations(NotifyResponse.class).set("status", ExecutionStatus.SUCCESS);
-    for (String correlationId : waitInstance.getCorrelationIds()) {
+    for (WaitQueue waitQueue : waitQueues) {
       try {
-        persistence.update(notifyResponseMap.get(correlationId), notifyResponseUpdate);
+        persistence.delete(waitQueue);
+        persistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
       } catch (Exception exception) {
         logger.error("Error in waitQueue cleanup", exception);
       }

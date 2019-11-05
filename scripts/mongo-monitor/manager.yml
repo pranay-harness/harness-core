@@ -3,6 +3,10 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.delegateTasks.find({}).count()"
 
+  - wait_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.waitQueues.find({}).count()"
+
   - notify_responces_count:
       check_interval:   10      # seconds
       query:            "db.notifyResponses.find({}).count()"
