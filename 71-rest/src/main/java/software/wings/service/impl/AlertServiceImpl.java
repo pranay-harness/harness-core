@@ -245,7 +245,8 @@ public class AlertServiceImpl implements AlertService {
     }
   }
 
-  private Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+  @Override
+  public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
     for (Alert alert : alertQuery) {
       injector.injectMembers(alert.getAlertData());

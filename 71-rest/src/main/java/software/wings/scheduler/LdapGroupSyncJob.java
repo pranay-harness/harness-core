@@ -273,12 +273,11 @@ public class LdapGroupSyncJob implements Job {
     LdapSettings ldapSettings = ssoSettingService.getLdapSettingsByUuid(ssoId);
     if (ldapSettings == null) {
       jobScheduler.deleteJob(ssoId, GROUP);
+      ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
       return;
     }
 
     try {
-      ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
-
       logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
 
       LdapTestResponse ldapTestResponse = ssoService.validateLdapConnectionSettings(ldapSettings, accountId);
