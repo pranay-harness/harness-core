@@ -25,6 +25,7 @@ import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.sso.LdapSettings;
@@ -54,6 +55,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -73,6 +75,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  static final int ONE_DAY = 86400000;
 
   @Override
   public SamlSettings getSamlSettingsByIdpUrl(String idpUrl) {
@@ -291,8 +294,20 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public void raiseSyncFailureAlert(String accountId, String ssoId, String message) {
+    // We will send the alert message every 24 hours
     SSOSyncFailedAlert alertData =
         SSOSyncFailedAlert.builder().accountId(accountId).ssoId(ssoId).message(message).build();
+    Optional<Alert> existingAlert =
+        alertService.findExistingAlert(accountId, GLOBAL_APP_ID, AlertType.USERGROUP_SYNC_FAILED, alertData);
+    if (existingAlert.isPresent()) {
+      Alert alert = existingAlert.get();
+      long lastUpdatedAt = alert.getLastUpdatedAt();
+      // If the previous alert happened within 24 hours, then we skip that alert
+      if (System.currentTimeMillis() - lastUpdatedAt < ONE_DAY) {
+        return;
+      }
+    }
+    closeSyncFailureAlertIfOpen(accountId, ssoId);
     alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.USERGROUP_SYNC_FAILED, alertData);
   }
 

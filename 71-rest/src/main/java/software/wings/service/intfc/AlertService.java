@@ -10,6 +10,7 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import javax.ws.rs.QueryParam;
 
@@ -29,4 +30,6 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication, OwnedB
   void activeDelegateUpdated(String accountId, String delegateId);
 
   void deploymentCompleted(String appId, String executionId);
+
+  Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 }
