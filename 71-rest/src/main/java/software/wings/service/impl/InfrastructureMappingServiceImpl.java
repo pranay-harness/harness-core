@@ -1887,8 +1887,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, null);
   }
 
-  private List<String> getInfrastructureMappingHostDisplayNames(
+  List<String> getInfrastructureMappingHostDisplayNames(
       InfrastructureMapping infrastructureMapping, String appId, String workflowExecutionId) {
+    if (isNotEmpty(infrastructureMapping.getProvisionerId())) {
+      return Collections.emptyList();
+    }
     List<String> hostDisplayNames = new ArrayList<>();
     if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
       if (infrastructureMapping.getProvisionerId() != null) {
