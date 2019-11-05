@@ -5,6 +5,7 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
@@ -19,7 +20,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -127,11 +130,13 @@ public class WebHookServiceImpl implements WebHookService {
         return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
       }
 
-      logger.info("Received the Webhook Request {}  ", String.valueOf(webHookRequest));
+      logger.info("Received input Webhook Request {}  ", String.valueOf(webHookRequest));
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       DeploymentTrigger deploymentTrigger = deploymentTriggerService.getTriggerByWebhookToken(token);
       String accountId = getAccountId(token, trigger, deploymentTrigger);
-
+      try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+        logger.info("Received the Webhook Request {} with accountId ", String.valueOf(webHookRequest), accountId);
+      }
       if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
         if (deploymentTrigger == null) {
           WebHookResponse webHookResponse =

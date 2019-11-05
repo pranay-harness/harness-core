@@ -1,5 +1,6 @@
 package software.wings.scheduler.approval;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -9,8 +10,10 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import io.harness.logging.AutoLogContext;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ApprovalPollingJobEntity.ApprovalPollingJobEntityKeys;
@@ -41,7 +44,10 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
 
   @Override
   public void handle(ApprovalPollingJobEntity entity) {
-    logger.info("Polling Approval status for approval polling job {}", entity);
+    try (AutoLogContext ignore1 = new AccountLogContext(entity.getAccountId(), OVERRIDE_ERROR)) {
+      logger.info(
+          "Polling Approval status for approval polling job {} approval type {}", entity, entity.getApprovalType());
+    }
 
     switch (entity.getApprovalType()) {
       case JIRA:

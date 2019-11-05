@@ -2,6 +2,7 @@ package io.harness.workers.background.critical.iterator;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -14,6 +15,7 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
@@ -22,6 +24,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Permit;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
+import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.PermitService;
@@ -60,7 +63,10 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
 
   @Override
   public void handle(ArtifactStream artifactStream) {
-    logger.info("Received the artifact collection for ArtifactStreamId {}", artifactStream.getUuid());
+    try (AutoLogContext ignore2 = new ArtifactStreamLogContext(
+             artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
+      logger.info("Received the artifact collection for ArtifactStreamId {}", artifactStream.getUuid());
+    }
     executeInternal(artifactStream);
   }
 

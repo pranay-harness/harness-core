@@ -26,6 +26,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
@@ -90,7 +91,9 @@ import io.harness.exception.WingsException;
 import io.harness.limits.InstanceUsageExceededLimitException;
 import io.harness.limits.checker.LimitApproachingException;
 import io.harness.limits.checker.UsageLimitExceededException;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.serializer.KryoUtils;
@@ -1792,7 +1795,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     String accountId = this.appService.getAccountIdByAppId(appId);
-    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+    }
 
     checkDeploymentRateLimit(accountId, appId);
 

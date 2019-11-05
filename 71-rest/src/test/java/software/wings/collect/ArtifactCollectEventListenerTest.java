@@ -130,6 +130,8 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                                .withArtifact(anArtifact()
                                                                  .withUuid(ARTIFACT_ID)
                                                                  .withAccountId(ACCOUNT_ID)
+                                                                 .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                                                 .withArtifactStreamType("DOCKER")
                                                                  .withAppId(APP_ID)
                                                                  .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                                                  .build())
@@ -141,10 +143,15 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
-    artifactCollectEventListener.onMessage(
-        aCollectEvent()
-            .withArtifact(anArtifact().withUuid(ARTIFACT_ID).withAccountId(ACCOUNT_ID).withAppId(APP_ID).build())
-            .build());
+    artifactCollectEventListener.onMessage(aCollectEvent()
+                                               .withArtifact(anArtifact()
+                                                                 .withUuid(ARTIFACT_ID)
+                                                                 .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                                                 .withArtifactStreamType("DOCKER")
+                                                                 .withAccountId(ACCOUNT_ID)
+                                                                 .withAppId(APP_ID)
+                                                                 .build())
+                                               .build());
 
     verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, RUNNING, DOWNLOADING);
     verify(artifactService).updateStatus(ARTIFACT_ID, ACCOUNT_ID, FAILED, Artifact.ContentStatus.FAILED);
