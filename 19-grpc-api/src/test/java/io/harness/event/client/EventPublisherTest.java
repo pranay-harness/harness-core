@@ -113,7 +113,7 @@ public class EventPublisherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN, resent = false, intermittent = true)
   @Category(UnitTests.class)
   public void testNoMessageLossWithErrorProneServer() throws Exception {
     fakeService.setErrorProne(true);

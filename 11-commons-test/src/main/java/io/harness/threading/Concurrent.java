@@ -24,6 +24,7 @@ public class Concurrent {
         try {
           barrier.await();
         } catch (InterruptedException | BrokenBarrierException e) {
+          Thread.currentThread().interrupt();
           throw new CyclicBarrierException(e);
         }
         runnable.accept(number);

@@ -13,13 +13,6 @@ public class ListNotifyResponseData implements DelegateTaskNotifyResponseData {
   private List<PersistentEntity> data = new ArrayList<>();
   private DelegateMetaInfo delegateMetaInfo;
 
-  public ListNotifyResponseData() {}
-
-  /**
-   * Gets data.
-   *
-   * @return the data
-   */
   public List getData() {
     return data;
   }
