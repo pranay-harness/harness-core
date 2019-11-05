@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -51,6 +52,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.CLOUD_FORMATION_CREATE_STACK;
@@ -1096,6 +1098,78 @@ public class WorkflowServiceTestHelper {
                                                          .build())
                                    .withConcurrencyStrategy(ConcurrencyStrategy.builder().build())
                                    .build())
+        .build();
+  }
+
+  public static Workflow constructBasicWorkflowWithRollbackForAMI() {
+    WorkflowPhase phase = getWorkflowPhaseForAMI();
+    return aWorkflow()
+        .uuid(WORKFLOW_ID)
+        .defaultVersion(1)
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .accountId(ACCOUNT_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .envId(ENV_ID)
+        .orchestrationWorkflow(getBasicOrchestrationWorkflowForAMI(phase))
+        .build();
+  }
+
+  private static WorkflowPhase getWorkflowPhaseForAMI() {
+    return aWorkflowPhase()
+        .infraDefinitionId(INFRA_DEFINITION_ID)
+        .serviceId(SERVICE_ID)
+        .deploymentType(AMI)
+        .phaseSteps(getAmiPhaseSteps(false))
+        .build();
+  }
+
+  private static BasicOrchestrationWorkflow getBasicOrchestrationWorkflowForAMI(WorkflowPhase phase) {
+    WorkflowPhase rollbackPhase = rollbackWorkflowPhase(phase);
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    rollbackMap.put(phase.getUuid(), rollbackPhase);
+    BasicOrchestrationWorkflow basicOrchestrationWorkflow =
+        aBasicOrchestrationWorkflow()
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+            .addWorkflowPhase(phase)
+            .withRollbackWorkflowPhaseIdMap(rollbackMap)
+            .withConcurrencyStrategy(ConcurrencyStrategy.builder().build())
+            .build();
+    basicOrchestrationWorkflow.onSave();
+    return basicOrchestrationWorkflow;
+  }
+
+  private static WorkflowPhase rollbackWorkflowPhase(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .name("Rollback" + workflowPhase.getName())
+        .deploymentType(workflowPhase.getDeploymentType())
+        .rollback(true)
+        .phaseNameForRollback(workflowPhase.getName())
+        .serviceId(workflowPhase.getServiceId())
+        .computeProviderId(workflowPhase.getComputeProviderId())
+        .infraMappingId(workflowPhase.getInfraMappingId())
+        .infraMappingName(workflowPhase.getInfraMappingName())
+        .infraDefinitionId(workflowPhase.getInfraDefinitionId())
+        .phaseSteps(asList(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, "Rollback Service")
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(AWS_AMI_SERVICE_ROLLBACK.name())
+                                            .name("Rollback AutoScaling Group")
+                                            .rollback(true)
+                                            .build())
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, "Verify Service")
+                .withRollback(true)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, "Wrap Up").withRollback(true).build()))
         .build();
   }
 

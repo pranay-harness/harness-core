@@ -751,7 +751,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (nextState == null) {
       throw new StateMachineIssueException(
           String.format("The advice suggests as next state %s, that is not in state machine: %s.",
-              executionEventAdvice.getNextStateName(), executionEventAdvice.getNextChildStateMachineId()));
+              executionEventAdvice.getNextStateName(), executionEventAdvice.getNextChildStateMachineId()),
+          ErrorCode.STATE_MACHINE_ISSUE);
     }
 
     StateExecutionInstance cloned =

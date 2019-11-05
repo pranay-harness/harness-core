@@ -166,8 +166,8 @@ public class StateMachineTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.TRANSITION_TO_INCORRECT_STATE.name());
       assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("invalidStateNames");
-      assertThat(exception.getParams().get("invalidStateNames")).asString().contains("StateC").contains("StateD");
+      assertThat(exception.getParams()).containsKey("details");
+      assertThat(exception.getParams().get("details")).asString().contains("StateC").contains("StateD");
     }
   }
 
@@ -212,11 +212,8 @@ public class StateMachineTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.STATES_WITH_DUP_TRANSITIONS.name());
       assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("statesWithDupTransitions");
-      assertThat(exception.getParams().get("statesWithDupTransitions"))
-          .asString()
-          .contains("StateA")
-          .contains("StateC");
+      assertThat(exception.getParams()).containsKey("details");
+      assertThat(exception.getParams().get("details")).asString().contains("StateA").contains("StateC");
     }
   }
 
@@ -265,8 +262,8 @@ public class StateMachineTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.NON_FORK_STATES.name());
       assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("nonForkStates");
-      assertThat(exception.getParams().get("nonForkStates")).asString().contains("StateB").contains("StateC");
+      assertThat(exception.getParams()).containsKey("details");
+      assertThat(exception.getParams().get("details")).asString().contains("StateB").contains("StateC");
     }
   }
 
@@ -315,8 +312,8 @@ public class StateMachineTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.NON_REPEAT_STATES.name());
       assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("nonRepeatStates");
-      assertThat(exception.getParams().get("nonRepeatStates")).asString().contains("StateB").contains("StateC");
+      assertThat(exception.getParams()).containsKey("details");
+      assertThat(exception.getParams().get("details")).asString().contains("StateB").contains("StateC");
     }
   }
 

@@ -21,6 +21,7 @@ import io.harness.data.structure.ListUtils;
 import io.harness.data.structure.MapUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
@@ -31,6 +32,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -51,6 +53,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.exception.StateMachineIssueException;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
@@ -230,7 +233,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
   private State convertToState(
       PipelineStage pipelineStage, Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
     if (pipelineStage == null || isEmpty(pipelineStage.getPipelineStageElements())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Pipeline Stage: pipelineStage");
+      throw new InvalidArgumentsException(Pair.of("args", "Pipeline Stage: pipelineStage"));
     }
     if (pipelineStage.getPipelineStageElements().size() == 1) {
       return convertToState(
@@ -281,7 +284,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     return state;
   }
 
-  public void deepTransform(
+  private void deepTransform(
       Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     transform(graph, stencilMap, orchestrationWorkflow);
     Map<String, Graph> subworkflows = graph.getSubworkflows();
@@ -402,7 +405,8 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       addRepeatersForRequiredContextElement();
       clearCache();
     } catch (IllegalArgumentException e) {
-      throw new WingsException(e);
+      throw new InvalidArgumentsException(
+          Pair.of("transform", "Exception Occurred While StateMachine Transformation"), e);
     }
   }
 
@@ -530,7 +534,8 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       }
     }
     if (!dupNames.isEmpty()) {
-      throw new WingsException(ErrorCode.DUPLICATE_STATE_NAMES).addParam("dupStateNames", dupNames.toString());
+      throw new StateMachineIssueException(
+          String.format("Duplicate States Detected %s", dupNames.toString()), ErrorCode.DUPLICATE_STATE_NAMES);
     }
 
     cachedStatesMap = statesMap;
@@ -628,12 +633,13 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
     if (transitions != null) {
       for (Transition transition : transitions) {
         if (transition.getTransitionType() == null) {
-          throw new WingsException(ErrorCode.TRANSITION_TYPE_NULL);
+          throw new StateMachineIssueException("TransitionType Cannot be null", ErrorCode.TRANSITION_TYPE_NULL);
         }
         State fromState = transition.getFromState();
         State toState = transition.getToState();
         if (fromState == null || toState == null) {
-          throw new WingsException(ErrorCode.TRANSITION_NOT_LINKED);
+          throw new StateMachineIssueException(
+              "Transition Should be linked. Both from and to states are null", ErrorCode.TRANSITION_NOT_LINKED);
         }
         boolean invalidState = false;
         if (statesMap.get(fromState.getName()) == null) {
@@ -689,18 +695,22 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       }
     }
     if (!invalidStateNames.isEmpty()) {
-      throw new WingsException(ErrorCode.TRANSITION_TO_INCORRECT_STATE)
-          .addParam("invalidStateNames", invalidStateNames.toString());
+      throw new StateMachineIssueException(
+          String.format("Invalid State Names Detected: %s", invalidStateNames.toString()),
+          ErrorCode.TRANSITION_TO_INCORRECT_STATE);
     }
     if (!nonForkStates.isEmpty()) {
-      throw new WingsException(ErrorCode.NON_FORK_STATES).addParam("nonForkStates", nonForkStates.toString());
+      throw new StateMachineIssueException(
+          String.format("NonForkStates: %s", nonForkStates.toString()), ErrorCode.NON_FORK_STATES);
     }
     if (!nonRepeatStates.isEmpty()) {
-      throw new WingsException(ErrorCode.NON_REPEAT_STATES).addParam("nonRepeatStates", nonRepeatStates.toString());
+      throw new StateMachineIssueException(
+          String.format("NonRepeatStates: %s", nonRepeatStates.toString()), ErrorCode.NON_REPEAT_STATES);
     }
     if (!statesWithDupTransitions.isEmpty()) {
-      throw new WingsException(ErrorCode.STATES_WITH_DUP_TRANSITIONS)
-          .addParam("statesWithDupTransitions", statesWithDupTransitions.toString());
+      throw new StateMachineIssueException(
+          String.format("StatesWithDupTransitions: %s", statesWithDupTransitions.toString()),
+          ErrorCode.STATES_WITH_DUP_TRANSITIONS);
     }
     for (Entry<String, List<String>> forkStateEntry : forkStateNamesMap.entrySet()) {
       ForkState forkFromState = (ForkState) statesMap.get(forkStateEntry.getKey());
@@ -809,7 +819,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       List<Transition> transitionsToOldState = getTransitionsTo(state);
       if (isEmpty(transitionsToOldState)) {
         if (!initialStateName.equals(stateName)) {
-          throw new WingsException("Inconsistent state");
+          throw new StateMachineIssueException("Inconsistent state", ErrorCode.STATE_MACHINE_ISSUE);
         }
         State newRepeatState = createRepeatState(state, requiredContextElementType);
         setInitialStateName(newRepeatState.getName());
