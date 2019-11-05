@@ -38,6 +38,7 @@ public class StressTest extends OrchestrationTest {
   @Ignore("Bypass this test, it is not for running regularly")
   public void stress() throws IOException {
     persistence.ensureIndex(NotifyEvent.class);
+    persistence.ensureIndex(WaitQueue.class);
     persistence.ensureIndex(WaitInstance.class);
     persistence.ensureIndex(NotifyResponse.class);
 
@@ -55,9 +56,10 @@ public class StressTest extends OrchestrationTest {
             final long waits = persistence.createQuery(WaitInstance.class)
                                    .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
                                    .count();
+            long waitQueues = persistence.createQuery(WaitQueue.class).count();
             long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
-            logger.info(
-                "{}: i = {}, avg: {}, waits: {}, events: {}", n, (i / 100 + 1) * 100, time / i, waits, notifyQueues);
+            logger.info("{}: i = {}, avg: {}, waits: {}, queues: {}, events: {}", n, (i / 100 + 1) * 100, time / i,
+                waits, waitQueues, notifyQueues);
           }
           i += ids;
           final String[] correlationIds = new String[ids];
@@ -84,8 +86,9 @@ public class StressTest extends OrchestrationTest {
       while (true) {
         final long waits =
             persistence.createQuery(WaitInstance.class).filter(WaitInstanceKeys.status, ExecutionStatus.NEW).count();
+        long waitQueues = persistence.createQuery(WaitQueue.class).count();
         long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
-        logger.info("waits: {}, events: {}", waits, notifyQueues);
+        logger.info("waits: {}, queues: {}, events: {}", waits, waitQueues, notifyQueues);
 
         if (notifyQueues == 0) {
           break;

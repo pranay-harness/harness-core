@@ -3,7 +3,7 @@ package io.harness.waiter;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.ExecutionStatus;
+import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -17,26 +17,26 @@ import org.mongodb.morphia.annotations.Indexed;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
- * Represents which waiter is waiting on which correlation Ids and callback to execute when done.
+ * Represents WaitQueue.
+ *
+ * @author Rishi
  */
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "WaitInstanceKeys")
-@Entity(value = "waitInstances", noClassnameStored = true)
+@FieldNameConstants(innerTypeName = "WaitQueueKeys")
+@Entity(value = "waitQueues", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class WaitInstance implements PersistentEntity, UuidAccess {
-  public static final Duration TTL = ofDays(21);
-  public static final Duration AfterFinishTTL = Duration.ofHours(1);
+public class WaitQueue implements PersistentEntity, UuidAccess, CreatedAtAccess {
+  public static final Duration TTL = ofDays(14);
 
-  @Id private String uuid;
-  private List<String> correlationIds;
-  private NotifyCallback callback;
+  @Id @NotNull private String uuid;
+  @Indexed @NotNull private long createdAt;
 
-  private ExecutionStatus status = ExecutionStatus.NEW;
-  private long callbackProcessingAt;
+  @Indexed @NotNull private String waitInstanceId;
+  @Indexed @NotNull private String correlationId;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());

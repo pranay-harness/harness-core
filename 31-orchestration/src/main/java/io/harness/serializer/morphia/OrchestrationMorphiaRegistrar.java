@@ -10,6 +10,7 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyResponse;
 import io.harness.waiter.WaitInstance;
 import io.harness.waiter.WaitInstanceError;
+import io.harness.waiter.WaitQueue;
 
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SweepingOutput.class);
     set.add(WaitInstance.class);
     set.add(WaitInstanceError.class);
+    set.add(WaitQueue.class);
   }
 
   @Override
