@@ -16,7 +16,6 @@ import migrations.all.AddTemplateMgmtPermissionToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateTask;
-import migrations.all.AddValidUntilToWaitQueue;
 import migrations.all.AddWhitelistedDomainsToAccountMigration;
 import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
@@ -201,7 +200,7 @@ public class MigrationList {
         .add(Pair.of(192, SetIsDeletedFlagForInstances.class))
         .add(Pair.of(193, UsageRestrictionsMigration.class))
         .add(Pair.of(194, AddInstanceStatsCollectionJobToAllAccounts.class))
-        .add(Pair.of(195, AddValidUntilToWaitQueue.class))
+        .add(Pair.of(195, BaseMigration.class))
         .add(Pair.of(196, RemoveDupInstanceStats.class))
         .add(Pair.of(197, YamlGitConfigRefactoringMigration.class))
         .add(Pair.of(198, YamlGitConfigMigration.class))
