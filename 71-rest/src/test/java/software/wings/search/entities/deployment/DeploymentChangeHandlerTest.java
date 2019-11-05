@@ -52,11 +52,15 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   private Environment environment;
   private Workflow workflow;
   private Pipeline pipeline;
-  private WorkflowExecution workflowExecution;
+  private WorkflowExecution workflowExecutionPipeline;
+  private WorkflowExecution workflowExecutionOrchestration;
   private ExecutionArgs executionArgs;
-  private ChangeEvent workflowExecutionInsertChangeEvent;
-  private ChangeEvent workflowExecutionUpdateChangeEvent;
-  private ChangeEvent workflowExecutionDeleteChangeEvent;
+  private ChangeEvent workflowExecutionPipelineInsertChangeEvent;
+  private ChangeEvent workflowExecutionPipelineUpdateChangeEvent;
+  private ChangeEvent workflowExecutionPipelineDeleteChangeEvent;
+  private ChangeEvent workflowExecutionOrchestrationInsertChangeEvent;
+  private ChangeEvent workflowExecutionOrchestrationUpdateChangeEvent;
+  private ChangeEvent workflowExecutionOrchestrationDeleteChangeEvent;
   private String workflowExecutionId = generateUuid();
   private String accountId = generateUuid();
   private String appId = generateUuid();
@@ -90,45 +94,75 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
     executionArgs = DeploymentEntityTestUtils.createExecutionArgs(WorkflowType.PIPELINE);
     assertThat(executionArgs).isNotNull();
 
-    workflowExecution = DeploymentEntityTestUtils.createWorkflowExecution(
-        workflowExecutionId, appId, APP_NAME, executionArgs, WorkflowType.PIPELINE, SUCCESS);
-    assertThat(workflowExecution).isNotNull();
+    workflowExecutionPipeline = DeploymentEntityTestUtils.createWorkflowExecution(workflowExecutionId, appId, APP_NAME,
+        environmentId, serviceId, workflowId, pipelineId, executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    assertThat(workflowExecutionPipeline).isNotNull();
+    wingsPersistence.save(workflowExecutionPipeline);
 
-    workflowExecutionInsertChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
-        WorkflowExecution.class, workflowExecution, ChangeType.INSERT);
-    assertThat(workflowExecutionInsertChangeEvent).isNotNull();
+    workflowExecutionOrchestration = DeploymentEntityTestUtils.createWorkflowExecution(workflowExecutionId, appId,
+        APP_NAME, environmentId, serviceId, workflowId, pipelineId, executionArgs, WorkflowType.PIPELINE, SUCCESS);
+    assertThat(workflowExecutionOrchestration).isNotNull();
+    wingsPersistence.save(workflowExecutionOrchestration);
 
-    workflowExecutionUpdateChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
-        WorkflowExecution.class, workflowExecution, ChangeType.UPDATE);
-    assertThat(workflowExecutionUpdateChangeEvent).isNotNull();
+    workflowExecutionPipelineInsertChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
+        WorkflowExecution.class, workflowExecutionPipeline, ChangeType.INSERT);
+    assertThat(workflowExecutionPipelineInsertChangeEvent).isNotNull();
 
-    workflowExecutionDeleteChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
-        WorkflowExecution.class, workflowExecution, ChangeType.DELETE);
-    assertThat(workflowExecutionDeleteChangeEvent).isNotNull();
+    workflowExecutionPipelineUpdateChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
+        WorkflowExecution.class, workflowExecutionPipeline, ChangeType.UPDATE);
+    assertThat(workflowExecutionPipelineUpdateChangeEvent).isNotNull();
+
+    workflowExecutionPipelineDeleteChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
+        WorkflowExecution.class, workflowExecutionPipeline, ChangeType.DELETE);
+    assertThat(workflowExecutionPipelineDeleteChangeEvent).isNotNull();
+
+    workflowExecutionOrchestrationInsertChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
+        WorkflowExecution.class, workflowExecutionOrchestration, ChangeType.INSERT);
+    assertThat(workflowExecutionOrchestrationInsertChangeEvent).isNotNull();
+
+    workflowExecutionOrchestrationUpdateChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
+        WorkflowExecution.class, workflowExecutionOrchestration, ChangeType.UPDATE);
+    assertThat(workflowExecutionOrchestrationUpdateChangeEvent).isNotNull();
+
+    workflowExecutionOrchestrationDeleteChangeEvent = DeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(
+        WorkflowExecution.class, workflowExecutionOrchestration, ChangeType.DELETE);
+    assertThat(workflowExecutionOrchestrationDeleteChangeEvent).isNotNull();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testWorkflowExecutionInsertChange() {
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
-    boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionInsertChangeEvent);
+    boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionPipelineInsertChangeEvent);
     assertThat(isSuccessful).isTrue();
+
+    when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
+    boolean isSuccess = deploymentChangeHandler.handleChange(workflowExecutionOrchestrationInsertChangeEvent);
+    assertThat(isSuccess).isTrue();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testWorkflowExecutionUpdateChange() {
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
-    boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionUpdateChangeEvent);
+    boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionPipelineUpdateChangeEvent);
     assertThat(isSuccessful).isTrue();
+
+    when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
+    boolean isSuccess = deploymentChangeHandler.handleChange(workflowExecutionOrchestrationUpdateChangeEvent);
+    assertThat(isSuccess).isTrue();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testWorkflowExecutionDeleteChange() {
     when(searchDao.deleteDocument(eq(DeploymentSearchEntity.TYPE), anyString())).thenReturn(true);
-    boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionDeleteChangeEvent);
+    boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionPipelineDeleteChangeEvent);
     assertThat(isSuccessful).isTrue();
+
+    when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
+    boolean isSuccess = deploymentChangeHandler.handleChange(workflowExecutionOrchestrationDeleteChangeEvent);
+    assertThat(isSuccess).isTrue();
   }
 
   @Test
