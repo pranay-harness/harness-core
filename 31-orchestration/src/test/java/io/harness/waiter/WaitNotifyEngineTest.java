@@ -109,6 +109,34 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
     }
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void testNotifyBeforeWait() throws IOException {
+    String uuid = generateUuid();
+    try (MaintenanceGuard guard = new MaintenanceGuard(true)) {
+      ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
+      String id = waitNotifyEngine.notify(uuid, data);
+
+      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
+
+      assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
+
+      notifier.execute();
+
+      assertThat(persistence.get(NotifyResponse.class, id))
+          .isNotNull()
+          .extracting(NotifyResponse::getResponse)
+          .isEqualTo(data);
+
+      notifyEventListener.execute();
+
+      assertThat(notifyEventQueue.count(Filter.ALL)).isEqualTo(0);
+
+      assertThat(responseMap).hasSize(1).isEqualTo(of(uuid, data));
+      assertThat(callCount.get()).isEqualTo(1);
+    }
+  }
+
   /**
    * Should wait for correlation ids.
    */

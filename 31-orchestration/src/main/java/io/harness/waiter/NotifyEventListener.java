@@ -1,8 +1,6 @@
 package io.harness.waiter;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
@@ -28,7 +26,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Singleton
 @Slf4j
@@ -69,40 +66,18 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
     String waitInstanceId = message.getWaitInstanceId();
 
-    WaitInstance waitInstance = persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                    .filter(WaitInstanceKeys.uuid, waitInstanceId)
-                                    .get();
+    final long now = System.currentTimeMillis();
+    WaitInstance waitInstance = fetchForProcessingWaitInstance(waitInstanceId, now);
 
     if (waitInstance == null) {
-      logger.warn("No waitInstance with id:[{}] skipping ...", waitInstanceId);
+      // This instance is already handled.
       return;
-    }
-
-    if (isNotEmpty(message.getCorrelationIds())) {
-      if (message.getCorrelationIds().size() < waitInstance.getCorrelationIds().size()) {
-        logger.info("Some of the correlationIds still needs to be waited, waitInstanceId: [{}]", waitInstanceId);
-        return;
-      }
     }
 
     final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                                      .field(ID_KEY)
                                                      .in(waitInstance.getCorrelationIds())
                                                      .asList();
-
-    Set<String> correlationIdSet = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
-    if (notifyResponses.size() != waitInstance.getCorrelationIds().size()) {
-      logger.warn(
-          "some notifyResponses for not found. Skipping the callback for the waitInstanceId: [{}]", waitInstanceId);
-      return;
-    }
-
-    final long now = System.currentTimeMillis();
-    waitInstance = fetchForProcessingWaitInstance(waitInstanceId, now);
-    if (waitInstance == null) {
-      // This instance is already handled.
-      return;
-    }
 
     Map<String, ResponseData> responseMap = new HashMap<>();
     Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
@@ -112,7 +87,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
       notifyResponseMap.put(notifyResponse.getUuid(), notifyResponse);
     });
 
-    boolean isError = notifyResponses.stream().filter(NotifyResponse::isError).findFirst().isPresent();
+    boolean isError = notifyResponses.stream().anyMatch(NotifyResponse::isError);
 
     ExecutionStatus status = ExecutionStatus.SUCCESS;
     NotifyCallback callback = waitInstance.getCallback();
@@ -158,17 +133,5 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
       logger.error("It took more than {} ms before we processed the notification. THIS IS VERY BAD!!!",
           MAX_CALLBACK_PROCESSING_TIME.toMillis());
     }
-
-    UpdateOperations<NotifyResponse> notifyResponseUpdate =
-        persistence.createUpdateOperations(NotifyResponse.class).set("status", ExecutionStatus.SUCCESS);
-    for (String correlationId : waitInstance.getCorrelationIds()) {
-      try {
-        persistence.update(notifyResponseMap.get(correlationId), notifyResponseUpdate);
-      } catch (Exception exception) {
-        logger.error("Error in waitQueue cleanup", exception);
-      }
-    }
-
-    logger.trace("Done processing message {}", message);
   }
 }
