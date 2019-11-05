@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -43,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
@@ -58,7 +60,10 @@ import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,6 +85,7 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Notification;
@@ -91,6 +97,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
@@ -115,7 +122,9 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 6/28/16.
@@ -141,6 +150,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private PersistentLocker persistentLocker;
+  @Mock private AcquiredLock acquiredLock;
 
   @Inject @InjectMocks private WingsPersistence realWingsPersistence;
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -862,6 +873,50 @@ public class EnvironmentServiceTest extends WingsBaseTest {
       fail("Should not reach here.");
     } catch (InvalidRequestException e) {
       assertThat(e.getMessage()).isEqualTo("Unhandled application manifest kind K8S_MANIFEST");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSetConfigMapYamlForService() {
+    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(environment);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    when(persistentLocker.waitToAcquireLock(Environment.class, ENV_ID, ofSeconds(5), ofSeconds(10)))
+        .thenReturn(acquiredLock);
+
+    environmentService.setConfigMapYamlForService(
+        APP_ID, ENV_ID, SERVICE_TEMPLATE_ID, KubernetesPayload.builder().advancedConfig("configMapYaml").build());
+
+    Map<String, String> configMapYamls = new HashMap<>();
+    configMapYamls.put(SERVICE_TEMPLATE_ID, "configMapYaml");
+    verify(updateOperations, times(1)).set("configMapYamlByServiceTemplateId", configMapYamls);
+    verify(yamlPushService, times(1))
+        .pushYamlChangeSet(ACCOUNT_ID, environment, environment, Type.UPDATE, false, false);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSetConfigMapYamlForServiceForException() {
+    when(persistentLocker.waitToAcquireLock(Environment.class, ENV_ID, ofSeconds(5), ofSeconds(10))).thenReturn(null);
+    try {
+      environmentService.setConfigMapYamlForService(
+          APP_ID, ENV_ID, SERVICE_TEMPLATE_ID, KubernetesPayload.builder().advancedConfig("configMapYaml").build());
+      fail("Should not reach here.");
+    } catch (UnexpectedException e) {
+      assertThat(e.getMessage()).isEqualTo("The persistent lock was not acquired");
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetOnNonExistentEnvironment() {
+    try {
+      environmentService.get(APP_ID, ENV_ID, false);
+      fail("Should not reach here.");
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage()).isEqualTo("Environment doesn't exist");
     }
   }
 }

@@ -6,8 +6,6 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static java.lang.String.format;
@@ -42,7 +40,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
+import io.harness.exception.UnexpectedException;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.lock.AcquiredLock;
@@ -188,7 +186,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public Environment get(String appId, String envId, boolean withSummary) {
     Environment environment = get(appId, envId);
     if (environment == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Environment doesn't exist");
+      throw new InvalidRequestException("Environment doesn't exist");
     }
     if (withSummary) {
       addServiceTemplates(environment);
@@ -888,10 +886,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment setConfigMapYamlForService(
       String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload) {
+    Environment updatedEnv;
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Environment.class, envId, ofSeconds(5), ofSeconds(10))) {
       if (lock == null) {
-        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "The persistent lock was not acquired.");
+        throw new UnexpectedException("The persistent lock was not acquired");
       }
       Environment savedEnv = get(appId, envId, false);
       notNullCheck("Environment", savedEnv, USER);
@@ -915,9 +914,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       }
 
       wingsPersistence.update(savedEnv, updateOperations);
+      String accountId = appService.getAccountIdByAppId(appId);
+      updatedEnv = get(appId, envId, false);
+      yamlPushService.pushYamlChangeSet(
+          accountId, savedEnv, updatedEnv, Type.UPDATE, updatedEnv.isSyncFromGit(), false);
     }
 
-    return get(appId, envId, false);
+    return updatedEnv;
   }
 
   @Override

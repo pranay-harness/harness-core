@@ -40,6 +40,7 @@ import io.harness.rule.RepeatRule.Repeat;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1660,7 +1661,9 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
+  @Ignore("Ignoring for now as its flaky")
   public void testListConfigurations() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     String testUuid = generateUuid();
