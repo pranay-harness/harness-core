@@ -144,6 +144,16 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testAppendToListInMultipleDocuments() {
+    when(elasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement))
+        .thenReturn(true);
+    boolean isSuccessful =
+        synchronousElasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement);
+    assertThat(isSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testAppendToListInMultipleDocumentsWithLimit() {
     when(elasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement, limit))
         .thenReturn(true);
     boolean isSuccessful = synchronousElasticsearchDao.appendToListInMultipleDocuments(
@@ -164,12 +174,11 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testRemoveFromListInSingleDocument() {
+  public void testRemoveFromListInMultipleDocument() {
     String idToBeDeleted = generateUuid();
-    when(elasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, documentId, idToBeDeleted))
-        .thenReturn(true);
-    boolean isSuccessful = synchronousElasticsearchDao.removeFromListInMultipleDocuments(
-        entityType, listToUpdate, documentId, idToBeDeleted);
+    when(elasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, idToBeDeleted)).thenReturn(true);
+    boolean isSuccessful =
+        synchronousElasticsearchDao.removeFromListInMultipleDocuments(entityType, listToUpdate, idToBeDeleted);
     assertThat(isSuccessful).isTrue();
   }
 }

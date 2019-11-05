@@ -1,6 +1,8 @@
 package software.wings.search;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.beans.WorkflowType;
+import io.harness.data.structure.UUIDGenerator;
 import org.apache.lucene.search.TotalHits;
 import org.apache.lucene.search.TotalHits.Relation;
 import org.elasticsearch.action.search.SearchResponse;
@@ -12,19 +14,30 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.internal.InternalSearchResponse;
 import software.wings.beans.EntityType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.search.entities.application.ApplicationView;
 import software.wings.search.entities.deployment.DeploymentView;
 import software.wings.search.entities.environment.EnvironmentView;
 import software.wings.search.entities.pipeline.PipelineView;
+import software.wings.search.entities.related.audit.RelatedAuditView;
+import software.wings.search.entities.related.deployment.RelatedDeploymentView;
 import software.wings.search.entities.service.ServiceView;
 import software.wings.search.entities.workflow.WorkflowView;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class ElasticsearchServiceTestUtils {
   private static float score = 0.2345f;
   private static ObjectMapper mapper = new ObjectMapper();
+
+  private static WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                                           .pipelineExecutionId(UUIDGenerator.generateUuid())
+                                                           .workflowType(WorkflowType.PIPELINE)
+                                                           .build();
 
   private static ApplicationView createApplicationView() {
     ApplicationView applicationView = new ApplicationView();
@@ -32,6 +45,16 @@ public class ElasticsearchServiceTestUtils {
     applicationView.setName("appName");
     applicationView.setType(EntityType.APPLICATION);
     applicationView.setCreatedAt(System.currentTimeMillis());
+
+    List<Long> auditTimestamps = new ArrayList<>();
+    auditTimestamps.add(System.currentTimeMillis());
+    auditTimestamps.add(System.currentTimeMillis());
+    applicationView.setAuditTimestamps(auditTimestamps);
+
+    List<RelatedAuditView> audits = new ArrayList<>();
+    audits.add(new RelatedAuditView());
+    audits.add(new RelatedAuditView());
+    applicationView.setAudits(audits);
     return applicationView;
   }
 
@@ -41,6 +64,11 @@ public class ElasticsearchServiceTestUtils {
     serviceView.setName("serviceName");
     serviceView.setCreatedAt(System.currentTimeMillis());
     serviceView.setType(EntityType.SERVICE);
+
+    serviceView.setAuditTimestamps(Arrays.asList(System.currentTimeMillis()));
+    serviceView.setAudits(Arrays.asList(new RelatedAuditView()));
+    serviceView.setDeploymentTimestamps(Arrays.asList(System.currentTimeMillis()));
+    serviceView.setDeployments(Arrays.asList(new RelatedDeploymentView(workflowExecution)));
     return serviceView;
   }
 
@@ -50,6 +78,12 @@ public class ElasticsearchServiceTestUtils {
     environmentView.setName("envName");
     environmentView.setCreatedAt(System.currentTimeMillis());
     environmentView.setType(EntityType.ENVIRONMENT);
+
+    environmentView.setAuditTimestamps(Arrays.asList(System.currentTimeMillis()));
+    environmentView.setAudits(Arrays.asList(new RelatedAuditView()));
+
+    environmentView.setDeploymentTimestamps(Arrays.asList(System.currentTimeMillis()));
+    environmentView.setDeployments(Arrays.asList(new RelatedDeploymentView(workflowExecution)));
     return environmentView;
   }
 
@@ -59,6 +93,11 @@ public class ElasticsearchServiceTestUtils {
     workflowView.setName("workflowName");
     workflowView.setCreatedAt(System.currentTimeMillis());
     workflowView.setType(EntityType.WORKFLOW);
+    workflowView.setAuditTimestamps(Arrays.asList(System.currentTimeMillis()));
+    workflowView.setAudits(Arrays.asList(new RelatedAuditView()));
+
+    workflowView.setDeploymentTimestamps(Arrays.asList(System.currentTimeMillis()));
+    workflowView.setDeployments(Arrays.asList(new RelatedDeploymentView(workflowExecution)));
     return workflowView;
   }
 
@@ -68,6 +107,11 @@ public class ElasticsearchServiceTestUtils {
     pipelineView.setName("pipelineName");
     pipelineView.setCreatedAt(System.currentTimeMillis());
     pipelineView.setType(EntityType.PIPELINE);
+    pipelineView.setAuditTimestamps(Arrays.asList(System.currentTimeMillis()));
+    pipelineView.setAudits(Arrays.asList(new RelatedAuditView()));
+
+    pipelineView.setDeploymentTimestamps(Arrays.asList(System.currentTimeMillis()));
+    pipelineView.setDeployments(Arrays.asList(new RelatedDeploymentView(workflowExecution)));
     return pipelineView;
   }
 

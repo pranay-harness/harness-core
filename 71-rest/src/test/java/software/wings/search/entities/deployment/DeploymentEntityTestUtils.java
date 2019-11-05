@@ -16,6 +16,9 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 import software.wings.search.framework.changestreams.ChangeType;
+import software.wings.sm.PipelineSummary;
+
+import java.util.Arrays;
 
 public class DeploymentEntityTestUtils extends WingsBaseTest {
   public static ExecutionArgs createExecutionArgs(WorkflowType workflowType) {
@@ -29,21 +32,34 @@ public class DeploymentEntityTestUtils extends WingsBaseTest {
   }
 
   public static WorkflowExecution createWorkflowExecution(String workflowExecutionId, String appId, String appName,
-      ExecutionArgs executionArgs, WorkflowType workflowType, ExecutionStatus executionStatus) {
-    return WorkflowExecution.builder()
-        .appId(appId)
-        .appName(appName)
-        .envType(NON_PROD)
-        .status(executionStatus)
-        .workflowType(workflowType)
-        .executionArgs(executionArgs)
-        .uuid(workflowExecutionId)
-        .build();
+      String envId, String serviceId, String workflowId, String pipelineId, ExecutionArgs executionArgs,
+      WorkflowType workflowType, ExecutionStatus executionStatus) {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .appId(appId)
+                                              .appName(appName)
+                                              .envType(NON_PROD)
+                                              .status(executionStatus)
+                                              .workflowType(workflowType)
+                                              .executionArgs(executionArgs)
+                                              .uuid(workflowExecutionId)
+                                              .build();
+
+    workflowExecution.setServiceIds(Arrays.asList(serviceId));
+    workflowExecution.setEnvIds(Arrays.asList(envId));
+    workflowExecution.setWorkflowIds(Arrays.asList(workflowId));
+    workflowExecution.setWorkflowId(workflowId);
+    PipelineSummary pipelineSummary =
+        PipelineSummary.builder().pipelineId(pipelineId).pipelineName("pipeline_name").build();
+
+    workflowExecution.setPipelineSummary(pipelineSummary);
+
+    return workflowExecution;
   }
 
   private static DBObject getStatusChange() {
     BasicDBObject status = new BasicDBObject();
     status.put("status", ExecutionStatus.RUNNING);
+    status.put("workflowId", generateUuid());
     return status;
   }
 
