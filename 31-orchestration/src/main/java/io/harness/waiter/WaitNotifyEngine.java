@@ -79,7 +79,7 @@ public class WaitNotifyEngine {
                                                    .uuid(correlationId)
                                                    .createdAt(currentTimeMillis())
                                                    .response(response)
-                                                   .error(error)
+                                                   .error(error || response instanceof ErrorNotifyResponseData)
                                                    .build());
 
       final Query<WaitInstance> query = persistence.createQuery(WaitInstance.class, excludeAuthority)

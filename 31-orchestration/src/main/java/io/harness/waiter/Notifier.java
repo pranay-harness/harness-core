@@ -1,5 +1,6 @@
 package io.harness.waiter;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
@@ -92,8 +93,6 @@ public class Notifier implements Runnable {
                  new HIterator(persistence.createQuery(WaitInstance.class, excludeAuthority)
                                    .filter(WaitInstanceKeys.correlationIds, notifyResponse.getUuid())
                                    .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
-                                   .field(WaitInstanceKeys.waitingOnCorrelationIds)
-                                   .sizeEq(0)
                                    .fetch())) {
           if (notifyResponse.getCreatedAt() < limit && !waitInstances.hasNext()) {
             deleteResponses.add(notifyResponse.getUuid());
@@ -104,7 +103,9 @@ public class Notifier implements Runnable {
           }
 
           for (WaitInstance waitInstance : waitInstances) {
-            notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+            if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+              notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+            }
           }
         }
       }
