@@ -55,4 +55,13 @@ public interface NodeEventOrBuilder extends
    * <code>.google.protobuf.Timestamp timestamp = 5;</code>
    */
   com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder();
+
+  /**
+   * <code>string node_name = 6;</code>
+   */
+  java.lang.String getNodeName();
+  /**
+   * <code>string node_name = 6;</code>
+   */
+  com.google.protobuf.ByteString getNodeNameBytes();
 }

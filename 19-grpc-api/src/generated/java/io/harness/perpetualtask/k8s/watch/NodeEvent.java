@@ -20,6 +20,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     cloudProviderId_ = "";
     nodeUid_ = "";
     type_ = 0;
+    nodeName_ = "";
   }
 
   @java.
@@ -79,6 +80,12 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
               timestamp_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 50: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            nodeName_ = s;
             break;
           }
           default: {
@@ -342,6 +349,36 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     return getTimestamp();
   }
 
+  public static final int NODE_NAME_FIELD_NUMBER = 6;
+  private volatile java.lang.Object nodeName_;
+  /**
+   * <code>string node_name = 6;</code>
+   */
+  public java.lang.String getNodeName() {
+    java.lang.Object ref = nodeName_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      nodeName_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string node_name = 6;</code>
+   */
+  public com.google.protobuf.ByteString getNodeNameBytes() {
+    java.lang.Object ref = nodeName_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      nodeName_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -372,6 +409,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     if (timestamp_ != null) {
       output.writeMessage(5, getTimestamp());
     }
+    if (!getNodeNameBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, nodeName_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -396,6 +436,9 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
     }
     if (timestamp_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, getTimestamp());
+    }
+    if (!getNodeNameBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, nodeName_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -426,6 +469,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       if (!getTimestamp().equals(other.getTimestamp()))
         return false;
     }
+    if (!getNodeName().equals(other.getNodeName()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -450,6 +495,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
       hash = (53 * hash) + getTimestamp().hashCode();
     }
+    hash = (37 * hash) + NODE_NAME_FIELD_NUMBER;
+    hash = (53 * hash) + getNodeName().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -577,6 +624,8 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
         timestamp_ = null;
         timestampBuilder_ = null;
       }
+      nodeName_ = "";
+
       return this;
     }
 
@@ -616,6 +665,7 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       } else {
         result.timestamp_ = timestampBuilder_.build();
       }
+      result.nodeName_ = nodeName_;
       onBuilt();
       return result;
     }
@@ -675,6 +725,10 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
       }
       if (other.hasTimestamp()) {
         mergeTimestamp(other.getTimestamp());
+      }
+      if (!other.getNodeName().isEmpty()) {
+        nodeName_ = other.nodeName_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1043,6 +1097,68 @@ public final class NodeEvent extends com.google.protobuf.GeneratedMessageV3 impl
         timestamp_ = null;
       }
       return timestampBuilder_;
+    }
+
+    private java.lang.Object nodeName_ = "";
+    /**
+     * <code>string node_name = 6;</code>
+     */
+    public java.lang.String getNodeName() {
+      java.lang.Object ref = nodeName_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        nodeName_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string node_name = 6;</code>
+     */
+    public com.google.protobuf.ByteString getNodeNameBytes() {
+      java.lang.Object ref = nodeName_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        nodeName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string node_name = 6;</code>
+     */
+    public Builder setNodeName(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      nodeName_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string node_name = 6;</code>
+     */
+    public Builder clearNodeName() {
+      nodeName_ = getDefaultInstance().getNodeName();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string node_name = 6;</code>
+     */
+    public Builder setNodeNameBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      nodeName_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

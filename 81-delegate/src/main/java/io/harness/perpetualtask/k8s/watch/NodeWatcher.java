@@ -52,6 +52,7 @@ public class NodeWatcher implements Watcher<Node> {
     NodeEvent nodeStartedEvent = NodeEvent.newBuilder()
                                      .setCloudProviderId(cloudProviderId)
                                      .setNodeUid(node.getMetadata().getUid())
+                                     .setNodeName(node.getMetadata().getName())
                                      .setType(EVENT_TYPE_START)
                                      .setTimestamp(timestamp)
                                      .build();
@@ -64,6 +65,7 @@ public class NodeWatcher implements Watcher<Node> {
     NodeEvent nodeStoppedEvent = NodeEvent.newBuilder()
                                      .setCloudProviderId(cloudProviderId)
                                      .setNodeUid(node.getMetadata().getUid())
+                                     .setNodeName(node.getMetadata().getName())
                                      .setType(EVENT_TYPE_STOP)
                                      .setTimestamp(timestamp)
                                      .build();
