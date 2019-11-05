@@ -134,6 +134,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   public void testWorkflowExecutionInsertChange() {
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
     boolean isSuccessful = deploymentChangeHandler.handleChange(workflowExecutionPipelineInsertChangeEvent);
+
     assertThat(isSuccessful).isTrue();
 
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);

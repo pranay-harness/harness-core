@@ -3,6 +3,8 @@ package software.wings.search.entities.pipeline;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -10,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,11 +29,12 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.search.entities.application.ApplicationEntityTestUtils;
 import software.wings.search.entities.environment.EnvironmentEntityTestUtils;
 import software.wings.search.entities.pipeline.PipelineView.PipelineViewKeys;
 import software.wings.search.entities.related.RelatedAuditEntityTestUtils;
-import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
+import software.wings.search.entities.related.RelatedDeploymentEntityTestUtils;
 import software.wings.search.entities.service.ServiceEntityTestUtils;
 import software.wings.search.entities.workflow.WorkflowEntityTestUtils;
 import software.wings.search.framework.SearchDao;
@@ -41,7 +45,6 @@ import java.io.IOException;
 
 public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Mock private SearchDao searchDao;
-  @Inject private RelatedAuditViewBuilder relatedAuditViewBuilder;
   @Inject @InjectMocks private PipelineChangeHandler pipelineChangeHandler;
 
   private static final String APP_NAME = "PipelineHandlerTestForApplication" + System.currentTimeMillis();
@@ -55,6 +58,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   private Environment environment;
   private Workflow workflow;
   private Pipeline pipeline;
+  private WorkflowExecution workflowExecution;
   private AuditHeader deleteAuditHeader;
   private AuditHeader nonDeleteAuditHeader;
   private ChangeEvent deleteAuditHeaderChangeEvent;
@@ -67,6 +71,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   private String environmentId = generateUuid();
   private String workflowId = generateUuid();
   private String pipelineId = generateUuid();
+  private String workflowExecutionId = generateUuid();
 
   @Before
   public void setup() throws IOException {
@@ -85,6 +90,11 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
 
     pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
     assertThat(pipeline).isNotNull();
+
+    workflowExecution = RelatedDeploymentEntityTestUtils.createWorkflowExecution(
+        workflowExecutionId, appId, serviceId, environmentId, workflowId, pipelineId, WorkflowType.PIPELINE);
+    assertThat(workflowExecution).isNotNull();
+    wingsPersistence.save(workflowExecution);
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         deleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.DELETE.name());
@@ -202,12 +212,49 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
-
     when(searchDao.updateListInMultipleDocuments(
              eq(PipelineSearchEntity.TYPE), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(true);
-
     boolean isUpdateSuccessful = pipelineChangeHandler.handleChange(workflowUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowExecutionInsertChange() {
+    ChangeEvent workflowExecutionInsertChangeEvent =
+        RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.INSERT);
+    when(searchDao.addTimestamp(eq(PipelineSearchEntity.TYPE), eq(PipelineViewKeys.deploymentTimestamps), anyString(),
+             anyLong(), anyInt()))
+        .thenReturn(true);
+    when(searchDao.appendToListInSingleDocument(
+             eq(PipelineSearchEntity.TYPE), eq(PipelineViewKeys.deployments), anyString(), anyMap(), anyInt()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = pipelineChangeHandler.handleChange(workflowExecutionInsertChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowExecutionUpdateChange() {
+    ChangeEvent workflowExecutionUpdateChangeEvent =
+        RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.UPDATE);
+    when(searchDao.updateListInMultipleDocuments(
+             eq(PipelineSearchEntity.TYPE), eq(PipelineViewKeys.deployments), anyString(), anyString(), anyString()))
+        .thenReturn(true);
+
+    boolean isUpdateSuccessful = pipelineChangeHandler.handleChange(workflowExecutionUpdateChangeEvent);
+    assertThat(isUpdateSuccessful).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testWorkflowExecutionChange() {
+    ChangeEvent workflowExecutionDeleteChangeEvent =
+        RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.DELETE);
+
+    boolean isUpdateSuccessful = pipelineChangeHandler.handleChange(workflowExecutionDeleteChangeEvent);
     assertThat(isUpdateSuccessful).isTrue();
   }
 }
