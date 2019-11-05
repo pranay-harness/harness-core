@@ -178,39 +178,46 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     Set<String> constraintIds = new HashSet<>();
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(query.fetch())) {
       for (ResourceConstraintInstance instance : iterator) {
-        final HoldingScope holdingScope = HoldingScope.valueOf(instance.getReleaseEntityType());
-        boolean finished = false;
-        switch (holdingScope) {
-          case WORKFLOW:
-            final WorkflowExecution workflowExecution =
-                workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-            finished = workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
-            break;
-          case PHASE:
-            final StateExecutionData stateExecutionData =
-                stateExecutionService.phaseStateExecutionData(instance.getAppId(),
-                    ResourceConstraintService.workflowExecutionIdFromReleaseEntityId(instance.getReleaseEntityId()),
-                    ResourceConstraintService.phaseNameFromReleaseEntityId(instance.getReleaseEntityId()));
-            finished = stateExecutionData != null && ExecutionStatus.isFinalStatus(stateExecutionData.getStatus());
-            break;
-          default:
-            unhandled(holdingScope);
-        }
-
-        if (finished) {
-          Map<String, Object> constraintContext =
-              ImmutableMap.of(ResourceConstraintInstanceKeys.appId, instance.getAppId());
-
-          if (getRegistry().consumerFinished(new ConstraintId(instance.getResourceConstraintId()),
-                  new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()),
-                  constraintContext)) {
-            constraintIds.add(instance.getResourceConstraintId());
-          }
+        if (updateActiveConstraintForInstance(instance)) {
+          constraintIds.add(instance.getResourceConstraintId());
         }
       }
     }
 
     return constraintIds;
+  }
+
+  @Override
+  public boolean updateActiveConstraintForInstance(ResourceConstraintInstance instance) {
+    boolean isConstraint = false;
+    final HoldingScope holdingScope = HoldingScope.valueOf(instance.getReleaseEntityType());
+    boolean finished = false;
+    switch (holdingScope) {
+      case WORKFLOW:
+        final WorkflowExecution workflowExecution =
+            workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
+        finished = workflowExecution != null && ExecutionStatus.isFinalStatus(workflowExecution.getStatus());
+        break;
+      case PHASE:
+        final StateExecutionData stateExecutionData = stateExecutionService.phaseStateExecutionData(instance.getAppId(),
+            ResourceConstraintService.workflowExecutionIdFromReleaseEntityId(instance.getReleaseEntityId()),
+            ResourceConstraintService.phaseNameFromReleaseEntityId(instance.getReleaseEntityId()));
+        finished = stateExecutionData != null && ExecutionStatus.isFinalStatus(stateExecutionData.getStatus());
+        break;
+      default:
+        unhandled(holdingScope);
+    }
+
+    if (finished) {
+      Map<String, Object> constraintContext =
+          ImmutableMap.of(ResourceConstraintInstanceKeys.appId, instance.getAppId());
+
+      if (getRegistry().consumerFinished(new ConstraintId(instance.getResourceConstraintId()),
+              new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()), constraintContext)) {
+        isConstraint = true;
+      }
+    }
+    return isConstraint;
   }
 
   @Override

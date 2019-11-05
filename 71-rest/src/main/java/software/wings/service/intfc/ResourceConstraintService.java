@@ -37,6 +37,8 @@ public interface ResourceConstraintService extends OwnedByAccount {
 
   Set<String> updateActiveConstraints(String appId, String workflowExecution);
 
+  boolean updateActiveConstraintForInstance(ResourceConstraintInstance instance);
+
   Set<String> selectBlockedConstraints();
 
   void updateBlockedConstraints(Set<String> constraintIds);

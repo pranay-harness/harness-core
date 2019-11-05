@@ -3,7 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
-import io.harness.persistence.PersistentEntity;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.Builder;
@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ResourceConstraintInstance implements PersistentEntity, UuidAware {
+public class ResourceConstraintInstance implements PersistentRegularIterable, UuidAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
 
@@ -49,8 +49,20 @@ public class ResourceConstraintInstance implements PersistentEntity, UuidAware {
 
   private long acquiredAt;
 
+  @Indexed private Long nextIteration;
+
   @JsonIgnore
   @SchemaIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
 }
