@@ -19,6 +19,9 @@ import java.util.Optional;
  */
 public interface LearningEngineService {
   String RESOURCE_URL = "learning";
+
+  LearningEngineAnalysisTask getTaskById(String taskId);
+
   boolean addLearningEngineAnalysisTask(LearningEngineAnalysisTask analysisTask);
   boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask);
 

@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
@@ -102,6 +103,7 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
 import software.wings.service.impl.analysis.MetricAnalysisRecord.MetricAnalysisRecordKeys;
@@ -1788,7 +1790,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .build();
 
     return createDelegateTask(TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createAppDynamicsDelegateTask(
@@ -1812,7 +1815,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build();
     return createDelegateTask(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createBugSnagDelegateTask(
@@ -1843,7 +1847,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .accountId(config.getAccountId())
             .build();
     return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
-        new Object[] {dataCollectionInfo}, config.getEnvId());
+        new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createNewRelicDelegateTask(
@@ -1871,7 +1876,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 FeatureName.DISABLE_METRIC_NAME_CURLY_BRACE_CHECK, newRelicConfig.getAccountId()))
             .build();
     return createDelegateTask(TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createPrometheusDelegateTask(
@@ -1893,7 +1899,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionMinute(0)
             .build();
     return createDelegateTask(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createStackDriverMetricDelegateTask(
@@ -1916,7 +1923,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionMinute(0)
             .build();
     return createDelegateTask(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createDatadogDelegateTask(
@@ -1949,7 +1957,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionTotalTime(timeDuration)
             .build();
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createAPMDelegateTask(
@@ -1986,7 +1995,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .build();
 
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   public static Map<String, List<APMMetricInfo>> createDatadogMetricEndPointMap(Map<String, String> dockerMetricsMap,
@@ -1995,10 +2005,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if (isNotEmpty(dockerMetricsMap)) {
       for (Entry<String, String> entry : dockerMetricsMap.entrySet()) {
         String filter = entry.getKey();
-        List<String> dockerMetrics = new ArrayList<>(Arrays.asList(entry.getValue().split(","))
-                                                         .parallelStream()
-                                                         .map(String ::trim)
-                                                         .collect(Collectors.toList()));
+        List<String> dockerMetrics = new ArrayList<>(
+            Arrays.asList(entry.getValue().split(",")).parallelStream().map(String::trim).collect(Collectors.toList()));
         metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
             Optional.empty(), Optional.of(dockerMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
       }
@@ -2006,10 +2014,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if (isNotEmpty(ecsMetricsMap)) {
       for (Entry<String, String> entry : ecsMetricsMap.entrySet()) {
         String filter = entry.getKey();
-        List<String> ecsMetrics = new ArrayList<>(Arrays.asList(entry.getValue().split(","))
-                                                      .parallelStream()
-                                                      .map(String ::trim)
-                                                      .collect(Collectors.toList()));
+        List<String> ecsMetrics = new ArrayList<>(
+            Arrays.asList(entry.getValue().split(",")).parallelStream().map(String::trim).collect(Collectors.toList()));
         metricEndPoints.putAll(DatadogState.metricEndpointsInfo(
             Optional.empty(), Optional.of(ecsMetrics), Optional.of(filter), Optional.empty(), Optional.empty()));
       }
@@ -2045,7 +2051,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionMinute(0)
             .build();
     return createDelegateTask(TaskType.CLOUD_WATCH_COLLECT_24_7_METRIC_DATA, config.getAccountId(), config.getAppId(),
-        waitId, new Object[] {dataCollectionInfo}, config.getEnvId());
+        waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createElkDelegateTask(ElkCVConfiguration config, String waitId, long startTime, long endTime) {
@@ -2078,7 +2085,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     dataCollectionInfo.setStartTime(startTime);
     dataCollectionInfo.setEndTime(endTime);
     return createDelegateTask(TaskType.ELK_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
-        new Object[] {dataCollectionInfo}, config.getEnvId());
+        new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createSplunkDelegateTask(
@@ -2101,14 +2109,16 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     dataCollectionInfo.setStartTime(startTimeMilliSec);
     dataCollectionInfo.setEndTime(endTimeMilliSec);
     return createDelegateTask(TaskType.SPLUNK_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
-        new Object[] {dataCollectionInfo}, config.getEnvId());
+        new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+        dataCollectionInfo.getStateExecutionId(), config.getStateType());
   }
 
   private DelegateTask createDataCollectionDelegateTask(CVTask cvTask) {
     DataCollectionInfoV2 dataCollectionInfo = cvTask.getDataCollectionInfo();
     DelegateTask delegateTask = createDelegateTask(dataCollectionInfo.getTaskType(), dataCollectionInfo.getAccountId(),
         dataCollectionInfo.getApplicationId(), cvTask.getUuid(), new Object[] {dataCollectionInfo},
-        dataCollectionInfo.getEnvId());
+        dataCollectionInfo.getEnvId(), dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
+        dataCollectionInfo.getStateType());
     waitNotifyEngine.waitForAll(
         DataCollectionCallbackV2.builder().cvTaskId(cvTask.getUuid()).build(), cvTask.getUuid());
 
@@ -2141,7 +2151,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
                 .build();
         return createDelegateTask(TaskType.SUMO_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(), waitId,
-            new Object[] {dataCollectionInfo}, config.getEnvId());
+            new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
+            dataCollectionInfo.getStateExecutionId(), config.getStateType());
 
       case DATA_DOG_LOG:
         DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(config.getConnectorId()).getValue();
@@ -2167,7 +2178,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, null, true))
                 .build();
         return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
-            waitId, new Object[] {customLogDataCollectionInfo}, config.getEnvId());
+            waitId, new Object[] {customLogDataCollectionInfo}, config.getEnvId(), config.getUuid(),
+            customLogDataCollectionInfo.getStateExecutionId(), config.getStateType());
       case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) config;
         GcpConfig gcpConfig = (GcpConfig) settingsService.get(config.getConnectorId()).getValue();
@@ -2192,7 +2204,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       secretManager.getEncryptionDetails(gcpConfig, stackdriverCVConfiguration.getAppId(), null))
                   .build();
           return createDelegateTask(TaskType.STACKDRIVER_COLLECT_24_7_LOG_DATA, config.getAccountId(),
-              config.getAppId(), waitId, new Object[] {stackDriverLogDataCollectionInfo}, config.getEnvId());
+              config.getAppId(), waitId, new Object[] {stackDriverLogDataCollectionInfo}, config.getEnvId(),
+              config.getUuid(), stackDriverLogDataCollectionInfo.getStateExecutionId(), config.getStateType());
         } else {
           throw new IllegalArgumentException("Stackdriver timeseries not implemented yet");
         }
@@ -2316,7 +2329,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         throw new IllegalStateException("Invalid state: " + context.getStateType());
     }
     DelegateTask delegateTask = createDelegateTask(taskType, context.getAccountId(), context.getAppId(), waitId,
-        new Object[] {dataCollectionInfo}, context.getEnvId());
+        new Object[] {dataCollectionInfo}, context.getEnvId(), dataCollectionInfo.getCvConfigId(),
+        dataCollectionInfo.getStateExecutionId(), context.getStateType());
     waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
                                     .appId(context.getAppId())
                                     .executionData(executionData)
@@ -2393,21 +2407,25 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .build();
   }
 
-  private DelegateTask createDelegateTask(
-      TaskType taskType, String accountId, String appId, String waitId, Object[] dataCollectionInfo, String envId) {
-    return DelegateTask.builder()
-        .async(true)
-        .accountId(accountId)
-        .appId(appId)
-        .waitId(waitId)
-        .data(TaskData.builder()
-                  .taskType(taskType.name())
-                  .parameters(dataCollectionInfo)
-                  .timeout(TimeUnit.MINUTES.toMillis(5))
-                  .build())
-        .envId(envId)
-        .correlationId(waitId)
-        .build();
+  private DelegateTask createDelegateTask(TaskType taskType, String accountId, String appId, String waitId,
+      Object[] dataCollectionInfo, String envId, String cvConfigId, String stateExecutionId, StateType stateType) {
+    try (VerificationLogContext ignored =
+             new VerificationLogContext(accountId, cvConfigId, stateExecutionId, stateType, OVERRIDE_ERROR)) {
+      logger.info("Triggered delegate task");
+      return DelegateTask.builder()
+          .async(true)
+          .accountId(accountId)
+          .appId(appId)
+          .waitId(waitId)
+          .data(TaskData.builder()
+                    .taskType(taskType.name())
+                    .parameters(dataCollectionInfo)
+                    .timeout(TimeUnit.MINUTES.toMillis(5))
+                    .build())
+          .envId(envId)
+          .correlationId(waitId)
+          .build();
+    }
   }
 
   private VerificationNodeDataSetupResponse getVerificationNodeDataResponse(

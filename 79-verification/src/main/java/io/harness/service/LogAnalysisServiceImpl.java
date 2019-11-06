@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
@@ -71,6 +72,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskKeys;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -97,6 +99,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Praveen
@@ -616,6 +619,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       Optional<Boolean> isFeedbackAnalysis) {
     mlAnalysisResponse.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
     final LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    if (taskId.isPresent()) {
+      LearningEngineAnalysisTask analysisTask = learningEngineService.getTaskById(taskId.get());
+      Preconditions.checkNotNull(analysisTask);
+      long currentEpoch = currentTimeMillis();
+      long timeTaken = currentEpoch - analysisTask.getCreatedAt();
+      logger.info("Finished analysis: Analysis type: {}, time delay: {} seconds",
+          isFeedbackAnalysis.isPresent() && isFeedbackAnalysis.get() ? MLAnalysisType.FEEDBACK_ANALYSIS.name()
+                                                                     : MLAnalysisType.LOG_ML.name(),
+          TimeUnit.MILLISECONDS.toSeconds(timeTaken));
+    }
     if (isNotEmpty(logsCVConfiguration.getContextId())) {
       AnalysisContext analysisContext = wingsPersistence.get(AnalysisContext.class, logsCVConfiguration.getContextId());
       mlAnalysisResponse.setStateExecutionId(analysisContext.getStateExecutionId());

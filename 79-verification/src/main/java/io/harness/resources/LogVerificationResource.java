@@ -1,7 +1,9 @@
 package io.harness.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.common.VerificationConstants.IS_EXPERIMENTAL;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -11,10 +13,12 @@ import io.harness.service.intfc.LogAnalysisService;
 import io.swagger.annotations.Api;
 import software.wings.api.InstanceElement;
 import software.wings.common.VerificationConstants;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
@@ -29,6 +33,7 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
+import software.wings.verification.log.LogsCVConfiguration;
 
 import java.util.List;
 import java.util.Map;
@@ -48,6 +53,7 @@ import javax.ws.rs.QueryParam;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class LogVerificationResource {
   @Inject private LogAnalysisService analysisService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Produces({"application/json", "application/v1+json"})
   @POST
@@ -157,8 +163,13 @@ public class LogVerificationResource {
       @QueryParam("taskId") String taskId,
       @QueryParam("comparisonStrategy") AnalysisComparisonStrategy comparisonStrategy,
       @QueryParam("isFeedbackAnalysis") boolean isFeedbackAnalysis, LogMLAnalysisRecord mlAnalysisResponse) {
-    return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, analysisMinute,
-        comparisonStrategy, mlAnalysisResponse, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
+    final LogsCVConfiguration logsCVConfiguration = wingsPersistence.get(LogsCVConfiguration.class, cvConfigId);
+    Preconditions.checkNotNull(logsCVConfiguration);
+    try (VerificationLogContext ignored = new VerificationLogContext(logsCVConfiguration.getAccountId(), cvConfigId,
+             null, logsCVConfiguration.getStateType(), OVERRIDE_ERROR)) {
+      return new RestResponse<>(analysisService.save24X7LogAnalysisRecords(appId, cvConfigId, analysisMinute,
+          comparisonStrategy, mlAnalysisResponse, Optional.of(taskId), Optional.of(isFeedbackAnalysis)));
+    }
   }
 
   @Produces({"application/json", "application/v1+json"})

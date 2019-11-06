@@ -119,6 +119,11 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
+  public LearningEngineAnalysisTask getTaskById(String taskId) {
+    return wingsPersistence.get(LearningEngineAnalysisTask.class, taskId);
+  }
+
+  @Override
   public boolean addLearningEngineAnalysisTask(LearningEngineAnalysisTask analysisTask) {
     analysisTask.setVersion(learningEngineApiVersion);
     analysisTask.setExecutionStatus(ExecutionStatus.QUEUED);
@@ -162,6 +167,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       logger.warn("task is already {}. Will not queue for minute {}, {}",
           learningEngineAnalysisTask.getExecutionStatus(), analysisTask.getAnalysis_minute(),
           learningEngineAnalysisTask);
+    }
+    if (isTaskCreated) {
+      logger.info("LE task queued for analysis type: {} and minute: {}", analysisTask.getMl_analysis_type(),
+          analysisTask.getAnalysis_minute());
     }
     return isTaskCreated;
   }
