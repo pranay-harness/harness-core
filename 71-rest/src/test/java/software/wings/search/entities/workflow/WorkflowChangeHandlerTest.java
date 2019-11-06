@@ -92,7 +92,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
     wingsPersistence.save(environment);
     assertThat(environment).isNotNull();
 
-    pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
+    pipeline =
+        PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
     wingsPersistence.save(pipeline);
 
@@ -141,7 +142,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
     Workflow workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowInsertChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.INSERT);
@@ -154,7 +155,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
     Workflow workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowDeleteChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.DELETE);
@@ -167,7 +168,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     Workflow workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);
@@ -216,11 +217,23 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testPipelineNameUpdateChange() {
+  public void testPipelineUpdateChange() {
     ChangeEvent pipelineUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(WorkflowSearchEntity.TYPE), eq(WorkflowViewKeys.pipelines), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(WorkflowSearchEntity.TYPE), eq(WorkflowViewKeys.pipelines), anyList(), anyMap()))
+        .thenReturn(true);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(WorkflowSearchEntity.TYPE), eq(WorkflowViewKeys.pipelines), anyList(), anyString()))
+        .thenReturn(true);
     when(searchDao.updateListInMultipleDocuments(
-             eq(WorkflowSearchEntity.TYPE), anyString(), anyString(), anyString(), anyString()))
+             eq(WorkflowSearchEntity.TYPE), eq(WorkflowViewKeys.pipelines), anyString(), anyString(), anyString()))
         .thenReturn(true);
 
     boolean isUpdateSuccessful = workflowChangeHandler.handleChange(pipelineUpdateChangeEvent);

@@ -76,20 +76,26 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     application = ApplicationEntityTestUtils.createApplication(accountId, appId, APP_NAME);
-    wingsPersistence.save(application);
     assertThat(application).isNotNull();
+    wingsPersistence.save(application);
 
     service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
     assertThat(service).isNotNull();
+    wingsPersistence.save(service);
 
     environment = EnvironmentEntityTestUtils.createEnvironment(accountId, appId, environmentId, ENVIRONMENT_NAME);
     assertThat(environment).isNotNull();
+    wingsPersistence.save(environment);
 
-    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
+    workflow =
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
     assertThat(environment).isNotNull();
+    wingsPersistence.save(workflow);
 
-    pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
+    pipeline =
+        PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
+    wingsPersistence.save(pipeline);
 
     workflowExecution = RelatedDeploymentEntityTestUtils.createWorkflowExecution(
         workflowExecutionId, appId, serviceId, environmentId, workflowId, pipelineId, WorkflowType.PIPELINE);
@@ -98,13 +104,13 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         deleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.DELETE.name());
-    wingsPersistence.save(deleteAuditHeader);
     assertThat(deleteAuditHeader).isNotNull();
+    wingsPersistence.save(deleteAuditHeader);
 
     nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         nonDeleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.UPDATE.name());
-    wingsPersistence.save(nonDeleteAuditHeader);
     assertThat(nonDeleteAuditHeader).isNotNull();
+    wingsPersistence.save(nonDeleteAuditHeader);
 
     deleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         deleteAuditHeader, appId, ChangeType.UPDATE, pipelineId, Type.DELETE.name());
@@ -136,7 +142,8 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testPipelineInsertChange() {
-    Pipeline pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
+    Pipeline pipeline =
+        PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
     ChangeEvent pipelineInsertChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.INSERT);
@@ -148,7 +155,8 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testPipelineDeleteChange() {
-    Pipeline pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
+    Pipeline pipeline =
+        PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
     ChangeEvent pipelineDeleteChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.DELETE);
@@ -160,7 +168,8 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
-    Pipeline pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
+    Pipeline pipeline =
+        PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
     ChangeEvent pipelineUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);

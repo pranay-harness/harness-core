@@ -92,11 +92,13 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
     assertThat(environment).isNotNull();
     wingsPersistence.save(environment);
 
-    pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
+    pipeline =
+        PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
     wingsPersistence.save(pipeline);
 
-    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
+    workflow =
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     wingsPersistence.save(workflow);
 
@@ -107,13 +109,13 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         deleteAuditHeaderId, accountId, appId, environmentId, EntityType.ENVIRONMENT.name(), Type.DELETE.name());
-    wingsPersistence.save(deleteAuditHeader);
     assertThat(deleteAuditHeader).isNotNull();
+    wingsPersistence.save(deleteAuditHeader);
 
     nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         nonDeleteAuditHeaderId, accountId, appId, environmentId, EntityType.ENVIRONMENT.name(), Type.UPDATE.name());
-    wingsPersistence.save(nonDeleteAuditHeader);
     assertThat(nonDeleteAuditHeader).isNotNull();
+    wingsPersistence.save(nonDeleteAuditHeader);
 
     deleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         deleteAuditHeader, appId, ChangeType.UPDATE, environmentId, Type.DELETE.name());
@@ -186,6 +188,18 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.pipelines), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.pipelines), anyList(), anyMap()))
+        .thenReturn(true);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.pipelines), anyList(), anyString()))
+        .thenReturn(true);
     when(searchDao.updateListInMultipleDocuments(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.pipelines),
              anyString(), anyString(), anyString()))
         .thenReturn(true);

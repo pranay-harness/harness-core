@@ -92,11 +92,13 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
     assertThat(environment).isNotNull();
     wingsPersistence.save(environment);
 
-    workflow = WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, WORKFLOW_NAME);
+    workflow =
+        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     wingsPersistence.save(workflow);
 
-    pipeline = PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME);
+    pipeline =
+        PipelineEntityTestUtils.createPipeline(accountId, appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
     wingsPersistence.save(pipeline);
 
@@ -179,6 +181,18 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
+
+    List<String> stringList = new ArrayList<>();
+    stringList.add("value1");
+
+    when(searchDao.nestedQuery(eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.pipelines), anyString()))
+        .thenReturn(stringList);
+    when(searchDao.appendToListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.pipelines), anyList(), anyMap()))
+        .thenReturn(true);
+    when(searchDao.removeFromListInMultipleDocuments(
+             eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.pipelines), anyList(), anyString()))
+        .thenReturn(true);
     when(searchDao.updateListInMultipleDocuments(
              eq(ServiceSearchEntity.TYPE), eq(ServiceViewKeys.pipelines), anyString(), anyString(), anyString()))
         .thenReturn(true);
