@@ -30,69 +30,69 @@ variable "workflow-terraform" {
   default = false
 }
 
-provider "aws" "aws_cloud" {
-    version = "~> 1.0"
+provider "aws" {
+    version = "~> 2.7"
 
-    access_key = "${var.access_key}"
-    secret_key = "${var.secret_key}"
-    region     = "${var.region}"
+    access_key = var.access_key
+    secret_key = var.secret_key
+    region     = var.region
 }
 
 module "workflow-generic" {
-  source  = "workflow-generic"
+  source  = "./workflow-generic"
 
-  workflow-generic = "${var.workflow-generic}"
+  workflow-generic = var.workflow-generic
 }
 
 module "workflow-barrier" {
-  source  = "workflow-barrier"
+  source  = "./workflow-barrier"
 
-  workflow-barrier = "${var.workflow-barrier}"
+  workflow-barrier = var.workflow-barrier
 }
 
 module "workflow-collapse_nodes" {
-  source  = "workflow-collapse_nodes"
+  source  = "./workflow-collapse_nodes"
 
-  workflow-collapse_nodes = "${var.workflow-collapse_nodes}"
+  workflow-collapse_nodes = var.workflow-collapse_nodes
 }
 
 module "workflow-scale" {
-  source  = "workflow-scale"
+  source  = "./workflow-scale"
 
-  workflow-scale = "${var.workflow-scale}"
+  workflow-scale = var.workflow-scale
 }
 
 module "workflow-terraform" {
-  source  = "workflow-terraform"
+  source  = "./workflow-terraform"
 
-  workflow-terraform = "${var.workflow-terraform}"
+  workflow-terraform = var.workflow-terraform
 }
 
 
 locals {
-  generic-instances = "${distinct(concat(module.workflow-generic.generic_instances,
-                                         module.workflow-barrier.generic_instances,
-                                         module.workflow-collapse_nodes.generic_instances,
-                                         module.workflow-scale.generic_instances,
-                                         module.workflow-terraform.generic_instances))}"
+  generic-instances = distinct(concat(module.workflow-generic.generic_instances,
+                                      module.workflow-barrier.generic_instances,
+                                      module.workflow-collapse_nodes.generic_instances,
+                                      module.workflow-scale.generic_instances,
+                                      module.workflow-terraform.generic_instances))
 }
 
 module "shared" {
-  source  = "shared"
+  source  = "./shared"
 
-  user = "${var.user}"
-  access_key = "${var.access_key}"
-  secret_key = "${var.secret_key}"
-  region = "${var.region}"
-  zone = "${var.zone}"
+  user = var.user
+  access_key = var.access_key
+  secret_key = var.secret_key
+  region = var.region
+  zone = var.zone
 
-  generic-instances = "${length(local.generic-instances)}"
+  generic-instances = length(local.generic-instances)
 }
 
 output "security_group" {
-    value = "${module.shared.security_group}"
+    value = module.shared.security_group
 }
 
 output "region" {
-    value = "${var.region}"
+    value = var.region
 }

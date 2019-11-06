@@ -26,22 +26,22 @@ resource "aws_instance" "test" {
     # AMI ID for Ubuntu Linux
     ami             = "ami-41e0b93b"
     instance_type   = "t2.micro"
-    key_name        = "${aws_key_pair.dev_test.id}"
-    security_groups = ["${aws_security_group.dev_test.name}"]
+    key_name        = aws_key_pair.dev_test.id
+    security_groups = [aws_security_group.dev_test.name]
 
-    tags {
+    tags = {
         Purpose     = "test"
         Name        = "workflow"
-        User        = "${var.user}"
-        Zone        = "${var.zone}"
+        User        = var.user
+        Zone        = var.zone
         Department  = "Deployment"
         Project     = "Workflow"
-        Owner       = "${var.user}"
+        Owner       = var.user
     }
 
-    count = "${var.generic-instances}"
+    count = var.generic-instances
 }
 
 output "security_group" {
-    value = "${aws_security_group.dev_test.name}"
+    value = aws_security_group.dev_test.name
 }
