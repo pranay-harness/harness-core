@@ -46,14 +46,16 @@ public class WaitNotifyEngine {
 
     final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder().uuid(generateUuid()).callback(callback);
 
+    final List<String> list;
     if (correlationIds.length == 1) {
-      waitInstanceBuilder.correlationIds(Collections.singletonList(correlationIds[0]));
+      list = Collections.singletonList(correlationIds[0]);
     } else {
       // In case of multiple items, we have to make sure that all of them are unique
       Set<String> set = new HashSet<>();
       Collections.addAll(set, correlationIds);
-      waitInstanceBuilder.correlationIds(new ArrayList<>(set));
+      list = new ArrayList<>(set);
     }
+    waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
 
     return wingsPersistence.save(waitInstanceBuilder.build());
   }

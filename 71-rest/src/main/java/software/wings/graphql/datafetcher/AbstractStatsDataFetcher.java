@@ -94,10 +94,8 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
         }
       }
     } catch (WingsException ex) {
-      logger.warn("WingsException while getting stats", ex);
       throw new InvalidRequestException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
     } catch (Exception ex) {
-      logger.warn("Exception while getting stats", ex);
       throw new InvalidRequestException(GENERIC_EXCEPTION_MSG, ex, WingsException.USER_SRE);
     } finally {
       logger.info("Time taken for the stats call {}", System.currentTimeMillis() - startTime);
