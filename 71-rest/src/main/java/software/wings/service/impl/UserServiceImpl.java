@@ -309,8 +309,7 @@ public class UserServiceImpl implements UserService {
       userInvite.setUuid(inviteId);
       params.put("userInviteId", inviteId);
 
-      logger.info("Created a new user invite {} for trial user {} from company {}", inviteId, emailAddress,
-          userInvite.getCompanyName());
+      logger.info("Created a new user invite {} for company {}", inviteId, userInvite.getCompanyName());
 
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
@@ -2126,7 +2125,10 @@ public class UserServiceImpl implements UserService {
   private Account setupAccount(Account account) {
     // HAR-8645: Always set default appId for account creation to pass validation
     account.setAppId(GLOBAL_APP_ID);
-    return accountService.save(account);
+    Account savedAccount = accountService.save(account);
+    logger.info("New account created with accountId {} and licenseType {}", account.getUuid(),
+        account.getLicenseInfo().getAccountType());
+    return savedAccount;
   }
 
   private List<UserGroup> getAccountAdminGroup(String accountId) {

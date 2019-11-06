@@ -192,6 +192,8 @@ public class AwsInstanceHandler extends InstanceHandler {
               logger.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
             }
           });
+
+          logger.info("Instances to be updated {}", instancesToBeUpdated.size());
         }
 
         handleEc2InstanceDelete(instancesInDBMap, latestEc2InstanceMap);
@@ -233,6 +235,8 @@ public class AwsInstanceHandler extends InstanceHandler {
             triggerService.triggerExecutionByServiceInfra(
                 infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
           }
+
+          logger.info("Instances to be added {}", instancesToBeAdded.size());
         }
       });
     }
@@ -306,8 +310,7 @@ public class AwsInstanceHandler extends InstanceHandler {
                                              .collect(Collectors.toSet());
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
-      logger.info("Total no of Ec2 instances to be deleted for InfraMappingId: {}, AppId: {} : {}",
-          ec2instance.getInfraMappingId(), ec2instance.getAppId(), instanceIdsToBeDeleted.size());
+      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }

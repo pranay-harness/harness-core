@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.utils.Utils.urlDecode;
@@ -15,7 +16,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.swagger.annotations.Api;
@@ -94,11 +97,13 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Boolean> disableAccount(
       @QueryParam("accountId") String accountId, @QueryParam("migratedTo") String migratedToClusterUrl) {
-    RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to disable account");
-    if (response == null) {
-      response = new RestResponse<>(accountService.disableAccount(accountId, urlDecode(migratedToClusterUrl)));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to disable account");
+      if (response == null) {
+        response = new RestResponse<>(accountService.disableAccount(accountId, urlDecode(migratedToClusterUrl)));
+      }
+      return response;
     }
-    return response;
   }
 
   @POST
@@ -106,11 +111,13 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> enableAccount(@QueryParam("accountId") String accountId) {
-    RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to enable account");
-    if (response == null) {
-      response = new RestResponse<>(accountService.enableAccount(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to enable account");
+      if (response == null) {
+        response = new RestResponse<>(accountService.enableAccount(accountId));
+      }
+      return response;
     }
-    return response;
   }
 
   @POST
@@ -185,40 +192,48 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Boolean> updateAccountLicense(
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull LicenseUpdateInfo licenseUpdateInfo) {
-    String fromAccountType = accountService.getAccountType(accountId).orElse(AccountType.PAID);
-    String toAccountType = licenseUpdateInfo.getLicenseInfo().getAccountType();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String fromAccountType = accountService.getAccountType(accountId).orElse(AccountType.PAID);
+      String toAccountType = licenseUpdateInfo.getLicenseInfo().getAccountType();
 
-    AccountMigration migration = null;
-    if (!fromAccountType.equals(toAccountType)) {
-      migration = AccountMigration.from(fromAccountType, toAccountType)
-                      .orElseThrow(() -> new InvalidRequestException("Unsupported migration", WingsException.USER));
-    }
-
-    RestResponse<Boolean> response =
-        accountPermissionUtils.checkIfHarnessUser("User not allowed to update account license");
-    if (response == null || (migration != null && migration.isSelfService() && userService.isAccountAdmin(accountId))) {
-      Map<String, Map<String, Object>> requiredInfoToComply = licenseUpdateInfo.getRequiredInfoToComply() == null
-          ? Collections.emptyMap()
-          : licenseUpdateInfo.getRequiredInfoToComply();
-
-      if (migration != null) {
-        if (!featureService.complyFeatureUsagesWithRestrictions(accountId, toAccountType, requiredInfoToComply)) {
-          throw new WingsException("Can not update account license. Account is using restricted features");
-        }
-      }
-      boolean licenseUpdated = licenseService.updateAccountLicense(accountId, licenseUpdateInfo.getLicenseInfo());
-      if (migration != null) {
-        featureService.complyFeatureUsagesWithRestrictions(accountId, requiredInfoToComply);
-        // Special Case. Enforce Service Instances Limits only for COMMUNITY account
-        if (toAccountType.equals(AccountType.COMMUNITY)) {
-          ServiceInstanceUsageCheckerJob.add(jobScheduler, accountId);
-        }
+      AccountMigration migration = null;
+      if (!fromAccountType.equals(toAccountType)) {
+        migration = AccountMigration.from(fromAccountType, toAccountType)
+                        .orElseThrow(() -> new InvalidRequestException("Unsupported migration", WingsException.USER));
       }
 
-      response = new RestResponse<>(licenseUpdated);
-    }
+      RestResponse<Boolean> response =
+          accountPermissionUtils.checkIfHarnessUser("User not allowed to update account license");
+      if (response == null
+          || (migration != null && migration.isSelfService() && userService.isAccountAdmin(accountId))) {
+        Map<String, Map<String, Object>> requiredInfoToComply = licenseUpdateInfo.getRequiredInfoToComply() == null
+            ? Collections.emptyMap()
+            : licenseUpdateInfo.getRequiredInfoToComply();
 
-    return response;
+        if (migration != null) {
+          if (!featureService.complyFeatureUsagesWithRestrictions(accountId, toAccountType, requiredInfoToComply)) {
+            throw new WingsException("Can not update account license. Account is using restricted features");
+          }
+        }
+        boolean licenseUpdated = licenseService.updateAccountLicense(accountId, licenseUpdateInfo.getLicenseInfo());
+        if (migration != null) {
+          featureService.complyFeatureUsagesWithRestrictions(accountId, requiredInfoToComply);
+          // Special Case. Enforce Service Instances Limits only for COMMUNITY account
+          if (toAccountType.equals(AccountType.COMMUNITY)) {
+            ServiceInstanceUsageCheckerJob.add(jobScheduler, accountId);
+          }
+        }
+
+        if (licenseUpdated) {
+          logger.info("license updated for account {}, license type is {} and status is {}", accountId,
+              licenseUpdateInfo.getLicenseInfo().getAccountType(),
+              licenseUpdateInfo.getLicenseInfo().getAccountStatus());
+        }
+        response = new RestResponse<>(licenseUpdated);
+      }
+
+      return response;
+    }
   }
 
   @PUT
@@ -298,11 +313,13 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> deleteAccount(@PathParam("accountId") @NotEmpty String accountId) {
-    RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to delete account");
-    if (response == null) {
-      response = new RestResponse<>(accountService.delete(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to delete account");
+      if (response == null) {
+        response = new RestResponse<>(accountService.delete(accountId));
+      }
+      return response;
     }
-    return response;
   }
 
   @POST

@@ -1,5 +1,6 @@
 package io.harness.workers.background.iterator;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -8,11 +9,14 @@ import com.google.inject.Inject;
 
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import io.harness.logging.AutoLogContext;
 import io.harness.mongo.MongoPersistenceIterator;
 import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
+import software.wings.service.impl.InfraMappingLogContext;
 import software.wings.service.impl.instance.InstanceHelper;
 
 /**
@@ -41,12 +45,15 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
 
   @Override
   public void handle(InfrastructureMapping infrastructureMapping) {
-    logger.info("Performing instance sync for infra mapping {}", infrastructureMapping.getUuid());
-    try {
-      instanceHelper.syncNow(infrastructureMapping.getAppId(), infrastructureMapping);
-      logger.info("Performed instance sync for infra mapping {}", infrastructureMapping.getUuid());
-    } catch (Exception ex) {
-      logger.error("Error while syncing instances for infra mapping {}", infrastructureMapping.getUuid(), ex);
+    try (AutoLogContext ignore1 = new AccountLogContext(infrastructureMapping.getAccountId(), OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new InfraMappingLogContext(infrastructureMapping.getUuid(), OVERRIDE_ERROR)) {
+      logger.info("Performing instance sync for infra mapping {}", infrastructureMapping.getUuid());
+      try {
+        instanceHelper.syncNow(infrastructureMapping.getAppId(), infrastructureMapping);
+        logger.info("Performed instance sync for infra mapping {}", infrastructureMapping.getUuid());
+      } catch (Exception ex) {
+        logger.error("Error while syncing instances for infra mapping {}", infrastructureMapping.getUuid(), ex);
+      }
     }
   }
 }

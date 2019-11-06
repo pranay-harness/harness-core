@@ -167,6 +167,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
           }
         });
 
+        logger.info("Instances to be updated {}", instancesToBeUpdated.size());
+
         // Find the instances that were yet to be added to db
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
@@ -181,6 +183,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
                 buildInstanceUsingEc2Instance(null, ec2Instance, infrastructureMapping, deploymentSummary);
             instanceService.save(instance);
           });
+
+          logger.info("Instances to be added {}", instancesToBeAdded.size());
         }
       });
     }

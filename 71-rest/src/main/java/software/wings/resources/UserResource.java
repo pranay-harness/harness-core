@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -24,6 +25,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
@@ -62,6 +64,7 @@ import software.wings.security.authentication.TwoFactorAdminOverrideSettings;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
+import software.wings.service.impl.MarketplaceTypeLogContext;
 import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
@@ -1004,29 +1007,31 @@ public class UserResource {
       @QueryParam("company") @NotEmpty String companyName,
       @QueryParam("marketPlaceType") MarketPlaceType marketPlaceType, @PathParam("inviteId") @NotEmpty String inviteId,
       @NotNull UserInvite userInvite) {
-    // only AWS / GCP marketplaces are supported
-    logger.info("Marketplace Signup. Email: {}, marketPlaceType= {}", userInvite.getEmail(), marketPlaceType);
+    try (AutoLogContext ignore1 = new MarketplaceTypeLogContext(marketPlaceType, OVERRIDE_ERROR)) {
+      // only AWS / GCP marketplaces are supported
+      logger.info("Marketplace Signup. marketPlaceType= {}", marketPlaceType);
 
-    try {
-      companyName = URLDecoder.decode(companyName, StandardCharsets.UTF_8.displayName());
-      accountName = URLDecoder.decode(accountName, StandardCharsets.UTF_8.displayName());
-    } catch (UnsupportedEncodingException e) {
-      logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {} Err: {}",
-          accountName, companyName, e.getMessage());
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account Name and Company Name must be UTF-8 compliant.");
+      try {
+        companyName = URLDecoder.decode(companyName, StandardCharsets.UTF_8.displayName());
+        accountName = URLDecoder.decode(accountName, StandardCharsets.UTF_8.displayName());
+      } catch (UnsupportedEncodingException e) {
+        logger.info("Account Name and Company Name must be UTF-8 compliant. accountName: {} companyName: {} Err: {}",
+            accountName, companyName, e.getMessage());
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account Name and Company Name must be UTF-8 compliant.");
+      }
+
+      userInvite.setUuid(inviteId);
+      User user = User.Builder.anUser()
+                      .withEmail(userInvite.getEmail())
+                      .withName(userInvite.getName())
+                      .withPassword(userInvite.getPassword())
+                      .withAccountName(accountName)
+                      .withCompanyName(companyName)
+                      .build();
+
+      User savedUser = userService.completeMarketPlaceSignup(user, userInvite, marketPlaceType);
+      return new RestResponse<>(savedUser);
     }
-
-    userInvite.setUuid(inviteId);
-    User user = User.Builder.anUser()
-                    .withEmail(userInvite.getEmail())
-                    .withName(userInvite.getName())
-                    .withPassword(userInvite.getPassword())
-                    .withAccountName(accountName)
-                    .withCompanyName(companyName)
-                    .build();
-
-    User savedUser = userService.completeMarketPlaceSignup(user, userInvite, marketPlaceType);
-    return new RestResponse<>(savedUser);
   }
 
   @PublicApi
