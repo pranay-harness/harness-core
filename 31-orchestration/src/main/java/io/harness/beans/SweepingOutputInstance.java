@@ -1,8 +1,10 @@
 package io.harness.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputConverter;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.KryoConverter;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -10,6 +12,7 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
@@ -44,6 +47,7 @@ import javax.validation.constraints.NotNull;
 })
 @Entity(value = "sweepingOutput2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Converters({SweepingOutputConverter.class})
 @FieldNameConstants(innerTypeName = "SweepingOutputKeys")
 public class SweepingOutputInstance implements PersistentEntity, UuidAccess {
   @Id private String uuid;
@@ -54,7 +58,15 @@ public class SweepingOutputInstance implements PersistentEntity, UuidAccess {
   private String stateExecutionId;
 
   @NotNull @Trimmed private String name;
-  @Getter private byte[] output;
+
+  public static class SweepingOutputConverter extends KryoConverter {
+    public SweepingOutputConverter() {
+      super(SweepingOutput.class);
+    }
+  }
+
+  @Getter private SweepingOutput value;
+  @Deprecated @Getter private byte[] output;
 
   public enum Scope { PIPELINE, WORKFLOW, PHASE, STATE }
 
