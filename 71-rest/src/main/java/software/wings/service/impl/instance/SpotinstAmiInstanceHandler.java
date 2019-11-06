@@ -164,6 +164,8 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
         Instance instance = instanceBuilder.build();
         instanceService.save(instance);
       });
+
+      logger.info("Instances to be added {}", ec2InstanceIdsToBeAdded.size());
     }
   }
 

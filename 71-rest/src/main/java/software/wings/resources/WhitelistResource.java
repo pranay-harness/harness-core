@@ -1,11 +1,15 @@
 package software.wings.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -126,7 +130,9 @@ public class WhitelistResource {
   @ExceptionMetered
   public RestResponse<Whitelist> save(@QueryParam("accountId") String accountId, Whitelist whitelist) {
     whitelist.setAccountId(accountId);
-    return new RestResponse<>(whitelistService.save(whitelist));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(whitelistService.save(whitelist));
+    }
   }
 
   /**
@@ -145,7 +151,9 @@ public class WhitelistResource {
       @QueryParam("accountId") String accountId, @PathParam("whitelistId") String whitelistId, Whitelist whitelist) {
     whitelist.setUuid(whitelistId);
     whitelist.setAccountId(accountId);
-    return new RestResponse<>(whitelistService.update(whitelist));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(whitelistService.update(whitelist));
+    }
   }
 
   /**
@@ -161,11 +169,15 @@ public class WhitelistResource {
   @ExceptionMetered
   public RestResponse<Boolean> delete(
       @QueryParam("accountId") String accountId, @PathParam("whitelistId") String whitelistId) {
-    return new RestResponse<>(whitelistService.delete(accountId, whitelistId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(whitelistService.delete(accountId, whitelistId));
+    }
   }
 
   @DELETE
   public RestResponse<Boolean> deleteAll(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(whitelistService.deleteAll(accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(whitelistService.deleteAll(accountId));
+    }
   }
 }

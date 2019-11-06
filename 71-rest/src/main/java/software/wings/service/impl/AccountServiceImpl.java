@@ -255,7 +255,7 @@ public class AccountServiceImpl implements AccountService {
 
     publishAccountChangeEvent(account);
 
-    logger.info("Successfully created account '{}' with id '{}'.", account.getAccountName(), account.getUuid());
+    logger.info("Successfully created account with id {}", account.getUuid());
     return account;
   }
 
@@ -427,7 +427,7 @@ public class AccountServiceImpl implements AccountService {
       //      refreshUsersForAccountDelete(accountId);
     }
 
-    logger.info("Successfully deleting account '{}': {}", accountId, deleted);
+    logger.info("Successfully deleted account {}", accountId);
     return deleted;
   }
 
@@ -1007,6 +1007,7 @@ public class AccountServiceImpl implements AccountService {
       scheduleQuartzJobs(accountId);
     }
 
+    logger.info("Updated status for account {}, new status is {}", accountId, accountStatus);
     return true;
   }
 

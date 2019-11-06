@@ -114,8 +114,7 @@ public class AzureInstanceHandler extends InstanceHandler {
                                              .collect(Collectors.toSet());
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
-      logger.info("Total no of Azure instances to be deleted for InfraMappingId: {}, AppId: {} : {}",
-          azureInstance.getInfraMappingId(), azureInstance.getAppId(), instanceIdsToBeDeleted.size());
+      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }

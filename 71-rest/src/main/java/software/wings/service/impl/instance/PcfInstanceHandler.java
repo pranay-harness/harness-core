@@ -147,6 +147,7 @@ public class PcfInstanceHandler extends InstanceHandler {
               instanceIdsToBeDeleted.add(instance.getUuid());
             }
           });
+          logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
 
           logger.info("Total no of instances found in DB for InfraMappingId: {} and AppId: {}, "
                   + "No of instances in DB: {}, No of Running instances: {}, "
@@ -185,6 +186,7 @@ public class PcfInstanceHandler extends InstanceHandler {
                   buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, deploymentSummary);
               instanceService.save(instance);
             });
+            logger.info("Instances to be added {}", instancesToBeAdded.size());
           }
         }
       });

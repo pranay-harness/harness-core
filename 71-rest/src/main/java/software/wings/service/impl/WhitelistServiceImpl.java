@@ -30,7 +30,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.IpWhitelistingFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.utils.CacheManager;
 import software.wings.utils.Validator;
@@ -49,7 +48,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class WhitelistServiceImpl implements WhitelistService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private CacheManager cacheManager;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject @Named(IpWhitelistingFeature.FEATURE_NAME) private PremiumFeature ipWhitelistingFeature;
@@ -61,6 +59,7 @@ public class WhitelistServiceImpl implements WhitelistService {
     Whitelist savedWhitelist = wingsPersistence.saveAndGet(Whitelist.class, whitelist);
     evictWhitelistConfigCache(whitelist.getAccountId());
     eventPublishHelper.publishSetupIPWhitelistingEvent(savedWhitelist.getAccountId(), savedWhitelist.getUuid());
+    logger.info("Created whitelist config {} for account {}", savedWhitelist.getUuid(), savedWhitelist.getAccountId());
     return savedWhitelist;
   }
 
@@ -232,6 +231,7 @@ public class WhitelistServiceImpl implements WhitelistService {
                                  .filter(Whitelist.ACCOUNT_ID_KEY, whitelist.getAccountId());
     wingsPersistence.update(query, operations);
     evictWhitelistConfigCache(whitelist.getAccountId());
+    logger.info("Updated whitelist config {} for account {}", whitelist.getUuid(), whitelist.getAccountId());
     return get(whitelist.getAccountId(), whitelist.getUuid());
   }
 
@@ -245,15 +245,15 @@ public class WhitelistServiceImpl implements WhitelistService {
     boolean delete = wingsPersistence.delete(whitelistQuery);
     if (delete) {
       evictWhitelistConfigCache(whitelist.getAccountId());
+      logger.info("Deleted whitelist config {} for account {}", whitelistId, accountId);
     }
     return delete;
   }
 
   @Override
   public boolean deleteAll(String accountId) {
-    Query<Whitelist> query = wingsPersistence.createQuery(Whitelist.class).filter(Whitelist.ACCOUNT_ID_KEY, accountId);
-
-    return wingsPersistence.delete(query);
+    deleteByAccountId(accountId);
+    return true;
   }
 
   @Override

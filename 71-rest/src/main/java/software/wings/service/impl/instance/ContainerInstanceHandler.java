@@ -202,6 +202,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
             }
           }
 
+          logger.info("Instances to be added {}", instancesToBeAdded.size());
+          logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+
           logger.info(
               "Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {}, InfraMappingId: {} and AppId: {}, "
                   + "No of instances in DB: {}, No of Running instances: {}, "
@@ -282,6 +285,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
+      logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
 
     for (String podName : instancesToBeAdded) {
@@ -295,6 +299,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
           buildInstanceFromPodInfo(containerInfraMapping, currentPodsMap.get(podName), deploymentSummary);
       instanceService.saveOrUpdate(instance);
     }
+
+    logger.info("Instances to be added {}", instancesToBeAdded.size());
   }
 
   private Map<ContainerMetadata, DeploymentSummary> getDeploymentSummaryMap(
