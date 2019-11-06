@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.lang.Math.max;
 import static java.util.stream.Collectors.toList;
@@ -48,6 +49,7 @@ public class Notifier implements Runnable {
 
   private int step = PAGE_SIZE / 3 + new Random().nextInt(PAGE_SIZE / 3);
   private int skip;
+  private boolean alternateSkip;
 
   @Override
   public void run() {
@@ -78,10 +80,11 @@ public class Notifier implements Runnable {
 
   public void executeUnderLock() {
     logger.debug("Execute Notifier response processing");
-    final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                                                     .project(NotifyResponseKeys.uuid, true)
-                                                     .project(NotifyResponseKeys.createdAt, true)
-                                                     .asList(new FindOptions().skip(skip).limit(PAGE_SIZE));
+    final List<NotifyResponse> notifyResponses =
+        persistence.createQuery(NotifyResponse.class, excludeAuthorityCount)
+            .project(NotifyResponseKeys.uuid, true)
+            .project(NotifyResponseKeys.createdAt, true)
+            .asList(new FindOptions().skip(alternateSkip ? skip : 0).limit(PAGE_SIZE));
 
     if (isEmpty(notifyResponses)) {
       logger.debug("There are no NotifyResponse entries to process");
@@ -91,8 +94,11 @@ public class Notifier implements Runnable {
 
     logger.info("Notifier responses {} with skip {}", notifyResponses.size(), skip);
 
-    skip = nextSkip(skip, notifyResponses.size(), step,
-        () -> (int) persistence.createQuery(NotifyResponse.class, excludeAuthority).count());
+    if (alternateSkip) {
+      skip = nextSkip(skip, notifyResponses.size(), step,
+          () -> (int) persistence.createQuery(NotifyResponse.class, excludeAuthority).count());
+    }
+    alternateSkip = !alternateSkip;
 
     Set<String> correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
     Map<String, List<String>> waitInstances = new HashMap<>();
