@@ -47,10 +47,6 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.notifyQueue.find({}).count()"
 
-  - wait_instances_count:
-      check_interval:   10      # seconds
-      query:            "db.waitInstances.find({}).count()"
-
   - prune_queues_count:
       check_interval:   10      # seconds
       query:            "db.pruneQueue2.find({}).count()"
@@ -70,6 +66,10 @@ metrics:
   - state_wait_instance_errors_document_size:
       check_interval:   10      # seconds
       query:            "db.waitInstanceErrors.stats().avgObjSize"
+
+  - wait_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.waitInstances.find({}).count()"
 
   - whitelist_count:
       check_interval:   10      # seconds
