@@ -1,16 +1,21 @@
 package software.wings.resources.limits;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
@@ -22,7 +27,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.HarnessUserGroupService;
 
-import java.util.Arrays;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -44,9 +48,11 @@ public class LimitConfigurationResource {
   @ExceptionMetered
   public RestResponse<Boolean> configureStaticLimit(
       @QueryParam("accountId") String accountId, @QueryParam("action") String action, @Body StaticLimit limit) {
-    checkPermissions(currentUser());
-    Boolean configured = configure(accountId, action, limit);
-    return new RestResponse<>(configured);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      checkPermissions(currentUser());
+      Boolean configured = configure(accountId, action, limit);
+      return new RestResponse<>(configured);
+    }
   }
 
   @POST
@@ -55,15 +61,17 @@ public class LimitConfigurationResource {
   @ExceptionMetered
   public RestResponse<Boolean> configureRateLimit(
       @QueryParam("accountId") String accountId, @QueryParam("action") String action, @Body RateLimit limit) {
-    checkPermissions(currentUser());
-    Boolean configured = configure(accountId, action, limit);
-    return new RestResponse<>(configured);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      checkPermissions(currentUser());
+      Boolean configured = configure(accountId, action, limit);
+      return new RestResponse<>(configured);
+    }
   }
 
   private User currentUser() {
     User user = UserThreadLocal.get();
     if (null == user) {
-      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, "Could not find user");
+      throw new UnauthorizedException("User does not exist", WingsException.USER);
     }
 
     return user;
@@ -72,7 +80,7 @@ public class LimitConfigurationResource {
   private void checkPermissions(User user) {
     boolean isHarnessSupportUser = harnessUserGroupService.isHarnessSupportUser(user.getUuid());
     if (!isHarnessSupportUser) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, "You don't have the permissions to perform this action.");
+      throw new UnauthorizedException("You don't have the permissions to perform this action.", WingsException.USER);
     }
   }
 
@@ -82,8 +90,7 @@ public class LimitConfigurationResource {
     try {
       actionType = ActionType.valueOf(action);
     } catch (IllegalArgumentException e) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT,
-          "Invalid action specified: " + action + ". Allowed action types: " + Arrays.asList(ActionType.values()));
+      throw new InvalidRequestException("Invalid action specified: " + action);
     }
 
     return limitsService.configure(accountId, actionType, limit);

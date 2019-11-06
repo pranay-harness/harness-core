@@ -4,11 +4,9 @@ import static junit.framework.TestCase.fail;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -19,7 +17,6 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   @Inject DashboardSettingsService dashboardSettingsService;
 
   String accountId = "ACCOUNTID";
-  EmbeddedUser embeddedUser1 = EmbeddedUser.builder().name("USER1").uuid("UUID1").email("user1@test.com").build();
 
   @Test
   @Category(UnitTests.class)
@@ -75,7 +72,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
       DashboardSettings updatedSettings = dashboardSettingsService.updateDashboardSettings(accountId, settings);
       fail();
     } catch (WingsException e) {
-      Assertions.assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_DASHBOARD_UPDATE_REQUEST);
+      Assertions.assertThat(e.getMessage()).isEqualTo("Invalid Dashboard update request");
     }
   }
 

@@ -1,10 +1,14 @@
 package io.harness.limits;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.limits.checker.UsageLimitExceededException;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.service.impl.StaticLimitActionTypeLogContext;
 
 import java.util.function.Supplier;
 
@@ -21,19 +25,21 @@ public class LimitEnforcementUtils {
    * @param <T> return type of function (example: {@link software.wings.beans.Application})
    */
   public static <T> T withLimitCheck(StaticLimitCheckerWithDecrement checker, Supplier<T> fn) {
-    boolean allowed = checker.checkAndConsume();
-    if (!allowed) {
-      log.info("Resource Usage Limit Reached. actionType={}, Limit: {}, accountId={}",
-          checker.getAction().getActionType(), checker.getLimit(), checker.getAction().getAccountId());
-      throw new WingsException(
-          ErrorCode.USAGE_LIMITS_EXCEEDED, "Usage Limit Reached. Please contact Harness support.", WingsException.USER);
-    }
+    try (AutoLogContext ignore1 = new AccountLogContext(checker.getAction().getAccountId(), OVERRIDE_ERROR);
+         AutoLogContext ignore2 =
+             new StaticLimitActionTypeLogContext(checker.getAction().getActionType().name(), OVERRIDE_ERROR)) {
+      boolean allowed = checker.checkAndConsume();
+      if (!allowed) {
+        log.info("Resource Usage Limit Reached. Limit: {}", checker.getLimit());
+        throw new UsageLimitExceededException(checker.getLimit(), checker.getAction().getAccountId());
+      }
 
-    try {
-      return fn.get();
-    } catch (Exception e) {
-      checker.decrement();
-      throw e;
+      try {
+        return fn.get();
+      } catch (Exception e) {
+        checker.decrement();
+        throw e;
+      }
     }
   }
 

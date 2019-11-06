@@ -15,9 +15,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.dashboard.DashboardSettings.keys;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.AccountEvent;
@@ -64,6 +63,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
                                     .properties(properties)
                                     .build();
     eventPublishHelper.publishAccountEvent(accountId, accountEvent, false, false);
+    logger.info("Created dashboard for account {}", accountId);
     return savedDashboardSettings;
   }
 
@@ -72,7 +72,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
       @NotNull String accountId, @NotNull DashboardSettings dashboardSettings) {
     String id = dashboardSettings.getUuid();
     if (id == null) {
-      throw new WingsException(ErrorCode.INVALID_DASHBOARD_UPDATE_REQUEST, USER);
+      throw new InvalidRequestException("Invalid Dashboard update request", USER);
     }
 
     DashboardSettings dashboardSettingsBeforeUpdate = get(accountId, id);
@@ -91,6 +91,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     DashboardSettings updatedDashboardSettings = get(accountId, id);
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, dashboardSettingsBeforeUpdate, updatedDashboardSettings, Type.UPDATE);
+    logger.info("Updated dashboard {} for account {}", id, accountId);
     return updatedDashboardSettings;
   }
 
@@ -101,6 +102,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
       boolean deleted = persistence.delete(DashboardSettings.class, dashboardSettingsId);
       if (deleted) {
         auditServiceHelper.reportForAuditingUsingAccountId(accountId, dashboardSettings, null, Type.DELETE);
+        logger.info("Deleted dashboard {} for account {}", dashboardSettingsId, accountId);
       }
       return deleted;
     }

@@ -1,5 +1,7 @@
 package software.wings.service.impl.deployment.checks;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -13,6 +15,8 @@ import io.harness.limits.checker.rate.RateLimitVicinityChecker;
 import io.harness.limits.configuration.NoLimitConfiguredException;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.RateLimitChecker;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.DeployMode;
 import software.wings.dl.WingsPersistence;
@@ -48,36 +52,42 @@ public class DeploymentRateLimitChecker implements PreDeploymentChecker {
    */
   @Override
   public void check(String accountId) {
-    String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
-    if (DeployMode.isOnPrem(deployMode)) {
-      return;
-    }
-
-    Action deployAction = new Action(accountId, ActionType.DEPLOY);
-    final int warningPercentage = percentToWarnOn();
-
-    try {
-      RateLimitChecker checker = (RateLimitChecker) limitCheckerFactory.getInstance(deployAction);
-      RateLimitChecker shortDurationChecker = shortDurationChecker(checker, deployAction);
-
-      if (null != shortDurationChecker && !shortDurationChecker.checkAndConsume()) {
-        logger.info("Short Duration Deployment Limit Reached. Limit: {} , accountId={}",
-            shortDurationChecker.getLimit(), accountId);
-        throw new UsageLimitExceededException(shortDurationChecker.getLimit(), accountId);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
+      if (DeployMode.isOnPrem(deployMode)) {
+        return;
       }
 
-      if (!checker.checkAndConsume()) {
-        throw new UsageLimitExceededException(checker.getLimit(), accountId);
-      }
+      Action deployAction = new Action(accountId, ActionType.DEPLOY);
+      final int warningPercentage = percentToWarnOn();
 
-      RateLimitVicinityChecker vicinityChecker = (RateLimitVicinityChecker) checker;
-      if (vicinityChecker.crossed(warningPercentage)) {
-        throw new LimitApproachingException(vicinityChecker.getLimit(), accountId, warningPercentage);
+      try {
+        RateLimitChecker checker = (RateLimitChecker) limitCheckerFactory.getInstance(deployAction);
+        RateLimitChecker shortDurationChecker = shortDurationChecker(checker, deployAction);
+
+        if (null != shortDurationChecker && !shortDurationChecker.checkAndConsume()) {
+          logger.info("Short Duration Deployment Limit Reached. accountId={}, Limit: {}", accountId,
+              shortDurationChecker.getLimit());
+          throw new UsageLimitExceededException(shortDurationChecker.getLimit(), accountId);
+        }
+
+        if (!checker.checkAndConsume()) {
+          RateLimit limit = checker.getLimit();
+          logger.info("Deployment Limit Reached. accountId={}, Limit: {}", accountId, limit.getCount());
+          throw new UsageLimitExceededException(limit, accountId);
+        }
+
+        RateLimitVicinityChecker vicinityChecker = (RateLimitVicinityChecker) checker;
+        if (vicinityChecker.crossed(warningPercentage)) {
+          RateLimit limit = vicinityChecker.getLimit();
+          logger.info("Deployment vicinity reached. accountId={}, Limit: {}", accountId, limit.getCount());
+          throw new LimitApproachingException(limit, accountId, warningPercentage);
+        }
+      } catch (NoLimitConfiguredException e) {
+        logger.error(
+            "No limit is configured for action: {} for account {}. Deployments will be allowed to maintain backward compatibility. But deployments are NOT being rate limited.",
+            deployAction, accountId, e);
       }
-    } catch (NoLimitConfiguredException e) {
-      logger.error(
-          "No limit is configured for action: {}. Deployments will be allowed to maintain backward compatibility. But deployments are NOT being rate limited.",
-          deployAction, e);
     }
   }
 
