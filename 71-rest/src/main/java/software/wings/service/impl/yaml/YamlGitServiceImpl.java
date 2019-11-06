@@ -9,6 +9,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -48,7 +49,9 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -620,85 +623,91 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public String processWebhookPost(
       String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers) {
-    List<SettingAttribute> settingAttributes =
-        wingsPersistence.createQuery(SettingAttribute.class)
-            .filter(ACCOUNT_ID_KEY, accountId)
-            .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT.name())
-            .asList();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      List<SettingAttribute> settingAttributes =
+          wingsPersistence.createQuery(SettingAttribute.class)
+              .filter(ACCOUNT_ID_KEY, accountId)
+              .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT.name())
+              .asList();
 
-    if (isEmpty(settingAttributes)) {
-      logger.info(GIT_YAML_LOG_PREFIX + "Git connector not found with accountId" + accountId);
-      throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
-    }
-
-    String gitConnectorId = null;
-    for (SettingAttribute settingAttribute : settingAttributes) {
-      SettingValue settingValue = settingAttribute.getValue();
-
-      if (settingValue instanceof GitConfig && webhookToken.equals(((GitConfig) settingValue).getWebhookToken())) {
-        gitConnectorId = settingAttribute.getUuid();
-        break;
+      if (isEmpty(settingAttributes)) {
+        logger.info(GIT_YAML_LOG_PREFIX + "Git connector not found with accountId" + accountId);
+        throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
       }
-    }
 
-    if (isEmpty(gitConnectorId)) {
-      throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
-    }
+      String gitConnectorId = null;
+      for (SettingAttribute settingAttribute : settingAttributes) {
+        SettingValue settingValue = settingAttribute.getValue();
 
-    boolean gitPingEvent = webhookEventUtils.isGitPingEvent(headers);
-    if (gitPingEvent) {
-      return "Found ping event. Only push events are supported";
-    }
+        if (settingValue instanceof GitConfig && webhookToken.equals(((GitConfig) settingValue).getWebhookToken())) {
+          gitConnectorId = settingAttribute.getUuid();
+          break;
+        }
+      }
 
-    String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
-    if (isEmpty(branchName)) {
+      if (isEmpty(gitConnectorId)) {
+        throw new InvalidRequestException("Git connector not found with webhook token " + webhookToken, USER);
+      }
+
+      boolean gitPingEvent = webhookEventUtils.isGitPingEvent(headers);
+      if (gitPingEvent) {
+        return "Found ping event. Only push events are supported";
+      }
+
+      String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
+      if (isEmpty(branchName)) {
+        logger.info(
+            format(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: %s, yamlWebHookPayload: %s, headers: %s",
+                webhookToken, yamlWebHookPayload, headers));
+        throw new InvalidRequestException("Branch not found from webhook payload", USER);
+      }
+
+      List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
+                                               .filter(ACCOUNT_ID_KEY, accountId)
+                                               .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
+                                               .filter(BRANCH_NAME_KEY, branchName)
+                                               .asList();
+      if (isEmpty(yamlGitConfigs)) {
+        logger.info(format(GIT_YAML_LOG_PREFIX
+                + "Git sync configuration not found with branch %s, gitConnectorId %s, webhookToken %s, webhookPayload %s",
+            branchName, gitConnectorId, webhookToken, yamlWebHookPayload));
+        throw new InvalidRequestException("Git sync configuration not found with branch " + branchName, USER);
+      }
+
+      YamlGitConfig yamlGitConfig = yamlGitConfigs.get(0);
+      List<String> yamlGitConfigIds = yamlGitConfigs.stream().map(YamlGitConfig::getUuid).collect(toList());
+      GitCommit gitCommit = fetchLastProcessedGitCommitId(accountId, yamlGitConfigIds);
+
+      String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
+
+      String waitId = generateUuid();
+      GitConfig gitConfig = getGitConfig(yamlGitConfig);
+      DelegateTask delegateTask = DelegateTask.builder()
+                                      .async(true)
+                                      .accountId(accountId)
+                                      .appId(GLOBAL_APP_ID)
+                                      .waitId(waitId)
+                                      .data(TaskData.builder()
+                                                .taskType(TaskType.GIT_COMMAND.name())
+                                                .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
+                                                    secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
+                                                    GitDiffRequest.builder()
+                                                        .lastProcessedCommitId(processedCommit)
+                                                        .yamlGitConfig(yamlGitConfig)
+                                                        .build()})
+                                                .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                .build())
+                                      .build();
+
+      waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
+      delegateService.queueTask(delegateTask);
+
       logger.info(
-          format(GIT_YAML_LOG_PREFIX + "Branch not found. webhookToken: %s, yamlWebHookPayload: %s, headers: %s",
-              webhookToken, yamlWebHookPayload, headers));
-      throw new InvalidRequestException("Branch not found from webhook payload", USER);
+          "Successfully queued webhook request for processing for branch [{}], gitConnectorId[{}], webhookToken [{}] ",
+          branchName, gitConnectorId, webhookToken);
+
+      return "Successfully queued webhook request for processing";
     }
-
-    List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
-                                             .filter(ACCOUNT_ID_KEY, accountId)
-                                             .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
-                                             .filter(BRANCH_NAME_KEY, branchName)
-                                             .asList();
-    if (isEmpty(yamlGitConfigs)) {
-      logger.info(format(GIT_YAML_LOG_PREFIX
-              + "Git sync configuration not found with branch %s, gitConnectorId %s, webhookToken %s, webhookPayload %s",
-          branchName, gitConnectorId, webhookToken, yamlWebHookPayload));
-      throw new InvalidRequestException("Git sync configuration not found with branch " + branchName, USER);
-    }
-
-    YamlGitConfig yamlGitConfig = yamlGitConfigs.get(0);
-    List<String> yamlGitConfigIds = yamlGitConfigs.stream().map(YamlGitConfig::getUuid).collect(toList());
-    GitCommit gitCommit = fetchLastProcessedGitCommitId(accountId, yamlGitConfigIds);
-
-    String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
-
-    String waitId = generateUuid();
-    GitConfig gitConfig = getGitConfig(yamlGitConfig);
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .async(true)
-                                    .accountId(accountId)
-                                    .appId(GLOBAL_APP_ID)
-                                    .waitId(waitId)
-                                    .data(TaskData.builder()
-                                              .taskType(TaskType.GIT_COMMAND.name())
-                                              .parameters(new Object[] {GitCommandType.DIFF, gitConfig,
-                                                  secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
-                                                  GitDiffRequest.builder()
-                                                      .lastProcessedCommitId(processedCommit)
-                                                      .yamlGitConfig(yamlGitConfig)
-                                                      .build()})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
-
-    waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
-    delegateService.queueTask(delegateTask);
-
-    return "Successfuly queued webhook request for processing";
   }
 
   @Override
