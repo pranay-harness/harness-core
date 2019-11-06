@@ -139,12 +139,8 @@ public class BuildSourceCallback implements NotifyCallback {
       }
       if (isNotEmpty(artifacts)) {
         artifacts.stream().limit(MAX_LOGS).forEach(artifact -> {
-          try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-               AutoLogContext ignore2 = new ArtifactStreamLogContext(
-                   artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
-            logger.info("Build number {} new artifacts collected for artifactStreamId {}", artifact.getBuildNo(),
-                artifactStream.getUuid());
-          }
+          logger.info("Build number {} new artifacts collected for artifactStreamId {}", artifact.getBuildNo(),
+              artifactStream.getUuid());
         });
 
         if (isUnstable) {
@@ -176,17 +172,21 @@ public class BuildSourceCallback implements NotifyCallback {
     ResponseData notifyResponseData = response.values().iterator().next();
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     logger.info("In notify for artifact stream id: [{}]", artifactStreamId);
-    if (notifyResponseData instanceof BuildSourceExecutionResponse) {
-      if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
-        handleResponseForSuccess(notifyResponseData, artifactStream);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ArtifactStreamLogContext(
+             artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
+      if (notifyResponseData instanceof BuildSourceExecutionResponse) {
+        if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
+          handleResponseForSuccess(notifyResponseData, artifactStream);
+        } else {
+          logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
+              ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
+          //        permitService.releasePermit(permitId, true);
+          updatePermit(artifactStream, true);
+        }
       } else {
-        logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
-            ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
-        //        permitService.releasePermit(permitId, true);
-        updatePermit(artifactStream, true);
+        notifyError(response);
       }
-    } else {
-      notifyError(response);
     }
   }
 
