@@ -10,7 +10,7 @@ import java.util.List;
 public interface LicenseService {
   String LICENSE_INFO = "LICENSE_INFO";
 
-  void checkForLicenseExpiry();
+  void checkForLicenseExpiry(Account account);
 
   Account addLicenseInfo(Account account);
 

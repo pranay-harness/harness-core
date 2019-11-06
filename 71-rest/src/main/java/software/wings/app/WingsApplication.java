@@ -126,6 +126,7 @@ import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.UsageMetricsJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.YamlChangeSetPruneJob;
+import software.wings.scheduler.account.LicenseCheckHandler;
 import software.wings.scheduler.approval.ApprovalPollingHandler;
 import software.wings.scheduler.audit.EntityAuditRecordHandler;
 import software.wings.scheduler.ecs.ECSPollingHandler;
@@ -614,6 +615,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(ArtifactCollectionHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(ArtifactCleanupHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(InstanceSyncHandler.class).registerIterators();
+    injector.getInstance(LicenseCheckHandler.class).registerIterators();
     injector.getInstance(ApprovalPollingHandler.class).registerIterators();
     injector.getInstance(ScheduleTriggerHandler.class).registerIterators();
     injector.getInstance(ECSPollingHandler.class).registerIterators();

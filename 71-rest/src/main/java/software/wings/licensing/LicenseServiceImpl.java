@@ -3,21 +3,18 @@ package software.wings.licensing;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.LICENSE_EXPIRED;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HIterator;
 import io.harness.security.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
@@ -64,19 +61,28 @@ public class LicenseServiceImpl implements LicenseService {
   private static final String EMAIL_BODY_ACCOUNT_EXPIRED = "Customer License has Expired";
   private static final String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
 
-  @Inject private AccountService accountService;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private GenericDbCache dbCache;
-  @Inject private ExecutorService executorService;
-  @Inject private LicenseProvider licenseProvider;
-  @Inject private EmailNotificationService emailNotificationService;
-  @Inject private EventPublishHelper eventPublishHelper;
-  @Inject private MainConfiguration mainConfiguration;
+  private AccountService accountService;
+  private WingsPersistence wingsPersistence;
+  private GenericDbCache dbCache;
+  private ExecutorService executorService;
+  private LicenseProvider licenseProvider;
+  private EmailNotificationService emailNotificationService;
+  private EventPublishHelper eventPublishHelper;
+  private List<String> trialDefaultContacts;
+  private List<String> paidDefaultContacts;
 
-  @Override
-  public void checkForLicenseExpiry() {
-    List<String> trialDefaultContacts = null;
-    List<String> paidDefaultContacts = null;
+  @Inject
+  public LicenseServiceImpl(AccountService accountService, WingsPersistence wingsPersistence, GenericDbCache dbCache,
+      ExecutorService executorService, LicenseProvider licenseProvider,
+      EmailNotificationService emailNotificationService, EventPublishHelper eventPublishHelper,
+      MainConfiguration mainConfiguration) {
+    this.accountService = accountService;
+    this.wingsPersistence = wingsPersistence;
+    this.dbCache = dbCache;
+    this.executorService = executorService;
+    this.licenseProvider = licenseProvider;
+    this.emailNotificationService = emailNotificationService;
+    this.eventPublishHelper = eventPublishHelper;
 
     DefaultSalesContacts defaultSalesContacts = mainConfiguration.getDefaultSalesContacts();
     if (defaultSalesContacts != null && defaultSalesContacts.isEnabled()) {
@@ -98,55 +104,50 @@ public class LicenseServiceImpl implements LicenseService {
         }
       }
     }
+  }
 
-    Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
-    query.project("_id", true);
-    try (HIterator<Account> records = new HIterator<>(query.fetch())) {
-      while (records.hasNext()) {
-        Account account = records.next();
-        try {
-          account = accountService.get(account.getUuid());
-          LicenseInfo licenseInfo = account.getLicenseInfo();
+  @Override
+  public void checkForLicenseExpiry(Account account) {
+    try {
+      account = accountService.get(account.getUuid());
+      LicenseInfo licenseInfo = account.getLicenseInfo();
 
-          if (licenseInfo == null) {
-            continue;
-          }
-
-          String accountStatus = licenseInfo.getAccountStatus();
-          String accountType = licenseInfo.getAccountType();
-          if (isEmpty(accountType)) {
-            continue;
-          }
-
-          if (accountType.equals(AccountType.COMMUNITY)) {
-            continue;
-          }
-
-          long expiryTime = licenseInfo.getExpiryTime();
-          long currentTime = System.currentTimeMillis();
-          if (currentTime < expiryTime) {
-            if (accountType.equals(AccountType.PAID) || accountType.equals(AccountType.ESSENTIALS)) {
-              if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= Duration.ofDays(30).toMillis())) {
-                sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
-                    EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, paidDefaultContacts);
-              }
-            } else if (accountType.equals(AccountType.TRIAL)) {
-              boolean lessThan7DaysLeftForLicenseExpiry = (expiryTime - currentTime) <= Duration.ofDays(7).toMillis();
-              if (!account.isEmailSentToSales() && lessThan7DaysLeftForLicenseExpiry) {
-                sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
-                    EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
-              }
-            }
-          } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
-            expireLicense(account.getUuid(), licenseInfo);
-            sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED,
-                EMAIL_BODY_ACCOUNT_EXPIRED,
-                accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
-          }
-        } catch (Exception e) {
-          logger.warn("Failed to check license info for account id {}", account.getUuid(), e);
-        }
+      if (licenseInfo == null) {
+        return;
       }
+
+      String accountStatus = licenseInfo.getAccountStatus();
+      String accountType = licenseInfo.getAccountType();
+      if (isEmpty(accountType)) {
+        return;
+      }
+
+      if (accountType.equals(AccountType.COMMUNITY)) {
+        return;
+      }
+
+      long expiryTime = licenseInfo.getExpiryTime();
+      long currentTime = System.currentTimeMillis();
+      if (currentTime < expiryTime) {
+        if (accountType.equals(AccountType.PAID) || accountType.equals(AccountType.ESSENTIALS)) {
+          if (!account.isEmailSentToSales() && ((expiryTime - currentTime) <= Duration.ofDays(30).toMillis())) {
+            sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
+                EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, paidDefaultContacts);
+          }
+        } else if (accountType.equals(AccountType.TRIAL)) {
+          boolean lessThan7DaysLeftForLicenseExpiry = (expiryTime - currentTime) <= Duration.ofDays(7).toMillis();
+          if (!account.isEmailSentToSales() && lessThan7DaysLeftForLicenseExpiry) {
+            sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE,
+                EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE, trialDefaultContacts);
+          }
+        }
+      } else if (AccountStatus.ACTIVE.equals(accountStatus)) {
+        expireLicense(account.getUuid(), licenseInfo);
+        sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED, EMAIL_BODY_ACCOUNT_EXPIRED,
+            accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
+      }
+    } catch (Exception e) {
+      logger.warn("Failed to check license info for account id {}", account.getUuid(), e);
     }
   }
 
@@ -213,7 +214,7 @@ public class LicenseServiceImpl implements LicenseService {
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (licenseInfo == null) {
       if (!DeployMode.isOnPrem(deployMode)) {
-        throw new WingsException("Invalid / Null license info", USER);
+        throw new InvalidRequestException("Invalid / Null license info", USER);
       } else {
         return account;
       }
@@ -227,15 +228,15 @@ public class LicenseServiceImpl implements LicenseService {
 
   private byte[] getEncryptedLicenseInfo(LicenseInfo licenseInfo) {
     if (licenseInfo == null) {
-      throw new WingsException("Invalid / Null license info", USER);
+      throw new InvalidRequestException("Invalid / Null license info", USER);
     }
 
     if (!AccountStatus.isValid(licenseInfo.getAccountStatus())) {
-      throw new WingsException("Invalid / Null license info account status", USER);
+      throw new InvalidRequestException("Invalid / Null license info account status", USER);
     }
 
     if (!AccountType.isValid(licenseInfo.getAccountType())) {
-      throw new WingsException("Invalid / Null license info account type", USER);
+      throw new InvalidRequestException("Invalid / Null license info account type", USER);
     }
 
     if (licenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
@@ -256,7 +257,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     if (licenseInfo.getExpiryTime() == 0L) {
-      throw new WingsException("No expiry set. Cannot proceed.", USER);
+      throw new InvalidRequestException("No expiry set. Cannot proceed.", USER);
     }
 
     if (licenseInfo.getAccountType().equals(AccountType.TRIAL)) {
@@ -266,7 +267,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     if (licenseInfo.getLicenseUnits() <= 0) {
-      throw new WingsException("Invalid number of license units. Cannot proceed.", USER);
+      throw new InvalidRequestException("Invalid number of license units. Cannot proceed.", USER);
     }
 
     return EncryptionUtils.encrypt(LicenseUtils.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
@@ -285,7 +286,7 @@ public class LicenseServiceImpl implements LicenseService {
 
   private byte[] getEncryptedLicenseInfoForUpdate(LicenseInfo currentLicenseInfo, LicenseInfo newLicenseInfo) {
     if (newLicenseInfo == null) {
-      throw new WingsException("Invalid / Null license info for update", USER);
+      throw new InvalidRequestException("Invalid / Null license info for update", USER);
     }
 
     if (currentLicenseInfo == null) {
@@ -294,7 +295,7 @@ public class LicenseServiceImpl implements LicenseService {
 
     if (isNotEmpty(newLicenseInfo.getAccountStatus())) {
       if (!AccountStatus.isValid(newLicenseInfo.getAccountStatus())) {
-        throw new WingsException("Invalid / Null license info account status", USER);
+        throw new InvalidRequestException("Invalid / Null license info account status", USER);
       }
       currentLicenseInfo.setAccountStatus(newLicenseInfo.getAccountStatus());
     }
@@ -303,7 +304,7 @@ public class LicenseServiceImpl implements LicenseService {
     long resetExpiryTime = 0;
     if (isNotEmpty(newLicenseInfo.getAccountType())) {
       if (!AccountType.isValid(newLicenseInfo.getAccountType())) {
-        throw new WingsException("Invalid / Null license info account type", USER);
+        throw new InvalidRequestException("Invalid / Null license info account type", USER);
       }
 
       if (isNotEmpty(newLicenseInfo.getAccountType())
@@ -324,11 +325,11 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     if (isEmpty(currentLicenseInfo.getAccountStatus())) {
-      throw new WingsException("Null license info account status. Cannot proceed with update", USER);
+      throw new InvalidRequestException("Null license info account status. Cannot proceed with update", USER);
     }
 
     if (isEmpty(currentLicenseInfo.getAccountType())) {
-      throw new WingsException("Null license info account type. Cannot proceed with update", USER);
+      throw new InvalidRequestException("Null license info account type. Cannot proceed with update", USER);
     }
 
     if (currentLicenseInfo.getAccountType().equals(AccountType.COMMUNITY)) {
@@ -340,7 +341,7 @@ public class LicenseServiceImpl implements LicenseService {
       } else if (newLicenseInfo.getExpiryTime() > 0
           && newLicenseInfo.getExpiryTime() != currentLicenseInfo.getExpiryTime()) {
         if (newLicenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
-          throw new WingsException("Expiry time less than current time. Cannot proceed with update", USER);
+          throw new InvalidRequestException("Expiry time less than current time. Cannot proceed with update", USER);
         }
         currentLicenseInfo.setExpiryTime(newLicenseInfo.getExpiryTime());
       } else {
@@ -351,7 +352,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     if (currentLicenseInfo.getExpiryTime() == 0L) {
-      throw new WingsException("No expiry set. Cannot proceed with update", USER);
+      throw new InvalidRequestException("No expiry set. Cannot proceed with update", USER);
     }
 
     if (newLicenseInfo.getLicenseUnits() > 0) {
@@ -361,7 +362,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     if (currentLicenseInfo.getLicenseUnits() <= 0) {
-      throw new WingsException("Invalid number of license units. Cannot proceed with update", USER);
+      throw new InvalidRequestException("Invalid number of license units. Cannot proceed with update", USER);
     }
 
     return EncryptionUtils.encrypt(
@@ -443,7 +444,7 @@ public class LicenseServiceImpl implements LicenseService {
   @Override
   public String generateLicense(LicenseInfo licenseInfo) {
     if (licenseInfo == null) {
-      throw new WingsException("Invalid license info", USER);
+      throw new InvalidRequestException("Invalid license info", USER);
     }
 
     return encodeBase64(getEncryptedLicenseInfo(licenseInfo));
@@ -454,13 +455,13 @@ public class LicenseServiceImpl implements LicenseService {
     try {
       if (isEmpty(encryptedLicenseInfoBase64String)) {
         String msg = "Couldn't find license info";
-        throw new WingsException(msg);
+        throw new InvalidRequestException(msg);
       }
 
       List<Account> accountList = accountService.listAllAccounts();
       if (accountList == null) {
         String msg = "Couldn't find any accounts in DB";
-        throw new WingsException(msg);
+        throw new InvalidRequestException(msg);
       }
 
       accountList.forEach(account -> {
@@ -477,13 +478,13 @@ public class LicenseServiceImpl implements LicenseService {
             if (licenseInfo != null) {
               updateAccountLicense(account.getUuid(), licenseInfo);
             } else {
-              throw new WingsException("No license info could be extracted from the encrypted license info");
+              throw new InvalidRequestException("No license info could be extracted from the encrypted license info");
             }
           }
         }
       });
     } catch (Exception ex) {
-      throw new WingsException("Error while updating account license for on-prem", ex);
+      throw new InvalidRequestException("Error while updating account license for on-prem", ex);
     }
   }
 
@@ -510,11 +511,11 @@ public class LicenseServiceImpl implements LicenseService {
     String accountStatus = licenseInfo.getAccountStatus();
 
     if (isEmpty(accountType)) {
-      throw new WingsException("Account type is null for account :" + accountId);
+      throw new InvalidRequestException("Account type is null for account :" + accountId);
     }
 
     if (isEmpty(accountStatus)) {
-      throw new WingsException("Account status is null for account :" + accountId);
+      throw new InvalidRequestException("Account status is null for account :" + accountId);
     }
 
     if (AccountType.COMMUNITY.equals(accountType)) {
@@ -547,14 +548,13 @@ public class LicenseServiceImpl implements LicenseService {
     Account account = accountService.get(accountId);
     LicenseInfo licenseInfo = account.getLicenseInfo();
     if (licenseInfo == null) {
-      throw new WingsException(LICENSE_EXPIRED);
+      throw new InvalidRequestException("license Info not present");
     }
 
     if (licenseInfo.getExpiryTime() > 0 && System.currentTimeMillis() > licenseInfo.getExpiryTime()) {
       licenseProvider.get(account.getLicenseId());
-      // throw new WingsException(LICENSE_NOT_ALLOWED);
     } else {
-      throw new WingsException(LICENSE_EXPIRED);
+      throw new InvalidRequestException("Invalid expiry time");
     }
   }
 
