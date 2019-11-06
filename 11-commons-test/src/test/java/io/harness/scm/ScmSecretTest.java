@@ -45,6 +45,15 @@ public class ScmSecretTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testDecrypt() {
+    if (!scmSecret.isInitialized()) {
+      return;
+    }
+    assertThat(scmSecret.decryptToString(new SecretName("aws_playground_access_key"))).isNotEmpty();
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testEncoding() {
     if (!scmSecret.isInitialized()) {
       return;
