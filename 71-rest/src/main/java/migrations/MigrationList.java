@@ -120,7 +120,6 @@ import migrations.all.UpdatePipelineParallelIndexes;
 import migrations.all.UsageRestrictionsMigration;
 import migrations.all.UserPermissionReadMigration;
 import migrations.all.VerificationMetricJobMigration;
-import migrations.all.WaitInstanceMigration;
 import migrations.all.YamlGitConfigAppMigration;
 import migrations.all.YamlGitConfigMigration;
 import migrations.all.YamlGitConfigRefactoringMigration;
@@ -290,7 +289,7 @@ public class MigrationList {
         .add(Pair.of(281, PcfServiceSpecificationToManifestFileMigration.class))
         .add(Pair.of(282, PcfServiceDeploymentMigration.class))
         .add(Pair.of(283, StackdriverServiceGuardMetricsGroupingMigration.class))
-        .add(Pair.of(284, WaitInstanceMigration.class))
+        .add(Pair.of(284, BaseMigration.class))
         .build();
   }
 }

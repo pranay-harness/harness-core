@@ -1,12 +1,10 @@
 package io.harness.waiter;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
@@ -21,8 +19,6 @@ import io.harness.queue.Queue;
 import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +34,7 @@ import java.util.Set;
 @Singleton
 @Slf4j
 public class WaitNotifyEngine {
-  @Inject private HPersistence persistence;
+  @Inject private HPersistence wingsPersistence;
   @Inject private Queue<NotifyEvent> notifyQueue;
 
   public String waitForAll(NotifyCallback callback, String... correlationIds) {
@@ -50,17 +46,16 @@ public class WaitNotifyEngine {
 
     final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder().uuid(generateUuid()).callback(callback);
 
-    final List<String> list;
     if (correlationIds.length == 1) {
-      list = singletonList(correlationIds[0]);
+      waitInstanceBuilder.correlationIds(Collections.singletonList(correlationIds[0]));
     } else {
       // In case of multiple items, we have to make sure that all of them are unique
       Set<String> set = new HashSet<>();
       Collections.addAll(set, correlationIds);
-      list = new ArrayList<>(set);
+      waitInstanceBuilder.correlationIds(new ArrayList<>(set));
     }
 
-    return persistence.save(waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list).build());
+    return wingsPersistence.save(waitInstanceBuilder.build());
   }
 
   public <T extends ResponseData> String notify(String correlationId, T response) {
@@ -75,26 +70,19 @@ public class WaitNotifyEngine {
     }
 
     try {
-      String notificationId = persistence.save(NotifyResponse.<T>builder()
-                                                   .uuid(correlationId)
-                                                   .createdAt(currentTimeMillis())
-                                                   .response(response)
-                                                   .error(error || response instanceof ErrorNotifyResponseData)
-                                                   .build());
+      String notificationId = wingsPersistence.save(NotifyResponse.<T>builder()
+                                                        .uuid(correlationId)
+                                                        .createdAt(currentTimeMillis())
+                                                        .response(response)
+                                                        .error(error)
+                                                        .build());
 
-      final Query<WaitInstance> query = persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                            .filter(WaitInstanceKeys.waitingOnCorrelationIds, correlationId);
+      final List<WaitInstance> waitInstances = wingsPersistence.createQuery(WaitInstance.class, excludeAuthority)
+                                                   .filter(WaitInstanceKeys.correlationIds, correlationId)
+                                                   .asList();
 
-      final UpdateOperations<WaitInstance> operations =
-          persistence.createUpdateOperations(WaitInstance.class)
-              .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, correlationId);
-
-      WaitInstance waitInstance;
-      while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
-        if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
-          notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
-        }
-      }
+      waitInstances.forEach(
+          waitInstance -> notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).error(error).build()));
 
       return notificationId;
     } catch (DuplicateKeyException exception) {
