@@ -10,8 +10,8 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.Scope;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
@@ -136,7 +136,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   private boolean allPhaseRollbackDone(ExecutionContext context) {
     SweepingOutputInquiry sweepingOutputInquiry =
         context.prepareSweepingOutputInquiryBuilder().name(AWS_AMI_ALL_PHASE_ROLLBACK_NAME).build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInquiry);
+    SweepingOutputInstance result = sweepingOutputService.find(sweepingOutputInquiry);
     if (result == null) {
       return false;
     }

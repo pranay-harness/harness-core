@@ -24,8 +24,8 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.Scope;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -440,7 +440,7 @@ public class K8sStateHelper {
 
   public K8sElement getK8sElement(ExecutionContext context) {
     SweepingOutputInquiry sweepingOutputInquiry = context.prepareSweepingOutputInquiryBuilder().name("k8s").build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInquiry);
+    SweepingOutputInstance result = sweepingOutputService.find(sweepingOutputInquiry);
     if (result == null) {
       return null;
     }

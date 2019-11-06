@@ -5,7 +5,7 @@ import static software.wings.beans.VariableType.ARTIFACT;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.serializer.KryoUtils;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
@@ -33,7 +33,7 @@ public class TemplateUtils {
     if (artifact == null) {
       return;
     }
-    sweepingOutputService.ensure(context.prepareSweepingOutputBuilder(SweepingOutput.Scope.STATE)
+    sweepingOutputService.ensure(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.STATE)
                                      .name(name)
                                      .output(KryoUtils.asDeflatedBytes(artifact))
                                      .build());

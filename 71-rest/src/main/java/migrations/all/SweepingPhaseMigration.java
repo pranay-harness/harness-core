@@ -4,8 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.SweepingOutputKeys;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -16,16 +16,16 @@ public class SweepingPhaseMigration implements Migration {
 
   @Override
   public void migrate() {
-    try (HIterator<SweepingOutput> iterator =
-             new HIterator<SweepingOutput>(wingsPersistence.createQuery(SweepingOutput.class)
-                                               .field(SweepingOutputKeys.phaseExecutionId)
-                                               .doesNotExist()
-                                               .fetch())) {
-      for (SweepingOutput sweepingOutput : iterator) {
-        final UpdateOperations<SweepingOutput> updateOperations =
-            wingsPersistence.createUpdateOperations(SweepingOutput.class)
+    try (HIterator<SweepingOutputInstance> iterator =
+             new HIterator<SweepingOutputInstance>(wingsPersistence.createQuery(SweepingOutputInstance.class)
+                                                       .field(SweepingOutputKeys.phaseExecutionId)
+                                                       .doesNotExist()
+                                                       .fetch())) {
+      for (SweepingOutputInstance sweepingOutputInstance : iterator) {
+        final UpdateOperations<SweepingOutputInstance> updateOperations =
+            wingsPersistence.createUpdateOperations(SweepingOutputInstance.class)
                 .set(SweepingOutputKeys.phaseExecutionId, generateUuid());
-        wingsPersistence.update(sweepingOutput, updateOperations);
+        wingsPersistence.update(sweepingOutputInstance, updateOperations);
       }
     }
   }

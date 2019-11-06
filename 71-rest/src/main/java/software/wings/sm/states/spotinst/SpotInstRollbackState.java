@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.Scope;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.serializer.KryoUtils;
 import io.harness.spotinst.model.ElastiGroup;
@@ -77,7 +77,7 @@ public class SpotInstRollbackState extends SpotInstDeployState {
   protected boolean allPhaseRollbackDone(ExecutionContext context) {
     SweepingOutputInquiry sweepingOutputInquiry =
         context.prepareSweepingOutputInquiryBuilder().name(ELASTI_GROUP_ALL_PHASE_ROLLBACK).build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInquiry);
+    SweepingOutputInstance result = sweepingOutputService.find(sweepingOutputInquiry);
     if (result == null) {
       return false;
     }

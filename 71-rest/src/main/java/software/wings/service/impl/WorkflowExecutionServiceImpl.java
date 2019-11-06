@@ -76,7 +76,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.beans.SweepingOutput.Scope;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.cache.Distributable;
 import io.harness.cache.Ordinal;

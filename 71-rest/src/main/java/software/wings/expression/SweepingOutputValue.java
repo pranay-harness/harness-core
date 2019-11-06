@@ -1,6 +1,6 @@
 package software.wings.expression;
 
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.LateBindingValue;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
@@ -15,10 +15,10 @@ public class SweepingOutputValue implements LateBindingValue {
 
   @Override
   public Object bind() {
-    SweepingOutput sweepingOutput = sweepingOutputService.find(sweepingOutputInquiry);
-    if (sweepingOutput == null) {
+    SweepingOutputInstance sweepingOutputInstance = sweepingOutputService.find(sweepingOutputInquiry);
+    if (sweepingOutputInstance == null) {
       return null;
     }
-    return KryoUtils.asInflatedObject(sweepingOutput.getOutput());
+    return KryoUtils.asInflatedObject(sweepingOutputInstance.getOutput());
   }
 }

@@ -1,8 +1,8 @@
 package io.harness.generator;
 
-import static io.harness.beans.SweepingOutput.Scope.PHASE;
-import static io.harness.beans.SweepingOutput.Scope.PIPELINE;
-import static io.harness.beans.SweepingOutput.Scope.WORKFLOW;
+import static io.harness.beans.SweepingOutputInstance.Scope.PHASE;
+import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
+import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;

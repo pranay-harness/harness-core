@@ -1,7 +1,7 @@
 package io.harness.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.SweepingOutput.SweepingOutputKeys;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "sweepingOutput2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SweepingOutputKeys")
-public class SweepingOutput implements PersistentEntity, UuidAccess {
+public class SweepingOutputInstance implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   private String appId;
   private String pipelineExecutionId;

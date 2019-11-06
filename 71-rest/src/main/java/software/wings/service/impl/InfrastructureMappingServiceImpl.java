@@ -56,7 +56,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -2285,7 +2285,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String phaseExecutionId = phaseElement.getPhaseExecutionIdForSweepingOutput();
     sweepingOutputService.save(SweepingOutputServiceImpl
                                    .prepareSweepingOutputBuilder(appId, null, workflowExecutionId, phaseExecutionId,
-                                       null, SweepingOutput.Scope.PHASE)
+                                       null, SweepingOutputInstance.Scope.PHASE)
                                    .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid())
                                    .output(KryoUtils.asDeflatedBytes(infrastructureMappingId))
                                    .build());

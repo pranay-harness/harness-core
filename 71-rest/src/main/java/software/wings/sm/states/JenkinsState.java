@@ -21,7 +21,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
@@ -91,7 +91,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
 
   @Getter @Setter private String sweepingOutputName;
-  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+  @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
 
   @Transient @Inject private DelegateService delegateService;
   @Transient @Inject private ActivityService activityService;

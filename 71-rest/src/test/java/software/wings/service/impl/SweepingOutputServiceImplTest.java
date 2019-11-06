@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.Scope;
-import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
 import org.junit.Before;
@@ -24,15 +24,15 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Inject private SweepingOutputService sweepingOutputService;
 
-  private SweepingOutputBuilder sweepingOutputBuilder;
-  private SweepingOutput sweepingOutput;
+  private SweepingOutputInstanceBuilder sweepingOutputBuilder;
+  private SweepingOutputInstance sweepingOutputInstance;
 
   @Before
   public void setup() {
     sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
         generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(), Scope.WORKFLOW);
 
-    sweepingOutput = sweepingOutputService.save(
+    sweepingOutputInstance = sweepingOutputService.save(
         sweepingOutputBuilder.name(SWEEPING_OUTPUT_NAME).output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT)).build());
   }
 
@@ -41,50 +41,51 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
   public void testCopyOutputsForAnotherWorkflowExecution() {
     final String anotherWorkflowId = generateUuid();
     sweepingOutputService.copyOutputsForAnotherWorkflowExecution(
-        sweepingOutput.getAppId(), sweepingOutput.getWorkflowExecutionIds().get(0), anotherWorkflowId);
+        sweepingOutputInstance.getAppId(), sweepingOutputInstance.getWorkflowExecutionIds().get(0), anotherWorkflowId);
 
-    SweepingOutput savedSweepingOutput1 =
+    SweepingOutputInstance savedSweepingOutputInstance1 =
         sweepingOutputService.find(SweepingOutputInquiry.builder()
                                        .name(SWEEPING_OUTPUT_NAME)
-                                       .appId(sweepingOutput.getAppId())
-                                       .phaseExecutionId(sweepingOutput.getPipelineExecutionId())
-                                       .workflowExecutionId(sweepingOutput.getWorkflowExecutionIds().get(0))
+                                       .appId(sweepingOutputInstance.getAppId())
+                                       .phaseExecutionId(sweepingOutputInstance.getPipelineExecutionId())
+                                       .workflowExecutionId(sweepingOutputInstance.getWorkflowExecutionIds().get(0))
                                        .build());
-    assertThat(savedSweepingOutput1).isNotNull();
-    assertThat(savedSweepingOutput1.getWorkflowExecutionIds())
-        .containsExactly(sweepingOutput.getWorkflowExecutionIds().get(0), anotherWorkflowId);
+    assertThat(savedSweepingOutputInstance1).isNotNull();
+    assertThat(savedSweepingOutputInstance1.getWorkflowExecutionIds())
+        .containsExactly(sweepingOutputInstance.getWorkflowExecutionIds().get(0), anotherWorkflowId);
 
-    SweepingOutput savedSweepingOutput2 =
+    SweepingOutputInstance savedSweepingOutputInstance2 =
         sweepingOutputService.find(SweepingOutputInquiry.builder()
                                        .name(SWEEPING_OUTPUT_NAME)
-                                       .appId(sweepingOutput.getAppId())
-                                       .phaseExecutionId(sweepingOutput.getPipelineExecutionId())
+                                       .appId(sweepingOutputInstance.getAppId())
+                                       .phaseExecutionId(sweepingOutputInstance.getPipelineExecutionId())
                                        .workflowExecutionId(anotherWorkflowId)
                                        .build());
-    assertThat(savedSweepingOutput2).isNotNull();
-    assertThat(savedSweepingOutput2.getWorkflowExecutionIds())
-        .containsExactly(sweepingOutput.getWorkflowExecutionIds().get(0), anotherWorkflowId);
+    assertThat(savedSweepingOutputInstance2).isNotNull();
+    assertThat(savedSweepingOutputInstance2.getWorkflowExecutionIds())
+        .containsExactly(sweepingOutputInstance.getWorkflowExecutionIds().get(0), anotherWorkflowId);
 
-    assertThat(savedSweepingOutput1.getUuid()).isEqualTo(sweepingOutput.getUuid());
-    assertThat(savedSweepingOutput2.getUuid()).isEqualTo(sweepingOutput.getUuid());
+    assertThat(savedSweepingOutputInstance1.getUuid()).isEqualTo(sweepingOutputInstance.getUuid());
+    assertThat(savedSweepingOutputInstance2.getUuid()).isEqualTo(sweepingOutputInstance.getUuid());
 
-    assertThat(savedSweepingOutput1.getOutput()).isEqualTo(sweepingOutput.getOutput());
-    assertThat(savedSweepingOutput2.getOutput()).isEqualTo(sweepingOutput.getOutput());
+    assertThat(savedSweepingOutputInstance1.getOutput()).isEqualTo(sweepingOutputInstance.getOutput());
+    assertThat(savedSweepingOutputInstance2.getOutput()).isEqualTo(sweepingOutputInstance.getOutput());
   }
 
   @Test
   @Category(UnitTests.class)
   public void testCopyOutputsForAnotherWorkflowExecutionForSameExecution() {
-    sweepingOutputService.copyOutputsForAnotherWorkflowExecution(sweepingOutput.getAppId(),
-        sweepingOutput.getWorkflowExecutionIds().get(0), sweepingOutput.getWorkflowExecutionIds().get(0));
+    sweepingOutputService.copyOutputsForAnotherWorkflowExecution(sweepingOutputInstance.getAppId(),
+        sweepingOutputInstance.getWorkflowExecutionIds().get(0),
+        sweepingOutputInstance.getWorkflowExecutionIds().get(0));
 
-    SweepingOutput savedSweepingOutput1 =
+    SweepingOutputInstance savedSweepingOutputInstance1 =
         sweepingOutputService.find(SweepingOutputInquiry.builder()
                                        .name(SWEEPING_OUTPUT_NAME)
-                                       .appId(sweepingOutput.getAppId())
-                                       .phaseExecutionId(sweepingOutput.getPipelineExecutionId())
-                                       .workflowExecutionId(sweepingOutput.getWorkflowExecutionIds().get(0))
+                                       .appId(sweepingOutputInstance.getAppId())
+                                       .phaseExecutionId(sweepingOutputInstance.getPipelineExecutionId())
+                                       .workflowExecutionId(sweepingOutputInstance.getWorkflowExecutionIds().get(0))
                                        .build());
-    assertThat(savedSweepingOutput1).isNotNull();
+    assertThat(savedSweepingOutputInstance1).isNotNull();
   }
 }

@@ -1,7 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.beans.DelegateTask;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
@@ -21,7 +21,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NotifyEvent.class);
     set.add(NotifyResponse.class);
     set.add(StateInspection.class);
-    set.add(SweepingOutput.class);
+    set.add(SweepingOutputInstance.class);
     set.add(WaitInstance.class);
     set.add(WaitInstanceError.class);
   }

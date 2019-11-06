@@ -42,7 +42,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.serializer.KryoUtils;
@@ -133,15 +133,15 @@ public class PcfDeployStateTest extends WingsBaseTest {
   private ExecutionContextImpl context;
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutput sweepingOutput = SweepingOutput.builder()
-                                              .appId(APP_ID)
-                                              .name(outputName)
-                                              .uuid(generateUuid())
-                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                              .stateExecutionId(null)
-                                              .pipelineExecutionId(null)
-                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
+                                                              .appId(APP_ID)
+                                                              .name(outputName)
+                                                              .uuid(generateUuid())
+                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                              .stateExecutionId(null)
+                                                              .pipelineExecutionId(null)
+                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                                              .build();
   /**
    * Set up.
    */
@@ -193,7 +193,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
     doReturn(null).when(encryptionService).decrypt(any(), any());
-    when(sweepingOutputService.find(any())).thenReturn(sweepingOutput);
+    when(sweepingOutputService.find(any())).thenReturn(sweepingOutputInstance);
   }
 
   @Test

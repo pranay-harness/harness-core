@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.beans.SweepingOutput.Scope.PIPELINE;
-import static io.harness.beans.SweepingOutput.Scope.WORKFLOW;
+import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
+import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.delegate.task.shell.ScriptType.BASH;
 import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
@@ -135,8 +135,8 @@ public class ShellScriptStateTest extends CategoryTest {
   public void shouldHandleAsyncResponseOnShellScriptSuccessAndSaveSweepingOutput() {
     when(executionContext.getStateExecutionData())
         .thenReturn(ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build());
-    when(executionContext.prepareSweepingOutputBuilder(any(SweepingOutput.Scope.class)))
-        .thenReturn(SweepingOutput.builder());
+    when(executionContext.prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class)))
+        .thenReturn(SweepingOutputInstance.builder());
 
     Map<String, String> map = new HashMap<>();
     map.put("A", "aaa");
@@ -147,7 +147,7 @@ public class ShellScriptStateTest extends CategoryTest {
                 .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
                 .build()));
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
-    verify(sweepingOutputService, times(1)).save(any(SweepingOutput.class));
+    verify(sweepingOutputService, times(1)).save(any(SweepingOutputInstance.class));
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(
@@ -171,7 +171,7 @@ public class ShellScriptStateTest extends CategoryTest {
                 .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
                 .build()));
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
-    verify(sweepingOutputService, times(0)).save(any(SweepingOutput.class));
+    verify(sweepingOutputService, times(0)).save(any(SweepingOutputInstance.class));
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(((ScriptStateExecutionData) (executionResponse.getStateExecutionData())).getSweepingOutputEnvVariables())

@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
@@ -26,14 +26,14 @@ public class SweepingOutputServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void shouldGetInstanceId() {
-    persistence.ensureIndex(SweepingOutput.class);
+    persistence.ensureIndex(SweepingOutputInstance.class);
 
-    final SweepingOutputBuilder builder = SweepingOutput.builder()
-                                              .name("jenkins")
-                                              .appId(generateUuid())
-                                              .pipelineExecutionId(generateUuid())
-                                              .workflowExecutionId(generateUuid())
-                                              .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")));
+    final SweepingOutputInstanceBuilder builder = SweepingOutputInstance.builder()
+                                                      .name("jenkins")
+                                                      .appId(generateUuid())
+                                                      .pipelineExecutionId(generateUuid())
+                                                      .workflowExecutionId(generateUuid())
+                                                      .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")));
 
     sweepingOutputService.save(builder.uuid(generateUuid()).build());
     assertThatThrownBy(() -> sweepingOutputService.save(builder.uuid(generateUuid()).build()))
