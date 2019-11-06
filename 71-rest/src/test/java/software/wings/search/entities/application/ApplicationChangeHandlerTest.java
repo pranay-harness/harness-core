@@ -74,31 +74,32 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     application = ApplicationEntityTestUtils.createApplication(account.getUuid(), appId, APP_NAME);
-    wingsPersistence.save(application);
     assertThat(application).isNotNull();
+    wingsPersistence.save(application);
 
     service = ServiceEntityTestUtils.createService(account.getUuid(), appId, serviceId, SERVICE_NAME);
-    wingsPersistence.save(service);
     assertThat(service).isNotNull();
+    wingsPersistence.save(service);
 
     environment =
         EnvironmentEntityTestUtils.createEnvironment(account.getUuid(), appId, environmentId, ENVIRONMENT_NAME);
-    wingsPersistence.save(environment);
     assertThat(environment).isNotNull();
+    wingsPersistence.save(environment);
 
-    workflow =
-        WorkflowEntityTestUtils.createWorkflow(account.getUuid(), appId, workflowId, environmentId, WORKFLOW_NAME);
-    wingsPersistence.save(workflow);
+    workflow = WorkflowEntityTestUtils.createWorkflow(
+        account.getUuid(), appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
+    wingsPersistence.save(workflow);
 
-    pipeline = PipelineEntityTestUtils.createPipeline(account.getUuid(), appId, pipelineId, PIPELINE_NAME);
-    wingsPersistence.save(pipeline);
+    pipeline = PipelineEntityTestUtils.createPipeline(
+        account.getUuid(), appId, pipelineId, PIPELINE_NAME, environmentId, workflowId);
     assertThat(pipeline).isNotNull();
+    wingsPersistence.save(pipeline);
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         deleteAuditHeaderId, account.getUuid(), appId, appId, EntityType.APPLICATION.name(), Type.DELETE.name());
-    wingsPersistence.save(deleteAuditHeader);
     assertThat(deleteAuditHeader).isNotNull();
+    wingsPersistence.save(deleteAuditHeader);
 
     nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
         nonDeleteAuditHeaderId, account.getUuid(), appId, appId, EntityType.APPLICATION.name(), Type.UPDATE.name());

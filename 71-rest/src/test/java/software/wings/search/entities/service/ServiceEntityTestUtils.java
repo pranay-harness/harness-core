@@ -22,6 +22,8 @@ public class ServiceEntityTestUtils {
     BasicDBObject basicDBObject = new BasicDBObject();
     basicDBObject.put("name", "edited_name");
     basicDBObject.put("appId", "appId");
+    basicDBObject.put("orchestration", "orchestration");
+    basicDBObject.put("pipelineStages", "pipelineStages");
 
     return basicDBObject;
   }
