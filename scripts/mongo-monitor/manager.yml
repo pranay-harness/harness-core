@@ -7,6 +7,30 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.notifyResponses.find({}).count()"
 
+  - notify_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.notifyQueue.find({}).count()"
+
+  - execution_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.executionQueue.find({}).count()"
+
+  - wait_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.waitInstances.find({}).count()"
+
+  - wait_instance_errors_count:
+      check_interval:   10      # seconds
+      query:            "db.waitInstanceErrors.find({}).count()"
+
+  - wait_instance_errors_document_size:
+      check_interval:   10      # seconds
+      query:            "db.waitInstanceErrors.stats().avgObjSize"
+
+  - whitelist_count:
+      check_interval:   10      # seconds
+      query:            "db.delegateConnectionResults.find({validated:true, lastUpdatedAt: {$gt: Date.now() - 6*60*60*1000}}).count()"
+
   - collector_queues_count:
       check_interval:   10      # seconds
       query:            "db.collectorQueue2.find({}).count()"
@@ -27,10 +51,6 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.emailQueue2.find({}).count()"
 
-  - execution_queues_count:
-      check_interval:   10      # seconds
-      query:            "db.executionQueue.find({}).count()"
-
   - instance_change_queues_count:
       check_interval:   10      # seconds
       query:            "db.instanceChangeQueue.find({}).count()"
@@ -43,10 +63,6 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.kmsTransitionEvent2.find({}).count()"
 
-  - notify_queues_count:
-      check_interval:   10      # seconds
-      query:            "db.notifyQueue.find({}).count()"
-
   - prune_queues_count:
       check_interval:   10      # seconds
       query:            "db.pruneQueue2.find({}).count()"
@@ -54,23 +70,3 @@ metrics:
   - generic_queues_count:
       check_interval:   10      # seconds
       query:            "db.genericEvent.find({}).count()"
-
-  - state_wait_instances_count:
-      check_interval:   10      # seconds
-      query:            "db.waitInstances.find({}).count()"
-
-  - state_wait_instance_errors_count:
-      check_interval:   10      # seconds
-      query:            "db.waitInstanceErrors.find({}).count()"
-
-  - state_wait_instance_errors_document_size:
-      check_interval:   10      # seconds
-      query:            "db.waitInstanceErrors.stats().avgObjSize"
-
-  - wait_instances_count:
-      check_interval:   10      # seconds
-      query:            "db.waitInstances.find({}).count()"
-
-  - whitelist_count:
-      check_interval:   10      # seconds
-      query:            "db.delegateConnectionResults.find({validated:true, lastUpdatedAt: {$gt: Date.now() - 6*60*60*1000}}).count()"

@@ -1,16 +1,33 @@
 metrics:
-  - state_execution_instances_document_size:
+  - workflow_executions_count:
       check_interval:   10      # seconds
-      query:            "db.stateExecutionInstances.stats().avgObjSize"
+      query:            "db.workflowExecutions.find({}).count()"
+
+  - workflow_executions_document_size:
+      check_interval:   10      # seconds
+      query:            "db.workflowExecutions.stats().avgObjSize"
 
   - state_execution_instances_count:
       check_interval:   10      # seconds
       query:            "db.stateExecutionInstances.find({}).count()"
 
-  - state_barrier_instances_count:
+  - state_execution_instances_document_size:
+      check_interval:   10      # seconds
+      query:            "db.stateExecutionInstances.stats().avgObjSize"
+
+  - sweeping_output_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.sweepingOutput2.find({}).count()"
+
+  - sweeping_output_instances_document_size:
+      check_interval:   10      # seconds
+      query:            "db.sweepingOutput2.stats().avgObjSize"
+
+  - barrier_instances_count:
       check_interval:   10      # seconds
       query:            "db.barrierInstances.find({}).count()"
 
-  - state_resource_constraint_instances_count:
+  - resource_constraint_instances_count:
       check_interval:   10      # seconds
       query:            "db.resourceConstraintInstances.find({}).count()"
+
