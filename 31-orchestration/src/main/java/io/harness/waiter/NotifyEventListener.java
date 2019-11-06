@@ -2,7 +2,6 @@ package io.harness.waiter;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
@@ -28,7 +27,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Singleton
 @Slf4j
@@ -90,7 +88,6 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
                                                      .in(waitInstance.getCorrelationIds())
                                                      .asList();
 
-    Set<String> correlationIdSet = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
     if (notifyResponses.size() != waitInstance.getCorrelationIds().size()) {
       logger.warn(
           "some notifyResponses for not found. Skipping the callback for the waitInstanceId: [{}]", waitInstanceId);
@@ -112,7 +109,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
       notifyResponseMap.put(notifyResponse.getUuid(), notifyResponse);
     });
 
-    boolean isError = notifyResponses.stream().filter(NotifyResponse::isError).findFirst().isPresent();
+    boolean isError = notifyResponses.stream().anyMatch(NotifyResponse::isError);
 
     ExecutionStatus status = ExecutionStatus.SUCCESS;
     NotifyCallback callback = waitInstance.getCallback();
