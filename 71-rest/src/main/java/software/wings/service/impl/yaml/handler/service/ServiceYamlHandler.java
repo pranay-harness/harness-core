@@ -16,7 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.EncryptDecryptException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -106,7 +107,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
             try {
               value = secretManager.getEncryptedYamlRef(serviceVariable);
             } catch (IllegalAccessException e) {
-              throw new WingsException(e);
+              throw new EncryptDecryptException(
+                  format("Could not find yaml ref for %s", serviceVariable.getValue()), e);
             }
           } else if (Type.TEXT == variableType) {
             if (serviceVariable.getValue() != null) {
@@ -265,9 +267,9 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       }
     }
 
-    for (String serviceVariableName : serviceVariablesMap.keySet()) {
-      if (!configVariablesFromYamlMap.containsKey(serviceVariableName)) {
-        configVarsToDelete.add(serviceVariablesMap.get(serviceVariableName));
+    for (Entry<String, ServiceVariable> entry : serviceVariablesMap.entrySet()) {
+      if (!configVariablesFromYamlMap.containsKey(entry.getKey())) {
+        configVarsToDelete.add(entry.getValue());
       }
     }
 

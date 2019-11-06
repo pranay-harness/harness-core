@@ -22,9 +22,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -213,7 +213,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             try {
               value = secretManager.getEncryptedYamlRef(serviceVariable);
             } catch (IllegalAccessException e) {
-              throw new WingsException(e);
+              throw new EncryptDecryptException(
+                  format("Could not find yaml ref for %s", serviceVariable.getValue()), e);
             }
           } else if (Type.TEXT == variableType) {
             if (serviceVariable.getValue() != null) {
@@ -224,8 +225,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
           } else {
             String msg = "Invalid value type: " + variableType + ". for variable: " + serviceVariable.getName()
                 + " in env: " + envName;
-            logger.warn(msg);
-            throw new WingsException(msg);
+            throw new InvalidRequestException(msg);
           }
 
           String parentServiceName = getParentServiceName(serviceVariable);
