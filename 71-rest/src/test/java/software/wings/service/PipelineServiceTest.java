@@ -60,13 +60,13 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.checker.UsageLimitExceededException;
 import io.harness.persistence.HQuery;
 import io.harness.resource.Loader;
 import io.harness.serializer.JsonUtils;
@@ -1082,7 +1082,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
-  @Test(expected = WingsException.class)
+  @Test(expected = UsageLimitExceededException.class)
   @Category(UnitTests.class)
   public void shouldNotCreatePipelineWhenLimitExceeds() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
@@ -1107,8 +1107,8 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     try {
       pipelineService.save(pipeline);
-    } catch (WingsException e) {
-      assertThat(e.getCode()).isEqualByComparingTo(ErrorCode.USAGE_LIMITS_EXCEEDED);
+    } catch (UsageLimitExceededException e) {
+      assertThat(e.getMessage()).startsWith("Usage limit reached. Limit: ");
       throw e;
     }
   }

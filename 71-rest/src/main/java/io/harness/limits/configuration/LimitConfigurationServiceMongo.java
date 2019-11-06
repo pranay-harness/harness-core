@@ -1,11 +1,13 @@
 package io.harness.limits.configuration;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
@@ -14,6 +16,8 @@ import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.UpdateOptions;
@@ -92,7 +96,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   @Override
   public boolean configure(String accountId, ActionType actionType, Limit limit) {
     if (StringUtils.isEmpty(accountId)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account ID is empty");
+      throw new InvalidRequestException("Account ID is empty", WingsException.USER);
     }
 
     ConfiguredLimit configuredLimit;
@@ -134,11 +138,16 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
       return false;
     }
 
+    log.info("Set the new limit for account: {}, action type: {}, limit: {}", accountId, actionType.name(),
+        limit.getLimitType().name());
     return true;
   }
 
   @Override
   public void deleteByAccountId(String accountId) {
-    dao.delete(dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, accountId));
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      dao.delete(dao.createQuery(ConfiguredLimit.class).filter(ConfiguredLimitKeys.accountId, accountId));
+      log.info("deleted limits for account {}", accountId);
+    }
   }
 }

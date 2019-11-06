@@ -2,6 +2,7 @@ package software.wings.resources.dashboard;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.CUSTOM_DASHBOARD;
 
@@ -22,7 +23,9 @@ import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.event.reconciliation.deployment.ReconciliationStatus;
 import io.harness.event.reconciliation.service.DeploymentReconService;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.swagger.annotations.Api;
@@ -42,6 +45,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.DashboardLogContext;
 import software.wings.service.impl.security.auth.DashboardAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -97,11 +101,13 @@ public class CustomDashboardResource {
   @RestrictedApi(CustomDashboardFeature.class)
   public RestResponse<DashboardSettings> createDashboardSetting(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, DashboardSettings settings) {
-    if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
+        throw new InvalidRequestException("User not authorized", USER);
+      }
+      settings.setAccountId(accountId);
+      return new RestResponse<>(dashboardSettingsService.createDashboardSettings(accountId, settings));
     }
-    settings.setAccountId(accountId);
-    return new RestResponse<>(dashboardSettingsService.createDashboardSettings(accountId, settings));
   }
 
   @PUT
@@ -110,14 +116,17 @@ public class CustomDashboardResource {
   @RestrictedApi(CustomDashboardFeature.class)
   public RestResponse<DashboardSettings> updateDashboardSettings(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, DashboardSettings settings) {
-    if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
-    }
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new DashboardLogContext(settings.getUuid(), OVERRIDE_ERROR)) {
+      if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
+        throw new InvalidRequestException("User not authorized", USER);
+      }
 
-    DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, settings.getUuid());
-    dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.UPDATE);
-    settings.setAccountId(accountId);
-    return new RestResponse<>(dashboardSettingsService.updateDashboardSettings(accountId, settings));
+      DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, settings.getUuid());
+      dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.UPDATE);
+      settings.setAccountId(accountId);
+      return new RestResponse<>(dashboardSettingsService.updateDashboardSettings(accountId, settings));
+    }
   }
 
   @DELETE
@@ -126,13 +135,16 @@ public class CustomDashboardResource {
   @RestrictedApi(CustomDashboardFeature.class)
   public RestResponse<Boolean> deleteDashboardSettings(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, @QueryParam("dashboardId") @NotBlank String id) {
-    if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
-    }
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new DashboardLogContext(id, OVERRIDE_ERROR)) {
+      if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {
+        throw new InvalidRequestException("User not authorized", USER);
+      }
 
-    DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, id);
-    dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.DELETE);
-    return new RestResponse<>(dashboardSettingsService.deleteDashboardSettings(accountId, id));
+      DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, id);
+      dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.DELETE);
+      return new RestResponse<>(dashboardSettingsService.deleteDashboardSettings(accountId, id));
+    }
   }
 
   @GET
@@ -142,7 +154,7 @@ public class CustomDashboardResource {
   public RestResponse<PageResponse<DashboardSettings>> getDashboardSettings(
       @QueryParam("accountId") @NotBlank String accountId, @BeanParam PageRequest<Application> pageRequest) {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      throw new InvalidRequestException("User not authorized", USER);
     }
     Set<String> allowedDashboardSettingIds = dashboardAuthHandler.getAllowedDashboardSettingIds();
 
@@ -163,7 +175,7 @@ public class CustomDashboardResource {
   public RestResponse<DashboardSettings> getDashboardSetting(
       @QueryParam("accountId") @NotBlank @AccountId String accountId, @PathParam("dashboardId") String dashboardId) {
     if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, accountId)) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
+      throw new InvalidRequestException("User not authorized", USER);
     }
 
     DashboardSettings dashboardSetting = dashboardSettingsService.get(accountId, dashboardId);

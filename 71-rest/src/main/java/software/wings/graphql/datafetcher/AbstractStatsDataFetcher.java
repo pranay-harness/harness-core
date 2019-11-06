@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -13,7 +14,9 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -26,6 +29,9 @@ import software.wings.graphql.schema.type.aggregation.QLDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLReference;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
 import software.wings.graphql.utils.nameservice.NameService;
+import software.wings.service.impl.AggregateFunctionLogContext;
+import software.wings.service.impl.FilterLogContext;
+import software.wings.service.impl.GroupByLogContext;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.FlatEntitySummaryStats;
 import software.wings.service.intfc.HarnessTagService;
 
@@ -59,6 +65,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
 
   @Override
   public final Object get(DataFetchingEnvironment dataFetchingEnvironment) {
+    long startTime = System.currentTimeMillis();
     Object result;
     try {
       Type[] typeArguments = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments();
@@ -72,18 +79,30 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
       final List<G> groupBy = (List<G>) fetchObject(dataFetchingEnvironment, GROUP_BY, groupByClass);
       final List<S> sort = (List<S>) fetchObject(dataFetchingEnvironment, SORT_CRITERIA, sortClass);
       String accountId = utils.getAccountId(dataFetchingEnvironment);
-      QLData qlData = fetch(accountId, aggregateFunction, filters, groupBy, sort);
-      QLData postFetchResult = postFetch(accountId, groupBy, qlData);
-      if (postFetchResult == null) {
-        result = qlData;
-      } else {
-        result = postFetchResult;
+
+      try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+           AutoLogContext ignore2 =
+               new AggregateFunctionLogContext(aggregationFuncClass.getSimpleName(), OVERRIDE_ERROR);
+           AutoLogContext ignore3 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR);
+           AutoLogContext ignore4 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR)) {
+        QLData qlData = fetch(accountId, aggregateFunction, filters, groupBy, sort);
+        QLData postFetchResult = postFetch(accountId, groupBy, qlData);
+        if (postFetchResult == null) {
+          result = qlData;
+        } else {
+          result = postFetchResult;
+        }
       }
     } catch (WingsException ex) {
+      logger.warn("WingsException while getting stats", ex);
       throw new InvalidRequestException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
     } catch (Exception ex) {
+      logger.warn("Exception while getting stats", ex);
       throw new InvalidRequestException(GENERIC_EXCEPTION_MSG, ex, WingsException.USER_SRE);
+    } finally {
+      logger.info("Time taken for the stats call {}", System.currentTimeMillis() - startTime);
     }
+
     return result;
   }
 
@@ -117,7 +136,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
     String accountId = context.get("accountId");
 
     if (isEmpty(accountId)) {
-      throw new WingsException("accountId is null in the environment");
+      throw new InvalidRequestException("accountId is null in the environment");
     }
 
     return accountId;
@@ -188,7 +207,7 @@ public abstract class AbstractStatsDataFetcher<A, F, G, S> implements DataFetche
 
   public void generateSqlInQuery(StringBuilder queryBuilder, Object[] values) {
     if (isEmpty(values)) {
-      throw new WingsException("Filter should have at least one value");
+      throw new InvalidRequestException("Filter should have at least one value");
     }
 
     boolean isString = values instanceof String[];
