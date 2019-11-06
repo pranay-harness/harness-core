@@ -3,6 +3,7 @@ package io.harness.perpetualtask.ecs;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
@@ -10,6 +11,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.Attribute;
+import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
 import com.amazonaws.services.ecs.model.DesiredStatus;
@@ -38,15 +40,18 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskParams;
+import io.harness.perpetualtask.ecs.support.EcsMetricClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,14 +67,27 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
-  @Inject private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
-  @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
-  @Inject private EventPublisher eventPublisher;
+  private static final long METRIC_AGGREGATION_WINDOW_MINUTES = 10;
+  private static final String INSTANCE_TERMINATED_NAME = "terminated";
+  private static final String ECS_OS_TYPE = "ecs.os-type";
+
+  private final AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
+  private final AwsEc2HelperServiceDelegate ec2ServiceDelegate;
+  private final EcsMetricClient ecsMetricClient;
+  private final EventPublisher eventPublisher;
 
   private Cache<String, EcsActiveInstancesCache> cache = Caffeine.newBuilder().build();
 
-  private static final String INSTANCE_TERMINATED_NAME = "terminated";
-  private static final String ECS_OS_TYPE = "ecs.os-type";
+  private Instant lastMetricCollectionTime = Instant.ofEpochSecond(0);
+
+  @Inject
+  public EcsPerpetualTaskExecutor(AwsEcsHelperServiceDelegate ecsHelperServiceDelegate,
+      AwsEc2HelperServiceDelegate ec2ServiceDelegate, EcsMetricClient ecsMetricClient, EventPublisher eventPublisher) {
+    this.ecsHelperServiceDelegate = ecsHelperServiceDelegate;
+    this.ec2ServiceDelegate = ec2ServiceDelegate;
+    this.ecsMetricClient = ecsMetricClient;
+    this.eventPublisher = eventPublisher;
+  }
 
   @Override
   public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
@@ -104,6 +122,10 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
           currentActiveTaskArns, startTime);
       publishEcsClusterSyncEvent(clusterName, currentActiveEc2InstanceIds, currentActiveContainerInstanceArns,
           currentActiveTaskArns, startTime);
+      if (startTime.isAfter(lastMetricCollectionTime.plus(METRIC_AGGREGATION_WINDOW_MINUTES, ChronoUnit.MINUTES))) {
+        publishUtilizationMetrics(region, awsConfig, encryptionDetails, clusterName, startTime);
+        lastMetricCollectionTime = startTime;
+      }
     } catch (Exception ex) {
       throw new WingsException("Exception while executing task: ", ex);
     }
@@ -112,6 +134,18 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
   private EcsPerpetualTaskParams getTaskParams(PerpetualTaskParams params) {
     return AnyUtils.unpack(params.getCustomizedParams(), EcsPerpetualTaskParams.class);
+  }
+
+  @VisibleForTesting
+  void publishUtilizationMetrics(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String clusterNameOrArn, Instant pollTime) {
+    Date startTime = Date.from(pollTime.minus(METRIC_AGGREGATION_WINDOW_MINUTES, ChronoUnit.MINUTES));
+    Date endTime = Date.from(pollTime);
+    String clusterName = StringUtils.substringAfterLast(clusterNameOrArn, "/");
+    List<Service> services = listServices(clusterNameOrArn, region, awsConfig, encryptionDetails);
+    Cluster cluster = new Cluster().withClusterName(clusterName).withClusterArn(clusterNameOrArn);
+    ecsMetricClient.getUtilizationMetrics(awsConfig, encryptionDetails, region, startTime, endTime, cluster, services)
+        .forEach(msg -> eventPublisher.publishMessage(msg, HTimestamps.fromInstant(pollTime)));
   }
 
   private void publishEcsClusterSyncEvent(String clusterName, Set<String> activeEc2InstanceIds,
