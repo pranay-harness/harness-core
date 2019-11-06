@@ -1,6 +1,7 @@
 package io.harness.resource;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.DelegateDataCollectionResource;
 import io.harness.resources.TimeSeriesResource;
 import io.harness.rest.RestResponse;
+import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -24,10 +26,12 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.FeatureName;
+import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
 
@@ -69,6 +73,9 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
 
   private TimeSeriesResource timeSeriesResource;
   @Inject private DelegateDataCollectionResource delegateDataCollectionResource;
+  @Inject private LearningEngineService learningEngineService;
+
+  @Inject private WingsPersistence wingsPersistence;
 
   @Before
   public void setup() {
@@ -87,7 +94,8 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     nodes.add("someNode");
     newRelicMetricDataRecords = Sets.newHashSet(new NewRelicMetricDataRecord());
 
-    timeSeriesResource = new TimeSeriesResource(timeSeriesAnalysisService, managerClientHelper, managerClient);
+    timeSeriesResource =
+        new TimeSeriesResource(timeSeriesAnalysisService, managerClientHelper, managerClient, learningEngineService);
 
     tsRequest = new TSRequest(stateExecutionId, workflowExecutionId, nodes, 0, 0);
     timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
@@ -135,12 +143,15 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testSaveMLAnalysisRecords() throws IOException {
+    LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder().build();
+    analysisTask.setCreatedAt(currentTimeMillis());
+    String taskId = wingsPersistence.save(analysisTask);
     when(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, applicationId, stateExecutionId,
-             workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
-             timeSeriesMLAnalysisRecord, null))
+             workflowExecutionId, groupName, 0, taskId, baseLineExecutionId, cvConfigId, timeSeriesMLAnalysisRecord,
+             null))
         .thenReturn(true);
     RestResponse<Boolean> resp = timeSeriesResource.saveMLAnalysisRecords(accountId, applicationId, stateType,
-        stateExecutionId, workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId, null,
+        stateExecutionId, workflowExecutionId, groupName, 0, taskId, baseLineExecutionId, cvConfigId, null,
         timeSeriesMLAnalysisRecord);
     assertThat(resp.getResource()).isTrue();
   }

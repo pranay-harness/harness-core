@@ -1,6 +1,10 @@
 package io.harness.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static java.lang.System.currentTimeMillis;
+
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -13,16 +17,20 @@ import io.harness.rest.RestResponse;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
+import software.wings.service.impl.VerificationLogContext;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.Version;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -32,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -45,6 +54,7 @@ import javax.ws.rs.QueryParam;
 @Path("/" + MetricDataAnalysisService.RESOURCE_URL)
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
+@Slf4j
 public class TimeSeriesResource {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
@@ -55,10 +65,12 @@ public class TimeSeriesResource {
   @VisibleForTesting
   @Inject
   public TimeSeriesResource(TimeSeriesAnalysisService timeSeriesAnalysisService,
-      VerificationManagerClientHelper managerClientHelper, VerificationManagerClient managerClient) {
+      VerificationManagerClientHelper managerClientHelper, VerificationManagerClient managerClient,
+      LearningEngineService learningEngineService) {
     this.timeSeriesAnalysisService = timeSeriesAnalysisService;
     this.managerClientHelper = managerClientHelper;
     this.managerClient = managerClient;
+    this.learningEngineService = learningEngineService;
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -97,9 +109,18 @@ public class TimeSeriesResource {
       @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("tag") String tag,
       TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
-    return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, appId,
-        stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,
-        mlAnalysisResponse, tag));
+    try (VerificationLogContext ignored =
+             new VerificationLogContext(accountId, cvConfigId, stateExecutionId, stateType, OVERRIDE_ERROR)) {
+      LearningEngineAnalysisTask analysisTask = learningEngineService.getTaskById(taskId);
+      Preconditions.checkNotNull(analysisTask);
+      long currentEpoch = currentTimeMillis();
+      long timeTaken = currentEpoch - analysisTask.getCreatedAt();
+      logger.info("Finished analysis: Analysis type: {}, time delay: {} seconds", MLAnalysisType.TIME_SERIES.name(),
+          TimeUnit.MILLISECONDS.toSeconds(timeTaken));
+      return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(accountId, stateType, appId,
+          stateExecutionId, workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId,
+          mlAnalysisResponse, tag));
+    }
   }
 
   @Produces({"application/json", "application/v1+json"})

@@ -2,6 +2,7 @@ package io.harness.jobs;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.FeatureName.LOGML_NEURAL_NET;
 import static software.wings.common.VerificationConstants.GET_LOG_FEEDBACKS;
 
@@ -16,6 +17,7 @@ import io.harness.service.intfc.LogAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
+import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
@@ -80,10 +82,13 @@ public class LogMLAnalysisGenerator implements Runnable {
 
   @Override
   public void run() {
-    if (analysisType != null && analysisType.equals(MLAnalysisType.FEEDBACK_ANALYSIS)) {
-      generateFeedbackAnalysis();
-    } else {
-      generateAnalysis();
+    try (VerificationLogContext ignored = new VerificationLogContext(
+             accountId, null, context.getStateExecutionId(), context.getStateType(), OVERRIDE_ERROR)) {
+      if (analysisType != null && analysisType.equals(MLAnalysisType.FEEDBACK_ANALYSIS)) {
+        generateFeedbackAnalysis();
+      } else {
+        generateAnalysis();
+      }
     }
     logAnalysisMinute++;
   }

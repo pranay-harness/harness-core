@@ -2,6 +2,7 @@ package io.harness.jobs.workflow.timeseries;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -30,6 +31,7 @@ import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -81,11 +83,14 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
                    WORKFLOW_VERIFICATION_REMOVE_CRON, context.getAccountId()))
                .getResource()) {
         logger.info("Executing Workflow timeseries Analysis job for context : {}", context);
-        new WorkflowTimeSeriesAnalysisJob
-            .MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClientHelper, context,
-                Optional.of(jobExecutionContext))
-            .run();
-        logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
+        try (VerificationLogContext ignored = new VerificationLogContext(
+                 context.getAccountId(), null, context.getStateExecutionId(), context.getStateType(), OVERRIDE_ERROR)) {
+          new WorkflowTimeSeriesAnalysisJob
+              .MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClientHelper, context,
+                  Optional.of(jobExecutionContext))
+              .run();
+          logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
+        }
       } else {
         logger.info("{} flag is enabled, it will be handled by iterators", WORKFLOW_VERIFICATION_REMOVE_CRON);
       }

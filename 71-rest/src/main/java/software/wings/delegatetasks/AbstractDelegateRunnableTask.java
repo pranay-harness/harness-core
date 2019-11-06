@@ -23,6 +23,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.AccountLogContext;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -66,7 +67,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Override
   @SuppressWarnings("PMD")
   public void run() {
-    try (TaskLogContext ignore = new TaskLogContext(this.taskId, OVERRIDE_ERROR)) {
+    try (TaskLogContext ignore = new TaskLogContext(this.taskId, OVERRIDE_ERROR);
+         AccountLogContext ignore2 = new AccountLogContext(this.accountId, OVERRIDE_ERROR)) {
       runDelegateTask();
     } catch (Throwable e) {
       logger.error(format("Unexpected error executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId), e);
