@@ -1,15 +1,20 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.GitCommand.GitCommandType.COMMIT_AND_PUSH;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -65,61 +70,63 @@ public class GitCommandCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    logger.info("Git command response [{}] for changeSetId [{}]", response, changeSetId);
-    ResponseData notifyResponseData = response.values().iterator().next();
-    if (notifyResponseData instanceof GitCommandExecutionResponse) {
-      GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
-      GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new GitCommandCallbackLogContext(getContext(), OVERRIDE_ERROR)) {
+      logger.info("Git command response [{}]", response);
 
-      if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
-        if (changeSetId != null) {
-          logger.warn("Git Command failed [{}] for changeSetId [{}]", gitCommandExecutionResponse.getErrorMessage(),
-              changeSetId);
+      ResponseData notifyResponseData = response.values().iterator().next();
+      if (notifyResponseData instanceof GitCommandExecutionResponse) {
+        GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
+        GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
+
+        if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
+          if (changeSetId != null) {
+            logger.warn("Git Command failed [{}]", gitCommandExecutionResponse.getErrorMessage());
+            yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+          }
+          // raise alert if GitConnectionErrorAlert is not already open (changeSetId will be null for webhook request,
+          // so putting outside if)
+          yamlGitService.raiseAlertForGitFailure(accountId, GLOBAL_APP_ID, gitCommandExecutionResponse.getErrorCode(),
+              gitCommandExecutionResponse.getErrorMessage());
+
+          return;
+        }
+
+        // close alert if GitConnectionErrorAlert is open as now connection was successful
+        yamlGitService.closeAlertForGitFailureIfOpen(accountId, GLOBAL_APP_ID, AlertType.GitConnectionError,
+            GitConnectionErrorAlert.builder().accountId(accountId).build());
+
+        logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
+            gitCommandExecutionResponse.getGitCommandStatus());
+
+        if (gitCommandResult.getGitCommandType().equals(COMMIT_AND_PUSH)) {
+          GitCommitAndPushResult gitCommitAndPushResult = (GitCommitAndPushResult) gitCommandResult;
+          YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
+          if (yamlChangeSet != null) {
+            yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
+            if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
+              List<String> yamlSetIdsProcessed =
+                  ((GitCommitRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetIds();
+
+              List<String> yamlGitConfigIds =
+                  obtainYamlGitConfigIds(accountId, gitCommitAndPushResult.getYamlGitConfig().getBranchName(),
+                      gitCommitAndPushResult.getYamlGitConfig().getGitConnectorId());
+
+              saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
+            }
+            yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
+          }
+        } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
+          GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
+          gitChangeSetProcesser.processGitChangeSet(accountId, gitDiffResult);
+        } else {
+          logger.warn("Unexpected commandType result: [{}]", gitCommandExecutionResponse.getErrorMessage());
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
         }
-        // raise alert if GitConnectionErrorAlert is not already open (changeSetId will be null for webhook request, so
-        // putting outside if)
-        yamlGitService.raiseAlertForGitFailure(accountId, GLOBAL_APP_ID, gitCommandExecutionResponse.getErrorCode(),
-            gitCommandExecutionResponse.getErrorMessage());
-
-        return;
-      }
-
-      // close alert if GitConnectionErrorAlert is open as now connection was successful
-      yamlGitService.closeAlertForGitFailureIfOpen(accountId, GLOBAL_APP_ID, AlertType.GitConnectionError,
-          GitConnectionErrorAlert.builder().accountId(accountId).build());
-
-      logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
-          gitCommandExecutionResponse.getGitCommandStatus());
-
-      if (gitCommandResult.getGitCommandType().equals(COMMIT_AND_PUSH)) {
-        GitCommitAndPushResult gitCommitAndPushResult = (GitCommitAndPushResult) gitCommandResult;
-        YamlChangeSet yamlChangeSet = yamlChangeSetService.get(accountId, changeSetId);
-        if (yamlChangeSet != null) {
-          yamlChangeSetService.updateStatus(accountId, changeSetId, Status.COMPLETED);
-          if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
-            List<String> yamlSetIdsProcessed =
-                ((GitCommitRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetIds();
-
-            List<String> yamlGitConfigIds =
-                obtainYamlGitConfigIds(accountId, gitCommitAndPushResult.getYamlGitConfig().getBranchName(),
-                    gitCommitAndPushResult.getYamlGitConfig().getGitConnectorId());
-
-            saveCommitFromHarness(gitCommitAndPushResult, yamlChangeSet, yamlGitConfigIds, yamlSetIdsProcessed);
-          }
-          yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
-        }
-      } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
-        GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
-        gitChangeSetProcesser.processGitChangeSet(accountId, gitDiffResult);
       } else {
-        logger.warn("Unexpected commandType result: [{}] for changeSetId [{}]",
-            gitCommandExecutionResponse.getErrorMessage(), changeSetId);
-        yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+        logger.warn("Unexpected notify response data: [{}]", notifyResponseData);
+        updateChangeSetFailureStatusSafely();
       }
-    } else {
-      logger.warn("Unexpected notify response data: [{}] for changeSetId [{}]", notifyResponseData, changeSetId);
-      updateChangeSetFailureStatusSafely();
     }
   }
 
@@ -178,5 +185,16 @@ public class GitCommandCallback implements NotifyCallback {
         .stream()
         .map(yamlGitConfig -> yamlGitConfig.getUuid())
         .collect(Collectors.toList());
+  }
+
+  private ImmutableMap<String, String> getContext() {
+    final ImmutableMap.Builder<String, String> context = ImmutableMap.builder();
+    context.put("gitCommandCallBackType", gitCommandType.toString());
+
+    if (isNotBlank(changeSetId)) {
+      context.put("gitCommandCallChangeSetId", changeSetId);
+    }
+
+    return context.build();
   }
 }
