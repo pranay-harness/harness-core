@@ -34,8 +34,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.Scope;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
@@ -154,7 +154,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Getter @Setter ApprovalStateParams approvalStateParams;
   @Getter @Setter ApprovalStateType approvalStateType = USER_GROUP;
 
-  @Getter private SweepingOutput.Scope sweepingOutputScope = Scope.PIPELINE;
+  @Getter private SweepingOutputInstance.Scope sweepingOutputScope = Scope.PIPELINE;
   @Getter @Setter private String sweepingOutputName;
 
   @Getter @Setter List<NameValuePair> variables;

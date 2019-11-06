@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -84,7 +84,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     this.customFields = customFields;
   }
 
-  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+  @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
 
   public JiraCreateUpdate(String name) {

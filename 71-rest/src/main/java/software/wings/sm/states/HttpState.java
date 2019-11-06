@@ -15,7 +15,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.DelegateMetaInfo;
@@ -92,7 +92,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private List<NameValuePair> responseProcessingExpressions;
 
   @Getter @Setter private String sweepingOutputName;
-  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+  @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
 
   @SchemaIgnore private int socketTimeoutMillis = 10000;
 

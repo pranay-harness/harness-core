@@ -14,7 +14,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -70,7 +70,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Getter @Setter private String provisionerId;
   @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
-  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+  @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
 
   public ShellScriptProvisionState(String name) {
     super(name, StateType.SHELL_SCRIPT_PROVISION.name());

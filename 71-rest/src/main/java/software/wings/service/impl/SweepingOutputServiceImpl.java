@@ -8,10 +8,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.Scope;
-import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
-import io.harness.beans.SweepingOutput.SweepingOutputKeys;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
@@ -29,19 +29,19 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public SweepingOutput save(SweepingOutput sweepingOutput) {
+  public SweepingOutputInstance save(SweepingOutputInstance sweepingOutputInstance) {
     try {
-      wingsPersistence.save(sweepingOutput);
-      return sweepingOutput;
+      wingsPersistence.save(sweepingOutputInstance);
+      return sweepingOutputInstance;
     } catch (DuplicateKeyException exception) {
       throw new InvalidRequestException(
-          format("Output with name %s, already saved in the context", sweepingOutput.getName()), exception);
+          format("Output with name %s, already saved in the context", sweepingOutputInstance.getName()), exception);
     }
   }
 
   @Override
-  public void ensure(SweepingOutput sweepingOutput) {
-    wingsPersistence.saveIgnoringDuplicateKeys(asList(sweepingOutput));
+  public void ensure(SweepingOutputInstance sweepingOutputInstance) {
+    wingsPersistence.saveIgnoringDuplicateKeys(asList(sweepingOutputInstance));
   }
 
   @Override
@@ -50,19 +50,21 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     if (fromWorkflowExecutionId.equals(toWorkflowExecutionId)) {
       return;
     }
-    final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
-                                            .filter(SweepingOutputKeys.appId, appId)
-                                            .filter(SweepingOutputKeys.workflowExecutionIds, fromWorkflowExecutionId);
+    final Query<SweepingOutputInstance> query =
+        wingsPersistence.createQuery(SweepingOutputInstance.class)
+            .filter(SweepingOutputKeys.appId, appId)
+            .filter(SweepingOutputKeys.workflowExecutionIds, fromWorkflowExecutionId);
 
-    UpdateOperations<SweepingOutput> ops = wingsPersistence.createUpdateOperations(SweepingOutput.class);
+    UpdateOperations<SweepingOutputInstance> ops =
+        wingsPersistence.createUpdateOperations(SweepingOutputInstance.class);
     ops.addToSet(SweepingOutputKeys.workflowExecutionIds, toWorkflowExecutionId);
     wingsPersistence.update(query, ops);
   }
 
-  public SweepingOutput find(SweepingOutputInquiry sweepingOutputInquiry) {
-    final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
-                                            .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
-                                            .filter(SweepingOutputKeys.name, sweepingOutputInquiry.getName());
+  public SweepingOutputInstance find(SweepingOutputInquiry sweepingOutputInquiry) {
+    final Query<SweepingOutputInstance> query = wingsPersistence.createQuery(SweepingOutputInstance.class)
+                                                    .filter(SweepingOutputKeys.appId, sweepingOutputInquiry.getAppId())
+                                                    .filter(SweepingOutputKeys.name, sweepingOutputInquiry.getName());
 
     final CriteriaContainerImpl workflowCriteria =
         query.criteria(SweepingOutputKeys.workflowExecutionIds).equal(sweepingOutputInquiry.getWorkflowExecutionId());
@@ -81,9 +83,9 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     return query.get();
   }
 
-  public static SweepingOutputBuilder prepareSweepingOutputBuilder(String appId, String pipelineExecutionId,
+  public static SweepingOutputInstanceBuilder prepareSweepingOutputBuilder(String appId, String pipelineExecutionId,
       String workflowExecutionId, String phaseExecutionId, String stateExecutionId,
-      SweepingOutput.Scope sweepingOutputScope) {
+      SweepingOutputInstance.Scope sweepingOutputScope) {
     // Default scope is pipeline
 
     if (pipelineExecutionId == null || !Scope.PIPELINE.equals(sweepingOutputScope)) {
@@ -100,7 +102,7 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
       stateExecutionId = "dummy-" + generateUuid();
     }
 
-    return SweepingOutput.builder()
+    return SweepingOutputInstance.builder()
         .uuid(generateUuid())
         .appId(appId)
         .pipelineExecutionId(pipelineExecutionId)

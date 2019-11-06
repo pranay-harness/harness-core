@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -214,15 +214,15 @@ public class HelmDeployStateTest extends WingsBaseTest {
                                                             .build();
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutput sweepingOutput = SweepingOutput.builder()
-                                              .appId(APP_ID)
-                                              .name(outputName)
-                                              .uuid(generateUuid())
-                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                              .stateExecutionId(null)
-                                              .pipelineExecutionId(null)
-                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
+                                                              .appId(APP_ID)
+                                                              .name(outputName)
+                                                              .uuid(generateUuid())
+                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                              .stateExecutionId(null)
+                                                              .pipelineExecutionId(null)
+                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                                              .build();
 
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
@@ -236,7 +236,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     workflowStandardParams.setCurrentUser(currentUser);
-    when(sweepingOutputService.find(any())).thenReturn(sweepingOutput);
+    when(sweepingOutputService.find(any())).thenReturn(sweepingOutputInstance);
 
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);

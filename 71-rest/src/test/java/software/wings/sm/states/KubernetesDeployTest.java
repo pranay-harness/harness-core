@@ -53,7 +53,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -193,15 +193,15 @@ public class KubernetesDeployTest extends WingsBaseTest {
           .build();
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutput sweepingOutput = SweepingOutput.builder()
-                                              .appId(APP_ID)
-                                              .name(outputName)
-                                              .uuid(generateUuid())
-                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                              .stateExecutionId(null)
-                                              .pipelineExecutionId(null)
-                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
+                                                              .appId(APP_ID)
+                                                              .name(outputName)
+                                                              .uuid(generateUuid())
+                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                              .stateExecutionId(null)
+                                                              .pipelineExecutionId(null)
+                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                                              .build();
 
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
@@ -222,7 +222,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID)).thenReturn(new ArrayList<>());
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
-    when(sweepingOutputService.find(any())).thenReturn(sweepingOutput);
+    when(sweepingOutputService.find(any())).thenReturn(sweepingOutputInstance);
 
     ServiceCommand serviceCommand =
         aServiceCommand()

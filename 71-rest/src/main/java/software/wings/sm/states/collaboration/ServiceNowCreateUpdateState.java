@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -49,7 +49,7 @@ import java.util.Map.Entry;
 
 @Slf4j
 public class ServiceNowCreateUpdateState extends State implements SweepingOutputStateMixin {
-  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+  @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private ServiceNowCreateUpdateParams serviceNowCreateUpdateParams;
   @Inject private transient ActivityService activityService;

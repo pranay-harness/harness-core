@@ -5,8 +5,8 @@
 package software.wings.sm;
 
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.logging.AutoLogContext;
@@ -89,7 +89,7 @@ public interface ExecutionContext {
 
   SettingValue getGlobalSettingValue(String accountId, String settingId);
 
-  SweepingOutputBuilder prepareSweepingOutputBuilder(SweepingOutput.Scope sweepingOutputScope);
+  SweepingOutputInstanceBuilder prepareSweepingOutputBuilder(SweepingOutputInstance.Scope sweepingOutputScope);
 
   SweepingOutputInquiryBuilder prepareSweepingOutputInquiryBuilder();
 

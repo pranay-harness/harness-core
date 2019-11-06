@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
 import org.junit.Test;
@@ -98,8 +98,8 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
     String workflowExecutionId = generateUuid();
     String followingWorkflowExecutionId = generateUuid();
 
-    SweepingOutput sweepingOutput =
-        sweepingOutputService.save(SweepingOutput.builder()
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.save(SweepingOutputInstance.builder()
                                        .uuid(generateUuid())
                                        .name("jenkins")
                                        .appId(appId)
@@ -136,8 +136,8 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
     String workflowExecutionId = generateUuid();
     String followingWorkflowExecutionId = generateUuid();
 
-    SweepingOutput sweepingOutput =
-        sweepingOutputService.save(SweepingOutput.builder()
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.save(SweepingOutputInstance.builder()
                                        .uuid(generateUuid())
                                        .name("workflow")
                                        .appId(appId)

@@ -9,7 +9,7 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -306,24 +306,24 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   private void saveArtifactToSweepingOutput(
       String appId, String phaseExecutionId, ArtifactVariable artifactVariable, Artifact artifact) {
     if (artifact != null) {
-      sweepingOutputService.save(
-          SweepingOutputServiceImpl
-              .prepareSweepingOutputBuilder(appId, null, null, phaseExecutionId, null, SweepingOutput.Scope.PHASE)
-              .name(artifactVariable.getName())
-              .output(KryoUtils.asDeflatedBytes(artifact))
-              .build());
+      sweepingOutputService.save(SweepingOutputServiceImpl
+                                     .prepareSweepingOutputBuilder(
+                                         appId, null, null, phaseExecutionId, null, SweepingOutputInstance.Scope.PHASE)
+                                     .name(artifactVariable.getName())
+                                     .output(KryoUtils.asDeflatedBytes(artifact))
+                                     .build());
     }
   }
 
   private void saveArtifactsToSweepingOutput(
       String appId, String phaseExecutionId, Map<String, Artifact> artifactsMap) {
     if (isNotEmpty(artifactsMap)) {
-      sweepingOutputService.save(
-          SweepingOutputServiceImpl
-              .prepareSweepingOutputBuilder(appId, null, null, phaseExecutionId, null, SweepingOutput.Scope.PHASE)
-              .name("artifacts")
-              .output(KryoUtils.asDeflatedBytes(artifactsMap))
-              .build());
+      sweepingOutputService.save(SweepingOutputServiceImpl
+                                     .prepareSweepingOutputBuilder(
+                                         appId, null, null, phaseExecutionId, null, SweepingOutputInstance.Scope.PHASE)
+                                     .name("artifacts")
+                                     .output(KryoUtils.asDeflatedBytes(artifactsMap))
+                                     .build());
     }
   }
 

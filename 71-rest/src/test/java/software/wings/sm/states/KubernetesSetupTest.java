@@ -54,7 +54,7 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.expression.VariableResolverTracker;
@@ -233,15 +233,15 @@ public class KubernetesSetupTest extends WingsBaseTest {
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutput sweepingOutput = SweepingOutput.builder()
-                                              .appId(APP_ID)
-                                              .name(outputName)
-                                              .uuid(generateUuid())
-                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                              .stateExecutionId(null)
-                                              .pipelineExecutionId(null)
-                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
+                                                              .appId(APP_ID)
+                                                              .name(outputName)
+                                                              .uuid(generateUuid())
+                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                              .stateExecutionId(null)
+                                                              .pipelineExecutionId(null)
+                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
+                                                              .build();
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -254,7 +254,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
         .thenReturn(singletonList(ARTIFACT_STREAM_ID));
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
-    when(sweepingOutputService.find(any())).thenReturn(sweepingOutput);
+    when(sweepingOutputService.find(any())).thenReturn(sweepingOutputInstance);
 
     ServiceCommand serviceCommand =
         aServiceCommand()

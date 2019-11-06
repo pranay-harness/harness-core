@@ -25,9 +25,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.beans.SweepingOutput;
-import io.harness.beans.SweepingOutput.Scope;
-import io.harness.beans.SweepingOutput.SweepingOutputBuilder;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
+import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
@@ -347,7 +347,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   private Map<String, Artifact> getArtifactMapForPhase() {
     SweepingOutputInquiry sweepingOutputInput = prepareSweepingOutputInquiryBuilder().name("artifacts").build();
-    SweepingOutput result = sweepingOutputService.find(sweepingOutputInput);
+    SweepingOutputInstance result = sweepingOutputService.find(sweepingOutputInput);
 
     if (result == null) {
       return null;
@@ -1012,7 +1012,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   @Override
-  public SweepingOutputBuilder prepareSweepingOutputBuilder(SweepingOutput.Scope sweepingOutputScope) {
+  public SweepingOutputInstanceBuilder prepareSweepingOutputBuilder(SweepingOutputInstance.Scope sweepingOutputScope) {
     // Default scope is pipeline
     if (sweepingOutputScope == null) {
       sweepingOutputScope = Scope.PIPELINE;
@@ -1029,7 +1029,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     String stateExecutionId = stateExecutionInstance.getUuid();
 
-    final SweepingOutputBuilder sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
+    final SweepingOutputInstanceBuilder sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
         getAppId(), pipelineExecutionId, workflowExecutionId, phaseExecutionId, stateExecutionId, sweepingOutputScope);
     return sweepingOutputBuilder.uuid(generateUuid());
   }
@@ -1206,7 +1206,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         prepareSweepingOutputInquiryBuilder()
             .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid())
             .build();
-    SweepingOutput sweepingOutput = sweepingOutputService.find(sweepingOutputInquiry);
-    return sweepingOutput == null ? null : (String) KryoUtils.asInflatedObject(sweepingOutput.getOutput());
+    SweepingOutputInstance sweepingOutputInstance = sweepingOutputService.find(sweepingOutputInquiry);
+    return sweepingOutputInstance == null ? null
+                                          : (String) KryoUtils.asInflatedObject(sweepingOutputInstance.getOutput());
   }
 }

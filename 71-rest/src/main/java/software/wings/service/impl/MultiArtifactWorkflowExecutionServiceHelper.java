@@ -10,7 +10,7 @@ import static software.wings.beans.VariableType.ARTIFACT;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.KryoUtils;
 import software.wings.beans.ArtifactVariable;
@@ -38,7 +38,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
     if (isNotEmpty(workflowVariables)) {
       sweepingOutputService.save(SweepingOutputServiceImpl
                                      .prepareSweepingOutputBuilder(workflowExecution.getAppId(), null,
-                                         workflowExecution.getUuid(), null, null, SweepingOutput.Scope.WORKFLOW)
+                                         workflowExecution.getUuid(), null, null, SweepingOutputInstance.Scope.WORKFLOW)
                                      .name("artifacts")
                                      .output(KryoUtils.asDeflatedBytes(workflowVariables))
                                      .build());

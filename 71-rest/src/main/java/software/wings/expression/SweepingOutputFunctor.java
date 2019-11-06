@@ -2,7 +2,7 @@ package software.wings.expression;
 
 import static java.lang.String.format;
 
-import io.harness.beans.SweepingOutput;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.LateBindingMap;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
@@ -21,11 +21,12 @@ public class SweepingOutputFunctor extends LateBindingMap {
   private transient SweepingOutputService sweepingOutputService;
 
   public Object output(String name) {
-    SweepingOutput sweepingOutput = sweepingOutputService.find(sweepingOutputInquiryBuilder.name(name).build());
-    if (sweepingOutput == null) {
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(sweepingOutputInquiryBuilder.name(name).build());
+    if (sweepingOutputInstance == null) {
       throw new SweepingOutputException(format("Missing sweeping output %s", name));
     }
-    return KryoUtils.asInflatedObject(sweepingOutput.getOutput());
+    return KryoUtils.asInflatedObject(sweepingOutputInstance.getOutput());
   }
 
   @Override
