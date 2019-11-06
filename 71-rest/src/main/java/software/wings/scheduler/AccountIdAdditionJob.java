@@ -11,7 +11,7 @@ import org.quartz.JobExecutionContext;
  */
 @DisallowConcurrentExecution
 @Slf4j
-// TODO: Class to be deleted by 11/15/2019
+// TODO: Class to be deleted by 11/30/2019
 public class AccountIdAdditionJob implements Job {
   private static final String CRON_NAME = "ACCOUNT_ID_ADDITION_CRON_NAME";
   private static final String CRON_GROUP = "ACCOUNT_ID_ADDITION_CRON_GROUP";
@@ -23,7 +23,9 @@ public class AccountIdAdditionJob implements Job {
 
   public static void delete(PersistentScheduler jobScheduler) {
     try {
-      jobScheduler.deleteJob(CRON_NAME, CRON_GROUP);
+      if (jobScheduler.checkExists(CRON_NAME, CRON_GROUP)) {
+        jobScheduler.deleteJob(CRON_NAME, CRON_GROUP);
+      }
     } catch (Exception ex) {
       logger.warn("Exception while deleting job {}", CRON_NAME);
     }

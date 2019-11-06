@@ -376,7 +376,7 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .build());
 
     Thread.sleep(2000);
-    licenseService.checkForLicenseExpiry();
+    licenseService.checkForLicenseExpiry(account);
     Account accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
   }

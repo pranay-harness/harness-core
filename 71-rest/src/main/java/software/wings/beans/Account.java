@@ -19,8 +19,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.yaml.BaseEntityYaml;
@@ -38,6 +41,10 @@ import javax.validation.constraints.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@Indexes(@Index(options = @IndexOptions(name = "next_iteration_license_info", unique = true),
+    fields = { @Field("licenseExpiryCheckIteration")
+               , @Field("encryptedLicenseInfo") }))
+
 public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
@@ -91,6 +98,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @Indexed private Long serviceGuardDataCollectionIteration;
   @Indexed private Long serviceGuardDataAnalysisIteration;
   @Indexed private Long workflowDataCollectionIteration;
+  @Indexed private Long licenseExpiryCheckIteration;
   private boolean cloudCostEnabled;
 
   private transient Map<String, String> defaults = new HashMap<>();
@@ -351,6 +359,11 @@ public class Account extends Base implements PersistentRegularIterable {
       this.workflowDataCollectionIteration = nextIteration;
       return;
     }
+
+    if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
+      this.licenseExpiryCheckIteration = nextIteration;
+      return;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -367,6 +380,11 @@ public class Account extends Base implements PersistentRegularIterable {
     if (AccountKeys.workflowDataCollectionIteration.equals(fieldName)) {
       return this.workflowDataCollectionIteration;
     }
+
+    if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
+      return this.licenseExpiryCheckIteration;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -557,5 +575,6 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
     public static final String name = "name";
+    public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
   }
 }
