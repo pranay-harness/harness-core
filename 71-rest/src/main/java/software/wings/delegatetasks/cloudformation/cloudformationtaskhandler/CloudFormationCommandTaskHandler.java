@@ -2,6 +2,8 @@ package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -9,9 +11,11 @@ import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
+import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -53,7 +57,16 @@ public abstract class CloudFormationCommandTaskHandler {
       CloudFormationCommandRequest request, List<EncryptedDataDetail> details) {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService, request.getAccountId(),
         request.getAppId(), request.getActivityId(), request.getCommandName());
-    return executeInternal(request, details, executionLogCallback);
+    try {
+      return executeInternal(request, details, executionLogCallback);
+    } catch (Exception ex) {
+      String errorMessage = format("Exception: %s while executing CF task.", ExceptionUtils.getMessage(ex));
+      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+      return CloudFormationCommandExecutionResponse.builder()
+          .errorMessage(errorMessage)
+          .commandExecutionStatus(FAILURE)
+          .build();
+    }
   }
 
   protected long printStackEvents(CloudFormationCommandRequest request, long stackEventsTs, Stack stack,
@@ -69,7 +82,7 @@ public abstract class CloudFormationCommandTaskHandler {
           executionLogCallback.saveExecutionLog("********[Status] [Type] [Logical Id] [Status Reason] ***********");
           printed = true;
         }
-        executionLogCallback.saveExecutionLog(String.format("[%s] [%s] [%s] [%s] [%s]", event.getResourceStatus(),
+        executionLogCallback.saveExecutionLog(format("[%s] [%s] [%s] [%s] [%s]", event.getResourceStatus(),
             event.getResourceType(), event.getLogicalResourceId(), getStatusReason(event.getResourceStatusReason()),
             event.getPhysicalResourceId()));
         if (currentLatestTs == -1) {
