@@ -5,12 +5,14 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+@FieldNameConstants(innerTypeName = "StagingOriginalExecutionKeys")
 public class StagingOriginalExecution extends State {
   @Inject SweepingOutputService sweepingOutputService;
 
