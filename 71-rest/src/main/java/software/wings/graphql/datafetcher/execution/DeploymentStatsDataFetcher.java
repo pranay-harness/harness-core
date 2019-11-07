@@ -529,10 +529,12 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
                   QLNumberFilter.builder().operator(QLNumberOperator.GREATER_THAN).values(new Number[] {0}).build())
               .build());
     }
+
     if (aggregateFunction != null && aggregateFunction.getInstancesDeployed() != null) {
       FunctionCall functionCall = getFunctionCall(aggregateFunction.getInstancesDeployed());
-      selectQuery.addCustomColumns(functionCall.addColumnParams(schema.getInstancesDeployed()),
-          DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName());
+      selectQuery.addCustomColumns(
+          Converter.toColumnSqlObject(functionCall.addColumnParams(schema.getInstancesDeployed()),
+              DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName()));
       fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
     }
 
