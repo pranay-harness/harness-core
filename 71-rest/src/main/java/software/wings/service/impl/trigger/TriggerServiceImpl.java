@@ -708,7 +708,8 @@ public class TriggerServiceImpl implements TriggerService {
       logger.info("Triggering  execution of appId {} with  pipeline id {} , trigger type {}", trigger.getAppId(),
           trigger.getWorkflowId(), trigger.getCondition().getConditionType().name());
     }
-    resolveTriggerPipelineVariables(trigger, executionArgs);
+    boolean infraDefEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
+    resolveTriggerPipelineVariables(trigger, executionArgs, infraDefEnabled);
     executionArgs.setPipelineId(trigger.getWorkflowId());
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
       logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
@@ -734,11 +735,12 @@ public class TriggerServiceImpl implements TriggerService {
     return workflowExecution;
   }
 
-  private void resolveTriggerPipelineVariables(Trigger trigger, ExecutionArgs executionArgs) {
+  private void resolveTriggerPipelineVariables(Trigger trigger, ExecutionArgs executionArgs, boolean infraDefEnabled) {
     Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
     notNullCheck("Pipeline was deleted or does not exist", pipeline, USER);
 
-    Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
+    Map<String, String> triggerWorkflowVariableValues =
+        overrideTriggerVariables(infraDefEnabled, trigger, executionArgs);
 
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     String envId = null;
@@ -757,8 +759,11 @@ public class TriggerServiceImpl implements TriggerService {
     }
 
     resolveServices(trigger, triggerWorkflowVariableValues, pipelineVariables);
-    resolveServiceInfrastructures(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
-    resolveInfraDefinitions(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
+    if (infraDefEnabled) {
+      resolveInfraDefinitions(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
+    } else {
+      resolveServiceInfrastructures(trigger.getAppId(), triggerWorkflowVariableValues, envId, pipelineVariables);
+    }
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
 
@@ -877,8 +882,10 @@ public class TriggerServiceImpl implements TriggerService {
     Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
     notNullCheck("Workflow was deleted", workflow, USER);
     notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER);
-    Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
     boolean infraDefEnabled = featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, workflow.getAccountId());
+
+    Map<String, String> triggerWorkflowVariableValues =
+        overrideTriggerVariables(infraDefEnabled, trigger, executionArgs);
 
     String envId = null;
     if (BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
