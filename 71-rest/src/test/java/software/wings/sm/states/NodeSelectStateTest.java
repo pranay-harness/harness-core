@@ -7,6 +7,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -14,11 +15,13 @@ import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysic
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -41,25 +44,33 @@ import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.FeatureName;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstanceSelectionParams.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.WingsTestConstants;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class NodeSelectStateTest extends WingsBaseTest {
@@ -71,6 +82,9 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private InstanceService instanceService;
   @Mock private WorkflowStandardParams workflowStandardParams;
+  @Mock private AppService appService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private NodeSelectState nodeSelectState = new DcNodeSelectState("DC_NODE_SELECT");
@@ -301,5 +315,63 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(executionResponse.getStateExecutionData()).isNull();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldReturnFalseWhenExecutionHostsNotPresent() {
+    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
+
+    boolean nodesOverridden = nodeSelectState.processExecutionHosts(APP_ID, Builder.aServiceInstanceSelectionParams(),
+        workflowStandardParams, new StringBuilder(), WingsTestConstants.WORKFLOW_EXECUTION_ID);
+
+    assertThat(nodesOverridden).isFalse();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldOverrideForFirstPhase() {
+    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams()
+                                                        .withExecutionHosts(Arrays.asList("host1", "host2"))
+                                                        .build();
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
+    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance().build();
+    doReturn(Collections.singletonList(stateExecutionInstance))
+        .when(workflowExecutionService)
+        .getStateExecutionInstancesForPhases(WORKFLOW_EXECUTION_ID);
+    StringBuilder message = new StringBuilder();
+    Builder selectionParams = Builder.aServiceInstanceSelectionParams();
+
+    boolean nodesOverridden = nodeSelectState.processExecutionHosts(
+        APP_ID, selectionParams, workflowStandardParams, message, WingsTestConstants.WORKFLOW_EXECUTION_ID);
+
+    assertThat(nodesOverridden).isTrue();
+    assertThat(message.toString()).isEqualTo("Nodes have been overridden from execution time nodes");
+    assertThat(selectionParams.build().getCount()).isEqualTo(2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldSkipSubsequentPhases() {
+    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams()
+                                                        .withExecutionHosts(Collections.singletonList("host1"))
+                                                        .build();
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
+    StateExecutionInstance stateExecutionInstance1 = StateExecutionInstance.Builder.aStateExecutionInstance().build();
+    StateExecutionInstance stateExecutionInstance2 = StateExecutionInstance.Builder.aStateExecutionInstance().build();
+    doReturn(Arrays.asList(stateExecutionInstance1, stateExecutionInstance2))
+        .when(workflowExecutionService)
+        .getStateExecutionInstancesForPhases(WORKFLOW_EXECUTION_ID);
+    StringBuilder message = new StringBuilder();
+    Builder selectionParams = Builder.aServiceInstanceSelectionParams();
+
+    boolean nodesOverridden = nodeSelectState.processExecutionHosts(
+        APP_ID, selectionParams, workflowStandardParams, message, WingsTestConstants.WORKFLOW_EXECUTION_ID);
+
+    assertThat(nodesOverridden).isTrue();
+    assertThat(message.toString()).isEqualTo("No nodes selected as targeted nodes have already been deployed");
+    assertThat(selectionParams.build().getCount()).isEqualTo(0);
   }
 }

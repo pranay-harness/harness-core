@@ -15,10 +15,13 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
@@ -89,6 +92,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Account;
@@ -123,6 +127,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
@@ -132,6 +137,7 @@ import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseService;
 import software.wings.rules.Listeners;
@@ -156,6 +162,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.HoldingScope;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -2224,5 +2231,103 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(infraMap.get("Service")).isEqualTo("Service");
     assertThat(infraMap.containsKey("CloudProvider")).isTrue();
     assertThat(infraMap.get("CloudProvider")).isEqualTo("PHYSICAL_DATA_CENTER");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void executionHostsShouldNotBeSetForPipelines() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setHosts(Arrays.asList("host1", "host2"));
+    executionArgs.setWorkflowType(WorkflowType.PIPELINE);
+
+    assertThatThrownBy(
+        () -> ((WorkflowExecutionServiceImpl) workflowExecutionService).validateExecutionArgsHosts(executionArgs, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("pipeline");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void executionHostsShouldNotBeSetForTriggers() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setHosts(Arrays.asList("host1", "host2"));
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+    Trigger trigger = Trigger.builder().build();
+
+    assertThatThrownBy(()
+                           -> ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                  .validateExecutionArgsHosts(executionArgs, trigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("trigger");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void executionHostsShouldNotBeSetForNonSshDeploymentType() {
+    List<String> hosts = Arrays.asList("host1", "host2");
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().serviceIds(Collections.singletonList("serviceId")).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().build();
+    workflow.setDeploymentTypes(Collections.singletonList(DeploymentType.KUBERNETES));
+
+    assertThatThrownBy(()
+                           -> ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                  .validateExecutionArgsHosts(hosts, workflowExecution, workflow))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Execution Hosts only supported for SSH deployment type");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void executionHostsShouldNotBeSetForMultiServicesInSingleWorkflow() {
+    List<String> hosts = Arrays.asList("host1", "host2");
+    List<String> servicesIds = Arrays.asList("serviceId1", "serviceId2");
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().serviceIds(servicesIds).build();
+
+    assertThatThrownBy(()
+                           -> ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                  .validateExecutionArgsHosts(hosts, workflowExecution, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("single service");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void emptyExecutionHostsShouldPassValidation() {
+    ExecutionArgs executionArgs = spy(new ExecutionArgs());
+
+    ((WorkflowExecutionServiceImpl) workflowExecutionService).validateExecutionArgsHosts(executionArgs, null);
+
+    verify(executionArgs, times(1)).getHosts();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldTrimNonEmptyList() {
+    WorkflowExecutionServiceImpl workflowExecutionService =
+        (WorkflowExecutionServiceImpl) this.workflowExecutionService;
+    List<String> trimmedList = workflowExecutionService.trimExecutionArgsHosts(Collections.singletonList(" abc "));
+
+    assertThat(trimmedList).isEqualTo(Collections.singletonList("abc"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void trimShouldReturnEmptyForEmptyList() {
+    WorkflowExecutionServiceImpl workflowExecutionService =
+        (WorkflowExecutionServiceImpl) this.workflowExecutionService;
+    List<String> trimmedList = workflowExecutionService.trimExecutionArgsHosts(Collections.emptyList());
+
+    assertThat(trimmedList).isEqualTo(Collections.emptyList());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void trimShouldReturnEmptyForNullList() {
+    WorkflowExecutionServiceImpl workflowExecutionService =
+        (WorkflowExecutionServiceImpl) this.workflowExecutionService;
+    List<String> trimmedList = workflowExecutionService.trimExecutionArgsHosts(null);
+
+    assertThat(trimmedList).isEqualTo(Collections.emptyList());
   }
 }

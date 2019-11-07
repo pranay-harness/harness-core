@@ -106,6 +106,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   private boolean excludeHostsWithSameArtifact;
   @Getter @Setter private boolean notifyTriggeredUserOnly;
+  @Getter @Setter private List<String> executionHosts;
 
   @JsonIgnore private EmbeddedUser currentUser;
 
@@ -539,6 +540,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     private boolean excludeHostsWithSameArtifact;
     private WorkflowElement workflowElement;
     private boolean notifyTriggeredUserOnly;
+    private List<String> executionHosts;
 
     private Builder() {}
 
@@ -636,6 +638,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return this;
     }
 
+    public Builder withExecutionHosts(List<String> executionHosts) {
+      this.executionHosts = executionHosts;
+      return this;
+    }
+
     /**
      * Build workflow standard params.
      *
@@ -655,6 +662,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       workflowStandardParams.setExcludeHostsWithSameArtifact(excludeHostsWithSameArtifact);
       workflowStandardParams.setNotifyTriggeredUserOnly(notifyTriggeredUserOnly);
       workflowStandardParams.setWorkflowElement(workflowElement);
+      workflowStandardParams.setExecutionHosts(executionHosts);
       return workflowStandardParams;
     }
   }

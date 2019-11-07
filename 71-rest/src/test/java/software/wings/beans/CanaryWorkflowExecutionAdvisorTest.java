@@ -2,13 +2,20 @@ package software.wings.beans;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
 import io.harness.exception.FailureType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.WorkflowStandardParams.Builder;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -129,5 +136,32 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
                    failureStrategies, EnumSet.<FailureType>of(FailureType.CONNECTIVITY), "dummy"))
         .isEqualTo(failureStrategies.get(4));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldReturnTrueWhenExecutionHostsPresent() {
+    CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    WorkflowStandardParams workflowStandardParams =
+        Builder.aWorkflowStandardParams().withExecutionHosts(Collections.singletonList("host1")).build();
+    doReturn(workflowStandardParams).when(context).getContextElement(ContextElementType.STANDARD);
+
+    boolean executionHostsPresent = canaryWorkflowExecutionAdvisor.isExecutionHostsPresent(context);
+
+    assertThat(executionHostsPresent).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldReturnFalseWhenExecutionHostsNotPresent() {
+    CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    WorkflowStandardParams workflowStandardParams = Builder.aWorkflowStandardParams().withExecutionHosts(null).build();
+    doReturn(workflowStandardParams).when(context).getContextElement(ContextElementType.STANDARD);
+
+    boolean executionHostsPresent = canaryWorkflowExecutionAdvisor.isExecutionHostsPresent(context);
+
+    assertThat(executionHostsPresent).isFalse();
   }
 }

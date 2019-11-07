@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -22,7 +23,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.context.ContextElementType;
-import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.MapperUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -40,7 +40,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
 
 import java.util.ArrayList;
@@ -197,6 +196,9 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     PageRequest<ServiceInstance> pageRequest = buildPageRequest();
+    if (pageRequest == null) {
+      return emptyList();
+    }
     PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest);
     return convertToInstanceElements(instances.getResponse());
   }
@@ -222,7 +224,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @return the page request
    */
   PageRequest<ServiceInstance> buildPageRequest() {
-    Application app = ((ExecutionContextImpl) context).getApp();
+    Application app = requireNonNull(context.getApp());
     PageRequestBuilder pageRequest = aPageRequest().withLimit(UNLIMITED);
 
     //    applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
@@ -232,7 +234,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     PageRequest<ServiceInstance> req = pageRequest.build();
     // Just for safety
     if (isEmpty(req.getFilters())) {
-      throw new InvalidRequestException("No Filter attached to filter service instances");
+      return null;
     }
     req.addFilter("appId", Operator.EQ, app.getUuid());
     return req;

@@ -46,6 +46,7 @@ public class ExecutionArgs {
   @Getter @Setter private boolean notifyTriggeredUserOnly;
   private List<ArtifactVariable> artifactVariables;
   @Getter @Setter private DeploymentTriggerExecutionArgs triggerExecutionArgs;
+  @Getter @Setter private List<String> hosts;
 
   /**
    * Gets service id.
