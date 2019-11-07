@@ -316,19 +316,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     }
   }
 
-  private String extractEncryptedRecordId(String encryptedValue) {
-    if (isBlank(encryptedValue)) {
-      return encryptedValue;
-    }
-
-    int pos = encryptedValue.indexOf(':');
-    if (pos == -1) {
-      return encryptedValue;
-    } else {
-      return encryptedValue.substring(pos + 1);
-    }
-  }
-
   private ServiceVariable updateServiceVariables(String accountId, List<NameValuePair.Yaml> configVarsToUpdate,
       Map<String, ServiceVariable> serviceVariableMap, ServiceVariable lastUpdatedServiceVariable) {
     for (NameValuePair.Yaml configVar : configVarsToUpdate) {
@@ -341,7 +328,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           break;
 
         case ENCRYPTED_TEXT:
-          String encryptedRecordId = extractEncryptedRecordId(value);
+          String encryptedRecordId = yamlHelper.extractEncryptedRecordId(value);
           serviceVariable.setEncryptedValue(encryptedRecordId);
           serviceVariable.setValue(isBlank(encryptedRecordId) ? null : encryptedRecordId.toCharArray());
           break;
@@ -389,7 +376,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       // it will be persisted as such which we do not want, therefore we need to extract out the
       // encrypted record id.
       serviceVariableBuilder.value(
-          cv.getValue() != null ? extractEncryptedRecordId(cv.getValue()).toCharArray() : null);
+          cv.getValue() != null ? yamlHelper.extractEncryptedRecordId(cv.getValue()).toCharArray() : null);
     } else if ("ARTIFACT".equals(cv.getValueType())) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         serviceVariableBuilder.type(Type.ARTIFACT);

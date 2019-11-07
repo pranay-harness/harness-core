@@ -483,7 +483,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
       switch (serviceVariable.getType()) {
         case ENCRYPTED_TEXT:
-          String encryptedRecordId = extractEncryptedRecordId(value);
+          String encryptedRecordId = yamlHelper.extractEncryptedRecordId(value);
           serviceVariable.setEncryptedValue(encryptedRecordId);
           serviceVariable.setValue(isBlank(encryptedRecordId) ? null : encryptedRecordId.toCharArray());
           break;
@@ -512,19 +512,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     }
 
     return lastUpdatedServiceVariable;
-  }
-
-  private String extractEncryptedRecordId(String encryptedValue) {
-    if (isBlank(encryptedValue)) {
-      return encryptedValue;
-    }
-
-    int pos = encryptedValue.indexOf(':');
-    if (pos == -1) {
-      return encryptedValue;
-    } else {
-      return encryptedValue.substring(pos + 1);
-    }
   }
 
   private ServiceVariable createNewVariableOverride(String appId, String envId, VariableOverrideYaml overrideYaml) {
@@ -578,8 +565,9 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       variableBuilder.value(overrideYaml.getValue() != null ? overrideYaml.getValue().toCharArray() : null);
     } else if ("ENCRYPTED_TEXT".equals(overrideYaml.getValueType())) {
       variableBuilder.type(Type.ENCRYPTED_TEXT);
-      variableBuilder.encryptedValue(overrideYaml.getValue());
-      variableBuilder.value(overrideYaml.getValue() != null ? overrideYaml.getValue().toCharArray() : null);
+      String encryptedRecordId = yamlHelper.extractEncryptedRecordId(overrideYaml.getValue());
+      variableBuilder.encryptedValue(encryptedRecordId);
+      variableBuilder.value(isBlank(encryptedRecordId) ? null : encryptedRecordId.toCharArray());
     } else if ("ARTIFACT".equals(overrideYaml.getValueType())) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         variableBuilder.type(Type.ARTIFACT);
