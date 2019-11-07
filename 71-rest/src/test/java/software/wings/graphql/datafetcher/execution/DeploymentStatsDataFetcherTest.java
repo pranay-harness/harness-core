@@ -472,19 +472,29 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testStackedTimeSeriesData() {
+  public void testStackedTimeSeriesDataForCount() {
+    testStackedTimeSeriesData(QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testStackedTimeSeriesDataForInstancesDeployed() {
+    testStackedTimeSeriesData(
+        QLDeploymentAggregationFunction.builder().instancesDeployed(QLCountAggregateOperation.SUM).build());
+  }
+
+  private void testStackedTimeSeriesData(QLDeploymentAggregationFunction deploymentAggregationFunction) {
     try {
-      QLStackedTimeSeriesData data =
-          (QLStackedTimeSeriesData) dataFetcher.fetch(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
-              QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build(), new ArrayList<>(),
-              Arrays.asList(QLDeploymentAggregation.builder()
-                                .timeAggregation(QLTimeSeriesAggregation.builder()
-                                                     .timeAggregationType(QLTimeAggregationType.DAY)
-                                                     .timeAggregationValue(1)
-                                                     .build())
-                                .entityAggregation(QLDeploymentEntityAggregation.EnvironmentType)
-                                .build()),
-              new ArrayList<>());
+      QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) dataFetcher.fetch(
+          DeploymentStatsDataFetcherTestKeys.ACCOUNTID, deploymentAggregationFunction, new ArrayList<>(),
+          Arrays.asList(QLDeploymentAggregation.builder()
+                            .timeAggregation(QLTimeSeriesAggregation.builder()
+                                                 .timeAggregationType(QLTimeAggregationType.DAY)
+                                                 .timeAggregationValue(1)
+                                                 .build())
+                            .entityAggregation(QLDeploymentEntityAggregation.EnvironmentType)
+                            .build()),
+          new ArrayList<>());
 
       validateStackedTimeSeriesDataPoint(data.getData().get(0), currentTime + 3600000 * 1);
       validateStackedTimeSeriesDataPoint(data.getData().get(1), currentTime + 3600000 * 2);
