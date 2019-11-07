@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
@@ -659,5 +660,18 @@ public class YamlHelper {
 
   public String getYamlPathForEntity(Object entity) {
     return entityUpdateService.getEntityRootFilePath(entity);
+  }
+
+  public String extractEncryptedRecordId(String encryptedValue) {
+    if (isBlank(encryptedValue)) {
+      return encryptedValue;
+    }
+
+    int pos = encryptedValue.indexOf(':');
+    if (pos == -1) {
+      return encryptedValue;
+    } else {
+      return encryptedValue.substring(pos + 1);
+    }
   }
 }
