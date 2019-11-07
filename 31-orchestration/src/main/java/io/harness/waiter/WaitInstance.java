@@ -1,6 +1,7 @@
 package io.harness.waiter;
 
 import static java.time.Duration.ofDays;
+import static java.time.Duration.ofHours;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.ExecutionStatus;
@@ -36,10 +37,10 @@ import java.util.List;
                , @Field(WaitInstanceKeys.correlationIds) }))
 public class WaitInstance implements PersistentEntity, UuidAccess {
   public static final Duration TTL = ofDays(21);
-  public static final Duration AfterFinishTTL = Duration.ofHours(1);
+  public static final Duration AfterFinishTTL = ofHours(1);
 
   @Id private String uuid;
-  @Indexed private List<String> correlationIds;
+  private List<String> correlationIds;
   @Indexed private List<String> waitingOnCorrelationIds;
   private NotifyCallback callback;
 
