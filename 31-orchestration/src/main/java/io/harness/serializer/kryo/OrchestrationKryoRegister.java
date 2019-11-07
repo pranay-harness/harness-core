@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.KryoRegistrar;
@@ -21,5 +22,6 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(WorkflowType.class, 5025);
     kryo.register(DelegateTask.Status.class, 5004);
     kryo.register(DelegateTask.class, 5003);
+    kryo.register(SweepingOutput.class, 3101);
   }
 }

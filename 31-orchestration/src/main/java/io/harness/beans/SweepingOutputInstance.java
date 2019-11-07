@@ -20,6 +20,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.converters.SimpleValueConverter;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -59,7 +60,7 @@ public class SweepingOutputInstance implements PersistentEntity, UuidAccess {
 
   @NotNull @Trimmed private String name;
 
-  public static class SweepingOutputConverter extends KryoConverter {
+  public static class SweepingOutputConverter extends KryoConverter implements SimpleValueConverter {
     public SweepingOutputConverter() {
       super(SweepingOutput.class);
     }
