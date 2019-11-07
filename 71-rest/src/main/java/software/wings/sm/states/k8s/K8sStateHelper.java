@@ -262,19 +262,27 @@ public class K8sStateHelper {
           format("Infra mapping not found for appId %s infraMappingId %s", appId, infraMappingId));
     }
 
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getManifestByServiceId(appId, infraMapping.getServiceId());
+    return doManifestsUseArtifactInternal(appId, infraMapping.getServiceId(), infraMapping.getEnvId());
+  }
+
+  private boolean doManifestsUseArtifactInternal(String appId, String serviceId, String envId) {
+    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
     if (doesValuesFileContainArtifact(applicationManifest)) {
       return true;
     }
 
-    applicationManifest = applicationManifestService.getByEnvId(appId, infraMapping.getEnvId(), AppManifestKind.VALUES);
+    applicationManifest = applicationManifestService.getAppManifest(appId, null, serviceId, AppManifestKind.VALUES);
     if (doesValuesFileContainArtifact(applicationManifest)) {
       return true;
     }
 
-    applicationManifest = applicationManifestService.getByEnvAndServiceId(
-        appId, infraMapping.getEnvId(), infraMapping.getServiceId(), AppManifestKind.VALUES);
+    applicationManifest = applicationManifestService.getByEnvId(appId, envId, AppManifestKind.VALUES);
+    if (doesValuesFileContainArtifact(applicationManifest)) {
+      return true;
+    }
+
+    applicationManifest =
+        applicationManifestService.getByEnvAndServiceId(appId, envId, serviceId, AppManifestKind.VALUES);
 
     return doesValuesFileContainArtifact(applicationManifest);
   }
@@ -286,21 +294,7 @@ public class K8sStateHelper {
           format("Infra mapping not found for appId %s infraMappingId %s", appId, infraDefinitionId));
     }
 
-    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
-    if (doesValuesFileContainArtifact(applicationManifest)) {
-      return true;
-    }
-
-    applicationManifest =
-        applicationManifestService.getByEnvId(appId, infrastructureDefinition.getEnvId(), AppManifestKind.VALUES);
-    if (doesValuesFileContainArtifact(applicationManifest)) {
-      return true;
-    }
-
-    applicationManifest = applicationManifestService.getByEnvAndServiceId(
-        appId, infrastructureDefinition.getEnvId(), serviceId, AppManifestKind.VALUES);
-
-    return doesValuesFileContainArtifact(applicationManifest);
+    return doManifestsUseArtifactInternal(appId, serviceId, infrastructureDefinition.getEnvId());
   }
 
   private boolean doesValuesFileContainArtifact(ApplicationManifest applicationManifest) {
