@@ -35,6 +35,8 @@ public class RelatedDeploymentEntityTestUtils {
   public static DBObject createWorkflowExecutionChanges() {
     BasicDBObject basicDBObject = new BasicDBObject();
     basicDBObject.put("status", "RUNNING");
+    basicDBObject.put("pipelineExecutionId", "pipelineExecutionId");
+
     return basicDBObject;
   }
 

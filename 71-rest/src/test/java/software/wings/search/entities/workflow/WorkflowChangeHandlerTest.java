@@ -141,8 +141,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
-    Workflow workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
+    Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
+        accountId, appId, workflowId, environmentId, serviceId, service, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowInsertChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.INSERT);
@@ -154,8 +154,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
-    Workflow workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
+    Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
+        accountId, appId, workflowId, environmentId, serviceId, service, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowDeleteChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.DELETE);
@@ -167,8 +167,8 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
-    Workflow workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
+    Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
+        accountId, appId, workflowId, environmentId, serviceId, service, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     ChangeEvent workflowUpdateChangeEvent =
         WorkflowEntityTestUtils.createWorkflowChangeEvent(workflow, ChangeType.UPDATE);

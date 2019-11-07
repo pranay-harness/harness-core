@@ -25,7 +25,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
-import software.wings.search.entities.pipeline.PipelineSearchEntity;
 import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView.DeploymentRelatedEntityViewKeys;
 import software.wings.search.entities.related.deployment.RelatedDeploymentViewBuilder;
@@ -190,7 +189,7 @@ public class WorkflowChangeHandler implements ChangeHandler {
         String fieldToUpdate = DeploymentRelatedEntityViewKeys.pipelineExecutionId;
         result = result
             && searchDao.updateListInMultipleDocuments(
-                   PipelineSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
+                   WorkflowSearchEntity.TYPE, entityType, newNameValue, documentToUpdate, fieldToUpdate);
       }
     }
     return result;
