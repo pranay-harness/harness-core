@@ -11,6 +11,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getStageService;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.Blue;
 import static software.wings.beans.Log.LogColor.Green;
@@ -213,7 +214,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     return k8sTaskHelper.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
   }
 
-  private boolean prepareForBlueGreen(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
+  @VisibleForTesting
+  boolean prepareForBlueGreen(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
       List<KubernetesResource> workloads = getWorkloads(resources);
@@ -262,9 +264,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         stageService = getKubernetesResourceFromSpec(primaryService.getSpec());
         stageService.appendSuffixInName("-stage");
         resources.add(stageService);
-        executionLogCallback.saveExecutionLog(
-            String.format("Created Stage service [%s] using Spec from Primary Service [%s]",
-                stageService.getResourceId().getName(), primaryService.getResourceId().getName()));
+        executionLogCallback.saveExecutionLog(format("Created Stage service [%s] using Spec from Primary Service [%s]",
+            stageService.getResourceId().getName(), primaryService.getResourceId().getName()));
       }
 
       Service primaryServiceInCluster;
@@ -287,6 +288,16 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
         primaryColor = (primaryServiceInCluster != null) ? getColorFromService(primaryServiceInCluster)
                                                          : HarnessLabelValues.colorDefault;
+
+        if (primaryColor == null) {
+          executionLogCallback.saveExecutionLog(
+              format(
+                  "Found conflicting service [%s] in the cluster. For blue/green deployment, the label [harness.io/color] is required in service selector. Delete this existing service to proceed",
+                  primaryService.getResourceId().getName()),
+              ERROR, FAILURE);
+          return false;
+        }
+
         stageColor = getInverseColor(primaryColor);
 
       } catch (Exception e) {

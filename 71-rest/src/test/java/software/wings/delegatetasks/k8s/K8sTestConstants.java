@@ -86,4 +86,17 @@ public interface K8sTestConstants {
       + "      resources:\n"
       + "        requests:\n"
       + "          storage: 1Gi\n";
+
+  String SERVICE_YAML = "apiVersion: v1\n"
+      + "kind: Service\n"
+      + "metadata:\n"
+      + "  name: servicename\n"
+      + "spec:\n"
+      + "  type: ClusterIp\n"
+      + "  ports:\n"
+      + "  - port: 80\n"
+      + "    targetPort: 8080\n"
+      + "    protocol: TCP\n"
+      + "  selector:\n"
+      + "    app: test";
 }
