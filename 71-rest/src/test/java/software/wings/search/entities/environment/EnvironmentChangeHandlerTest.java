@@ -97,8 +97,8 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
     assertThat(pipeline).isNotNull();
     wingsPersistence.save(pipeline);
 
-    workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
+    workflow = WorkflowEntityTestUtils.createWorkflow(
+        accountId, appId, workflowId, environmentId, serviceId, service, WORKFLOW_NAME);
     assertThat(workflow).isNotNull();
     wingsPersistence.save(workflow);
 

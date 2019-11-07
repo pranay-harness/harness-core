@@ -87,8 +87,8 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
     assertThat(environment).isNotNull();
     wingsPersistence.save(environment);
 
-    workflow =
-        WorkflowEntityTestUtils.createWorkflow(accountId, appId, workflowId, environmentId, serviceId, WORKFLOW_NAME);
+    workflow = WorkflowEntityTestUtils.createWorkflow(
+        accountId, appId, workflowId, environmentId, serviceId, service, WORKFLOW_NAME);
     assertThat(environment).isNotNull();
     wingsPersistence.save(workflow);
 
@@ -233,6 +233,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.INSERT);
+
     when(searchDao.addTimestamp(eq(PipelineSearchEntity.TYPE), eq(PipelineViewKeys.deploymentTimestamps), anyString(),
              anyLong(), anyInt()))
         .thenReturn(true);
@@ -249,6 +250,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
         RelatedDeploymentEntityTestUtils.createWorkflowExecutionChangeEvent(workflowExecution, ChangeType.UPDATE);
+
     when(searchDao.updateListInMultipleDocuments(
              eq(PipelineSearchEntity.TYPE), eq(PipelineViewKeys.deployments), anyString(), anyString(), anyString()))
         .thenReturn(true);

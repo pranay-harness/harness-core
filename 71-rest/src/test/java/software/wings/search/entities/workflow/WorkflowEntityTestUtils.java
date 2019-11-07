@@ -11,32 +11,50 @@ import io.harness.beans.WorkflowType;
 import io.harness.data.structure.UUIDGenerator;
 import software.wings.api.DeploymentType;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 import software.wings.search.framework.changestreams.ChangeType;
 
+import java.util.Arrays;
+
 public class WorkflowEntityTestUtils {
-  public static Workflow createWorkflow(
-      String accountId, String appId, String workflowId, String envId, String serviceId, String workflowName) {
-    return aWorkflow()
-        .name(workflowName)
-        .appId(appId)
-        .envId(envId)
-        .uuid(workflowId)
-        .accountId(accountId)
-        .workflowType(WorkflowType.ORCHESTRATION)
-        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
-                                   .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
-                                   .addWorkflowPhase(aWorkflowPhase()
-                                                         .name("Phase 1")
-                                                         .serviceId(serviceId)
-                                                         .deploymentType(DeploymentType.SSH)
-                                                         .infraMappingId(UUIDGenerator.generateUuid())
-                                                         .build())
-                                   .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
-                                   .build())
-        .build();
+  public static Workflow createWorkflow(String accountId, String appId, String workflowId, String envId,
+      String serviceId, Service service, String workflowName) {
+    Workflow workflow =
+        aWorkflow()
+            .name(workflowName)
+            .appId(appId)
+            .envId(envId)
+            .serviceId(serviceId)
+            .services(Arrays.asList(service))
+            .uuid(workflowId)
+            .accountId(accountId)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                       .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+                                       .addWorkflowPhase(aWorkflowPhase()
+                                                             .name("Phase 1")
+                                                             .serviceId(serviceId)
+                                                             .deploymentType(DeploymentType.SSH)
+                                                             .infraMappingId(UUIDGenerator.generateUuid())
+                                                             .build())
+                                       .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+                                       .build())
+            .build();
+
+    workflow.setOrchestration(aCanaryOrchestrationWorkflow()
+                                  .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+                                  .addWorkflowPhase(aWorkflowPhase()
+                                                        .name("Phase 1")
+                                                        .serviceId(serviceId)
+                                                        .deploymentType(DeploymentType.SSH)
+                                                        .infraMappingId(UUIDGenerator.generateUuid())
+                                                        .build())
+                                  .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+                                  .build());
+    return workflow;
   }
 
   private static DBObject getWorkflowChanges() {
