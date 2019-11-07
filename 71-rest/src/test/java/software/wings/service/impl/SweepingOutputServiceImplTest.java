@@ -5,11 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
+import lombok.Builder;
+import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,13 +30,37 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
   private SweepingOutputInstanceBuilder sweepingOutputBuilder;
   private SweepingOutputInstance sweepingOutputInstance;
 
+  @Value
+  @Builder
+  public static class SweepingOutputValue implements SweepingOutput {
+    String text;
+  }
+
   @Before
   public void setup() {
     sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(
         generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(), Scope.WORKFLOW);
 
-    sweepingOutputInstance = sweepingOutputService.save(
-        sweepingOutputBuilder.name(SWEEPING_OUTPUT_NAME).output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT)).build());
+    sweepingOutputInstance =
+        sweepingOutputService.save(sweepingOutputBuilder.name(SWEEPING_OUTPUT_NAME)
+                                       .output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT))
+                                       .value(SweepingOutputValue.builder().text(SWEEPING_OUTPUT_CONTENT).build())
+                                       .build());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testSweepingOutputObtainValue() {
+    SweepingOutputInstance savedSweepingOutputInstance =
+        sweepingOutputService.find(SweepingOutputInquiry.builder()
+                                       .name(SWEEPING_OUTPUT_NAME)
+                                       .appId(sweepingOutputInstance.getAppId())
+                                       .phaseExecutionId(sweepingOutputInstance.getPipelineExecutionId())
+                                       .workflowExecutionId(sweepingOutputInstance.getWorkflowExecutionIds().get(0))
+                                       .build());
+
+    assertThat(((SweepingOutputValue) savedSweepingOutputInstance.getValue()).getText())
+        .isEqualTo(SWEEPING_OUTPUT_CONTENT);
   }
 
   @Test
