@@ -56,6 +56,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   private static final long JIRA_TASK_TIMEOUT_MILLIS = 60 * 1000;
   private static final String JIRA_ISSUE_ID = "issueId";
   private static final String JIRA_ISSUE_KEY = "issueKey";
+  private static final String JIRA_ISSUE = "issue";
 
   @Inject private transient ActivityService activityService;
   @Inject @Transient private transient WingsPersistence wingsPersistence;
@@ -201,8 +202,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   }
 
   private String createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
 
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
@@ -222,6 +222,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         && executionContext.getOrchestrationWorkflowType().equals(BUILD)) {
       activityBuilder.environmentId(GLOBAL_ENV_ID).environmentName(GLOBAL_ENV_ID).environmentType(ALL);
     } else {
+      Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
       activityBuilder.environmentId(env.getUuid())
           .environmentName(env.getName())
           .environmentType(env.getEnvironmentType());
@@ -241,9 +242,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
     jiraExecutionData.setActivityId(activityId);
 
     if (jiraExecutionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
-      Map<String, String> sweepingOutputMap = new HashMap<>();
+      Map<String, Object> sweepingOutputMap = new HashMap<>();
       sweepingOutputMap.put(JIRA_ISSUE_ID, jiraExecutionData.getIssueId());
       sweepingOutputMap.put(JIRA_ISSUE_KEY, jiraExecutionData.getIssueKey());
+      sweepingOutputMap.put(JIRA_ISSUE, jiraExecutionData.getJiraIssueData());
       handleSweepingOutput(sweepingOutputService, context, sweepingOutputMap);
     }
 

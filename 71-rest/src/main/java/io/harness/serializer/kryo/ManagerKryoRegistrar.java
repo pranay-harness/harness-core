@@ -101,6 +101,7 @@ import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsRoute53WeightUpdateStateExecutionData;
 import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.api.jira.JiraExecutionData.JiraIssueData;
 import software.wings.api.jira.JiraField;
 import software.wings.api.jira.JiraIssueType;
 import software.wings.api.jira.JiraProjectData;
@@ -1388,5 +1389,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaDetailsResponse.class, 7256);
     kryo.register(AwsLambdaDetails.class, 7257);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
+
+    kryo.register(JiraIssueData.class, 7259);
   }
 }

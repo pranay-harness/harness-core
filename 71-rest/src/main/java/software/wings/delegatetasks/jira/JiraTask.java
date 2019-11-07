@@ -10,6 +10,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.BasicCredentials;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.api.jira.JiraExecutionData.JiraIssueData;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.jira.JiraCustomFieldValue;
 import software.wings.beans.jira.JiraTaskParameters;
@@ -258,6 +260,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
     List<String> issueKeys = new ArrayList<>();
     List<String> issueUrls = new ArrayList<>();
+    JiraIssueData firstIssueInListData = null;
 
     for (String issueId : parameters.getUpdateIssueIds()) {
       try {
@@ -268,6 +271,11 @@ public class JiraTask extends AbstractDelegateRunnableTask {
 
         if (EmptyPredicate.isNotEmpty(parameters.getSummary())) {
           update.field(Field.SUMMARY, parameters.getSummary());
+          fieldsUpdated = true;
+        }
+
+        if (EmptyPredicate.isNotEmpty(parameters.getDescription())) {
+          update.field(Field.DESCRIPTION, parameters.getDescription());
           fieldsUpdated = true;
         }
 
@@ -298,6 +306,10 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         logger.info("Successfully updated ticket : " + issueId);
         issueKeys.add(issue.getKey());
         issueUrls.add(getIssueUrl(parameters.getJiraConfig(), issue));
+
+        if (firstIssueInListData == null) {
+          firstIssueInListData = JiraIssueData.builder().description(parameters.getDescription()).build();
+        }
       } catch (JiraException j) {
         String errorMessage = "Failed to update jira issue : " + issueId;
         logger.error(errorMessage, j);
@@ -320,6 +332,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         .issueUrl(issueUrls.toString().replaceAll("[\\[\\]]", ""))
         .issueId(parameters.getUpdateIssueIds().get(0))
         .issueKey(issueKeys.get(0))
+        .jiraIssueData(firstIssueInListData)
         .build();
   }
 
@@ -417,6 +430,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .issueId(issue.getId())
           .issueKey(issue.getKey())
           .issueUrl(getIssueUrl(parameters.getJiraConfig(), issue))
+          .jiraIssueData(JiraIssueData.builder().description(issue.getDescription()).build())
           .build();
     } catch (JiraException e) {
       logger.error("Unable to create a new Jira ticket", e);
@@ -460,7 +474,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
         return Arrays.asList(fieldValue.split(" "));
 
       default:
-        throw new WingsException("FieldType " + type + "not supported in Harness for " + fieldName);
+        throw new InvalidRequestException("FieldType " + type + "not supported in Harness for " + fieldName);
     }
   }
 
@@ -560,6 +574,7 @@ public class JiraTask extends AbstractDelegateRunnableTask {
           .issueKey(issue.getKey())
           .currentStatus(approvalFieldValue)
           .errorMessage(message)
+          .jiraIssueData(JiraIssueData.builder().description(issue.getDescription()).build())
           .build();
     } catch (JiraException e) {
       String error = "Unable to fetch Jira for id: " + parameters.getIssueId();
