@@ -354,10 +354,7 @@ public class LdapHelper {
         } else {
           logger.info("LDAP auth failed, response not available for identifier:[{}]", identifier);
         }
-        return LdapResponse.builder()
-            .status(Status.FAILURE)
-            .message(response.getResultCode() == null ? "" : response.getResultCode().toString())
-            .build();
+        return LdapResponse.builder().status(Status.FAILURE).message(LdapConstants.INVALID_CREDENTIALS).build();
       }
     } catch (LdapException e) {
       logger.error(String.format("Ldap authentication failed for identifier: [{}] and Ldap display Name: [{}]",
@@ -365,7 +362,7 @@ public class LdapHelper {
           e);
       return LdapResponse.builder()
           .status(Status.FAILURE)
-          .message(e.getResultCode() == null ? "" : e.getResultCode().toString())
+          .message(e.getResultCode() == null ? LdapConstants.INVALID_CREDENTIALS : e.getResultCode().toString())
           .build();
     }
   }

@@ -37,4 +37,5 @@ public class LdapConstants {
   public static final String SSO_PROVIDER_NOT_REACHABLE = "SSO Provider %s not reachable from delegates.";
   public static final String NO_USER_CONFIG_FAILURE =
       "No user config found. Please send at least one user configuration.";
+  public static final String INVALID_CREDENTIALS = "INVALID CREDENTIALS";
 }
