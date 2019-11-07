@@ -1,14 +1,14 @@
 #!/bin/sh
 #
 
-BUILD=`pushd tools; mvn install; popd`
+BUILD=`pushd tools; mvn ${MAVEN_ARGS} install; popd`
 if [ $? -ne 0 ]
 then
     echo "$BUILD"
     exit 1
 fi
 
-CHECKING=`mvn checkstyle:checkstyle`
+CHECKING=`mvn ${MAVEN_ARGS} checkstyle:checkstyle`
 if [ $? -ne 0 ]
 then
     echo "$CHECKING"

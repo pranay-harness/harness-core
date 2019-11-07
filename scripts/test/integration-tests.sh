@@ -7,7 +7,7 @@ echo vault token: $vault_token
 serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ \"serviceType\" : \"LEARNING_ENGINE\" }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo learing engine secret: $serviceSecret
 export LEARNING_SERVICE_SECRET=$serviceSecret
-mvn -B failsafe:integration-test -DskipITs=false -P integration-coverage -Dvault.token=$vault_token -DforkCount=8
+mvn ${MAVEN_ARGS} failsafe:integration-test -DskipITs=false -P integration-coverage -Dvault.token=$vault_token -DforkCount=8
 test_status=$?
 
 # take dump of mongodb

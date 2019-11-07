@@ -67,8 +67,8 @@ else
 
     if [ ! -z "$POMS" ]
     then
-        mvn sortpom:sort > /dev/null
-        pushd tools > /dev/null; mvn sortpom:sort > /dev/null; popd > /dev/null
+        mvn ${MAVEN_ARGS} sortpom:sort > /dev/null
+        pushd tools > /dev/null; mvn ${MAVEN_ARGS} sortpom:sort > /dev/null; popd > /dev/null
 
         #do the formatting
         for file in `find . -type f -name pom.xml`
