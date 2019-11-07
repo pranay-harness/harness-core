@@ -33,6 +33,14 @@ public class JiraExecutionData extends StateExecutionData implements DelegateTas
 
   private String currentStatus;
 
+  private JiraIssueData jiraIssueData;
+
+  @Data
+  @Builder
+  public static class JiraIssueData {
+    private String description;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
