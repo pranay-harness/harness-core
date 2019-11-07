@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
+import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
@@ -45,6 +46,7 @@ public class PipelineGovernanceReportEvaluator {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HarnessTagService harnessTagService;
   @Inject private PipelineGovernanceService pipelineGovernanceService;
+  @Inject @OnPipeline private GovernanceStatusEvaluator<Pipeline> pipelineStatusEvaluator;
 
   @Inject @OnWorkflow private GovernanceStatusEvaluator<Workflow> workflowStatusEvaluator;
 
@@ -61,10 +63,14 @@ public class PipelineGovernanceReportEvaluator {
     for (PipelineGovernanceRule rule : governanceConfigRules) {
       List<GovernanceRuleStatus> tempStatuses = new LinkedList<>();
 
+      GovernanceRuleStatus ruleStatus =
+          pipelineStatusEvaluator.status(accountId, reportEvaluationContext.getPipeline(), rule);
+      tempStatuses.add(ruleStatus);
+
       // looks for tags in workflows. If you want to look for tags in some other entity like Commands, then add that
       // logic here by implementing `GovernanceStatusEvaluator` for Command entity and using it here
       for (Workflow workflow : reportEvaluationContext.getWorkflows()) {
-        GovernanceRuleStatus ruleStatus = workflowStatusEvaluator.status(accountId, workflow, rule);
+        ruleStatus = workflowStatusEvaluator.status(accountId, workflow, rule);
         tempStatuses.add(ruleStatus);
       }
 
