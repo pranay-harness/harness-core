@@ -146,6 +146,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   List<StateExecutionInstance> getStateExecutionInstances(String appId, String executionUuid);
 
+  List<StateExecutionInstance> getStateExecutionInstancesForPhases(String executionUuid);
+
   void refreshBuildExecutionSummary(String workflowExecutionId, BuildExecutionSummary buildExecutionSummary);
 
   Set<WorkflowExecutionBaseline> markBaseline(String appId, String workflowExecutionId, boolean isBaseline);

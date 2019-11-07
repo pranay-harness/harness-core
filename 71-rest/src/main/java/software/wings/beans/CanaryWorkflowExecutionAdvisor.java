@@ -50,6 +50,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 
@@ -139,6 +140,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
         if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() == SUCCESS) {
           if (!rolling) {
+            return null;
+          }
+
+          if (isExecutionHostsPresent(context)) {
             return null;
           }
 
@@ -303,6 +308,16 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             workflowExecution.getUuid(), ex);
       }
     }
+  }
+
+  boolean isExecutionHostsPresent(ExecutionContextImpl context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+    if (workflowStandardParams != null && isNotEmpty(workflowStandardParams.getExecutionHosts())) {
+      logger.info("Not generating rolling  phases when execution hosts are present");
+      return true;
+    }
+    return false;
   }
 
   private ExecutionEventAdvice computeExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,

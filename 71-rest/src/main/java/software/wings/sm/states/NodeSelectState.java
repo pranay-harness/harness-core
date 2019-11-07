@@ -5,6 +5,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
@@ -32,18 +33,23 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
+import software.wings.beans.ServiceInstanceSelectionParams.Builder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -51,6 +57,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.HashMap;
@@ -79,6 +86,9 @@ public abstract class NodeSelectState extends State {
   @Inject @Transient private ArtifactService artifactService;
 
   @Inject private transient StateExecutionService stateExecutionService;
+  @Inject @Transient private FeatureFlagService featureFlagService;
+  @Inject @Transient private AppService appService;
+  @Inject @Transient private WorkflowExecutionService workflowExecutionService;
 
   NodeSelectState(String name, String stateType) {
     super(name, stateType);
@@ -87,7 +97,7 @@ public abstract class NodeSelectState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      String appId = ((ExecutionContextImpl) context).getApp().getUuid();
+      String appId = requireNonNull(context.getApp()).getUuid();
 
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
       String serviceId = phaseElement.getServiceElement().getUuid();
@@ -128,6 +138,12 @@ public abstract class NodeSelectState extends State {
       }
       selectionParams.withCount(instancesToAdd);
 
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+      StringBuilder message = new StringBuilder();
+      boolean nodesOverriddenFromExecutionHosts = processExecutionHosts(
+          appId, selectionParams, workflowStandardParams, message, context.getWorkflowExecutionId());
+
       logger.info(
           "Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
       List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
@@ -136,11 +152,10 @@ public abstract class NodeSelectState extends State {
       String errorMessage = buildServiceInstancesErrorMessage(
           serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
 
-      if (isNotEmpty(errorMessage)) {
+      if (isNotEmpty(errorMessage) && !nodesOverriddenFromExecutionHosts) {
         return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
       }
 
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       boolean excludeHostsWithSameArtifact = false;
       if (workflowStandardParams != null) {
         excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact()
@@ -151,7 +166,7 @@ public abstract class NodeSelectState extends State {
             || InfrastructureMappingType.AZURE_INFRA.name().equals(infrastructureMapping.getInfraMappingType())
             || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name().equals(
                    infrastructureMapping.getInfraMappingType())) {
-          if (excludeHostsWithSameArtifact) {
+          if (excludeHostsWithSameArtifact && !nodesOverriddenFromExecutionHosts) {
             serviceInstances =
                 excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
           }
@@ -182,12 +197,38 @@ public abstract class NodeSelectState extends State {
           executionResponse.errorMessage("No nodes selected (Nodes already deployed with the same artifact)");
         }
       }
+      if (nodesOverriddenFromExecutionHosts) {
+        executionResponse.errorMessage(message.toString());
+      }
+
       return executionResponse.build();
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  boolean processExecutionHosts(String appId, Builder selectionParams, WorkflowStandardParams workflowStandardParams,
+      StringBuilder message, String workflowExecutionId) {
+    if (workflowStandardParams != null && isNotEmpty(workflowStandardParams.getExecutionHosts())
+        && featureFlagService.isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, appService.getAccountIdByAppId(appId))) {
+      List<StateExecutionInstance> stateExecutionInstancesForPhases =
+          workflowExecutionService.getStateExecutionInstancesForPhases(workflowExecutionId);
+      if (stateExecutionInstancesForPhases.size() == 1) {
+        message.append("Nodes have been overridden from execution time nodes");
+        List<String> executionHosts = workflowStandardParams.getExecutionHosts();
+        selectionParams.withSelectSpecificHosts(true);
+        selectionParams.withHostNames(executionHosts);
+        selectionParams.withCount(executionHosts.size());
+      } else {
+        message.append("No nodes selected as targeted nodes have already been deployed");
+        selectionParams.withSelectSpecificHosts(true);
+        selectionParams.withCount(0);
+      }
+      return true;
+    }
+    return false;
   }
 
   private int getCount(int maxInstances) {
@@ -258,7 +299,7 @@ public abstract class NodeSelectState extends State {
       errorMessage =
           "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
     } else if (serviceInstances.size() > DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
-      Account account = accountService.get(((ExecutionContextImpl) context).getApp().getAccountId());
+      Account account = accountService.get(requireNonNull(context.getApp()).getAccountId());
       if (account == null
           || (account.getLicenseInfo() != null && isNotEmpty(account.getLicenseInfo().getAccountType())
                  && AccountType.COMMUNITY.equals(account.getLicenseInfo().getAccountType()))) {

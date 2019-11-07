@@ -1165,6 +1165,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
     }
 
+    validateExecutionArgsHosts(executionArgs.getHosts(), workflowExecution, workflow);
+
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
@@ -1197,9 +1199,30 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
     stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
+    stdParams.setExecutionHosts(executionArgs.getHosts());
 
     return triggerExecution(workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(),
         workflowExecutionUpdate, stdParams, trigger, null, workflow);
+  }
+
+  void validateExecutionArgsHosts(List<String> hosts, WorkflowExecution workflowExecution, Workflow workflow) {
+    if (isEmpty(hosts)) {
+      return;
+    }
+
+    List<String> serviceIds = workflowExecution.getServiceIds();
+    if (isEmpty(serviceIds) || serviceIds.size() > 1) {
+      throw new InvalidRequestException("Execution Hosts only supported for single service workflow", USER);
+    }
+
+    List<DeploymentType> deploymentTypes = workflow.getDeploymentTypes();
+    if (isEmpty(deploymentTypes) || deploymentTypes.size() > 1) {
+      throw new InvalidRequestException("Execution Hosts only supported for single deployment type", USER);
+    }
+
+    if (deploymentTypes.get(0) != DeploymentType.SSH) {
+      throw new InvalidRequestException("Execution Hosts only supported for SSH deployment type", USER);
+    }
   }
 
   private Map<String, Object> getWorkflowVariables(
@@ -1732,6 +1755,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String envId, ExecutionArgs executionArgs, Trigger trigger) {
     String accountId = appService.getAccountIdByAppId(appId);
 
+    validateExecutionArgsHosts(executionArgs, trigger);
+    executionArgs.setHosts(trimExecutionArgsHosts(executionArgs.getHosts()));
+
     try {
       WorkflowExecution execution = triggerEnvExecution(appId, envId, executionArgs, null, trigger);
       alertService.closeAlertsOfType(accountId, appId, AlertType.USAGE_LIMIT_EXCEEDED);
@@ -1748,6 +1774,27 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED, errMsg, USER);
+    }
+  }
+
+  List<String> trimExecutionArgsHosts(List<String> hosts) {
+    if (isEmpty(hosts)) {
+      return Collections.emptyList();
+    }
+    return hosts.stream().map(StringUtils::trim).collect(Collectors.toList());
+  }
+
+  void validateExecutionArgsHosts(ExecutionArgs executionArgs, Trigger trigger) {
+    if (isEmpty(executionArgs.getHosts())) {
+      return;
+    }
+
+    if (executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
+      throw new InvalidRequestException("Hosts can't be overridden for pipeline", USER);
+    }
+
+    if (trigger != null) {
+      throw new InvalidRequestException("Hosts can't be overridden for triggers", USER);
     }
   }
 
@@ -2811,6 +2858,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return new ArrayList<>();
     }
     return allStateExecutionInstances;
+  }
+
+  @Override
+  public List<StateExecutionInstance> getStateExecutionInstancesForPhases(String executionUuid) {
+    return wingsPersistence.createQuery(StateExecutionInstance.class)
+        .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+        .filter(StateExecutionInstanceKeys.stateType, PHASE.name())
+        .asList();
   }
 
   @Override
