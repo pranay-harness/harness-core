@@ -16,21 +16,26 @@ import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class SweepingOutputFunctor extends LateBindingMap {
-  SweepingOutputInquiryBuilder sweepingOutputInquiryBuilder;
+  private transient SweepingOutputInquiryBuilder sweepingOutputInquiryBuilder;
 
   private transient SweepingOutputService sweepingOutputService;
 
-  public Object output(String name) {
+  public synchronized Object output(String name) {
     SweepingOutputInstance sweepingOutputInstance =
         sweepingOutputService.find(sweepingOutputInquiryBuilder.name(name).build());
     if (sweepingOutputInstance == null) {
       throw new SweepingOutputException(format("Missing sweeping output %s", name));
     }
+
+    if (sweepingOutputInstance.getValue() != null) {
+      return sweepingOutputInstance.getValue();
+    }
+
     return KryoUtils.asInflatedObject(sweepingOutputInstance.getOutput());
   }
 
   @Override
-  public Object get(Object key) {
+  public synchronized Object get(Object key) {
     return output((String) key);
   }
 }
