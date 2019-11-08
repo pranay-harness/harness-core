@@ -32,7 +32,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
 
   @Value
   @Builder
-  public static class SweepingOutputValue implements SweepingOutput {
+  public static class SweepingOutputData implements SweepingOutput {
     String text;
   }
 
@@ -44,7 +44,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
     sweepingOutputInstance =
         sweepingOutputService.save(sweepingOutputBuilder.name(SWEEPING_OUTPUT_NAME)
                                        .output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT))
-                                       .value(SweepingOutputValue.builder().text(SWEEPING_OUTPUT_CONTENT).build())
+                                       .value(SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
                                        .build());
   }
 
@@ -59,7 +59,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
                                        .workflowExecutionId(sweepingOutputInstance.getWorkflowExecutionIds().get(0))
                                        .build());
 
-    assertThat(((SweepingOutputValue) savedSweepingOutputInstance.getValue()).getText())
+    assertThat(((SweepingOutputData) savedSweepingOutputInstance.getValue()).getText())
         .isEqualTo(SWEEPING_OUTPUT_CONTENT);
   }
 

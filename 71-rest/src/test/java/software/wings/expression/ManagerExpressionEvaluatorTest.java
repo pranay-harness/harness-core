@@ -13,9 +13,12 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.serializer.KryoUtils;
+import lombok.Builder;
+import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -29,8 +32,6 @@ import java.util.Map;
 
 /**
  * The Class ManagerExpressionEvaluatorTest.
- *
- * @author Rishi
  */
 public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
@@ -144,6 +145,47 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .pipelineExecutionId(pipelineExecutionId)
                                        .workflowExecutionId(workflowExecutionId)
                                        .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
+                                       .build());
+
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder()
+            .put("workflow",
+                SweepingOutputValue.builder()
+                    .sweepingOutputService(sweepingOutputService)
+                    .sweepingOutputInquiry(SweepingOutputInquiry.builder()
+                                               .name("workflow")
+                                               .appId(appId)
+                                               .pipelineExecutionId(pipelineExecutionId)
+                                               .workflowExecutionId(followingWorkflowExecutionId)
+                                               .build())
+                    .build())
+            .build();
+
+    assertThat(expressionEvaluator.substitute("${workflow.foo}", context)).isEqualTo("bar");
+  }
+
+  @Value
+  @Builder
+  public static class SweepingOutputData implements SweepingOutput {
+    String foo;
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldRenderSweepingOutputValueByValue() {
+    String appId = generateUuid();
+    String pipelineExecutionId = generateUuid();
+    String workflowExecutionId = generateUuid();
+    String followingWorkflowExecutionId = generateUuid();
+
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.save(SweepingOutputInstance.builder()
+                                       .uuid(generateUuid())
+                                       .name("workflow")
+                                       .appId(appId)
+                                       .pipelineExecutionId(pipelineExecutionId)
+                                       .workflowExecutionId(workflowExecutionId)
+                                       .value(SweepingOutputData.builder().foo("bar").build())
                                        .build());
 
     Map<String, Object> context =

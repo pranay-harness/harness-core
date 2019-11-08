@@ -19,6 +19,11 @@ public class SweepingOutputValue implements LateBindingValue {
     if (sweepingOutputInstance == null) {
       return null;
     }
+
+    if (sweepingOutputInstance.getValue() != null) {
+      return sweepingOutputInstance.getValue();
+    }
+
     return KryoUtils.asInflatedObject(sweepingOutputInstance.getOutput());
   }
 }

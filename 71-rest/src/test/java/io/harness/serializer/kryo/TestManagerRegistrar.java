@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo;
 import io.harness.serializer.KryoRegistrar;
 import software.wings.common.cache.MongoStoreTest.TestNominalEntity;
 import software.wings.common.cache.MongoStoreTest.TestOrdinalEntity;
+import software.wings.expression.ManagerExpressionEvaluatorTest;
 import software.wings.service.impl.SweepingOutputServiceImplTest;
 import software.wings.service.impl.WorkflowExecutionUpdateFake;
 import software.wings.sm.StateMachineExecutionCallbackMock;
@@ -22,6 +23,7 @@ public class TestManagerRegistrar implements KryoRegistrar {
     kryo.register(TestNominalEntity.class, index++);
     kryo.register(TestOrdinalEntity.class, index++);
 
-    kryo.register(SweepingOutputServiceImplTest.SweepingOutputValue.class, index++);
+    kryo.register(SweepingOutputServiceImplTest.SweepingOutputData.class, index++);
+    kryo.register(ManagerExpressionEvaluatorTest.SweepingOutputData.class, index++);
   }
 }
