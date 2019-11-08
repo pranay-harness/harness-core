@@ -913,10 +913,15 @@ public class HelmDeployState extends State {
           helmValueOverridesYamlFiles.stream()
               .map(yamlFileContent -> {
                 if (imageDetails != null) {
-                  yamlFileContent =
-                      yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
-                          .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
-                              getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()));
+                  if (isNotBlank(imageDetails.getTag())) {
+                    yamlFileContent =
+                        yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag());
+                  }
+
+                  if (isNotBlank(imageDetails.getName())) {
+                    yamlFileContent = yamlFileContent.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX,
+                        getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()));
+                  }
                 }
                 yamlFileContent =
                     yamlFileContent.replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, containerServiceParams.getNamespace());
