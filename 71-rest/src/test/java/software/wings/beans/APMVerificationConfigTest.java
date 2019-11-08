@@ -5,7 +5,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Rule;
 import org.junit.Test;
