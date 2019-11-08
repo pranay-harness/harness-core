@@ -10,6 +10,7 @@
 .idea
 portal.iml
 /target
+jacoco-it.exec
 
 *.ipr
 *.iws
