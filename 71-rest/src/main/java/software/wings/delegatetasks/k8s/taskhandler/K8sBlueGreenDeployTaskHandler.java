@@ -350,7 +350,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex >= 0; releaseIndex--) {
       Release release = releaseHistory.getReleases().get(releaseIndex);
-      if (release.getNumber() != currentRelease.getNumber()
+      if (release.getNumber() != currentRelease.getNumber() && release.getManagedWorkload() != null
           && release.getManagedWorkload().getName().endsWith(stageColor)) {
         for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
           KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
@@ -361,7 +361,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       }
     }
     releaseHistory.getReleases().removeIf(release
-        -> release.getNumber() != currentRelease.getNumber()
+        -> release.getNumber() != currentRelease.getNumber() && release.getManagedWorkload() != null
             && release.getManagedWorkload().getName().endsWith(stageColor));
   }
 

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -14,8 +15,11 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.Release;
+import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
 import io.harness.k8s.model.ReleaseHistory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,6 +46,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper k8sTaskHelper;
   @Mock private ExecutionLogCallback executionLogCallback;
   @Mock private ReleaseHistory releaseHistory;
+  @Mock private Kubectl client;
 
   @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
 
@@ -139,5 +144,39 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
         .saveExecutionLog(
             "Found conflicting service [servicename] in the cluster. For blue/green deployment, the label [harness.io/color] is required in service selector. Delete this existing service to proceed",
             LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCleanupForBlueGreenForNPE() throws Exception {
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    on(k8sBlueGreenDeployTaskHandler).set("client", client);
+    on(k8sBlueGreenDeployTaskHandler).set("primaryColor", "blue");
+    on(k8sBlueGreenDeployTaskHandler).set("stageColor", "green");
+    on(k8sBlueGreenDeployTaskHandler).set("currentRelease", Release.builder().number(1).build());
+
+    KubernetesResource kubernetesResource = ManifestHelper.processYaml(DEPLOYMENT_YAML).get(0);
+    Release release = Release.builder()
+                          .resources(asList(kubernetesResource.getResourceId()))
+                          .number(2)
+                          .managedWorkloads(asList(KubernetesResourceIdRevision.builder()
+                                                       .workload(kubernetesResource.getResourceId())
+                                                       .revision("2")
+                                                       .build()))
+                          .build();
+    ReleaseHistory releaseHistory = ReleaseHistory.createNew();
+    releaseHistory.setReleases(new ArrayList<>(asList(release)));
+
+    k8sBlueGreenDeployTaskHandler.cleanupForBlueGreen(delegateTaskParams, releaseHistory, executionLogCallback);
+
+    kubernetesResource.getResourceId().setName("deployment-green");
+    kubernetesResource.getResourceId().setVersioned(true);
+    release.setManagedWorkload(kubernetesResource.getResourceId());
+    release.setManagedWorkloadRevision("2");
+    release.setManagedWorkloads(null);
+    k8sBlueGreenDeployTaskHandler.cleanupForBlueGreen(delegateTaskParams, releaseHistory, executionLogCallback);
+    verify(k8sTaskHelper, times(1))
+        .delete(client, delegateTaskParams, asList(kubernetesResource.getResourceId()), executionLogCallback);
   }
 }
