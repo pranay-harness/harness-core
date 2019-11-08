@@ -1,8 +1,10 @@
 package io.harness.testframework.framework;
 
+import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
+import static io.harness.testframework.framework.utils.ExecutorUtils.addJarConfig;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
@@ -56,9 +59,13 @@ public class DelegateExecutor {
         final Path jar = Paths.get(directory.getPath(), "81-delegate", "target", "delegate-capsule.jar");
         final Path config = Paths.get(directory.getPath(), "81-delegate", "config-delegate.yml");
 
-        final List<String> command = asList("java", "-Xmx4096m", "-XX:+HeapDumpOnOutOfMemoryError",
-            "-XX:+PrintGCDetails", "-XX:+PrintGCDateStamps", "-Xloggc:mygclogfilename.gc", "-XX:+UseParallelGC",
-            "-XX:MaxGCPauseMillis=500", "-jar", jar.toString(), config.toString());
+        List<String> command = new ArrayList<>();
+        command.add("java");
+
+        addGCVMOptions(command);
+        addJacocoAgentVM(jar, command);
+
+        addJarConfig(jar, config, command);
 
         logger.info(Strings.join(command, " "));
 
