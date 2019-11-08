@@ -22,6 +22,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -30,6 +31,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -101,6 +103,7 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -109,6 +112,8 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -127,6 +132,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -166,6 +172,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private HelmHelper helmHelper;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private ArtifactStreamService artifactStreamService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -571,5 +579,50 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.FAILED);
     verify(applicationManifestUtils, times(0)).getValuesFilesFromGitFetchFilesResponse(any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHelmDeployWithCustomArtifact() {
+    when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
+        .thenReturn(HelmChartSpecification.builder()
+                        .chartName(CHART_NAME)
+                        .chartUrl(CHART_URL)
+                        .chartVersion(CHART_VERSION)
+                        .build());
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
+    when(artifactCollectionUtils.fetchContainerImageDetails(any(), any())).thenReturn(ImageDetails.builder().build());
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(anyString()))
+        .thenReturn(Arrays.asList(ARTIFACT_STREAM_ID));
+
+    HelmDeployStateExecutionData helmStateExecutionData =
+        (HelmDeployStateExecutionData) context.getStateExecutionData();
+    String valuesFile = "# imageName: ${DOCKER_IMAGE_NAME}\n"
+        + "# tag: ${DOCKER_IMAGE_TAG}";
+    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    valuesFiles.put(K8sValuesLocation.Service, valuesFile);
+    helmStateExecutionData.setValuesFiles(valuesFiles);
+
+    helmDeployState.execute(context);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
+    assertThat(helmInstallCommandRequest.getVariableOverridesYamlFiles().get(0)).isEqualTo(valuesFile);
+
+    when(artifactCollectionUtils.fetchContainerImageDetails(any(), any()))
+        .thenReturn(ImageDetails.builder().name("IMAGE_NAME").tag("TAG").build());
+    helmDeployState.execute(context);
+
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(2)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    helmInstallCommandRequest = (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
+    String renderedValuesFile = "# imageName: IMAGE_NAME\n"
+        + "# tag: TAG";
+    assertThat(helmInstallCommandRequest.getVariableOverridesYamlFiles().get(0)).isEqualTo(renderedValuesFile);
   }
 }

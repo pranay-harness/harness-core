@@ -1,5 +1,6 @@
 package io.harness.functional.artifactstream;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
@@ -17,11 +18,13 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -59,7 +62,9 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = ANSHUL)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void shouldCollectGCSArtifact() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, Settings.GCP_PLAYGROUND);
@@ -93,7 +98,9 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = ANSHUL)
   @Category(FunctionalTests.class)
+  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void shouldCollectGCSArtifactWithRegex() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, Settings.GCP_PLAYGROUND);
