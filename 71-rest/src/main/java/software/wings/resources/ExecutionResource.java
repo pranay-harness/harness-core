@@ -50,6 +50,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -109,14 +110,11 @@ public class ExecutionResource {
       @DefaultValue("false") @QueryParam("includeGraph") boolean includeGraph,
       @QueryParam("workflowType") List<String> workflowTypes,
       @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions) {
-    List<String> authorizedAppIds = null;
+    List<String> authorizedAppIds;
     if (isNotEmpty(appIds)) {
       authorizedAppIds = appIds;
-    } else {
-      authorizedAppIds = appService.getAppIdsByAccountId(accountId);
+      pageRequest.addFilter("appId", Operator.IN, authorizedAppIds.toArray());
     }
-
-    pageRequest.addFilter("appId", Operator.IN, authorizedAppIds.toArray());
 
     if (pageRequest.getPageSize() > ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
       pageRequest.setLimit(ResourceConstants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
@@ -160,13 +158,15 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("excludeFromAggregation") Set<String> excludeFromAggregation) {
     final WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, excludeFromAggregation);
     workflowExecution.setStateMachine(null);
+    authService.authorizeAppAccess(
+        workflowExecution.getAccountId(), workflowExecution.getAppId(), UserThreadLocal.get(), Action.READ);
     return new RestResponse<>(workflowExecution);
   }
 
