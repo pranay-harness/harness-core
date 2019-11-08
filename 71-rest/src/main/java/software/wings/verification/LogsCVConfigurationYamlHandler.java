@@ -7,6 +7,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.verification.log.BugsnagCVConfiguration.BugsnagCVConfigurationYaml;
+import software.wings.verification.log.CustomLogCVServiceConfiguration.CustomLogsCVConfigurationYaml;
 import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
@@ -36,6 +37,9 @@ public class LogsCVConfigurationYamlHandler
         break;
       case SPLUNKV2:
         yaml = new SplunkCVConfigurationYaml();
+        break;
+      case LOG_VERIFICATION:
+        yaml = CustomLogsCVConfigurationYaml.builder().build();
         break;
       default:
         throw new IllegalStateException("Invalid state " + bean.getStateType());

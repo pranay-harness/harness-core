@@ -3,6 +3,7 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.BODY_STRING;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
@@ -13,6 +14,8 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -20,6 +23,7 @@ import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -40,7 +44,6 @@ import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +58,7 @@ import java.util.function.Supplier;
 @Slf4j
 public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
+
   @Inject private DelegateLogService delegateLogService;
   private CustomLogDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
@@ -86,9 +90,11 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
           if (decryptedValue != null) {
             decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
           }
+
         } catch (IOException e) {
-          throw new WingsException(dataCollectionInfo.getStateType().getName()
-                  + ": Log data collection : Unable to decrypt field " + encryptedDataDetail.getFieldName(),
+          throw new VerificationOperationException(ErrorCode.DEFAULT_ERROR_CODE,
+              dataCollectionInfo.getStateType().getName() + ": Log data collection : Unable to decrypt field "
+                  + encryptedDataDetail.getFieldName(),
               e);
         }
       }
@@ -162,6 +168,21 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return output;
     }
 
+    private String resolveDollarReferencesOfSecrets(String input) {
+      while (input.contains("${")) {
+        int startIndex = input.indexOf("${");
+        int endIndex = input.indexOf('}', startIndex);
+        String fieldName = input.substring(startIndex + 2, endIndex);
+        String headerBeforeIndex = input.substring(0, startIndex);
+        if (!decryptedFields.containsKey(fieldName)) {
+          // this could be a ${startTime}, so we're ignoring and moving on
+          continue;
+        }
+        input = headerBeforeIndex + decryptedFields.get(fieldName) + input.substring(endIndex + 1);
+      }
+      return input;
+    }
+
     private String fetchLogs(final String url, Map<String, String> headers, Map<String, String> options,
         Map<String, Object> body, String query, Set<String> hosts, String hostNameSeparator) {
       try {
@@ -173,8 +194,13 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
         String concatenatedHostQuery = CustomDataCollectionUtils.getConcatenatedQuery(hosts, hostNameSeparator);
         String resolvedUrl = CustomDataCollectionUtils.resolvedUrl(url, null, startTime, endTime, null);
+        resolvedUrl = resolveDollarReferencesOfSecrets(resolvedUrl);
+
         Map<String, Object> resolvedBody =
             CustomDataCollectionUtils.resolveMap(body, concatenatedHostQuery, startTime, endTime, query);
+        String bodyToLog = JsonUtils.asJson(resolvedBody);
+        String resolvedBodyStr = resolveDollarReferencesOfSecrets(JsonUtils.asJson(resolvedBody));
+        resolvedBody = new JSONObject(resolvedBodyStr).toMap();
 
         Call<Object> request;
         if (isNotEmpty(body)) {
@@ -191,13 +217,10 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
                                          .type(FieldType.URL)
                                          .build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        List<ThirdPartyApiCallField> requestFields = new ArrayList<>();
-        resolvedBody.forEach(
-            (key, value)
-                -> requestFields.add(
-                    ThirdPartyApiCallField.builder().name(key).value(value.toString()).type(FieldType.TEXT).build()));
-        if (isNotEmpty(requestFields)) {
-          apiCallLog.setRequest(requestFields);
+
+        if (isNotEmpty(bodyToLog)) {
+          apiCallLog.addFieldToRequest(
+              ThirdPartyApiCallField.builder().name(BODY_STRING).value(bodyToLog).type(FieldType.JSON).build());
         }
         Response<Object> response;
         try {

@@ -105,33 +105,22 @@ public class APMValidation extends AbstractSecretManagerValidation {
         break;
       } else if (config instanceof APMVerificationConfig) {
         APMVerificationConfig apmConfig = (APMVerificationConfig) config;
-        validateCollectorConfig = APMValidateCollectorConfig.builder()
-                                      .baseUrl(apmConfig.getUrl())
-                                      .url(apmConfig.getValidationUrl())
-                                      .options(apmConfig.collectionHeaders())
-                                      .headers(apmConfig.collectionParams())
-                                      .build();
+        validateCollectorConfig = APMValidateCollectorConfig.builder().baseUrl(apmConfig.getUrl()).build();
         break;
       } else if (config instanceof APMDataCollectionInfo) {
         APMDataCollectionInfo dInfo = (APMDataCollectionInfo) config;
-        validateCollectorConfig = APMValidateCollectorConfig.builder()
-                                      .baseUrl(dInfo.getBaseUrl())
-                                      .url(dInfo.getValidationUrl())
-                                      .options(dInfo.getOptions())
-                                      .headers(dInfo.getHeaders())
-                                      .build();
+        validateCollectorConfig = APMValidateCollectorConfig.builder().baseUrl(dInfo.getBaseUrl()).build();
         break;
       } else if (config instanceof CustomLogDataCollectionInfo) {
         CustomLogDataCollectionInfo dInfo = (CustomLogDataCollectionInfo) config;
-        validateCollectorConfig = APMValidateCollectorConfig.builder()
-                                      .baseUrl(dInfo.getBaseUrl())
-                                      .url(dInfo.getValidationUrl())
-                                      .options(dInfo.getOptions())
-                                      .headers(dInfo.getHeaders())
-                                      .build();
+        validateCollectorConfig = APMValidateCollectorConfig.builder().baseUrl(dInfo.getBaseUrl()).build();
         break;
       } else if (config instanceof APMValidateCollectorConfig) {
         validateCollectorConfig = (APMValidateCollectorConfig) config;
+        validateCollectorConfig.setUrl(null);
+        validateCollectorConfig.setBody(null);
+        validateCollectorConfig.setOptions(null);
+        validateCollectorConfig.setHeaders(null);
         break;
       }
     }

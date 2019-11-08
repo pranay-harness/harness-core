@@ -83,7 +83,7 @@ public class CVConfigurationYamlHandlerTestBase extends WingsBaseTest {
     cvServiceConfiguration.setName("TestStackdriverConfig");
   }
 
-  void buildYaml(CVConfigurationYaml yaml) throws Exception {
+  void buildYaml(CVConfigurationYaml yaml) {
     yaml.setName("TestStackdriverConfig");
     yaml.setAccountId(accountId);
     yaml.setServiceName(serviceName);

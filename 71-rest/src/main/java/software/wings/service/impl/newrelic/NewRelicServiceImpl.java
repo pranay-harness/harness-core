@@ -26,6 +26,7 @@ import software.wings.APMFetchConfig;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.APMVerificationConfig.KeyValues;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.FeatureName;
@@ -60,6 +61,7 @@ import software.wings.utils.CacheManager;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -119,14 +121,19 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       SettingAttribute settingAttribute = settingsService.get(serverConfigId);
       APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
+      List<KeyValues> bodySecrets = APMVerificationConfig.getSecretNameIdKeyValueList(fetchConfig.getBody());
+      List<KeyValues> urlSecrets = APMVerificationConfig.getSecretNameIdKeyValueList(fetchConfig.getUrl());
+
       APMValidateCollectorConfig apmValidateCollectorConfig =
           APMValidateCollectorConfig.builder()
               .baseUrl(apmVerificationConfig.getUrl())
               .headers(apmVerificationConfig.collectionHeaders())
               .options(apmVerificationConfig.collectionParams())
-              .url(fetchConfig.getUrl())
-              .body(fetchConfig.getBody())
-              .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
+              .url(apmVerificationConfig.resolveSecretNameInUrlOrBody(fetchConfig.getUrl()))
+              .body(apmVerificationConfig.resolveSecretNameInUrlOrBody(fetchConfig.getBody()))
+              .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager,
+                  Arrays.asList(bodySecrets, urlSecrets, apmVerificationConfig.getHeadersList(),
+                      apmVerificationConfig.getOptionsList())))
               .build();
       if (isNotEmpty(fetchConfig.getBody())) {
         apmValidateCollectorConfig.setCollectionMethod(Method.POST);
@@ -148,7 +155,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Override
   public void validateConfig(
       SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
-    ErrorCode errorCode = null;
+    ErrorCode errorCode = ErrorCode.DEFAULT_ERROR_CODE;
     try {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                             .accountId(settingAttribute.getAccountId())

@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
@@ -30,7 +29,6 @@ import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -98,6 +96,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
+  @Override
   public String getTimeDuration() {
     if (isBlank(timeDuration)) {
       return String.valueOf(15);
@@ -132,9 +131,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData data, Set<String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
 
     SettingAttribute settingAttribute = null;
     String serverConfigId = analysisServerConfigId;
@@ -174,7 +171,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .startMinute(0)
-            .responseDefinition(constructLogDefinitions(context))
+            .responseDefinition(constructLogDefinitions(context, logCollectionInfos))
             .collectionFrequency(getDataCollectionRate())
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .accountId(accountId)
@@ -208,16 +205,18 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  protected Map<String, Map<String, ResponseMapper>> constructLogDefinitions(final ExecutionContext context) {
+  public static Map<String, Map<String, ResponseMapper>> constructLogDefinitions(
+      final ExecutionContext context, final List<LogCollectionInfo> logCollectionInfos) {
     Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
     for (LogCollectionInfo logInfo : logCollectionInfos) {
-      String evaluatedUrl = context.renderExpression(logInfo.getCollectionUrl());
+      String evaluatedUrl =
+          context != null ? context.renderExpression(logInfo.getCollectionUrl()) : logInfo.getCollectionUrl();
       logDefinition.put(evaluatedUrl, getResponseMappers(logInfo));
     }
     return logDefinition;
   }
 
-  private Map<String, ResponseMapper> getResponseMappers(LogCollectionInfo logCollectionInfo) {
+  private static Map<String, ResponseMapper> getResponseMappers(LogCollectionInfo logCollectionInfo) {
     ResponseMapping responseMapping = logCollectionInfo.getResponseMapping();
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
 
@@ -243,7 +242,6 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
 
     logMsgList.add(responseMapping.getLogMessageJsonPath());
     responseMappers.put("logMessage", ResponseMapper.builder().fieldName("logMessage").jsonPath(logMsgList).build());
-    // TODO: Need to put in the timestamp format as well.
 
     return responseMappers;
   }
@@ -254,6 +252,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
   @AllArgsConstructor
   public static class LogCollectionInfo {
     private String collectionUrl;
+    private String collectionBody;
     private ResponseType responseType;
     private CustomLogVerificationState.ResponseMapping responseMapping;
     private Method method;

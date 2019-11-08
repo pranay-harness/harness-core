@@ -9,6 +9,8 @@ import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -33,6 +35,7 @@ import software.wings.sm.states.APMVerificationState.Method;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -51,15 +54,17 @@ public class APMDelegateServiceImpl implements APMDelegateService {
   @Override
   public boolean validateCollector(APMValidateCollectorConfig config) {
     config.getHeaders().put("Accept", "application/json");
-    Call<Object> request = getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
-
+    Call<Object> request = getAPMRestClient(config).validate(
+        resolveDollarReferences(config.getUrl()), config.getHeaders(), config.getOptions());
+    decryptFields(config.getEncryptedDataDetails());
     if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
+        config.setBody(resolveDollarReferences(config.getBody()));
         body = new JSONObject(config.getBody()).toMap();
       }
-      request = getAPMRestClient(config).postCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
-          resolveDollarReferences(config.getOptions()), body);
+      request = getAPMRestClient(config).postCollect(resolveDollarReferences(config.getUrl()),
+          resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()), body);
     }
 
     final Response<Object> response;
@@ -74,6 +79,23 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     } catch (Exception e) {
       throw new WingsException(e);
     }
+  }
+
+  private String resolveDollarReferences(String input) {
+    if (input == null) {
+      return null;
+    }
+    while (input.contains("${")) {
+      int startIndex = input.indexOf("${");
+      int endIndex = input.indexOf('}', startIndex);
+      String fieldName = input.substring(startIndex + 2, endIndex);
+      String headerBeforeIndex = input.substring(0, startIndex);
+      if (!decryptedFields.containsKey(fieldName)) {
+        throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, "Invalid secret provided in input");
+      }
+      input = headerBeforeIndex + decryptedFields.get(fieldName) + input.substring(endIndex + 1);
+    }
+    return input;
   }
 
   private BiMap<String, Object> resolveDollarReferences(Map<String, String> input) {
@@ -92,6 +114,22 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     return output;
   }
 
+  private void decryptFields(List<EncryptedDataDetail> encryptedDataDetails) {
+    if (isNotEmpty(encryptedDataDetails)) {
+      char[] decryptedValue;
+      for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+        try {
+          decryptedValue = encryptionService.getDecryptedValue(encryptedDataDetail);
+          if (decryptedValue != null) {
+            decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
+          }
+        } catch (IOException e) {
+          throw new WingsException("APM fetch data : Unable to decrypt field " + encryptedDataDetail.getFieldName());
+        }
+      }
+    }
+  }
+
   @Override
   public String fetch(APMValidateCollectorConfig config, ThirdPartyApiCallLog apiCallLog) {
     config.getHeaders().put("Accept", "application/json");
@@ -104,7 +142,8 @@ public class APMDelegateServiceImpl implements APMDelegateService {
             decryptedFields.put(encryptedDataDetail.getFieldName(), new String(decryptedValue));
           }
         } catch (IOException e) {
-          throw new WingsException("APM fetch data : Unable to decrypt field " + encryptedDataDetail.getFieldName());
+          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR,
+              "APM fetch data : Unable to decrypt field " + encryptedDataDetail.getFieldName());
         }
       }
     }
@@ -115,15 +154,17 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     if (config.getCollectionMethod() != null && config.getCollectionMethod().equals(Method.POST)) {
       Map<String, Object> body = new HashMap<>();
       if (isNotEmpty(config.getBody())) {
+        String bodyToLog = config.getBody();
+        config.setBody(resolveDollarReferences(config.getBody()));
         body = new JSONObject(config.getBody()).toMap();
         apiCallLog.addFieldToRequest(
-            ThirdPartyApiCallField.builder().name(PAYLOAD).value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
+            ThirdPartyApiCallField.builder().name(PAYLOAD).value(bodyToLog).type(FieldType.JSON).build());
       }
-      request = getAPMRestClient(config).postCollect(config.getUrl(), resolveDollarReferences(config.getHeaders()),
-          resolveDollarReferences(config.getOptions()), body);
+      request = getAPMRestClient(config).postCollect(resolveDollarReferences(config.getUrl()),
+          resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()), body);
     } else {
-      request = getAPMRestClient(config).collect(
-          config.getUrl(), resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
+      request = getAPMRestClient(config).collect(resolveDollarReferences(config.getUrl()),
+          resolveDollarReferences(config.getHeaders()), resolveDollarReferences(config.getOptions()));
     }
     String urlToLog = request.request().url().toString();
     if (urlToLog.contains("api_key")) {

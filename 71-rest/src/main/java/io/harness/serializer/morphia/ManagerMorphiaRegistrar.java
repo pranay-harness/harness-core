@@ -663,6 +663,7 @@ import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
+import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
@@ -938,6 +939,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ServerlessInstanceStats.class);
     set.add(StackDriverMetricCVConfiguration.class);
     set.add(ClusterRecord.class);
+    set.add(CustomLogCVServiceConfiguration.class);
   }
 
   @Override
@@ -1399,5 +1401,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("verification.VerificationStateAnalysisExecutionData", VerificationStateAnalysisExecutionData.class);
     w.put(cf + "response.CloudFormationCommandExecutionResponse", CloudFormationCommandExecutionResponse.class);
     w.put(cf + "response.CloudFormationCreateStackResponse", CloudFormationCreateStackResponse.class);
+    w.put("verification.log.CustomLogCVServiceConfiguration", CustomLogCVServiceConfiguration.class);
   }
 }
