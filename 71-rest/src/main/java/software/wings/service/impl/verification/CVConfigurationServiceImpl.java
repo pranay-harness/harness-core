@@ -64,6 +64,7 @@ import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
+import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationKeys;
@@ -226,6 +227,22 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         }
         break;
 
+      case LOG_VERIFICATION:
+        if (!featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, accountId)) {
+          logger.info("Custom Logs service guard 24/7 is not enabled for account {}", accountId);
+          throw new UnsupportedOperationException(
+              "Custom Logs service guard 24/7 is not enabled for account " + accountId);
+        }
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), CustomLogCVServiceConfiguration.class);
+        CustomLogCVServiceConfiguration customLogCVServiceConfiguration =
+            (CustomLogCVServiceConfiguration) cvConfiguration;
+        if (!customLogCVServiceConfiguration.validateConfiguration()) {
+          logger.info("The configuration for Custom Logs Service Guard is invalid.");
+          String errMsg =
+              "The configuration should contain ${start_time} or ${start_time_seconds} paired with ${end_time} or ${end_time_seconds}";
+          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+        }
+        break;
       default:
         throw new VerificationOperationException(
             ErrorCode.APM_CONFIGURATION_ERROR, "No matching state type found " + stateType);
@@ -428,6 +445,17 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case APM_VERIFICATION:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), APMCVServiceConfiguration.class);
+        break;
+      case LOG_VERIFICATION:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), CustomLogCVServiceConfiguration.class);
+        CustomLogCVServiceConfiguration customLogCVServiceConfiguration =
+            (CustomLogCVServiceConfiguration) updatedConfig;
+        if (!customLogCVServiceConfiguration.validateConfiguration()) {
+          logger.info("The configuration for Custom Logs Service Guard is invalid.");
+          String errMsg =
+              "The configuration should contain ${start_time} or ${start_time_seconds} paired with ${end_time} or ${end_time_seconds}";
+          throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
+        }
         break;
       default:
         throw new VerificationOperationException(
@@ -738,6 +766,18 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               "metricCollectionInfos", ((APMCVServiceConfiguration) cvConfiguration).getMetricCollectionInfos());
         }
         break;
+      case LOG_VERIFICATION:
+        if (!featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, savedConfiguration.getAccountId())) {
+          logger.info(
+              "Custom Logs service guard 24/7 is not enabled for account {}", savedConfiguration.getAccountId());
+          throw new UnsupportedOperationException(
+              "Custom Logs service guard 24/7 is not enabled for account " + savedConfiguration.getAccountId());
+        }
+        if (((CustomLogCVServiceConfiguration) cvConfiguration).getLogCollectionInfo() != null) {
+          updateOperations.set(
+              "logCollectionInfo", ((CustomLogCVServiceConfiguration) cvConfiguration).getLogCollectionInfo());
+        }
+        break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
     }
@@ -831,6 +871,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       case STACK_DRIVER_LOG:
       case DATA_DOG_LOG:
       case SPLUNKV2:
+      case LOG_VERIFICATION:
         break;
       case PROMETHEUS:
         metricTemplates = PrometheusState.createMetricTemplates(

@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createCustomLogsConfig;
 import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createStackDriverConfig;
 
 import com.google.common.base.Charsets;
@@ -53,6 +54,7 @@ import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
+import software.wings.service.impl.log.CustomLogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.CloudWatchService;
@@ -65,9 +67,13 @@ import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.APMVerificationState.ResponseMapping;
+import software.wings.sm.states.CustomLogVerificationState;
+import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
+import software.wings.sm.states.CustomLogVerificationState.Method;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
@@ -546,5 +552,74 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
 
     assertThat(TaskType.STACKDRIVER_COLLECT_24_7_METRIC_DATA.name())
         .isEqualTo(taskCaptor.getValue().getData().getTaskType());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateCustomLogs24x7Task() throws Exception {
+    String accountId = generateUuid();
+    CustomLogCVServiceConfiguration cvConfiguration = createCustomLogsConfig(accountId);
+    wingsPersistence.save(cvConfiguration);
+
+    APMVerificationConfig apmConfig = new APMVerificationConfig();
+    SettingAttribute attribute = SettingAttribute.Builder.aSettingAttribute()
+                                     .withValue(apmConfig)
+                                     .withUuid(cvConfiguration.getConnectorId())
+                                     .build();
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(mockWaitNotifyEngine.waitForAll(anyObject(), anyString())).thenReturn("waitId");
+    when(mockSecretManager.getEncryptionDetails(apmConfig, cvConfiguration.getAppId(), null))
+        .thenReturn(new ArrayList<>());
+
+    // execute behavior
+    boolean response =
+        service.collect247Data(cvConfiguration.getUuid(), StateType.LOG_VERIFICATION, 1540419553000l, 1540420454000l);
+    // verify
+    assertThat(response).isTrue();
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(mockWaitNotifyEngine).waitForAll(anyObject(), anyString());
+    verify(mockDelegateService).queueTask(taskCaptor.capture());
+
+    assertThat(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA.name()).isEqualTo(taskCaptor.getValue().getData().getTaskType());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetNodeDataCustomLogsValidCase() {
+    APMVerificationConfig config = new APMVerificationConfig();
+    config.setValidationUrl("this is a testurl");
+    config.setUrl("this is a test url");
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(config);
+
+    String dummyResponseString =
+        "{ \"logMessage\":\"this is a log message example\",\"host\":\"sample.host.ame\",\"key1\":1.45, \"time\":\"12345612227\"}";
+
+    CustomLogSetupTestNodeData nodeData =
+        CustomLogSetupTestNodeData.builder()
+            .logCollectionInfo(LogCollectionInfo.builder()
+                                   .collectionUrl("testURL")
+                                   .method(Method.GET)
+                                   .responseMapping(CustomLogVerificationState.ResponseMapping.builder()
+                                                        .hostJsonPath("host")
+                                                        .logMessageJsonPath("logMessage")
+                                                        .timestampJsonPath("time")
+                                                        .build())
+                                   .build())
+            .build();
+
+    // setup
+    when(mockSettingsService.get(anyString())).thenReturn(attribute);
+    when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockAPMDelegateService);
+    when(mockAPMDelegateService.fetch(any(APMValidateCollectorConfig.class), any(ThirdPartyApiCallLog.class)))
+        .thenReturn(dummyResponseString);
+
+    // execute
+    VerificationNodeDataSetupResponse response =
+        service.getDataForNode("accountId", "serverConfigId", nodeData, StateType.LOG_VERIFICATION);
+
+    // verify
+    assertThat(response).isNotNull();
+    assertThat(response.getLoadResponse().isLoadPresent()).isTrue();
   }
 }

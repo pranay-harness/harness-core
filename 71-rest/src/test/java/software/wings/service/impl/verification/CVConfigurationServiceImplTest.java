@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
+import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -35,11 +36,16 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
+import software.wings.sm.states.CustomLogVerificationState.Method;
+import software.wings.sm.states.CustomLogVerificationState.ResponseMapping;
+import software.wings.sm.states.CustomLogVerificationState.ResponseType;
 import software.wings.sm.states.StackDriverState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
@@ -63,6 +69,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     accountId = generateUuid();
     MockitoAnnotations.initMocks(this);
     when(featureFlagService.isEnabled(FeatureName.STACKDRIVER_SERVICEGUARD, accountId)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, accountId)).thenReturn(true);
     FieldUtils.writeField(cvConfigurationService, "featureFlagService", featureFlagService, true);
   }
 
@@ -414,6 +421,59 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(metricType).isEqualTo(MetricType.INFRA.name());
   }
 
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateCustomLogsConfig() throws Exception {
+    CustomLogCVServiceConfiguration configuration = createCustomLogsConfig(accountId);
+
+    String cvConfigId = cvConfigurationService.saveConfiguration(
+        accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.LOG_VERIFICATION, configuration);
+
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
+    CustomLogCVServiceConfiguration customLogCVServiceConfiguration = (CustomLogCVServiceConfiguration) cvConfiguration;
+    assertThat(customLogCVServiceConfiguration).isNotNull();
+    assertThat(customLogCVServiceConfiguration.getLogCollectionInfo()).isNotNull();
+    assertThat(customLogCVServiceConfiguration.getQuery()).isNotNull();
+  }
+
+  @Test(expected = VerificationOperationException.class)
+  @Category(UnitTests.class)
+  public void testCreateCustomLogsConfigNoTimeData() throws Exception {
+    CustomLogCVServiceConfiguration configuration = createCustomLogsConfig(accountId);
+
+    configuration.getLogCollectionInfo().setCollectionUrl("testUrl");
+    String cvConfigId = cvConfigurationService.saveConfiguration(
+        accountId, "LQWs27mPS7OrwCwDmT8aBA", StateType.LOG_VERIFICATION, configuration);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateCustomLogConfig() throws Exception {
+    testCreateCustomLogsConfig();
+    CustomLogCVServiceConfiguration configuration =
+        wingsPersistence.createQuery(CustomLogCVServiceConfiguration.class)
+            .filter(CVConfigurationKeys.stateType, StateType.LOG_VERIFICATION)
+            .get();
+
+    configuration.getLogCollectionInfo().setCollectionUrl("updated url ${start_time} ${end_time}");
+
+    cvConfigurationService.updateConfiguration(configuration, configuration.getAppId());
+
+    CustomLogCVServiceConfiguration updatedConfig = cvConfigurationService.getConfiguration(configuration.getUuid());
+    assertThat(updatedConfig).isNotNull();
+    assertThat(updatedConfig.getLogCollectionInfo()).isNotNull();
+    assertThat(updatedConfig.getQuery()).isNotNull();
+    assertThat(updatedConfig.getLogCollectionInfo().getCollectionUrl())
+        .isEqualTo("updated url ${start_time} ${end_time}");
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  @Category(UnitTests.class)
+  public void testCustomLogsFeatureFlagOff() throws Exception {
+    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
+    testCreateCustomLogsConfig();
+  }
+
   public static StackDriverMetricCVConfiguration createStackDriverConfig(String accountId) throws Exception {
     String paramsForStackDriver = Resources.toString(
         CVConfigurationServiceImplTest.class.getResource("/apm/stackdriverpayload.json"), Charsets.UTF_8);
@@ -446,6 +506,34 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     configuration.setConnectorId(generateUuid());
     configuration.setServiceId(generateUuid());
 
+    return configuration;
+  }
+
+  public static CustomLogCVServiceConfiguration createCustomLogsConfig(String accountId) throws Exception {
+    CustomLogCVServiceConfiguration configuration =
+        CustomLogCVServiceConfiguration.builder()
+            .logCollectionInfo(LogCollectionInfo.builder()
+                                   .collectionUrl("testUrl ${start_time} and ${end_time}")
+                                   .method(Method.GET)
+                                   .responseType(ResponseType.JSON)
+                                   .responseMapping(ResponseMapping.builder()
+                                                        .hostJsonPath("hostname")
+                                                        .logMessageJsonPath("message")
+                                                        .timestampJsonPath("@timestamp")
+                                                        .build())
+                                   .build())
+            .build();
+
+    configuration.setAccountId(accountId);
+    configuration.setStateType(StateType.STACK_DRIVER);
+    configuration.setEnvId(generateUuid());
+    configuration.setName("StackDriver");
+    configuration.setConnectorId(generateUuid());
+    configuration.setServiceId(generateUuid());
+    configuration.setStateType(StateType.LOG_VERIFICATION);
+    configuration.setQuery(generateUUID());
+    configuration.setBaselineStartMinute(16);
+    configuration.setBaselineEndMinute(30);
     return configuration;
   }
 

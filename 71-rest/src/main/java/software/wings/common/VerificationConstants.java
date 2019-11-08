@@ -88,6 +88,7 @@ public class VerificationConstants {
   public static final String DD_HOST_NAME_EXPRESSION = "${host_identifier}";
   public static final String IS_EXPERIMENTAL = "isExperimental";
   public static final String URL_STRING = "Url";
+  public static final String BODY_STRING = "Body";
   public static final String CONNECTOR = ":";
   public static final String VERIFICATION_HOST_PLACEHOLDER = "${host}";
 
@@ -220,7 +221,7 @@ public class VerificationConstants {
 
   public static List<StateType> getLogAnalysisStates() {
     return Arrays.asList(StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNKV2, StateType.BUG_SNAG,
-        StateType.DATA_DOG_LOG, StateType.STACK_DRIVER_LOG);
+        StateType.DATA_DOG_LOG, StateType.STACK_DRIVER_LOG, StateType.LOG_VERIFICATION);
   }
 
   public static List<StateType> getAnalysisStates() {

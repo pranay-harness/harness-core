@@ -10,13 +10,18 @@ import software.wings.beans.Log;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.log.CustomLogSetupTestNodeData;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.analysis.LogVerificationService;
+import software.wings.sm.StateType;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by peeyushaggarwal on 1/9/17.
@@ -28,6 +33,7 @@ import javax.ws.rs.Produces;
 public class LogResource {
   @Inject private LogService logService;
   @Inject private LogVerificationService logVerificationService;
+  @Inject private ContinuousVerificationService cvManagerService;
 
   @DelegateAuth
   @POST
@@ -37,5 +43,17 @@ public class LogResource {
   public RestResponse<Boolean> batchSave(
       @PathParam("activityId") String activityId, @PathParam("unitName") String unitName, Log log) {
     return new RestResponse<>(logService.batchedSaveCommandUnitLogs(activityId, unitName, log));
+  }
+
+  @POST
+  @Path("/node-data")
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
+      @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
+      @QueryParam("stateType") final StateType stateType, CustomLogSetupTestNodeData fetchConfig) {
+    return new RestResponse<>(
+        cvManagerService.getDataForNode(accountId, serverConfigId, fetchConfig, StateType.LOG_VERIFICATION));
   }
 }

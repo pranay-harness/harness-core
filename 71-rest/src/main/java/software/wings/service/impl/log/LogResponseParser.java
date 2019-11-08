@@ -1,9 +1,12 @@
 package software.wings.service.impl.log;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.common.collect.Multimap;
 
+import io.harness.exception.WingsException;
+import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,12 +23,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class LogResponseParser {
   private static final String TIMESTAMP_FIELD = "timestamp";
-  private static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+  private static String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   private static final int MAX_CONCAT_JSON_FIELDS = 100;
+
+  private String timestampFormat = DEFAULT_TIMESTAMP_FORMAT;
   @Data
   @Builder
   @AllArgsConstructor
@@ -44,13 +50,19 @@ public class LogResponseParser {
         logsResponseParser.put(responseMapper.getJsonPath().get(0).split("\\."), responseMapper.getFieldName(),
             responseMapper.getRegexs());
       }
-      if (responseMapper.getJsonPath().size() > 1) {
+      if (responseMapper.getJsonPath() != null && responseMapper.getJsonPath().size() > 1) {
         for (int index = 1; index < responseMapper.getJsonPath().size(); index++) {
           String path = responseMapper.getJsonPath().get(index);
           if (!isEmpty(path)) {
             logsResponseParser.put(
                 path.split("\\."), responseMapper.getFieldName() + index, responseMapper.getRegexs());
           }
+        }
+      }
+
+      if (responseMapper.getFieldName().equals(TIMESTAMP_FIELD)) {
+        if (isNotEmpty(responseMapper.getTimestampFormat())) {
+          timestampFormat = responseMapper.getTimestampFormat();
         }
       }
     }
@@ -61,7 +73,7 @@ public class LogResponseParser {
     } catch (Exception ex) {
       logger.error("Unable to extract data in LogResponseParser {}", data.responseText);
     }
-    createRecords(output, resultMap);
+    createRecords(output, resultMap, timestampFormat);
     // filter only the hosts we care about
     List<LogElement> logs = new ArrayList<>();
     if (resultMap.size() > 0 && data.shouldInspectHosts) {
@@ -76,7 +88,8 @@ public class LogResponseParser {
     return logs;
   }
 
-  private static void createRecords(List<Multimap<String, Object>> response, Map<String, LogElement> resultMap) {
+  private static void createRecords(
+      List<Multimap<String, Object>> response, Map<String, LogElement> resultMap, String timestampFormat) {
     if (response == null) {
       logger.error("Something went wrong during parsing. Response is null.");
       return;
@@ -93,9 +106,25 @@ public class LogResponseParser {
       }
       Iterator<Object> hostnames = record.get("host").iterator();
       while (timestamps.hasNext()) {
-        String timestampStr = (String) timestamps.next();
-        DateTimeFormatter df = DateTimeFormatter.ofPattern(DEFAULT_TIMESTAMP_FORMAT);
-        long timestamp = Instant.from(df.parse(timestampStr)).toEpochMilli();
+        // Figure out which form the timestamp is in
+        long timestamp = 0;
+        Object nextTimestamp = timestamps.next();
+        try {
+          timestamp = timestamps != null ? (long) VerificationResponseParser.cast(nextTimestamp, TIMESTAMP_FIELD) : 0;
+          long now = Timestamp.currentMinuteBoundary();
+          if (timestamp != 0 && String.valueOf(timestamp).length() < String.valueOf(now).length()) {
+            // Timestamp is in seconds. Convert to millis
+            timestamp = timestamp * 1000;
+          } else if (String.valueOf(timestamp).length()
+              == String.valueOf(TimeUnit.MILLISECONDS.toNanos(now)).length()) {
+            timestamp = TimeUnit.NANOSECONDS.toMillis(timestamp);
+          }
+        } catch (WingsException ex) {
+          String timestampStr = (String) nextTimestamp;
+          DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFormat);
+          timestamp = Instant.from(df.parse(timestampStr)).toEpochMilli();
+        }
+
         String hostName = record.containsKey("host") ? (String) hostnames.next() : null;
         final String key = timestamp + ":" + hostName;
         if (!resultMap.containsKey(key)) {

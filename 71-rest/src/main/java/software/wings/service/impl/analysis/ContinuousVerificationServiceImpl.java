@@ -72,6 +72,7 @@ import software.wings.api.DeploymentType;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.APMVerificationConfig.KeyValues;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BugsnagConfig;
@@ -120,6 +121,8 @@ import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.log.CustomLogSetupTestNodeData;
+import software.wings.service.impl.log.LogResponseParser;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisRecordKeys;
@@ -156,6 +159,8 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.BugsnagState;
+import software.wings.sm.states.CustomLogVerificationState;
+import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.sm.states.DatadogLogState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
@@ -179,6 +184,7 @@ import software.wings.verification.dashboard.HeatMapUnit;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.log.BugsnagCVConfiguration;
+import software.wings.verification.log.CustomLogCVServiceConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
@@ -1363,12 +1369,70 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           return getLogNodeDataForDatadog(accountId, (DataDogSetupTestNodeData) fetchConfig);
         case APM_VERIFICATION:
           return getMetricsNodeDataForApmCustom(accountId, (APMSetupTestNodeData) fetchConfig);
+        case LOG_VERIFICATION:
+          return getCustomLogDataForNode(accountId, (CustomLogSetupTestNodeData) fetchConfig);
         default:
           throw new VerificationOperationException(
               ErrorCode.APM_CONFIGURATION_ERROR, "Invalid StateType provided" + type);
       }
     } catch (Exception e) {
       throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, e.getMessage(), e, USER);
+    }
+  }
+
+  private VerificationNodeDataSetupResponse getCustomLogDataForNode(
+      String accountId, CustomLogSetupTestNodeData config) {
+    SettingAttribute settingAttribute = settingsService.get(config.getSettingId());
+    APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetailsForCustomLogs(apmVerificationConfig,
+        config.getLogCollectionInfo().getCollectionUrl(), config.getLogCollectionInfo().getCollectionBody());
+
+    APMValidateCollectorConfig apmValidateCollectorConfig =
+        APMValidateCollectorConfig.builder()
+            .baseUrl(apmVerificationConfig.getUrl())
+            .headers(apmVerificationConfig.collectionHeaders())
+            .options(apmVerificationConfig.collectionParams())
+            .url(apmVerificationConfig.resolveSecretNameInUrlOrBody(config.getLogCollectionInfo().getCollectionUrl()))
+            .body(apmVerificationConfig.resolveSecretNameInUrlOrBody(config.getLogCollectionInfo().getCollectionBody()))
+            .collectionMethod(Method.valueOf(config.getLogCollectionInfo().getMethod().name()))
+            .encryptedDataDetails(encryptedDataDetails)
+            .build();
+    VerificationNodeDataSetupResponse response =
+        VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
+
+    try {
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(accountId)
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
+      String logCollectionResponse =
+          delegateProxyFactory.get(APMDelegateService.class, syncTaskContext)
+              .fetch(apmValidateCollectorConfig, ThirdPartyApiCallLog.createApiCallLog(accountId, config.getGuid()));
+      if (isNotEmpty(logCollectionResponse)) {
+        response.setProviderReachable(true);
+      }
+
+      Map<String, Map<String, ResponseMapper>> logDefinitions =
+          CustomLogVerificationState.constructLogDefinitions(null, Arrays.asList(config.getLogCollectionInfo()));
+      Preconditions.checkState(logDefinitions.size() == 1);
+
+      LogResponseParser.LogResponseData responseData = new LogResponseParser.LogResponseData(
+          logCollectionResponse, null, false, logDefinitions.values().iterator().next());
+
+      Collection<LogElement> logRecords = (new LogResponseParser()).extractLogs(responseData);
+      if (isNotEmpty(logRecords)) {
+        response.setProviderReachable(true);
+        response.setLoadResponse(
+            VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(logCollectionResponse).build());
+        response.setConfigurationCorrect(true);
+        response.setDataForNode(logCollectionResponse);
+      }
+      return response;
+    } catch (Exception ex) {
+      logger.error("Exception while parsing the APM Response.");
+      response.setConfigurationCorrect(false);
+      return response;
     }
   }
 
@@ -1699,6 +1763,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       case APM_VERIFICATION:
         APMCVServiceConfiguration apmcvServiceConfiguration = (APMCVServiceConfiguration) cvConfiguration;
         task = createAPMDelegateTask(apmcvServiceConfiguration, waitId, startTime, endTime);
+        break;
+      case LOG_VERIFICATION:
+        CustomLogCVServiceConfiguration customLogCVServiceConfiguration =
+            (CustomLogCVServiceConfiguration) cvConfiguration;
+        task = createDataCollectionDelegateTask(customLogCVServiceConfiguration, waitId, startTime, endTime);
         break;
       default:
         logger.error("Calling collect 24x7 data for an unsupported state : {}", stateType);
@@ -2128,7 +2197,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       LogsCVConfiguration config, String waitId, long startTime, long endTime) {
     String stateExecutionId = CV_24x7_STATE_EXECUTION + "-" + config.getUuid();
     long duration = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-    logger.info("Created data collection delegate task for config : {} startTime : {} endTime : {} duration: {}",
+    logger.info("Creating data collection delegate task for config : {} startTime : {} endTime : {} duration: {}",
         config, startTime, endTime, duration);
     if (config.isWorkflowConfig()) {
       stateExecutionId = wingsPersistence.get(AnalysisContext.class, config.getContextId()).getStateExecutionId();
@@ -2156,7 +2225,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
       case DATA_DOG_LOG:
         DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(config.getConnectorId()).getValue();
-        final CustomLogDataCollectionInfo customLogDataCollectionInfo =
+        final CustomLogDataCollectionInfo datadogLogCollectionInfo =
             CustomLogDataCollectionInfo.builder()
                 .baseUrl(datadogConfig.getUrl())
                 .validationUrl(DatadogConfig.validationUrl)
@@ -2178,8 +2247,49 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .responseDefinition(DatadogLogState.constructLogDefinitions(datadogConfig, null, true))
                 .build();
         return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
+            waitId, new Object[] {datadogLogCollectionInfo}, config.getEnvId(), config.getUuid(),
+            datadogLogCollectionInfo.getStateExecutionId(), config.getStateType());
+
+      case LOG_VERIFICATION:
+        APMVerificationConfig logConfig =
+            (APMVerificationConfig) settingsService.get(config.getConnectorId()).getValue();
+        CustomLogCVServiceConfiguration customLogCVServiceConfiguration = (CustomLogCVServiceConfiguration) config;
+
+        List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetailsForCustomLogs(logConfig,
+            customLogCVServiceConfiguration.getLogCollectionInfo().getCollectionUrl(),
+            customLogCVServiceConfiguration.getLogCollectionInfo().getCollectionBody());
+
+        String body = logConfig.resolveSecretNameInUrlOrBody(
+            customLogCVServiceConfiguration.getLogCollectionInfo().getCollectionBody());
+
+        CustomLogDataCollectionInfo customLogDataCollectionInfo =
+            CustomLogDataCollectionInfo.builder()
+                .baseUrl(logConfig.getUrl())
+                .validationUrl(logConfig.getValidationUrl())
+                .headers(logConfig.collectionHeaders())
+                .options(logConfig.collectionParams())
+                .encryptedDataDetails(encryptedDataDetails)
+                .query(customLogCVServiceConfiguration.getLogCollectionInfo().getCollectionUrl())
+                .stateType(StateType.LOG_VERIFICATION)
+                .applicationId(config.getAppId())
+                .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+                .serviceId(config.getServiceId())
+                .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
+                .body(isEmpty(body) ? null : new JSONObject(body).toMap())
+                .cvConfidId(config.getUuid())
+                .startTime(startTime)
+                .endTime(endTime)
+                .startMinute(0)
+                .responseDefinition(CustomLogVerificationState.constructLogDefinitions(
+                    null, Arrays.asList(customLogCVServiceConfiguration.getLogCollectionInfo())))
+                .collectionFrequency(1)
+                .collectionTime((int) duration)
+                .accountId(config.getAccountId())
+                .build();
+        return createDelegateTask(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA, config.getAccountId(), config.getAppId(),
             waitId, new Object[] {customLogDataCollectionInfo}, config.getEnvId(), config.getUuid(),
             customLogDataCollectionInfo.getStateExecutionId(), config.getStateType());
+
       case STACK_DRIVER_LOG:
         StackdriverCVConfiguration stackdriverCVConfiguration = (StackdriverCVConfiguration) config;
         GcpConfig gcpConfig = (GcpConfig) settingsService.get(config.getConnectorId()).getValue();
@@ -2213,6 +2323,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       default:
         throw new IllegalStateException("Invalid state: " + config.getStateType());
     }
+  }
+
+  private List<EncryptedDataDetail> getEncryptedDataDetailsForCustomLogs(
+      APMVerificationConfig logConfig, String url, String body) {
+    List<KeyValues> bodySecrets = APMVerificationConfig.getSecretNameIdKeyValueList(body);
+    List<KeyValues> urlSecrets = APMVerificationConfig.getSecretNameIdKeyValueList(url);
+
+    return logConfig.encryptedDataDetails(
+        secretManager, Arrays.asList(bodySecrets, urlSecrets, logConfig.getHeadersList(), logConfig.getOptionsList()));
   }
 
   private boolean createDataCollectionDelegateTask(AnalysisContext context, long collectionStartMinute) {

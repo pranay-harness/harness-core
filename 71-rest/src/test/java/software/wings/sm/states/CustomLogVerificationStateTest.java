@@ -6,6 +6,7 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.states.CustomLogVerificationState.constructLogDefinitions;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -72,7 +73,7 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
     List<LogCollectionInfo> collectionInfos = yamlUtils.read(yamlStr, new TypeReference<List<LogCollectionInfo>>() {});
     state.setLogCollectionInfos(collectionInfos);
 
-    Map<String, Map<String, ResponseMapper>> logDefinitions = state.constructLogDefinitions(context);
+    Map<String, Map<String, ResponseMapper>> logDefinitions = constructLogDefinitions(context, collectionInfos);
     assertThat(logDefinitions).isNotNull();
     assertThat(logDefinitions.containsKey("customLogVerificationQuery")).isTrue();
     Map<String, ResponseMapper> mapping = logDefinitions.get("customLogVerificationQuery");

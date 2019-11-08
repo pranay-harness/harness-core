@@ -22,7 +22,7 @@ import java.util.Map;
 @Builder
 public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
   @NonNull private String baseUrl;
-  @NonNull private String url;
+  private String url;
   private String body;
   private Method collectionMethod;
   private Map<String, String> headers;
