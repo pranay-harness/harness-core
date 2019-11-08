@@ -95,7 +95,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
   private class ElkLogzDataCollector implements Runnable {
     private final LogDataCollectionInfo dataCollectionInfo;
-    private long collectionStartTime, collectionEndTime;
+    private long collectionStartTime;
     private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
     private String delegateTaskId;
@@ -122,8 +122,6 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         default:
           throw new WingsException("Invalid StateType : " + getStateType());
       }
-      collectionEndTime =
-          is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
       this.taskResult = taskResult;
     }
 
@@ -156,7 +154,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                         .hosts(
                             hostName.equals(DUMMY_HOST_NAME) ? Collections.emptySet() : Collections.singleton(hostName))
                         .startTime(collectionStartTime)
-                        .endTime(collectionEndTime)
+                        .endTime(is24X7Task() ? dataCollectionInfo.getEndTime()
+                                              : collectionStartTime + TimeUnit.MINUTES.toMillis(1))
                         .queryType(elkDataCollectionInfo.getQueryType())
                         .build();
                 logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
@@ -284,6 +283,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       if (hits.has("total")) {
         totalHits = hits.getLong("total");
       }
+      long collectionEndTime =
+          is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
       double intervalInMinutes = (collectionEndTime - collectionStartTime) / (1000 * 60.0);
       if (intervalInMinutes != 0) {
         return (long) (totalHits / intervalInMinutes);
