@@ -44,16 +44,15 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
       new FindAndModifyOptions().writeConcern(WriteConcern.MAJORITY).upsert(false).returnNew(false);
 
   private WaitInstance fetchForProcessingWaitInstance(String waitInstanceId, long now) {
-    final long limit = now - MAX_CALLBACK_PROCESSING_TIME.toMillis();
-
     final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class)
                                                       .filter(WaitInstanceKeys.uuid, waitInstanceId)
                                                       .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
                                                       .field(WaitInstanceKeys.callbackProcessingAt)
-                                                      .lessThan(limit);
+                                                      .lessThan(now);
 
     final UpdateOperations<WaitInstance> updateOperations =
-        persistence.createUpdateOperations(WaitInstance.class).set(WaitInstanceKeys.callbackProcessingAt, now);
+        persistence.createUpdateOperations(WaitInstance.class)
+            .set(WaitInstanceKeys.callbackProcessingAt, now + MAX_CALLBACK_PROCESSING_TIME.toMillis());
 
     return persistence.findAndModify(waitInstanceQuery, updateOperations, findAndModifyOptions);
   }
