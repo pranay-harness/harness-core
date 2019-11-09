@@ -1,6 +1,7 @@
 package software.wings.verification.log;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -26,27 +27,33 @@ public class CustomLogCVServiceConfiguration extends LogsCVConfiguration {
     this.query = logCollectionInfo.getCollectionUrl();
   }
 
+  public void setQuery() {
+    if (logCollectionInfo != null) {
+      this.query = logCollectionInfo.getCollectionUrl();
+    }
+  }
+
   public boolean validateConfiguration() {
     if (logCollectionInfo != null) {
       if (logCollectionInfo.getMethod().equals(Method.POST) && isEmpty(logCollectionInfo.getCollectionBody())) {
         return false;
       }
-      boolean bodyContainsStartTime = isEmpty(logCollectionInfo.getCollectionBody())
-          || logCollectionInfo.getCollectionBody().contains("${start_time}")
-          || logCollectionInfo.getCollectionBody().contains("${start_time_seconds}");
+      boolean bodyContainsStartTime = isNotEmpty(logCollectionInfo.getCollectionBody())
+          && (logCollectionInfo.getCollectionBody().contains("${start_time}")
+                 || logCollectionInfo.getCollectionBody().contains("${start_time_seconds}"));
       boolean urlContainsStartTime = logCollectionInfo.getCollectionUrl().contains("${start_time}")
           || logCollectionInfo.getCollectionUrl().contains("${start_time_seconds}");
-      boolean bodyContainsEndTime = isEmpty(logCollectionInfo.getCollectionBody())
-          || logCollectionInfo.getCollectionBody().contains("${end_time}")
-          || logCollectionInfo.getCollectionBody().contains("${end_time_seconds}");
+      boolean bodyContainsEndTime = isNotEmpty(logCollectionInfo.getCollectionBody())
+          && (logCollectionInfo.getCollectionBody().contains("${end_time}")
+                 || logCollectionInfo.getCollectionBody().contains("${end_time_seconds}"));
       boolean urlContainsEndTime = logCollectionInfo.getCollectionUrl().contains("${end_time}")
           || logCollectionInfo.getCollectionUrl().contains("${end_time_seconds}");
 
-      if (!bodyContainsEndTime || !urlContainsEndTime || !bodyContainsStartTime || !urlContainsStartTime) {
-        return false;
+      if ((bodyContainsEndTime || urlContainsEndTime) && (bodyContainsStartTime || urlContainsStartTime)) {
+        return true;
       }
     }
-    return true;
+    return false;
   }
 
   @Data
