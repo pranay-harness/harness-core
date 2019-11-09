@@ -231,7 +231,8 @@ public class ServiceChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       Map<String, Boolean> isAffectedResourceHandled = new HashMap<>();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-        if (entityAuditRecord.getAffectedResourceType().equals(EntityType.SERVICE.name())
+        if (entityAuditRecord.getAffectedResourceType() != null
+            && entityAuditRecord.getAffectedResourceType().equals(EntityType.SERVICE.name())
             && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())
             && !isAffectedResourceHandled.containsKey(entityAuditRecord.getAffectedResourceId())) {
