@@ -117,6 +117,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetTimeseriesRecordsForServiceGuard() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG);
