@@ -550,7 +550,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void scheduleJobs(Injector injector) {
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), rand.nextInt(10), 10L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), rand.nextInt(60), 60L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), rand.nextInt(5), 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
