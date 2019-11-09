@@ -1,10 +1,6 @@
-locals {
-  group = "dev_db"
-}
-
 resource "google_logging_metric" "dev_db_index_issues" {
-  name = join("_", [var.deployment, "dev_db_index_issues"])
-  filter = join("\n", [local.filter_prefx,
+  name = join("_", [local.name_prefix, "dev_db_index_issues"])
+  filter = join("\n", [local.filter_prefix,
     "(\"IndexManager\" OR \"HObjectFactory\")",
     "severity=\"ERROR\""
   ])

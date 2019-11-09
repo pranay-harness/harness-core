@@ -2,6 +2,7 @@ package io.harness.logging;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,10 +50,12 @@ public class AutoLogContext implements AutoCloseable {
           previous.put(key, original);
           break;
         case OVERRIDE_ERROR:
-          String msg = format(
-              "Key [%s] initialized in the same thread with a different value '%s'. Keeping the original value '%s'",
-              key, value, original);
-          logger.error(msg, new Exception(msg));
+          try (AutoLogContext ignore = new MdcKeyLogContext(key, OVERRIDE_ERROR)) {
+            logger.error(
+                format("Initialized in the same thread with a different value '%s'. Keeping the original value '%s'",
+                    value, original),
+                new Exception(""));
+          }
           return;
         default:
           unhandled(behavior);

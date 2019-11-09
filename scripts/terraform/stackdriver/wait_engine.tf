@@ -1,6 +1,6 @@
 resource "google_logging_metric" "wait_engine_duplicate_issues" {
-  name = join("_", [var.deployment, "wait_engine_duplicate_issues"])
-  filter = join("\n", [local.filter_prefx,
+  name = join("_", [local.name_prefix, "wait_engine_duplicate_issues"])
+  filter = join("\n", [local.filter_prefix,
     "Unexpected rate of DuplicateKeyException per correlation"])
   metric_descriptor {
     metric_kind = "DELTA"

@@ -1,5 +1,6 @@
 package io.harness.logging;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import ch.qos.logback.classic.Level;
@@ -76,8 +77,10 @@ public class CustomJsonLayout extends JsonLayoutBase<ILoggingEvent> {
     if (logger.isDebugEnabled() && event.getLevel().toInt() >= Level.INFO.toInt()) {
       for (Entry<String, String> entry : event.getMDCPropertyMap().entrySet()) {
         if (formattedMessage.contains(entry.getValue())) {
-          logger.debug("Logging message '{}' incorporates variable {} that is already in the MDC table with key {}",
-              event.getMessage(), entry.getValue(), entry.getKey());
+          try (AutoLogContext ignore = new MessagePatternLogContext(event.getMessage(), OVERRIDE_ERROR);
+               AutoLogContext ignore2 = new MdcKeyLogContext(entry.getKey(), OVERRIDE_ERROR)) {
+            logger.debug("MDC table and the logging message have the same value {}", entry.getValue());
+          }
         }
       }
     }

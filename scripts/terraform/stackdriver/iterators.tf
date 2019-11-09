@@ -1,20 +1,10 @@
-resource "google_logging_metric" "iterators_working_on_entity" {
-  name = join("_", [var.deployment, "iterators_working_on_entity"])
-  filter = join("\n", [local.filter_prefx,
+resource "google_logging_metric" "iterators_working_on_entity_by_thread_pool" {
+  name = join("_", [local.name_prefix, "iterators_working_on_entity"])
+  filter = join("\n", [local.filter_prefix,
     "\"Working on entity\""])
   metric_descriptor {
     metric_kind = "DELTA"
     value_type = "INT64"
-    labels {
-      key = "account"
-      value_type = "STRING"
-      description = "The account the entity belongs"
-    }
-    labels {
-      key = "entity"
-      value_type = "STRING"
-      description = "The class of the entity to operate over"
-    }
     labels {
       key = "thread_pool"
       value_type = "STRING"
@@ -22,16 +12,14 @@ resource "google_logging_metric" "iterators_working_on_entity" {
     }
   }
   label_extractors = {
-    "account": "EXTRACT(jsonPayload.harness.accountId)",
-    "entity": "EXTRACT(jsonPayload.harness.class)",
     "thread_pool": "EXTRACT(jsonPayload.thread)",
   }
 }
 
 resource "google_logging_metric" "iterators_delays" {
-  name = join("_", [var.deployment, "iterators_delays"])
+  name = join("_", [local.name_prefix, "iterators_delays"])
   filter = join("\n", [
-    local.filter_prefx,
+    local.filter_prefix,
     "\"Working on entity\""])
   metric_descriptor {
     metric_kind = "DELTA"
@@ -56,8 +44,8 @@ resource "google_logging_metric" "iterators_delays" {
 
 
 resource "google_logging_metric" "iterators_issues" {
-  name = join("_", [var.deployment, "iterators_issues"])
-  filter = join("\n", [local.filter_prefx,
+  name = join("_", [local.name_prefix, "iterators_issues"])
+  filter = join("\n", [local.filter_prefix,
     "MongoPersistenceIterator",
     "severity=\"ERROR\""])
   metric_descriptor {
