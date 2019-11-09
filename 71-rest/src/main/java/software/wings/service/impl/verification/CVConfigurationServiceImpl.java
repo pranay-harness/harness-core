@@ -242,6 +242,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               "The configuration should contain ${start_time} or ${start_time_seconds} paired with ${end_time} or ${end_time_seconds}";
           throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
         }
+        customLogCVServiceConfiguration.setQuery();
         break;
       default:
         throw new VerificationOperationException(
@@ -456,6 +457,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               "The configuration should contain ${start_time} or ${start_time_seconds} paired with ${end_time} or ${end_time_seconds}";
           throw new VerificationOperationException(ErrorCode.APM_CONFIGURATION_ERROR, errMsg);
         }
+        customLogCVServiceConfiguration.setQuery();
         break;
       default:
         throw new VerificationOperationException(
