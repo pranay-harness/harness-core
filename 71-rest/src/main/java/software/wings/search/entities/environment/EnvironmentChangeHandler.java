@@ -231,7 +231,8 @@ public class EnvironmentChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       Map<String, Boolean> isAffectedResourceHandled = new HashMap<>();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-        if (entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())
+        if (entityAuditRecord.getAffectedResourceType() != null
+            && entityAuditRecord.getAffectedResourceType().equals(EntityType.ENVIRONMENT.name())
             && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())
             && !isAffectedResourceHandled.containsKey(entityAuditRecord.getAffectedResourceId())) {

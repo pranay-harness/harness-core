@@ -59,7 +59,8 @@ public class PipelineChangeHandler implements ChangeHandler {
       AuditHeader auditHeader = (AuditHeader) changeEvent.getFullDocument();
       Map<String, Boolean> isAffectedResourceHandled = new HashMap<>();
       for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-        if (entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())
+        if (entityAuditRecord.getAffectedResourceType() != null
+            && entityAuditRecord.getAffectedResourceType().equals(EntityType.PIPELINE.name())
             && entityAuditRecord.getAffectedResourceId() != null
             && !entityAuditRecord.getAffectedResourceOperation().equals(Type.DELETE.name())
             && !isAffectedResourceHandled.containsKey(entityAuditRecord.getAffectedResourceId())) {
@@ -91,7 +92,6 @@ public class PipelineChangeHandler implements ChangeHandler {
       String deploymentTimestampsField = PipelineViewKeys.deploymentTimestamps;
       result = searchDao.addTimestamp(PipelineSearchEntity.TYPE, deploymentTimestampsField, documentToUpdate,
           workflowExecution.getCreatedAt(), DAYS_TO_RETAIN);
-
       result = result
           && searchDao.appendToListInSingleDocument(PipelineSearchEntity.TYPE, fieldToUpdate, documentToUpdate,
                  deploymentRelatedEntityViewMap, MAX_RUNTIME_ENTITIES);

@@ -180,7 +180,8 @@ class WorkflowViewBuilder {
         final AuditHeader auditHeader = iterator.next();
         Map<String, Boolean> isAffectedResourceHandled = new HashMap<>();
         for (EntityAuditRecord entityAuditRecord : auditHeader.getEntityAuditRecords()) {
-          if (entityAuditRecord.getAffectedResourceType().equals(EntityType.WORKFLOW.name())
+          if (entityAuditRecord.getAffectedResourceType() != null
+              && entityAuditRecord.getAffectedResourceType().equals(EntityType.WORKFLOW.name())
               && entityAuditRecord.getAffectedResourceId() != null
               && entityAuditRecord.getAffectedResourceId().equals(workflow.getUuid())
               && !isAffectedResourceHandled.containsKey(entityAuditRecord.getAffectedResourceId())) {
