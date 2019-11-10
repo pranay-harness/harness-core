@@ -58,6 +58,14 @@ if [[ "" != "$ELASTICSEARCH_INDEX_SUFFIX" ]]; then
   yq write -i $CONFIG_FILE elasticsearch.indexSuffix "$ELASTICSEARCH_INDEX_SUFFIX"
 fi
 
+if [[ "" != "$ELASTICSEARCH_MONGO_TAG_NAME" ]]; then
+ yq write -i $CONFIG_FILE elasticsearch.mongoTagKey "$ELASTICSEARCH_MONGO_TAG_NAME"
+fi
+
+if [[ "" != "$ELASTICSEARCH_MONGO_TAG_VALUE" ]]; then
+ yq write -i $CONFIG_FILE elasticsearch.mongoTagValue "$ELASTICSEARCH_MONGO_TAG_VALUE"
+fi
+
 if [[ "" != "$MONGO_LOCK_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.locksUri "${MONGO_LOCK_URI//\\&/&}"
 fi

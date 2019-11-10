@@ -11,6 +11,8 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
+import com.mongodb.Tag;
+import com.mongodb.TagSet;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -48,8 +50,16 @@ public class ChangeTracker {
 
   private MongoClientURI mongoClientUri() {
     final String mongoClientUrl = mainConfiguration.getMongoConnectionFactory().getUri();
-    return new MongoClientURI(mongoClientUrl,
-        MongoClientOptions.builder(MongoModule.mongoClientOptions).readPreference(ReadPreference.secondaryPreferred()));
+    ReadPreference readPreference;
+    if (mainConfiguration.getElasticsearchConfig().getMongoTagKey().equals("none")) {
+      readPreference = ReadPreference.secondaryPreferred();
+    } else {
+      final TagSet tags = new TagSet(new Tag(mainConfiguration.getElasticsearchConfig().getMongoTagKey(),
+          mainConfiguration.getElasticsearchConfig().getMongoTagValue()));
+      readPreference = ReadPreference.secondaryPreferred(tags);
+    }
+    return new MongoClientURI(
+        mongoClientUrl, MongoClientOptions.builder(MongoModule.mongoClientOptions).readPreference(readPreference));
   }
 
   private void connectToMongoDatabase() {

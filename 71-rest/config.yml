@@ -166,6 +166,8 @@ searchEnabled: false
 elasticsearch:
   uri: http://localhost:9200
   indexSuffix: _default
+  mongoTagKey: none
+  mongoTagValue: none
 
 watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
