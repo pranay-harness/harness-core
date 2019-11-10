@@ -22,14 +22,12 @@ public class CustomJenkinsServer extends JenkinsServer {
   @Override
   public JobWithDetails getJob(FolderJob folder, String jobName) throws IOException {
     try {
-      JobWithExtendedDetails job = client.get(toJobBaseUrl(folder, jobName), JobWithExtendedDetails.class);
+      JobWithExtendedDetails job = client.get(toJobUrl(folder, jobName), JobWithExtendedDetails.class);
       job.setClient(client);
 
       return job;
     } catch (HttpResponseException e) {
-      //      LOGGER.debug("getJob(folder={}, jobName={}) status={}", folder, jobName, e.getStatusCode());
       if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-        // TODO: Think hard about this.
         return null;
       }
       throw e;
@@ -43,8 +41,8 @@ public class CustomJenkinsServer extends JenkinsServer {
    * @param jobName the name of the job.
    * @return converted base url.
    */
-  private String toJobBaseUrl(FolderJob folder, String jobName) {
-    return toBaseUrl(folder) + "job/" + EncodingUtils.encode(jobName);
+  private String toJobUrl(FolderJob folder, String jobName) {
+    return toBaseJobUrl(folder) + "job/" + EncodingUtils.encode(jobName);
   }
 
   /**
@@ -53,7 +51,7 @@ public class CustomJenkinsServer extends JenkinsServer {
    * @param folder the folder or {@code null}
    * @return The created base url.
    */
-  private String toBaseUrl(FolderJob folder) {
+  private String toBaseJobUrl(FolderJob folder) {
     String path = "/";
     if (folder != null) {
       path = folder.getUrl();

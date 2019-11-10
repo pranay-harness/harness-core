@@ -261,7 +261,8 @@ public class AccountGenerator {
     addUsersToUserGroup(users, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(
         account.getUuid(), readOnlyUser, UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
-    readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
+
+    wingsPersistence.save(readOnlyUserGroup);
 
     addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
 

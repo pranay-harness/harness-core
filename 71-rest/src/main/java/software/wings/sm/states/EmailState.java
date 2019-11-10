@@ -19,7 +19,6 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
@@ -82,7 +81,7 @@ public class EmailState extends State {
                                         .cc(getEmailAddressList(evaluatedCc))
                                         .subject(evaluatedSubject)
                                         .body(evaluatedBody)
-                                        .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                        .accountId(context.getAccountId())
                                         .build());
       executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
@@ -191,10 +190,6 @@ public class EmailState extends State {
    * @return the boolean
    */
   public Boolean isIgnoreDeliveryFailure() {
-    return ignoreDeliveryFailure;
-  }
-
-  public Boolean getIgnoreDeliveryFailure() {
     return ignoreDeliveryFailure;
   }
 

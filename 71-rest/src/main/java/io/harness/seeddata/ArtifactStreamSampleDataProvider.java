@@ -1,7 +1,6 @@
 package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_IMAGE_NAME;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,43 +34,7 @@ public class ArtifactStreamSampleDataProvider {
         false);
 
     try {
-      // Adding some artifacts to get ready with deployment.
-      DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
-
-      // Add one tag
-      BuildDetails buildDetails =
-          ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "1");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      // Add second tag
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "2");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "3");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "4");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "5");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "6");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "7");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "8");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "9");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails =
-          ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "latest");
-      buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
-
+      addTag(appId, savedArtifactStream, (DockerConfig) settingAttribute.getValue());
     } catch (Exception e) {
       logger.warn("Error occurred while saving artifacts for docker ArtifactStream for accountId {} ",
           settingAttribute.getAccountId());
@@ -79,59 +42,32 @@ public class ArtifactStreamSampleDataProvider {
     return savedArtifactStream;
   }
 
-  public ArtifactStream createDockerArtifactStream(SettingAttribute settingAttribute) {
-    ArtifactStream savedArtifactStream = artifactStreamService.createWithBinding(GLOBAL_APP_ID,
-        DockerArtifactStream.builder()
-            .appId(GLOBAL_APP_ID)
-            .settingId(settingAttribute.getUuid())
-            .imageName(DOCKER_TODO_LIST_IMAGE_NAME)
-            .name(SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME)
-            .serviceId(settingAttribute.getUuid())
-            .build(),
-        false);
+  private void addTag(String appId, ArtifactStream savedArtifactStream, DockerConfig dockerConfig) {
+    addTag(appId, savedArtifactStream, dockerConfig, "1");
 
-    try {
-      // Adding some artifacts to get ready with deployment.
-      DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
+    // Add second tag
+    addTag(appId, savedArtifactStream, dockerConfig, "2");
 
-      // Add one tag
-      BuildDetails buildDetails =
-          ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "1");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "3");
 
-      // Add second tag
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "2");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "4");
 
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "3");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "5");
 
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "4");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "6");
 
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "5");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "7");
 
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "6");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "8");
 
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "7");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "9");
 
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "8");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
+    addTag(appId, savedArtifactStream, dockerConfig, "latest");
+  }
 
-      buildDetails = ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "9");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
-
-      buildDetails =
-          ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, "latest");
-      buildSourceService.collectArtifact(savedArtifactStream.getUuid(), buildDetails);
-
-    } catch (Exception e) {
-      logger.warn("Error occurred while saving artifacts for docker ArtifactStream for accountId {} ",
-          settingAttribute.getAccountId());
-    }
-    return savedArtifactStream;
+  private void addTag(String appId, ArtifactStream savedArtifactStream, DockerConfig dockerConfig, String s) {
+    BuildDetails buildDetails =
+        ArtifactCollectionUtils.prepareDockerBuildDetails(dockerConfig, DOCKER_TODO_LIST_IMAGE_NAME, s);
+    buildSourceService.collectArtifact(appId, savedArtifactStream.getUuid(), buildDetails);
   }
 }

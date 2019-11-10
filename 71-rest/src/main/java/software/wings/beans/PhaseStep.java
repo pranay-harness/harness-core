@@ -309,15 +309,15 @@ public class PhaseStep {
   }
 
   public PhaseStep cloneIntenal() {
-    PhaseStepType phaseStepType = getPhaseStepType();
-    // Do not clone if phaseStepType is containerSetup or pcfSetup
+    PhaseStepType stepType = getPhaseStepType();
+    // Do not clone if stepType is containerSetup or pcfSetup
     // as only 1st phase has setup step.
-    if (phaseStepType != null && setupTypes.contains(phaseStepType)) {
+    if (stepType != null && setupTypes.contains(stepType)) {
       return null;
     }
-    PhaseStep clonedPhaseStep = aPhaseStep(phaseStepType, getName())
+    PhaseStep clonedPhaseStep = aPhaseStep(stepType, getName())
                                     .withPhaseStepNameForRollback(getPhaseStepNameForRollback())
-                                    .withPhaseStepType(phaseStepType)
+                                    .withPhaseStepType(stepType)
                                     .withRollback(isRollback())
                                     .withFailureStrategies(getFailureStrategies())
                                     .withStatusForRollback(getStatusForRollback())

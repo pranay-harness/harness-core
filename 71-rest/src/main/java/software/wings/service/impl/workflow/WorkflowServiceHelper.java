@@ -90,7 +90,6 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
@@ -320,7 +319,7 @@ public class WorkflowServiceHelper {
       }
       return hpaYaml;
     } catch (IOException e) {
-      throw new WingsException("Unable to generate Yaml String for Horizontal pod autoscalar");
+      throw new InvalidRequestException("Unable to generate Yaml String for Horizontal pod autoscalar", USER);
     }
   }
 
@@ -416,7 +415,7 @@ public class WorkflowServiceHelper {
         }
       }
     }
-    throw new WingsException(
+    throw new InvalidRequestException(
         "Workflow [" + workflow.getName() + "] environment parameterized. However, the value not supplied", USER);
   }
 

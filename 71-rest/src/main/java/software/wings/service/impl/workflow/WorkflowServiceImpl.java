@@ -106,7 +106,6 @@ import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -133,14 +132,12 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
-import software.wings.beans.RoleType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -1028,7 +1025,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.setEnvId(envId);
           setUnset(ops, "envId", envId);
         }
-        //        updateRequiredEntityTypes(workflow.getApplicationId(), orchestrationWorkflow);
       }
       if (!cloned) {
         EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), WORKFLOW,
@@ -2984,25 +2980,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     List<NotificationRule> notificationRules = asList(notificationRule);
     workflow.getOrchestrationWorkflow().setNotificationRules(notificationRules);
-  }
-
-  /**
-   * This method will return defaultNotificationGroup for account. If default notification group is not set,
-   * then "Account Administrator" notification group would be returned.
-
-   * @param accountId
-   * @return
-   */
-  private List<NotificationGroup> getNotificationGroupForDefaultNotificationRule(String accountId) {
-    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
-
-    if (CollectionUtils.isEmpty(notificationGroups)) {
-      // TODO: We should be able to get Logged On User Admin role dynamically
-      notificationGroups =
-          notificationSetupService.listNotificationGroups(accountId, RoleType.ACCOUNT_ADMIN.getDisplayName());
-    }
-
-    return notificationGroups;
   }
 
   private void createDefaultFailureStrategy(Workflow workflow) {

@@ -113,6 +113,11 @@ public class EmailStateTest extends WingsBaseTest {
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but().build());
     assertThat(executionResponse.getErrorMessage()).isNull();
+    assertThat(emailState.getBody()).isNotEmpty();
+    assertThat(emailState.getSubject()).isNotEmpty();
+    assertThat(emailState.getToAddress()).isNotEmpty();
+    assertThat(emailState.getCcAddress()).isNotEmpty();
+    assertThat(emailState.isIgnoreDeliveryFailure()).isTrue();
 
     verify(emailNotificationService).send(emailData);
   }

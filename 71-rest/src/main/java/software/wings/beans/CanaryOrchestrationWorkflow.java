@@ -207,12 +207,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Override
   public List<String> getServiceIds() {
-    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+    List<WorkflowPhase> phases = new ArrayList<>();
     for (String workflowPhaseId : workflowPhaseIds) {
       WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
-      workflowPhases.add(workflowPhase);
+      phases.add(workflowPhase);
     }
-    return workflowPhases.stream()
+    return phases.stream()
         .filter(workflowPhase -> workflowPhase.getServiceId() != null)
         .map(WorkflowPhase::getServiceId)
         .distinct()
@@ -221,12 +221,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Override
   public List<String> getInfraMappingIds() {
-    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+    List<WorkflowPhase> phases = new ArrayList<>();
     for (String workflowPhaseId : workflowPhaseIds) {
       WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
-      workflowPhases.add(workflowPhase);
+      phases.add(workflowPhase);
     }
-    return workflowPhases.stream()
+    return phases.stream()
         .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
         .map(WorkflowPhase::getInfraMappingId)
         .distinct()
@@ -235,12 +235,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Override
   public List<String> getInfraDefinitionIds() {
-    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+    List<WorkflowPhase> phases = new ArrayList<>();
     for (String workflowPhaseId : workflowPhaseIds) {
       WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
-      workflowPhases.add(workflowPhase);
+      phases.add(workflowPhase);
     }
-    return workflowPhases.stream()
+    return phases.stream()
         .filter(workflowPhase -> workflowPhase.getInfraDefinitionId() != null)
         .map(WorkflowPhase::getInfraDefinitionId)
         .distinct()
