@@ -66,8 +66,10 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   private WorkflowExecution workflowExecution;
   private AuditHeader deleteAuditHeader;
   private AuditHeader nonDeleteAuditHeader;
+  private AuditHeader nonResourceTypeAuditHeader;
   private ChangeEvent deleteAuditHeaderChangeEvent;
   private ChangeEvent nonDeleteAuditHeaderChangeEvent;
+  private ChangeEvent nonResourceTypeAuditHeaderChangeEvent;
   private String accountId = getAccount(AccountType.PAID).getUuid();
   private String nonDeleteAuditHeaderId = generateUuid();
   private String deleteAuditHeaderId = generateUuid();
@@ -108,14 +110,19 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
     wingsPersistence.save(workflowExecution);
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
-        deleteAuditHeaderId, accountId, appId, environmentId, EntityType.ENVIRONMENT.name(), Type.DELETE.name());
+        deleteAuditHeaderId, accountId, appId, environmentId, EntityType.ENVIRONMENT.name(), Type.DELETE.name(), true);
     assertThat(deleteAuditHeader).isNotNull();
     wingsPersistence.save(deleteAuditHeader);
 
-    nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
-        nonDeleteAuditHeaderId, accountId, appId, environmentId, EntityType.ENVIRONMENT.name(), Type.UPDATE.name());
+    nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(nonDeleteAuditHeaderId, accountId, appId,
+        environmentId, EntityType.ENVIRONMENT.name(), Type.UPDATE.name(), true);
     assertThat(nonDeleteAuditHeader).isNotNull();
     wingsPersistence.save(nonDeleteAuditHeader);
+
+    nonResourceTypeAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(nonDeleteAuditHeaderId, accountId, appId,
+        environmentId, EntityType.ENVIRONMENT.name(), Type.UPDATE.name(), false);
+    assertThat(nonResourceTypeAuditHeader).isNotNull();
+    wingsPersistence.save(nonResourceTypeAuditHeader);
 
     deleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         deleteAuditHeader, appId, ChangeType.UPDATE, environmentId, Type.DELETE.name());
@@ -124,13 +131,16 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
     nonDeleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         nonDeleteAuditHeader, appId, ChangeType.UPDATE, environmentId, Type.UPDATE.name());
     assertThat(nonDeleteAuditHeaderChangeEvent).isNotNull();
+
+    nonResourceTypeAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
+        nonResourceTypeAuditHeader, appId, ChangeType.UPDATE, environmentId, Type.UPDATE.name());
+    assertThat(nonResourceTypeAuditHeaderChangeEvent).isNotNull();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = environmentChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
-    assertThat(isSuccessful).isNotNull();
     assertThat(isSuccessful).isTrue();
 
     when(searchDao.addTimestamp(eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.auditTimestamps), anyString(),
@@ -140,8 +150,10 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
              eq(EnvironmentSearchEntity.TYPE), eq(EnvironmentViewKeys.audits), anyString(), anyMap(), eq(3)))
         .thenReturn(true);
     boolean result = environmentChangeHandler.handleChange(nonDeleteAuditHeaderChangeEvent);
-    assertThat(result).isNotNull();
     assertThat(result).isTrue();
+
+    boolean isTrue = environmentChangeHandler.handleChange(nonResourceTypeAuditHeaderChangeEvent);
+    assertThat(isTrue).isTrue();
   }
 
   @Test

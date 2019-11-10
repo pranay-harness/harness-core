@@ -61,8 +61,10 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   private WorkflowExecution workflowExecution;
   private AuditHeader deleteAuditHeader;
   private AuditHeader nonDeleteAuditHeader;
+  private AuditHeader nonResourceTypeAuditHeader;
   private ChangeEvent deleteAuditHeaderChangeEvent;
   private ChangeEvent nonDeleteAuditHeaderChangeEvent;
+  private ChangeEvent nonResourceTypeAuditHeaderChangeEvent;
   private String accountId = getAccount(AccountType.PAID).getUuid();
   private String nonDeleteAuditHeaderId = generateUuid();
   private String deleteAuditHeaderId = generateUuid();
@@ -103,12 +105,12 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
     wingsPersistence.save(workflowExecution);
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
-        deleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.DELETE.name());
+        deleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.DELETE.name(), true);
     assertThat(deleteAuditHeader).isNotNull();
     wingsPersistence.save(deleteAuditHeader);
 
     nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
-        nonDeleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.UPDATE.name());
+        nonDeleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.UPDATE.name(), true);
     assertThat(nonDeleteAuditHeader).isNotNull();
     wingsPersistence.save(nonDeleteAuditHeader);
 
@@ -119,13 +121,21 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
     nonDeleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         nonDeleteAuditHeader, appId, ChangeType.UPDATE, pipelineId, Type.UPDATE.name());
     assertThat(nonDeleteAuditHeaderChangeEvent).isNotNull();
+
+    nonResourceTypeAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
+        nonDeleteAuditHeaderId, accountId, appId, pipelineId, EntityType.PIPELINE.name(), Type.UPDATE.name(), false);
+    assertThat(nonResourceTypeAuditHeader).isNotNull();
+    wingsPersistence.save(nonResourceTypeAuditHeader);
+
+    nonResourceTypeAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
+        nonResourceTypeAuditHeader, appId, ChangeType.UPDATE, pipelineId, Type.UPDATE.name());
+    assertThat(nonResourceTypeAuditHeaderChangeEvent).isNotNull();
   }
 
   @Test
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = pipelineChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
-    assertThat(isSuccessful).isNotNull();
     assertThat(isSuccessful).isTrue();
 
     when(searchDao.addTimestamp(eq(PipelineSearchEntity.TYPE), eq(PipelineViewKeys.auditTimestamps), anyString(),
@@ -135,8 +145,10 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
              eq(PipelineSearchEntity.TYPE), eq(PipelineViewKeys.audits), anyString(), anyMap(), eq(3)))
         .thenReturn(true);
     boolean result = pipelineChangeHandler.handleChange(nonDeleteAuditHeaderChangeEvent);
-    assertThat(result).isNotNull();
     assertThat(result).isTrue();
+
+    boolean isTrue = pipelineChangeHandler.handleChange(nonResourceTypeAuditHeaderChangeEvent);
+    assertThat(isTrue).isTrue();
   }
 
   @Test
