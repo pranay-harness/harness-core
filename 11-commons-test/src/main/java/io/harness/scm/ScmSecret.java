@@ -5,6 +5,7 @@ import com.bettercloud.vault.VaultConfig;
 import com.bettercloud.vault.VaultException;
 import com.bettercloud.vault.response.AuthResponse;
 import com.bettercloud.vault.response.LogicalResponse;
+import io.harness.exception.ScmSecretException;
 import lombok.Getter;
 import org.apache.commons.codec.binary.Hex;
 
@@ -42,7 +43,7 @@ public class ScmSecret {
 
       return new Vault(config);
     } catch (VaultException e) {
-      throw new RuntimeException(e);
+      throw new ScmSecretException(e);
     }
   }
 
@@ -51,7 +52,7 @@ public class ScmSecret {
     try (InputStream in = getClass().getResourceAsStream("/secrets.properties")) {
       secrets.load(in);
     } catch (IOException exception) {
-      throw new RuntimeException(exception);
+      throw new ScmSecretException(exception);
     }
   }
 
@@ -74,7 +75,7 @@ public class ScmSecret {
       cipher.init(Cipher.DECRYPT_MODE, aesKey);
       return cipher.doFinal(Hex.decodeHex(cipheredSecretHex.toCharArray()));
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new ScmSecretException(e);
     }
   }
 
@@ -101,7 +102,7 @@ public class ScmSecret {
       cipher.init(Cipher.ENCRYPT_MODE, aesKey);
       return Hex.encodeHexString(cipher.doFinal(secret));
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new ScmSecretException(e);
     }
   }
 

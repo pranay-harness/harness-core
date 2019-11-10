@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
@@ -42,7 +41,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -142,7 +140,6 @@ public class AuthHandler {
   @Inject private AuthService authService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DashboardAuthHandler dashboardAuthHandler;
-  @Inject private AuthHandler authHandler;
   @Inject private ApiKeyService apiKeyService;
   @Inject private HarnessApiKeyService harnessApiKeyService;
 
@@ -692,9 +689,7 @@ public class AuthHandler {
       SetView<String> intersection = Sets.intersection(appFilter.getIds(), allAppIds);
       return new HashSet<>(intersection);
     } else {
-      String msg = "Unknown app filter type: " + appFilter.getFilterType();
-      logger.error(msg);
-      throw new WingsException(msg);
+      throw new InvalidRequestException("Unknown app filter type: " + appFilter.getFilterType());
     }
   }
 
@@ -864,7 +859,7 @@ public class AuthHandler {
               } else if (permissionType == DEPLOYMENT) {
                 className = WorkflowExecution.class.getName();
               } else {
-                throw new WingsException("Invalid permission type: " + permissionType);
+                throw new InvalidRequestException("Invalid permission type: " + permissionType);
               }
 
               return className;
@@ -897,7 +892,7 @@ public class AuthHandler {
     } else {
       String msg = "Unknown service filter type: " + serviceFilter.getFilterType();
       logger.error(msg);
-      throw new WingsException(msg);
+      throw new InvalidRequestException(msg);
     }
   }
 
@@ -920,7 +915,7 @@ public class AuthHandler {
     } else {
       String msg = "Unknown service filter type: " + provisionerFilter.getFilterType();
       logger.error(msg);
-      throw new WingsException(msg);
+      throw new InvalidRequestException(msg);
     }
   }
 
@@ -1568,20 +1563,20 @@ public class AuthHandler {
 
     ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
     if (apiKeyEntry == null) {
-      throw new WingsException(USER_NOT_AUTHORIZED);
+      throw new InvalidRequestException("User not authorized", USER);
     }
 
     UserPermissionInfo userPermissionInfo = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
 
     logger.info("SCIM permissions: {}", userPermissionInfo.getAccountPermissionSummary().getPermissions());
     if (!userPermissionInfo.getAccountPermissionSummary().getPermissions().contains(USER_PERMISSION_MANAGEMENT)) {
-      throw new WingsException(USER_NOT_AUTHORIZED);
+      throw new InvalidRequestException("User not authorized", USER);
     }
   }
 
   private String getToken(String authorizationHeader, String prefix) {
     if (!authorizationHeader.contains(prefix)) {
-      throw new WingsException(USER_NOT_AUTHORIZED);
+      throw new InvalidRequestException("User not authorized", USER);
     }
     return authorizationHeader.substring(prefix.length()).trim();
   }

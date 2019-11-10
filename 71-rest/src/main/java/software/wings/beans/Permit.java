@@ -19,7 +19,7 @@ import java.util.Date;
 @Entity(value = "permits", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class Permit extends Base {
-  public static String PERMIT_KEY_ID = "key";
+  public static final String PERMIT_KEY_ID = "key";
   @Indexed(options = @IndexOptions(unique = true, background = true)) private String key;
   private String group;
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0)) private Date expireAt;

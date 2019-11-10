@@ -13,6 +13,7 @@ import java.util.List;
 
 @Slf4j
 public class CsvParser {
+  private CsvParser() {}
   private static CSVFormat csvFormat = CSVFormat.DEFAULT.withTrim().withTrailingDelimiter().withEscape('\\');
 
   public static List<String> parse(String input) {
@@ -22,7 +23,7 @@ public class CsvParser {
     }
     try (CSVParser csvParser = CSVParser.parse(input, csvFormat)) {
       final List<CSVRecord> records = csvParser.getRecords();
-      if (records.size() == 0) {
+      if (isEmpty(records)) {
         return list;
       }
       CSVRecord record = records.get(0);
