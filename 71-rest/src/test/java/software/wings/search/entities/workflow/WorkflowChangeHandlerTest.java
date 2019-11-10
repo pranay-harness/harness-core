@@ -66,8 +66,10 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   private AuditHeader deleteAuditHeader;
   private WorkflowExecution workflowExecution;
   private AuditHeader nonDeleteAuditHeader;
+  private AuditHeader nonResourceTypeAuditHeader;
   private ChangeEvent deleteAuditHeaderChangeEvent;
   private ChangeEvent nonDeleteAuditHeaderChangeEvent;
+  private ChangeEvent nonResourceTypeAuditHeaderChangeEvent;
   private String accountId = getAccount(AccountType.PAID).getUuid();
   private String nonDeleteAuditHeaderId = generateUuid();
   private String deleteAuditHeaderId = generateUuid();
@@ -103,12 +105,12 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
     wingsPersistence.save(workflowExecution);
 
     deleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
-        deleteAuditHeaderId, accountId, appId, workflowId, EntityType.WORKFLOW.name(), Type.DELETE.name());
+        deleteAuditHeaderId, accountId, appId, workflowId, EntityType.WORKFLOW.name(), Type.DELETE.name(), true);
     wingsPersistence.save(deleteAuditHeader);
     assertThat(deleteAuditHeader).isNotNull();
 
     nonDeleteAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
-        nonDeleteAuditHeaderId, accountId, appId, workflowId, EntityType.WORKFLOW.name(), Type.UPDATE.name());
+        nonDeleteAuditHeaderId, accountId, appId, workflowId, EntityType.WORKFLOW.name(), Type.UPDATE.name(), true);
     wingsPersistence.save(nonDeleteAuditHeader);
     assertThat(nonDeleteAuditHeader).isNotNull();
 
@@ -119,6 +121,15 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
     nonDeleteAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
         nonDeleteAuditHeader, appId, ChangeType.UPDATE, pipelineId, Type.UPDATE.name());
     assertThat(nonDeleteAuditHeaderChangeEvent).isNotNull();
+
+    nonResourceTypeAuditHeader = RelatedAuditEntityTestUtils.createAuditHeader(
+        nonDeleteAuditHeaderId, accountId, appId, workflowId, EntityType.WORKFLOW.name(), Type.UPDATE.name(), false);
+    assertThat(nonResourceTypeAuditHeader).isNotNull();
+    wingsPersistence.save(nonResourceTypeAuditHeader);
+
+    nonResourceTypeAuditHeaderChangeEvent = RelatedAuditEntityTestUtils.createAuditHeaderChangeEvent(
+        nonResourceTypeAuditHeader, appId, ChangeType.UPDATE, workflowId, Type.UPDATE.name());
+    assertThat(nonResourceTypeAuditHeaderChangeEvent).isNotNull();
   }
 
   @Test
@@ -136,6 +147,9 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
         .thenReturn(true);
     boolean result = workflowChangeHandler.handleChange(nonDeleteAuditHeaderChangeEvent);
     assertThat(result).isTrue();
+
+    boolean isTrue = workflowChangeHandler.handleChange(nonResourceTypeAuditHeaderChangeEvent);
+    assertThat(isTrue).isTrue();
   }
 
   @Test

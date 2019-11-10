@@ -14,8 +14,8 @@ import software.wings.search.framework.changestreams.ChangeType;
 import java.util.Arrays;
 
 public class RelatedAuditEntityTestUtils {
-  public static AuditHeader createAuditHeader(
-      String auditHeaderId, String accountId, String appId, String entityId, String entityType, String operationType) {
+  public static AuditHeader createAuditHeader(String auditHeaderId, String accountId, String appId, String entityId,
+      String entityType, String operationType, Boolean isResourceTypePresent) {
     EmbeddedUser user = EmbeddedUser.builder().name("testing").build();
 
     AuditHeader auditHeader =
@@ -41,21 +41,25 @@ public class RelatedAuditEntityTestUtils {
             .build();
     auditHeader.setAccountId(accountId);
     auditHeader.setEntityAuditRecords(
-        Arrays.asList(createEntityAuditRecord(appId, entityId, entityType, operationType)));
+        Arrays.asList(createEntityAuditRecord(appId, entityId, entityType, operationType, isResourceTypePresent)));
     return auditHeader;
   }
 
   public static EntityAuditRecord createEntityAuditRecord(
-      String appId, String entityId, String entityType, String operationType) {
-    return EntityAuditRecord.builder()
-        .entityId(entityId)
-        .entityName("name")
-        .operationType(operationType)
-        .affectedResourceOperation(operationType)
-        .affectedResourceId(entityId)
-        .affectedResourceType(entityType)
-        .appId(appId)
-        .build();
+      String appId, String entityId, String entityType, String operationType, boolean isResourceTypePresent) {
+    EntityAuditRecord entityAuditRecord = EntityAuditRecord.builder()
+                                              .entityId(entityId)
+                                              .entityName("name")
+                                              .operationType(operationType)
+                                              .affectedResourceOperation(operationType)
+                                              .affectedResourceId(entityId)
+                                              .appId(appId)
+                                              .build();
+
+    if (isResourceTypePresent) {
+      entityAuditRecord.setAffectedResourceType(entityType);
+    }
+    return entityAuditRecord;
   }
 
   public static DBObject getAuditHeaderChanges(String appId, String auditEntityId, String operationType) {
