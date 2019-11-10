@@ -64,6 +64,8 @@ public interface ArtifactService extends OwnedByArtifactStream {
    */
   Artifact create(@Valid Artifact artifact);
 
+  Artifact create(Artifact artifact, boolean skipDuplicateCheck);
+
   /**
    * Update.
    *

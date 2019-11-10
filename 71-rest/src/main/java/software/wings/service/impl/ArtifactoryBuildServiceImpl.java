@@ -45,8 +45,8 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     return wrapNewBuildsWithLabels(
-        getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, 200), artifactStreamAttributes,
-        artifactoryConfig, encryptionDetails);
+        getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, ARTIFACT_RETENTION_SIZE),
+        artifactStreamAttributes, artifactoryConfig, encryptionDetails);
   }
 
   @Override

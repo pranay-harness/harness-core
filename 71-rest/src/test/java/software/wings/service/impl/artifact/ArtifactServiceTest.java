@@ -9,8 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -61,6 +63,7 @@ import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
@@ -103,6 +106,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private SettingsService settingsService;
+  @Mock private ArtifactCollectionUtils artifactCollectionUtils;
 
   @InjectMocks @Inject private ArtifactService artifactService;
   private String BUILD_NO = "buildNo";
@@ -149,15 +153,70 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldCreateArtifactWhenValid() {
-    assertThat(artifactService.create(artifactBuilder.but().build()))
+    assertThat(artifactService.create(artifactBuilder.but().build(), true))
         .isNotNull()
         .hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
   }
 
   @Test
   @Category(UnitTests.class)
+  public void shouldNotCreateDuplicateJenkinsArtifact() {
+    when(artifactCollectionUtils.getArtifactStreamAttributes(eq(jenkinsArtifactStream), anyBoolean()))
+        .thenReturn(ArtifactStreamAttributes.builder().build());
+    Artifact oldArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact newArtifact = artifactService.create(artifactBuilder.but().build());
+    assertThat(newArtifact.getUuid()).isEqualTo(oldArtifact.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotCreateDuplicateAMIArtifact() {
+    AmiArtifactStream artifactStream = AmiArtifactStream.builder()
+                                           .uuid(ARTIFACT_STREAM_ID)
+                                           .appId(APP_ID)
+                                           .sourceName("ARTIFACT_SOURCE")
+                                           .serviceId(SERVICE_ID)
+                                           .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactCollectionUtils.getArtifactStreamAttributes(eq(artifactStream), anyBoolean()))
+        .thenReturn(ArtifactStreamAttributes.builder().build());
+    Artifact oldArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact newArtifact = artifactService.create(artifactBuilder.but().build());
+    assertThat(newArtifact.getUuid()).isEqualTo(oldArtifact.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotCreateDuplicateS3Artifact() {
+    AmazonS3ArtifactStream artifactStream = AmazonS3ArtifactStream.builder()
+                                                .uuid(ARTIFACT_STREAM_ID)
+                                                .appId(APP_ID)
+                                                .sourceName("ARTIFACT_SOURCE")
+                                                .serviceId(SERVICE_ID)
+                                                .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactCollectionUtils.getArtifactStreamAttributes(eq(artifactStream), anyBoolean()))
+        .thenReturn(ArtifactStreamAttributes.builder().build());
+    Map<String, String> metadata = ImmutableMap.of("artifactPath", "path");
+    Artifact oldArtifact = artifactService.create(artifactBuilder.but().withMetadata(metadata).build());
+    Artifact newArtifact = artifactService.create(artifactBuilder.but().withMetadata(metadata).build());
+    assertThat(newArtifact.getUuid()).isEqualTo(oldArtifact.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldCreateNonDuplicateArtifact() {
+    when(artifactCollectionUtils.getArtifactStreamAttributes(eq(jenkinsArtifactStream), anyBoolean()))
+        .thenReturn(ArtifactStreamAttributes.builder().build());
+    Artifact oldArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact newArtifact = artifactService.create(artifactLatestBuilder.but().build());
+    assertThat(newArtifact.getUuid()).isNotEqualTo(oldArtifact.getUuid());
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void shouldAddArtifactFile() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     assertThat(savedArtifact).isNotNull().hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
     ArtifactFile artifactFile = anArtifactFile()
                                     .withAppId(APP_ID)
@@ -176,7 +235,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenAppIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> artifactService.create(artifactBuilder.but().withAppId("BAD_APP_ID").build()));
+        .isThrownBy(() -> artifactService.create(artifactBuilder.but().withAppId("BAD_APP_ID").build(), true));
   }
 
   @Test
@@ -184,7 +243,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionWhenReleaseIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(
-            () -> artifactService.create(artifactBuilder.but().withArtifactStreamId("NON_EXISTENT_ID").build()));
+            () -> artifactService.create(artifactBuilder.but().withArtifactStreamId("NON_EXISTENT_ID").build(), true));
   }
 
   @Test
@@ -193,13 +252,13 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {
     assertThatExceptionOfType(ConstraintViolationException.class)
-        .isThrownBy(() -> artifactService.create(artifactBuilder.but().withRevision(null).build()));
+        .isThrownBy(() -> artifactService.create(artifactBuilder.but().withRevision(null).build(), true));
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateArtifactWhenValid() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
 
     savedArtifact.setDisplayName("ARTIFACT_DISPLAY_NAME");
     assertThat(artifactService.update(savedArtifact)).isEqualTo(savedArtifact);
@@ -208,17 +267,17 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenArtifactToBeUpdatedIsInvalid() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
 
     savedArtifact.setDisplayName(null);
     assertThatExceptionOfType(ConstraintViolationException.class)
-        .isThrownBy(() -> artifactService.create(savedArtifact));
+        .isThrownBy(() -> artifactService.update(savedArtifact));
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateStatusApproved() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), APPROVED);
     Artifact updatedArtifact = artifactService.get(savedArtifact.getUuid());
     assertThat(updatedArtifact).isNotNull();
@@ -228,7 +287,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateStatusWithErrorMessage() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     artifactService.updateStatus(
         savedArtifact.getUuid(), savedArtifact.getAccountId(), Status.FAILED, "Failed to download artifact");
     Artifact updatedArtifact = artifactService.get(savedArtifact.getUuid());
@@ -240,7 +299,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateContentStatus() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), APPROVED, DOWNLOADED);
     Artifact updatedArtifact = artifactService.get(savedArtifact.getUuid());
     assertThat(updatedArtifact).isNotNull();
@@ -251,7 +310,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldUpdateContentStatusWithErrorMessage() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), Status.FAILED,
         ContentStatus.FAILED, "Failed to download artifact");
     Artifact updatedArtifact = artifactService.get(savedArtifact.getUuid());
@@ -264,7 +323,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldNotDownloadFileForArtifactWhenNotReady() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     assertThat(artifactService.download(ACCOUNT_ID, savedArtifact.getUuid())).isNull();
   }
 
@@ -273,7 +332,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldDownloadFileForArtifactWhenReady() {
     File file = null;
     try {
-      Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+      Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
       ArtifactFile artifactFile =
           anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
       wingsRule.getDatastore().save(artifactFile);
@@ -298,7 +357,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldListByAppId() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     assertThat(artifactService.listByAppId(APP_ID)).hasSize(1).containsExactly(savedArtifact);
   }
@@ -400,15 +459,15 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   private void constructArtifacts() {
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build(), true);
 
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build(), true);
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build(), true);
 
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build(), true);
   }
 
   private void constructArtifactsAtConnectorLevel() {
@@ -423,21 +482,21 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                   .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build(), true);
 
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build(), true);
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build(), true);
 
     artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build(), true);
   }
 
   @Test
   @Category(UnitTests.class)
   public void shouldGetArtifact() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     assertThat(artifactService.get(savedArtifact.getUuid())).isEqualTo(savedArtifact);
   }
 
@@ -448,7 +507,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldGetArtifactWithServices() {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     Artifact updatedArtifact = artifactService.get(savedArtifact.getUuid());
     assertThat(updatedArtifact).isEqualTo(savedArtifact);
     assertThat(updatedArtifact).extracting(Artifact::getServices).isNotNull();
@@ -457,7 +516,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldFetchLatestArtifactForArtifactStream() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(jenkinsArtifactStream);
     assertThat(latestArtifact)
         .isNotNull()
@@ -469,7 +528,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFetchLastCollectedApprovedArtifactForArtifactStream() {
     Artifact artifact = artifactBuilder.build();
-    Artifact savedArtifact = artifactService.create(artifact);
+    Artifact savedArtifact = artifactService.create(artifact, true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), APPROVED);
     Artifact latestArtifact =
         artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream);
@@ -485,9 +544,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact latestArtifact = artifactService.fetchLastCollectedApprovedArtifactSorted(jenkinsArtifactStream);
     assertThat(latestArtifact).isNull();
 
-    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build(), true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), READY);
-    Artifact savedArtifactLatest = artifactService.create(artifactLatestBuilder.build());
+    Artifact savedArtifactLatest = artifactService.create(artifactLatestBuilder.build(), true);
     artifactService.updateStatus(savedArtifactLatest.getUuid(), savedArtifactLatest.getAccountId(), READY);
     latestArtifact = artifactService.fetchLastCollectedApprovedArtifactSorted(jenkinsArtifactStream);
     assertThat(latestArtifact).isNotNull().extracting(Artifact::getBuildNo).isEqualTo(savedArtifactLatest.getBuildNo());
@@ -496,7 +555,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldFetchLastCollectedArtifactForArtifactStream() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build(), true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), RUNNING);
     Artifact latestArtifact = artifactService.fetchLastCollectedArtifact(jenkinsArtifactStream);
     assertThat(latestArtifact)
@@ -508,7 +567,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldGetArtifactByBuildNumberSource() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build(), true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), APPROVED);
     Artifact latestArtifact =
         artifactService.getArtifactByBuildNumber(jenkinsArtifactStream, savedArtifact.getBuildNo(), false);
@@ -800,7 +859,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDeleteArtifact() {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
     artifactService.delete(savedArtifact.getAccountId(), savedArtifact.getUuid());
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNull();
@@ -836,10 +895,10 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact jenkinsArtifact = constructArtifact(jenkinsArtifactStreamId);
 
     when(artifactStreamService.get(dockerArtifactStreamId)).thenReturn(dockerArtifactStream);
-    artifactService.create(dockerArtifact);
+    artifactService.create(dockerArtifact, true);
 
     when(artifactStreamService.get(jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
-    artifactService.create(jenkinsArtifact);
+    artifactService.create(jenkinsArtifact, true);
 
     artifactService.deleteArtifacts(50);
     assertThat(artifactService.listByAppId(APP_ID)).hasSize(2);
@@ -879,7 +938,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                    .build();
 
     when(artifactStreamService.get(jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
-    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact, true);
 
     wingsRule.getDatastore().save(savedArtifact);
     artifactService.deleteArtifacts(0);
@@ -913,7 +972,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void shouldListByIds() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
     assertThat(artifactService.listByIds(ACCOUNT_ID, singletonList(savedArtifact.getUuid()))).isNotEmpty();
   }
@@ -941,7 +1000,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                    .build();
 
     when(artifactStreamService.get(jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
-    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact, true);
     assertThat(savedArtifact).isNotNull();
 
     artifactService.deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
@@ -974,7 +1033,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                    .build();
 
     when(artifactStreamService.get(jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
-    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact, true);
     ArtifactFile artifactFile = anArtifactFile()
                                     .withAppId(APP_ID)
                                     .withName("test-artifact.war")
@@ -997,7 +1056,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Category(UnitTests.class)
   public void testFetchArtifactFiles() {
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build(), true);
     ArtifactFile artifactFile = anArtifactFile()
                                     .withAppId(APP_ID)
                                     .withName("test-artifact.war")
@@ -1024,7 +1083,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                   .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
     Artifact artifact = artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build(), true);
     assertThat(artifact).isNotNull();
   }
 
@@ -1048,8 +1107,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                   .autoPopulate(true)
                                                   .build();
     when(artifactStreamService.get(artifact.getArtifactStreamId())).thenReturn(nexusArtifactStream);
-    Artifact artifact =
-        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "1.0.0.18279")).but().build());
+    Artifact artifact = artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "1.0.0.18279")).but().build(), true);
     assertThat(artifact).isNotNull();
     assertThat(artifact.getBuildNo()).isEqualTo("1.0.0.18279");
     assertThat(artifact.getContentStatus()).isEqualTo(NOT_DOWNLOADED);
@@ -1076,7 +1135,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                               .build();
     when(artifactStreamService.get(artifact.getArtifactStreamId())).thenReturn(artifactoryArtifactStream);
     Artifact artifact =
-        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "latest")).but().build());
+        artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "latest")).but().build(), true);
     assertThat(artifact).isNotNull();
     assertThat(artifact.getBuildNo()).isEqualTo("latest");
     assertThat(artifact.getContentStatus()).isEqualTo(METADATA_ONLY);
@@ -1104,7 +1163,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
             .build();
     when(artifactStreamService.get(artifact.getArtifactStreamId())).thenReturn(artifactoryArtifactStream);
     Artifact artifact = artifactService.create(
-        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0.war")).but().build());
+        artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.0.war")).but().build(), true);
     assertThat(artifact).isNotNull();
     assertThat(artifact.getBuildNo()).isEqualTo("todolist-1.0.war");
     assertThat(artifact.getStatus()).isEqualTo(QUEUED);
@@ -1130,19 +1189,22 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                    .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                    .withStatus(RUNNING)
                                    .but()
-                                   .build());
+                                   .build(),
+            true);
     Artifact artifact2 =
         artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.1.war"))
                                    .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                    .withStatus(READY)
                                    .but()
-                                   .build());
+                                   .build(),
+            true);
     Artifact artifact3 =
         artifactService.create(artifactBuilder.withMetadata(ImmutableMap.of(BUILD_NO, "todolist-1.2.war"))
                                    .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                    .withStatus(Status.FAILED)
                                    .but()
-                                   .build());
+                                   .build(),
+            true);
     artifactService.updateArtifactSourceName(customArtifactStream);
     Artifact updatedArtifact1 = artifactService.get(artifact1.getUuid());
     assertThat(updatedArtifact1).isNotNull();
@@ -1164,7 +1226,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                    .withAppId(APP_ID)
                                    .withStatus(RUNNING)
                                    .but()
-                                   .build());
+                                   .build(),
+            true);
     when(artifactStreamServiceBindingService.listServices(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(asList(Service.builder().name("Service1").build()));
     Artifact artifact = artifactService.getWithServices(artifact1.getUuid(), APP_ID);
@@ -1182,7 +1245,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                    .withAppId(APP_ID)
                                    .withStatus(RUNNING)
                                    .but()
-                                   .build());
+                                   .build(),
+            true);
     Map<String, String> sourceProperties = new HashMap<>();
     sourceProperties.put("k1", "v1");
     sourceProperties.put("k2", "v2");
@@ -1199,7 +1263,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldGetCustomArtifactByBuildNumberSource() {
     CustomArtifactStream customArtifactStream =
         CustomArtifactStream.builder().sourceName("test").uuid(ARTIFACT_STREAM_ID).build();
-    Artifact savedArtifact = artifactService.create(artifactBuilder.build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.build(), true);
     artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAccountId(), APPROVED);
     Artifact latestArtifact =
         artifactService.getArtifactByBuildNumber(customArtifactStream, savedArtifact.getBuildNo(), false);
