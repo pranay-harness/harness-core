@@ -4,8 +4,6 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
-import com.google.common.collect.Maps;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +12,7 @@ import lombok.NoArgsConstructor;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.yaml.BaseYamlWithType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +36,7 @@ public class Variable {
   public static final String ENV_ID = "envId";
   public static final String SERVICE_ID = "serviceId";
 
-  private Map<String, Object> metadata = Maps.newHashMap();
+  private Map<String, Object> metadata = new HashMap<>();
 
   private VariableType type = VariableType.TEXT;
 
@@ -127,7 +126,7 @@ public class Variable {
     private String value;
     private boolean fixed;
     private VariableType type = VariableType.TEXT;
-    private Map<String, Object> metadata = Maps.newHashMap();
+    private Map<String, Object> metadata = new HashMap<>();
     private String allowedValues;
     private List<String> allowedList;
 
