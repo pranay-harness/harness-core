@@ -31,7 +31,7 @@ public class WorkflowExecutionServiceHelper {
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   private static final String CHANGED_MESSAGE =
-      "Previous workflow variables have been changed. Please select new values";
+      "Workflow Variables have changed since previous execution. Please select new values.";
 
   public WorkflowVariablesMetadata fetchWorkflowVariables(
       String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
@@ -103,8 +103,8 @@ public class WorkflowExecutionServiceHelper {
     for (Variable variable : workflowVariables) {
       String name = variable.getName();
       boolean isEntity = ENTITY.equals(variable.getType());
-      String oldVariableVal = oldWorkflowVariablesMap.getOrDefault(name, null);
-      if (oldVariableVal == null) {
+      boolean oldVariablePresent = oldWorkflowVariablesMap.containsKey(name);
+      if (!oldVariablePresent) {
         // A new workflow variable.
         if (isEntity) {
           // If there is a new workflow variable of type ENTITY set resetEntities = true.
@@ -112,7 +112,7 @@ public class WorkflowExecutionServiceHelper {
         }
         continue;
       }
-      variable.setValue(oldVariableVal);
+      variable.setValue(oldWorkflowVariablesMap.get(name));
       // This is never a noop as we have already dealt with the case that this workflow variable is new.
       oldWorkflowVariablesMap.remove(name);
     }
