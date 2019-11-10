@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYaml;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +27,7 @@ public class TemplateExpression {
   @Default private boolean expressionAllowed = true; // Can this template expression can contain other expression
   private String description;
   private boolean mandatory;
-  @Default private Map<String, Object> metadata = Maps.newHashMap();
+  @Default private Map<String, Object> metadata = new HashMap<>();
 
   @Data
   @NoArgsConstructor

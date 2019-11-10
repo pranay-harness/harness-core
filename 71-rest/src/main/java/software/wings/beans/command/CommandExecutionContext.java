@@ -31,6 +31,7 @@ import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -55,9 +56,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private ExecutionCredential executionCredential;
   private AppContainer appContainer;
   private List<ArtifactFile> artifactFiles;
-  private Map<String, String> serviceVariables = Maps.newHashMap();
-  private Map<String, String> safeDisplayServiceVariables = Maps.newHashMap();
-  private Map<String, String> envVariables = Maps.newHashMap();
+  private Map<String, String> serviceVariables = new HashMap<>();
+  private Map<String, String> safeDisplayServiceVariables = new HashMap<>();
+  private Map<String, String> envVariables = new HashMap<>();
   private SettingAttribute hostConnectionAttributes;
   private List<EncryptedDataDetail> hostConnectionCredentials;
   private SettingAttribute bastionConnectionAttributes;
@@ -70,7 +71,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private CodeDeployParams codeDeployParams;
   private ContainerSetupParams containerSetupParams;
   private ContainerResizeParams containerResizeParams;
-  private Map<String, String> metadata = Maps.newHashMap();
+  private Map<String, String> metadata = new HashMap<>();
   private CommandExecutionData commandExecutionData;
   private Integer timeout;
   private String deploymentType;

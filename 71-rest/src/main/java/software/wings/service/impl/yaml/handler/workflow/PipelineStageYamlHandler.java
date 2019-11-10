@@ -10,7 +10,6 @@ import static software.wings.expression.ManagerExpressionEvaluator.matchesVariab
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -38,6 +37,7 @@ import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -74,8 +74,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       }
     }
 
-    Map<String, Object> properties = Maps.newHashMap();
-    Map<String, String> workflowVariables = Maps.newLinkedHashMap();
+    Map<String, Object> properties = new HashMap<>();
+    Map<String, String> workflowVariables = new LinkedHashMap<>();
     Workflow workflow;
     if (!yaml.getType().equals(StateType.APPROVAL.name())) {
       workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());

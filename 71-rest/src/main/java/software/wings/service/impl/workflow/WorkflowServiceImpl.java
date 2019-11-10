@@ -869,13 +869,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return containerTask != null && containerTask.checkStatefulSet();
   }
 
-  private void addLinkedPreOrPostDeploymentSteps(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
-    workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
-        canaryOrchestrationWorkflow.getPreDeploymentSteps(), null);
-    workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
-        canaryOrchestrationWorkflow.getPostDeploymentSteps(), null);
-  }
-
   private void updateKeywordsAndLinkedTemplateUuids(Workflow workflow, List<String> linkedTemplateUuids) {
     if (isNotEmpty(linkedTemplateUuids)) {
       linkedTemplateUuids = linkedTemplateUuids.stream().distinct().collect(toList());
