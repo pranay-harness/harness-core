@@ -27,8 +27,17 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Indexes(@Index(options = @IndexOptions(name = "owners"), fields = { @Field("artifactStreamId")
-                                                                     , @Field("appId") }))
+@Indexes({
+  @Index(options = @IndexOptions(name = "owners"), fields = { @Field("artifactStreamId")
+                                                              , @Field("appId") })
+  , @Index(options = @IndexOptions(name = "artifactStream_buildNo"), fields = {
+    @Field("artifactStreamId"), @Field("metadata.buildNo")
+  }), @Index(options = @IndexOptions(name = "artifactStream_artifactPath"), fields = {
+    @Field("artifactStreamId"), @Field("metadata.artifactPath")
+  }), @Index(options = @IndexOptions(name = "artifactStream_revision"), fields = {
+    @Field("artifactStreamId"), @Field("revision")
+  })
+})
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
@@ -57,6 +66,7 @@ public class Artifact extends Base {
     public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.image;
     public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.tag;
     public static final String metadata_buildNo = metadata + "." + ArtifactMetadataKeys.buildNo;
+    public static final String metadata_artifactPath = metadata + "." + ArtifactMetadataKeys.artifactPath;
   }
 
   private String artifactStreamId;

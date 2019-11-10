@@ -493,7 +493,7 @@ public class ArtifactCollectionUtils {
     return aBuildDetails().withNumber(tag).withMetadata(metadata).withBuildUrl(tagUrl + tag).build();
   }
 
-  private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, boolean isMultiArtifact) {
+  ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, boolean isMultiArtifact) {
     if (isMultiArtifact) {
       return artifactStream.fetchArtifactStreamAttributes();
     } else {
@@ -684,8 +684,7 @@ public class ArtifactCollectionUtils {
    * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
    * @return true, if generic artifact stream - uses artifact path as key
    */
-  private static boolean isGenericArtifactStream(
-      String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
+  static boolean isGenericArtifactStream(String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
     if (AMAZON_S3.name().equals(artifactStreamType)) {
       return true;
     }

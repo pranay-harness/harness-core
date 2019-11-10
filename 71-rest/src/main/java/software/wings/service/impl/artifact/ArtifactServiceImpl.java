@@ -10,6 +10,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.regex.Pattern.compile;
@@ -68,6 +69,7 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
@@ -121,6 +123,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private SettingsService settingsService;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -179,6 +182,11 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
+    return create(artifact, false);
+  }
+
+  @Override
+  public Artifact create(Artifact artifact, boolean skipDuplicateCheck) {
     String appId = artifact.fetchAppId();
     if (appId != null && !appId.equals(GLOBAL_APP_ID) && !appService.exist(appId)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "App does not exist: " + appId);
@@ -189,8 +197,21 @@ public class ArtifactServiceImpl implements ArtifactService {
     artifact.setArtifactSourceName(artifactStream.getSourceName());
     setAccountId(artifact);
     setArtifactStatus(artifact, artifactStream);
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifact.getAccountId())) {
+    boolean isMultiArtifact =
+        featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifact.getAccountId());
+    if (!isMultiArtifact) {
       artifact.setServiceIds(artifactStreamServiceBindingService.listServiceIds(artifactStream.getUuid()));
+    }
+
+    if (!skipDuplicateCheck) {
+      ArtifactStreamAttributes artifactStreamAttributes =
+          artifactCollectionUtils.getArtifactStreamAttributes(artifactStream, isMultiArtifact);
+      Artifact savedArtifact = getArtifactByUniqueKey(artifactStream, artifactStreamAttributes, artifact);
+      if (savedArtifact != null) {
+        logger.info(format("Skipping creation of duplicate artifact for artifact stream: [%s], saved artifact: [%s]",
+            artifactStream.getUuid(), savedArtifact.getUuid()));
+        return savedArtifact;
+      }
     }
 
     String key = wingsPersistence.save(artifact);
@@ -201,6 +222,30 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
     executorService.submit(() -> deleteArtifactsWithContents(ARTIFACT_RETENTION_SIZE, artifactStream));
     return savedArtifact;
+  }
+
+  private Artifact getArtifactByUniqueKey(
+      ArtifactStream artifactStream, ArtifactStreamAttributes artifactStreamAttributes, Artifact artifact) {
+    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
+                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid());
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    String key;
+    String value;
+    if (AMI.name().equals(artifactStreamType)) {
+      key = ArtifactKeys.revision;
+      value = artifact.getRevision();
+    } else if (ArtifactCollectionUtils.isGenericArtifactStream(artifactStreamType, artifactStreamAttributes)) {
+      key = ArtifactKeys.metadata_artifactPath;
+      value = artifact.getArtifactPath();
+    } else {
+      key = ArtifactKeys.metadata_buildNo;
+      value = artifact.getBuildNo();
+    }
+
+    if (value == null) {
+      return null;
+    }
+    return artifactQuery.filter(key, value).get();
   }
 
   private void setAccountId(Artifact artifact) {
@@ -674,7 +719,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         deleteArtifacts(artifactIds, artifactFileIds);
       }
     } catch (Exception ex) {
-      logger.warn(String.format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
+      logger.warn(format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
                       toBeDeletedArtifacts.size()),
           ex);
       return;
@@ -687,7 +732,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     try {
       deleteArtifactFiles(getArtifactFileIds(toBeDeletedArtifacts));
     } catch (Exception ex) {
-      logger.warn(String.format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
+      logger.warn(format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
                       toBeDeletedArtifacts.size()),
           ex);
       return;

@@ -55,7 +55,7 @@ public class ArtifactTest extends GraphQLTest {
                             .withDisplayName("Some artifact")
                             .build();
 
-    assertThat(artifactService.create(artifact)).isNotNull();
+    assertThat(artifactService.create(artifact, true)).isNotNull();
     String query = $GQL(/*
 {
   artifact(artifactId: "%s") {
