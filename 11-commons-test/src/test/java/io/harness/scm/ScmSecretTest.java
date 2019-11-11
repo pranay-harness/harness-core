@@ -2,6 +2,7 @@ package io.harness.scm;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -61,7 +62,7 @@ public class ScmSecretTest extends CategoryTest {
 
     String text = "udo6OkOATXXGFZR/J0RCUDrtib6njyGbZtCv2c+v";
 
-    final byte[] bytes = text.getBytes();
+    final byte[] bytes = text.getBytes(UTF_8);
     String test = scmSecret.encrypt(bytes);
 
     for (int i = 0; i < test.length() / 118; i++) {

@@ -19,6 +19,7 @@ import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.utils.Lists;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -129,6 +130,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
   }
 
+  @SuppressFBWarnings("UC_USELESS_CONDITION")
   protected QLData getData(@NotNull String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupByList,
       List<QLDeploymentSortCriteria> sortCriteria) {
@@ -281,6 +283,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     return builder.dataPoints(stackedDataPoints).build();
   }
 
+  @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
   private class QLStackedDataPointComparator implements Comparator<QLStackedDataPoint> {
     private QLSortOrder sortOrder;
 
@@ -668,8 +671,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
         -> qlDeploymentSortCriteria.getSortOrder() == null
             || !fieldNames.contains(qlDeploymentSortCriteria.getSortType().getDeploymentMetadata()));
 
-    List<DeploymentMetaDataFields> sortFields =
-        sortCriteria.stream().map(s -> s.getSortType().getDeploymentMetadata()).collect(Collectors.toList());
+    sortCriteria.stream().map(s -> s.getSortType().getDeploymentMetadata()).collect(Collectors.toList());
 
     if (EmptyPredicate.isNotEmpty(sortCriteria)) {
       sortCriteria.forEach(s -> addOrderBy(selectQuery, s));

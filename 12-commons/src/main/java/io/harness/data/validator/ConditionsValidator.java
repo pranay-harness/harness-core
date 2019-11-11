@@ -1,5 +1,6 @@
 package io.harness.data.validator;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ public class ConditionsValidator {
     return allTrue(expectations);
   }
 
+  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   private static boolean allTrue(Map<String, Supplier<Boolean>> booleanFns) {
     for (String key : booleanFns.keySet()) {
       Supplier<Boolean> fn = booleanFns.get(key);
