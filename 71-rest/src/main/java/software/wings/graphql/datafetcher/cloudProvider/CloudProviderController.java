@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import io.harness.exception.WingsException;
+import io.harness.ccm.CloudCostAware;
+import io.harness.exception.InvalidRequestException;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider;
@@ -17,7 +18,9 @@ public class CloudProviderController {
     return builder.id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
         .createdAt(settingAttribute.getCreatedAt())
-        .createdBy(UserController.populateUser(settingAttribute.getCreatedBy()));
+        .createdBy(UserController.populateUser(settingAttribute.getCreatedBy()))
+        .type(settingAttribute.getValue().getType())
+        .isCloudCostEnabled(getCloudCostEnabledBoolean(settingAttribute));
   }
 
   public static QLCloudProviderBuilder getCloudProviderBuilder(SettingAttribute settingAttribute) {
@@ -43,9 +46,17 @@ public class CloudProviderController {
         cloudProviderBuilder = QLPcfCloudProvider.builder();
         break;
       default:
-        throw new WingsException("Unknown Cloud ProviderType " + settingAttribute.getValue().getSettingType());
+        throw new InvalidRequestException("Unknown Cloud ProviderType " + settingAttribute.getValue().getSettingType());
     }
 
     return cloudProviderBuilder;
+  }
+
+  public static boolean getCloudCostEnabledBoolean(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue() instanceof CloudCostAware
+        && ((CloudCostAware) settingAttribute.getValue()).getCcmConfig() != null) {
+      return ((CloudCostAware) settingAttribute.getValue()).getCcmConfig().isCloudCostEnabled();
+    }
+    return false;
   }
 }

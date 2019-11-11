@@ -17,6 +17,8 @@ public class QLGcpCloudProvider implements QLCloudProvider {
   private String description;
   private Long createdAt;
   private QLUser createdBy;
+  private String type;
+  private boolean isCloudCostEnabled;
 
   public static class QLGcpCloudProviderBuilder implements QLCloudProviderBuilder {}
 }
