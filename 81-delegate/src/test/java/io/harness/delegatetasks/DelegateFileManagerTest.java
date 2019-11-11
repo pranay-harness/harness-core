@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateFileManagerImpl;
 import io.harness.managerclient.ManagerClient;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;

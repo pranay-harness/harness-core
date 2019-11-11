@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.time.Timestamp;

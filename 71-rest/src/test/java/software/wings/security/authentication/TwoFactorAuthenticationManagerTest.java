@@ -20,7 +20,7 @@ import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import org.joda.time.DateTimeUtils;
 import org.junit.Assert;
 import org.junit.Test;

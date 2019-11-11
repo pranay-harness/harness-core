@@ -8,7 +8,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedRecord;
