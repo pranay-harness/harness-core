@@ -5,8 +5,9 @@ import com.google.inject.name.Named;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -48,6 +49,7 @@ import software.wings.service.intfc.SearchService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,12 +61,12 @@ public class ElasticsearchServiceImpl implements SearchService {
   @Inject @Named(AuditTrailFeature.FEATURE_NAME) private PremiumFeature auditTrailFeature;
   @Inject private ElasticsearchIndexManager elasticsearchIndexManager;
   @Inject private Set<SearchEntity<?>> searchEntities;
-  private static final int MAX_RESULTS = 50;
+  private static final int MAX_RESULTS_PER_ENTITY = 20;
   private static final int BOOST_VALUE = 5;
   private static final int SLOP_DISTANCE_VALUE = 10;
 
   public SearchResults getSearchResults(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
-    SearchHits hits = search(searchString, accountId);
+    List<SearchHits> searchHitsList = search(searchString, accountId);
     LinkedHashMap<String, List<SearchResult>> searchResult = new LinkedHashMap<>();
 
     List<SearchResult> applicationSearchResults = new ArrayList<>();
@@ -74,49 +76,53 @@ public class ElasticsearchServiceImpl implements SearchService {
     List<SearchResult> environmentSearchResults = new ArrayList<>();
     List<SearchResult> deploymentSearchResults = new ArrayList<>();
     ObjectMapper mapper = new ObjectMapper();
-    boolean includeAudits = auditTrailFeature.isAvailableForAccount(accountId);
 
-    for (SearchHit hit : hits) {
-      Map<String, Object> result = hit.getSourceAsMap();
-      switch (EntityType.valueOf(result.get(EntityBaseViewKeys.type).toString())) {
-        case APPLICATION:
-          ApplicationView applicationView = mapper.convertValue(result, ApplicationView.class);
-          ApplicationSearchResult applicationSearchResult =
-              new ApplicationSearchResult(applicationView, includeAudits, hit.getScore());
-          applicationSearchResults.add(applicationSearchResult);
-          break;
-        case SERVICE:
-          ServiceView serviceView = mapper.convertValue(result, ServiceView.class);
-          ServiceSearchResult serviceSearchResult = new ServiceSearchResult(serviceView, includeAudits, hit.getScore());
-          serviceSearchResults.add(serviceSearchResult);
-          break;
-        case ENVIRONMENT:
-          EnvironmentView environmentView = mapper.convertValue(result, EnvironmentView.class);
-          EnvironmentSearchResult environmentSearchResult =
-              new EnvironmentSearchResult(environmentView, includeAudits, hit.getScore());
-          environmentSearchResults.add(environmentSearchResult);
-          break;
-        case WORKFLOW:
-          WorkflowView workflowView = mapper.convertValue(result, WorkflowView.class);
-          WorkflowSearchResult workflowSearchResult =
-              new WorkflowSearchResult(workflowView, includeAudits, hit.getScore());
-          workflowSearchResults.add(workflowSearchResult);
-          break;
-        case PIPELINE:
-          PipelineView pipelineView = mapper.convertValue(result, PipelineView.class);
-          PipelineSearchResult pipelineSearchResult =
-              new PipelineSearchResult(pipelineView, includeAudits, hit.getScore());
-          pipelineSearchResults.add(pipelineSearchResult);
-          break;
-        case DEPLOYMENT:
-          if (result.get(DeploymentViewKeys.workflowInPipeline) != null
-              && result.get(DeploymentViewKeys.workflowInPipeline).equals(false)) {
-            DeploymentView deploymentView = mapper.convertValue(result, DeploymentView.class);
-            DeploymentSearchResult deploymentSearchResult = new DeploymentSearchResult(deploymentView, hit.getScore());
-            deploymentSearchResults.add(deploymentSearchResult);
-          }
-          break;
-        default:
+    boolean includeAudits = auditTrailFeature.isAvailableForAccount(accountId);
+    for (SearchHits hits : searchHitsList) {
+      for (SearchHit hit : hits) {
+        Map<String, Object> result = hit.getSourceAsMap();
+        switch (EntityType.valueOf(result.get(EntityBaseViewKeys.type).toString())) {
+          case APPLICATION:
+            ApplicationView applicationView = mapper.convertValue(result, ApplicationView.class);
+            ApplicationSearchResult applicationSearchResult =
+                new ApplicationSearchResult(applicationView, includeAudits, hit.getScore());
+            applicationSearchResults.add(applicationSearchResult);
+            break;
+          case SERVICE:
+            ServiceView serviceView = mapper.convertValue(result, ServiceView.class);
+            ServiceSearchResult serviceSearchResult =
+                new ServiceSearchResult(serviceView, includeAudits, hit.getScore());
+            serviceSearchResults.add(serviceSearchResult);
+            break;
+          case ENVIRONMENT:
+            EnvironmentView environmentView = mapper.convertValue(result, EnvironmentView.class);
+            EnvironmentSearchResult environmentSearchResult =
+                new EnvironmentSearchResult(environmentView, includeAudits, hit.getScore());
+            environmentSearchResults.add(environmentSearchResult);
+            break;
+          case WORKFLOW:
+            WorkflowView workflowView = mapper.convertValue(result, WorkflowView.class);
+            WorkflowSearchResult workflowSearchResult =
+                new WorkflowSearchResult(workflowView, includeAudits, hit.getScore());
+            workflowSearchResults.add(workflowSearchResult);
+            break;
+          case PIPELINE:
+            PipelineView pipelineView = mapper.convertValue(result, PipelineView.class);
+            PipelineSearchResult pipelineSearchResult =
+                new PipelineSearchResult(pipelineView, includeAudits, hit.getScore());
+            pipelineSearchResults.add(pipelineSearchResult);
+            break;
+          case DEPLOYMENT:
+            if (result.get(DeploymentViewKeys.workflowInPipeline) != null
+                && result.get(DeploymentViewKeys.workflowInPipeline).equals(false)) {
+              DeploymentView deploymentView = mapper.convertValue(result, DeploymentView.class);
+              DeploymentSearchResult deploymentSearchResult =
+                  new DeploymentSearchResult(deploymentView, hit.getScore());
+              deploymentSearchResults.add(deploymentSearchResult);
+            }
+            break;
+          default:
+        }
       }
     }
     searchResult.put(ApplicationSearchEntity.TYPE, applicationSearchResults);
@@ -130,23 +136,35 @@ public class ElasticsearchServiceImpl implements SearchService {
     return new SearchResults(searchResult);
   }
 
-  private SearchHits search(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
-    String[] indexNames = getAliasesToSearch();
-    SearchRequest searchRequest = new SearchRequest(indexNames);
-    BoolQueryBuilder boolQueryBuilder = createQuery(searchString, accountId);
-    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(boolQueryBuilder).size(MAX_RESULTS);
-    searchRequest.source(searchSourceBuilder);
-    searchRequest.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
-    SearchResponse searchResponse = elasticsearchClient.search(searchRequest);
-    logger.info("Search results, time taken : {}, number of hits: {}, accountID: {}", searchResponse.getTook(),
-        searchResponse.getHits().getTotalHits(), accountId);
-    return searchResponse.getHits();
-  }
+  private List<SearchHits> search(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
+    MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
+    Iterator<SearchEntity<?>> iterator = searchEntities.iterator();
 
-  private String[] getAliasesToSearch() {
-    return searchEntities.stream()
-        .map(searchEntity -> elasticsearchIndexManager.getAliasName(searchEntity.getType()))
-        .toArray(String[] ::new);
+    while (iterator.hasNext()) {
+      String indexName = elasticsearchIndexManager.getAliasName(iterator.next().getType());
+      SearchRequest searchRequest = new SearchRequest(indexName);
+      BoolQueryBuilder boolQueryBuilder = createQuery(searchString, accountId);
+      SearchSourceBuilder searchSourceBuilder =
+          new SearchSourceBuilder().query(boolQueryBuilder).size(MAX_RESULTS_PER_ENTITY);
+      searchRequest.source(searchSourceBuilder);
+      searchRequest.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
+      multiSearchRequest.add(searchRequest);
+    }
+
+    MultiSearchResponse multiSearchResponse = elasticsearchClient.multiSearch(multiSearchRequest);
+
+    List<SearchHits> searchHits = new ArrayList<>();
+    long totalHits = 0;
+    for (MultiSearchResponse.Item item : multiSearchResponse.getResponses()) {
+      if (item.getResponse() != null && item.getResponse().getHits() != null
+          && item.getResponse().getHits().getTotalHits() != null) {
+        totalHits += item.getResponse().getHits().getTotalHits().value;
+        searchHits.add(item.getResponse().getHits());
+      }
+    }
+    logger.info("Search results, time taken : {}, number of hits: {}, accountID: {}", multiSearchResponse.getTook(),
+        totalHits, accountId);
+    return searchHits;
   }
 
   private static BoolQueryBuilder createQuery(@NotBlank String searchString, @NotBlank String accountId) {

@@ -10,6 +10,8 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -71,5 +73,9 @@ public class ElasticsearchClient {
   AcknowledgedResponse updateAliases(IndicesAliasesRequest indicesAliasesRequest)
       throws IOException, ElasticsearchException {
     return client.indices().updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT);
+  }
+
+  public MultiSearchResponse multiSearch(MultiSearchRequest searchRequest) throws IOException {
+    return client.msearch(searchRequest, RequestOptions.DEFAULT);
   }
 }

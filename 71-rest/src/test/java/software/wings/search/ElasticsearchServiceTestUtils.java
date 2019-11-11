@@ -5,6 +5,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.data.structure.UUIDGenerator;
 import org.apache.lucene.search.TotalHits;
 import org.apache.lucene.search.TotalHits.Relation;
+import org.elasticsearch.action.search.MultiSearchResponse;
+import org.elasticsearch.action.search.MultiSearchResponse.Item;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchResponse.Clusters;
 import org.elasticsearch.action.search.ShardSearchFailure;
@@ -230,5 +232,11 @@ public class ElasticsearchServiceTestUtils {
         new InternalSearchResponse(searchHits, null, null, null, false, false, 1);
 
     return new SearchResponse(internalSearchResponse, "scrollId", 1, 1, 0, 10000, shardFailures, new Clusters(1, 1, 0));
+  }
+
+  public static MultiSearchResponse getMultiSearchResponse() {
+    Item item = new Item(getSearchResponse(), new Exception());
+    Item[] items = {item};
+    return new MultiSearchResponse(items, 1);
   }
 }
