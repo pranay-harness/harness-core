@@ -48,6 +48,7 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
 
     when(auditTrailFeature.isAvailableForAccount(anyString())).thenReturn(true);
     when(elasticsearchClient.search(any())).thenReturn(ElasticsearchServiceTestUtils.getSearchResponse());
+    when(elasticsearchClient.multiSearch(any())).thenReturn(ElasticsearchServiceTestUtils.getMultiSearchResponse());
     when(elasticsearchIndexManager.getAliasName(DeploymentSearchEntity.TYPE)).thenReturn(DeploymentSearchEntity.TYPE);
     when(elasticsearchIndexManager.getAliasName(ApplicationSearchEntity.TYPE)).thenReturn(ApplicationSearchEntity.TYPE);
     when(elasticsearchIndexManager.getAliasName(ServiceSearchEntity.TYPE)).thenReturn(ServiceSearchEntity.TYPE);
