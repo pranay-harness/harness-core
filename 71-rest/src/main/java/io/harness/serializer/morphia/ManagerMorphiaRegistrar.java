@@ -1,5 +1,8 @@
 package io.harness.serializer.morphia;
 
+import io.harness.ccm.budget.entities.ApplicationBudgetScope;
+import io.harness.ccm.budget.entities.Budget;
+import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
@@ -940,6 +943,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(StackDriverMetricCVConfiguration.class);
     set.add(ClusterRecord.class);
     set.add(CustomLogCVServiceConfiguration.class);
+    set.add(Budget.class);
   }
 
   @Override
@@ -949,6 +953,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("marketplace.gcp.events.AccountActiveEvent", AccountActiveEvent.class);
     h.put("ccm.cluster.entities.DirectKubernetesCluster", DirectKubernetesCluster.class);
     h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);
+    h.put("ccm.budget.entities.ApplicationBudgetScope", ApplicationBudgetScope.class);
+    h.put("ccm.budget.entities.ClusterBudgetScope", ClusterBudgetScope.class);
 
     final HelperPut w = (name, clazz) -> map.put(PKG_WINGS + name, clazz);
 
