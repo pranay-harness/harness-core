@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import org.junit.Test;
@@ -19,23 +20,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ReflectionUtilsTest extends CategoryTest {
-  private class FieldBase { public String baseField; }
+  @SuppressFBWarnings("UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD")
+  private static class FieldBase {
+    public String baseField;
+  }
 
-  private class Field extends FieldBase {
+  private static class Field extends FieldBase {
     public String field;
     public String inheritField;
     @DummyAnnotation public String annotatedField;
     @DummyAnnotation public List<String> annotatedListField;
   }
 
-  private class AccessorsBase {
-    private String baseAccessor;
+  private static class AccessorsBase {
+    private String baseAccessor = "";
     public String getBaseAccessor() {
       return baseAccessor;
     }
   }
 
-  private class Accessors extends AccessorsBase {
+  private static class Accessors extends AccessorsBase {
     private String privateMethod;
     private String getPrivateMethod() {
       return privateMethod;

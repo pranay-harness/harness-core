@@ -19,7 +19,7 @@ import java.util.Set;
 
 @Slf4j
 public class MorphiaModule extends DependencyProviderModule {
-  private static MorphiaModule instance;
+  private static volatile MorphiaModule instance;
 
   public static MorphiaModule getInstance() {
     if (instance == null) {

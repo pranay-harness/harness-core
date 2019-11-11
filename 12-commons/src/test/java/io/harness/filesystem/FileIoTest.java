@@ -18,6 +18,7 @@ import org.junit.experimental.categories.Category;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -74,7 +75,7 @@ public class FileIoTest extends CategoryTest {
     File testFile = new File(fileName);
     assertThat(testFile.exists()).isFalse();
     try (FileOutputStream outputStream = new FileOutputStream(testFile)) {
-      outputStream.write("RandomTextContent".getBytes());
+      outputStream.write("RandomTextContent".getBytes(StandardCharsets.UTF_8));
     }
     assertThat(testFile.exists()).isTrue();
     deleteFileIfExists(fileName);
@@ -90,7 +91,7 @@ public class FileIoTest extends CategoryTest {
     File directory = new File(directoryName);
     File testFile = new File(directory, fileName);
     try (FileOutputStream outputStream = new FileOutputStream(testFile)) {
-      outputStream.write("RandomTextContent".getBytes());
+      outputStream.write("RandomTextContent".getBytes(StandardCharsets.UTF_8));
     }
     assertThat(testFile.exists()).isTrue();
     deleteDirectoryAndItsContentIfExists(directoryName);
@@ -107,7 +108,7 @@ public class FileIoTest extends CategoryTest {
     createDirectoryIfDoesNotExist(directoryName);
     File directory = new File(directoryName);
     File testFile = new File(directory, fileName);
-    writeFile(testFile.getAbsolutePath(), text.getBytes());
+    writeFile(testFile.getAbsolutePath(), text.getBytes(StandardCharsets.UTF_8));
     assertThat(testFile.exists()).isTrue();
 
     try (Stream<String> stream = lines(Paths.get(testFile.getAbsolutePath()))) {

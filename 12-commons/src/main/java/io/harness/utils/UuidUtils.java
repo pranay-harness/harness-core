@@ -21,7 +21,7 @@ public final class UuidUtils {
 
   public static boolean isValidUuidStr(String value) {
     try {
-      UUID uuid = UUID.fromString(value);
+      UUID.fromString(value);
       return true;
     } catch (Exception e) {
       logger.info("{} is not a valid UUID", value);
