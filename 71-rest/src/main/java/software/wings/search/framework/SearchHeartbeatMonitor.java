@@ -15,8 +15,8 @@ import java.util.Date;
  *
  * @author utkarsh
  */
-@Slf4j
 @AllArgsConstructor
+@Slf4j
 public class SearchHeartbeatMonitor implements Runnable {
   private WingsPersistence wingsPersistence;
   private LockTimeoutCallback lockTimeoutCallback;

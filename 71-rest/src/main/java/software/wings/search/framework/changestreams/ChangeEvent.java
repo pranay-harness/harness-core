@@ -15,10 +15,10 @@ import lombok.extern.slf4j.Slf4j;
  * @author utkarsh
  */
 
-@Slf4j
 @Value
 @Builder
 @AllArgsConstructor
+@Slf4j
 public class ChangeEvent<T extends PersistentEntity> {
   @NonNull private String token;
   @NonNull private ChangeType changeType;

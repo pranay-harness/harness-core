@@ -35,9 +35,9 @@ import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.Optional;
 
-@Slf4j
 @Singleton
 @NoArgsConstructor
+@Slf4j
 public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
       SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {

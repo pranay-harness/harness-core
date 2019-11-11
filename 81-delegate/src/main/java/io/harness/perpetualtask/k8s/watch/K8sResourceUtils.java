@@ -12,8 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 @UtilityClass
+@Slf4j
 public class K8sResourceUtils {
   String K8S_CPU_RESOURCE = "cpu";
   String K8S_MEMORY_RESOURCE = "memory";

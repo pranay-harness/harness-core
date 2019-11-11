@@ -1,7 +1,7 @@
 package software.wings.scheduler.approval;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -11,8 +11,8 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
-import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.approval.ApprovalPollingJobEntity;

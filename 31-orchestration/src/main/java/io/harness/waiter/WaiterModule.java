@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.TypeLiteral;
 
 import io.harness.govern.DependencyModule;
-import io.harness.mongo.MongoQueue;
+import io.harness.mongo.queue.MongoQueue;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueModule;

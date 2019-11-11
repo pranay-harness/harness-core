@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Singleton
-@Slf4j
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Slf4j
 public class DeploymentTriggerYamlHandler extends BaseYamlHandler<DeploymentTriggerYaml, DeploymentTrigger> {
   @Inject YamlHelper yamlHelper;
   @Inject DeploymentTriggerService deploymentTriggerService;

@@ -1,7 +1,7 @@
 package io.harness.workers.background.critical.iterator;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofSeconds;
 
 import com.google.common.collect.Sets;
@@ -12,8 +12,8 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.ExceptionLogger;
-import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;

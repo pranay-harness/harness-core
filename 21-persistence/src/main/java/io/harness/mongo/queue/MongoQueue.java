@@ -1,4 +1,4 @@
-package io.harness.mongo;
+package io.harness.mongo.queue;
 
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.manage.GlobalContextManager.obtainGlobalContext;

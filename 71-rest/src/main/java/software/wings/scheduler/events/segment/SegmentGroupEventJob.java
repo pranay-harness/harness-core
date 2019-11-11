@@ -1,7 +1,7 @@
 package software.wings.scheduler.events.segment;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 
@@ -12,8 +12,8 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.account.AccountChangeHandler;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
-import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext.SegmentGroupEventJobContextKeys;

@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.internal;
 
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
@@ -9,8 +9,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
-import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;

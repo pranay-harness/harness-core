@@ -5,8 +5,8 @@ import io.harness.perpetualtask.k8s.watch.Resource.Quantity;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @UtilityClass
+@Slf4j
 public class K8sResourceUtils {
   private static final String K8S_CPU_RESOURCE = "cpu";
   private static final String K8S_MEMORY_RESOURCE = "memory";

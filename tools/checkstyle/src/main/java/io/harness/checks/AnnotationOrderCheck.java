@@ -52,6 +52,8 @@ public class AnnotationOrderCheck extends AbstractCheck {
                                              .put("SchemaIgnore", 51)
                                              .put("Entity", 61)
                                              .put("HarnessEntity", 62)
+                                             .put("UtilityClass", 101)
+                                             .put("Slf4j", 102)
                                              .build();
 
   Map<String, Map<String, String>> incompatible =

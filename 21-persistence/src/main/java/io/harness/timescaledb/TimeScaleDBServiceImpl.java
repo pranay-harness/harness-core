@@ -17,8 +17,8 @@ import java.sql.Statement;
 import java.util.Properties;
 
 @Singleton
-@Slf4j
 @NoArgsConstructor
+@Slf4j
 public class TimeScaleDBServiceImpl implements TimeScaleDBService {
   private TimeScaleDBConfig timeScaleDBConfig;
   private boolean validDB;

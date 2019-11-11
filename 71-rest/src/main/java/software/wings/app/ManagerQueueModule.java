@@ -8,7 +8,7 @@ import com.google.inject.TypeLiteral;
 
 import io.harness.config.PublisherConfiguration;
 import io.harness.event.model.GenericEvent;
-import io.harness.mongo.QueueFactory;
+import io.harness.mongo.queue.QueueFactory;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
 import software.wings.api.DeploymentEvent;

@@ -2,7 +2,7 @@ package io.harness.jobs.sg247.collection;
 
 import com.google.inject.Inject;
 
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.service.intfc.ContinuousVerificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;

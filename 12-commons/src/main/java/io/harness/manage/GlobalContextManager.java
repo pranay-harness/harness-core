@@ -14,8 +14,8 @@ import org.slf4j.MDC;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-@Slf4j
 @UtilityClass
+@Slf4j
 public class GlobalContextManager {
   private static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal<>();
 

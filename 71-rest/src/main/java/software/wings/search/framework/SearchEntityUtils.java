@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
  * @author utkarsh
  */
 
-@Slf4j
 @UtilityClass
+@Slf4j
 public final class SearchEntityUtils {
   private static final Mapper mapper = new Mapper();
   private static final EntityCache entityCache = new NoopEntityCache();

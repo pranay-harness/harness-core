@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
-import io.harness.mongo.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

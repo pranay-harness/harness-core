@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.internal;
 
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofSeconds;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -8,8 +8,8 @@ import com.google.inject.Inject;
 
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
-import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;

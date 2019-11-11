@@ -1,6 +1,6 @@
 package io.harness.iterator;
 
-import static io.harness.mongo.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -9,7 +9,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.config.WorkersConfiguration;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
-import io.harness.mongo.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
