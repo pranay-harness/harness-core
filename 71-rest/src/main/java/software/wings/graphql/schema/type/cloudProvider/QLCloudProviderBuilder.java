@@ -7,5 +7,7 @@ public interface QLCloudProviderBuilder {
   QLCloudProviderBuilder name(String name);
   QLCloudProviderBuilder createdAt(Long createdAt);
   QLCloudProviderBuilder createdBy(QLUser createdBy);
+  QLCloudProviderBuilder type(String type);
+  QLCloudProviderBuilder isCloudCostEnabled(boolean isCloudCostEnabled);
   QLCloudProvider build();
 }

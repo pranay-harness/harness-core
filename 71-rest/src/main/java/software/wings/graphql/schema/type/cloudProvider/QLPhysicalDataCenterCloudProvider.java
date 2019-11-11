@@ -16,6 +16,8 @@ public class QLPhysicalDataCenterCloudProvider implements QLCloudProvider {
   private String name;
   private Long createdAt;
   private QLUser createdBy;
+  private String type;
+  private boolean isCloudCostEnabled;
 
   public static class QLPhysicalDataCenterCloudProviderBuilder implements QLCloudProviderBuilder {}
 }

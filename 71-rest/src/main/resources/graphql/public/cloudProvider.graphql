@@ -33,6 +33,8 @@ interface CloudProvider {
   description: String
   createdAt: DateTime
   createdBy: User
+  type: String
+  isCloudCostEnabled: Boolean
 }
 
 type CloudProviderConnection {
@@ -46,6 +48,8 @@ type AwsCloudProvider implements CloudProvider {
   description: String
   createdAt: DateTime
   createdBy: User
+  type: String
+  isCloudCostEnabled: Boolean
 }
 
 type PhysicalDataCenterCloudProvider implements CloudProvider {
@@ -54,6 +58,8 @@ type PhysicalDataCenterCloudProvider implements CloudProvider {
   description: String
   createdAt: DateTime
   createdBy: User
+  type: String
+  isCloudCostEnabled: Boolean
 }
 
 type AzureCloudProvider implements CloudProvider {
@@ -62,6 +68,8 @@ type AzureCloudProvider implements CloudProvider {
   description: String
   createdAt: DateTime
   createdBy: User
+  type: String
+  isCloudCostEnabled: Boolean
 }
 
 type GcpCloudProvider implements CloudProvider {
@@ -70,6 +78,8 @@ type GcpCloudProvider implements CloudProvider {
   description: String
   createdAt: DateTime
   createdBy: User
+  type: String
+  isCloudCostEnabled: Boolean
 }
 
 type KubernetesCloudProvider implements CloudProvider {
@@ -78,6 +88,8 @@ type KubernetesCloudProvider implements CloudProvider {
   description: String
   createdAt: DateTime
   createdBy: User
+  type: String
+  isCloudCostEnabled: Boolean
 }
 
 type PcfCloudProvider implements CloudProvider {
@@ -86,4 +98,6 @@ type PcfCloudProvider implements CloudProvider {
   description: String
   createdAt: DateTime
   createdBy: User
+  type: String
+  isCloudCostEnabled: Boolean
 }
