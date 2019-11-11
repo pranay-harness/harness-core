@@ -93,6 +93,7 @@ public class BuildSourceCallback implements NotifyCallback {
       executorService.submit(() -> {
         try {
           handleResponseForSuccessInternal(notifyResponseData, artifactStream);
+
         } catch (Exception ex) {
           logger.error(
               "Error while processing response for BuildSourceCallback for accountId:[{}] artifactStreamId:[{}] permitId:[{}] settingId:[{}]",
@@ -139,8 +140,12 @@ public class BuildSourceCallback implements NotifyCallback {
       }
       if (isNotEmpty(artifacts)) {
         artifacts.stream().limit(MAX_LOGS).forEach(artifact -> {
-          logger.info("Build number {} new artifacts collected for artifactStreamId {}", artifact.getBuildNo(),
-              artifactStream.getUuid());
+          try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+               AutoLogContext ignore2 = new ArtifactStreamLogContext(
+                   artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
+            logger.info("Build number {} new artifacts collected for artifactStreamId {}", artifact.getBuildNo(),
+                artifactStream.getUuid());
+          }
         });
 
         if (isUnstable) {
