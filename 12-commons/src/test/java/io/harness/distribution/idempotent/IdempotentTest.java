@@ -19,7 +19,7 @@ import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.InprocIdempotentRegistry;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
 import lombok.Value;

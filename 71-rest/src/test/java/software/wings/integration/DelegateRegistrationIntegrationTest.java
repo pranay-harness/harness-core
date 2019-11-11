@@ -4,7 +4,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.IntegrationTests;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;

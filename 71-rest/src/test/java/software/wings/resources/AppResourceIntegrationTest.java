@@ -14,7 +14,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import lombok.val;
 import migrations.InitializeAppCounters;
 import org.apache.commons.lang3.RandomStringUtils;

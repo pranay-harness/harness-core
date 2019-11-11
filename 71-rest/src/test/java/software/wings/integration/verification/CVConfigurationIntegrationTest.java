@@ -36,7 +36,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.Repeat;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;

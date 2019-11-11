@@ -9,19 +9,27 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestTimedOutException;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+/*
+I. Do not use Repeat to execute the same logic more than once. Instead, just create inside the test logic to repeat the
+sensitive section. The test frameworks do a lot of work to prepare the test for execution, we should not need to do
+this again and again. Not to mention that this is not always safe to do when integrating with PowerMock and similar.
 
+II. Do not use test annotation @Repeat with value for successes.
+
+Using this field does not resolve test flakiness. It at best simply reduces the likelihood of the issue to surface.
+
+Instead, use one of the following approaches to resolve the flakiness:
+
+Use junit.Assume.assumeTrue to confirm that every precondition for your test to succeed is met. If your tests
+depend on infrastructure make sure it is available in order to execute the test. The infrastructure should be monitored
+from the outside system for availability, not from the tests.
+Use retry from inside the test. You should not use the Test framework to repeat the test if it requires
+experimentation. Encode this logic inside the test.
+Pool until the expected condition is met with a proper timeout.
+ */
+@Deprecated
 public class RepeatRule implements TestRule {
   @Getter private int repetition;
-
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({java.lang.annotation.ElementType.METHOD})
-  public @interface Repeat {
-    int times();
-    int successes() default - 1; // default value -1 gets converted to times() value.
-  }
 
   // TODO: find out why Builder and Statement require full path to compile
   @lombok.Builder
@@ -92,4 +100,4 @@ public class RepeatRule implements TestRule {
 
     return statement;
   }
-  }
+}
