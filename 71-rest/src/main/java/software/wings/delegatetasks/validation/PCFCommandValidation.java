@@ -2,6 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -13,7 +14,11 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
+import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Arrays;
@@ -71,12 +76,33 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
 
       validated = response.isValidated();
     }
+
+    if (validated && needToCheckAppAutoscalarPluginInstall(commandRequest)) {
+      try {
+        validated = pcfDeploymentManager.checkIfAppAutoscalarInstalled();
+      } catch (Exception e) {
+        logger.error("Failed to Validate App-Autoscalar Plugin installed");
+        validated = false;
+      }
+    }
     if (!validated) {
       logger.warn("This delegate failed to verify Pivotal connectivity");
     }
 
     return singletonList(
         DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
+  }
+
+  @VisibleForTesting
+  boolean needToCheckAppAutoscalarPluginInstall(PcfCommandRequest commandRequest) {
+    boolean checkAppAutoscalarPluginInstall = false;
+    if (commandRequest instanceof PcfCommandSetupRequest || commandRequest instanceof PcfCommandDeployRequest
+        || commandRequest instanceof PcfCommandRollbackRequest
+        || commandRequest instanceof PcfCommandRouteUpdateRequest) {
+      checkAppAutoscalarPluginInstall = commandRequest.isUseAppAutoscalar();
+    }
+
+    return checkAppAutoscalarPluginInstall;
   }
 
   @Override

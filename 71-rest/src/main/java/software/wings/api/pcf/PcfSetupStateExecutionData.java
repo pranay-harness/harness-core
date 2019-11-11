@@ -45,6 +45,11 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   private TaskType taskType;
   private Map<K8sValuesLocation, ApplicationManifest> appManifestMap;
   private GitFetchFilesFromMultipleRepoResult fetchFilesResult;
+  private boolean enforceSslValidation;
+  private boolean useAppAutoscalar;
+  private Integer timeout;
+  private Integer activeVersionsToKeep;
+  private String pcfAppNameFromLegacyWorkflow;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

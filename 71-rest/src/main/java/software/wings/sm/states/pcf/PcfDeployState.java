@@ -288,6 +288,8 @@ public class PcfDeployState extends State {
                 ? null
                 : pcfSetupContextElement.getAppDetailsToBeDownsized().get(0))
         .isStandardBlueGreen(pcfSetupContextElement.isStandardBlueGreenWorkflow())
+        .useAppAutoscalar(pcfSetupContextElement.isUseAppAutoscalar())
+        .enforceSslValidation(pcfSetupContextElement.isEnforceSslValidation())
         .build();
   }
 

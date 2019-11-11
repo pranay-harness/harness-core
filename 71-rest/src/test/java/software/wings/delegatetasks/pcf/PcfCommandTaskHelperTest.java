@@ -41,6 +41,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -483,6 +485,17 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     assertThat((boolean) map.get(RANDOM_ROUTE_MANIFEST_YML_ELEMENT)).isEqualTo(true);
     assertThat((String) map.get(HOST_MANIFEST_YML_ELEMENT)).isEqualTo("myHost");
     assertThat(map.containsKey(RANDOM_ROUTE_MANIFEST_YML_ELEMENT)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateYamlFileLocally() throws Exception {
+    String data = "asd";
+    File file = pcfCommandTaskHelper.createYamlFileLocally("./test" + System.currentTimeMillis(), data);
+    assertThat(file.exists()).isTrue();
+    String content = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
+    assertThat(content).isEqualTo(data);
+    FileIo.deleteFileIfExists(file.getAbsolutePath());
   }
 
   @Test

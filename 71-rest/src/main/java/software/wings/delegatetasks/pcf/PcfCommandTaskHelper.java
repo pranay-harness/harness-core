@@ -371,6 +371,11 @@ public class PcfCommandTaskHelper {
     return writeToManifestFile(requestData.getFinalManifestYaml(), manifestFile);
   }
 
+  public File createYamlFileLocally(String filePath, String content) throws IOException {
+    File file = new File(filePath);
+    return writeToManifestFile(content, file);
+  }
+
   public File createManifestVarsYamlFileLocally(
       PcfCreateApplicationRequestData requestData, String varsContent, int index) {
     try {

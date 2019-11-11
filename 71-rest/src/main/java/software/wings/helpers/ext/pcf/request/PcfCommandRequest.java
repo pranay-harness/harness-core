@@ -25,6 +25,8 @@ public class PcfCommandRequest implements ExecutionCapabilityDemander {
   private String workflowExecutionId;
   private Integer timeoutIntervalInMin;
   private boolean useCLIForPcfAppCreation;
+  private boolean enforceSslValidation;
+  private boolean useAppAutoscalar;
 
   public enum PcfCommandType { SETUP, RESIZE, ROLLBACK, UPDATE_ROUTE, DATAFETCH, VALIDATE, APP_DETAILS, CREATE_ROUTE }
 

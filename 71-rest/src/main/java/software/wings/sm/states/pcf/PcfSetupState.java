@@ -156,6 +156,8 @@ public class PcfSetupState extends State {
   @Getter @Setter private boolean blueGreen;
   @Getter @Setter private boolean isWorkflowV2;
   @Getter @Setter private String[] tempRouteMap;
+  @Getter @Setter private boolean useAppAutoscalar;
+  @Getter @Setter private boolean enforceSslValidation;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -218,6 +220,11 @@ public class PcfSetupState extends State {
                      .append(artifact.getUuid())
                      .toString(),
         artifactStream);
+
+    // If git fetch has happened, we need to set workflow state variables from stateExecution data.
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    restoreStateDataAfterGitFetchIfNeeded(pcfSetupStateExecutionData);
 
     if (olderActiveVersionCountToKeep == null) {
       olderActiveVersionCountToKeep = Integer.valueOf(3);
@@ -282,6 +289,8 @@ public class PcfSetupState extends State {
                 olderActiveVersionCountToKeep == null ? Integer.valueOf(3) : olderActiveVersionCountToKeep)
             .useCLIForPcfAppCreation(useCliForSetup)
             .pcfManifestsPackage(pcfManifestsPackage)
+            .useAppAutoscalar(useAppAutoscalar)
+            .enforceSslValidation(enforceSslValidation)
             .build();
 
     PcfSetupStateExecutionData stateExecutionData =
@@ -304,6 +313,8 @@ public class PcfSetupState extends State {
             .isStandardBlueGreen(blueGreen)
             .useTempRoutes(!isOriginalRoute)
             .taskType(PCF_COMMAND_TASK)
+            .useAppAutoscalar(useAppAutoscalar)
+            .enforceSslValidation(enforceSslValidation)
             .build();
 
     String waitId = generateUuid();
@@ -327,6 +338,19 @@ public class PcfSetupState extends State {
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
+  }
+
+  @VisibleForTesting
+  void restoreStateDataAfterGitFetchIfNeeded(PcfSetupStateExecutionData pcfSetupStateExecutionData) {
+    // means git fetch was not executed. No need to restore values
+    if (pcfSetupStateExecutionData == null) {
+      return;
+    }
+
+    olderActiveVersionCountToKeep = pcfSetupStateExecutionData.getActiveVersionsToKeep();
+    timeoutIntervalInMinutes = pcfSetupStateExecutionData.getTimeout();
+    pcfAppName = pcfSetupStateExecutionData.getPcfAppNameFromLegacyWorkflow();
+    maxInstances = pcfSetupStateExecutionData.getMaxInstanceCount();
   }
 
   @VisibleForTesting
@@ -482,7 +506,9 @@ public class PcfSetupState extends State {
             .resizeStrategy(resizeStrategy)
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
-            .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen());
+            .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen())
+            .useAppAutoscalar(useAppAutoscalar)
+            .enforceSslValidation(enforceSslValidation);
 
     if (!isPcfSetupCommandResponseNull) {
       pcfSetupContextElementBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
@@ -626,6 +652,12 @@ public class PcfSetupState extends State {
                                 .commandName(PCF_SETUP_COMMAND)
                                 .taskType(GIT_FETCH_FILES_TASK)
                                 .appManifestMap(appManifestMap)
+                                .activeVersionsToKeep(olderActiveVersionCountToKeep)
+                                .timeout(timeoutIntervalInMinutes)
+                                .useAppAutoscalar(useAppAutoscalar)
+                                .enforceSslValidation(enforceSslValidation)
+                                .pcfAppNameFromLegacyWorkflow(pcfAppName)
+                                .maxInstanceCount(maxInstances)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

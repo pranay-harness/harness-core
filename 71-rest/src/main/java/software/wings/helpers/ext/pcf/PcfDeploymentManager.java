@@ -4,6 +4,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.List;
@@ -42,4 +43,13 @@ public interface PcfDeploymentManager {
 
   String createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path, boolean tcpRoute,
       boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException;
+
+  void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException;
+  boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException;
+  boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  String resolvePcfPluginHome();
 }

@@ -1,8 +1,6 @@
 package io.harness.pcf;
 
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
-import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
-import static io.harness.pcf.model.ManifestType.CREATE_SERVICE_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,16 +44,37 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
   private String TEST_VAR = "  MY: order\n"
       + "  PCF_APP_NAME : prod";
 
+  private String AUTOSCALAR_MANIFEST = "---\n"
+      + "instance_limits:\n"
+      + "  min: 6\n"
+      + "  max: 12\n"
+      + "rules:\n"
+      + "- rule_type: \"http_latency\"\n"
+      + "  rule_sub_type: \"avg_99th\"\n"
+      + "  threshold:\n"
+      + "    min: 10\n"
+      + "    max: 20\n"
+      + "scheduled_limit_changes:\n"
+      + "- recurrence: 32\n"
+      + "  executes_at: \"2032-01-01T20:00:00Z\"\n"
+      + "  instance_limits:\n"
+      + "    min: 1\n"
+      + "    max: 3\n"
+      + "- recurrence: 2\n"
+      + "  executes_at: \"2032-01-01T04:00:00Z\"\n"
+      + "  instance_limits:\n"
+      + "    min: 6\n"
+      + "    max: 12";
+
   @Test
   @Category(UnitTests.class)
   public void testCategory() {
     PcfFileTypeChecker pcfFileTypeChecker = new PcfFileTypeChecker();
     assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isEqualTo(APPLICATION_MANIFEST);
-    assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML_CREATE_SERVICE_PUSH_YML))
-        .isEqualTo(APPLICATION_MANIFEST_WITH_CREATE_SERVICE);
-    assertThat(pcfFileTypeChecker.getManifestType(CREATE_SERVICE_PUSH_YML)).isEqualTo(CREATE_SERVICE_MANIFEST);
+    assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isEqualTo(APPLICATION_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType(TEST_VAR)).isEqualTo(VARIABLE_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType("test:val")).isNotEqualTo(VARIABLE_MANIFEST);
     assertThat(pcfFileTypeChecker.getManifestType(MANIFEST_YML)).isNotEqualTo(VARIABLE_MANIFEST);
+    assertThat(pcfFileTypeChecker.getManifestType(AUTOSCALAR_MANIFEST)).isNotEqualTo(AUTOSCALAR_MANIFEST);
   }
 }
