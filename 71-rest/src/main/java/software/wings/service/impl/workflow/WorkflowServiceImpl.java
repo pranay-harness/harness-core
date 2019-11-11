@@ -242,6 +242,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
@@ -1122,11 +1123,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private boolean pruneWorkflow(String appId, String workflowId) {
     pruneQueue.send(new PruneEvent(Workflow.class, appId, workflowId));
-    if (!wingsPersistence.delete(Workflow.class, appId, workflowId)) {
-      return false;
-    }
-
-    return true;
+    return wingsPersistence.delete(Workflow.class, appId, workflowId);
   }
 
   @Override
@@ -1244,9 +1241,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
       Map<String, Object> properties = step.getProperties();
       Object o = properties.get(RUN_PLAN_ONLY_KEY);
-      if ((o instanceof Boolean) && ((Boolean) o)) {
-        return true;
-      }
+      return (o instanceof Boolean) && ((Boolean) o);
     }
     return false;
   }
@@ -1255,9 +1250,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
       Map<String, Object> properties = step.getProperties();
       Object o = properties.get(INHERIT_APPROVED_PLAN);
-      if ((o instanceof Boolean) && ((Boolean) o)) {
-        return true;
-      }
+      return (o instanceof Boolean) && ((Boolean) o);
     }
     return false;
   }
@@ -1756,14 +1749,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
-    return orchestrationWorkflow.getGraph()
-        .getSubworkflows()
-        .get(subworkflowId)
-        .getNodes()
-        .stream()
-        .filter(n -> node.getId().equals(n.getId()))
-        .findFirst()
-        .get();
+    final Optional<GraphNode> graphNode = orchestrationWorkflow.getGraph()
+                                              .getSubworkflows()
+                                              .get(subworkflowId)
+                                              .getNodes()
+                                              .stream()
+                                              .filter(n -> node.getId().equals(n.getId()))
+                                              .findFirst();
+    return graphNode.isPresent() ? graphNode.get() : null;
   }
 
   @Override
@@ -3150,7 +3143,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     final String msg = format("Connector [%s] is referenced by %s [%s]", settingAttribute.getName(),
         plural("workflow", count), sb.toString());
-    return (Rejection) () -> msg;
+    return () -> msg;
   }
 
   @Override

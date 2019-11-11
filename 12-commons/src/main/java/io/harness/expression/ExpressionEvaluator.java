@@ -1,13 +1,12 @@
 package io.harness.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
-import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.InvalidRequestException.USER;
 
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -171,8 +170,7 @@ public class ExpressionEvaluator {
     }
     Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(name);
     if (!matcher.matches()) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "Special characters are not allowed in variable name");
+      throw new InvalidRequestException("Special characters are not allowed in variable name", USER);
     }
   }
 

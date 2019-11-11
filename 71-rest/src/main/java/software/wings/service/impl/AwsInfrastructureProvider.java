@@ -16,19 +16,14 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
-import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -471,21 +466,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsEcsHelperServiceManager.listClusterServices(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, null, cluster);
-  }
-
-  private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    logger.error("AWS API call exception", amazonServiceException);
-    if (amazonServiceException instanceof AmazonCodeDeployException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED, new Throwable(amazonServiceException.getErrorMessage()));
-    } else if (amazonServiceException instanceof AmazonEC2Exception) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
-          .addParam("message", amazonServiceException.getErrorMessage());
-    } else if (amazonServiceException instanceof AmazonECSException) {
-      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED)
-          .addParam("message", amazonServiceException.getErrorMessage());
-    }
-    logger.error("Unhandled aws exception");
-    throw new WingsException(ErrorCode.ACCESS_DENIED).addParam("message", amazonServiceException.getErrorMessage());
   }
 
   public Set<String> listTags(SettingAttribute computeProviderSetting, String region) {

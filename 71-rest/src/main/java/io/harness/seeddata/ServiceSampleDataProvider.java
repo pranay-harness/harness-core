@@ -48,7 +48,7 @@ public class ServiceSampleDataProvider {
 
     final ContainerTask savedContainerTask = serviceResourceService.createContainerTask(containerTask, true);
 
-    // Update the YAML Spec for BusyBox  --> TODO: Move it to files
+    // Update the YAML Spec for BusyBox
     String advancedConfig = "# Enter your Controller YAML spec below.\n"
         + "#\n"
         + "# Supported Controllers:\n"

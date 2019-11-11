@@ -11,9 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Created by peeyushaggarwal on 10/25/16.
- */
 public class JenkinsExecutionDataTest extends CategoryTest {
   private JenkinsExecutionData jenkinsExecutionData =
       JenkinsExecutionData.builder().jobName("testjob").buildUrl("http://jenkins/testjob/11").build();
@@ -27,7 +24,7 @@ public class JenkinsExecutionDataTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldGetExecutionSummary() throws Exception {
+  public void shouldGetExecutionSummary() {
     assertThat(jenkinsExecutionData.getExecutionSummary())
         .containsAllEntriesOf(ImmutableMap.of("jobName",
             ExecutionDataValue.builder().displayName("Job Name").value("testjob").build(), "build",
@@ -37,7 +34,7 @@ public class JenkinsExecutionDataTest extends CategoryTest {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldGetExecutionDetails() throws Exception {
+  public void shouldGetExecutionDetails() {
     assertThat(jenkinsExecutionData.getExecutionDetails())
         .containsAllEntriesOf(ImmutableMap.of("jobName",
             ExecutionDataValue.builder().displayName("Job Name").value("testjob").build(), "build",

@@ -11,6 +11,7 @@ import com.google.common.io.Resources;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.FunctorException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
@@ -433,5 +434,11 @@ public class ExpressionEvaluatorTest extends CategoryTest {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
     expressionEvaluator.addFunctor("thrower", new ExceptionThrowFunctor());
     expressionEvaluator.substitute("${thrower.throwException()}", new HashMap<>());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Category(UnitTests.class)
+  public void shouldThrowInValidVariableName() {
+    ExpressionEvaluator.isValidVariableName("${invalidVar}");
   }
 }
