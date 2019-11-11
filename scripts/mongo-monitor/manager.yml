@@ -70,3 +70,7 @@ metrics:
   - generic_queues_count:
       check_interval:   10      # seconds
       query:            "db.genericEvent.find({}).count()"
+
+  - instance_count:
+      check_interval:   600      # seconds
+      query:            "db.instance.find({}).count()"
