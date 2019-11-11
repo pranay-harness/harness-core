@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistentIterable;
-import io.harness.mongo.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

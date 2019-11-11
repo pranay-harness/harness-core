@@ -16,7 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;

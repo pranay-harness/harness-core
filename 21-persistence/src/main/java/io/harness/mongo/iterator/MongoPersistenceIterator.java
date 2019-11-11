@@ -1,11 +1,11 @@
-package io.harness.mongo;
+package io.harness.mongo.iterator;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ZERO;
@@ -21,6 +21,8 @@ import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.mongo.DelayLogContext;
+import io.harness.mongo.EntityLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import lombok.Builder;

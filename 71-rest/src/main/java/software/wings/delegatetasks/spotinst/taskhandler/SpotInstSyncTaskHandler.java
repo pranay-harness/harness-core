@@ -24,9 +24,9 @@ import software.wings.beans.SpotInstConfig;
 
 import java.util.List;
 
-@Slf4j
 @Singleton
 @NoArgsConstructor
+@Slf4j
 public class SpotInstSyncTaskHandler extends SpotInstTaskHandler {
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,
       SpotInstConfig spotInstConfig, AwsConfig awsConfig) throws Exception {

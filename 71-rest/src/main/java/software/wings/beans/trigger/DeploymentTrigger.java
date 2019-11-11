@@ -45,7 +45,6 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @AllArgsConstructor
-@Slf4j
 @Indexes({
   @Index(
       options = @IndexOptions(name = "uniqueTriggerIdx", unique = true), fields = { @Field("appId")
@@ -61,6 +60,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "DeploymentTriggerKeys")
 @Entity(value = "deploymentTriggers", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@Slf4j
 public class DeploymentTrigger implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                           UpdatedByAware, PersistentCronIterable, TagAware, ApplicationAccess {
   @Id @NotNull(groups = {DeploymentTrigger.class}) @SchemaIgnore private String uuid;

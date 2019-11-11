@@ -12,8 +12,8 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-@Slf4j
 @AllArgsConstructor
+@Slf4j
 public class SearchEntityBulkMigrationTask<T extends PersistentEntity> implements Callable<Boolean> {
   private ElasticsearchClient elasticsearchClient;
   private SearchEntity<T> searchEntity;

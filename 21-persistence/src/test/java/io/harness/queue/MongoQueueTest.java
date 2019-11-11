@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.mongo.MongoQueue;
+import io.harness.mongo.queue.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.Queue.Filter;

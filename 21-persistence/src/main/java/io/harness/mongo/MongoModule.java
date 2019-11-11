@@ -29,18 +29,15 @@ import java.util.Set;
 
 @Slf4j
 public class MongoModule extends DependencyProviderModule {
-  public static final MongoClientOptions mongoClientOptions =
-      MongoClientOptions.builder()
-          .retryWrites(true)
-          // TODO: Using secondaryPreferred creates issues that need to be investigated
-          //.readPreference(ReadPreference.secondaryPreferred())
-          .connectTimeout(30000)
-          .serverSelectionTimeout(90000)
-          .maxConnectionIdleTime(600000)
-          .connectionsPerHost(300)
-          .build();
+  public static final MongoClientOptions mongoClientOptions = MongoClientOptions.builder()
+                                                                  .retryWrites(true)
+                                                                  .connectTimeout(30000)
+                                                                  .serverSelectionTimeout(90000)
+                                                                  .maxConnectionIdleTime(600000)
+                                                                  .connectionsPerHost(300)
+                                                                  .build();
 
-  public static AdvancedDatastore createDatastore(Morphia morphia, String uri, Set<Class> collectionClasses) {
+  public static AdvancedDatastore createDatastore(Morphia morphia, String uri) {
     MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(clientUri);
 

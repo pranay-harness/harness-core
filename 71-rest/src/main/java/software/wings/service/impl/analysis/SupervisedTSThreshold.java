@@ -36,9 +36,9 @@ import java.util.Optional;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@Slf4j
 @Entity(value = "supervisedTSThreshold", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Slf4j
 public class SupervisedTSThreshold implements GoogleDataStoreAware, CreatedAtAware {
   public static final String connector = ":";
 

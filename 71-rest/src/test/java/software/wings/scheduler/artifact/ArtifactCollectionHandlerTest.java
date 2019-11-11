@@ -18,7 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
-import io.harness.mongo.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

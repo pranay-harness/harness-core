@@ -20,8 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @UtilityClass
+@Slf4j
 public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";

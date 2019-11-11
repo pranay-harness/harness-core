@@ -50,9 +50,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Singleton
-@Slf4j
 @Data
 @EqualsAndHashCode(callSuper = false)
+@Slf4j
 public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   @Inject private TriggerService triggerService;
   private String WORKFLOW = "Workflow";

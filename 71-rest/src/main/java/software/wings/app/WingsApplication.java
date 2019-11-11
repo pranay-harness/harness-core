@@ -15,7 +15,6 @@ import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMEN
 import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
 import static software.wings.utils.CacheManager.USER_CACHE;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -475,9 +474,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (isNotEmpty(configuration.getMongoConnectionFactory().getLocksUri())
         && !configuration.getMongoConnectionFactory().getLocksUri().equals(
                configuration.getMongoConnectionFactory().getUri())) {
-      Set<Class> classes = ImmutableSet.<Class>of();
-
-      persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri(), classes);
+      persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri());
     }
     persistence.registerUserProvider(new ThreadLocalUserProvider());
   }

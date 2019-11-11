@@ -7,8 +7,8 @@ import com.google.inject.Singleton;
 
 import io.harness.config.WorkersConfiguration;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
-import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;

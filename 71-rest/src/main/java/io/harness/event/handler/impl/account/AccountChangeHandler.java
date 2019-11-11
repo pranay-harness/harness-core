@@ -37,9 +37,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@Slf4j
 @NoArgsConstructor
 @Singleton
+@Slf4j
 public class AccountChangeHandler implements EventHandler {
   @Inject private SegmentHelper segmentHelper;
   @Inject private InstanceStatService instanceStatService;

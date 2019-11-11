@@ -49,8 +49,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-@Slf4j
 @UtilityClass
+@Slf4j
 public class IndexManager {
   public static final String UNIQUE = "unique";
 

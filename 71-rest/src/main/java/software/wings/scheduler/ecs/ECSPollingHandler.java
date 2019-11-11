@@ -1,6 +1,6 @@
 package software.wings.scheduler.ecs;
 
-import static io.harness.mongo.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 
@@ -10,8 +10,8 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
-import io.harness.mongo.MongoPersistenceIterator;
-import io.harness.mongo.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ecs.ECSPollingJobEntity;
 import software.wings.beans.ecs.ECSPollingJobEntity.ECSPollingJobEntityKeys;

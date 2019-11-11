@@ -28,9 +28,9 @@ import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
 
-@Slf4j
 @Singleton
 @NoArgsConstructor
+@Slf4j
 public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
   @VisibleForTesting
   void scaleElastigroup(ElastiGroup elastiGroup, String spotInstToken, String spotInstAccountId, int steadyStateTimeOut,

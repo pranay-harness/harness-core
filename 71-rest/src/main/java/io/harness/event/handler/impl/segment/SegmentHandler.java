@@ -77,6 +77,7 @@ public class SegmentHandler implements EventHandler {
   @Inject private UserService userService;
   @Inject private Utils utils;
   @Inject private PersistentLocker persistentLocker;
+
   @UtilityClass
   public static final class Keys {
     public static final String NATERO = "Natero";
