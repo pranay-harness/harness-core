@@ -62,8 +62,12 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
 
   @Test
   @Category(UnitTests.class)
-  public void shouldLoadDefaultTemplates() {
+  public void shouldLoadDefaultHttpTemplates() {
     templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    Template template = getTemplate(parentFolder);
+    assertThat(template).isNotNull();
+    assertThat(template.getTemplateObject()).isNotNull();
   }
 
   @Test

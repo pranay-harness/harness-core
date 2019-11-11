@@ -34,7 +34,7 @@ public class BambooExecutionData extends StateExecutionData implements DelegateT
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
-    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     setBambooExecutionDetails(executionDetails);
     return executionDetails;
   }
@@ -63,7 +63,7 @@ public class BambooExecutionData extends StateExecutionData implements DelegateT
         ExecutionDataValue.builder().displayName("Build Status").value(buildStatus).build());
 
     putNotNull(
-        executionDetails, "buildUrl", ExecutionDataValue.builder().displayName("Build URL").value(buildUrl).build());
+        executionDetails, "buildUrl", ExecutionDataValue.builder().displayName("Build Url").value(buildUrl).build());
   }
 
   @Override
