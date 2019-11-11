@@ -14,14 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.mapping.cache.EntityCache;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utils class for common operations
@@ -85,8 +84,8 @@ public final class SearchEntityUtils {
     return list.subList(0, index);
   }
 
-  public static long getTimestampNdaysBackInMillis(int daysToRetain) {
-    return Instant.now().minus(daysToRetain, ChronoUnit.DAYS).toEpochMilli();
+  public static long getTimestampNdaysBackInMillis(Integer daysToRetain) {
+    return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(daysToRetain.longValue());
   }
 
   public static Map<String, Object> convertToMap(Object object) {

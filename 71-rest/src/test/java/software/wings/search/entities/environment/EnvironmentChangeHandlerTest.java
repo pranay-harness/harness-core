@@ -200,7 +200,6 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
         PipelineEntityTestUtils.createPipelineChangeEvent(pipeline, ChangeType.UPDATE);
-
     List<String> stringList = new ArrayList<>();
     stringList.add("value1");
 
