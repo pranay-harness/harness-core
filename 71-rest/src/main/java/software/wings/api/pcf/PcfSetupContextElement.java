@@ -57,6 +57,8 @@ public class PcfSetupContextElement implements ContextElement {
   private List<PcfAppSetupTimeDetails> appDetailsToBeDownsized;
   private boolean isStandardBlueGreenWorkflow;
   private boolean isDownsizeOldApps;
+  private boolean enforceSslValidation;
+  private boolean useAppAutoscalar;
 
   @Override
   public ContextElementType getElementType() {

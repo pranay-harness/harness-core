@@ -25,7 +25,7 @@ public class PcfInfraMappingDataRequest extends PcfCommandRequest {
       Integer timeoutIntervalInMin, String host, String domain, String path, Integer port, boolean useRandomPort,
       boolean tcpRoute, String applicationNamePrefix, ActionType actionType, boolean useCLIForPcfAppCreation) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation);
+        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, false, false);
     this.pcfConfig = pcfConfig;
     this.host = host;
     this.domain = domain;

@@ -42,9 +42,9 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       List<String> routeMaps, Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
       Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
       boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
-      PcfManifestsPackage pcfManifestsPackage) {
+      PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar, boolean enforceSslValidation) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation);
+        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar);
     this.releaseNamePrefix = releaseNamePrefix;
     this.manifestYaml = manifestYaml;
     this.artifactFiles = artifactFiles;

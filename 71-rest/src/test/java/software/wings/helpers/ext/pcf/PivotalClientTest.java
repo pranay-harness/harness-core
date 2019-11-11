@@ -1,15 +1,23 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
+import static io.harness.pcf.model.PcfConstants.CF_HOME;
+import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -18,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.filesystem.FileIo;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
@@ -36,17 +45,21 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.stubbing.Answer;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +72,8 @@ public class PivotalClientTest extends WingsBaseTest {
   @Mock Routes routes;
   @Spy PcfClientImpl client;
   @Spy PcfClientImpl mockedClient;
+  public static String APP_NAME = "APP_NAME";
+  public static String PATH = "path";
 
   @Before
   public void setupMocks() throws Exception {
@@ -639,5 +654,202 @@ public class PivotalClientTest extends WingsBaseTest {
     assertThat(hostCaptor.getValue()).isEqualTo("myapp2");
     assertThat(domainCaptor.getValue()).isEqualTo("cfapps.io");
     assertThat(pathCaptor.getValue()).isEqualTo("P1");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testPerformConfigureAutoscalar() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    doAnswer((Answer<Boolean>) invocation -> { return true; }).when(pcfClient).doLogin(any(), any(), anyString());
+
+    String AUTOSCALAR_MANIFEST = "autoscalar config";
+
+    File file = new File("./autoscalar" + System.currentTimeMillis() + ".yml");
+    file.createNewFile();
+    FileIo.writeFile(file.getAbsolutePath(), AUTOSCALAR_MANIFEST.getBytes());
+
+    ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+    ProcessResult processResult = mock(ProcessResult.class);
+    doReturn(processResult).when(processExecutor).execute();
+    doReturn(0).doReturn(1).when(processResult).getExitValue();
+
+    doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
+    pcfClient.performConfigureAutoscalar(
+        PcfAppAutoscalarRequestData.builder().autoscalarFilePath(file.getAbsolutePath()).timeoutInMins(1).build(),
+        logCallback);
+
+    assertThat(file.exists()).isFalse();
+    try {
+      pcfClient.performConfigureAutoscalar(
+          PcfAppAutoscalarRequestData.builder().autoscalarFilePath(file.getAbsolutePath()).timeoutInMins(1).build(),
+          logCallback);
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+    }
+
+    doThrow(Exception.class).when(processExecutor).execute();
+    try {
+      pcfClient.performConfigureAutoscalar(
+          PcfAppAutoscalarRequestData.builder().autoscalarFilePath(file.getAbsolutePath()).timeoutInMins(1).build(),
+          logCallback);
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCheckIfAppHasAutoscalarAttached() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    doAnswer((Answer<Boolean>) invocation -> { return true; }).when(pcfClient).doLogin(any(), any(), anyString());
+
+    ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+    ProcessResult processResult = mock(ProcessResult.class);
+
+    doReturn(processResult).when(processExecutor).execute();
+    doReturn("asd").doReturn(null).doReturn(EMPTY).when(processResult).outputUTF8();
+
+    doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
+    assertThat(
+        pcfClient.checkIfAppHasAutoscalarAttached(
+            PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build(), logCallback))
+        .isTrue();
+
+    assertThat(
+        pcfClient.checkIfAppHasAutoscalarAttached(
+            PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build(), logCallback))
+        .isFalse();
+
+    assertThat(
+        pcfClient.checkIfAppHasAutoscalarAttached(
+            PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build(), logCallback))
+        .isFalse();
+
+    doThrow(Exception.class).when(processExecutor).execute();
+    try {
+      pcfClient.checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData.builder().build(), logCallback);
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCheckIfAppAutoscalarInstalled() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+    ProcessResult processResult = mock(ProcessResult.class);
+
+    doReturn(processResult).when(processExecutor).execute();
+    doReturn("asd").doReturn(null).doReturn(EMPTY).when(processResult).outputUTF8();
+
+    doReturn(processExecutor).when(pcfClient).createExecutorForAutoscalarPluginCheck(anyMap());
+    assertThat(pcfClient.checkIfAppAutoscalarInstalled()).isTrue();
+
+    assertThat(pcfClient.checkIfAppAutoscalarInstalled()).isFalse();
+    assertThat(pcfClient.checkIfAppAutoscalarInstalled()).isFalse();
+
+    doThrow(Exception.class).when(processExecutor).execute();
+    try {
+      pcfClient.checkIfAppAutoscalarInstalled();
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testChangeAutoscalarState() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    doAnswer((Answer<Boolean>) invocation -> { return true; }).when(pcfClient).doLogin(any(), any(), anyString());
+
+    ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+    ProcessResult processResult = mock(ProcessResult.class);
+    doReturn(processResult).when(processExecutor).execute();
+    doReturn(0).doReturn(1).when(processResult).getExitValue();
+
+    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build();
+    doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
+    doReturn("cf").when(pcfClient).generateChangeAutoscalarStateCommand(any(), anyBoolean());
+    pcfClient.changeAutoscalarState(pcfAppAutoscalarRequestData, logCallback, true);
+
+    try {
+      pcfClient.changeAutoscalarState(pcfAppAutoscalarRequestData, logCallback, false);
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+    }
+
+    doThrow(Exception.class).when(processExecutor).execute();
+    try {
+      pcfClient.changeAutoscalarState(pcfAppAutoscalarRequestData, logCallback, true);
+    } catch (Exception e) {
+      assertThat(e instanceof PivotalClientApiException).isTrue();
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetAppAutoscalarEnvMapForCustomPlugin() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
+        PcfAppAutoscalarRequestData.builder().configPathVar(PATH).build());
+
+    assertThat(appAutoscalarEnvMapForCustomPlugin.size()).isEqualTo(2);
+    assertThat(appAutoscalarEnvMapForCustomPlugin.get(CF_HOME)).isEqualTo(PATH);
+    assertThat(appAutoscalarEnvMapForCustomPlugin.containsKey(CF_PLUGIN_HOME)).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateProccessExecutorForPcfTask() throws Exception {
+    Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
+        PcfAppAutoscalarRequestData.builder().configPathVar(PATH).build());
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ProcessExecutor processExecutor = pcfClient.createProccessExecutorForPcfTask(
+        1, CF_COMMAND_FOR_CHECKING_AUTOSCALAR, appAutoscalarEnvMapForCustomPlugin, logCallback);
+
+    assertThat(processExecutor.getCommand()).containsExactly("/bin/sh", "-c", "cf plugins | grep autoscaling-apps");
+    assertThat(processExecutor.getEnvironment()).isEqualTo(appAutoscalarEnvMapForCustomPlugin);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateExecutorForAutoscalarPluginCheck() throws Exception {
+    Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
+        PcfAppAutoscalarRequestData.builder().configPathVar(PATH).build());
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ProcessExecutor processExecutor =
+        pcfClient.createExecutorForAutoscalarPluginCheck(appAutoscalarEnvMapForCustomPlugin);
+
+    assertThat(processExecutor.getCommand()).containsExactly("/bin/sh", "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR);
+    assertThat(processExecutor.getEnvironment()).isEqualTo(appAutoscalarEnvMapForCustomPlugin);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGenerateChangeAutoscalarStateCommand() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    String command = pcfClient.generateChangeAutoscalarStateCommand(
+        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).build(), true);
+    assertThat(command).isEqualTo("cf enable-autoscaling " + APP_NAME);
+    command = pcfClient.generateChangeAutoscalarStateCommand(
+        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).build(), false);
+    assertThat(command).isEqualTo("cf disable-autoscaling " + APP_NAME);
   }
 }

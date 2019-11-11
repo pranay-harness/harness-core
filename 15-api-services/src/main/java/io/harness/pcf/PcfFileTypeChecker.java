@@ -2,13 +2,13 @@ package io.harness.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
-import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
-import static io.harness.pcf.model.ManifestType.CREATE_SERVICE_MANIFEST;
+import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
-import static io.harness.pcf.model.PcfConstants.CREATE_SERVICE_MANIFEST_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.MEMORY_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE;
+import static io.harness.pcf.model.PcfConstants.PCF_AUTOSCALAR_MANIFEST_RULES_ELE;
 
 import com.google.inject.Singleton;
 
@@ -39,21 +39,23 @@ public class PcfFileTypeChecker {
     }
 
     if (isApplicationManifest(map)) {
-      if (isCreateServiceManifest(map)) {
-        return APPLICATION_MANIFEST_WITH_CREATE_SERVICE;
-      }
       return APPLICATION_MANIFEST;
-    }
-
-    if (isCreateServiceManifest(map)) {
-      return CREATE_SERVICE_MANIFEST;
     }
 
     if (isVariableManifest(map)) {
       return VARIABLE_MANIFEST;
     }
 
+    if (isAutoscalarManifest(map)) {
+      return AUTOSCALAR_MANIFEST;
+    }
+
     return null;
+  }
+
+  private boolean isAutoscalarManifest(Map<String, Object> map) {
+    return map.containsKey(PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE)
+        && map.containsKey(PCF_AUTOSCALAR_MANIFEST_RULES_ELE);
   }
 
   private boolean isVariableManifest(Map<String, Object> map) {
@@ -64,10 +66,6 @@ public class PcfFileTypeChecker {
 
   private boolean isInvalidValue(Object value) {
     return value instanceof Map;
-  }
-
-  private boolean isCreateServiceManifest(Map<String, Object> map) {
-    return map.containsKey(CREATE_SERVICE_MANIFEST_ELEMENT);
   }
 
   private boolean isApplicationManifest(Map<String, Object> map) {

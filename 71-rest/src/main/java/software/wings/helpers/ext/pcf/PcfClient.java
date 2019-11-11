@@ -7,6 +7,7 @@ import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.reactor.ConnectionContext;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.List;
@@ -49,4 +50,12 @@ public interface PcfClient {
       throws PivotalClientApiException, InterruptedException;
   List<Domain> getAllDomainsForSpace(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException;
+  void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException;
+  boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException;
+  boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  String resolvePcfPluginHome();
 }

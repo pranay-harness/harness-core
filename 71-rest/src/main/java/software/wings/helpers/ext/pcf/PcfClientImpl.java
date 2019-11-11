@@ -3,9 +3,17 @@ package software.wings.helpers.ext.pcf;
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
+import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING;
+import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
+import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
+import static io.harness.pcf.model.PcfConstants.CONFIGURE_AUTOSCALING;
+import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
+import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.PCF_ROUTE_PATH_SEPARATOR;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
+import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -18,6 +26,7 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
+import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -53,10 +62,12 @@ import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.TokenProvider;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
+import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.io.File;
@@ -82,6 +93,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Singleton
 @Slf4j
 public class PcfClientImpl implements PcfClient {
+  public static final String BIN_SH = "/bin/sh";
+
   public CloudFoundryOperationsWrapper getCloudFoundryOperationsWrapper(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
     try {
@@ -377,6 +390,226 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
+  public void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    int exitCode = 1;
+
+    try {
+      // First login
+      boolean loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
+          appAutoscalarRequestData.getConfigPathVar());
+
+      if (loginSuccessful) {
+        logManifestFile(appAutoscalarRequestData.getAutoscalarFilePath(), executionLogCallback);
+
+        // perform configure-autoscalar command
+        ProcessExecutor processExecutor = createProccessExecutorForPcfTask(appAutoscalarRequestData.getTimeoutInMins(),
+            getConfigureAutosaclarCfCliCommand(appAutoscalarRequestData),
+            getAppAutoscalarEnvMapForCustomPlugin(appAutoscalarRequestData), executionLogCallback);
+        exitCode = processExecutor.execute().getExitValue();
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      execeptionForAutoscalarConfigureFailure(appAutoscalarRequestData.getApplicationName(), e);
+    } catch (Exception e) {
+      execeptionForAutoscalarConfigureFailure(appAutoscalarRequestData.getApplicationName(), e);
+    } finally {
+      try {
+        FileIo.deleteFileIfExists(appAutoscalarRequestData.getAutoscalarFilePath());
+      } catch (IOException e) {
+        logger.warn("Failed to delete temp autoscalar file");
+      }
+    }
+
+    if (exitCode != 0) {
+      throw new PivotalClientApiException(
+          new StringBuilder()
+              .append("Exception occurred while Configuring autoscalar for Application: ")
+              .append(appAutoscalarRequestData.getApplicationName())
+              .append(", Error: App Autoscalar configuration Failed :  ")
+              .append(exitCode)
+              .toString());
+    }
+  }
+
+  public boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
+    boolean appAutoscalarInstalled;
+    Map<String, String> map = new HashMap();
+    map.put(CF_PLUGIN_HOME, resolvePcfPluginHome());
+    ProcessExecutor processExecutor = createExecutorForAutoscalarPluginCheck(map);
+
+    try {
+      ProcessResult processResult = processExecutor.execute();
+      appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new PivotalClientApiException("check for App Autoscalar plugin failed", e);
+    } catch (Exception e) {
+      throw new PivotalClientApiException("check for AppAutoscalar plugin failed", e);
+    }
+
+    return appAutoscalarInstalled;
+  }
+
+  @VisibleForTesting
+  ProcessExecutor createExecutorForAutoscalarPluginCheck(Map<String, String> map) {
+    return new ProcessExecutor()
+        .timeout(1, TimeUnit.MINUTES)
+        .command(BIN_SH, "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR)
+        .readOutput(true)
+        .environment(map);
+  }
+
+  @VisibleForTesting
+  public void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException {
+    int exitCode = 1;
+
+    try {
+      // First login
+      boolean loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
+          appAutoscalarRequestData.getConfigPathVar());
+
+      if (loginSuccessful) {
+        // perform enable/disable autoscalar
+        String completeCommand = generateChangeAutoscalarStateCommand(appAutoscalarRequestData, enable);
+
+        ProcessExecutor processExecutor = createProccessExecutorForPcfTask(appAutoscalarRequestData.getTimeoutInMins(),
+            completeCommand, getAppAutoscalarEnvMapForCustomPlugin(appAutoscalarRequestData), executionLogCallback);
+        exitCode = processExecutor.execute().getExitValue();
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      exceptionForAutoscalarStateChangeFailure(appAutoscalarRequestData.getApplicationName(), enable, e);
+      return;
+    } catch (Exception e) {
+      exceptionForAutoscalarStateChangeFailure(appAutoscalarRequestData.getApplicationName(), enable, e);
+    }
+    if (exitCode != 0) {
+      throw new PivotalClientApiException(new StringBuilder()
+                                              .append("Exception occurred for Application: ")
+                                              .append(appAutoscalarRequestData.getApplicationName())
+                                              .append(", for action: ")
+                                              .append(enable ? ENABLE_AUTOSCALING : DISABLE_AUTOSCALING)
+                                              .append(exitCode)
+                                              .toString());
+    }
+  }
+
+  @VisibleForTesting
+  String generateChangeAutoscalarStateCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData, boolean enable) {
+    String commandName = enable ? ENABLE_AUTOSCALING : DISABLE_AUTOSCALING;
+    return new StringBuilder(128)
+        .append("cf ")
+        .append(commandName)
+        .append(' ')
+        .append(appAutoscalarRequestData.getApplicationName())
+        .toString();
+  }
+
+  public boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    boolean appAutoscalarInstalled = false;
+    executionLogCallback.saveExecutionLog(
+        "# Checking if Application: " + appAutoscalarRequestData.getApplicationName() + " has Autoscalar Bound to it");
+
+    try {
+      boolean loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
+          appAutoscalarRequestData.getConfigPathVar());
+      if (loginSuccessful) {
+        ProcessExecutor processExecutor = createProccessExecutorForPcfTask(1,
+            CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING.replace(
+                APP_TOKEN, appAutoscalarRequestData.getApplicationName()),
+            getAppAutoscalarEnvMapForCustomPlugin(appAutoscalarRequestData), executionLogCallback);
+
+        ProcessResult processResult = processExecutor.execute();
+        appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new PivotalClientApiException("check for App Autoscalar Binding failed", e);
+    } catch (Exception e) {
+      throw new PivotalClientApiException("check for AppAutoscalar Binding failed", e);
+    }
+
+    return appAutoscalarInstalled;
+  }
+
+  @VisibleForTesting
+  Map<String, String> getAppAutoscalarEnvMapForCustomPlugin(PcfAppAutoscalarRequestData appAutoscalarRequestData) {
+    Map<String, String> environmentMapForPcfExecutor =
+        getEnvironmentMapForPcfExecutor(appAutoscalarRequestData.getConfigPathVar());
+    // set CUSTOM_PLUGIN_HOME, NEEDED FOR AUTO-SCALAR PLUIN
+    environmentMapForPcfExecutor.put(CF_PLUGIN_HOME, resolvePcfPluginHome());
+    return environmentMapForPcfExecutor;
+  }
+
+  @VisibleForTesting
+  ProcessExecutor createProccessExecutorForPcfTask(
+      long timeout, String command, Map<String, String> env, ExecutionLogCallback executionLogCallback) {
+    return new ProcessExecutor()
+        .timeout(timeout, TimeUnit.MINUTES)
+        .command(BIN_SH, "-c", command)
+        .readOutput(true)
+        .environment(env)
+        .redirectOutput(new LogOutputStream() {
+          @Override
+          protected void processLine(String line) {
+            executionLogCallback.saveExecutionLog(line);
+          }
+        });
+  }
+
+  private void exceptionForAutoscalarStateChangeFailure(String appName, boolean enable, Exception e)
+      throws PivotalClientApiException {
+    throw new PivotalClientApiException(new StringBuilder()
+                                            .append("Exception occurred for Application: ")
+                                            .append(appName)
+                                            .append(", for action: ")
+                                            .append(enable ? ENABLE_AUTOSCALING : DISABLE_AUTOSCALING)
+                                            .append(", Error: ")
+                                            .append(e)
+                                            .toString(),
+        e);
+  }
+
+  private void execeptionForAutoscalarConfigureFailure(String applicationName, Exception e)
+      throws PivotalClientApiException {
+    throw new PivotalClientApiException(new StringBuilder(128)
+                                            .append("Exception occurred while Configuring autoscalar for Application: ")
+                                            .append(applicationName)
+                                            .append(", Error: ")
+                                            .append(e)
+                                            .toString(),
+        e);
+  }
+
+  @NotNull
+  private String getConfigureAutosaclarCfCliCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData) {
+    return new StringBuilder(128)
+        .append(CONFIGURE_AUTOSCALING)
+        .append(' ')
+        .append(appAutoscalarRequestData.getApplicationName())
+        .append(' ')
+        .append(appAutoscalarRequestData.getAutoscalarFilePath())
+        .toString();
+  }
+
+  public String resolvePcfPluginHome() {
+    // look into java system variable
+    final String sysVarPluginHome = System.getProperty(SYS_VAR_CF_PLUGIN_HOME);
+    if (isNotEmpty(sysVarPluginHome)) {
+      return sysVarPluginHome.trim();
+    }
+    // env variable
+    final String envVarPluginHome = System.getenv(CF_PLUGIN_HOME);
+    if (isNotEmpty(envVarPluginHome)) {
+      return envVarPluginHome.trim();
+    }
+    // default is user home
+    return System.getProperty("user.home");
+  }
+
   private int doCfPush(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
       String finalFilePath, PcfCreateApplicationRequestData requestData)
       throws InterruptedException, TimeoutException, IOException {
@@ -384,7 +617,7 @@ public class PcfClientImpl implements PcfClient {
     String command = constructCfPushCommand(requestData, finalFilePath);
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
-                                          .command("/bin/sh", "-c", command)
+                                          .command(BIN_SH, "-c", command)
                                           .readOutput(true)
                                           .environment(getEnvironmentMapForPcfExecutor(requestData.getConfigPathVar()))
                                           .redirectOutput(new LogOutputStream() {
@@ -427,7 +660,7 @@ public class PcfClientImpl implements PcfClient {
     String password = handlePwdForSpecialCharsForShell(pcfRequestConfig.getPassword());
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(1, TimeUnit.MINUTES)
-                                          .command("/bin/sh", "-c",
+                                          .command(BIN_SH, "-c",
                                               new StringBuilder(128)
                                                   .append("cf login -a ")
                                                   .append(pcfRequestConfig.getEndpointUrl())

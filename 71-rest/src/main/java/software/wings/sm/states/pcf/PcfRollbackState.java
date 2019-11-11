@@ -84,6 +84,8 @@ public class PcfRollbackState extends PcfDeployState {
         .appsToBeDownSized(pcfSetupContextElement.getAppDetailsToBeDownsized())
         .newApplicationDetails(pcfSetupContextElement.getNewPcfApplicationDetails())
         .isStandardBlueGreenWorkflow(pcfSetupContextElement.isStandardBlueGreenWorkflow())
+        .enforceSslValidation(pcfSetupContextElement.isEnforceSslValidation())
+        .useAppAutoscalar(pcfSetupContextElement.isUseAppAutoscalar())
         .build();
   }
 

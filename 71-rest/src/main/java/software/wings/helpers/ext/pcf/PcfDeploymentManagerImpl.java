@@ -18,6 +18,7 @@ import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.Collections;
@@ -207,6 +208,49 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
   }
 
+  @Override
+  public String checkConnectivity(PcfConfig pcfConfig) {
+    try {
+      getOrganizations(PcfRequestConfig.builder()
+                           .endpointUrl(pcfConfig.getEndpointUrl())
+                           .userName(pcfConfig.getUsername())
+                           .password(String.valueOf(pcfConfig.getPassword()))
+                           .timeOutIntervalInMins(5)
+                           .build());
+    } catch (PivotalClientApiException e) {
+      return e.getMessage();
+    }
+
+    return "SUCCESS";
+  }
+
+  public boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
+    return pcfClient.checkIfAppAutoscalarInstalled();
+  }
+
+  @Override
+  public boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    return pcfClient.checkIfAppHasAutoscalarAttached(appAutoscalarRequestData, executionLogCallback);
+  }
+
+  @Override
+  public void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    pcfClient.performConfigureAutoscalar(appAutoscalarRequestData, executionLogCallback);
+  }
+
+  @Override
+  public void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException {
+    pcfClient.changeAutoscalarState(appAutoscalarRequestData, executionLogCallback, enable);
+  }
+
+  @Override
+  public String resolvePcfPluginHome() {
+    return pcfClient.resolvePcfPluginHome();
+  }
+
   private String generateRouteUrl(
       String host, String domain, String path, boolean tcpRoute, boolean useRandomPort, Integer port) {
     StringBuilder routeBuilder = new StringBuilder(128);
@@ -279,21 +323,5 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       name = name.substring(0, index);
     }
     return name;
-  }
-
-  @Override
-  public String checkConnectivity(PcfConfig pcfConfig) {
-    try {
-      getOrganizations(PcfRequestConfig.builder()
-                           .endpointUrl(pcfConfig.getEndpointUrl())
-                           .userName(pcfConfig.getUsername())
-                           .password(String.valueOf(pcfConfig.getPassword()))
-                           .timeOutIntervalInMins(5)
-                           .build());
-    } catch (PivotalClientApiException e) {
-      return e.getMessage();
-    }
-
-    return "SUCCESS";
   }
 }
