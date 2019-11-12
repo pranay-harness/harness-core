@@ -94,12 +94,18 @@ public class InfraMappingToDefinitionMigration implements Migration {
   // Accounts Migrated "jDOmhrFmSOGZJ1C91UC_hg", "SAsyUUHTTImuYSZ35HPDvw", "-oSRX0KNRni3wCdyoesp8Q",
   // "Evq3-KwvQfK5wE8UoR1Xcw", "-czOfo4UTPumhprgLZkDYg","GsntpegQTsii4JSf_mIpIQ",
   // "DyzFTB8WQdeLLi3hMnvZyg","l8h5XdMlSG6boWd99Tg-2g", "q-smn59lTqO_m-i_Sgs6sw", "ctRbnV9aTXisj2xkIRquYQ",
-  // "0LRUeE0IR8ax08KOXrMv3A","XtqjhVchTfOwuNqXiSzxdQ", "i3p84Q6oTXaN7JvCNLQJRA"
+  // "0LRUeE0IR8ax08KOXrMv3A","XtqjhVchTfOwuNqXiSzxdQ", "i3p84Q6oTXaN7JvCNLQJRA","UtTa95tnQqWxGByLkXlp6Q",
+  // "wXdRHOtoSuK1Qdi6QWnGgA"
 
-  private final List<String> accountIds = Arrays.asList("UtTa95tnQqWxGByLkXlp6Q", "wXdRHOtoSuK1Qdi6QWnGgA");
+  private final List<String> accountIds = Arrays.asList(
+      "R7OsqSbNQS69mq74kMNceQ", "oO8Ba5pbSeCfOf31v30DPQ", "hlSq1mrxReGdHtVxYSbm4A", "0-aYFXytT3SWH4g58-iIsg");
 
   public void migrate() {
     for (String accountId : accountIds) {
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, accountId)) {
+        logger.info(StringUtils.join(DEBUG_LINE, " Feature Flag is already enabled for account ", accountId));
+        continue;
+      }
       logger.info(StringUtils.join(DEBUG_LINE, "Starting Infra Definition migration for accountId ", accountId));
       Account account = null;
       try {
