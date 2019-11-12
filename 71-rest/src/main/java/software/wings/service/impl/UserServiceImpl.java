@@ -7,7 +7,7 @@ import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIT;
+import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
@@ -1969,7 +1969,7 @@ public class UserServiceImpl implements UserService {
     if (account == null) {
       String message = "Account [" + accountId + "] does not exist";
       logger.warn(message);
-      throw new WingsException(ACCOUNT_DOES_NOT_EXIT);
+      throw new WingsException(ACCOUNT_DOES_NOT_EXIST);
     }
     User user = get(userId);
 
