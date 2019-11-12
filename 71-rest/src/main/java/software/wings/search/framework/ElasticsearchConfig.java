@@ -17,10 +17,9 @@ public class ElasticsearchConfig {
   @Builder.Default
   @NotEmpty
   private String uri = "http://localhost:9200";
-
   @JsonProperty(defaultValue = "_default") @Builder.Default @NotEmpty private String indexSuffix = "_default";
-  @JsonProperty(defaultValue = "tag") @Builder.Default @NotEmpty private String mongoTagKey = "tag";
-  @JsonProperty(defaultValue = "tagValue") @Builder.Default @NotEmpty private String mongoTagValue = "tagValue";
+  @JsonProperty(defaultValue = "none") @Builder.Default @NotEmpty private String mongoTagKey = "none";
+  @JsonProperty(defaultValue = "none") @Builder.Default @NotEmpty private String mongoTagValue = "none";
 
   private byte[] encryptedUri;
 }
