@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -139,6 +140,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
     String artifactStreamType = artifactStream.getArtifactStreamType();
     if (DOCKER.name().equals(artifactStreamType)) {
       cleanupDockerArtifacts(artifactStream, deletedArtifacts);
+    } else if (AMI.name().equals(artifactStreamType)) {
+      cleanupAMIArtifacts(artifactStream, deletedArtifacts);
     }
     return deletedArtifacts;
   }
@@ -163,5 +166,27 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
 
     artifactService.deleteArtifacts(deletedArtifactsNew);
     deletedArtifacts.addAll(deletedArtifactsNew);
+  }
+
+  private void cleanupAMIArtifacts(ArtifactStream artifactStream, List<Artifact> deletedArtifacts) {
+    Set<String> revisionNumbers = isEmpty(builds)
+        ? new HashSet<>()
+        : builds.parallelStream().map(BuildDetails::getRevision).collect(Collectors.toSet());
+    List<Artifact> artifactsToBeDeleted = new ArrayList<>();
+    try (HIterator<Artifact> artifacts =
+             new HIterator<>(artifactService.prepareArtifactWithMetadataQuery(artifactStream).fetch())) {
+      for (Artifact artifact : artifacts) {
+        if (artifact != null && (artifact.getRevision() != null) && !revisionNumbers.contains(artifact.getRevision())) {
+          artifactsToBeDeleted.add(artifact);
+        }
+      }
+    }
+
+    if (isEmpty(artifactsToBeDeleted)) {
+      return;
+    }
+
+    artifactService.deleteArtifacts(artifactsToBeDeleted);
+    deletedArtifacts.addAll(artifactsToBeDeleted);
   }
 }
