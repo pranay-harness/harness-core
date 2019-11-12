@@ -1770,6 +1770,24 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-maven-plugin</artifactId>
+                    <version>3.1.12.2</version>
+                    <configuration>
+                        <spotbugsXmlOutput>true</spotbugsXmlOutput>
+                        <xmlOutput>true</xmlOutput>
+                        <excludeFilterFile>tools/config/src/main/resources/findbugs-exclude.xml</excludeFilterFile>
+                        <maxHeap>4096</maxHeap>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.github.spotbugs</groupId>
+                            <artifactId>spotbugs</artifactId>
+                            <version>4.0.0-beta4</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
                     <groupId>com.github.chrisdchristo</groupId>
                     <artifactId>capsule-maven-plugin</artifactId>
                     <version>1.5.1</version>
