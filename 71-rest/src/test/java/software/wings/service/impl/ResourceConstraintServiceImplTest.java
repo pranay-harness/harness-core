@@ -100,7 +100,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
     doReturn(resourceConstraint).when(query).get();
     doThrow(DuplicateKeyException.class).when(wingsPersistence).save(resourceConstraint);
     ResourceConstraint savedResourceConstraint =
-        resourceConstraintService.ensureResourceConstraintForConcurrency(ACCOUNT_ID, "Queuing");
+        resourceConstraintService.ensureResourceConstraintForConcurrency(ACCOUNT_ID, RESOURCE_CONSTRAINT_NAME);
 
     assertThat(savedResourceConstraint.getUuid()).isEqualTo(resourceConstraint.getUuid());
     assertThat(savedResourceConstraint.getName()).isEqualTo(resourceConstraint.getName());
@@ -111,6 +111,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
   public void shouldTestFetchEntityIdListForUnitAndEntityType() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraintInstance.class));
     doReturn(query).doReturn(query).when(query).filter(ResourceConstraintInstanceKeys.appId, APP_ID);
+    doReturn(query).when(query).filter(ResourceConstraintInstanceKeys.resourceConstraintId, RESOURCE_CONSTRAINT_ID);
     doReturn(query).when(query).filter(ResourceConstraintInstanceKeys.resourceUnit, INFRA_MAPPING_ID);
     doReturn(query).doReturn(query).when(query).filter(
         ResourceConstraintInstanceKeys.releaseEntityType, HoldingScope.WORKFLOW.name());
@@ -119,7 +120,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
     doReturn(asList(instance1, instance2)).when(query).asList();
     List<ResourceConstraintInstance> entityIds =
         resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(
-            APP_ID, INFRA_MAPPING_ID, HoldingScope.WORKFLOW.name());
+            APP_ID, RESOURCE_CONSTRAINT_ID, INFRA_MAPPING_ID, HoldingScope.WORKFLOW.name());
 
     assertThat(entityIds).isNotNull().hasSize(2);
   }

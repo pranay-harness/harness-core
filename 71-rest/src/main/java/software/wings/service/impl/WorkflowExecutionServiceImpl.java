@@ -158,6 +158,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
+import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -3451,7 +3452,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public ConcurrentExecutionResponse fetchConcurrentExecutions(String appId, String workflowExecutionId, String unit) {
+  public ConcurrentExecutionResponse fetchConcurrentExecutions(
+      String appId, String workflowExecutionId, String resourceConstraintName, String unit) {
+    ResourceConstraint resourceConstraint =
+        resourceConstraintService.getByName(appService.getAccountIdByAppId(appId), resourceConstraintName);
+    notNullCheck("Resource Constraint not found for name " + resourceConstraintName, resourceConstraint);
     WorkflowExecution execution = getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("Workflow Execution not found", execution);
     ConcurrentExecutionResponseBuilder responseBuilder = ConcurrentExecutionResponse.builder();
@@ -3461,7 +3466,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (ExecutionStatus.isRunningStatus(execution.getStatus())) {
       List<ResourceConstraintInstance> instances =
           resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(
-              appId, unit, HoldingScope.WORKFLOW.name());
+              appId, resourceConstraint.getUuid(), unit, HoldingScope.WORKFLOW.name());
       responseBuilder.state(extractState(workflowExecutionId, instances));
       responseBuilder.executions(fetchWorkflowExecutionsForResourceConstraint(
           appId, instances.stream().map(ResourceConstraintInstance::getReleaseEntityId).collect(Collectors.toList())));

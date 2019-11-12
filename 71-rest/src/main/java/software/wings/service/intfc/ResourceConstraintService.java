@@ -15,6 +15,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public interface ResourceConstraintService extends OwnedByAccount {
   PageResponse<ResourceConstraint> list(PageRequest<ResourceConstraint> pageRequest);
@@ -24,6 +25,8 @@ public interface ResourceConstraintService extends OwnedByAccount {
   @ValidationGroups(Update.class) void update(@Valid ResourceConstraint resourceConstraint);
 
   ResourceConstraint get(String accountId, String resourceConstraintId);
+
+  ResourceConstraint getByName(@NotNull String accountId, @NotNull String resourceConstraintName);
 
   ResourceConstraint ensureResourceConstraintForConcurrency(String accountId, String name);
 
@@ -46,7 +49,7 @@ public interface ResourceConstraintService extends OwnedByAccount {
   List<ResourceConstraintUsage> usage(String accountId, List<String> resourceConstraintIds);
 
   List<ResourceConstraintInstance> fetchResourceConstraintInstancesForUnitAndEntityType(
-      String appId, String unit, String entityType);
+      String appId, String resourceConstraintId, String unit, String entityType);
 
   static String workflowExecutionIdFromReleaseEntityId(String releaseEntityId) {
     return releaseEntityId.split("[|]")[0];

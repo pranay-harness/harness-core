@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
@@ -541,8 +542,13 @@ public class ExecutionResource {
   @ExceptionMetered
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<ConcurrentExecutionResponse> getExecutionsForConstraint(@QueryParam("appId") String appId,
-      @PathParam("workflowExecutionId") String workflowExecutionId, @QueryParam("unit") String unit) {
-    notNullCheck("App cannot be null", appId);
-    return new RestResponse<>(workflowExecutionService.fetchConcurrentExecutions(appId, workflowExecutionId, unit));
+      @PathParam("workflowExecutionId") String workflowExecutionId, @QueryParam("unit") String unit,
+      @QueryParam("resourceConstraintName") String resourceConstraintName) {
+    notNullCheck("App cant be null", appId);
+    if (resourceConstraintName == null) {
+      resourceConstraintName = QUEUING_RC_NAME;
+    }
+    return new RestResponse<>(
+        workflowExecutionService.fetchConcurrentExecutions(appId, workflowExecutionId, resourceConstraintName, unit));
   }
 }

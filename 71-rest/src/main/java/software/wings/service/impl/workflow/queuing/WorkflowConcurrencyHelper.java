@@ -3,6 +3,7 @@ package software.wings.service.impl.workflow.queuing;
 import static io.harness.data.structure.CollectionUtils.fetchIndex;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
 import static software.wings.common.InfrastructureConstants.STATE_TIMEOUT_KEY_NAME;
 import static software.wings.common.InfrastructureConstants.WEEK_TIMEOUT;
@@ -49,7 +50,7 @@ public class WorkflowConcurrencyHelper {
       return canaryOrchestrationWorkflow;
     }
     ResourceConstraint resourceConstraint =
-        resourceConstraintService.ensureResourceConstraintForConcurrency(accountId, "Queuing");
+        resourceConstraintService.ensureResourceConstraintForConcurrency(accountId, QUEUING_RC_NAME);
     boolean resourceConstraintAdded = false;
     if (EmptyPredicate.isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       resourceConstraintAdded =
