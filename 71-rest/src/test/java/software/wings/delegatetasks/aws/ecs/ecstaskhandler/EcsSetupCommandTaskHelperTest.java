@@ -1,9 +1,13 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -14,28 +18,47 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
+import static software.wings.cloudprovider.ContainerInfo.Status.FAILURE;
+import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
+import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_GREEN;
+import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_VERSION;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.TASK_REVISION;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalingPoliciesResult;
+import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
 import com.amazonaws.services.ecs.model.AssignPublicIp;
 import com.amazonaws.services.ecs.model.AwsVpcConfiguration;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
+import com.amazonaws.services.ecs.model.DeleteServiceRequest;
+import com.amazonaws.services.ecs.model.DescribeServicesResult;
+import com.amazonaws.services.ecs.model.KeyValuePair;
 import com.amazonaws.services.ecs.model.LaunchType;
+import com.amazonaws.services.ecs.model.ListServicesResult;
+import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.NetworkMode;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.ServiceRegistry;
+import com.amazonaws.services.ecs.model.Tag;
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.amazonaws.services.elasticloadbalancingv2.model.Action;
+import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -54,14 +77,23 @@ import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.EcsContainerService;
+import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
+
 @Slf4j
 public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String SECURITY_GROUP_ID_1 = "sg-id";
@@ -75,6 +107,10 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String DOCKER_IMG_NAME = "dockerImgName";
   public static final String DOCKER_DOMAIN_NAME = "domainName";
   @Mock private AwsClusterService awsClusterService;
+  @Mock private AwsEcsHelperServiceDelegate mockAwsEcsHelperServiceDelegate;
+  @Mock private AwsAppAutoScalingHelperServiceDelegate mockAwsAppAutoScalingService;
+  @Mock private AwsHelperService mockAwsHelperService;
+  @Mock private EcsContainerService mockEcsContainerService;
   @Spy @InjectMocks @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 
   private SettingAttribute computeProvider = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
@@ -468,8 +504,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     ecsSetupCommandTaskHelper.createTaskDefinition(ecsContainerTask, "ContainerName", DOCKER_IMG_NAME,
-        getEcsSetupParams(), AwsConfig.builder().build(), Collections.EMPTY_MAP, Collections.EMPTY_MAP,
-        Collections.EMPTY_LIST, executionLogCallback, DOCKER_DOMAIN_NAME);
+        getEcsSetupParams(), AwsConfig.builder().build(), ImmutableMap.of("svk", "svv"),
+        ImmutableMap.of("sdvk", "sdvv"), Collections.EMPTY_LIST, executionLogCallback, DOCKER_DOMAIN_NAME);
 
     ArgumentCaptor<RegisterTaskDefinitionRequest> captor = ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
     verify(awsClusterService).createTask(anyString(), any(), anyList(), captor.capture());
@@ -491,6 +527,12 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(containerDefinition.getImage()).isEqualTo(DOCKER_DOMAIN_NAME + "/" + DOCKER_IMG_NAME);
     assertThat(containerDefinition.getPortMappings()).isNotNull();
     assertThat(containerDefinition.getPortMappings()).hasSize(1);
+
+    List<KeyValuePair> environment = containerDefinition.getEnvironment();
+    assertThat(environment).isNotNull();
+    assertThat(environment.size()).isEqualTo(1);
+    assertThat(environment.get(0).getName()).isEqualTo("svk");
+    assertThat(environment.get(0).getValue()).isEqualTo("svv");
 
     PortMapping portMapping = containerDefinition.getPortMappings().iterator().next();
     assertThat(portMapping.getContainerPort().intValue()).isEqualTo(80);
@@ -687,5 +729,223 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat("arn2").isEqualTo(data.getNewServiceDiscoveryArn());
     assertThat(1).isEqualTo(serviceRegistries.size());
     assertThat("arn2").isEqualTo(serviceRegistries.get(0).getRegistryArn());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testStoreCurrentServiceNameAndCountInfo() {
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    doReturn(newArrayList(new Service().withServiceName("foo__1").withDesiredCount(0),
+                 new Service().withServiceName("foo__2").withDesiredCount(2),
+                 new Service().withServiceName("foo__3").withDesiredCount(0)))
+        .when(mockAwsEcsHelperServiceDelegate)
+        .listServicesForCluster(any(), anyList(), anyString(), anyString());
+    ecsSetupCommandTaskHelper.storeCurrentServiceNameAndCountInfo(awsConfig, params, emptyList(), builder, "foo__3");
+    ContainerSetupCommandUnitExecutionData data = builder.build();
+    assertThat(data.getEcsServiceToBeDownsized()).isEqualTo("foo__2");
+    assertThat(data.getCountToBeDownsizedForOldService()).isEqualTo(2);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testBackupAutoScalarConfig() {
+    EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    result.put("foo__1", 2);
+    doReturn(result)
+        .when(awsClusterService)
+        .getActiveServiceCounts(anyString(), any(), anyList(), anyString(), anyString());
+    doReturn(
+        new DescribeScalableTargetsResult().withScalableTargets(
+            new ScalableTarget().withResourceId("resId").withScalableDimension("scalDim").withServiceNamespace("Ecs")))
+        .when(mockAwsAppAutoScalingService)
+        .listScalableTargets(anyString(), any(), anyList(), any());
+    doReturn(new DescribeScalingPoliciesResult().withScalingPolicies(new ScalingPolicy().withPolicyARN("policyArn")))
+        .when(mockAwsAppAutoScalingService)
+        .listScalingPolicies(anyString(), any(), anyList(), any());
+    doReturn("policyJson").when(mockAwsAppAutoScalingService).getJsonForAwsScalablePolicy(any());
+    ecsSetupCommandTaskHelper.backupAutoScalarConfig(params, attribute, emptyList(), "foo__1", builder, mockCallback);
+    ContainerSetupCommandUnitExecutionData data = builder.build();
+    List<AwsAutoScalarConfig> configs = data.getPreviousAwsAutoScalarConfigs();
+    assertThat(configs).isNotNull();
+    assertThat(configs.size()).isEqualTo(1);
+    assertThat(configs.get(0).getResourceId()).isEqualTo("resId");
+    assertThat(configs.get(0).getScalingPolicyJson()[0]).isEqualTo("policyJson");
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleRollback_PrevSvcExists() {
+    EcsSetupParams params = anEcsSetupParams()
+                                .withRegion("us-east-1")
+                                .withClusterName("cluster")
+                                .withIsDaemonSchedulingStrategy(true)
+                                .withPreviousEcsServiceSnapshotJson("PrevJson")
+                                .withServiceSteadyStateTimeout(10)
+                                .build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    doReturn(new Service().withServiceName("foo__1").withServiceArn("svcArn"))
+        .when(ecsSetupCommandTaskHelper)
+        .getAwsServiceFromJson(anyString(), any());
+    doReturn(AwsConfig.builder().build()).when(mockAwsHelperService).validateAndGetAwsConfig(any(), anyList());
+    doReturn(new DescribeServicesResult().withServices(
+                 new Service().withDesiredCount(2).withEvents(new ServiceEvent().withId("evId"))))
+        .when(mockAwsHelperService)
+        .describeServices(anyString(), any(), anyList(), any());
+    doReturn(newArrayList(ContainerInfo.builder().containerId("id1").build(),
+                 ContainerInfo.builder().containerId("id2").build()))
+        .when(mockEcsContainerService)
+        .getContainerInfosAfterEcsWait(
+            anyString(), any(), anyList(), anyString(), anyString(), anyList(), any(), anyBoolean());
+    ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback);
+    ContainerSetupCommandUnitExecutionData data = builder.build();
+    assertThat(data.getEcsServiceArn()).isEqualTo("svcArn");
+    assertThat(data.getContainerServiceName()).isEqualTo("foo__1");
+    verify(mockAwsHelperService).updateService(anyString(), any(), anyList(), any());
+    verify(mockEcsContainerService).waitForTasksToBeInRunningStateButDontThrowException(any());
+    verify(mockEcsContainerService).waitForServiceToReachSteadyState(anyInt(), any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testHandleRollback_PrevSvcDoesNotExist() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    EcsSetupParams params = anEcsSetupParams()
+                                .withRegion("us-east-1")
+                                .withEcsServiceArn("ecsSvcArn")
+                                .withClusterName("cluster")
+                                .withIsDaemonSchedulingStrategy(true)
+                                .build();
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback);
+    verify(mockAwsHelperService).deleteService(anyString(), any(), anyList(), any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCreateEcsService() {
+    EcsSetupParams params =
+        anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").withTaskFamily("foo").build();
+    TaskDefinition taskDefinition = new TaskDefinition().withRevision(2);
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    result.put("foo__1", 2);
+    doReturn(result)
+        .when(awsClusterService)
+        .getActiveServiceCounts(anyString(), any(), anyList(), anyString(), anyString());
+    CreateServiceRequest createServiceRequest =
+        new CreateServiceRequest().withServiceName("foo__2").withCluster("cluster");
+    doReturn(createServiceRequest)
+        .when(ecsSetupCommandTaskHelper)
+        .getCreateServiceRequest(any(), anyList(), any(), any(), anyString(), any(), any(), any());
+    ecsSetupCommandTaskHelper.createEcsService(params, taskDefinition, attribute, emptyList(), builder, mockCallback);
+    verify(awsClusterService).createService(anyString(), any(), anyList(), any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDownsizeOldOrUnhealthy() {
+    EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    result.put("foo__1", 1);
+    result.put("foo__2", 1);
+    doReturn(result)
+        .when(awsClusterService)
+        .getActiveServiceCounts(anyString(), any(), anyList(), anyString(), anyString());
+    doReturn(new ListTasksResult().withTaskArns(singletonList("foo__1__arn")))
+        .doReturn(new ListTasksResult().withTaskArns(singletonList("foo__2__arn")))
+        .when(mockAwsHelperService)
+        .listTasks(anyString(), any(), anyList(), any());
+    doReturn(singletonList(ContainerInfo.builder().status(FAILURE).build()))
+        .doReturn(singletonList(ContainerInfo.builder().status(SUCCESS).build()))
+        .when(mockEcsContainerService)
+        .getContainerInfosAfterEcsWait(
+            anyString(), any(), anyList(), anyString(), anyString(), anyList(), any(), anyBoolean());
+    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback);
+    verify(awsClusterService)
+        .resizeCluster(anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testCleanup() {
+    doReturn(newArrayList(new Service().withServiceName("foo__1").withDesiredCount(0),
+                 new Service().withServiceName("foo__2").withDesiredCount(2),
+                 new Service().withServiceName("foo__3").withDesiredCount(0)))
+        .when(awsClusterService)
+        .getServices(anyString(), any(), anyList(), anyString());
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    ecsSetupCommandTaskHelper.cleanup(attribute, "us-east-1", "foo__3", "clusterName", emptyList(), mockCallback);
+    verify(awsClusterService).deleteService(anyString(), any(), anyList(), anyString(), eq("foo__1"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetExistingServiceMetadataSnapshot() {
+    EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(new ListServicesResult().withServiceArns("arn__1"))
+        .when(mockAwsHelperService)
+        .listServices(anyString(), any(), anyList(), any());
+    doReturn(new DescribeServicesResult().withServices(new Service().withServiceName("foo__1")))
+        .when(mockAwsHelperService)
+        .describeServices(anyString(), any(), anyList(), any());
+    Optional<Service> serviceOptional = ecsSetupCommandTaskHelper.getExistingServiceMetadataSnapshot(
+        params, attribute, emptyList(), "foo__1", mockAwsHelperService);
+    assertThat(serviceOptional.isPresent()).isTrue();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetTargetGroupForDefaultAction() {
+    Listener listener = new Listener().withDefaultActions(new Action().withTargetGroupArn("arn").withType("forward"));
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    String targetGroup = ecsSetupCommandTaskHelper.getTargetGroupForDefaultAction(listener, mockCallback);
+    assertThat(targetGroup).isEqualTo("arn");
+    Listener listener2 = new Listener().withDefaultActions(emptyList());
+    assertThatThrownBy(() -> ecsSetupCommandTaskHelper.getTargetGroupForDefaultAction(listener2, mockCallback))
+        .isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testDeleteExistingServicesOtherThanBlueVersion() {
+    EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(singletonList(new Service().withServiceArn("arn").withServiceName("foo__1").withTags(
+                 new Tag().withKey(BG_VERSION).withValue(BG_GREEN))))
+        .when(ecsSetupCommandTaskHelper)
+        .getServicesForClusterByMatchingPrefix(any(), any(), anyList(), anyString());
+    ecsSetupCommandTaskHelper.deleteExistingServicesOtherThanBlueVersion(params, attribute, emptyList(), mockCallback);
+    ArgumentCaptor<DeleteServiceRequest> captor = ArgumentCaptor.forClass(DeleteServiceRequest.class);
+    verify(mockAwsHelperService).deleteService(anyString(), any(), anyList(), captor.capture());
+    DeleteServiceRequest request = captor.getValue();
+    assertThat(request).isNotNull();
+    assertThat(request.getCluster()).isEqualTo("cluster");
+    assertThat(request.getService()).isEqualTo("arn");
   }
 }
