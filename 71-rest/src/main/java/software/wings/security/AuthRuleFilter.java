@@ -2,7 +2,7 @@ package software.wings.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIT;
+import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.ACCOUNT_MIGRATED;
 import static io.harness.eraro.ErrorCode.INACTIVE_ACCOUNT;
 import static io.harness.eraro.ErrorCode.NOT_WHITELISTED_IP;
@@ -283,7 +283,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private void validateAccountStatus(String accountId, boolean isHarnessUserExemptedRequest) {
     String accountStatus = accountService.getAccountStatus(accountId);
     if (AccountStatus.DELETED.equals(accountStatus)) {
-      throw new WingsException(ACCOUNT_DOES_NOT_EXIT, USER);
+      throw new WingsException(ACCOUNT_DOES_NOT_EXIST, USER);
     } else if (AccountStatus.INACTIVE.equals(accountStatus) && !isHarnessUserExemptedRequest) {
       Account account = accountService.getFromCache(accountId);
       String migratedToClusterUrl = account == null ? null : account.getMigratedToClusterUrl();
