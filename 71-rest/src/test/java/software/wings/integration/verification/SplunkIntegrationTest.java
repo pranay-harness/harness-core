@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class SplunkIntegrationTest extends BaseIntegrationTest {
+  private static final String SPLUNK_CLOUD_URL = "https://api-prd-p-429h4vj2lsng.cloud.splunk.com:8089";
   @Inject SplunkDelegateService splunkDelegateService; // = new SplunkDelegateServiceImpl();
   @Inject private ScmSecret scmSecret;
 
@@ -35,7 +36,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     SplunkConfig config =
         SplunkConfig.builder()
             .accountId(accountId)
-            .splunkUrl("https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089")
+            .splunkUrl(SPLUNK_CLOUD_URL)
             .username(scmSecret.decryptToString(new SecretName("splunk_cloud_username")))
             .password(scmSecret.decryptToString(new SecretName("splunk_cloud_password")).toCharArray())
             .build();
@@ -54,7 +55,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
     SplunkConfig config =
         SplunkConfig.builder()
             .accountId(accountId)
-            .splunkUrl("https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089")
+            .splunkUrl(SPLUNK_CLOUD_URL)
             .username(scmSecret.decryptToString(new SecretName("splunk_cloud_username")))
             .password(scmSecret.decryptToString(new SecretName("splunk_cloud_password")).toCharArray())
             .build();
