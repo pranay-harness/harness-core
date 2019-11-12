@@ -1,11 +1,12 @@
 package io.harness.testframework.framework.utils;
 
+import lombok.experimental.UtilityClass;
+
 import java.nio.file.Path;
 import java.util.List;
 
+@UtilityClass
 public class ExecutorUtils {
-  private ExecutorUtils() {}
-
   public static void addJacocoAgentVM(final Path jar, List<String> command) {
     final String jacocoAgentPath = System.getenv("JACOCO_AGENT_PATH");
     if (jacocoAgentPath == null) {
