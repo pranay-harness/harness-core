@@ -4,6 +4,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
+import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -44,8 +45,9 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
             .executorService(artifactCollectionExecutor)
             .semaphore(new Semaphore(5))
             .handler(this)
-            .filterExpander(
-                query -> query.filter(ArtifactStreamKeys.artifactStreamType, ArtifactStreamType.DOCKER.name()))
+            .filterExpander(query
+                -> query.field(ArtifactStreamKeys.artifactStreamType)
+                       .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name())))
             .schedulingType(REGULAR)
             .redistribute(true));
 

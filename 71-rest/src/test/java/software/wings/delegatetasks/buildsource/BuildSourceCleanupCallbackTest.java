@@ -12,6 +12,9 @@ import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTA
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
@@ -31,6 +34,7 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
+import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
@@ -49,6 +53,7 @@ import java.util.concurrent.RejectedExecutionException;
 public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
+  private static final String ARTIFACT_STREAM_ID_3 = "ARTIFACT_STREAM_ID_3";
 
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private ArtifactService artifactService;
@@ -78,6 +83,25 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
                                                      .imageName("image_name")
                                                      .build();
 
+  AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .uuid(ARTIFACT_STREAM_ID_3)
+                                            .appId(APP_ID)
+                                            .settingId(SETTING_ID)
+                                            .region("us-east-1")
+                                            .autoPopulate(true)
+                                            .serviceId(SERVICE_ID)
+                                            .build();
+
+  Artifact artifact = Artifact.Builder.anArtifact()
+                          .withUuid(ARTIFACT_ID)
+                          .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                          .withAppId(APP_ID)
+                          .withSettingId(SETTING_ID)
+                          .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                          .withRevision("1.0")
+                          .build();
+
   private static final Artifact ARTIFACT_1 = anArtifact().withMetadata(Maps.newHashMap("buildNo", "1")).build();
   private static final Artifact ARTIFACT_2 = anArtifact().withMetadata(Maps.newHashMap("buildNo", "2")).build();
 
@@ -88,7 +112,8 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   public void setupMocks() {
     ARTIFACT_STREAM_UNSTABLE.setCollectionStatus(UNSTABLE.name());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID_2)).thenReturn(ARTIFACT_STREAM_UNSTABLE);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_3)).thenReturn(amiArtifactStream);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_2)).thenReturn(ARTIFACT_2);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
@@ -124,6 +149,36 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     buildSourceCleanupCallback.handleResponseForSuccessInternal(
         prepareBuildSourceExecutionResponse(true), ARTIFACT_STREAM);
     verify(artifactService, times(1)).deleteArtifacts(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldNotifyOnSuccessWithAMIDeleteArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_3);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(artifact);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), amiArtifactStream);
+    verify(artifactService, times(1)).deleteArtifacts(any());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void shouldSkipDeleteWithEmptyArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_3);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(null);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), amiArtifactStream);
+    verify(artifactService, times(0)).deleteArtifacts(any());
   }
 
   @Test
