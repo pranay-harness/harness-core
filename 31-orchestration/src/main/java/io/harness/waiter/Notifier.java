@@ -9,7 +9,6 @@ import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -92,7 +91,6 @@ public class Notifier implements Runnable {
         try (HIterator<WaitInstance> waitInstances =
                  new HIterator(persistence.createQuery(WaitInstance.class, excludeAuthority)
                                    .filter(WaitInstanceKeys.correlationIds, notifyResponse.getUuid())
-                                   .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
                                    .fetch())) {
           if (notifyResponse.getCreatedAt() < limit && !waitInstances.hasNext()) {
             deleteResponses.add(notifyResponse.getUuid());

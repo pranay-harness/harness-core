@@ -3,7 +3,6 @@ package io.harness.waiter;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -33,14 +32,8 @@ public class NotifyResponse<T extends ResponseData> implements PersistentEntity,
 
   @Id private String uuid;
   @Indexed private long createdAt;
-
   private T response;
-
   private boolean error;
-
-  private Date expiryTs;
-
-  private ExecutionStatus status = ExecutionStatus.NEW;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
