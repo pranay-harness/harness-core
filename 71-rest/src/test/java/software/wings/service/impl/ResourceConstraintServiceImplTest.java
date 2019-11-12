@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -20,6 +21,8 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.Consumer.State;
+import io.harness.rule.OwnerRule.Owner;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -107,7 +110,9 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = PRANJAL)
   @Category(UnitTests.class)
+  @Ignore("This test is noop, rewrite to actually store resource constraints and check what the returns")
   public void shouldTestFetchEntityIdListForUnitAndEntityType() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraintInstance.class));
     doReturn(query).doReturn(query).when(query).filter(ResourceConstraintInstanceKeys.appId, APP_ID);

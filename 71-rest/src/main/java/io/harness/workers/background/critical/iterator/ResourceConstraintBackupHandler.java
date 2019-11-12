@@ -3,6 +3,7 @@ package io.harness.workers.background.critical.iterator;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofSeconds;
+import static software.wings.beans.ResourceConstraintInstance.NOT_FINISHED_STATES;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -39,7 +40,7 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
         MongoPersistenceIterator.<ResourceConstraintInstance>builder()
             .clazz(ResourceConstraintInstance.class)
             .fieldName(ResourceConstraintInstanceKeys.nextIteration)
-            .filterExpander(q -> q.field(ResourceConstraintInstanceKeys.state).notEqual(State.FINISHED.name()))
+            .filterExpander(q -> q.field(ResourceConstraintInstanceKeys.state).in(NOT_FINISHED_STATES))
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofSeconds(30))
             .acceptableExecutionTime(ofSeconds(30))

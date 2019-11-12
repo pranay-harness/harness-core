@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ResourceConstraintInstance.NOT_FINISHED_STATES;
 import static software.wings.sm.states.HoldingScope.WORKFLOW;
 
 import com.google.common.base.Joiner;
@@ -535,7 +536,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         .filter(ResourceConstraintInstanceKeys.resourceUnit, unit)
         .filter(ResourceConstraintInstanceKeys.releaseEntityType, entityType)
         .field(ResourceConstraintInstanceKeys.state)
-        .in(asList(State.ACTIVE.name(), State.BLOCKED.name()))
+        .in(NOT_FINISHED_STATES)
+        .order(Sort.ascending(ResourceConstraintInstanceKeys.order))
         .asList();
   }
 
