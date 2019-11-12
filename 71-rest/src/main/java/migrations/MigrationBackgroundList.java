@@ -126,8 +126,10 @@ public class MigrationBackgroundList {
         .add(Pair.of(69, BaseMigration.class))
         .add(Pair.of(70, BaseMigration.class))
         .add(Pair.of(71, BaseMigration.class))
-        .add(Pair.of(72, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(72, BaseMigration.class))
         .add(Pair.of(73, BaseMigration.class))
+        .add(Pair.of(74, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(75, BaseMigration.class))
         .build();
   }
 }
