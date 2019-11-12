@@ -205,7 +205,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   void refreshAwsLambdaExecutionSummary(
       String workflowExecutionId, List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries);
 
-  ConcurrentExecutionResponse fetchConcurrentExecutions(String appId, String workflowExecutionId, String unit);
+  ConcurrentExecutionResponse fetchConcurrentExecutions(
+      String appId, String workflowExecutionId, String resourceConstraintName, String unit);
 
   Map<String, Object> extractServiceInfrastructureDetails(String appId, WorkflowExecution execution);
 

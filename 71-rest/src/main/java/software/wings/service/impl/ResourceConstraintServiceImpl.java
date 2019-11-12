@@ -69,6 +69,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -95,6 +96,14 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     } catch (DuplicateKeyException exception) {
       throw new InvalidRequestException("The resource constraint name cannot be reused.", exception, USER);
     }
+  }
+
+  @Override
+  public ResourceConstraint getByName(@NotNull String accountId, @NotNull String resourceConstraintName) {
+    return wingsPersistence.createQuery(ResourceConstraint.class)
+        .filter(ResourceConstraintKeys.accountId, accountId)
+        .filter(ResourceConstraintKeys.name, resourceConstraintName)
+        .get();
   }
 
   @Override
@@ -519,9 +528,10 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public List<ResourceConstraintInstance> fetchResourceConstraintInstancesForUnitAndEntityType(
-      String appId, String unit, String entityType) {
+      String appId, String resourceConstraintId, String unit, String entityType) {
     return wingsPersistence.createQuery(ResourceConstraintInstance.class)
         .filter(ResourceConstraintInstanceKeys.appId, appId)
+        .filter(ResourceConstraintInstanceKeys.resourceConstraintId, resourceConstraintId)
         .filter(ResourceConstraintInstanceKeys.resourceUnit, unit)
         .filter(ResourceConstraintInstanceKeys.releaseEntityType, entityType)
         .field(ResourceConstraintInstanceKeys.state)

@@ -40,6 +40,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.infra.InfraDefinitionTestConstants.RESOURCE_CONSTRAINT_NAME;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.StateType.EMAIL;
@@ -74,6 +75,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -119,6 +121,7 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -2194,10 +2197,17 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       }
       count++;
     }
-    when(resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(any(), any(), any()))
+    when(resourceConstraintService.fetchResourceConstraintInstancesForUnitAndEntityType(any(), any(), any(), any()))
         .thenReturn(resourceConstraintInstances);
-    ConcurrentExecutionResponse response =
-        workflowExecutionService.fetchConcurrentExecutions(app.getUuid(), firstExecutionId, INFRA_MAPPING_ID);
+    when(resourceConstraintService.getByName(account.getUuid(), RESOURCE_CONSTRAINT_NAME))
+        .thenReturn(ResourceConstraint.builder()
+                        .name(RESOURCE_CONSTRAINT_NAME)
+                        .accountId(account.getUuid())
+                        .capacity(1)
+                        .strategy(Strategy.FIFO)
+                        .build());
+    ConcurrentExecutionResponse response = workflowExecutionService.fetchConcurrentExecutions(
+        app.getUuid(), firstExecutionId, RESOURCE_CONSTRAINT_NAME, INFRA_MAPPING_ID);
     assertThat(response).isNotNull();
     assertThat(response.getUnitType()).isEqualTo(UnitType.INFRA);
     assertThat(response.getExecutions()).isNotNull().hasSize(2);

@@ -15,4 +15,6 @@ public final class InfrastructureConstants {
   public static final Integer WEEK_TIMEOUT = 7 * 24 * 60 * 60 * 1000;
 
   public static final String STATE_TIMEOUT_KEY_NAME = "timeoutMillis";
+
+  public static final String QUEUING_RC_NAME = "Queuing";
 }
