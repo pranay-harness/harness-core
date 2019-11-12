@@ -47,10 +47,10 @@ public class ChangeTracker {
   private Set<Future<?>> changeTrackingTasksFuture;
   private MongoDatabase mongoDatabase;
   private MongoClient mongoClient;
+  private ReadPreference readPreference;
 
   private MongoClientURI mongoClientUri() {
     final String mongoClientUrl = mainConfiguration.getMongoConnectionFactory().getUri();
-    ReadPreference readPreference;
     if (mainConfiguration.getElasticsearchConfig().getMongoTagKey().equals("none")) {
       readPreference = ReadPreference.secondaryPreferred();
     } else {
@@ -67,7 +67,8 @@ public class ChangeTracker {
     mongoClient = new MongoClient(uri);
     final String databaseName = uri.getDatabase();
     logger.info(String.format("Database is %s", databaseName));
-    mongoDatabase = mongoClient.getDatabase(databaseName).withReadConcern(ReadConcern.MAJORITY);
+    mongoDatabase =
+        mongoClient.getDatabase(databaseName).withReadConcern(ReadConcern.MAJORITY).withReadPreference(readPreference);
   }
 
   private void createChangeStreamTasks(Set<ChangeTrackingInfo<?>> changeTrackingInfos, CountDownLatch latch) {
@@ -75,7 +76,8 @@ public class ChangeTracker {
     for (ChangeTrackingInfo<?> changeTrackingInfo : changeTrackingInfos) {
       MongoCollection<DBObject> collection =
           mongoDatabase.getCollection(getCollectionName(changeTrackingInfo.getMorphiaClass()))
-              .withDocumentClass(DBObject.class);
+              .withDocumentClass(DBObject.class)
+              .withReadPreference(readPreference);
 
       ChangeStreamSubscriber changeStreamSubscriber = getChangeStreamSubscriber(changeTrackingInfo);
       ChangeTrackingTask changeTrackingTask =
