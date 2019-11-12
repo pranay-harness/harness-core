@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
@@ -14,7 +13,6 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
-import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -52,9 +50,7 @@ public class StressTest extends OrchestrationTest {
         while (i < 10000) {
           final int ids = random.nextInt(5) + 1;
           if (i / 100 != (i + ids) / 100) {
-            final long waits = persistence.createQuery(WaitInstance.class)
-                                   .filter(WaitInstanceKeys.status, ExecutionStatus.NEW)
-                                   .count();
+            final long waits = persistence.createQuery(WaitInstance.class).count();
             long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
             logger.info(
                 "{}: i = {}, avg: {}, waits: {}, events: {}", n, (i / 100 + 1) * 100, time / i, waits, notifyQueues);
@@ -82,8 +78,7 @@ public class StressTest extends OrchestrationTest {
       });
 
       while (true) {
-        final long waits =
-            persistence.createQuery(WaitInstance.class).filter(WaitInstanceKeys.status, ExecutionStatus.NEW).count();
+        final long waits = persistence.createQuery(WaitInstance.class).count();
         long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
         logger.info("waits: {}, events: {}", waits, notifyQueues);
 
