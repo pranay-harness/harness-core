@@ -197,7 +197,7 @@ public class ConnectorUtils {
    * Connector util to create a Verification Provider: Splunk Connector
    */
   public static String createSplunkConnector(String bearerToken, String connectorName, String accountId) {
-    String SPLUNK_URL = "https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089/";
+    String SPLUNK_URL = "https://api-prd-p-429h4vj2lsng.cloud.splunk.com:8089/";
 
     SettingAttribute settingAttribute =
         aSettingAttribute()

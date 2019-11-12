@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response;
  * Created by Pranjal on 09/01/2018
  */
 public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
+  private static final String SPLUNK_CLOUD_URL = "https://api-prd-p-429h4vj2lsng.cloud.splunk.com:8089";
   private String elkSettingId;
   private String appId;
   private String workflowId;
@@ -56,7 +57,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(SplunkConfig.builder()
                            .accountId(accountId)
-                           .splunkUrl("https://input-prd-p-429h4vj2lsng.cloud.splunk.com:8089")
+                           .splunkUrl(SPLUNK_CLOUD_URL)
                            .username(scmSecret.decryptToString(new SecretName("splunk_cloud_username")))
                            .password(scmSecret.decryptToString(new SecretName("splunk_cloud_password")).toCharArray())
                            .build())
