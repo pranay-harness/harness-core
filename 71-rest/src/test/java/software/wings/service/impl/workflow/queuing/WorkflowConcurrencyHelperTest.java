@@ -27,12 +27,14 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceTestHelper;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ResourceConstraintService;
 
 import java.util.List;
 
 public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   @Mock private ResourceConstraintService resourceConstraintService;
+  @Mock private AppService appService;
   @Mock private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
   @InjectMocks @Inject private WorkflowConcurrencyHelper workflowConcurrencyHelper;
@@ -55,10 +57,10 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void noConcurrencyIfStrategyNotPresent() {
     Workflow workflow = constructCanaryWorkflowWithPhase();
+    when(appService.getAccountIdByAppId(workflow.getAppId())).thenReturn(workflow.getAccountId());
     assertThat(workflow).isNotNull().hasFieldOrProperty("uuid");
 
-    workflowConcurrencyHelper.enhanceWithConcurrencySteps(
-        workflow.getAppId(), workflow.getAccountId(), workflow.getOrchestrationWorkflow());
+    workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow.getAppId(), workflow.getOrchestrationWorkflow());
 
     List<WorkflowPhase> workflowPhases =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases();
@@ -72,6 +74,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   public void ensureConcurrencyForAlreadyProvisioned() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(false);
     Workflow workflow = constructCanaryWorkflowWithConcurrencyStrategy();
+    when(appService.getAccountIdByAppId(workflow.getAppId())).thenReturn(workflow.getAccountId());
     assertThat(workflow).isNotNull().hasFieldOrProperty("uuid");
     List<WorkflowPhase> workflowPhasesBeforeQueuing =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases();
@@ -79,8 +82,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
     assertThat(workflowPhaseBeforeQueuing.getPhaseSteps()).isNotNull().hasSize(6);
     assertThat(workflowPhaseBeforeQueuing.getPhaseSteps().get(0).getSteps()).isNotNull().hasSize(1);
 
-    workflowConcurrencyHelper.enhanceWithConcurrencySteps(
-        workflow.getAppId(), workflow.getAccountId(), workflow.getOrchestrationWorkflow());
+    workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow.getAppId(), workflow.getOrchestrationWorkflow());
 
     List<WorkflowPhase> workflowPhases =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases();
@@ -97,6 +99,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   public void ensureConcurrencyForDynamicallyProvisionedWithProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);
     Workflow workflow = WorkflowServiceTestHelper.constructBasicWorkflowWithThrottling(true);
+    when(appService.getAccountIdByAppId(workflow.getAppId())).thenReturn(workflow.getAccountId());
     List<WorkflowPhase> workflowPhases =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases();
     assertThat(workflow).isNotNull().hasFieldOrProperty("uuid");
@@ -108,8 +111,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0))
         .hasFieldOrPropertyWithValue("name", "CloudFormation Create Stack");
 
-    workflowConcurrencyHelper.enhanceWithConcurrencySteps(
-        workflow.getAppId(), workflow.getAccountId(), workflow.getOrchestrationWorkflow());
+    workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow.getAppId(), workflow.getOrchestrationWorkflow());
 
     assertThat(workflowPhase.getPhaseSteps()).isNotNull().hasSize(5);
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps()).isNotNull().hasSize(2);
@@ -122,6 +124,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   public void ensureConcurrencyForDynamicallyProvisionedWithNoProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);
     Workflow workflow = WorkflowServiceTestHelper.constructCanaryWorkflowWithConcurrencyStrategy();
+    when(appService.getAccountIdByAppId(workflow.getAppId())).thenReturn(workflow.getAccountId());
     List<WorkflowPhase> workflowPhases =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases();
     assertThat(workflow).isNotNull().hasFieldOrProperty("uuid");
@@ -138,8 +141,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
     WorkflowPhase workflowPhase = workflowPhases.get(workflowPhases.size() - 1);
     assertThat(workflowPhase.getPhaseSteps()).isNotNull().hasSize(6);
 
-    workflowConcurrencyHelper.enhanceWithConcurrencySteps(
-        workflow.getAppId(), workflow.getAccountId(), workflow.getOrchestrationWorkflow());
+    workflowConcurrencyHelper.enhanceWithConcurrencySteps(workflow.getAppId(), workflow.getOrchestrationWorkflow());
 
     assertThat(workflowPhase.getPhaseSteps()).isNotNull().hasSize(6);
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0))

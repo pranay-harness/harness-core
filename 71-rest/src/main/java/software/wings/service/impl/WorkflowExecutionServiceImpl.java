@@ -1111,7 +1111,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (infraRefactor) {
       workflow.setOrchestrationWorkflow(workflowConcurrencyHelper.enhanceWithConcurrencySteps(
-          workflow.getAppId(), workflow.getAccountId(), workflow.getOrchestrationWorkflow()));
+          workflow.getAppId(), workflow.getOrchestrationWorkflow()));
     }
 
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
