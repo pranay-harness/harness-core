@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -7,6 +8,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.STAGE_SERVICE_NAME_EXPRESSION;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -14,6 +16,8 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
@@ -21,6 +25,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.serializer.KryoUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +34,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.KubernetesSwapServiceSelectorsExecutionData;
 import software.wings.api.PhaseElement;
+import software.wings.api.k8s.K8sSwapServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -47,9 +53,10 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -64,6 +71,7 @@ import java.util.Map;
 @Slf4j
 public class KubernetesSwapServiceSelectors extends State {
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
+  private static final String K8S_SWAP_SERVICE_ELEMENT = "k8sSwapServiceElement";
 
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
@@ -74,6 +82,7 @@ public class KubernetesSwapServiceSelectors extends State {
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   @Getter @Setter @Attributes(title = "Service One") private String service1;
 
@@ -122,6 +131,13 @@ public class KubernetesSwapServiceSelectors extends State {
         (KubernetesSwapServiceSelectorsExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionResponse.getExecutionStatus());
 
+    if (ExecutionStatus.SUCCESS.equals(executionResponse.getExecutionStatus())) {
+      K8sSwapServiceElement k8sSwapServiceElement = getK8sSwapServiceElement(context);
+      if (k8sSwapServiceElement == null) {
+        saveK8sSwapServiceElement(context, K8sSwapServiceElement.builder().swapDone(true).build());
+      }
+    }
+
     return ExecutionResponse.builder()
         .executionStatus(executionResponse.getExecutionStatus())
         .stateExecutionData(context.getStateExecutionData())
@@ -129,12 +145,13 @@ public class KubernetesSwapServiceSelectors extends State {
   }
 
   protected Activity createActivity(ExecutionContext executionContext) {
-    Application app = ((ExecutionContextImpl) executionContext).getApp();
-    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
+
+    Application app = workflowStandardParams.fetchRequiredApp();
+    Environment env = workflowStandardParams.fetchRequiredEnv();
 
     ActivityBuilder activityBuilder = Activity.builder()
                                           .applicationName(app.getName())
@@ -214,6 +231,18 @@ public class KubernetesSwapServiceSelectors extends State {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
+    if (isRollback()) {
+      K8sSwapServiceElement k8sSwapServiceElement = getK8sSwapServiceElement(context);
+      if (k8sSwapServiceElement == null || !k8sSwapServiceElement.isSwapDone()) {
+        return ExecutionResponse.builder()
+            .executionStatus(SKIPPED)
+            .stateExecutionData(aStateExecutionData()
+                                    .withErrorMsg("Services were not swapped in the deployment phase. Skipping.")
+                                    .build())
+            .build();
+      }
+    }
+
     ContainerServiceElement containerElement =
         context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
             .stream()
@@ -288,5 +317,22 @@ public class KubernetesSwapServiceSelectors extends State {
         .infrastructureMappingId(containerInfrastructureMapping.getUuid())
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
         .build();
+  }
+
+  private K8sSwapServiceElement getK8sSwapServiceElement(ExecutionContext context) {
+    SweepingOutputInquiry sweepingOutputInquiry =
+        context.prepareSweepingOutputInquiryBuilder().name(K8S_SWAP_SERVICE_ELEMENT).build();
+    SweepingOutputInstance result = sweepingOutputService.find(sweepingOutputInquiry);
+    if (result == null) {
+      return null;
+    }
+    return (K8sSwapServiceElement) KryoUtils.asInflatedObject(result.getOutput());
+  }
+
+  private void saveK8sSwapServiceElement(ExecutionContext context, K8sSwapServiceElement k8sSwapServiceElement) {
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                   .name(K8S_SWAP_SERVICE_ELEMENT)
+                                   .output(KryoUtils.asDeflatedBytes(k8sSwapServiceElement))
+                                   .build());
   }
 }
