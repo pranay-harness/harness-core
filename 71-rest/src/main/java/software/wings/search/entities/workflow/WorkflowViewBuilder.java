@@ -104,7 +104,9 @@ class WorkflowViewBuilder {
   private void setApplicationName(Workflow workflow, WorkflowView workflowView) {
     if (workflow.getAppId() != null) {
       Application application = wingsPersistence.get(Application.class, workflow.getAppId());
-      workflowView.setAppName(application.getName());
+      if (application.getName() != null) {
+        workflowView.setAppName(application.getName());
+      }
     }
   }
 
@@ -120,8 +122,10 @@ class WorkflowViewBuilder {
     }
     if (!isEnvironmentTemplatized && workflow.getEnvId() != null) {
       Environment environment = wingsPersistence.get(Environment.class, workflow.getEnvId());
-      workflowView.setEnvironmentId(environment.getUuid());
-      workflowView.setEnvironmentName(environment.getName());
+      if (environment != null) {
+        workflowView.setEnvironmentId(environment.getUuid());
+        workflowView.setEnvironmentName(environment.getName());
+      }
     }
   }
 

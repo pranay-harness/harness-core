@@ -114,7 +114,6 @@ class ServiceViewBuilder {
         }
       }
     }
-
     Collections.reverse(audits);
     Collections.reverse(auditTimestamps);
     serviceView.setAuditTimestamps(auditTimestamps);
@@ -191,7 +190,9 @@ class ServiceViewBuilder {
   private void setApplicationName(Service service, ServiceView serviceView) {
     if (service.getAppId() != null) {
       Application application = wingsPersistence.get(Application.class, service.getAppId());
-      serviceView.setAppName(application.getName());
+      if (application.getName() != null) {
+        serviceView.setAppName(application.getName());
+      }
     }
   }
 
