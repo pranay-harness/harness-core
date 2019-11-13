@@ -49,7 +49,7 @@ public class EcsMetricClientTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldMakeAggregatedQuery() throws Exception {
     AwsConfig awsConfig = AwsConfig.builder().build();

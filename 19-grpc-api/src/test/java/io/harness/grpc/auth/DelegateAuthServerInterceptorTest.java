@@ -72,7 +72,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPassThroughIfExcludedService() throws Exception {
     val healthStub = HealthGrpc.newBlockingStub(channel);
@@ -80,7 +80,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldBlockIfNoAccountIdInMetadata() throws Exception {
     val eventSvcStub = EventPublisherGrpc.newBlockingStub(channel);
@@ -91,7 +91,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldBlockIfNoTokenInMetadata() throws Exception {
     val metadata = new Metadata();
@@ -105,7 +105,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldBlockIfTokenValidationFails() throws Exception {
     when(tokenAuthenticator.validateToken(ACCOUNT_ID, TOKEN))
@@ -122,7 +122,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPassAndAddAccountIdToContextIfTokenValidationSucceeds() throws Exception {
     val metadata = new Metadata();

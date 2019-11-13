@@ -97,7 +97,7 @@ public class ECSCanaryDeployment extends AbstractE2ETest {
   final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
 
   @Test
-  @Owner(emails = VENKATESH, resent = false)
+  @Owner(emails = VENKATESH)
   @Category(E2ETests.class)
   public void TC1_createApplication() {
     // Test data setup
@@ -111,7 +111,7 @@ public class ECSCanaryDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = VENKATESH, resent = false)
+  @Owner(emails = VENKATESH)
   @Category(E2ETests.class)
   public void TC2_createECSServiceAndCollectArtifact() {
     Service ecsService = Service.builder()
@@ -142,7 +142,7 @@ public class ECSCanaryDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = VENKATESH, resent = false)
+  @Owner(emails = VENKATESH)
   @Category(E2ETests.class)
   public void TC3_createEnvironment() {
     Environment myEnv = anEnvironment().name(ENV_MAME).environmentType(EnvironmentType.NON_PROD).build();
@@ -171,7 +171,7 @@ public class ECSCanaryDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = VENKATESH, resent = false)
+  @Owner(emails = VENKATESH)
   @Category(E2ETests.class)
   public void TC4_createCanaryWorkflow() {
     List<PhaseStep> phaseSteps = new ArrayList<>();

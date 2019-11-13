@@ -70,7 +70,7 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldLogPingSuccessOnClient() throws Exception {
     pingPongClient.runOneIteration();
@@ -80,7 +80,7 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldLogPingSuccessOnServer() throws Exception {
     pingPongClient.runOneIteration();
@@ -90,7 +90,7 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldLogPingFailure() throws Exception {
     server.shutdownNow().awaitTermination();

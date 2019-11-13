@@ -60,7 +60,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void amPermissionToPostForUser() {
     final String READ_ONLY_USER = "rbac2@harness.io";
@@ -110,7 +110,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void accessManagementPermissionTestForGet() {
   //    final String READ_ONLY_USER = "rbac2@harness.io";
@@ -119,7 +119,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void amPermissionToPostForUserGroup() {
     final String READ_ONLY_USER = "rbac2@harness.io";
@@ -128,7 +128,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void updateMembersAndPermissionsInUserGroup() {
     logger.info("Logging in as a rbac2 user");
@@ -140,7 +140,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForIPWhitelisting() {
   //    AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
@@ -149,7 +149,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void updateNotificationSettingsInUserGroup() {
   //    logger.info("Logging in as a rbac2 user");
@@ -160,7 +160,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForAPIKeys() {
   //    logger.info("Logging in as a rbac2 user");
@@ -169,7 +169,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForLDAP() {
   //    AccessManagementUtils.ldapCreationFailureCheckTest(
@@ -177,7 +177,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForSAML() {
   //    AccessManagementUtils.amNoPermissionToPostForSAML(
@@ -185,7 +185,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void updateIPWhitelistingTest() {
   //    AccessManagementUtils.updateIPWhiteListing(
@@ -194,7 +194,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void deleteIPWhitelistingTest() {
   //    AccessManagementUtils.deleteIPWhitelisting(
@@ -203,7 +203,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
-  //  @Owner(emails = SWAMY, resent = false)
+  //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void updateAndDeleteApiKeysTest() {
   //    AccessManagementUtils.updateAndDeleteAPIKeys(

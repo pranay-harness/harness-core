@@ -27,7 +27,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   private static String CATEGORY = "CONNECTOR";
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC0_listAllConnectors() {
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -35,7 +35,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC1_createAndDeleteAppdynamicsConnector() {
     String connectorName = CONNECTOR_APPDYNAMICS_PREFIX + System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC2_createAndDeleteNewrelicConnector() {
     String connectorName = CONNECTOR_NEWRELIC_PREFIX + System.currentTimeMillis();
@@ -77,7 +77,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC3_createAndDeleteELKConnector() {
     String connectorName = CONNECTOR_ELK_PREFIX + System.currentTimeMillis();
@@ -98,7 +98,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC4_createAndDeleteSplunkConnector() {
     String connectorName = CONNECTOR_SPLUNK_PREFIX + System.currentTimeMillis();
@@ -119,7 +119,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC5_createAndDeleteBugsnagConnector() {
     String connectorName = CONNECTOR_BUGSNAG_PREFIX + System.currentTimeMillis();
@@ -140,7 +140,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC6_createAndDeleteDatadogConnector() {
     String connectorName = CONNECTOR_DATADOG_PREFIX + System.currentTimeMillis();
@@ -161,7 +161,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false)
+  @Owner(emails = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC7_createAndDeleteSumoLogicConnector() {
     String connectorName = CONNECTOR_SUMOLOGIC_PREFIX + System.currentTimeMillis();
@@ -182,7 +182,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = SHASWAT, resent = false, intermittent = true)
+  @Owner(emails = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC8_createAndDeletePrometheusConnector() {
     String connectorName = CONNECTOR_PROMETHEUS_PREFIX + System.currentTimeMillis();

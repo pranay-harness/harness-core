@@ -18,7 +18,7 @@ import software.wings.beans.sso.LdapSettings;
 @Slf4j
 public class SSOCRUDTest extends AbstractFunctionalTest {
   @Test()
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void testLDAPCRUD() {
     logger.info("Starting the LDAP test");
@@ -35,7 +35,7 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void testSAMLCRUD() {
     logger.info("Starting the SAML test");

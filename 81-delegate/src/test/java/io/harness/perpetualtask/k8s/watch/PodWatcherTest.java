@@ -68,7 +68,7 @@ public class PodWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPublishPodScheduledAndPodInfo() throws Exception {
     podWatcher.eventReceived(Action.MODIFIED, scheduledPod());
@@ -80,7 +80,7 @@ public class PodWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPublishPodDeleted() throws Exception {
     podWatcher.eventReceived(Action.DELETED, scheduledAndDeletedPod());
@@ -90,7 +90,7 @@ public class PodWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldNotPublishDuplicates() throws Exception {
     podWatcher.eventReceived(Action.ADDED, podBuilder().build()); // none
@@ -107,7 +107,7 @@ public class PodWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldCloseUnderlyingWatchOnClosingWatcher() throws Exception {
     podWatcher.onClose(null);

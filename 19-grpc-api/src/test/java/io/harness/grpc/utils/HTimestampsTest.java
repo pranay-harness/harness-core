@@ -20,7 +20,7 @@ import java.util.Date;
 
 public class HTimestampsTest extends CategoryTest {
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testRoundTripToInstant() {
     Instant now = Instant.now();
@@ -28,7 +28,7 @@ public class HTimestampsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testRoundTripToDate() {
     Date now = new Date(System.currentTimeMillis());
@@ -44,7 +44,7 @@ public class HTimestampsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testParseDate() {
     String dateString = "2019-08-21T09:17:52.342Z";
@@ -54,7 +54,7 @@ public class HTimestampsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testParseErrorThrowsWingsException() {
     String dateString = "2019/08/21T09:17:52.342Z";

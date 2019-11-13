@@ -43,7 +43,7 @@ public class DelegateAuthCallCredentialsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldFailCallIfRequirePrivacyAndChannelIsNotSecure() throws Exception {
     delegateAuthCallCredentials = new DelegateAuthCallCredentials(tokenGenerator, ACCOUNT_ID, true);
@@ -53,7 +53,7 @@ public class DelegateAuthCallCredentialsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldAddCredentialsIfNotRequirePrivacyAndChannelIsNotSecure() throws Exception {
     delegateAuthCallCredentials = new DelegateAuthCallCredentials(tokenGenerator, ACCOUNT_ID, false);
@@ -68,7 +68,7 @@ public class DelegateAuthCallCredentialsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldAddCredentialsIfRequirePrivacyAndChannelIsSecure() throws Exception {
     delegateAuthCallCredentials = new DelegateAuthCallCredentials(tokenGenerator, ACCOUNT_ID, true);

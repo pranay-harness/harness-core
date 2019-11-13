@@ -108,7 +108,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldGetMetricData() throws Exception {
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
@@ -131,7 +131,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAmazonServiceExceptionWhenGetMetricData() {
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
@@ -151,7 +151,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAmazonClientExceptionWhenGetMetricData() {
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);

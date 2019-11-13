@@ -4,13 +4,10 @@ import static java.lang.String.format;
 
 import com.google.common.collect.ImmutableList;
 
-import io.harness.category.element.CliFunctionalTests;
-import io.harness.category.element.FunctionalTests;
-import io.harness.category.element.IntegrationTests;
-import io.harness.category.element.UnitTests;
+import io.harness.NoopStatement;
 import io.harness.exception.CategoryConfigException;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -21,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
-public class OwnerRule extends RepeatRule {
+public class OwnerRule implements TestRule {
   public static final String AADITI = "aaditi.joag@harness.io";
   public static final String ADWAIT = "adwait.bhandare@harness.io";
   public static final String AMAN = "aman.singh@harness.io";
@@ -65,6 +62,7 @@ public class OwnerRule extends RepeatRule {
   public static final String VENKATESH = "venkatesh.kotrike@harness.io";
   public static final String VIKAS = "vikas.naiyar@harness.io";
   public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
+  public static final String UNKNOWN = "unknown";
 
   private static List<String> active = ImmutableList.<String>builder()
                                            .add(AADITI)
@@ -110,13 +108,14 @@ public class OwnerRule extends RepeatRule {
                                            .add(VENKATESH)
                                            .add(VIKAS)
                                            .add(YOGESH_CHAUHAN)
+                                           .add(UNKNOWN)
                                            .build();
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
   public @interface Owner {
     String[] emails();
-    boolean resent() default true;
+
     boolean intermittent() default false;
   }
 
@@ -136,7 +135,7 @@ public class OwnerRule extends RepeatRule {
     final String prEmail = System.getenv("ghprbPullAuthorEmail");
     if (prEmail == null) {
       if (owner.intermittent()) {
-        return RepeatRule.RepeatStatement.builder().build();
+        return new NoopStatement();
       }
       return statement;
     }
@@ -147,34 +146,10 @@ public class OwnerRule extends RepeatRule {
     final boolean match = Arrays.asList(owner.emails()).contains(prEmail);
     if (!match) {
       if (owner.intermittent()) {
-        return RepeatRule.RepeatStatement.builder().build();
+        return new NoopStatement();
       }
-      return statement;
     }
 
-    if (!owner.resent()) {
-      return statement;
-    }
-
-    final Class categoryElement = CategoryTimeoutRule.fetchCategoryElement(description.getAnnotation(Category.class));
-
-    int repeatCount = 20;
-    if (categoryElement == UnitTests.class) {
-      repeatCount = 15;
-    } else if (categoryElement == IntegrationTests.class) {
-      repeatCount = 10;
-    } else if (categoryElement == FunctionalTests.class) {
-      repeatCount = 5;
-    } else if (categoryElement == CliFunctionalTests.class) {
-      repeatCount = 5;
-    }
-
-    return RepeatRule.RepeatStatement.builder()
-        .statement(statement)
-        .parentRule(this)
-        .times(repeatCount)
-        .successes(repeatCount)
-        .timeoutOnly(true)
-        .build();
+    return statement;
   }
   }

@@ -73,7 +73,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUserGroup() {
     AccessManagementUtils.testPermissionToPostInUserGroup(
@@ -81,7 +81,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForIPWhitelisting() {
     AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
@@ -89,7 +89,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForAPIKeys() {
     AccessManagementUtils.runAPIKeyPostTest(
