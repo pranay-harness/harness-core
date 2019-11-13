@@ -21,6 +21,7 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
+import static software.wings.sm.rollback.RollbackStateMachineGenerator.ROLLBACK_STAGING_PHASE_NAME;
 
 import com.google.inject.Inject;
 
@@ -139,6 +140,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             context, executionEvent.getExecutionStatus(), phaseSubWorkflow);
 
         if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() == SUCCESS) {
+          if (phaseSubWorkflow.getName().equals(ROLLBACK_STAGING_PHASE_NAME)
+              && executionEvent.getExecutionStatus() == SUCCESS) {
+            return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+          }
+
           if (!rolling) {
             return null;
           }
@@ -199,6 +205,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         if (phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != SUCCESS) {
           return null;
         }
+
       } else if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow
           && ((PhaseStepSubWorkflow) state).getPhaseStepType().equals(PhaseStepType.ROLLBACK_PROVISIONERS)
           && executionEvent.getExecutionStatus() == SUCCESS) {
@@ -224,7 +231,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       if (orchestrationWorkflow == null || orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() == null) {
         return null;
       }
-
       if (phaseSubWorkflow != null && executionInterrupts != null
           && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)) {
         return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
