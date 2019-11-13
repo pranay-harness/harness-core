@@ -23,7 +23,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.filesystem.FileIo;
@@ -69,6 +68,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
 import java.io.File;
 import java.io.IOException;
@@ -376,8 +376,8 @@ public class PcfClientImpl implements PcfClient {
                                               .append("Exception occurred while creating Application: ")
                                               .append(pcfRequestConfig.getApplicationName())
                                               .append(", Error: App creation process Failed :  ")
-                                              .append(e)
-                                              .toString());
+                                              .toString(),
+          e);
     }
 
     if (exitCode != 0) {
@@ -649,8 +649,14 @@ public class PcfClientImpl implements PcfClient {
   }
 
   private Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar) {
-    Map<String, String> map = new HashMap();
+    return getEnvironmentMapForPcfExecutor(configPathVar, null);
+  }
+  private Map<String, String> getEnvironmentMapForPcfExecutor(String configPathVar, String pluginHomeAbsPath) {
+    final Map<String, String> map = new HashMap<>();
     map.put(CF_HOME, configPathVar);
+    if (isNotEmpty(pluginHomeAbsPath)) {
+      map.put(CF_PLUGIN_HOME, pluginHomeAbsPath);
+    }
     return map;
   }
 
@@ -733,7 +739,7 @@ public class PcfClientImpl implements PcfClient {
       }
     }
 
-    if (EmptyPredicate.isNotEmpty(applicationManifest.getEnvironmentVariables())) {
+    if (isNotEmpty(applicationManifest.getEnvironmentVariables())) {
       for (Map.Entry<String, Object> entry : applicationManifest.getEnvironmentVariables().entrySet()) {
         builder.environmentVariable(entry.getKey(), entry.getValue());
       }
@@ -757,7 +763,7 @@ public class PcfClientImpl implements PcfClient {
 
   private void addRouteMapsToManifest(PcfRequestConfig pcfRequestConfig, Builder builder) {
     // Set routeMaps
-    if (EmptyPredicate.isNotEmpty(pcfRequestConfig.getRouteMaps())) {
+    if (isNotEmpty(pcfRequestConfig.getRouteMaps())) {
       List<org.cloudfoundry.operations.applications.Route> routeList =
           pcfRequestConfig.getRouteMaps()
               .stream()
@@ -1114,11 +1120,62 @@ public class PcfClientImpl implements PcfClient {
     }
 
     List<Route> routes = getRouteMapsByNames(Arrays.asList(route), pcfRequestConfig);
-    if (EmptyPredicate.isNotEmpty(routes)) {
+    if (isNotEmpty(routes)) {
       return Optional.of(routes.get(0));
     }
 
     return Optional.empty();
+  }
+
+  @Override
+  public void runPcfPluginScript(PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    PcfRequestConfig pcfRequestConfig = pcfRunPluginScriptRequestData.getPcfRequestConfig();
+    int exitCode = -1;
+    try {
+      executionLogCallback.saveExecutionLog("# Final Script to execute :");
+      executionLogCallback.saveExecutionLog("# ------------------------------------------ \n");
+      executionLogCallback.saveExecutionLog(pcfRunPluginScriptRequestData.getFinalScriptString());
+      executionLogCallback.saveExecutionLog("\n# ------------------------------------------ ");
+      executionLogCallback.saveExecutionLog(
+          "\n# CF_HOME value: " + pcfRunPluginScriptRequestData.getWorkingDirectory());
+      final String pcfPluginHome = resolvePcfPluginHome();
+      executionLogCallback.saveExecutionLog("# CF_PLUGIN_HOME value: " + pcfPluginHome);
+      boolean loginSuccessful =
+          doLogin(pcfRequestConfig, executionLogCallback, pcfRunPluginScriptRequestData.getWorkingDirectory());
+      if (loginSuccessful) {
+        executionLogCallback.saveExecutionLog("# Executing pcf plugin script :");
+
+        ProcessExecutor processExecutor =
+            new ProcessExecutor()
+                .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
+                .command(BIN_SH, "-c", pcfRunPluginScriptRequestData.getFinalScriptString())
+                .readOutput(true)
+                .environment(
+                    getEnvironmentMapForPcfExecutor(pcfRunPluginScriptRequestData.getWorkingDirectory(), pcfPluginHome))
+                .redirectOutput(new LogOutputStream() {
+                  @Override
+                  protected void processLine(String line) {
+                    executionLogCallback.saveExecutionLog(line);
+                  }
+                });
+        ProcessResult processResult = runProcessExecutor(processExecutor);
+        executionLogCallback.saveExecutionLog("# Exit value =" + processResult.getExitValue());
+        exitCode = processResult.getExitValue();
+      }
+    } catch (Exception e) {
+      throw new PivotalClientApiException("Exception occurred while running pcf plugin script", e);
+    }
+    if (exitCode != 0) {
+      throw new PivotalClientApiException("Exception occurred while running pcf plugin script"
+          + ", Error: Plugin Script process ExitCode:  " + exitCode);
+    }
+  }
+
+  @VisibleForTesting
+  ProcessResult runProcessExecutor(ProcessExecutor processExecutor)
+      throws InterruptedException, TimeoutException, IOException {
+    return processExecutor.execute();
   }
 
   public void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)

@@ -16,6 +16,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.TaskType.COMMAND;
+import static software.wings.beans.appmanifest.StoreType.Local;
+import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType.UPDATE_ROUTE;
 import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -694,5 +696,17 @@ public class PcfStateHelperTest extends WingsBaseTest {
     } catch (Exception e) {
       assertThat(e instanceof InvalidRequestException).isTrue();
     }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testIsManifestInGit() throws Exception {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(Remote).build());
+    appManifestMap.put(K8sValuesLocation.Environment, ApplicationManifest.builder().storeType(Local).build());
+    assertThat(pcfStateHelper.isManifestInGit(appManifestMap)).isTrue();
+
+    appManifestMap.remove(K8sValuesLocation.Service);
+    assertThat(pcfStateHelper.isManifestInGit(appManifestMap)).isFalse();
   }
 }

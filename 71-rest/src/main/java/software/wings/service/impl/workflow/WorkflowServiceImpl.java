@@ -360,7 +360,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    return getStencils(appId, workflowId, phaseId, stateTypeScopes);
+    final Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
+    removeStencil(stencils, appId, FeatureName.PCF_CUSTOM_PLUGIN_SUPPORT, StateTypeScope.ORCHESTRATION_STENCILS,
+        StateType.PCF_PLUGIN);
+    return stencils;
   }
 
   private void removeStencil(Map<StateTypeScope, List<Stencil>> stencils, String appId, FeatureName featureName,

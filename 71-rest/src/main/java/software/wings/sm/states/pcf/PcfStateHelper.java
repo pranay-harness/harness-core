@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
@@ -17,6 +18,8 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
+import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
 import static software.wings.utils.Validator.notNullCheck;
@@ -38,6 +41,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.ServiceElement;
@@ -50,9 +54,12 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GitFetchFilesTaskParams;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
@@ -71,16 +78,19 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -96,6 +106,8 @@ public class PcfStateHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private PcfFileTypeChecker pcfFileTypeChecker;
   @Inject private DelegateService delegateService;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient ApplicationManifestUtils applicationManifestUtils;
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
@@ -110,6 +122,8 @@ public class PcfStateHelper {
                   .build())
         .envId(taskCreationData.getEnvId())
         .infrastructureMappingId(taskCreationData.getInfrastructureMappingId())
+        .tags(ListUtils.emptyIfNull(taskCreationData.getTagList()))
+        .serviceTemplateId(taskCreationData.getServiceTemplateId())
         .build();
   }
 
@@ -544,6 +558,46 @@ public class PcfStateHelper {
     }
 
     return Integer.parseInt(maxVal);
+  }
+
+  public boolean isManifestInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
+      ApplicationManifest applicationManifest = entry.getValue();
+      if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public DelegateTask createGitFetchFileAsyncTask(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
+    Application app = context.getApp();
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+    notNullCheck("Environment is null", env, USER);
+    InfrastructureMapping infraMapping = infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
+    notNullCheck("InfraStructureMapping is null", infraMapping, USER);
+    GitFetchFilesTaskParams fetchFilesTaskParams =
+        applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
+    fetchFilesTaskParams.setActivityId(activityId);
+    fetchFilesTaskParams.setFinalState(true);
+    fetchFilesTaskParams.setAppManifestKind(AppManifestKind.PCF_OVERRIDE);
+
+    String waitId = generateUuid();
+    return DelegateTask.builder()
+        .accountId(app.getAccountId())
+        .appId(app.getUuid())
+        .envId(env.getUuid())
+        .infrastructureMappingId(infraMapping.getUuid())
+        .waitId(waitId)
+        .async(true)
+        .data(TaskData.builder()
+                  .taskType(GIT_FETCH_FILES_TASK.name())
+                  .parameters(new Object[] {fetchFilesTaskParams})
+                  .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
+                  .build())
+        .build();
   }
 
   private Map<String, Object> generateCaseInsensitiveTreeMap(Map<String, Object> map) {

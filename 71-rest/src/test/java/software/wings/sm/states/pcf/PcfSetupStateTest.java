@@ -487,18 +487,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
-  public void testIsManifestInGit() throws Exception {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
-    appManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(Remote).build());
-    appManifestMap.put(K8sValuesLocation.Environment, ApplicationManifest.builder().storeType(Local).build());
-    assertThat(pcfSetupState.isManifestInGit(appManifestMap)).isTrue();
-
-    appManifestMap.remove(K8sValuesLocation.Service);
-    assertThat(pcfSetupState.isManifestInGit(appManifestMap)).isFalse();
-  }
-
-  @Test
-  @Category(UnitTests.class)
   public void testGenerateCurrentRunningCount() {
     assertThat(pcfSetupState.generateCurrentRunningCount(
                    PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(3).build()))

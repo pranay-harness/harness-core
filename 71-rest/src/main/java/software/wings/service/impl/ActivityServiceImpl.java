@@ -118,6 +118,7 @@ public class ActivityServiceImpl implements ActivityService {
       switch (activity.getCommandUnitType()) {
         case KUBERNETES:
         case PCF_SETUP:
+        case PCF_PLUGIN:
         case COMMAND:
         case HELM:
         case SPOTINST_SETUP:

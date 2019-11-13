@@ -41,6 +41,7 @@ import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.operations.routes.Routes;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Test.None;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -54,17 +55,20 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class PivotalClientTest extends WingsBaseTest {
-  PcfClientImpl pcfClient = new PcfClientImpl();
+  @Spy PcfClientImpl pcfClient = new PcfClientImpl();
   @Mock CloudFoundryOperationsWrapper wrapper;
   @Mock CloudFoundryOperations operations;
   @Mock Organizations organizations;
@@ -851,5 +855,21 @@ public class PivotalClientTest extends WingsBaseTest {
     command = pcfClient.generateChangeAutoscalarStateCommand(
         PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).build(), false);
     assertThat(command).isEqualTo("cf disable-autoscaling " + APP_NAME);
+  }
+
+  @Test(expected = None.class)
+  @Category(UnitTests.class)
+  public void test_runPcfPluginScript()
+      throws PivotalClientApiException, InterruptedException, TimeoutException, IOException {
+    final PcfRunPluginScriptRequestData requestData =
+        PcfRunPluginScriptRequestData.builder()
+            .pcfRequestConfig(PcfRequestConfig.builder().timeOutIntervalInMins(5).build())
+            .workingDirectory("/tmp/abc")
+            .build();
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    doReturn(true).when(pcfClient).doLogin(any(PcfRequestConfig.class), any(ExecutionLogCallback.class), anyString());
+    doReturn(new ProcessResult(0, null)).when(pcfClient).runProcessExecutor(any(ProcessExecutor.class));
+    pcfClient.runPcfPluginScript(requestData, logCallback);
   }
 }

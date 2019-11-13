@@ -6,11 +6,11 @@ public interface PcfConstants {
   String PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX = "PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX: ";
   String PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION = "Pivotal Client Exception: ";
   String CF_HOME = "CF_HOME";
+  String CF_PLUGIN_HOME = "CF_PLUGIN_HOME";
+  String SYS_VAR_CF_PLUGIN_HOME = "harness.pcf.plugin.home";
   String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
   String CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING = "cf autoscaling-apps | grep <APP_NAME>";
   String APP_TOKEN = "<APP_NAME>";
-  String CF_PLUGIN_HOME = "CF_PLUGIN_HOME";
-  String SYS_VAR_CF_PLUGIN_HOME = "harness.pcf.plugin.home";
   String ENABLE_AUTOSCALING = "enable-autoscaling";
   String DISABLE_AUTOSCALING = "disable-autoscaling";
   String CONFIGURE_AUTOSCALING = "cf configure-autoscaling";
@@ -64,6 +64,8 @@ public interface PcfConstants {
   String CONTEXT_APP_TEMP_ROUTES = "tempRoutes";
   String PCF_CONFIG_FILE_EXTENSION = ".yml";
   String PCF_ROUTE_PATH_SEPARATOR = "/";
+
+  String FILE_START_REGEX = "\\$\\{path\\.root}";
 
   String PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE = "instance_limits";
   String PCF_AUTOSCALAR_MANIFEST_RULES_ELE = "rules";

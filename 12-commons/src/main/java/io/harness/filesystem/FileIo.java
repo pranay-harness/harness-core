@@ -38,10 +38,13 @@ import java.util.stream.Stream;
 
 public class FileIo {
   public static void createDirectoryIfDoesNotExist(final String directoryPath) throws IOException {
-    Path path = Paths.get(directoryPath);
+    createDirectoryIfDoesNotExist(Paths.get(directoryPath));
+  }
+
+  public static void createDirectoryIfDoesNotExist(final Path filePath) throws IOException {
     try {
-      if (!Files.exists(path)) {
-        Files.createDirectories(path);
+      if (!filePath.toFile().exists()) {
+        Files.createDirectories(filePath);
       }
     } catch (FileAlreadyExistsException e) {
       // Ignore.
@@ -118,7 +121,11 @@ public class FileIo {
   }
 
   public static void writeFile(final String directoryPath, byte[] content) throws IOException {
-    Files.write(Paths.get(directoryPath), content, CREATE, WRITE, SYNC);
+    writeFile(Paths.get(directoryPath), content);
+  }
+
+  public static void writeFile(final Path filePath, byte[] content) throws IOException {
+    Files.write(filePath, content, CREATE, WRITE, SYNC);
   }
 
   public static boolean acquireLock(File file, Duration wait) {

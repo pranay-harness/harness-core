@@ -81,6 +81,7 @@ import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDataFetchCommandTaskHa
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDeployCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRollbackCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRouteUpdateCommandTaskHandler;
+import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRunPluginCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfSetupCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfValidationCommandTaskHandler;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
@@ -454,6 +455,8 @@ public class DelegateModule extends DependencyModule {
         .to(PcfDataFetchCommandTaskHandler.class);
     commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.CREATE_ROUTE.name())
         .to(PcfCreatePcfResourceCommandTaskHandler.class);
+    commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.RUN_PLUGIN.name())
+        .to(PcfRunPluginCommandTaskHandler.class);
 
     MapBinder<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMapBinder =
         MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends SettingValue>>() {},

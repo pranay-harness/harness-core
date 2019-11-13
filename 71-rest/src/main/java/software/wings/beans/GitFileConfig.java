@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,6 +20,7 @@ public class GitFileConfig {
   @Trimmed private String commitId;
   @Trimmed private String branch;
   @Trimmed private String filePath;
+  private List<String> filePathList;
   private boolean useBranch;
   @Transient @JsonInclude(Include.NON_EMPTY) private String connectorName;
 }

@@ -2,7 +2,6 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static java.util.Collections.emptyList;
@@ -12,7 +11,6 @@ import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
-import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.utils.Misc.normalizeExpression;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -26,7 +24,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
@@ -49,8 +46,6 @@ import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
-import software.wings.beans.GitFetchFilesTaskParams;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -58,7 +53,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.CommandUnit;
@@ -73,8 +67,6 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
-import software.wings.service.ServiceHelper;
-import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -82,8 +74,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
@@ -98,28 +88,24 @@ import software.wings.utils.ServiceVersionConvention;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfSetupState extends State {
   @Inject private transient AppService appService;
-  @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;
-  @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient PcfStateHelper pcfStateHelper;
-  @Inject private ServiceHelper serviceHelper;
-  @Inject private transient ActivityHelperService activityHelperService;
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
 
@@ -183,7 +169,7 @@ public class PcfSetupState extends State {
 
     if (isPcfManifestRefactorEnabled(app.getAccountId())) {
       appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.PCF_OVERRIDE);
-      valuesInGit = isManifestInGit(appManifestMap);
+      valuesInGit = pcfStateHelper.isManifestInGit(appManifestMap);
     }
 
     Activity activity = createActivity(context, valuesInGit);
@@ -616,37 +602,12 @@ public class PcfSetupState extends State {
 
   private ExecutionResponse executeGitTask(
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
-    Application app = context.getApp();
-    Environment env = ((ExecutionContextImpl) context).getEnv();
-    notNullCheck("Environment is null", env, USER);
-    InfrastructureMapping infraMapping = infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
-    notNullCheck("InfraStructureMapping is null", infraMapping, USER);
-    GitFetchFilesTaskParams fetchFilesTaskParams =
-        applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
-    fetchFilesTaskParams.setActivityId(activityId);
-    fetchFilesTaskParams.setFinalState(true);
-    fetchFilesTaskParams.setAppManifestKind(AppManifestKind.PCF_OVERRIDE);
-
-    String waitId = generateUuid();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(app.getAccountId())
-                                    .appId(app.getUuid())
-                                    .envId(env.getUuid())
-                                    .infrastructureMappingId(infraMapping.getUuid())
-                                    .waitId(waitId)
-                                    .async(true)
-                                    .data(TaskData.builder()
-                                              .taskType(GIT_FETCH_FILES_TASK.name())
-                                              .parameters(new Object[] {fetchFilesTaskParams})
-                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
-                                              .build())
-                                    .build();
-
-    String delegateTaskId = delegateService.queueTask(delegateTask);
-
+    final DelegateTask gitFetchFileTask =
+        pcfStateHelper.createGitFetchFileAsyncTask(context, appManifestMap, activityId);
+    final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
     return ExecutionResponse.builder()
         .async(true)
-        .correlationIds(Arrays.asList(waitId))
+        .correlationIds(Collections.singletonList(gitFetchFileTask.getWaitId()))
         .stateExecutionData(PcfSetupStateExecutionData.builder()
                                 .activityId(activityId)
                                 .commandName(PCF_SETUP_COMMAND)
@@ -689,18 +650,6 @@ public class PcfSetupState extends State {
 
   private String getActivityId(ExecutionContext context) {
     return ((PcfSetupStateExecutionData) context.getStateExecutionData()).getActivityId();
-  }
-
-  @VisibleForTesting
-  boolean isManifestInGit(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
-      ApplicationManifest applicationManifest = entry.getValue();
-      if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   @VisibleForTesting

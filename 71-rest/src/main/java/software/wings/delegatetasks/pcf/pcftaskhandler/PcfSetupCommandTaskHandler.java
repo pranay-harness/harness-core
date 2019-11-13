@@ -301,7 +301,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
         FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
       }
     } catch (Exception e) {
-      logger.warn("Failed to remove temp files created" + e);
+      logger.warn("Failed to remove temp files created", e);
     }
   }
 

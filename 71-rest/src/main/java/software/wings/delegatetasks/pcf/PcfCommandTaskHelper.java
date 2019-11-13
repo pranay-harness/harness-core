@@ -28,8 +28,10 @@ import static io.harness.pcf.model.PcfConstants.ROUTE_PATH_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.SERVICES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.STACK_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.TIMEOUT_MANIFEST_YML_ELEMENT;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
@@ -682,5 +684,16 @@ public class PcfCommandTaskHelper {
 
       applicationToBeUpdated.put(HOST_MANIFEST_YML_ELEMENT, appPrefix);
     }
+  }
+
+  public void printFileNamesInExecutionLogs(List<String> filePathList, ExecutionLogCallback executionLogCallback) {
+    if (EmptyPredicate.isEmpty(filePathList)) {
+      return;
+    }
+
+    StringBuilder sb = new StringBuilder(1024);
+    filePathList.forEach(filePath -> sb.append(color(format("- %s", filePath), Gray)).append(System.lineSeparator()));
+
+    executionLogCallback.saveExecutionLog(sb.toString());
   }
 }

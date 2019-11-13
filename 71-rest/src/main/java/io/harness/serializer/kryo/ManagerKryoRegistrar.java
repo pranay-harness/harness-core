@@ -113,6 +113,8 @@ import software.wings.api.k8s.K8sSwapServiceElement;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
+import software.wings.api.pcf.PcfPluginExecutionSummary;
+import software.wings.api.pcf.PcfPluginStateExecutionData;
 import software.wings.api.pcf.PcfRouteSwapExecutionSummary;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
@@ -423,6 +425,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
@@ -1394,10 +1397,12 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
 
     kryo.register(JiraIssueData.class, 7259);
-
     kryo.register(K8sSwapServiceElement.class, 7260);
 
     kryo.register(SlackMessage.class, 7261);
     kryo.register(SlackMessageSenderImpl.class, 7262);
+    kryo.register(PcfRunPluginCommandRequest.class, 7263);
+    kryo.register(PcfPluginExecutionSummary.class, 7264);
+    kryo.register(PcfPluginStateExecutionData.class, 7265);
   }
 }
