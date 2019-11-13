@@ -122,6 +122,7 @@ import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.LicenseCheckJob;
 import software.wings.scheduler.ResourceConstraintBackupJob;
+import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.UsageMetricsJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.YamlChangeSetPruneJob;
@@ -620,6 +621,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(SegmentGroupEventJob.class).registerIterators();
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
+    injector.getInstance(UsageMetricsHandler.class).registerIterators();
 
     if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
       logger.info("Initializing Perpetual Task Assignor..");
