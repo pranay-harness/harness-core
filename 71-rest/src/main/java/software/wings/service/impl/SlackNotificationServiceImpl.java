@@ -1,42 +1,28 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
-import static software.wings.common.NotificationConstants.ABORTED_COLOR;
-import static software.wings.common.NotificationConstants.COMPLETED_COLOR;
-import static software.wings.common.NotificationConstants.FAILED_COLOR;
-import static software.wings.common.NotificationConstants.PAUSED_COLOR;
-import static software.wings.common.NotificationConstants.RESUMED_COLOR;
+import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import allbegray.slack.SlackClientFactory;
-import allbegray.slack.type.Attachment;
-import allbegray.slack.type.Payload;
-import allbegray.slack.webhook.SlackWebhookClient;
-import io.harness.exception.InvalidRequestException;
-import io.harness.network.Http;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.POST;
-import retrofit2.http.Url;
+import software.wings.beans.FeatureName;
+import software.wings.beans.SlackMessage;
+import software.wings.beans.SyncTaskContext;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.beans.notification.SlackNotificationSetting;
+import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SlackMessageSender;
 import software.wings.service.intfc.SlackNotificationService;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
@@ -47,14 +33,16 @@ import java.util.Objects;
 @Slf4j
 @Singleton
 public class SlackNotificationServiceImpl implements SlackNotificationService {
+  @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private SlackMessageSender slackMessageSender;
+  @Inject private FeatureFlagService featureFlagService;
+
   public static final String SLACK_WEBHOOK_URL_PREFIX = "https://hooks.slack.com/services/";
   public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
 
-  private static final String WHITE_COLOR = "#FFFFFF";
-
   @Override
-  public void sendMessage(
-      SlackNotificationConfiguration slackConfig, String slackChannel, String senderName, String message) {
+  public void sendMessage(SlackNotificationConfiguration slackConfig, String slackChannel, String senderName,
+      String message, String accountId) {
     if (Objects.requireNonNull(slackConfig, "slack Config can't be null")
             .equals(SlackNotificationSetting.emptyConfig())) {
       return;
@@ -66,38 +54,23 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       return;
     }
 
-    Payload payload = new Payload();
-
-    if (message.contains("||")) {
-      Attachment attachment = new Attachment();
-      String[] parts = message.split("\\|\\|");
-      payload.setText(processText(parts[0]));
-      attachment.setText(processText(parts[1]));
-      attachment.setFooter(processText(parts[2]));
-      attachment.setColor(getColor(parts[3]));
-      attachment.setFooter_icon(format("https://s3.amazonaws.com/wings-assets/slackicons/%s.png", parts[3]));
-      attachment.setMrkdwn_in(ImmutableList.of("text"));
-      payload.setAttachments(ImmutableList.of(attachment));
-    } else {
-      payload.setText(processText(message));
-    }
-
-    if (isNotEmpty(slackChannel)) {
-      if (slackChannel.charAt(0) != '#') {
-        slackChannel = "#" + slackChannel;
+    if (featureFlagService.isEnabled(FeatureName.SEND_SLACK_NOTIFICATION_FROM_DELEGATE, accountId)) {
+      try {
+        logger.info("Sending message via delegate");
+        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                              .accountId(accountId)
+                                              .appId(GLOBAL_APP_ID)
+                                              .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                              .build();
+        logger.info("Sending message for account {} via delegate", accountId);
+        delegateProxyFactory.get(SlackMessageSender.class, syncTaskContext)
+            .send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message));
+      } catch (Exception ex) {
+        logger.error("Failed to send slack message", ex);
       }
-      payload.setChannel(slackChannel);
-    }
-    payload.setUsername(senderName);
-    payload.setIcon_url("https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png");
-
-    webhookUrl = webhookUrl.trim();
-
-    if (isSlackWebhookUrl(webhookUrl)) {
-      SlackWebhookClient webhookClient = getWebhookClient(webhookUrl);
-      webhookClient.post(payload);
     } else {
-      sendGenericHttpPostRequest(webhookUrl, payload);
+      logger.info("Sending message for account {} via manager", accountId);
+      slackMessageSender.send(new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message));
     }
   }
 
@@ -130,65 +103,4 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       }
     }
   }
-
-  private void sendGenericHttpPostRequest(String webhookUrl, Payload payload) {
-    if (webhookUrl.endsWith("/")) {
-      webhookUrl = webhookUrl.substring(0, webhookUrl.length() - 1);
-    }
-    int lastIndexOf = webhookUrl.lastIndexOf('/') + 1;
-    String baseUrl = webhookUrl.substring(0, lastIndexOf);
-    String webhookToken = webhookUrl.substring(lastIndexOf);
-    try {
-      getSlackHttpClient(baseUrl).PostMsg(webhookToken, payload).execute();
-    } catch (IOException e) {
-      throw new InvalidRequestException("Post message failed", e);
-    }
-  }
-
-  private boolean isSlackWebhookUrl(String webhookUrl) {
-    return webhookUrl.startsWith(SLACK_WEBHOOK_URL_PREFIX);
-  }
-
-  public SlackWebhookClient getWebhookClient(String webhookUrl) {
-    return SlackClientFactory.createWebhookClient(webhookUrl);
-  }
-
-  private String processText(String message) {
-    return message.replaceAll("<<<", "*<")
-        .replaceAll("\\|-\\|", "|")
-        .replaceAll(">>>", ">*")
-        .replaceAll("\\\\n", "\n")
-        .replaceAll("\\\\\\*", "*");
-  }
-
-  private String getColor(String status) {
-    switch (status) {
-      case "completed":
-        return COMPLETED_COLOR;
-      case "expired":
-      case "rejected":
-      case "failed":
-        return FAILED_COLOR;
-      case "paused":
-        return PAUSED_COLOR;
-      case "resumed":
-        return RESUMED_COLOR;
-      case "aborted":
-        return ABORTED_COLOR;
-      default:
-        unhandled(status);
-    }
-    return WHITE_COLOR;
-  }
-
-  private SlackHttpClient getSlackHttpClient(String baseUrl) {
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(baseUrl)
-                                  .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(Http.getUnsafeOkHttpClient(baseUrl))
-                                  .build();
-    return retrofit.create(SlackHttpClient.class);
-  }
-
-  public interface SlackHttpClient { @POST Call<ResponseBody> PostMsg(@Url String url, @Body Payload payload); }
 }

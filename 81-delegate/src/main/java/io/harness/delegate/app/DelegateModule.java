@@ -151,7 +151,7 @@ import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SftpBuildServiceImpl;
-import software.wings.service.impl.SlackNotificationServiceImpl;
+import software.wings.service.impl.SlackMessageSenderImpl;
 import software.wings.service.impl.SmbBuildServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.TerraformConfigInspectServiceImpl;
@@ -210,7 +210,7 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.SftpBuildService;
-import software.wings.service.intfc.SlackNotificationService;
+import software.wings.service.intfc.SlackMessageSender;
 import software.wings.service.intfc.SmbBuildService;
 import software.wings.service.intfc.TerraformConfigInspectService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -412,7 +412,6 @@ public class DelegateModule extends DependencyModule {
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceImpl.class);
-    bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
     bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
     bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
     bind(CustomRepositoryService.class).to(CustomRepositoryServiceImpl.class);
@@ -422,6 +421,9 @@ public class DelegateModule extends DependencyModule {
     bind(ServiceNowDelegateService.class).to(ServiceNowDelegateServiceImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
+
+    bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
+
     bind(AwsCloudWatchHelperServiceDelegate.class).to(AwsCloudWatchHelperServiceDelegateImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =

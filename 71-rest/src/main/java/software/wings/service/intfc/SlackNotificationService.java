@@ -16,7 +16,8 @@ public interface SlackNotificationService {
    * @param senderName  the sender name
    * @param message     the message
    */
-  void sendMessage(SlackNotificationConfiguration slackConfig, String slackChanel, String senderName, String message);
+  void sendMessage(SlackNotificationConfiguration slackConfig, String slackChanel, String senderName, String message,
+      String accountId);
 
   /**
    * This handled json based messages and not YAML based templates.

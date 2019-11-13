@@ -112,6 +112,7 @@ import software.wings.delegatetasks.validation.SecretManagerValidation;
 import software.wings.delegatetasks.validation.ServicenowValidation;
 import software.wings.delegatetasks.validation.SftpValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
+import software.wings.delegatetasks.validation.SlackValidation;
 import software.wings.delegatetasks.validation.SmbValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.StackDriverValidation;
@@ -375,7 +376,8 @@ public enum TaskType {
   SERVICENOW_VALIDATION(TaskGroup.SERVICENOW, ServiceImplDelegateTask.class, ServicenowValidation.class),
   HELM_REPO_CONFIG_VALIDATION(
       TaskGroup.HELM_REPO_CONFIG_VALIDATION, HelmRepoConfigValidationTask.class, HelmRepoConfigValidation.class),
-  HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK, HelmValuesFetchTask.class, HelmRepoConfigValidation.class);
+  HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK, HelmValuesFetchTask.class, HelmRepoConfigValidation.class),
+  SLACK(TaskGroup.SLACK, ServiceImplDelegateTask.class, SlackValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

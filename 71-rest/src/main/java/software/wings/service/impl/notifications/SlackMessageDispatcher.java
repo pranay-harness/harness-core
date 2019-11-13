@@ -53,8 +53,9 @@ public class SlackMessageDispatcher {
       return;
     }
 
-    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
-        notifications.get(0).getAccountId(), SettingVariableTypes.SLACK.name());
+    String accountId = notifications.get(0).getAccountId();
+    List<SettingAttribute> settingAttributes =
+        settingsService.getGlobalSettingAttributesByType(accountId, SettingVariableTypes.SLACK.name());
     if (isEmpty(settingAttributes)) {
       log.warn("No slack configuration found ");
       return;
@@ -75,7 +76,7 @@ public class SlackMessageDispatcher {
 
     messages.forEach(message
         -> channels.forEach(
-            channel -> slackNotificationService.sendMessage(slackConfig, channel, HARNESS_NAME, message)));
+            channel -> slackNotificationService.sendMessage(slackConfig, channel, HARNESS_NAME, message, accountId)));
   }
 
   public void dispatch(List<Notification> notifications, SlackNotificationConfiguration slackConfig) {
@@ -142,7 +143,8 @@ public class SlackMessageDispatcher {
     }
 
     for (String message : messages) {
-      slackNotificationService.sendMessage(slackConfig, stripToEmpty(slackConfig.getName()), HARNESS_NAME, message);
+      slackNotificationService.sendMessage(
+          slackConfig, stripToEmpty(slackConfig.getName()), HARNESS_NAME, message, accountId);
     }
   }
 }
