@@ -19,14 +19,6 @@ metrics:
       check_interval:   10      # seconds
       query:            "db.waitInstances.find({}).count()"
 
-  - wait_instance_errors_count:
-      check_interval:   10      # seconds
-      query:            "db.waitInstanceErrors.find({}).count()"
-
-  - wait_instance_errors_document_size:
-      check_interval:   10      # seconds
-      query:            "db.waitInstanceErrors.stats().avgObjSize"
-
   - whitelist_count:
       check_interval:   10      # seconds
       query:            "db.delegateConnectionResults.find({validated:true, lastUpdatedAt: {$gt: Date.now() - 6*60*60*1000}}).count()"
