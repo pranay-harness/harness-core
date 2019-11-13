@@ -146,10 +146,58 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testGetLogsWithCorrectDataCollectionMinuteOnMultipleCallsVersion7() throws Exception {
+    FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
+
+    when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(searchResponseVersion7());
+    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
+    Runnable runnable = dataCollectionTask.getDataCollector(taskResult);
+    runnable.run();
+    runnable.run();
+    ArgumentCaptor<List> taskCaptor = ArgumentCaptor.forClass(List.class);
+    verify(logAnalysisStoreService, times(2))
+        .save(any(), any(), any(), any(), any(), any(), any(), any(), any(), taskCaptor.capture());
+    assertThat(taskCaptor.getValue().size()).isEqualTo(2);
+
+    List<List> results = taskCaptor.getAllValues();
+    assertThat(results.size()).isEqualTo(2);
+    List<LogElement> first = results.get(0);
+    assertThat(first.get(0).getLogCollectionMinute()).isEqualTo(dataCollectionInfo.getStartMinute());
+    List<LogElement> second = results.get(1);
+    assertThat(second.get(0).getLogCollectionMinute()).isEqualTo(dataCollectionInfo.getStartMinute() + 1);
+    assertThat(first.get(0).getClusterLabel()).isEqualTo("-3");
+    assertThat(first.get(1).getLogMessage())
+        .isEqualTo("java.lang.RuntimeException: Method throws runtime exception java.lang.Thread.run(Thread.java:748)");
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testGetLogsWithCorrectParamsInSearch() throws Exception {
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
 
     when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(searchResponse());
+    DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
+    Runnable runnable = dataCollectionTask.getDataCollector(taskResult);
+    runnable.run();
+    runnable.run();
+    ArgumentCaptor<ElkLogFetchRequest> taskCaptor = ArgumentCaptor.forClass(ElkLogFetchRequest.class);
+    verify(elkDelegateService, times(2)).search(any(), any(), taskCaptor.capture(), any(), anyInt());
+
+    List<ElkLogFetchRequest> results = taskCaptor.getAllValues();
+    assertThat(results.size()).isEqualTo(2);
+
+    assertThat(results.get(0).getEndTime())
+        .isEqualTo(Instant.ofEpochMilli(dataCollectionInfo.getStartTime()).plus(Duration.ofMinutes(1)).toEpochMilli());
+    assertThat(results.get(1).getEndTime())
+        .isEqualTo(Instant.ofEpochMilli(dataCollectionInfo.getStartTime()).plus(Duration.ofMinutes(2)).toEpochMilli());
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testGetLogsWithCorrectParamsInSearchVersion7() throws Exception {
+    FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
+
+    when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(searchResponseVersion7());
     DataCollectionTaskResult taskResult = dataCollectionTask.initDataCollection(dataCollectionInfo);
     Runnable runnable = dataCollectionTask.getDataCollector(taskResult);
     runnable.run();
@@ -178,6 +226,39 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
         + "  },\n"
         + "  \"hits\" : {\n"
         + "    \"total\" : 1,\n"
+        + "    \"max_score\" : 0.0,\n"
+        + "    \"hits\" : [ {\n"
+        + "      \"_index\" : \"integration-test\",\n"
+        + "      \"_type\" : \"_doc\",\n"
+        + "      \"_id\" : \"-_R4_W0BhJ3XTYaV0z5L\",\n"
+        + "      \"_score\" : 0.0,\n"
+        + "      \"_source\" : {\n"
+        + "        \"hostname\" : \"harness-example-deployment-canary-5f65dcf968-6slrm\",\n"
+        + "        \"level\" : \"WARN\",\n"
+        + "        \"message\" : \"java.lang.RuntimeException: Method throws runtime exception java.lang.Thread.run(Thread.java:748)\",\n"
+        + "        \"@timestamp\" : \"2019-10-24T11:13:20.492Z\"\n"
+        + "      }\n"
+        + "    }]\n"
+        + "  }\n"
+        + "}";
+    return new ObjectMapper().readValue(json, HashMap.class);
+  }
+
+  private Object searchResponseVersion7() throws IOException {
+    String json = "{\n"
+        + "  \"took\" : 4,\n"
+        + "  \"timed_out\" : false,\n"
+        + "  \"_shards\" : {\n"
+        + "    \"total\" : 5,\n"
+        + "    \"successful\" : 5,\n"
+        + "    \"skipped\" : 0,\n"
+        + "    \"failed\" : 0\n"
+        + "  },\n"
+        + "  \"hits\" : {\n"
+        + "    \"total\" : {\n"
+        + "    \"value\" : 1,\n"
+        + "    \"relation\" : \"eq\"\n"
+        + "  },\n"
         + "    \"max_score\" : 0.0,\n"
         + "    \"hits\" : [ {\n"
         + "      \"_index\" : \"integration-test\",\n"

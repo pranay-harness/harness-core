@@ -11,7 +11,8 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.UnexpectedException;
+import io.harness.exception.VerificationOperationException;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
@@ -120,7 +121,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
           break;
 
         default:
-          throw new WingsException("Invalid StateType : " + getStateType());
+          throw new VerificationOperationException(
+              ErrorCode.ELK_CONFIGURATION_ERROR, "Invalid StateType : " + getStateType());
       }
       this.taskResult = taskResult;
     }
@@ -205,7 +207,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
               long totalHitsPerMinute = getTotalHitsPerMinute(hits);
               if (totalHitsPerMinute > getDelegateTotalHitsVerificationThreshold()) {
                 String reason = "Number of logs returned per minute are above the threshold. Please refine your query.";
-                throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, reason).addParam("reason", reason);
+                throw new VerificationOperationException(ErrorCode.ELK_CONFIGURATION_ERROR, reason);
               }
             }
             try {
@@ -243,7 +245,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
           if (retry == 0) {
             taskResult.setErrorMessage(ExceptionUtils.getMessage(ex));
           }
-          if (ex instanceof WingsException || !(ex instanceof Exception) || ++retry >= RETRIES) {
+          if (ex instanceof VerificationOperationException || !(ex instanceof Exception) || ++retry >= RETRIES) {
             logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 logCollectionMinute, ex);
             taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
@@ -280,8 +282,14 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
 
     private long getTotalHitsPerMinute(JSONObject hits) {
       long totalHits = 0;
-      if (hits.has("total")) {
-        totalHits = hits.getLong("total");
+      String totalKeyword = "total";
+      if (hits.has(totalKeyword)) {
+        if (hits.get(totalKeyword) instanceof JSONObject) {
+          JSONObject totalObject = hits.getJSONObject(totalKeyword);
+          totalHits = totalObject.getLong("value");
+        } else {
+          totalHits = hits.getLong(totalKeyword);
+        }
       }
       long collectionEndTime =
           is24X7Task() ? dataCollectionInfo.getEndTime() : collectionStartTime + TimeUnit.MINUTES.toMillis(1);
@@ -334,10 +342,8 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       try {
         timeStampValue = timeFormatter.parse(timeStamp).getTime();
       } catch (ParseException pe) {
-        throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR,
-            "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat, WingsException.USER,
-            pe)
-            .addParam("reason", "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat);
+        throw new VerificationOperationException(ErrorCode.ELK_CONFIGURATION_ERROR,
+            "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat);
       }
 
       if (is24x7Task && (timeStampValue < collectionStartTime || timeStampValue > collectionEndTime)) {
@@ -373,6 +379,6 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
     if (messageObject instanceof String) {
       return (String) messageObject;
     }
-    throw new WingsException("Unable to parse JSON response " + source.toString() + " and field " + field);
+    throw new UnexpectedException("Unable to parse JSON response " + source.toString() + " and field " + field);
   }
 }

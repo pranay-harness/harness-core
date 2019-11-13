@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -82,6 +83,36 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testGetLogDataByHostForTotalHitsAndThresholdVersion() throws IOException {
+    String accountId = generateUuid();
+    String appId = generateUuid();
+    String settingId = generateUuid();
+    ElkSetupTestNodeData elkSetupTestNodeData = ElkSetupTestNodeData.builder()
+                                                    .settingId(settingId)
+                                                    .appId(appId)
+                                                    .isServiceLevel(true)
+                                                    .timeStampFieldFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+                                                    .build();
+    List<EncryptedDataDetail> encryptedDataDetails = mock(List.class);
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+    ElkConfig elkConfig = mock(ElkConfig.class);
+    when(settingService.get(eq(settingId))).thenReturn(settingAttribute);
+    when(settingAttribute.getValue()).thenReturn(elkConfig);
+    when(secretManager.getEncryptionDetails(anyObject(), eq(appId), anyString())).thenReturn(encryptedDataDetails);
+    ElkDelegateService elkDelegateService = mock(ElkDelegateService.class);
+    when(delegateProxyFactory.get(eq(ElkDelegateService.class), anyObject())).thenReturn(elkDelegateService);
+    Object elkResponse = getELKResponseVersion7(15 * 201);
+    when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(elkResponse);
+
+    VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
+        service.getLogDataByHost(accountId, elkSetupTestNodeData);
+    assertThat((long) verificationNodeDataSetupResponse.getLoadResponse().getTotalHits()).isEqualTo(201);
+    assertThat((long) verificationNodeDataSetupResponse.getLoadResponse().getTotalHitsThreshold())
+        .isEqualTo(VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD);
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testValidateQueryPassesIfTotalHitsIsLessThenTheThreshold() throws IOException {
     String accountId = generateUuid();
     String appId = generateUuid();
@@ -104,6 +135,28 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
 
   @Test
   @Category(UnitTests.class)
+  public void testValidateQueryPassesIfTotalHitsIsLessThenTheThresholdVersion7() throws IOException {
+    String accountId = generateUuid();
+    String appId = generateUuid();
+    String settingId = generateUuid();
+    String query = generateUuid();
+    List<EncryptedDataDetail> encryptedDataDetails = mock(List.class);
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+    ElkConfig elkConfig = mock(ElkConfig.class);
+    when(settingService.get(eq(settingId))).thenReturn(settingAttribute);
+    when(settingAttribute.getValue()).thenReturn(elkConfig);
+    when(secretManager.getEncryptionDetails(anyObject(), eq(appId), anyString())).thenReturn(encryptedDataDetails);
+    ElkDelegateService elkDelegateService = mock(ElkDelegateService.class);
+    when(delegateProxyFactory.get(eq(ElkDelegateService.class), anyObject())).thenReturn(elkDelegateService);
+    Object responseWithoutHost = getELKResponseVersion7(15 * 20);
+    when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(responseWithoutHost);
+
+    assertThat(service.validateQuery(accountId, appId, settingId, query, "test", null, "hostname", "log", "@timestamp"))
+        .isEqualTo(true);
+  }
+
+  @Test
+  @Category(UnitTests.class)
   public void testValidateQueryThrowsWingsExceptionIfTotalHitsIsLessThenTheThreshold() throws IOException {
     String accountId = generateUuid();
     String appId = generateUuid();
@@ -118,6 +171,35 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
     ElkDelegateService elkDelegateService = mock(ElkDelegateService.class);
     when(delegateProxyFactory.get(eq(ElkDelegateService.class), anyObject())).thenReturn(elkDelegateService);
     Object responseWithoutHost = getELKResponse(1000 * 15 + 1); // per minute 1000
+    when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(responseWithoutHost);
+
+    try {
+      service.validateQuery(accountId, appId, settingId, query, "test", null, "hostname", "log", "@timestamp");
+      fail("validate query should throw wings exception..");
+    } catch (VerificationOperationException e) {
+      assertThat("Error in Elasticsearch configuration. Too many logs returned using query: '" + query
+          + "'. Please refine your query.")
+          .isEqualTo(e.getParams().get("reason"));
+      assertThat(e.getCode()).isEqualTo(ErrorCode.ELK_CONFIGURATION_ERROR);
+    }
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testValidateQueryThrowsWingsExceptionIfTotalHitsIsLessThenTheThresholdVersion7() throws IOException {
+    String accountId = generateUuid();
+    String appId = generateUuid();
+    String settingId = generateUuid();
+    String query = generateUuid();
+    List<EncryptedDataDetail> encryptedDataDetails = mock(List.class);
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+    ElkConfig elkConfig = mock(ElkConfig.class);
+    when(settingService.get(eq(settingId))).thenReturn(settingAttribute);
+    when(settingAttribute.getValue()).thenReturn(elkConfig);
+    when(secretManager.getEncryptionDetails(anyObject(), eq(appId), anyString())).thenReturn(encryptedDataDetails);
+    ElkDelegateService elkDelegateService = mock(ElkDelegateService.class);
+    when(delegateProxyFactory.get(eq(ElkDelegateService.class), anyObject())).thenReturn(elkDelegateService);
+    Object responseWithoutHost = getELKResponseVersion7(1000 * 15 + 1); // per minute 1000
     when(elkDelegateService.search(any(), any(), any(), any(), anyInt())).thenReturn(responseWithoutHost);
 
     try {
@@ -169,6 +251,29 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
         + "  },\n"
         + "  \"hits\": {\n"
         + "    \"total\": " + total + ",\n"
+        + "    \"max_score\": 0,\n"
+        + "    \"hits\": [\n"
+        + "    ]\n"
+        + "  }\n"
+        + "}";
+    return JsonUtils.asObject(resp, Map.class);
+  }
+
+  private Object getELKResponseVersion7(int total) {
+    String resp = "{\n"
+        + "  \"took\": 20,\n"
+        + "  \"timed_out\": false,\n"
+        + "  \"_shards\": {\n"
+        + "    \"total\": 275,\n"
+        + "    \"successful\": 275,\n"
+        + "    \"skipped\": 270,\n"
+        + "    \"failed\": 0\n"
+        + "  },\n"
+        + "  \"hits\": {\n"
+        + "    \"total\": {\n"
+        + "    \"value\": " + total + ",\n"
+        + "    \"relation\": \"eq\"\n"
+        + "  },\n"
         + "    \"max_score\": 0,\n"
         + "    \"hits\": [\n"
         + "    ]\n"

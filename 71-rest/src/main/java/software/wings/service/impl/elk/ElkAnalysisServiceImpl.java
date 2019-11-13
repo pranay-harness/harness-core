@@ -11,7 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.VerificationOperationException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,8 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
   public Map<String, ElkIndexTemplate> getIndices(String accountId, String analysisServerConfigId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No elk setting with id: " + analysisServerConfigId + " found");
+      throw new VerificationOperationException(
+          ErrorCode.ELK_CONFIGURATION_ERROR, "No elk setting with id: " + analysisServerConfigId + " found");
     }
 
     List<EncryptedDataDetail> encryptedDataDetails =
@@ -83,7 +84,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     final SettingAttribute settingAttribute = settingsService.get(elkSetupTestNodeData.getSettingId());
     logger.info("Settings attribute : " + settingAttribute);
     if (settingAttribute == null) {
-      throw new WingsException(
+      throw new VerificationOperationException(ErrorCode.ELK_CONFIGURATION_ERROR,
           "No " + StateType.ELK + " setting with id: " + elkSetupTestNodeData.getSettingId() + " found");
     }
     final ElkLogFetchRequest elkFetchRequestWithoutHost =
@@ -197,8 +198,14 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     if (hits == null) {
       return 0;
     }
-    if (hits.has("total")) {
-      return hits.getLong("total");
+    String totalKeyword = "total";
+    if (hits.has(totalKeyword)) {
+      if (hits.get(totalKeyword) instanceof JSONObject) {
+        JSONObject totalObject = hits.getJSONObject(totalKeyword);
+        return totalObject.getLong("value");
+      } else {
+        return hits.getLong(totalKeyword);
+      }
     } else {
       return 0;
     }
@@ -235,15 +242,14 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
                   createApiCallLog(settingAttribute.getAccountId(), guid), 5);
       long totalHitsPerMinute = parseTotalHits(responseWithoutHost) / TIME_DURATION_FOR_LOGS_IN_MINUTES;
       if (totalHitsPerMinute >= VerificationConstants.TOTAL_HITS_PER_MIN_THRESHOLD) {
-        throw new WingsException(
-            ErrorCode.ELK_CONFIGURATION_ERROR, "Too many logs to process, please refine your query")
-            .addParam("reason", "Too many logs returned using query: '" + query + "'. Please refine your query.");
+        throw new VerificationOperationException(ErrorCode.ELK_CONFIGURATION_ERROR,
+            "Too many logs returned using query: '" + query + "'. Please refine your query.");
       }
 
       logger.info("Valid query passed with query {} and index {}", query, index);
       return true;
     } catch (Exception ex) {
-      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, ex).addParam("reason", ExceptionUtils.getMessage(ex));
+      throw new VerificationOperationException(ErrorCode.ELK_CONFIGURATION_ERROR, ExceptionUtils.getMessage(ex));
     }
   }
 }
