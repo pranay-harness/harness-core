@@ -98,6 +98,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @Indexed private Long serviceGuardDataCollectionIteration;
   @Indexed private Long serviceGuardDataAnalysisIteration;
   @Indexed private Long workflowDataCollectionIteration;
+  @Indexed private Long usageMetricsTaskIteration;
   @Indexed private Long licenseExpiryCheckIteration;
   private boolean cloudCostEnabled;
 
@@ -350,17 +351,19 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
-    if (AccountKeys.serviceGuardDataAnalysisIteration.equals(fieldName)) {
+    else if (AccountKeys.serviceGuardDataAnalysisIteration.equals(fieldName)) {
       this.serviceGuardDataAnalysisIteration = nextIteration;
       return;
     }
 
-    if (AccountKeys.workflowDataCollectionIteration.equals(fieldName)) {
+    else if (AccountKeys.workflowDataCollectionIteration.equals(fieldName)) {
       this.workflowDataCollectionIteration = nextIteration;
       return;
     }
 
-    if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
+    else if (AccountKeys.usageMetricsTaskIteration.equals(fieldName)) {
+      this.usageMetricsTaskIteration = nextIteration;
+    } else if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
       this.licenseExpiryCheckIteration = nextIteration;
       return;
     }
@@ -373,15 +376,19 @@ public class Account extends Base implements PersistentRegularIterable {
       return this.serviceGuardDataCollectionIteration;
     }
 
-    if (AccountKeys.serviceGuardDataAnalysisIteration.equals(fieldName)) {
+    else if (AccountKeys.serviceGuardDataAnalysisIteration.equals(fieldName)) {
       return this.serviceGuardDataAnalysisIteration;
     }
 
-    if (AccountKeys.workflowDataCollectionIteration.equals(fieldName)) {
+    else if (AccountKeys.workflowDataCollectionIteration.equals(fieldName)) {
       return this.workflowDataCollectionIteration;
     }
 
-    if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
+    else if (AccountKeys.usageMetricsTaskIteration.equals(fieldName)) {
+      return this.usageMetricsTaskIteration;
+    }
+
+    else if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
       return this.licenseExpiryCheckIteration;
     }
 

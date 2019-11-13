@@ -31,6 +31,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.LicenseInfo;
 import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
@@ -43,6 +44,7 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
   @Mock private HarnessMetricRegistry harnessMetricRegistry;
 
   @Inject UsageMetricsService usageMetricsService;
+  @Inject UsageMetricsHandler usageMetricsHandler;
 
   @Inject WingsPersistence wingsPersistence;
 
@@ -95,7 +97,7 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
     wingsPersistence.save(Arrays.asList(nrConfig, ddConfig));
 
     doNothing().when(harnessMetricRegistry).recordGaugeValue(any(), any(String[].class), anyInt());
-    usageMetricsService.checkUsageMetrics();
+    usageMetricsHandler.handle(account);
     ArgumentCaptor<String> taskCaptorName = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String[]> taskCaptorParams = ArgumentCaptor.forClass(String[].class);
     ArgumentCaptor<Double> taskCaptorValue = ArgumentCaptor.forClass(Double.class);
@@ -142,7 +144,8 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
     wingsPersistence.save(nrConfig);
 
     doNothing().when(harnessMetricRegistry).recordGaugeValue(any(), any(String[].class), anyInt());
-    usageMetricsService.checkUsageMetrics();
+    usageMetricsHandler.handle(account);
+    usageMetricsHandler.handle(comnunityAccount);
     ArgumentCaptor<String> taskCaptorName = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String[]> taskCaptorParams = ArgumentCaptor.forClass(String[].class);
     ArgumentCaptor<Double> taskCaptorValue = ArgumentCaptor.forClass(Double.class);
