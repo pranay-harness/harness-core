@@ -95,7 +95,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreateInstancePodInfo() throws Exception {
     InstanceData instanceData = getNodeInstantData();
-    when(instanceDataService.fetchInstanceData(ACCOUNT_ID, NODE_NAME)).thenReturn(instanceData);
+    when(instanceDataService.fetchInstanceDataWithName(ACCOUNT_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
+        .thenReturn(instanceData);
     when(cloudToHarnessMappingService.getHarnessServiceInfo(any())).thenReturn(harnessServiceInfo());
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.RELEASE_NAME, K8sCCMConstants.RELEASE_NAME);
@@ -158,7 +159,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
                            .setTotalResource(resource)
                            .setCreationTimestamp(timestamp)
                            .build();
-    return getPublishedMessage(accountId, nodeInfo);
+    return getPublishedMessage(accountId, nodeInfo, HTimestamps.toMillis(timestamp));
   }
 
   private PublishedMessage getK8sPodEventMessage(
@@ -170,13 +171,14 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
                             .setType(eventType)
                             .setTimestamp(timestamp)
                             .build();
-    return getPublishedMessage(accountId, podEvent);
+    return getPublishedMessage(accountId, podEvent, HTimestamps.toMillis(timestamp));
   }
 
-  private PublishedMessage getPublishedMessage(String accountId, Message message) {
+  private PublishedMessage getPublishedMessage(String accountId, Message message, long occurredAt) {
     Any payload = Any.pack(message);
     return PublishedMessage.builder()
         .data(payload.toByteArray())
+        .occurredAt(occurredAt)
         .type(message.getClass().getName())
         .accountId(accountId)
         .build();

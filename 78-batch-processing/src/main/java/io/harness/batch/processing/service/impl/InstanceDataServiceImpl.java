@@ -50,6 +50,11 @@ public class InstanceDataServiceImpl implements InstanceDataService {
   }
 
   @Override
+  public InstanceData fetchInstanceDataWithName(String accountId, String instanceId, Long occurredAt) {
+    return instanceDataDao.fetchInstanceDataWithName(accountId, instanceId, occurredAt);
+  }
+
+  @Override
   public List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime) {
     List<InstanceState> instanceStates =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));

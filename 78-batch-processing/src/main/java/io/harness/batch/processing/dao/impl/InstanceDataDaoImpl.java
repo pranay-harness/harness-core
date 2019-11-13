@@ -2,6 +2,8 @@ package io.harness.batch.processing.dao.impl;
 
 import static java.util.Objects.isNull;
 
+import com.google.inject.Inject;
+
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
@@ -12,6 +14,7 @@ import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +26,7 @@ import java.util.List;
 @Slf4j
 @Repository
 public class InstanceDataDaoImpl implements InstanceDataDao {
-  @Autowired private HPersistence hPersistence;
+  @Autowired @Inject private HPersistence hPersistence;
 
   @Override
   public boolean create(InstanceData instanceData) {
@@ -36,22 +39,27 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
                                     .filter(InstanceDataKeys.accountId, instanceEvent.getAccountId())
                                     .filter(InstanceDataKeys.cloudProviderId, instanceEvent.getCloudProviderId())
                                     .filter(InstanceDataKeys.instanceId, instanceEvent.getInstanceId());
+    InstanceData instanceData = query.get();
+    if (null != instanceData) {
+      UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
 
-    UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
-
-    Instant instant = instanceEvent.getTimestamp();
-    switch (instanceEvent.getType()) {
-      case STOP:
-        updateOperations.set(InstanceDataKeys.usageStopTime, instant);
-        break;
-      case START:
-        updateOperations.set(InstanceDataKeys.usageStartTime, instant);
-        break;
-      default:
-        break;
+      Instant instant = instanceEvent.getTimestamp();
+      switch (instanceEvent.getType()) {
+        case STOP:
+          updateOperations.set(InstanceDataKeys.usageStopTime, instant);
+          break;
+        case START:
+          updateOperations.set(InstanceDataKeys.usageStartTime, instant);
+          break;
+        default:
+          break;
+      }
+      FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
+      return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+    } else {
+      logger.info("Instance Event received before info event {}", instanceEvent.getInstanceId());
     }
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
-    return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+    return null;
   }
 
   @Override
@@ -60,28 +68,39 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
                                     .filter(InstanceDataKeys.accountId, instanceInfo.getAccountId())
                                     .filter(InstanceDataKeys.cloudProviderId, instanceInfo.getCloudProviderId())
                                     .filter(InstanceDataKeys.instanceId, instanceInfo.getInstanceId());
-    UpdateOperations<InstanceData> updateOperations =
-        hPersistence.createUpdateOperations(InstanceData.class)
-            .set(InstanceDataKeys.accountId, instanceInfo.getAccountId())
-            .set(InstanceDataKeys.cloudProviderId, instanceInfo.getCloudProviderId())
-            .set(InstanceDataKeys.instanceId, instanceInfo.getInstanceId())
-            .set(InstanceDataKeys.instanceType, instanceInfo.getInstanceType());
+    InstanceData instanceData = query.get();
+    if (null == instanceData) {
+      UpdateOperations<InstanceData> updateOperations =
+          hPersistence.createUpdateOperations(InstanceData.class)
+              .set(InstanceDataKeys.accountId, instanceInfo.getAccountId())
+              .set(InstanceDataKeys.cloudProviderId, instanceInfo.getCloudProviderId())
+              .set(InstanceDataKeys.instanceId, instanceInfo.getInstanceId())
+              .set(InstanceDataKeys.instanceName, instanceInfo.getInstanceName())
+              .set(InstanceDataKeys.instanceType, instanceInfo.getInstanceType());
 
-    if (!isNull(instanceInfo.getResource())) {
-      updateOperations.set(InstanceDataKeys.totalResource, instanceInfo.getResource());
+      if (!isNull(instanceInfo.getResource())) {
+        updateOperations.set(InstanceDataKeys.totalResource, instanceInfo.getResource());
+      }
+
+      if (!isNull(instanceInfo.getLabels())) {
+        updateOperations.set(InstanceDataKeys.labels, instanceInfo.getLabels());
+      }
+
+      if (instanceInfo.getMetaData() != null) {
+        updateOperations.set(InstanceDataKeys.metaData, instanceInfo.getMetaData());
+      }
+
+      if (instanceInfo.getHarnessServiceInfo() != null) {
+        updateOperations.set(InstanceDataKeys.harnessServiceInfo, instanceInfo.getHarnessServiceInfo());
+      }
+
+      FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
+
+      return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+    } else {
+      logger.info("Instance data found {} ", instanceData);
     }
-
-    if (!isNull(instanceInfo.getLabels())) {
-      updateOperations.set(InstanceDataKeys.labels, instanceInfo.getLabels());
-    }
-
-    if (instanceInfo.getMetaData() != null) {
-      updateOperations.set(InstanceDataKeys.metaData, instanceInfo.getMetaData());
-    }
-
-    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
-
-    return hPersistence.upsert(query, updateOperations, findAndModifyOptions);
+    return instanceData;
   }
 
   @Override
@@ -112,6 +131,15 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
     return hPersistence.createQuery(InstanceData.class)
         .filter(InstanceDataKeys.accountId, accountId)
         .filter(InstanceDataKeys.instanceId, instanceId)
+        .get();
+  }
+
+  @Override
+  public InstanceData fetchInstanceDataWithName(String accountId, String instanceName, Long occurredAt) {
+    return hPersistence.createQuery(InstanceData.class)
+        .filter(InstanceDataKeys.accountId, accountId)
+        .filter(InstanceDataKeys.instanceName, instanceName)
+        .order(Sort.descending(InstanceDataKeys.usageStartTime))
         .get();
   }
 
