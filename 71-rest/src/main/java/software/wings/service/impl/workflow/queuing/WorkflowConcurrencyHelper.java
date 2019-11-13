@@ -26,6 +26,7 @@ import software.wings.beans.PhaseStepType;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.sm.states.ResourceConstraintState.AcquireMode;
@@ -37,24 +38,22 @@ import java.util.function.Predicate;
 
 @Slf4j
 public class WorkflowConcurrencyHelper {
-  @Inject ResourceConstraintService resourceConstraintService;
-  @Inject InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private AppService appService;
+  @Inject private ResourceConstraintService resourceConstraintService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   private static final List<String> PROVISIONER_STEP_TYPES =
       Arrays.asList(CLOUD_FORMATION_CREATE_STACK.name(), TERRAFORM_PROVISION.name(), SHELL_SCRIPT_PROVISION.name());
 
-  public OrchestrationWorkflow enhanceWithConcurrencySteps(
-      String appId, String accountId, OrchestrationWorkflow orchestrationWorkflow) {
+  public OrchestrationWorkflow enhanceWithConcurrencySteps(String appId, OrchestrationWorkflow orchestrationWorkflow) {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
     if (!concurrencyEnabled(canaryOrchestrationWorkflow)) {
       return canaryOrchestrationWorkflow;
     }
-    ResourceConstraint resourceConstraint =
-        resourceConstraintService.ensureResourceConstraintForConcurrency(accountId, QUEUING_RC_NAME);
+
     boolean resourceConstraintAdded = false;
     if (EmptyPredicate.isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-      resourceConstraintAdded =
-          addResourceConstraintForConcurrency(appId, canaryOrchestrationWorkflow, resourceConstraint);
+      resourceConstraintAdded = addResourceConstraintForConcurrency(appId, canaryOrchestrationWorkflow);
     }
     if (resourceConstraintAdded) {
       canaryOrchestrationWorkflow.setGraph(canaryOrchestrationWorkflow.generateGraph());
@@ -65,15 +64,13 @@ public class WorkflowConcurrencyHelper {
   /**
    * This method checks if infra is dynamically provisioned. If not adds a Resource Constraint Step as first
    * If dynamically provisioned adds a Resource Constraint step after the PROVISION_INFRASTRUCTURE step
-   * Otherwise throw a invalid Request Exception
    *
    * @param appId AppId for the workflow
    * @param canaryOrchestrationWorkflow WorkflowPhase
-   * @param resourceConstraint Resource Constraint
    * @return WorkflowPhase After adding the Resource Constraint Step If required
    */
   private boolean addResourceConstraintForConcurrency(
-      String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow, ResourceConstraint resourceConstraint) {
+      String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     boolean resourceConstraintAdded = false;
     WorkflowPhase workflowPhase = canaryOrchestrationWorkflow.getWorkflowPhases().get(0);
     if (workflowPhase.getInfraDefinitionId() != null) {
@@ -84,7 +81,7 @@ public class WorkflowConcurrencyHelper {
       if (addAsFirstStepInPhaseStep(canaryOrchestrationWorkflow, isDynamicInfra, phaseSteps)) {
         PhaseStep firstStep = phaseSteps.get(0);
         firstStep.getSteps().add(
-            0, getResourceConstraintStep(resourceConstraint, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
+            0, getResourceConstraintStep(appId, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
         resourceConstraintAdded = true;
       } else if (isDynamicInfra && isPresent(phaseSteps, getProvisionInfrastructurePhaseStepPredicate())) {
         PhaseStep provisionerPhaseStep =
@@ -93,7 +90,7 @@ public class WorkflowConcurrencyHelper {
             fetchIndex(provisionerPhaseStep.getSteps(), step -> PROVISIONER_STEP_TYPES.contains(step.getType()));
         if (provisionerStepIndex > -1) {
           provisionerPhaseStep.getSteps().add(provisionerStepIndex + 1,
-              getResourceConstraintStep(resourceConstraint, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
+              getResourceConstraintStep(appId, canaryOrchestrationWorkflow.getConcurrencyStrategy()));
           resourceConstraintAdded = true;
         }
       } else {
@@ -117,8 +114,10 @@ public class WorkflowConcurrencyHelper {
     return phaseStep -> phaseStep.getPhaseStepType().equals(PhaseStepType.PROVISION_INFRASTRUCTURE);
   }
 
-  private GraphNode getResourceConstraintStep(
-      ResourceConstraint resourceConstraint, ConcurrencyStrategy concurrencyStrategy) {
+  private GraphNode getResourceConstraintStep(String appId, ConcurrencyStrategy concurrencyStrategy) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    ResourceConstraint resourceConstraint =
+        resourceConstraintService.ensureResourceConstraintForConcurrency(accountId, QUEUING_RC_NAME);
     return GraphNode.builder()
         .id(generateUuid())
         .type(RESOURCE_CONSTRAINT.name())
