@@ -53,6 +53,10 @@ import java.util.Set;
 @Slf4j
 public class IndexManager {
   public static final String UNIQUE = "unique";
+  public static final String BACKGROUND = "background";
+  public static final String NAME = "name";
+  public static final String EXPIRE_AFTER_SECONDS = "expireAfterSeconds";
+  public static final String PARTIAL_FILTER_EXPRESSION = "partialFilterExpression";
 
   public interface IndexCreator { void create(); }
 
@@ -69,7 +73,7 @@ public class IndexManager {
     while (cursor.hasNext()) {
       BasicDBObject object = (BasicDBObject) cursor.next();
 
-      final String name = (String) object.get("name");
+      final String name = (String) object.get(NAME);
       final BasicDBObject accessesObject = (BasicDBObject) object.get("accesses");
 
       Accesses accesses =
@@ -118,7 +122,7 @@ public class IndexManager {
                                             final Object unique = obj.get(UNIQUE);
                                             return unique != null && unique.toString().equals("true");
                                           })
-                                          .map(obj -> obj.get("name").toString())
+                                          .map(obj -> obj.get(NAME).toString())
                                           .collect(toSet());
 
     accesses.entrySet()
@@ -200,7 +204,7 @@ public class IndexManager {
         if (okToDropIndexes) {
           final List<DBObject> indexInfo = collection.getIndexInfo();
           final List<String> obsoleteIndexes = indexInfo.stream()
-                                                   .map(obj -> obj.get("name").toString())
+                                                   .map(obj -> obj.get(NAME).toString())
                                                    .filter(name -> !"_id_".equals(name))
                                                    .filter(name -> !creators.keySet().contains(name))
                                                    .collect(toList());
@@ -270,7 +274,7 @@ public class IndexManager {
 
   static boolean isOkToDropIndexes(Date tooNew, Map<String, Accesses> accesses, List<DBObject> indexInfo) {
     for (DBObject info : indexInfo) {
-      final String name = info.get("name").toString();
+      final String name = info.get(NAME).toString();
       // Note that we are aware that we checking the obsolete indexes as well. This is to play on the safe side.
       final Accesses access = accesses.get(name);
       if (access == null || access.getSince().compareTo(tooNew) > 0) {
@@ -324,11 +328,11 @@ public class IndexManager {
           logger.error("Do not use default index name. WARNING: this index will not be created!!!");
         } else {
           DBObject options = new BasicDBObject();
-          options.put("name", indexName);
+          options.put(NAME, indexName);
           if (index.options().unique()) {
             options.put(UNIQUE, Boolean.TRUE);
           } else {
-            options.put("background", Boolean.TRUE);
+            options.put(BACKGROUND, Boolean.TRUE);
           }
           creators.put(indexName, () -> collection.createIndex(keys, options));
         }
@@ -347,14 +351,17 @@ public class IndexManager {
         BasicDBObject dbObject = new BasicDBObject(name, direction);
 
         DBObject options = new BasicDBObject();
-        options.put("name", indexName);
+        options.put(NAME, indexName);
         if (indexed.options().unique()) {
           options.put(UNIQUE, Boolean.TRUE);
         } else {
-          options.put("background", Boolean.TRUE);
+          options.put(BACKGROUND, Boolean.TRUE);
         }
         if (indexed.options().expireAfterSeconds() != -1) {
-          options.put("expireAfterSeconds", indexed.options().expireAfterSeconds());
+          options.put(EXPIRE_AFTER_SECONDS, indexed.options().expireAfterSeconds());
+        }
+        if (isNotEmpty(indexed.options().partialFilter())) {
+          options.put(PARTIAL_FILTER_EXPRESSION, indexed.options().partialFilter());
         }
 
         creators.put(indexName, () -> collection.createIndex(dbObject, options));
