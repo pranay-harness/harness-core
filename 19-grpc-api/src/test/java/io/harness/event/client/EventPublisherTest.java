@@ -96,7 +96,7 @@ public class EventPublisherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldThrowIaeIfWrongMethodIsCalled() {
     assertThatIllegalArgumentException().isThrownBy(
@@ -106,14 +106,14 @@ public class EventPublisherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testNoMessageLoss() throws Exception {
     concurrentPublish(eventPublisher);
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false, intermittent = true)
+  @Owner(emails = AVMOHAN, intermittent = true)
   @Category(UnitTests.class)
   public void testNoMessageLossWithErrorProneServer() throws Exception {
     fakeService.setErrorProne(true);
@@ -148,7 +148,7 @@ public class EventPublisherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testMessageReceived() {
     fakeService.setRecordMessages(true);
@@ -166,7 +166,7 @@ public class EventPublisherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void testMessageReceivedIfServerCallFails() {
     fakeService.setRecordMessages(true);

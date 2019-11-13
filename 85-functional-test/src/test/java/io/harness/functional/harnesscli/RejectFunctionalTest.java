@@ -37,7 +37,7 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = DEEPAK, resent = false)
+  @Owner(emails = DEEPAK)
   @Category(CliFunctionalTests.class)
   public void rejectTheWorkflow() {
     workflowName = "CLI-Test-Approval-" + System.currentTimeMillis();
@@ -68,7 +68,7 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = DEEPAK, resent = false)
+  @Owner(emails = DEEPAK)
   @Category(CliFunctionalTests.class)
   public void rejectWithoutFlag() {
     String rejectOutput = "";
@@ -89,7 +89,7 @@ public class RejectFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = DEEPAK, resent = false)
+  @Owner(emails = DEEPAK)
   @Category(CliFunctionalTests.class)
   public void rejectThePipeline() {
     pipelineName = "CLI-PIPELINE-" + System.currentTimeMillis();

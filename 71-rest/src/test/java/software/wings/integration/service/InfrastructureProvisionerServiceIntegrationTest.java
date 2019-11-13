@@ -14,7 +14,7 @@ public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegra
   //  @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   //
   //  @Test
-  //  @Owner(emails = GEORGE, resent = false)
+  //  @Owner(emails = GEORGE)
   //  public void listForTaskTest() {
   //    Randomizer.Seed seed = Randomizer.seed();
   //    final InfrastructureProvisioner infrastructureProvisioner =

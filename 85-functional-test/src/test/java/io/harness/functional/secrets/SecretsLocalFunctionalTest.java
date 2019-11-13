@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = SWAMY, resent = false, intermittent = true)
+  @Owner(emails = SWAMY, intermittent = true)
   @Category(FunctionalTests.class)
   public void secretsTextCRUDTests() {
     logger.info("Local secrets text test starts");
@@ -107,7 +107,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false, intermittent = true)
+  @Owner(emails = SWAMY, intermittent = true)
   @Category(FunctionalTests.class)
   public void secretsFileCRUDTests() {
     logger.info("Local secrets file test starts");

@@ -66,7 +66,7 @@ public class NodeWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPublishNodeStartedEvent() throws Exception {
     Instant creationTime = now().minus(5, ChronoUnit.MINUTES);
@@ -83,7 +83,7 @@ public class NodeWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPublishNodeStoppedEvent() throws Exception {
     String creationTimestamp = now().minus(5, ChronoUnit.MINUTES).toString();
@@ -101,7 +101,7 @@ public class NodeWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPublishNodeInfoOnlyOnce() throws Exception {
     Instant creationTime = now().minus(5, ChronoUnit.MINUTES);
@@ -124,7 +124,7 @@ public class NodeWatcherTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldCloseUnderlyingWatchOnClosingWatcher() throws Exception {
     nodeWatcher.onClose(null);

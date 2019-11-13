@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 
 public class PublisherModuleTest extends CategoryTest {
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldBindNoopPublisherIfPublishTargetIsNull() throws Exception {
     Injector injector = Guice.createInjector(new PublisherModule(Config.builder().build()));

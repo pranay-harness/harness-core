@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 public class SecretsCRUDTest extends AbstractE2ETest {
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(E2ETests.class)
   public void secretsTextCRUDTests() {
     logger.info("Local secrets text test starts");
@@ -60,7 +60,7 @@ public class SecretsCRUDTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(E2ETests.class)
   public void secretsFileCRUDTests() {
     logger.info("Local secrets file test starts");

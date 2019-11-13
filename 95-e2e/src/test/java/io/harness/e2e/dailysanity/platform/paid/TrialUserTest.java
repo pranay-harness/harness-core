@@ -26,7 +26,7 @@ public class TrialUserTest extends AbstractE2ETest {
   final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
 
   @Test()
-  @Owner(emails = NATARAJA, resent = false)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void listUsers() {
     logger.info("Starting the list users test");

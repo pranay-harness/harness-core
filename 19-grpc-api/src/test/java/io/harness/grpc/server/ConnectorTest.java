@@ -12,28 +12,28 @@ import org.junit.experimental.categories.Category;
 
 public class ConnectorTest extends CategoryTest {
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldFailIfSecureConnectorWithoutKeyFile() throws Exception {
     assertThatIllegalArgumentException().isThrownBy(() -> new Connector(123, true, "", null));
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldFailIfSecureConnectorWithoutCertFile() throws Exception {
     assertThatIllegalArgumentException().isThrownBy(() -> new Connector(123, true, null, ""));
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPassIfSecureConnectorWithKeyFileAndCertFile() throws Exception {
     assertThatCode(() -> new Connector(123, true, "", "")).doesNotThrowAnyException();
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPassInsecureConnectorWithoutKeyFileAndCertFile() throws Exception {
     assertThatCode(() -> new Connector(123, false, null, null)).doesNotThrowAnyException();

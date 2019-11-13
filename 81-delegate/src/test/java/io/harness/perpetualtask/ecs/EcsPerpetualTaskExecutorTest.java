@@ -55,7 +55,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldQueryEcsMetricClientAndPublishUtilizationMessages() throws Exception {
     String region = "us-east-1";

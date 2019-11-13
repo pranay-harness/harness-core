@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 public class AccessMgmtApiKeysTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = SWAMY, resent = false)
+  @Owner(emails = SWAMY)
   @Category(FunctionalTests.class)
   public void apiKeysCRUD() {
     logger.info("Creating a userGroup");

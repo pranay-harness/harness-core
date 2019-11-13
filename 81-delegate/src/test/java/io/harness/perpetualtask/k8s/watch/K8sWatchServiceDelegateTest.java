@@ -49,7 +49,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldCreatePodWatch() throws Exception {
     String cloudProviderId = UUID.randomUUID().toString();
@@ -67,7 +67,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldCreateNodeWatch() throws Exception {
     String cloudProviderId = UUID.randomUUID().toString();
@@ -85,7 +85,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldNotCreateDuplicateWatch() throws Exception {
     String cloudProviderId = UUID.randomUUID().toString();
@@ -103,7 +103,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldCreateMultipleWatchesIfNotDuplicate() throws Exception {
     String cloudProviderId1 = UUID.randomUUID().toString();
@@ -130,7 +130,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldDeletePodWatch() throws Exception {
     String cloudProviderId = UUID.randomUUID().toString();
@@ -149,7 +149,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldDeleteNodeWatch() throws Exception {
     String cloudProviderId = UUID.randomUUID().toString();
@@ -168,7 +168,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN, resent = false)
+  @Owner(emails = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldThrowIaeIfUnknownResourceKind() throws Exception {
     String cloudProviderId = UUID.randomUUID().toString();
