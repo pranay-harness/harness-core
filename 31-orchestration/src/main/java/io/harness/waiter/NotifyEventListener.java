@@ -17,7 +17,6 @@ import io.harness.queue.QueueListener;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -78,6 +77,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
                                  .fetch())) {
         for (NotifyResponse notifyResponse : notifyResponses) {
           if (notifyResponse.isError()) {
+            logger.info("Failed notification response {}", notifyResponse.getUuid());
             isError = true;
           }
           responseMap.put(notifyResponse.getUuid(), notifyResponse.getResponse());
@@ -96,24 +96,13 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
           logger.info("WaitInstance callback finished");
         } catch (Exception exception) {
           logger.error("WaitInstance callback failed", exception);
-          try {
-            WaitInstanceError waitInstanceError = WaitInstanceError.builder()
-                                                      .waitInstanceId(waitInstanceId)
-                                                      .responseMap(responseMap)
-                                                      .errorStackTrace(ExceptionUtils.getStackTrace(exception))
-                                                      .build();
-
-            persistence.save(waitInstanceError);
-          } catch (Exception e2) {
-            logger.error("Error in persisting waitInstanceError", e2);
-          }
         }
       }
 
       try {
         persistence.delete(waitInstance);
       } catch (Exception exception) {
-        logger.error("Error in waitInstanceUpdate", exception);
+        logger.error("Failed to delete WaitInstance", exception);
       }
 
       final long passed = System.currentTimeMillis() - now;
