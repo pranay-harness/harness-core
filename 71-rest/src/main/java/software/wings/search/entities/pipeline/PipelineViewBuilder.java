@@ -154,13 +154,15 @@ class PipelineViewBuilder {
               && pipelineStageElement.getProperties().get(worklowIdKey) != null) {
             Workflow workflow =
                 wingsPersistence.get(Workflow.class, pipelineStageElement.getProperties().get(worklowIdKey).toString());
-            EntityInfo workflowInfo =
-                new EntityInfo(pipelineStageElement.getProperties().get(worklowIdKey).toString(), workflow.getName());
-            workflows.add(workflowInfo);
-            if (workflow.getOrchestration() != null) {
-              populateServices(workflow);
-              workflow.getServices().forEach(
-                  service -> services.add(new EntityInfo(service.getUuid(), service.getName())));
+            if (workflow != null) {
+              EntityInfo workflowInfo =
+                  new EntityInfo(pipelineStageElement.getProperties().get(worklowIdKey).toString(), workflow.getName());
+              workflows.add(workflowInfo);
+              if (workflow.getOrchestration() != null) {
+                populateServices(workflow);
+                workflow.getServices().forEach(
+                    service -> services.add(new EntityInfo(service.getUuid(), service.getName())));
+              }
             }
           }
         }

@@ -162,7 +162,9 @@ class EnvironmentViewBuilder {
   private void setApplicationName(Environment environment, EnvironmentView environmentView) {
     if (environment.getAppId() != null) {
       Application application = wingsPersistence.get(Application.class, environment.getAppId());
-      environmentView.setAppName(application.getName());
+      if (application.getName() != null) {
+        environmentView.setAppName(application.getName());
+      }
     }
   }
 

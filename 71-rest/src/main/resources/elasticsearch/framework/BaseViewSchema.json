@@ -2,19 +2,22 @@
   "settings" : {
     "index" : {
       "number_of_replicas": 1,
-      "number_of_shards": 1
+      "number_of_shards": 1,
+      "max_ngram_diff" : 30
     },
     "analysis": {
-      "tokenizer": {
-        "camel_case_tokenizer": {
-          "type":       "pattern",
-          "pattern": "([^\\p{L}\\d]+)|(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)"
+      "analyzer": {
+        "custom_analyzer": {
+          "tokenizer": "custom_tokenizer",
+          "filter" : ["lowercase"]
         }
       },
-      "analyzer": {
-        "camel_case_analyzer": {
-          "tokenizer": "camel_case_tokenizer",
-          "filter": ["lowercase"]
+      "tokenizer": {
+        "custom_tokenizer": {
+          "type": "ngram",
+          "min_gram": 1,
+          "max_gram": 30,
+          "token_chars": [ "letter", "digit" ]
         }
       }
     }
@@ -50,7 +53,7 @@
       : {"type" : "text", "analyzer" : "standard"},
       "id" : {"type" : "keyword"},
       "lastUpdatedAt" : {"type" : "long","index" : false},
-      "name" : {"type" : "text", "analyzer": "camel_case_analyzer" },
+      "name" : {"type" : "text", "analyzer": "custom_analyzer" },
       "type" : {
         "type" : "keyword",
         "index" : false

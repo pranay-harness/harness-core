@@ -10,6 +10,7 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -62,7 +63,7 @@ public class ElasticsearchServiceImpl implements SearchService {
   @Inject private ElasticsearchIndexManager elasticsearchIndexManager;
   @Inject private Set<SearchEntity<?>> searchEntities;
   private static final int MAX_RESULTS_PER_ENTITY = 20;
-  private static final int BOOST_VALUE = 5;
+  private static final int BOOST_VALUE = 15;
   private static final int SLOP_DISTANCE_VALUE = 10;
 
   public SearchResults getSearchResults(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
@@ -169,12 +170,15 @@ public class ElasticsearchServiceImpl implements SearchService {
 
   private static BoolQueryBuilder createQuery(@NotBlank String searchString, @NotBlank String accountId) {
     BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-    QueryBuilder queryBuilder = QueryBuilders.disMaxQuery()
-                                    .add(QueryBuilders.matchPhrasePrefixQuery(EntityBaseViewKeys.name, searchString)
-                                             .boost(BOOST_VALUE)
-                                             .slop(SLOP_DISTANCE_VALUE))
-                                    .add(QueryBuilders.matchPhraseQuery(EntityBaseViewKeys.description, searchString))
-                                    .tieBreaker(0.7f);
+    QueryBuilder queryBuilder =
+        QueryBuilders.disMaxQuery()
+            .add(QueryBuilders.matchQuery(EntityBaseViewKeys.name, searchString)
+                     .operator(Operator.AND)
+                     .boost(BOOST_VALUE))
+            .add(QueryBuilders.matchPhrasePrefixQuery(EntityBaseViewKeys.description, searchString)
+                     .slop(SLOP_DISTANCE_VALUE))
+            .tieBreaker(0.0f);
+
     boolQueryBuilder.must(queryBuilder).filter(QueryBuilders.termQuery(EntityBaseViewKeys.accountId, accountId));
     return boolQueryBuilder;
   }
