@@ -173,6 +173,7 @@ import software.wings.sm.states.k8s.K8sScale;
 import software.wings.sm.states.k8s.K8sTrafficSplitState;
 import software.wings.sm.states.pcf.MapRouteState;
 import software.wings.sm.states.pcf.PcfDeployState;
+import software.wings.sm.states.pcf.PcfPluginState;
 import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
@@ -567,6 +568,11 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
   PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, FLOW_CONTROLS, WorkflowServiceHelper.PCF_BG_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_SWICH_ROUTES),
+      ORCHESTRATION_STENCILS),
+
+  // todo @rk: verify
+  PCF_PLUGIN(PcfPluginState.class, COMMANDS, WorkflowServiceHelper.PCF_PLUGIN,
+      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_SETUP, PhaseStepType.PCF_RESIZE),
       ORCHESTRATION_STENCILS),
 
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",

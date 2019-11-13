@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
@@ -41,6 +40,7 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.file.NoSuchFileException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,11 +131,20 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     } else {
       executionLogCallback.saveExecutionLog("CommitId: " + gitFileConfig.getCommitId());
     }
-    executionLogCallback.saveExecutionLog("\nFetching " + gitFileConfig.getFilePath());
 
-    String filePath = isBlank(gitFileConfig.getFilePath()) ? "" : gitFileConfig.getFilePath();
+    List<String> filePathsToFetch = null;
+    if (EmptyPredicate.isNotEmpty(gitFileConfig.getFilePathList())) {
+      filePathsToFetch = gitFileConfig.getFilePathList();
+      executionLogCallback.saveExecutionLog("\nFetching following Files :");
+      printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
+    } else {
+      executionLogCallback.saveExecutionLog("\nFetching " + gitFileConfig.getFilePath());
+      String filePath = isBlank(gitFileConfig.getFilePath()) ? "" : gitFileConfig.getFilePath();
+      filePathsToFetch = Collections.singletonList(filePath);
+    }
+
     GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
-        gitFileConfig.getCommitId(), gitFileConfig.getBranch(), asList(filePath), gitFileConfig.isUseBranch());
+        gitFileConfig.getCommitId(), gitFileConfig.getBranch(), filePathsToFetch, gitFileConfig.isUseBranch());
     printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
 
     return gitFetchFilesResult;
@@ -176,6 +185,17 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         each -> sb.append(color(format("- %s", each.getFilePath()), Gray)).append(System.lineSeparator()));
 
     executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
+    executionLogCallback.saveExecutionLog(sb.toString());
+  }
+
+  private void printFileNamesInExecutionLogs(List<String> filePathList, ExecutionLogCallback executionLogCallback) {
+    if (EmptyPredicate.isEmpty(filePathList)) {
+      return;
+    }
+
+    StringBuilder sb = new StringBuilder(1024);
+    filePathList.forEach(filePath -> sb.append(color(format("- %s", filePath), Gray)).append(System.lineSeparator()));
+
     executionLogCallback.saveExecutionLog(sb.toString());
   }
 }

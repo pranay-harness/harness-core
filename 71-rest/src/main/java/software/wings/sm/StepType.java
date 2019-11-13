@@ -187,6 +187,7 @@ import software.wings.sm.states.k8s.K8sScale;
 import software.wings.sm.states.k8s.K8sTrafficSplitState;
 import software.wings.sm.states.pcf.MapRouteState;
 import software.wings.sm.states.pcf.PcfDeployState;
+import software.wings.sm.states.pcf.PcfPluginState;
 import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
@@ -411,6 +412,10 @@ public enum StepType {
   PCF_ROLLBACK(PcfRollbackState.class, WorkflowServiceHelper.PCF_ROLLBACK, asList(PCF),
       asList(PhaseStepType.PCF_RESIZE), Lists.newArrayList(DeploymentType.PCF), asList(PhaseType.ROLLBACK),
       asList(BASIC, CANARY, BLUE_GREEN)),
+  // todo @rk: verify
+  PCF_PLUGIN(PcfPluginState.class, WorkflowServiceHelper.PCF_PLUGIN, asList(PCF),
+      asList(PhaseStepType.PCF_SETUP, PhaseStepType.PCF_RESIZE), Lists.newArrayList(DeploymentType.PCF),
+      asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
 
   // Infra Provisioners
   CLOUD_FORMATION_CREATE_STACK(CloudFormationCreateStackState.class, CF_CREATE_STACK,

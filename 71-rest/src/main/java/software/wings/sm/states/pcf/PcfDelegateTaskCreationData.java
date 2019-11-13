@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.TaskType;
 
+import java.util.List;
+
 @Data
 @Builder
 public class PcfDelegateTaskCreationData {
@@ -15,4 +17,6 @@ public class PcfDelegateTaskCreationData {
   private String infrastructureMappingId;
   private Object[] parameters;
   private long timeout;
+  private List<String> tagList;
+  private String serviceTemplateId;
 }

@@ -28,7 +28,17 @@ public class PcfCommandRequest implements ExecutionCapabilityDemander {
   private boolean enforceSslValidation;
   private boolean useAppAutoscalar;
 
-  public enum PcfCommandType { SETUP, RESIZE, ROLLBACK, UPDATE_ROUTE, DATAFETCH, VALIDATE, APP_DETAILS, CREATE_ROUTE }
+  public enum PcfCommandType {
+    SETUP,
+    RESIZE,
+    ROLLBACK,
+    UPDATE_ROUTE,
+    DATAFETCH,
+    VALIDATE,
+    APP_DETAILS,
+    CREATE_ROUTE,
+    RUN_PLUGIN
+  }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

@@ -19,6 +19,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Arrays;
@@ -43,8 +44,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
     boolean validated = false;
     PcfCommandRequest commandRequest = (PcfCommandRequest) getParameters()[0];
     PcfConfig pcfConfig = commandRequest.getPcfConfig();
-
-    List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) getParameters()[1];
+    final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(commandRequest);
     logger.info("Running validation for task {} ", delegateTaskId);
 
     try {
@@ -63,7 +63,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
       logger.error(errorMsg);
     }
 
-    if (validated && commandRequest.isUseCLIForPcfAppCreation()) {
+    if (validated && pcfCliValidationRequired(commandRequest)) {
       // Here we are using new DelegateCapability Framework code. But eventually, this validation
       // should become part of this framework and this class should be deprecated and removed later
       ProcessExecutorCapabilityCheck executorCapabilityCheck = new ProcessExecutorCapabilityCheck();
@@ -119,10 +119,25 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
                           .append(pcfConfig.getUsername())
                           .toString();
 
-    if (pcfCommandRequest.isUseCLIForPcfAppCreation()) {
+    if (pcfCliValidationRequired(pcfCommandRequest)) {
       criteria = new StringBuilder(128).append(criteria).append('_').append("cf_cli").toString();
     }
 
     return criteria;
+  }
+
+  private List<EncryptedDataDetail> getEncryptedDataDetails(PcfCommandRequest pcfCommandRequest) {
+    if (pcfCommandRequest instanceof PcfRunPluginCommandRequest) {
+      return ((PcfRunPluginCommandRequest) pcfCommandRequest).getEncryptedDataDetails();
+    }
+    final Object[] parameters = getParameters();
+    if (parameters.length > 1) {
+      return (List<EncryptedDataDetail>) parameters[1];
+    }
+    return null;
+  }
+
+  private boolean pcfCliValidationRequired(PcfCommandRequest pcfCommandRequest) {
+    return pcfCommandRequest instanceof PcfRunPluginCommandRequest || pcfCommandRequest.isUseCLIForPcfAppCreation();
   }
 }

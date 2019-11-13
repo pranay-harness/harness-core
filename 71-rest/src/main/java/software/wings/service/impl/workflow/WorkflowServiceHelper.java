@@ -203,6 +203,7 @@ public class WorkflowServiceHelper {
   public static final String INFRA_TEMP_ROUTE_PCF = "infra.pcf.tempRoute";
   public static final String SETUP = "Setup";
   public static final String PCF_SETUP = "App Setup";
+  public static final String PCF_PLUGIN = "Run PCF Plugin";
   public static final String SPOTINST_SETUP = "Elastigroup Setup";
   public static final String SPOTINST_DEPLOY = "Elastigroup Deploy";
   public static final String SPOTINST_ROLLBACK = "Elastigroup Rollback";

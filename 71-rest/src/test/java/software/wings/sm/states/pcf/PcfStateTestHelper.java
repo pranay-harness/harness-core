@@ -22,6 +22,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfDeployContextElement;
+import software.wings.api.pcf.PcfPluginStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
@@ -154,6 +155,24 @@ public class PcfStateTestHelper {
         .routeMaps(route)
         .tempRouteMap(tempRoute)
         .computeProviderSettingId(COMPUTE_PROVIDER_ID)
+        .build();
+  }
+
+  public StateExecutionInstance getStateExecutionInstanceForPluginState(
+      WorkflowStandardParams workflowStandardParams, PhaseElement phaseElement, ServiceElement serviceElement) {
+    return aStateExecutionInstance()
+        .displayName(STATE_NAME)
+        .addContextElement(phaseElement)
+        .addStateExecutionData(PcfPluginStateExecutionData.builder().build())
+        .addContextElement(workflowStandardParams)
+        .addContextElement(ContainerServiceElement.builder()
+                               .uuid(serviceElement.getUuid())
+                               .resizeStrategy(RESIZE_NEW_FIRST)
+                               .maxInstances(10)
+                               .name(PCF_SERVICE_NAME)
+                               .deploymentType(DeploymentType.PCF)
+                               .infraMappingId(INFRA_MAPPING_ID)
+                               .build())
         .build();
   }
 }

@@ -9,6 +9,7 @@ import org.cloudfoundry.reactor.ConnectionContext;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,9 @@ public interface PcfClient {
       throws PivotalClientApiException, InterruptedException;
   Optional<Route> getRouteMap(PcfRequestConfig pcfRequestConfig, String route)
       throws PivotalClientApiException, InterruptedException;
+
+  void runPcfPluginScript(PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
   List<Domain> getAllDomainsForSpace(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException;
   void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,

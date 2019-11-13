@@ -9,11 +9,14 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 
 import java.util.List;
@@ -31,15 +34,25 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public PcfCommandExecutionResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
+    if (!(parameters instanceof PcfRunPluginCommandRequest)) {
+      throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfPluginCommandRequest"));
+    }
+    final PcfRunPluginCommandRequest pluginCommandRequest = (PcfRunPluginCommandRequest) parameters;
+    return getPcfCommandExecutionResponse(pluginCommandRequest, pluginCommandRequest.getEncryptedDataDetails());
   }
 
   @Override
   public PcfCommandExecutionResponse run(Object[] parameters) {
-    PcfCommandRequest pcfCommandRequest = (PcfCommandRequest) parameters[0];
+    final PcfCommandRequest pcfCommandRequest = (PcfCommandRequest) parameters[0];
+    final List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) parameters[1];
+    return getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails);
+  }
+
+  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(
+      PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       return commandTaskTypeToTaskHandlerMap.get(pcfCommandRequest.getPcfCommandType().name())
-          .executeTask(pcfCommandRequest, (List) parameters[1]);
+          .executeTask(pcfCommandRequest, encryptedDataDetails);
     } catch (Exception ex) {
       logger.error(format("Exception in processing PCF task [%s]", pcfCommandRequest.toString()), ex);
       return PcfCommandExecutionResponse.builder()
