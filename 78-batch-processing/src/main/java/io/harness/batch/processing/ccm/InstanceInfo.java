@@ -13,6 +13,7 @@ public class InstanceInfo {
   String accountId;
   String cloudProviderId;
   String instanceId;
+  String instanceName;
   InstanceType instanceType;
   Resource resource;
   List<Container> containerList;

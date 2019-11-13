@@ -15,5 +15,7 @@ public interface InstanceDataService {
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 
+  InstanceData fetchInstanceDataWithName(String accountId, String instanceId, Long occurredAt);
+
   List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime);
 }

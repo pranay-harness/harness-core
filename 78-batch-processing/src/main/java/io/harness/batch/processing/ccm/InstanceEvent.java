@@ -11,6 +11,7 @@ public class InstanceEvent {
   String accountId;
   String cloudProviderId;
   String instanceId;
+  String instanceName;
   Instant timestamp;
   EventType type;
   public enum EventType { STOP, START }

@@ -1,5 +1,7 @@
 package io.harness.batch.processing.dao.impl;
 
+import com.google.inject.Inject;
+
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
@@ -13,7 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @Slf4j
 public class BatchJobScheduledDataDaoImpl implements BatchJobScheduledDataDao {
-  @Autowired private HPersistence hPersistence;
+  @Autowired @Inject private HPersistence hPersistence;
 
   @Override
   public boolean create(BatchJobScheduledData batchJobScheduledData) {

@@ -22,6 +22,8 @@ public interface InstanceDataDao {
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 
+  InstanceData fetchInstanceDataWithName(String accountId, String instanceName, Long occurredAt);
+
   List<InstanceData> fetchClusterActiveInstanceData(
       String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime);
 }

@@ -39,7 +39,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, podInfo.getNodeName());
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
 
-    InstanceData instanceData = instanceDataService.fetchInstanceData(accountId, podInfo.getNodeName());
+    InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(
+        accountId, podInfo.getNodeName(), publishedMessage.getOccurredAt());
     if (null != instanceData) {
       Map<String, String> nodeMetaData = instanceData.getMetaData();
       metaData.put(InstanceMetaDataConstants.REGION, nodeMetaData.get(InstanceMetaDataConstants.REGION));
@@ -47,6 +48,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
           InstanceMetaDataConstants.INSTANCE_FAMILY, nodeMetaData.get(InstanceMetaDataConstants.INSTANCE_FAMILY));
       metaData.put(
           InstanceMetaDataConstants.OPERATING_SYSTEM, nodeMetaData.get(InstanceMetaDataConstants.OPERATING_SYSTEM));
+      metaData.put(InstanceMetaDataConstants.POD_NAME, podInfo.getPodName());
       metaData.put(
           InstanceMetaDataConstants.PARENT_RESOURCE_CPU, String.valueOf(instanceData.getTotalResource().getCpuUnits()));
       metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY,
@@ -60,6 +62,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .accountId(accountId)
         .cloudProviderId(podInfo.getCloudProviderId())
         .instanceId(podInfo.getPodUid())
+        .instanceName(podInfo.getPodName())
         .instanceType(InstanceType.K8S_POD)
         .resource(K8sResourceUtils.getResource(podInfo.getTotalResource()))
         .metaData(metaData)

@@ -26,6 +26,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
     metaData.put(InstanceMetaDataConstants.REGION, labelsMap.get(K8sCCMConstants.REGION));
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
+    metaData.put(InstanceMetaDataConstants.NODE_NAME, nodeInfo.getNodeName());
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, labelsMap.get(K8sCCMConstants.INSTANCE_FAMILY));
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeInfo.getNodeUid());
@@ -33,7 +34,8 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     return InstanceInfo.builder()
         .accountId(publishedMessage.getAccountId())
         .cloudProviderId(nodeInfo.getCloudProviderId())
-        .instanceId(nodeInfo.getNodeName())
+        .instanceId(nodeInfo.getNodeUid())
+        .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)
         .resource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResource()))
         .labels(nodeInfo.getLabelsMap())

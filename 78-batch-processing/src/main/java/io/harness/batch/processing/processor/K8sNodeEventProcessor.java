@@ -29,6 +29,7 @@ public class K8sNodeEventProcessor implements ItemProcessor<PublishedMessage, In
         .accountId(publishedMessage.getAccountId())
         .cloudProviderId(nodeEvent.getCloudProviderId())
         .instanceId(nodeEvent.getNodeUid())
+        .instanceName(nodeEvent.getNodeName())
         .type(type)
         .timestamp(HTimestamps.toInstant(nodeEvent.getTimestamp()))
         .build();
