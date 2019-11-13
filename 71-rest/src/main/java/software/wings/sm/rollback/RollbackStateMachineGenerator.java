@@ -28,7 +28,10 @@ import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
 public class RollbackStateMachineGenerator {
-  private static final String STAGING_STEP_NAME = "Staging Original Execution";
+  public static final String ROLLBACK_STAGING_PHASE_NAME = "Rollback Staging";
+  private static final String ROLLBACK_STAGING_PHASE_STEP_NAME = "Rollback Staged";
+  private static final String ROLLBACK_STAGING_STEP_NAME = "Staging Original Execution";
+
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
@@ -62,18 +65,21 @@ public class RollbackStateMachineGenerator {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) orchestrationWorkflow.cloneInternal();
     for (WorkflowPhase phase : canaryOrchestrationWorkflow.getWorkflowPhases()) {
+      phase.setName(ROLLBACK_STAGING_PHASE_NAME);
       phase.setPhaseSteps(Collections.singletonList(getStagingStep(successfulExecutionId)));
+      WorkflowPhase rollbackPhase = canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phase.getUuid());
+      rollbackPhase.setPhaseNameForRollback(ROLLBACK_STAGING_PHASE_NAME);
     }
     return canaryOrchestrationWorkflow;
   }
 
   private PhaseStep getStagingStep(String successfulExecutionId) {
     PhaseStep phaseStep =
-        aPhaseStep(ROLLBACK_STAGED, STAGING_STEP_NAME)
+        aPhaseStep(ROLLBACK_STAGED, ROLLBACK_STAGING_PHASE_STEP_NAME)
             .addStep(GraphNode.builder()
                          .id(generateUuid())
                          .type(STAGING_ORIGINAL_EXECUTION.name())
-                         .name(STAGING_STEP_NAME)
+                         .name(ROLLBACK_STAGING_STEP_NAME)
                          .properties(ImmutableMap.<String, Object>builder()
                                          .put(StagingOriginalExecutionKeys.successfulExecutionId, successfulExecutionId)
                                          .build())
