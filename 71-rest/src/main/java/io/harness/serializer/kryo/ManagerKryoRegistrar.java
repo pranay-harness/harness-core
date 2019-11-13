@@ -109,6 +109,7 @@ import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.api.k8s.K8sSwapServiceElement;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
@@ -1391,5 +1392,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
 
     kryo.register(JiraIssueData.class, 7259);
+    kryo.register(K8sSwapServiceElement.class, 7260);
   }
 }
