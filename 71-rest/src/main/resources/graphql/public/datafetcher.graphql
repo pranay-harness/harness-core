@@ -3,6 +3,9 @@ enum DataFetcherEnum {
   applicationConnection
   applicationStats
   artifact
+  billingStatsEntity
+  billingStatsTimeSeries
+  billingTrendStats
   cloudProvider
   cloudProviderConnection
   cloudProviderStats
