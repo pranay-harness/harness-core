@@ -76,33 +76,34 @@ public class WaitNotifyEngine {
     }
 
     try {
-      String notificationId = persistence.save(NotifyResponse.<T>builder()
-                                                   .uuid(correlationId)
-                                                   .createdAt(currentTimeMillis())
-                                                   .response(response)
-                                                   .error(error || response instanceof ErrorNotifyResponseData)
-                                                   .build());
-
-      final Query<WaitInstance> query = persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                            .filter(WaitInstanceKeys.waitingOnCorrelationIds, correlationId);
-
-      final UpdateOperations<WaitInstance> operations =
-          persistence.createUpdateOperations(WaitInstance.class)
-              .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, correlationId);
-
-      WaitInstance waitInstance;
-      while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
-        if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
-          notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
-        }
-      }
-
-      return notificationId;
+      persistence.save(NotifyResponse.<T>builder()
+                           .uuid(correlationId)
+                           .createdAt(currentTimeMillis())
+                           .response(response)
+                           .error(error || response instanceof ErrorNotifyResponseData)
+                           .build());
+      handleNotifyResponse(correlationId);
+      return correlationId;
     } catch (DuplicateKeyException exception) {
       logger.warn("Unexpected rate of DuplicateKeyException per correlation", exception);
     } catch (Exception exception) {
       logger.error("Failed to notify for response of type " + response.getClass().getSimpleName(), exception);
     }
     return null;
+  }
+
+  public void handleNotifyResponse(String uuid) {
+    final Query<WaitInstance> query = persistence.createQuery(WaitInstance.class, excludeAuthority)
+                                          .filter(WaitInstanceKeys.waitingOnCorrelationIds, uuid);
+
+    final UpdateOperations<WaitInstance> operations = persistence.createUpdateOperations(WaitInstance.class)
+                                                          .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, uuid);
+
+    WaitInstance waitInstance;
+    while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
+      if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+        notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+      }
+    }
   }
 }

@@ -20,8 +20,6 @@ import io.harness.queue.QueueController;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -36,6 +34,7 @@ public class Notifier implements Runnable {
   @Inject private PersistentLocker persistentLocker;
   @Inject private Queue<NotifyEvent> notifyQueue;
   @Inject private QueueController queueController;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public void run() {
@@ -77,17 +76,8 @@ public class Notifier implements Runnable {
                                .project(NotifyResponseKeys.uuid, true)
                                .project(NotifyResponseKeys.createdAt, true)
                                .fetch())) {
+      boolean needHandling = false;
       for (NotifyResponse notifyResponse : iterator) {
-        final Query<WaitInstance> raceQuery =
-            persistence.createQuery(WaitInstance.class, excludeAuthority)
-                .filter(WaitInstanceKeys.waitingOnCorrelationIds, notifyResponse.getUuid());
-
-        final UpdateOperations<WaitInstance> raceOperations =
-            persistence.createUpdateOperations(WaitInstance.class)
-                .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, notifyResponse.getUuid());
-
-        persistence.update(raceQuery, raceOperations);
-
         try (HIterator<WaitInstance> waitInstances =
                  new HIterator(persistence.createQuery(WaitInstance.class, excludeAuthority)
                                    .filter(WaitInstanceKeys.correlationIds, notifyResponse.getUuid())
@@ -101,11 +91,17 @@ public class Notifier implements Runnable {
           }
 
           for (WaitInstance waitInstance : waitInstances) {
-            if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
-                && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
-              notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+            if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+              if (waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
+                notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+              }
+            } else if (waitInstance.getWaitingOnCorrelationIds().contains(notifyResponse.getUuid())) {
+              needHandling = true;
             }
           }
+        }
+        if (needHandling) {
+          waitNotifyEngine.handleNotifyResponse(notifyResponse.getUuid());
         }
       }
 
