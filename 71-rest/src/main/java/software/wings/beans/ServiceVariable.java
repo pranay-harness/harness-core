@@ -26,6 +26,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.utils.IndexType;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -49,9 +50,12 @@ import javax.validation.constraints.NotNull;
   ,
       @Index(fields = { @Field("appId")
                         , @Field("entityId") }, options = @IndexOptions(name = "app_entityId")),
-      @Index(fields = {
-        @Field("appId"), @Field("envId"), @Field("templateId")
-      }, options = @IndexOptions(name = "app_env_templateId"))
+      @Index(fields = { @Field("appId")
+                        , @Field("envId"), @Field("templateId") },
+          options = @IndexOptions(name = "app_env_templateId")),
+      @Index(options = @IndexOptions(name = "appEntityIdx"), fields = {
+        @Field("appId"), @Field("entityId"), @Field(value = "createdAt", type = IndexType.DESC),
+      })
 })
 @Data
 @Builder
