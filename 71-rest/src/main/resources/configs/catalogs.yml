@@ -427,6 +427,8 @@ TASK_TYPES:
       value: TERRAFORM
     - name: Lightweight Directory Access Protocol (LDAP)
       value: LDAP
+    - name: Slack Notifications
+      value: SLACK
     - name: Amazon Web Services (AWS)
       value: AWS
     - name: Trigger

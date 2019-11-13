@@ -237,6 +237,7 @@ import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.ServiceVariableServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.SftpBuildServiceImpl;
+import software.wings.service.impl.SlackMessageSenderImpl;
 import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.impl.SmbBuildServiceImpl;
 import software.wings.service.impl.StateExecutionServiceImpl;
@@ -435,6 +436,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SftpBuildService;
 import software.wings.service.intfc.SignupService;
+import software.wings.service.intfc.SlackMessageSender;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.SmbBuildService;
 import software.wings.service.intfc.StateExecutionService;
@@ -730,6 +732,7 @@ public class WingsModule extends DependencyModule {
     bind(AwsRoute53HelperServiceManager.class).to(AwsRoute53HelperServiceManagerImpl.class);
     bind(HarnessApiKeyService.class).to(HarnessApiKeyServiceImpl.class);
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
+    bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 
     bind(KmsEncryptDecryptClient.class);
     bind(GraphQLRateLimiter.class);

@@ -24,6 +24,7 @@ import java.util.List;
 public class OwnerRule extends RepeatRule {
   public static final String AADITI = "aaditi.joag@harness.io";
   public static final String ADWAIT = "adwait.bhandare@harness.io";
+  public static final String AMAN = "aman.singh@harness.io";
   public static final String ANKIT = "ankit.singhal@harness.io";
   public static final String ANSHUL = "anshul@harness.io";
   public static final String ANUBHAW = "anubhaw@harness.io";
@@ -69,6 +70,7 @@ public class OwnerRule extends RepeatRule {
                                            .add(AADITI)
                                            .add(ADWAIT)
                                            .add(ANKIT)
+                                           .add(AMAN)
                                            .add(ANSHUL)
                                            .add(ANUBHAW)
                                            .add(AVMOHAN)

@@ -193,6 +193,7 @@ import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
+import software.wings.beans.SlackMessage;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SpotInstConfig;
@@ -444,6 +445,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
+import software.wings.service.impl.SlackMessageSenderImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -1392,6 +1394,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
 
     kryo.register(JiraIssueData.class, 7259);
+
     kryo.register(K8sSwapServiceElement.class, 7260);
+
+    kryo.register(SlackMessage.class, 7261);
+    kryo.register(SlackMessageSenderImpl.class, 7262);
   }
 }
