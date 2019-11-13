@@ -36,7 +36,7 @@ public class IndexManagerTest extends PersistenceTest {
 
     final Map<String, IndexCreator> creators = IndexManager.indexCreators(mappedClass, collection);
 
-    assertThat(creators).hasSize(2);
+    assertThat(creators).hasSize(3);
     assertThat(IndexManager.createNewIndexes(creators)).isEqualTo(creators.size());
     final Date afterCreatingIndexes = new Date();
 
@@ -45,7 +45,6 @@ public class IndexManagerTest extends PersistenceTest {
 
     final Date tooNew = new Date(System.currentTimeMillis() - Duration.ofDays(1).toMillis());
     assertThat(IndexManager.isOkToDropIndexes(IndexManager.tooNew(), accesses, indexInfo)).isFalse();
-
     assertThat(IndexManager.isOkToDropIndexes(afterCreatingIndexes, accesses, indexInfo)).isTrue();
   }
 }
