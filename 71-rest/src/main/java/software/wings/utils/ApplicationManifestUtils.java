@@ -114,8 +114,6 @@ public class ApplicationManifestUtils {
 
     ContainerServiceParams containerServiceParams = null;
     String infrastructureMappingId = context.fetchInfraMappingId();
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.get(app.getAppId(), infrastructureMappingId);
 
     if (infrastructureMappingId != null) {
       InfrastructureMapping infraMapping =

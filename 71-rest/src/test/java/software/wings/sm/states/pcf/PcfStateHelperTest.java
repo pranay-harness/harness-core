@@ -264,12 +264,14 @@ public class PcfStateHelperTest extends WingsBaseTest {
     appManifestMap.put(K8sValuesLocation.Service, serviceApplicationManifest);
 
     PcfManifestsPackage pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult);
-    // assertThat(finalManifestFilesMap).isEmpty();
+    assertThat(pcfManifestsPackage.getManifestYml()).isNull();
+    assertThat(pcfManifestsPackage.getVariableYmls()).isNull();
 
     filesFromMultipleRepo.put(K8sValuesLocation.Service.name(), null);
     fetchFilesResult.setFilesFromMultipleRepo(filesFromMultipleRepo);
     pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult);
-    // assertThat(finalManifestFilesMap).isEmpty();
+    assertThat(pcfManifestsPackage.getManifestYml()).isNull();
+    assertThat(pcfManifestsPackage.getVariableYmls()).isNull();
   }
 
   @Test
