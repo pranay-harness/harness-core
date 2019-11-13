@@ -1,0 +1,99 @@
+extend type Query {
+  billingStatsTimeSeries(
+    filters: [CCMFilter]
+    aggregateFunction: CCMAggregationFunction
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): StackedTimeSeriesData @dataFetcher(name: billingStatsTimeSeries)
+
+  billingTrendStats(
+    filters: [CCMFilter]
+    aggregateFunction: CCMAggregationFunction
+    groupBy: [CCMGroupBy]
+  ): BillingStatsData @dataFetcher(name: billingTrendStats)
+
+  billingStatsEntity(
+    filters: [CCMFilter]
+    aggregateFunction: CCMAggregationFunction
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): BillingEntityData @dataFetcher(name: billingStatsEntity)
+}
+
+input CCMAggregationFunction {
+  operationType: CCMAggregateOperation
+  columnName: String
+}
+
+enum CCMAggregateOperation {
+  SUM
+}
+
+input CCMGroupBy {
+  entityGroupBy: CCMEntityGroupBy
+}
+
+enum CCMEntityGroupBy {
+  Application
+  Service
+  Cluster
+  StartTime
+  Environment
+  Region
+}
+
+input TimeSeriesGroupBy {
+  timeAggregationType: TimeGroupType
+  timeAggregationValue: Int
+}
+
+enum TimeGroupType {
+  HOUR
+  DAY
+}
+
+input BillingSortCriteria {
+  sortType: BillingSortType
+  sortOrder: SortOrder
+}
+
+enum BillingSortType {
+  Time
+  Amount
+}
+
+type BillingEntityDataPoint {
+  id: String
+  name: String
+  type: String
+  totalCost: Number
+  idleCost: Number
+  costTrend: Number
+  trendType: String
+  region: String
+}
+
+type BillingEntityData {
+  data: [BillingEntityDataPoint]
+}
+
+type BillingStatsData {
+  totalCost: BillingStatsInfo
+  costTrend: BillingStatsInfo
+  forecastCost: BillingStatsInfo
+}
+
+type BillingStatsInfo {
+  statsLabel: String
+  statsDescription: String
+  statsValue: String
+}
+
+input CCMFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  cluster: IdFilter
+  endTime: TimeFilter
+  startTime: TimeFilter
+}
