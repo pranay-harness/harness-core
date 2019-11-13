@@ -80,8 +80,7 @@ public class BuildSourceCallback implements NotifyCallback {
   // Used in tests.
   public BuildSourceCallback() {}
 
-  public BuildSourceCallback(
-      String accountId, String artifactStreamId, String permitId, String settingId) { // todo: new constr with settingId
+  public BuildSourceCallback(String accountId, String artifactStreamId, String permitId, String settingId) {
     this.accountId = accountId;
     this.artifactStreamId = artifactStreamId;
     this.permitId = permitId;

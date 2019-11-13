@@ -1,9 +1,9 @@
 package software.wings.helpers.ext.chartmuseum;
 
 public class ChartMuseumConstants {
-  public static final int CHART_MUSEUM_SERVER_START_RETRIES = 5; // ToDo anshul decide on the value
-  public static final int PORTS_START_POINT = 35000; // ToDo anshul decide on the value
-  public static final int PORTS_BOUND = 5000; // ToDo anshul decide on the value
+  public static final int CHART_MUSEUM_SERVER_START_RETRIES = 5;
+  public static final int PORTS_START_POINT = 35000;
+  public static final int PORTS_BOUND = 5000;
 
   public static final String CHART_MUSEUM_SERVER_URL = "http://127.0.0.1:${PORT}";
 

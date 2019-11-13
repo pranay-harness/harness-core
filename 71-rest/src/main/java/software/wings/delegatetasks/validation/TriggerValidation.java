@@ -22,8 +22,8 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class TriggerValidation extends AbstractDelegateValidateTask {
-  @Inject private transient GitClient gitClient;
-  @Inject private transient EncryptionService encryptionService;
+  @Inject private GitClient gitClient;
+  @Inject private EncryptionService encryptionService;
 
   public TriggerValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
@@ -57,7 +57,6 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
     return singletonList(delegateConnectionResult);
   }
 
-  // ToDo what does this getCriteria does
   @Override
   public List<String> getCriteria() {
     TriggerRequest triggerRequest = (TriggerRequest) (getParameters()[0]);

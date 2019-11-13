@@ -27,11 +27,11 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class HelmCommandValidation extends AbstractDelegateValidateTask {
-  @Inject private transient HelmDeployService helmDeployService;
-  @Inject private transient ContainerValidationHelper containerValidationHelper;
-  @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Inject private transient GitClient gitClient;
-  @Inject private transient EncryptionService encryptionService;
+  @Inject private HelmDeployService helmDeployService;
+  @Inject private ContainerValidationHelper containerValidationHelper;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private GitClient gitClient;
+  @Inject private EncryptionService encryptionService;
 
   public HelmCommandValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {

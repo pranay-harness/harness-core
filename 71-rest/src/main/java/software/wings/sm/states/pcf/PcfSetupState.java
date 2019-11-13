@@ -121,7 +121,7 @@ public class PcfSetupState extends State {
   @Inject private ServiceHelper serviceHelper;
   @Inject private transient ActivityHelperService activityHelperService;
   @Inject private transient FeatureFlagService featureFlagService;
-  @Inject private transient ApplicationManifestUtils applicationManifestUtils;
+  @Inject private ApplicationManifestUtils applicationManifestUtils;
 
   @Inject @Transient protected transient LogService logService;
 

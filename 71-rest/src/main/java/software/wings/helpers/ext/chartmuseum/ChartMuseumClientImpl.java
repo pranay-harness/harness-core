@@ -151,7 +151,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     try (StringBufferOutputStream stringBufferOutputStream = new StringBufferOutputStream(stringBuffer)) {
       return new ProcessExecutor()
           .environment(environment)
-          .timeout(5, TimeUnit.MINUTES) // ToDo anshul fix this..reduce it to 1 ..also do we need it
+          .timeout(5, TimeUnit.MINUTES)
           .commandSplit(command)
           .readOutput(true)
           .redirectOutput(stringBufferOutputStream)
