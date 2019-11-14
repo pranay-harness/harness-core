@@ -1,18 +1,22 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.User.Builder.anUser;
 
-import io.harness.CategoryTest;
+import com.google.inject.Inject;
+
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -23,7 +27,11 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.FeatureName;
+import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.AccountPasswordExpirationJob;
@@ -32,6 +40,7 @@ import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
@@ -41,13 +50,14 @@ import software.wings.utils.CacheManager;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
+import java.util.Base64;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.GenericType;
 
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
-public class UserResourceTest extends CategoryTest {
+public class UserResourceTest extends WingsBaseTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
   public static final HarnessUserGroupService HARNESS_USER_GROUP_SERVICE = mock(HarnessUserGroupService.class);
   public static final UserGroupService USER_GROUP_SERVICE = mock(UserGroupService.class);
@@ -63,6 +73,8 @@ public class UserResourceTest extends CategoryTest {
       mock(TwoFactorAuthenticationManager.class);
   static final UsageRestrictionsService USAGE_RESTRICTIONS_SERVICE = mock(UsageRestrictionsService.class);
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
+  static final FeatureFlagService FEATURE_FLAG_SERVICE = mock(FeatureFlagService.class);
+  @Inject @InjectMocks private UserResource userResource;
 
   /**
    * The constant RESOURCES.
@@ -73,7 +85,7 @@ public class UserResourceTest extends CategoryTest {
           .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, USAGE_RESTRICTIONS_SERVICE,
               ACCOUNT_PERMISSION_UTILS, AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHE_HELPER,
               HARNESS_USER_GROUP_SERVICE, USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB,
-              RE_CAPTCHA_VERIFIER))
+              RE_CAPTCHA_VERIFIER, FEATURE_FLAG_SERVICE))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)
           .build();
@@ -109,5 +121,20 @@ public class UserResourceTest extends CategoryTest {
   public void shouldErrorOnListWhenAccountIdIsNotFound() {
     RestResponse<PageResponse<User>> restResponse =
         RESOURCES.client().target("/users").request().get(new GenericType<RestResponse<PageResponse<User>>>() {});
+  }
+
+  @Test
+  @Owner(emails = DEEPAK)
+  @Category(UnitTests.class)
+  public void shouldLoginUserUsingPostRequest() {
+    when(AUTHENTICATION_MANAGER.defaultLoginAccount(anyString(), anyString())).thenReturn(new User());
+    when(FEATURE_FLAG_SERVICE.isEnabled(FeatureName.LOGIN_POST_REQUEST, null)).thenReturn(true);
+    String username = "userEmail";
+    String password = "userPassword";
+    String actualString = username + ":" + password;
+    String BasicBase64format = Base64.getEncoder().encodeToString(actualString.getBytes());
+    String authorization = "Basic " + BasicBase64format;
+    userResource.login(LoginRequest.builder().authorization(authorization).build(), null, null);
+    verify(AUTHENTICATION_MANAGER, times(1)).defaultLoginAccount(anyString(), anyString());
   }
 }

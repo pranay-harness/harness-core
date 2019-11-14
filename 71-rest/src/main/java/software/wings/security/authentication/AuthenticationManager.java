@@ -32,6 +32,7 @@ import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
+import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.licensing.LicenseService;
 import software.wings.security.SecretManager.JWT_CATEGORY;
@@ -179,9 +180,12 @@ public class AuthenticationManager {
       }
 
       builder.showCaptcha(showCaptcha);
-
       Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
           user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
+      boolean isPostRequest = false;
+      if (featureFlagService.isEnabled(FeatureName.LOGIN_POST_REQUEST, null)) {
+        isPostRequest = true;
+      }
       AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
       if (null == authenticationMechanism) {
         authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
@@ -208,10 +212,11 @@ public class AuthenticationManager {
         default:
           // Nothing to do by default
       }
-      return builder.authenticationMechanism(authenticationMechanism).build();
+      return builder.postRequest(isPostRequest).authenticationMechanism(authenticationMechanism).build();
     } catch (WingsException we) {
       if (featureFlagService.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)) {
         logger.warn(we.getMessage(), we);
+        builder.postRequest(false);
         return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
       } else {
         throw we;
