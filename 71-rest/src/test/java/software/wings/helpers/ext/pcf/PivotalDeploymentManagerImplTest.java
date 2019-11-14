@@ -1,8 +1,17 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -17,11 +26,14 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 
 import java.util.Arrays;
 import java.util.List;
 public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Mock PcfClientImpl client;
+  @Mock ExecutionLogCallback logCallback;
   @InjectMocks @Inject PcfDeploymentManagerImpl deploymentManager;
 
   @Test
@@ -104,5 +116,38 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
                              .runningInstances(0)
                              .build();
     assertThat(deploymentManager.matchesPrefix("BG", applicationSummary)).isFalse();
+  }
+
+  @Test
+  @Owner(emails = ADWAIT)
+  @Category(UnitTests.class)
+  public void testChangeAutoscalarState() throws Exception {
+    reset(client);
+    doReturn(false).doReturn(true).when(client).checkIfAppHasAutoscalarWithExpectedState(any(), any());
+
+    doNothing().when(client).changeAutoscalarState(any(), any(), anyBoolean());
+
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    deploymentManager.changeAutoscalarState(PcfAppAutoscalarRequestData.builder().build(), logCallback, true);
+    verify(client, never()).changeAutoscalarState(any(), any(), anyBoolean());
+
+    deploymentManager.changeAutoscalarState(PcfAppAutoscalarRequestData.builder().build(), logCallback, true);
+    verify(client, times(1)).changeAutoscalarState(any(), any(), anyBoolean());
+  }
+
+  @Test
+  @Owner(emails = ADWAIT)
+  @Category(UnitTests.class)
+  public void testPerformConfigureAutoscalar() throws Exception {
+    reset(client);
+    doReturn(false).doReturn(true).when(client).checkIfAppHasAutoscalarAttached(any(), any());
+    doNothing().when(client).performConfigureAutoscalar(any(), any());
+
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+    deploymentManager.performConfigureAutoscalar(PcfAppAutoscalarRequestData.builder().build(), logCallback);
+    verify(client, never()).performConfigureAutoscalar(any(), any());
+
+    deploymentManager.performConfigureAutoscalar(PcfAppAutoscalarRequestData.builder().build(), logCallback);
+    verify(client, times(1)).performConfigureAutoscalar(any(), any());
   }
 }

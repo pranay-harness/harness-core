@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
@@ -626,6 +628,44 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
   @Test
   @Owner(emails = UNKNOWN)
+  @Category(UnitTests.class)
+  public void testRestoreStateDataAfterGitFetchIfNeeded() {
+    PcfSetupState state = new PcfSetupState("");
+
+    PcfSetupStateExecutionData pcfSetupStateExecutionData = PcfSetupStateExecutionData.builder()
+                                                                .useAppAutoscalar(true)
+                                                                .useCurrentRunningInstanceCount(true)
+                                                                .maxInstanceCount(2)
+                                                                .enforceSslValidation(true)
+                                                                .activeVersionsToKeep(4)
+                                                                .pcfAppNameFromLegacyWorkflow(APP_NAME)
+                                                                .resizeStrategy(RESIZE_NEW_FIRST)
+                                                                .timeout(6)
+                                                                .build();
+
+    assertThat(state.getMaxInstances()).isNull();
+    assertThat(state.isUseAppAutoscalar()).isFalse();
+    assertThat(state.isEnforceSslValidation()).isFalse();
+    assertThat(state.getOlderActiveVersionCountToKeep()).isNull();
+    assertThat(state.isUseCurrentRunningCount()).isFalse();
+    assertThat(state.getResizeStrategy()).isNull();
+    assertThat(state.getTimeoutIntervalInMinutes()).isEqualTo(5);
+    assertThat(state.getPcfAppName()).isNull();
+
+    state.restoreStateDataAfterGitFetchIfNeeded(pcfSetupStateExecutionData);
+
+    assertThat(state.getMaxInstances()).isEqualTo(2);
+    assertThat(state.isUseAppAutoscalar()).isTrue();
+    assertThat(state.isEnforceSslValidation()).isTrue();
+    assertThat(state.getOlderActiveVersionCountToKeep()).isEqualTo(4);
+    assertThat(state.isUseCurrentRunningCount()).isTrue();
+    assertThat(state.getResizeStrategy()).isEqualTo(RESIZE_NEW_FIRST);
+    assertThat(state.getTimeoutIntervalInMinutes()).isEqualTo(6);
+    assertThat(state.getPcfAppName()).isEqualTo(APP_NAME);
+  }
+
+  @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchRouteMas() {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();

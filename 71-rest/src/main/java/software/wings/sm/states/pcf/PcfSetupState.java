@@ -291,6 +291,7 @@ public class PcfSetupState extends State {
             .maxInstanceCount(maxCount)
             .useCurrentRunningInstanceCount(useCurrentRunningCount)
             .currentRunningInstanceCount(getCurrentRunningCountForSetupRequest())
+            .desireActualFinalCount(useCurrentRunningCount ? getCurrentRunningCountForSetupRequest() : maxCount)
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .serviceId(serviceElement.getUuid())
@@ -301,6 +302,8 @@ public class PcfSetupState extends State {
             .taskType(PCF_COMMAND_TASK)
             .useAppAutoscalar(useAppAutoscalar)
             .enforceSslValidation(enforceSslValidation)
+            .resizeStrategy(resizeStrategy)
+            .pcfManifestsPackage(pcfManifestsPackage)
             .build();
 
     String waitId = generateUuid();
@@ -333,10 +336,14 @@ public class PcfSetupState extends State {
       return;
     }
 
+    useCurrentRunningCount = pcfSetupStateExecutionData.isUseCurrentRunningInstanceCount();
     olderActiveVersionCountToKeep = pcfSetupStateExecutionData.getActiveVersionsToKeep();
     timeoutIntervalInMinutes = pcfSetupStateExecutionData.getTimeout();
     pcfAppName = pcfSetupStateExecutionData.getPcfAppNameFromLegacyWorkflow();
     maxInstances = pcfSetupStateExecutionData.getMaxInstanceCount();
+    enforceSslValidation = pcfSetupStateExecutionData.isEnforceSslValidation();
+    useAppAutoscalar = pcfSetupStateExecutionData.isUseAppAutoscalar();
+    resizeStrategy = pcfSetupStateExecutionData.getResizeStrategy();
   }
 
   @VisibleForTesting
@@ -489,12 +496,14 @@ public class PcfSetupState extends State {
             .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
             .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
             .currentRunningInstanceCount(generateCurrentRunningCount(pcfSetupCommandResponse))
-            .resizeStrategy(resizeStrategy)
+            .desiredActualFinalCount(stateExecutionData.getDesireActualFinalCount())
+            .resizeStrategy(stateExecutionData.getResizeStrategy())
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
             .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen())
-            .useAppAutoscalar(useAppAutoscalar)
-            .enforceSslValidation(enforceSslValidation);
+            .useAppAutoscalar(stateExecutionData.isUseAppAutoscalar())
+            .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
+            .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage());
 
     if (!isPcfSetupCommandResponseNull) {
       pcfSetupContextElementBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
@@ -615,10 +624,12 @@ public class PcfSetupState extends State {
                                 .appManifestMap(appManifestMap)
                                 .activeVersionsToKeep(olderActiveVersionCountToKeep)
                                 .timeout(timeoutIntervalInMinutes)
-                                .useAppAutoscalar(useAppAutoscalar)
+                                .useAppAutoscalar(/*useAppAutoscalar*/ true)
                                 .enforceSslValidation(enforceSslValidation)
                                 .pcfAppNameFromLegacyWorkflow(pcfAppName)
                                 .maxInstanceCount(maxInstances)
+                                .resizeStrategy(resizeStrategy)
+                                .useCurrentRunningInstanceCount(useCurrentRunningCount)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

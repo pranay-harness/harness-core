@@ -237,13 +237,26 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    pcfClient.performConfigureAutoscalar(appAutoscalarRequestData, executionLogCallback);
+    boolean autoscalarAttached =
+        pcfClient.checkIfAppHasAutoscalarAttached(appAutoscalarRequestData, executionLogCallback);
+    if (autoscalarAttached) {
+      pcfClient.performConfigureAutoscalar(appAutoscalarRequestData, executionLogCallback);
+    }
   }
 
   @Override
-  public void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+  public boolean changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException {
-    pcfClient.changeAutoscalarState(appAutoscalarRequestData, executionLogCallback, enable);
+    // If we want to enable it, its expected to be disabled and vice versa
+    appAutoscalarRequestData.setExpectedEnabled(!enable);
+    boolean autoscalarAttachedWithExpectedStatus =
+        pcfClient.checkIfAppHasAutoscalarWithExpectedState(appAutoscalarRequestData, executionLogCallback);
+    if (autoscalarAttachedWithExpectedStatus) {
+      pcfClient.changeAutoscalarState(appAutoscalarRequestData, executionLogCallback, enable);
+      return true;
+    }
+
+    return false;
   }
 
   @Override

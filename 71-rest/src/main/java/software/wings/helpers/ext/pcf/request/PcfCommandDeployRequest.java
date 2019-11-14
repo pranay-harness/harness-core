@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.pcf.request;
 
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,6 +30,8 @@ public class PcfCommandDeployRequest extends PcfCommandRequest {
   private Integer downSizeCount;
   private Integer totalPreviousInstanceCount;
   private PcfAppSetupTimeDetails downsizeAppDetail;
+  private Integer maxCount;
+  private PcfManifestsPackage pcfManifestsPackage;
   /**
    * This will be empty for deploy_state, so deploy will figureOut old versions and scale them down by 5
    * This will be set by Rollback, Rollback will use same request and PCFCommand.DEPLOY,
@@ -41,10 +44,11 @@ public class PcfCommandDeployRequest extends PcfCommandRequest {
   @Builder
   public PcfCommandDeployRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
-      String newReleaseName, Integer updateCount, Integer downSizeCount, Integer totalPreviousInstanceCount,
-      List<PcfServiceData> instanceData, ResizeStrategy resizeStrategy, List<String> routeMaps,
-      Integer timeoutIntervalInMin, boolean useCLIForPcfAppCreation, PcfAppSetupTimeDetails downsizeAppDetail,
-      boolean isStandardBlueGreen, boolean useAppAutoscalar, boolean enforceSslValidation) {
+      String newReleaseName, Integer maxCount, Integer updateCount, Integer downSizeCount,
+      Integer totalPreviousInstanceCount, List<PcfServiceData> instanceData, ResizeStrategy resizeStrategy,
+      List<String> routeMaps, Integer timeoutIntervalInMin, boolean useCLIForPcfAppCreation,
+      PcfAppSetupTimeDetails downsizeAppDetail, boolean isStandardBlueGreen, PcfManifestsPackage pcfManifestsPackage,
+      boolean useAppAutoscalar, boolean enforceSslValidation) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar);
     this.newReleaseName = newReleaseName;
@@ -56,5 +60,7 @@ public class PcfCommandDeployRequest extends PcfCommandRequest {
     this.totalPreviousInstanceCount = totalPreviousInstanceCount;
     this.downsizeAppDetail = downsizeAppDetail;
     this.isStandardBlueGreen = isStandardBlueGreen;
+    this.maxCount = maxCount;
+    this.pcfManifestsPackage = pcfManifestsPackage;
   }
 }

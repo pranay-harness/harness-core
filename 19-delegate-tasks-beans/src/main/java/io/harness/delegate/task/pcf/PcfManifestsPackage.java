@@ -9,5 +9,6 @@ import java.util.List;
 @Builder
 public class PcfManifestsPackage {
   private String manifestYml;
+  private String autoscalarManifestYml;
   private List<String> variableYmls;
 }

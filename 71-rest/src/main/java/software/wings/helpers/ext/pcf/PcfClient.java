@@ -61,5 +61,7 @@ public interface PcfClient {
   boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException;
   boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  boolean checkIfAppHasAutoscalarWithExpectedState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException;
   String resolvePcfPluginHome();
 }

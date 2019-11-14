@@ -25,7 +25,6 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.ExceptionUtils;
-import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -367,7 +366,11 @@ public class PcfClientImpl implements PcfClient {
       logManifestFile(finalFilePath, executionLogCallback);
 
       executionLogCallback.saveExecutionLog("# CF_HOME value: " + requestData.getConfigPathVar());
-      boolean loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, requestData.getConfigPathVar());
+      boolean loginSuccessful = true;
+      if (requestData.isLoginNeeded()) {
+        loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, requestData.getConfigPathVar());
+      }
+
       if (loginSuccessful) {
         exitCode = doCfPush(pcfRequestConfig, executionLogCallback, finalFilePath, requestData);
       }
@@ -390,14 +393,31 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
+  public boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
+    boolean appAutoscalarInstalled;
+    Map<String, String> map = new HashMap();
+    map.put(CF_PLUGIN_HOME, resolvePcfPluginHome());
+    ProcessExecutor processExecutor = createExecutorForAutoscalarPluginCheck(map);
+
+    try {
+      ProcessResult processResult = processExecutor.execute();
+      appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
+    } catch (InterruptedException e) {
+      throw new PivotalClientApiException("check for App Autoscalar plugin failed", e);
+    } catch (Exception e) {
+      throw new PivotalClientApiException("check for AppAutoscalar plugin failed", e);
+    }
+
+    return appAutoscalarInstalled;
+  }
+
   public void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     int exitCode = 1;
 
     try {
       // First login
-      boolean loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
-          appAutoscalarRequestData.getConfigPathVar());
+      boolean loginSuccessful = logInForAppAutoscalarCliCommand(appAutoscalarRequestData, executionLogCallback);
 
       if (loginSuccessful) {
         logManifestFile(appAutoscalarRequestData.getAutoscalarFilePath(), executionLogCallback);
@@ -409,16 +429,9 @@ public class PcfClientImpl implements PcfClient {
         exitCode = processExecutor.execute().getExitValue();
       }
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
       execeptionForAutoscalarConfigureFailure(appAutoscalarRequestData.getApplicationName(), e);
     } catch (Exception e) {
       execeptionForAutoscalarConfigureFailure(appAutoscalarRequestData.getApplicationName(), e);
-    } finally {
-      try {
-        FileIo.deleteFileIfExists(appAutoscalarRequestData.getAutoscalarFilePath());
-      } catch (IOException e) {
-        logger.warn("Failed to delete temp autoscalar file");
-      }
     }
 
     if (exitCode != 0) {
@@ -432,34 +445,6 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  public boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
-    boolean appAutoscalarInstalled;
-    Map<String, String> map = new HashMap();
-    map.put(CF_PLUGIN_HOME, resolvePcfPluginHome());
-    ProcessExecutor processExecutor = createExecutorForAutoscalarPluginCheck(map);
-
-    try {
-      ProcessResult processResult = processExecutor.execute();
-      appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new PivotalClientApiException("check for App Autoscalar plugin failed", e);
-    } catch (Exception e) {
-      throw new PivotalClientApiException("check for AppAutoscalar plugin failed", e);
-    }
-
-    return appAutoscalarInstalled;
-  }
-
-  @VisibleForTesting
-  ProcessExecutor createExecutorForAutoscalarPluginCheck(Map<String, String> map) {
-    return new ProcessExecutor()
-        .timeout(1, TimeUnit.MINUTES)
-        .command(BIN_SH, "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR)
-        .readOutput(true)
-        .environment(map);
-  }
-
   @VisibleForTesting
   public void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException {
@@ -467,8 +452,7 @@ public class PcfClientImpl implements PcfClient {
 
     try {
       // First login
-      boolean loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
-          appAutoscalarRequestData.getConfigPathVar());
+      boolean loginSuccessful = logInForAppAutoscalarCliCommand(appAutoscalarRequestData, executionLogCallback);
 
       if (loginSuccessful) {
         // perform enable/disable autoscalar
@@ -479,7 +463,6 @@ public class PcfClientImpl implements PcfClient {
         exitCode = processExecutor.execute().getExitValue();
       }
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
       exceptionForAutoscalarStateChangeFailure(appAutoscalarRequestData.getApplicationName(), enable, e);
       return;
     } catch (Exception e) {
@@ -496,6 +479,76 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
+  public boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    boolean appAutoscalarInstalled = false;
+    executionLogCallback.saveExecutionLog("\n# Checking if Application: "
+        + appAutoscalarRequestData.getApplicationName() + " has Autoscalar Bound to it");
+
+    try {
+      boolean loginSuccessful = logInForAppAutoscalarCliCommand(appAutoscalarRequestData, executionLogCallback);
+      if (loginSuccessful) {
+        ProcessExecutor processExecutor = createProccessExecutorForPcfTask(1,
+            CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING.replace(
+                APP_TOKEN, appAutoscalarRequestData.getApplicationGuid()),
+            getAppAutoscalarEnvMapForCustomPlugin(appAutoscalarRequestData), executionLogCallback);
+
+        ProcessResult processResult = processExecutor.execute();
+        appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
+      }
+    } catch (InterruptedException e) {
+      throw new PivotalClientApiException("check for App Autoscalar Binding failed", e);
+    } catch (Exception e) {
+      throw new PivotalClientApiException("check for AppAutoscalar Binding failed", e);
+    }
+
+    return appAutoscalarInstalled;
+  }
+
+  public boolean checkIfAppHasAutoscalarWithExpectedState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+    boolean appAutoscalarInExpectedState = false;
+    logCallback.saveExecutionLog("\n# Checking if Application: " + appAutoscalarRequestData.getApplicationName()
+        + " has Autoscalar Bound to it");
+
+    try {
+      boolean loginSuccessful = logInForAppAutoscalarCliCommand(appAutoscalarRequestData, logCallback);
+      if (loginSuccessful) {
+        ProcessExecutor executor = createProccessExecutorForPcfTask(1,
+            CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING.replace(
+                APP_TOKEN, appAutoscalarRequestData.getApplicationGuid()),
+            getAppAutoscalarEnvMapForCustomPlugin(appAutoscalarRequestData), logCallback);
+
+        ProcessResult processResult = executor.execute();
+        String output = processResult.outputUTF8();
+        if (isEmpty(output)) {
+          logCallback.saveExecutionLog("\n# No App Autoscalar Bound to App");
+        } else {
+          logCallback.saveExecutionLog("# App Autoscalar Current State: " + output);
+          String status = appAutoscalarRequestData.isExpectedEnabled() ? " true " : " false ";
+          if (output.contains(status)) {
+            appAutoscalarInExpectedState = true;
+          }
+        }
+      }
+    } catch (InterruptedException e) {
+      throw new PivotalClientApiException("check for App Autoscalar Binding failed", e);
+    } catch (Exception e) {
+      throw new PivotalClientApiException("check for AppAutoscalar Binding failed", e);
+    }
+
+    return appAutoscalarInExpectedState;
+  }
+
+  @VisibleForTesting
+  ProcessExecutor createExecutorForAutoscalarPluginCheck(Map<String, String> map) {
+    return new ProcessExecutor()
+        .timeout(1, TimeUnit.MINUTES)
+        .command(BIN_SH, "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR)
+        .readOutput(true)
+        .environment(map);
+  }
+
   @VisibleForTesting
   String generateChangeAutoscalarStateCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData, boolean enable) {
     String commandName = enable ? ENABLE_AUTOSCALING : DISABLE_AUTOSCALING;
@@ -507,32 +560,16 @@ public class PcfClientImpl implements PcfClient {
         .toString();
   }
 
-  public boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    boolean appAutoscalarInstalled = false;
-    executionLogCallback.saveExecutionLog(
-        "# Checking if Application: " + appAutoscalarRequestData.getApplicationName() + " has Autoscalar Bound to it");
-
-    try {
-      boolean loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
+  @VisibleForTesting
+  boolean logInForAppAutoscalarCliCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException {
+    boolean loginSuccessful = true;
+    if (!appAutoscalarRequestData.isLoggedin()) {
+      loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
           appAutoscalarRequestData.getConfigPathVar());
-      if (loginSuccessful) {
-        ProcessExecutor processExecutor = createProccessExecutorForPcfTask(1,
-            CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING.replace(
-                APP_TOKEN, appAutoscalarRequestData.getApplicationName()),
-            getAppAutoscalarEnvMapForCustomPlugin(appAutoscalarRequestData), executionLogCallback);
-
-        ProcessResult processResult = processExecutor.execute();
-        appAutoscalarInstalled = isNotEmpty(processResult.outputUTF8());
-      }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new PivotalClientApiException("check for App Autoscalar Binding failed", e);
-    } catch (Exception e) {
-      throw new PivotalClientApiException("check for AppAutoscalar Binding failed", e);
     }
-
-    return appAutoscalarInstalled;
+    appAutoscalarRequestData.setLoggedin(loginSuccessful);
+    return loginSuccessful;
   }
 
   @VisibleForTesting
@@ -665,7 +702,7 @@ public class PcfClientImpl implements PcfClient {
     executionLogCallback.saveExecutionLog("# Performing \"login\"");
     String password = handlePwdForSpecialCharsForShell(pcfRequestConfig.getPassword());
     ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .timeout(1, TimeUnit.MINUTES)
+                                          .timeout(5, TimeUnit.MINUTES)
                                           .command(BIN_SH, "-c",
                                               new StringBuilder(128)
                                                   .append("cf login -a ")

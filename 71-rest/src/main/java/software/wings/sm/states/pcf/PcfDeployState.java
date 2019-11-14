@@ -272,6 +272,7 @@ public class PcfDeployState extends State {
         .space(pcfSetupContextElement.getPcfCommandRequest().getSpace())
         .pcfConfig(pcfConfig)
         .pcfCommandType(PcfCommandType.RESIZE)
+        .maxCount(pcfSetupContextElement.getDesiredActualFinalCount())
         .updateCount(updateCount)
         .downSizeCount(downsizeUpdateCount)
         .totalPreviousInstanceCount(pcfSetupContextElement.getTotalPreviousInstanceCount() == null
@@ -290,6 +291,7 @@ public class PcfDeployState extends State {
         .isStandardBlueGreen(pcfSetupContextElement.isStandardBlueGreenWorkflow())
         .useAppAutoscalar(pcfSetupContextElement.isUseAppAutoscalar())
         .enforceSslValidation(pcfSetupContextElement.isEnforceSslValidation())
+        .pcfManifestsPackage(pcfSetupContextElement.getPcfManifestsPackage())
         .build();
   }
 

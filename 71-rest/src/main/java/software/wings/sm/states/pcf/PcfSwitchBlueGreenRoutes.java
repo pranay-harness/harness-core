@@ -124,6 +124,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
           && pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData() != null) {
         downsizeOldApps =
             pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData().isDownsizeOldApplication();
+        requestConfigData.setDownsizeOldApplication(downsizeOldApps);
       }
     }
 
@@ -145,6 +146,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
+            .downsizeOldApps(downsizeOldApps)
             .build(),
         pcfSetupContextElement);
   }

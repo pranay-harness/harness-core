@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -59,6 +60,8 @@ public class PcfSetupContextElement implements ContextElement {
   private boolean isDownsizeOldApps;
   private boolean enforceSslValidation;
   private boolean useAppAutoscalar;
+  private Integer desiredActualFinalCount;
+  private PcfManifestsPackage pcfManifestsPackage;
 
   @Override
   public ContextElementType getElementType() {

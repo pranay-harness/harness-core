@@ -23,4 +23,5 @@ public class PcfRouteUpdateQueueRequestData {
   private PcfRouteUpdateRequestConfigData requestConfigData;
   private List<EncryptedDataDetail> encryptedDataDetails;
   private boolean skipRollback;
+  private boolean downsizeOldApps;
 }

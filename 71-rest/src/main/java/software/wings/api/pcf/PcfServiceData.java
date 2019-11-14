@@ -10,4 +10,5 @@ public class PcfServiceData {
   private String id;
   private int previousCount;
   private int desiredCount;
+  private boolean disableAutoscalarPerformed;
 }
