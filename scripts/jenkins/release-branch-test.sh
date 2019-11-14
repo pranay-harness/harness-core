@@ -14,7 +14,7 @@ then
     echo
     echo
 
+    echo NOT_MERGED="${NOT_MERGED}" > envvars
+
     exit 1
 fi
-
-echo NOT_MERGED="${NOT_MERGED}" > envvars
