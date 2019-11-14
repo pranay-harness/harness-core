@@ -176,6 +176,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -268,9 +269,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean fromYaml) {
-    if (fromYaml) {
-      logger.info("Ignore validation for InfraMapping created from yaml");
+  public void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean skipValidation) {
+    if (skipValidation) {
+      logger.info(
+          "Ignore validation for InfraMapping as skipValidation is marked true. Infra mapping coming from yaml or Infra def");
       return;
     }
     if (isNotEmpty(infraMapping.getProvisionerId())) {
@@ -385,7 +387,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   @ValidationGroups(Create.class)
-  public InfrastructureMapping save(InfrastructureMapping infraMapping, boolean fromYaml) {
+  public InfrastructureMapping save(InfrastructureMapping infraMapping, boolean skipValidation) {
     // The default name uses a bunch of user inputs, which is why we generate it at the time of save.
     boolean infraRefactor =
         featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId());
@@ -410,7 +412,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       ((ContainerInfrastructureMapping) infraMapping).setReleaseName(fetchReleaseName(infraMapping));
     }
 
-    validateInfraMapping(infraMapping, fromYaml);
+    validateInfraMapping(infraMapping, skipValidation);
     InfrastructureMapping savedInfraMapping;
     try {
       savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
@@ -444,7 +446,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping, boolean fromYaml) {
+  public InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping, boolean skipValidation) {
     InfrastructureMapping savedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
@@ -494,13 +496,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(ecsInfrastructureMapping, fromYaml);
+      validateInfraMapping(ecsInfrastructureMapping, skipValidation);
       handleEcsInfraMapping(keyValuePairs, fieldsToRemove, ecsInfrastructureMapping);
 
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(directKubernetesInfrastructureMapping, fromYaml);
+      validateInfraMapping(directKubernetesInfrastructureMapping, skipValidation);
       if (isNotBlank(directKubernetesInfrastructureMapping.getNamespace())) {
         keyValuePairs.put("namespace", directKubernetesInfrastructureMapping.getNamespace());
       } else {
@@ -515,7 +517,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(gcpKubernetesInfrastructureMapping, fromYaml);
+      validateInfraMapping(gcpKubernetesInfrastructureMapping, skipValidation);
       if (isNotEmpty(gcpKubernetesInfrastructureMapping.getClusterName())) {
         keyValuePairs.put("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
       } else {
@@ -529,7 +531,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           (AzureKubernetesInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(azureKubernetesInfrastructureMapping, fromYaml);
+      validateInfraMapping(azureKubernetesInfrastructureMapping, skipValidation);
       keyValuePairs.put("clusterName", azureKubernetesInfrastructureMapping.getClusterName());
       keyValuePairs.put("subscriptionId", azureKubernetesInfrastructureMapping.getSubscriptionId());
       keyValuePairs.put("resourceGroup", azureKubernetesInfrastructureMapping.getResourceGroup());
@@ -539,11 +541,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               : "default");
     } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
       AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(azureInfrastructureMapping, fromYaml);
-      keyValuePairs.put("subscriptionId", azureInfrastructureMapping.getSubscriptionId());
-      keyValuePairs.put("resourceGroup", azureInfrastructureMapping.getResourceGroup());
-      keyValuePairs.put("tags", azureInfrastructureMapping.getTags());
+      validateInfraMapping(azureInfrastructureMapping, skipValidation);
+
+      if (isNotEmpty(azureInfrastructureMapping.getSubscriptionId())) {
+        keyValuePairs.put("subscriptionId", azureInfrastructureMapping.getSubscriptionId());
+      }
+
+      if (isNotEmpty(azureInfrastructureMapping.getResourceGroup())) {
+        keyValuePairs.put("resourceGroup", azureInfrastructureMapping.getResourceGroup());
+      }
+
+      if (isNotEmpty(azureInfrastructureMapping.getTags())) {
+        keyValuePairs.put("tags", azureInfrastructureMapping.getTags());
+      }
+
       keyValuePairs.put("usePublicDns", azureInfrastructureMapping.isUsePublicDns());
+
       if (DeploymentType.SSH.name().equals(infrastructureMapping.getDeploymentType())) {
         keyValuePairs.put("hostConnectionAttrs", azureInfrastructureMapping.getHostConnectionAttrs());
       }
@@ -559,7 +572,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(awsInfrastructureMapping, fromYaml);
+      validateInfraMapping(awsInfrastructureMapping, skipValidation);
       if (awsInfrastructureMapping.getRegion() != null) {
         keyValuePairs.put("region", awsInfrastructureMapping.getRegion());
       } else {
@@ -597,7 +610,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsLambdaInfraStructureMapping) {
       AwsLambdaInfraStructureMapping lambdaInfraStructureMapping =
           (AwsLambdaInfraStructureMapping) infrastructureMapping;
-      validateInfraMapping(lambdaInfraStructureMapping, fromYaml);
+      validateInfraMapping(lambdaInfraStructureMapping, skipValidation);
       if (lambdaInfraStructureMapping.getRegion() != null) {
         keyValuePairs.put("region", lambdaInfraStructureMapping.getRegion());
       } else {
@@ -633,7 +646,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping physicalInfrastructureMapping =
           (PhysicalInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(physicalInfrastructureMapping, fromYaml);
+      validateInfraMapping(physicalInfrastructureMapping, skipValidation);
       if (isNotEmpty(physicalInfrastructureMapping.hosts())) {
         keyValuePairs.put("hosts", physicalInfrastructureMapping.hosts());
       } else {
@@ -650,19 +663,26 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         fieldsToRemove.add("loadBalancerId");
       }
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingWinRm) {
-      validateInfraMapping(infrastructureMapping, fromYaml);
-      keyValuePairs.put(
-          "loadBalancerId", ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getLoadBalancerId());
-      keyValuePairs.put("hostNames", ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getHostNames());
+      PhysicalInfrastructureMappingWinRm physicalInfrastructureMappingWinRm =
+          (PhysicalInfrastructureMappingWinRm) infrastructureMapping;
+      validateInfraMapping(infrastructureMapping, skipValidation);
+
+      if (isNotEmpty(physicalInfrastructureMappingWinRm.getLoadBalancerId())) {
+        keyValuePairs.put("loadBalancerId", physicalInfrastructureMappingWinRm.getLoadBalancerId());
+      }
+
+      if (isNotEmpty(physicalInfrastructureMappingWinRm.getHostNames())) {
+        keyValuePairs.put("hostNames", physicalInfrastructureMappingWinRm.getHostNames());
+      }
 
       if (!StringUtils.equals(((PhysicalInfrastructureMappingWinRm) savedInfraMapping).getWinRmConnectionAttributes(),
-              ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes())) {
-        getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType())
-            .updateHostConnAttrs(infrastructureMapping,
-                ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes());
+              physicalInfrastructureMappingWinRm.getWinRmConnectionAttributes())) {
+        getInfrastructureProviderByComputeProviderType(physicalInfrastructureMappingWinRm.getComputeProviderType())
+            .updateHostConnAttrs(
+                infrastructureMapping, physicalInfrastructureMappingWinRm.getWinRmConnectionAttributes());
 
-        keyValuePairs.put("winRmConnectionAttributes",
-            ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes());
+        keyValuePairs.put(
+            "winRmConnectionAttributes", physicalInfrastructureMappingWinRm.getWinRmConnectionAttributes());
       }
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
@@ -683,7 +703,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
       AwsAmiInfrastructureMapping savedAwsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) savedInfraMapping;
-      validateInfraMapping(awsAmiInfrastructureMapping, fromYaml);
+      validateInfraMapping(awsAmiInfrastructureMapping, skipValidation);
       if (awsAmiInfrastructureMapping.getRegion() != null) {
         keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
       } else {
@@ -739,7 +759,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     } else if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(pcfInfrastructureMapping, fromYaml);
+      validateInfraMapping(pcfInfrastructureMapping, skipValidation);
       handlePcfInfraMapping(keyValuePairs, pcfInfrastructureMapping);
     }
     if (computeProviderSetting != null) {
@@ -753,8 +773,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     }
 
+    Map<String, Object> finalKeyValuePairs = new HashMap<>();
+    for (Entry<String, Object> e : keyValuePairs.entrySet()) {
+      if (e.getValue() == null) {
+        fieldsToRemove.add(e.getKey());
+      } else {
+        finalKeyValuePairs.put(e.getKey(), e.getValue());
+      }
+    }
+
     wingsPersistence.updateFields(
-        infrastructureMapping.getClass(), infrastructureMapping.getUuid(), keyValuePairs, fieldsToRemove);
+        infrastructureMapping.getClass(), infrastructureMapping.getUuid(), finalKeyValuePairs, fieldsToRemove);
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
 
     boolean isRename = !updatedInfraMapping.getName().equals(savedInfraMapping.getName());

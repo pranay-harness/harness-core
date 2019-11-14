@@ -527,7 +527,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
     assertThat(returnedInfra).isNotNull();
     Map<String, Object> keyValuePairs = new LinkedHashMap<>();
-    keyValuePairs.put("loadBalancerId", null);
     keyValuePairs.put("computeProviderSettingId", COMPUTE_PROVIDER_ID);
     keyValuePairs.put("winRmConnectionAttributes", winrmConnectionAttributeId2);
     keyValuePairs.put("hostNames", singletonList(HOST_NAME));

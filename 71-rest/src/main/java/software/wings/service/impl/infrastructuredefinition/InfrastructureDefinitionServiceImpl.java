@@ -608,19 +608,19 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         infrastructureDefinitionHelper.getNameFromInfraDefinition(infrastructureDefinition, serviceId));
     if (infraMapping == null) {
       try {
-        return infrastructureMappingService.save(newInfraMapping);
+        return infrastructureMappingService.save(newInfraMapping, true);
       } catch (DuplicateFieldException ex) {
         logger.info("Trying to save but Existing InfraMapping Found. Updating........");
         infraMapping = infrastructureDefinitionHelper.existingInfraMapping(infrastructureDefinition, serviceId);
         newInfraMapping.setUuid(infraMapping.getUuid());
         newInfraMapping.setName(infraMapping.getName());
-        return infrastructureMappingService.update(newInfraMapping);
+        return infrastructureMappingService.update(newInfraMapping, true);
       }
     } else {
       logger.info("Existing InfraMapping Found Updating.....");
       newInfraMapping.setUuid(infraMapping.getUuid());
       newInfraMapping.setName(infraMapping.getName());
-      return infrastructureMappingService.update(newInfraMapping);
+      return infrastructureMappingService.update(newInfraMapping, true);
     }
   }
 
