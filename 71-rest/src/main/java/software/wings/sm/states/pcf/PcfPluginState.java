@@ -102,7 +102,7 @@ public class PcfPluginState extends State {
 
   public static final String PCF_PLUGIN_COMMAND = "PCF Plugin";
   public static final String FILE_START_REGEX = PcfConstants.FILE_START_REGEX;
-  public static final String FILE_END_REGEX = "[\\s,;'\":]";
+  public static final String FILE_END_REGEX = "(\\s|,|;|'|\"|:|$)";
 
   public static final Pattern PATH_REGEX_PATTERN = Pattern.compile(FILE_START_REGEX + ".*?" + FILE_END_REGEX);
 
@@ -111,6 +111,7 @@ public class PcfPluginState extends State {
   @Getter @Setter @Attributes(title = "Script") private String scriptString;
 
   @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
+  public static final String START_SLASH_ALL_MATCH = "\\A/+";
 
   public PcfPluginState(String name) {
     super(name, StateType.PCF_PLUGIN.name());
@@ -217,10 +218,7 @@ public class PcfPluginState extends State {
     return ImmutableMap.of(K8sValuesLocation.Service, serviceManifest);
   }
   private String toRelativePath(String path) {
-    if (EmptyPredicate.isNotEmpty(path) && path.charAt(0) == '/') {
-      return path.substring(1);
-    }
-    return path;
+    return path.trim().replaceFirst(START_SLASH_ALL_MATCH, "");
   }
 
   private int resolveTimeoutIntervalInMinutes(PcfPluginStateExecutionData pcfPluginStateExecutionData) {
