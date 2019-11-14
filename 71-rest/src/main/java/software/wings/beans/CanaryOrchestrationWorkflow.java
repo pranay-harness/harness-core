@@ -85,6 +85,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private Set<EntityType> requiredEntityTypes;
 
+  private static final String WORKFLOW_INFRADEFINITION_VALIDATION_MESSAGE =
+      "Some phases %s Infrastructure Definition are found to be invalid/incomplete.";
+
   @Transient @JsonIgnore private List<String> templateVariables = new ArrayList<>();
 
   @Override
@@ -782,7 +785,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
       if (isNotEmpty(invalidInfraPhaseIds)) {
         setValid(false);
-        setValidationMessage(format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
+        setValidationMessage(format(WORKFLOW_INFRADEFINITION_VALIDATION_MESSAGE, invalidInfraPhaseIds.toString()));
       }
     }
   }

@@ -89,7 +89,7 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.stencilMap(any())).thenReturn(stencilMap);
     StateMachine originalStateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
-        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), stencilMap, true);
+        ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), stencilMap, true, false);
     assertThat(originalStateMachine).isNotNull();
     assertThat(originalStateMachine.getStates()).hasSize(4);
     assertThat(originalStateMachine.getChildStateMachines()).hasSize(5);

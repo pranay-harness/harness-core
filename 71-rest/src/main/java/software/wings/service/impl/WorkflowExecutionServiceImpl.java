@@ -1116,7 +1116,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
-        workflowService.stencilMap(appId), infraRefactor);
+        workflowService.stencilMap(appId), infraRefactor, false);
 
     // TODO: this is workaround for a side effect in the state machine generation that mangles with the original
     //       workflow object.

@@ -126,7 +126,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
    */
 
   public StateMachine(Workflow workflow, Integer originVersion, Graph graph,
-      Map<String, StateTypeDescriptor> stencilMap, boolean infraRefactor) {
+      Map<String, StateTypeDescriptor> stencilMap, boolean infraRefactor, boolean migration) {
     orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     setAppId(workflow.getAppId());
     this.originId = workflow.getUuid();
@@ -139,7 +139,9 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       logger.error("Error in State Machine transform", wingsException);
       errorMsg = ExceptionUtils.getMessage(wingsException);
     }
-    orchestrationWorkflow.validate(infraRefactor);
+    if (!migration) {
+      orchestrationWorkflow.validate(infraRefactor);
+    }
     if (orchestrationWorkflow.isValid() && !valid) {
       orchestrationWorkflow.setValid(false);
       orchestrationWorkflow.setValidationMessage(errorMsg);

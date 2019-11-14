@@ -57,7 +57,7 @@ public class RollbackStateMachineGenerator {
         modifyOrchestrationForRollback(orchestrationWorkflow, successfulExecutionId);
     modifiedOrchestrationWorkflow.setGraph(modifiedOrchestrationWorkflow.generateGraph());
     return new StateMachine(workflow, workflow.getDefaultVersion(), modifiedOrchestrationWorkflow.getGraph(),
-        workflowService.stencilMap(appId), infraRefactor);
+        workflowService.stencilMap(appId), infraRefactor, false);
   }
 
   private CanaryOrchestrationWorkflow modifyOrchestrationForRollback(
