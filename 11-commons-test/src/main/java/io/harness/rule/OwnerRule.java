@@ -2,10 +2,13 @@ package io.harness.rule;
 
 import static java.lang.String.format;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import io.harness.NoopStatement;
 import io.harness.exception.CategoryConfigException;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -15,7 +18,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class OwnerRule implements TestRule {
@@ -62,54 +65,59 @@ public class OwnerRule implements TestRule {
   public static final String VENKATESH = "venkatesh.kotrike@harness.io";
   public static final String VIKAS = "vikas.naiyar@harness.io";
   public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
-  public static final String UNKNOWN = "unknown";
 
-  private static List<String> active = ImmutableList.<String>builder()
-                                           .add(AADITI)
-                                           .add(ADWAIT)
-                                           .add(ANKIT)
-                                           .add(AMAN)
-                                           .add(ANSHUL)
-                                           .add(ANUBHAW)
-                                           .add(AVMOHAN)
-                                           .add(BRETT)
-                                           .add(DEEPAK)
-                                           .add(GARVIT)
-                                           .add(GEORGE)
-                                           .add(HANTANG)
-                                           .add(HARSH)
-                                           .add(HITESH)
-                                           .add(JATIN)
-                                           .add(JUHI)
-                                           .add(KAMAL)
-                                           .add(MARK)
-                                           .add(MEENAKSHI)
-                                           .add(NATARAJA)
-                                           .add(PARNIAN)
-                                           .add(POOJA)
-                                           .add(PRANJAL)
-                                           .add(PRAVEEN)
-                                           .add(PUNEET)
-                                           .add(RAGHU)
-                                           .add(RAMA)
-                                           .add(ROHIT)
-                                           .add(RUSHABH)
-                                           .add(SHASWAT)
-                                           .add(SHUBHANSHU)
-                                           .add(SOWMYA)
-                                           .add(SRINIVAS)
-                                           .add(SRIRAM)
-                                           .add(SUNIL)
-                                           .add(SWAMY)
-                                           .add(UJJAWAL)
-                                           .add(UTKARSH)
-                                           .add(VAIBHAV_SI)
-                                           .add(VAIBHAV_TULSYAN)
-                                           .add(VENKATESH)
-                                           .add(VIKAS)
-                                           .add(YOGESH_CHAUHAN)
-                                           .add(UNKNOWN)
-                                           .build();
+  @Value
+  @Builder
+  public static class DevInfo {
+    private String slack;
+  }
+
+  @Getter
+  private static final Map<String, DevInfo> active = ImmutableMap.<String, DevInfo>builder()
+                                                         .put(AADITI, DevInfo.builder().build())
+                                                         .put(ADWAIT, DevInfo.builder().build())
+                                                         .put(ANKIT, DevInfo.builder().build())
+                                                         .put(AMAN, DevInfo.builder().build())
+                                                         .put(ANSHUL, DevInfo.builder().build())
+                                                         .put(ANUBHAW, DevInfo.builder().build())
+                                                         .put(AVMOHAN, DevInfo.builder().build())
+                                                         .put(BRETT, DevInfo.builder().build())
+                                                         .put(DEEPAK, DevInfo.builder().build())
+                                                         .put(GARVIT, DevInfo.builder().build())
+                                                         .put(GEORGE, DevInfo.builder().slack("george").build())
+                                                         .put(HANTANG, DevInfo.builder().build())
+                                                         .put(HARSH, DevInfo.builder().build())
+                                                         .put(HITESH, DevInfo.builder().build())
+                                                         .put(JATIN, DevInfo.builder().build())
+                                                         .put(JUHI, DevInfo.builder().build())
+                                                         .put(KAMAL, DevInfo.builder().build())
+                                                         .put(MARK, DevInfo.builder().build())
+                                                         .put(MEENAKSHI, DevInfo.builder().build())
+                                                         .put(NATARAJA, DevInfo.builder().build())
+                                                         .put(PARNIAN, DevInfo.builder().build())
+                                                         .put(POOJA, DevInfo.builder().build())
+                                                         .put(PRANJAL, DevInfo.builder().build())
+                                                         .put(PRAVEEN, DevInfo.builder().build())
+                                                         .put(PUNEET, DevInfo.builder().build())
+                                                         .put(RAGHU, DevInfo.builder().build())
+                                                         .put(RAMA, DevInfo.builder().build())
+                                                         .put(ROHIT, DevInfo.builder().build())
+                                                         .put(RUSHABH, DevInfo.builder().build())
+                                                         .put(SHASWAT, DevInfo.builder().build())
+                                                         .put(SHUBHANSHU, DevInfo.builder().build())
+                                                         .put(SOWMYA, DevInfo.builder().build())
+                                                         .put(SRINIVAS, DevInfo.builder().build())
+                                                         .put(SRIRAM, DevInfo.builder().build())
+                                                         .put(SUNIL, DevInfo.builder().build())
+                                                         .put(SWAMY, DevInfo.builder().build())
+                                                         .put(UJJAWAL, DevInfo.builder().build())
+                                                         .put(UTKARSH, DevInfo.builder().build())
+                                                         .put(VAIBHAV_SI, DevInfo.builder().build())
+                                                         .put(VAIBHAV_TULSYAN, DevInfo.builder().build())
+                                                         .put(VENKATESH, DevInfo.builder().build())
+                                                         .put(VIKAS, DevInfo.builder().build())
+                                                         .put(YOGESH_CHAUHAN, DevInfo.builder().build())
+                                                         .build();
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
@@ -127,7 +135,7 @@ public class OwnerRule implements TestRule {
     }
 
     for (String email : owner.emails()) {
-      if (!active.contains(email)) {
+      if (!active.containsKey(email)) {
         throw new CategoryConfigException(format("Email %s is not active.", email));
       }
     }
