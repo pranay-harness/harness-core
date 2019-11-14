@@ -1,5 +1,7 @@
 package io.harness.event.usagemetrics;
 
+import static io.harness.rule.OwnerRule.RUSHABH;
+
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -15,7 +17,7 @@ public class UsageMetricsEventPublisherUnitTest extends WingsBaseTest {
   @Inject UsageMetricsEventPublisher usageMetricsEventPublisher;
 
   @Test
-  @Owner(developers = "rushabh@harness.io")
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testConstructDeploymentEvent() {
     WorkflowExecution workflowExecution = UsageMetricsTestUtils.generateWorkflowExecution(0);

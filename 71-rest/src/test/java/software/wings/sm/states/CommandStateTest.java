@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
@@ -633,7 +634,7 @@ public class CommandStateTest extends WingsBaseTest {
    * Should throw exception for unknown command.
    */
   @Test
-  @Owner(developers = "aaditi@harness.io", intermittent = true)
+  @Owner(developers = AADITI, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFailWhenNestedCommandNotFound() {
