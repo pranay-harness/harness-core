@@ -12,5 +12,8 @@ public class PcfAppAutoscalarRequestData {
   private String autoscalarFilePath;
   private String configPathVar;
   private String applicationName;
+  private String applicationGuid;
+  private boolean expectedEnabled;
   private int timeoutInMins;
+  private boolean loggedin;
 }

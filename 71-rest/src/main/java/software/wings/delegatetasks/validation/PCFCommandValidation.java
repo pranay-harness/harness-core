@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.pcf.model.PcfConstants.CF_APP_AUTOSCALAR_VALIDATION;
 import static java.util.Collections.singletonList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -121,6 +122,15 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
 
     if (pcfCliValidationRequired(pcfCommandRequest)) {
       criteria = new StringBuilder(128).append(criteria).append('_').append("cf_cli").toString();
+    }
+
+    if (needToCheckAppAutoscalarPluginInstall(pcfCommandRequest)) {
+      criteria = new StringBuilder(128)
+                     .append(criteria)
+                     .append('_')
+                     .append("cf_cli")
+                     .append(CF_APP_AUTOSCALAR_VALIDATION)
+                     .toString();
     }
 
     return criteria;

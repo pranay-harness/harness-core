@@ -46,7 +46,7 @@ public interface PcfDeploymentManager {
 
   void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
-  void changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
+  boolean changeAutoscalarState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException;
   boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException;
   boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,

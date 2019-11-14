@@ -8,9 +8,11 @@ import static software.wings.beans.Log.color;
 
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.filesystem.FileIo;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +24,16 @@ import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import software.wings.helpers.ext.pcf.PivotalClientApiException;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.utils.Misc;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +60,13 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
 
     PcfCommandRollbackRequest commandRollbackRequest = (PcfCommandRollbackRequest) pcfCommandRequest;
 
+    File workingDirectory = null;
+    Exception exception = null;
     try {
+      // This will be CF_HOME for any cli related operations
+      String randomToken = UUIDGenerator.generateUuid();
+      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
+
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
       encryptionService.decrypt(pcfConfig, encryptedDataDetails);
       if (CollectionUtils.isEmpty(commandRollbackRequest.getInstanceData())) {
@@ -71,6 +83,14 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
               .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin() == null
                       ? 10
                       : commandRollbackRequest.getTimeoutIntervalInMin())
+              .build();
+
+      // Will be used if app autoscalar is configured
+      PcfAppAutoscalarRequestData autoscalarRequestData =
+          PcfAppAutoscalarRequestData.builder()
+              .pcfRequestConfig(pcfRequestConfig)
+              .configPathVar(workingDirectory.getAbsolutePath())
+              .timeoutInMins(commandRollbackRequest.getTimeoutIntervalInMin())
               .build();
 
       // get Upsize Instance data
@@ -91,22 +111,40 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       // During rollback, always upsize old ones
       pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
           pcfRequestConfig, upsizeList, pcfInstanceElements);
-      pcfCommandTaskHelper.downSizeListOfInstances(
-          executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated, pcfRequestConfig, downSizeList);
+
+      // Enable autoscalar for older app, if it was disabled during deploy
+      enableAutoscalarIfNeeded(upsizeList, autoscalarRequestData, executionLogCallback);
+
+      pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfServiceDataUpdated, pcfRequestConfig,
+          downSizeList, commandRollbackRequest, autoscalarRequestData);
 
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
       pcfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElements);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback completed successfully");
-    } catch (Exception e) {
+    } catch (IOException | PivotalClientApiException e) {
+      exception = e;
+    } catch (Exception ex) {
+      exception = ex;
+    } finally {
+      if (workingDirectory != null) {
+        try {
+          FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
+        } catch (IOException e) {
+          logger.warn("Failed to delete temp cf home folder", e);
+        }
+      }
+    }
+
+    if (exception != null) {
       logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Rollback task [{}]",
-          commandRollbackRequest, e);
+          commandRollbackRequest, exception);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback failed to complete successfully");
-      Misc.logAllMessages(e, executionLogCallback);
+      Misc.logAllMessages(exception, executionLogCallback);
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
-      pcfDeployCommandResponse.setOutput(ExceptionUtils.getMessage(e));
+      pcfDeployCommandResponse.setOutput(ExceptionUtils.getMessage(exception));
     }
 
     return PcfCommandExecutionResponse.builder()
@@ -114,5 +152,20 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .errorMessage(pcfDeployCommandResponse.getOutput())
         .pcfCommandResponse(pcfDeployCommandResponse)
         .build();
+  }
+
+  private void enableAutoscalarIfNeeded(List<PcfServiceData> upsizeList,
+      PcfAppAutoscalarRequestData autoscalarRequestData, ExecutionLogCallback logCallback)
+      throws PivotalClientApiException {
+    for (PcfServiceData pcfServiceData : upsizeList) {
+      if (!pcfServiceData.isDisableAutoscalarPerformed()) {
+        continue;
+      }
+
+      autoscalarRequestData.setApplicationName(pcfServiceData.getName());
+      autoscalarRequestData.setApplicationGuid(pcfServiceData.getId());
+      autoscalarRequestData.setExpectedEnabled(false);
+      pcfDeploymentManager.changeAutoscalarState(autoscalarRequestData, logCallback, true);
+    }
   }
 }

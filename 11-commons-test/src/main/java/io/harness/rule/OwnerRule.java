@@ -65,6 +65,7 @@ public class OwnerRule implements TestRule {
   public static final String VENKATESH = "venkatesh.kotrike@harness.io";
   public static final String VIKAS = "vikas.naiyar@harness.io";
   public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
+  public static final String ROHIT_KUMAR = "rohit.kumar@harness.io";
   @Deprecated public static final String UNKNOWN = "unknown";
 
   @Value
@@ -118,6 +119,7 @@ public class OwnerRule implements TestRule {
                                                          .put(VENKATESH, DevInfo.builder().build())
                                                          .put(VIKAS, DevInfo.builder().build())
                                                          .put(YOGESH_CHAUHAN, DevInfo.builder().build())
+                                                         .put(ROHIT_KUMAR, DevInfo.builder().build())
                                                          .put(UNKNOWN, DevInfo.builder().slack("channel").build())
                                                          .build();
 

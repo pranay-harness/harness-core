@@ -14,6 +14,7 @@ public interface PcfConstants {
   String ENABLE_AUTOSCALING = "enable-autoscaling";
   String DISABLE_AUTOSCALING = "disable-autoscaling";
   String CONFIGURE_AUTOSCALING = "cf configure-autoscaling";
+  String CF_APP_AUTOSCALAR_VALIDATION = "cf_appautoscalar";
 
   String MANIFEST_YML = "manifest.yml";
   String VARS_YML = "vars.yml";

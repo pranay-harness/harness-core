@@ -663,10 +663,10 @@ public class PcfStateHelperTest extends WingsBaseTest {
                                                   .manifestYml(TEST_APP_MANIFEST)
                                                   .variableYmls(Arrays.asList(TEST_VAR, TEST_VAR_1))
                                                   .build();
-    doReturn(SERVICE_MANIFEST_YML).doReturn(v1).doReturn(v2).when(context).renderExpression(anyString());
+    doReturn(v1).doReturn(v2).when(context).renderExpression(anyString());
 
     pcfStateHelper.evaluateExpressionsInManifestTypes(context, pcfManifestsPackage);
-    assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(SERVICE_MANIFEST_YML);
+    assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(TEST_APP_MANIFEST);
     assertThat(pcfManifestsPackage.getVariableYmls()).isNotEmpty();
     assertThat(pcfManifestsPackage.getVariableYmls().size()).isEqualTo(2);
     assertThat(pcfManifestsPackage.getVariableYmls().get(0)).isEqualTo(v1);

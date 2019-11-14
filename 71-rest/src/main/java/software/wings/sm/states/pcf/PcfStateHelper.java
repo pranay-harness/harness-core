@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
+import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
@@ -191,6 +192,8 @@ public class PcfStateHelper {
                                               .space(getSpaceFromSetupContext(pcfSetupContextElement))
                                               .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
                                               .timeoutIntervalInMin(timeoutIntervalInMinutes)
+                                              .enforceSslValidation(pcfSetupContextElement.isEnforceSslValidation())
+                                              .useAppAutoscalar(pcfSetupContextElement.isUseAppAutoscalar())
                                               .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
@@ -338,8 +341,9 @@ public class PcfStateHelper {
       if (isEmpty(pcfManifestsPackage.getVariableYmls())) {
         pcfManifestsPackage.setVariableYmls(new ArrayList<>());
       }
-
       pcfManifestsPackage.getVariableYmls().add(fileContent);
+    } else if (AUTOSCALAR_MANIFEST.equals(manifestType)) {
+      pcfManifestsPackage.setAutoscalarManifestYml(fileContent);
     }
   }
 
@@ -432,9 +436,6 @@ public class PcfStateHelper {
 
   @VisibleForTesting
   void evaluateExpressionsInManifestTypes(ExecutionContext context, PcfManifestsPackage pcfManifestsPackage) {
-    // evaluate expressions in manifest.yml
-    pcfManifestsPackage.setManifestYml(context.renderExpression(pcfManifestsPackage.getManifestYml()));
-
     // evaluate expression in variables.yml
     List<String> varYmls = pcfManifestsPackage.getVariableYmls();
     if (isNotEmpty(varYmls)) {

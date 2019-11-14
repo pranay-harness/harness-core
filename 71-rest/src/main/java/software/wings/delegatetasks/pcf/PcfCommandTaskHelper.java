@@ -21,7 +21,9 @@ import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NO_HOSTNAME_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.NO_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.PATH_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
 import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.REPOSITORY_DIR_PATH;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_PATH_MANIFEST_YML_ELEMENT;
@@ -50,6 +52,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -66,7 +69,9 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
@@ -157,8 +162,9 @@ public class PcfCommandTaskHelper {
   }
 
   public void downSizeListOfInstances(ExecutionLogCallback executionLogCallback,
-      PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList) throws PivotalClientApiException {
+      List<PcfServiceData> pcfServiceDataUpdated, PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList,
+      PcfCommandRollbackRequest commandRollbackRequest, PcfAppAutoscalarRequestData appAutoscalarRequestData)
+      throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("\n");
     for (PcfServiceData pcfServiceData : downSizeList) {
       executionLogCallback.saveExecutionLog(color("# Downsizing application:", White, Bold));
@@ -173,6 +179,15 @@ public class PcfCommandTaskHelper {
 
       pcfRequestConfig.setApplicationName(pcfServiceData.getName());
       pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
+
+      if (commandRollbackRequest.isUseAppAutoscalar()) {
+        ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+        appAutoscalarRequestData.setApplicationName(applicationDetail.getName());
+        appAutoscalarRequestData.setApplicationGuid(applicationDetail.getId());
+        appAutoscalarRequestData.setExpectedEnabled(true);
+        disableAutoscalar(appAutoscalarRequestData, executionLogCallback);
+      }
+
       downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
       pcfServiceDataUpdated.add(pcfServiceData);
     }
@@ -203,8 +218,8 @@ public class PcfCommandTaskHelper {
    */
   public void downsizePreviousReleases(PcfCommandDeployRequest pcfCommandDeployRequest,
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
-      List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, List<PcfInstanceElement> pcfInstanceElements)
-      throws PivotalClientApiException {
+      List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, List<PcfInstanceElement> pcfInstanceElements,
+      PcfAppAutoscalarRequestData appAutoscalarRequestData) throws PivotalClientApiException {
     if (pcfCommandDeployRequest.isStandardBlueGreen()) {
       executionLogCallback.saveExecutionLog("# BG Deployment. Old Application will not be downsized.");
       return;
@@ -246,7 +261,15 @@ public class PcfCommandTaskHelper {
       return;
     }
 
-    // downsize application
+    // First disable App Auto scalar if attached with application
+    if (pcfCommandDeployRequest.isUseAppAutoscalar()) {
+      appAutoscalarRequestData.setApplicationName(applicationDetail.getName());
+      appAutoscalarRequestData.setApplicationGuid(applicationDetail.getId());
+      appAutoscalarRequestData.setExpectedEnabled(true);
+      boolean autoscalarStateChanged = disableAutoscalar(appAutoscalarRequestData, executionLogCallback);
+      pcfServiceData.setDisableAutoscalarPerformed(autoscalarStateChanged);
+    }
+
     ApplicationDetail applicationDetailAfterResize =
         downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
 
@@ -420,16 +443,8 @@ public class PcfCommandTaskHelper {
 
   /**
    * This is called from Deploy (Resize) phase.
-   * @param executionLogCallback
-   * @param pcfDeploymentManager
-   * @param pcfCommandDeployRequest
-   * @param pcfServiceDataUpdated
-   * @param pcfRequestConfig
-   * @param details
-   * @param pcfInstanceElements
-   * @throws PivotalClientApiException
    */
-  public void upsizeNewApplication(ExecutionLogCallback executionLogCallback, PcfDeploymentManager pcfDeploymentManager,
+  public void upsizeNewApplication(ExecutionLogCallback executionLogCallback,
       PcfCommandDeployRequest pcfCommandDeployRequest, List<PcfServiceData> pcfServiceDataUpdated,
       PcfRequestConfig pcfRequestConfig, ApplicationDetail details, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
@@ -520,6 +535,11 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog("# Unmapping Routes was successfully completed");
   }
 
+  public boolean disableAutoscalar(PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    return pcfDeploymentManager.changeAutoscalarState(pcfAppAutoscalarRequestData, executionLogCallback, false);
+  }
+
   private String getRouteString(List<String> routeMaps) {
     if (EmptyPredicate.isEmpty(routeMaps)) {
       return StringUtils.EMPTY;
@@ -576,6 +596,14 @@ public class PcfCommandTaskHelper {
                                               .toString(),
           e);
     }
+  }
+
+  public File generateWorkingDirectoryForDeployment(String workingDirecotry) throws IOException {
+    FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
+    FileIo.createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
+    String workingDir = PCF_ARTIFACT_DOWNLOAD_DIR_PATH + "/" + workingDirecotry;
+    FileIo.createDirectoryIfDoesNotExist(workingDir);
+    return new File(workingDir);
   }
 
   private Map<String, Object> generateFinalMapForYamlDump(TreeMap<String, Object> applicationToBeUpdated) {

@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -514,7 +515,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testStartApplicationException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -532,7 +533,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testUnmapRouteMapForAppException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -552,7 +553,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testMapRouteMapForAppException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -573,7 +574,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testPushApplicationUsingManifest() throws Exception {
     PcfClientImpl client = spy(PcfClientImpl.class);
@@ -606,7 +607,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testFindRoutesNeedToBeCreated() throws Exception {
     List<String> routes = new ArrayList<>();
@@ -645,7 +646,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testMapRoutesForApplication() throws Exception {
     PcfClientImpl pcfClient1 = spy(PcfClientImpl.class);
@@ -690,7 +691,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformConfigureAutoscalar() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -714,7 +715,6 @@ public class PivotalClientTest extends WingsBaseTest {
         PcfAppAutoscalarRequestData.builder().autoscalarFilePath(file.getAbsolutePath()).timeoutInMins(1).build(),
         logCallback);
 
-    assertThat(file.exists()).isFalse();
     try {
       pcfClient.performConfigureAutoscalar(
           PcfAppAutoscalarRequestData.builder().autoscalarFilePath(file.getAbsolutePath()).timeoutInMins(1).build(),
@@ -731,10 +731,12 @@ public class PivotalClientTest extends WingsBaseTest {
     } catch (Exception e) {
       assertThat(e instanceof PivotalClientApiException).isTrue();
     }
+
+    FileIo.deleteFileIfExists(file.getAbsolutePath());
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testCheckIfAppHasAutoscalarAttached() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -747,23 +749,17 @@ public class PivotalClientTest extends WingsBaseTest {
 
     doReturn(processResult).when(processExecutor).execute();
     doReturn("asd").doReturn(null).doReturn(EMPTY).when(processResult).outputUTF8();
-
     doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
-    assertThat(
-        pcfClient.checkIfAppHasAutoscalarAttached(
-            PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build(), logCallback))
-        .isTrue();
 
-    assertThat(
-        pcfClient.checkIfAppHasAutoscalarAttached(
-            PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build(), logCallback))
-        .isFalse();
+    PcfAppAutoscalarRequestData autoscalarRequestData = PcfAppAutoscalarRequestData.builder()
+                                                            .applicationName(APP_NAME)
+                                                            .applicationGuid(APP_NAME)
+                                                            .timeoutInMins(1)
+                                                            .build();
+    assertThat(pcfClient.checkIfAppHasAutoscalarAttached(autoscalarRequestData, logCallback)).isTrue();
 
-    assertThat(
-        pcfClient.checkIfAppHasAutoscalarAttached(
-            PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).timeoutInMins(1).build(), logCallback))
-        .isFalse();
-
+    assertThat(pcfClient.checkIfAppHasAutoscalarAttached(autoscalarRequestData, logCallback)).isFalse();
+    assertThat(pcfClient.checkIfAppHasAutoscalarAttached(autoscalarRequestData, logCallback)).isFalse();
     doThrow(Exception.class).when(processExecutor).execute();
     try {
       pcfClient.checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData.builder().build(), logCallback);
@@ -773,7 +769,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testCheckIfAppAutoscalarInstalled() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -801,7 +797,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testChangeAutoscalarState() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -835,7 +831,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testGetAppAutoscalarEnvMapForCustomPlugin() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -848,7 +844,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateProccessExecutorForPcfTask() throws Exception {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
@@ -865,7 +861,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateExecutorForAutoscalarPluginCheck() throws Exception {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
@@ -882,16 +878,34 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateChangeAutoscalarStateCommand() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
-    String command = pcfClient.generateChangeAutoscalarStateCommand(
-        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).build(), true);
+    PcfAppAutoscalarRequestData autoscalarRequestData =
+        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).build();
+    String command = pcfClient.generateChangeAutoscalarStateCommand(autoscalarRequestData, true);
     assertThat(command).isEqualTo("cf enable-autoscaling " + APP_NAME);
-    command = pcfClient.generateChangeAutoscalarStateCommand(
-        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).build(), false);
+    command = pcfClient.generateChangeAutoscalarStateCommand(autoscalarRequestData, false);
     assertThat(command).isEqualTo("cf disable-autoscaling " + APP_NAME);
+  }
+
+  @Test
+  @Owner(emails = ADWAIT)
+  @Category(UnitTests.class)
+  public void testLogInForAppAutoscalarCliCommand() throws Exception {
+    PcfClientImpl pcfClient = spy(PcfClientImpl.class);
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    PcfAppAutoscalarRequestData autoscalarRequestData = PcfAppAutoscalarRequestData.builder().loggedin(true).build();
+    pcfClient.logInForAppAutoscalarCliCommand(autoscalarRequestData, logCallback);
+    verify(pcfClient, never()).doLogin(any(), any(), anyString());
+
+    doReturn(true).when(pcfClient).doLogin(any(), any(), anyString());
+    autoscalarRequestData.setLoggedin(false);
+    pcfClient.logInForAppAutoscalarCliCommand(autoscalarRequestData, logCallback);
+    verify(pcfClient, times(1)).doLogin(any(), any(), anyString());
   }
 
   @Test(expected = None.class)

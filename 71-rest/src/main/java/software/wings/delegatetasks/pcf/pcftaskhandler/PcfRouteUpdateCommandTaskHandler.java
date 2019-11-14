@@ -8,17 +8,21 @@ import static software.wings.beans.Log.color;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.filesystem.FileIo;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.cloudfoundry.operations.applications.ApplicationDetail;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
@@ -26,6 +30,8 @@ import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @NoArgsConstructor
@@ -34,6 +40,7 @@ import java.util.List;
 public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
   /**
    * Performs RouteSwapping for Blue-Green deployment
+   *
    * @param pcfCommandRequest
    * @param encryptedDataDetails
    * @return
@@ -48,7 +55,12 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     PcfCommandExecutionResponse pcfCommandExecutionResponse =
         PcfCommandExecutionResponse.builder().pcfCommandResponse(pcfCommandResponse).build();
 
+    File workingDirectory = null;
     try {
+      // This will be CF_HOME for any cli related operations
+      String randomToken = UUIDGenerator.generateUuid();
+      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
+
       executionLogCallback.saveExecutionLog(color("--------- Starting PCF Route Update\n", White, Bold));
       PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) pcfCommandRequest;
       PcfConfig pcfConfig = pcfCommandRouteUpdateRequest.getPcfConfig();
@@ -69,13 +81,13 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       if (pcfRouteUpdateConfigData.isStandardBlueGreen()) {
         if (swapRouteExecutionNeeded(pcfRouteUpdateConfigData)) {
           // If rollback and old app was downsized, restore it
-          restoreOldAppDuringRollbackIfNeeded(
-              executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
+          restoreOldAppDuringRollbackIfNeeded(executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig,
+              pcfRouteUpdateConfigData, workingDirectory.getAbsolutePath());
           // Swap routes
           performRouteUpdateForStandardBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
           // if deploy and downsizeOld is true
-          downsizeOldAppDuringDeployIfRequired(
-              executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig, pcfRouteUpdateConfigData);
+          downsizeOldAppDuringDeployIfRequired(executionLogCallback, pcfCommandRouteUpdateRequest, pcfRequestConfig,
+              pcfRouteUpdateConfigData, workingDirectory.getAbsolutePath());
         } else {
           executionLogCallback.saveExecutionLog(color("# No Route Update Required In Rollback", White, Bold));
         }
@@ -92,6 +104,14 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog("# Error: " + e.getMessage());
       pcfCommandResponse.setOutput(e.getMessage());
       pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    } finally {
+      try {
+        if (workingDirectory != null) {
+          FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
+        }
+      } catch (IOException e) {
+        logger.warn("Failed to delete temp directory created for CF CLI login", e);
+      }
     }
 
     pcfCommandExecutionResponse.setCommandExecutionStatus(pcfCommandResponse.getCommandExecutionStatus());
@@ -118,15 +138,16 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
   @VisibleForTesting
   void restoreOldAppDuringRollbackIfNeeded(ExecutionLogCallback executionLogCallback,
       PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest, PcfRequestConfig pcfRequestConfig,
-      PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData) {
+      PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData, String configVarPath) {
     if (pcfRouteUpdateConfigData.isRollback() && pcfRouteUpdateConfigData.isDownsizeOldApplication()) {
-      resizeOldApplications(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback, true);
+      resizeOldApplications(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback, true, configVarPath);
     }
   }
 
   @VisibleForTesting
   void resizeOldApplications(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, boolean isRollback) {
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, boolean isRollback,
+      String configVarPath) {
     PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =
         pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
 
@@ -150,9 +171,36 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
                                                   .append("} to Count: ")
                                                   .append(count)
                                                   .toString());
+
+        // If downsizing, disable auto-scalar
+        PcfAppAutoscalarRequestData appAutoscalarRequestData = null;
+        if (pcfCommandRouteUpdateRequest.isUseAppAutoscalar()) {
+          ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+          appAutoscalarRequestData = PcfAppAutoscalarRequestData.builder()
+                                         .applicationGuid(applicationDetail.getId())
+                                         .applicationName(applicationDetail.getName())
+                                         .pcfRequestConfig(pcfRequestConfig)
+                                         .configPathVar(configVarPath)
+                                         .timeoutInMins(pcfCommandRouteUpdateRequest.getTimeoutIntervalInMin())
+                                         .build();
+
+          // Before downsizing, disable autoscalar if its enabled.
+          if (!isRollback && count == 0) {
+            appAutoscalarRequestData.setExpectedEnabled(true);
+            pcfCommandTaskHelper.disableAutoscalar(appAutoscalarRequestData, executionLogCallback);
+          }
+        }
+
+        // reisze app (upsize in swap rollback, downsize in swap state)
         pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+
+        // After resize, enable autoscalar if it was attached.
+        if (isRollback && pcfCommandRouteUpdateRequest.isUseAppAutoscalar()) {
+          appAutoscalarRequestData.setExpectedEnabled(false);
+          pcfDeploymentManager.changeAutoscalarState(appAutoscalarRequestData, executionLogCallback, true);
+        }
       } catch (Exception e) {
-        logger.error("Failed to downsize PCF application: " + appNameBeingDownsized);
+        logger.error("Failed to downsize PCF application: " + appNameBeingDownsized, e);
         executionLogCallback.saveExecutionLog("Failed while downsizing old application: " + appNameBeingDownsized);
       }
     }
@@ -161,9 +209,9 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
   @VisibleForTesting
   void downsizeOldAppDuringDeployIfRequired(ExecutionLogCallback executionLogCallback,
       PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest, PcfRequestConfig pcfRequestConfig,
-      PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData) {
+      PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData, String configVarPath) {
     if (!pcfRouteUpdateConfigData.isRollback() && pcfRouteUpdateConfigData.isDownsizeOldApplication()) {
-      resizeOldApplications(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback, false);
+      resizeOldApplications(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback, false, configVarPath);
     }
   }
 

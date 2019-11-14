@@ -2,9 +2,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.pcf.model.PcfConstants.PCF_ARTIFACT_DOWNLOAD_DIR_PATH;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
-import static io.harness.pcf.model.PcfConstants.REPOSITORY_DIR_PATH;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -38,6 +36,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
@@ -80,6 +79,17 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     File artifactFile = null;
     File workingDirectory = null;
     try {
+      // This path represents location where artifact will be downloaded, manifest file will be created and
+      // config.json file will be generated with login details by cf cli, for current task.
+      // This value is set to CF_HOME env variable when process executor is created.
+      String randomToken = UUIDGenerator.generateUuid();
+      workingDirectory = pcfCommandTaskHelper.generateWorkingDirectoryForDeployment(randomToken);
+      if (pcfCommandSetupRequest.isUseCLIForPcfAppCreation() || pcfCommandSetupRequest.isUseAppAutoscalar()) {
+        if (workingDirectory == null) {
+          throw new PivotalClientApiException("Failed to generate CF-CLI Working directory");
+        }
+      }
+
       PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
                                               .orgName(pcfCommandSetupRequest.getOrganization())
                                               .spaceName(pcfCommandSetupRequest.getSpace())
@@ -89,6 +99,13 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                               .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
                                               .useCLIForAppCreate(pcfCommandSetupRequest.isUseCLIForPcfAppCreation())
                                               .build();
+
+      PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+          PcfAppAutoscalarRequestData.builder()
+              .pcfRequestConfig(pcfRequestConfig)
+              .configPathVar(workingDirectory.getAbsolutePath())
+              .timeoutInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
+              .build();
 
       executionLogCallback.saveExecutionLog("\n# Fetching all existing applications ");
 
@@ -108,7 +125,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       int releaseRevision = getReleaseRevisionForNewApplication(previousReleases);
 
       // Delete any older application excpet most recent 1.
-      deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest, executionLogCallback);
+      deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest, pcfAppAutoscalarRequestData,
+          executionLogCallback);
 
       // Fetch apps again, as apps may have been deleted/downsized
       previousReleases =
@@ -126,12 +144,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       String newReleaseName =
           ServiceVersionConvention.getServiceName(pcfCommandSetupRequest.getReleaseNamePrefix(), releaseRevision);
 
-      // This path represents location where artifact will be downloaded, manifest file will be created and
-      // config.json file will be generated with login details by cf cli, for current task.
-      // This value is set to CF_HOME env variable when process executor is created.
-      String randomToken = UUIDGenerator.generateUuid();
-      workingDirectory = generateWorkingDirectoryForDeployment(randomToken);
-
       // Download artifact on delegate from manager
       artifactFile = pcfCommandTaskHelper.downloadArtifact(
           pcfCommandSetupRequest.getArtifactFiles(), pcfCommandSetupRequest.getAccountId(), workingDirectory);
@@ -145,6 +157,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                                         .newReleaseName(newReleaseName)
                                                         .pcfManifestFileData(pcfManifestFileData)
                                                         .varsYmlFilePresent(varsYmlPresent)
+                                                        .loginNeeded(!pcfAppAutoscalarRequestData.isLoggedin())
                                                         .build();
 
       // Generate final manifest Yml needed for push.
@@ -172,6 +185,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       List<PcfAppSetupTimeDetails> downsizeAppDetails =
           pcfCommandTaskHelper.generateDownsizeDetails(pcfRequestConfig, newReleaseName);
+
       PcfSetupCommandResponse pcfSetupCommandResponse =
           PcfSetupCommandResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -266,14 +280,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
             + 1;
   }
 
-  private File generateWorkingDirectoryForDeployment(String workingDirecotry) throws IOException {
-    FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
-    FileIo.createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
-    String workingDir = PCF_ARTIFACT_DOWNLOAD_DIR_PATH + "/" + workingDirecotry;
-    FileIo.createDirectoryIfDoesNotExist(workingDir);
-    return new File(workingDir);
-  }
-
   private void removeTempFilesCreated(PcfCommandSetupRequest pcfCommandRequest,
       ExecutionLogCallback executionLogCallback, File artifactFile, File workingDirectory,
       PcfManifestFileData pcfManifestFileData) {
@@ -311,13 +317,13 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * 3. Based on count "LastVersopAppsToKeep" provided by user, (default is 3)
    * 4. Keep most recent app as is, and (last LastVersopAppsToKeep - 1) apps will be downsized to 0
    * 5. All apps older than that will be deleted
-   *
    * @param previousReleases
    * @param pcfRequestConfig
    */
   @VisibleForTesting
   void deleteOlderApplications(List<ApplicationSummary> previousReleases, PcfRequestConfig pcfRequestConfig,
-      PcfCommandSetupRequest pcfCommandSetupRequest, ExecutionLogCallback executionLogCallback) {
+      PcfCommandSetupRequest pcfCommandSetupRequest, PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     if (EmptyPredicate.isEmpty(previousReleases)) {
       return;
     }
@@ -358,7 +364,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       for (int index = appsWithNonZeroInstances.size() - 2; index >= 0; index--) {
         ApplicationSummary applicationSummary = appsWithNonZeroInstances.get(index);
         if (appsDownsizedCount < olderActiveVersionCountToKeep - 1) {
-          downsizeApplicationToZero(applicationSummary, pcfRequestConfig, executionLogCallback);
+          downsizeApplicationToZero(applicationSummary, pcfRequestConfig, pcfCommandSetupRequest,
+              appAutoscalarRequestData, executionLogCallback);
           appsDownsizedCount++;
         } else {
           deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted, executionLogCallback);
@@ -434,11 +441,20 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
   @VisibleForTesting
   void downsizeApplicationToZero(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig,
-      ExecutionLogCallback executionLogCallback) {
+      PcfCommandSetupRequest pcfCommandSetupRequest, PcfAppAutoscalarRequestData appAutoscalarRequestData,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("# Application Being Downsized To 0: ")
                                               .append(applicationSummary.getName())
                                               .toString());
+
+    if (pcfCommandSetupRequest.isUseAppAutoscalar()) {
+      appAutoscalarRequestData.setApplicationName(applicationSummary.getName());
+      appAutoscalarRequestData.setApplicationGuid(applicationSummary.getId());
+      appAutoscalarRequestData.setExpectedEnabled(true);
+      pcfCommandTaskHelper.disableAutoscalar(appAutoscalarRequestData, executionLogCallback);
+    }
+
     pcfRequestConfig.setApplicationName(applicationSummary.getName());
     pcfRequestConfig.setDesiredCount(0);
     try {

@@ -3,14 +3,17 @@ package software.wings.delegatetasks.pcf;
 import static io.harness.pcf.model.PcfConstants.HOST_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -24,6 +27,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -34,7 +38,9 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
@@ -186,7 +192,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testGetRevisionFromReleaseName() throws Exception {
     Integer revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
@@ -197,7 +203,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateManifestVarsYamlFileLocally() throws Exception {
     PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()
@@ -221,7 +227,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateManifestYamlFileLocally() throws Exception {
     File file = null;
@@ -258,7 +264,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testGetPrefix() {
     Set<String> names = new HashSet<>();
@@ -274,7 +280,45 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
+  @Category(UnitTests.class)
+  public void testDownSizeListOfInstances() throws Exception {
+    reset(pcfDeploymentManager);
+    ApplicationDetail detail = ApplicationDetail.builder()
+                                   .diskQuota(1)
+                                   .id("id")
+                                   .name("app")
+                                   .instances(0)
+                                   .memoryLimit(1)
+                                   .stack("stack")
+                                   .runningInstances(2)
+                                   .requestedState("RUNNING")
+                                   .build();
+
+    doReturn(detail).when(pcfDeploymentManager).getApplicationByName(any());
+    doReturn(detail).when(pcfDeploymentManager).resizeApplication(any());
+
+    List<PcfServiceData> pcfServiceDataListToBeUpdated = new ArrayList<>();
+    List<PcfServiceData> pcfServiceDataList = new ArrayList<>();
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    pcfServiceDataList.add(PcfServiceData.builder().name("test").desiredCount(2).build());
+    PcfCommandRollbackRequest commandRollbackRequest =
+        PcfCommandRollbackRequest.builder().useAppAutoscalar(true).build();
+    String path = EMPTY;
+
+    doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
+    pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfServiceDataListToBeUpdated, pcfRequestConfig,
+        pcfServiceDataList, commandRollbackRequest,
+        PcfAppAutoscalarRequestData.builder()
+            .applicationName(detail.getName())
+            .applicationGuid(detail.getId())
+            .build());
+    verify(pcfDeploymentManager, times(1)).changeAutoscalarState(any(), any(), anyBoolean());
+    assertThat(pcfServiceDataListToBeUpdated.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testDownsizePreviousReleases() throws Exception {
     PcfCommandDeployRequest request =
@@ -285,8 +329,8 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
 
     // No old app exists
-    pcfCommandTaskHelper.downsizePreviousReleases(
-        request, pcfRequestConfig, executionLogCallback, pcfServiceDataList, 0, pcfInstanceElements);
+    pcfCommandTaskHelper.downsizePreviousReleases(request, pcfRequestConfig, executionLogCallback, pcfServiceDataList,
+        0, pcfInstanceElements, PcfAppAutoscalarRequestData.builder().build());
     verify(pcfDeploymentManager, never()).getApplicationByName(any());
 
     InstanceDetail instanceDetail0 = InstanceDetail.builder()
@@ -339,14 +383,15 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
     // For BG, downsize should never happen.
     request.setStandardBlueGreen(true);
-    pcfCommandTaskHelper.downsizePreviousReleases(
-        request, pcfRequestConfig, executionLogCallback, pcfServiceDataList, 2, pcfInstanceElements);
+    pcfCommandTaskHelper.downsizePreviousReleases(request, pcfRequestConfig, executionLogCallback, pcfServiceDataList,
+        2, pcfInstanceElements, PcfAppAutoscalarRequestData.builder().build());
     verify(pcfDeploymentManager, never()).getApplicationByName(any());
 
     // exptectedCount = cuurrentCount, no downsize should be called.
     request.setStandardBlueGreen(false);
-    pcfCommandTaskHelper.downsizePreviousReleases(
-        request, pcfRequestConfig, executionLogCallback, pcfServiceDataList, 2, pcfInstanceElements);
+    pcfCommandTaskHelper.downsizePreviousReleases(request, pcfRequestConfig, executionLogCallback, pcfServiceDataList,
+        2, pcfInstanceElements,
+        PcfAppAutoscalarRequestData.builder().applicationGuid("id").applicationName("app").build());
     verify(pcfDeploymentManager, times(1)).getApplicationByName(any());
     verify(pcfCommandTaskHelper, never()).downSize(any(), any(), any(), any());
     assertThat(pcfServiceDataList.size()).isEqualTo(1);
@@ -367,8 +412,8 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     doReturn(applicationDetailAfterDownsize).when(pcfDeploymentManager).resizeApplication(any());
     pcfInstanceElements.clear();
     pcfServiceDataList.clear();
-    pcfCommandTaskHelper.downsizePreviousReleases(
-        request, pcfRequestConfig, executionLogCallback, pcfServiceDataList, 1, pcfInstanceElements);
+    pcfCommandTaskHelper.downsizePreviousReleases(request, pcfRequestConfig, executionLogCallback, pcfServiceDataList,
+        1, pcfInstanceElements, PcfAppAutoscalarRequestData.builder().build());
     verify(pcfDeploymentManager, times(2)).getApplicationByName(any());
     verify(pcfCommandTaskHelper, times(1)).downSize(any(), any(), any(), any());
     assertThat(pcfServiceDataList.size()).isEqualTo(1);
@@ -384,7 +429,93 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
+  @Category(UnitTests.class)
+  public void testDownsizePreviousReleases_autoscalar() throws Exception {
+    PcfCommandDeployRequest request =
+        PcfCommandDeployRequest.builder().accountId(ACCOUNT_ID).downsizeAppDetail(null).useAppAutoscalar(true).build();
+
+    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    List<PcfServiceData> pcfServiceDataList = new ArrayList<>();
+    List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
+
+    InstanceDetail instanceDetail0 = InstanceDetail.builder()
+                                         .cpu(0.0)
+                                         .index("0")
+                                         .diskQuota(0l)
+                                         .diskUsage(0l)
+                                         .memoryQuota(0l)
+                                         .memoryUsage(0l)
+                                         .state("RUNNING")
+                                         .build();
+
+    InstanceDetail instanceDetail1 = InstanceDetail.builder()
+                                         .cpu(0.0)
+                                         .index("1")
+                                         .diskQuota(0l)
+                                         .diskUsage(0l)
+                                         .memoryQuota(0l)
+                                         .memoryUsage(0l)
+                                         .state("RUNNING")
+                                         .build();
+    // old app exists, but downsize is not required.
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .diskQuota(1)
+                                              .id("id")
+                                              .name("app")
+                                              .instanceDetails(instanceDetail0, instanceDetail1)
+                                              .instances(2)
+                                              .memoryLimit(1)
+                                              .stack("stack")
+                                              .runningInstances(2)
+                                              .requestedState("RUNNING")
+                                              .build();
+
+    ApplicationDetail applicationDetailAfterDownsize = ApplicationDetail.builder()
+                                                           .diskQuota(1)
+                                                           .id("id")
+                                                           .name("app")
+                                                           .instanceDetails(instanceDetail0)
+                                                           .instances(1)
+                                                           .memoryLimit(1)
+                                                           .stack("stack")
+                                                           .runningInstances(1)
+                                                           .requestedState("RUNNING")
+                                                           .build();
+
+    request.setDownsizeAppDetail(
+        PcfAppSetupTimeDetails.builder().applicationGuid("1").applicationName("app").initialInstanceCount(1).build());
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
+
+    // Downsize application from 2 to 1
+    doReturn(applicationDetailAfterDownsize).when(pcfDeploymentManager).resizeApplication(any());
+    doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
+    pcfInstanceElements.clear();
+    pcfServiceDataList.clear();
+    pcfCommandTaskHelper.downsizePreviousReleases(request, pcfRequestConfig, executionLogCallback, pcfServiceDataList,
+        1, pcfInstanceElements,
+        PcfAppAutoscalarRequestData.builder()
+            .applicationName(applicationDetail.getName())
+            .applicationGuid(applicationDetail.getId())
+            .build());
+    verify(pcfDeploymentManager, times(1)).getApplicationByName(any());
+    verify(pcfCommandTaskHelper, times(1)).downSize(any(), any(), any(), any());
+    verify(pcfDeploymentManager, times(1)).changeAutoscalarState(any(), any(), anyBoolean());
+    assertThat(pcfServiceDataList.size()).isEqualTo(1);
+    assertThat(pcfServiceDataList.get(0).getDesiredCount()).isEqualTo(1);
+    assertThat(pcfServiceDataList.get(0).getPreviousCount()).isEqualTo(2);
+    assertThat(pcfServiceDataList.get(0).getId()).isEqualTo("id");
+    assertThat(pcfServiceDataList.get(0).getName()).isEqualTo("app");
+    assertThat(pcfServiceDataList.get(0).isDisableAutoscalarPerformed()).isTrue();
+
+    assertThat(pcfInstanceElements.size()).isEqualTo(1);
+    assertThat(pcfInstanceElements.get(0).getApplicationId()).isEqualTo("id");
+    assertThat(pcfInstanceElements.get(0).getDisplayName()).isEqualTo("app");
+    assertThat(pcfInstanceElements.get(0).getInstanceIndex()).isEqualTo("0");
+  }
+
+  @Test
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateManifestYamlForPush() throws Exception {
     List<String> routes = Arrays.asList("app.harness.io", "stage.harness.io");
@@ -462,7 +593,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testHandleManifestWithNoRoute() {
     Map map = new HashMap<>();
@@ -479,7 +610,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testHandleRandomRouteScenario() {
     Map map = new HashMap<>();
@@ -498,7 +629,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateYamlFileLocally() throws Exception {
     String data = "asd";
@@ -510,7 +641,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateDownsizeDetails() throws Exception {
     List<ApplicationSummary> previousReleases = new ArrayList<>();
@@ -539,5 +670,48 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
     assertThat(details).isNotNull();
     assertThat(details.size()).isEqualTo(1);
     assertThat(details.get(0).getApplicationName()).isEqualTo("a_s_e__4");
+  }
+
+  @Test
+  @Owner(emails = ADWAIT)
+  @Category(UnitTests.class)
+  public void testPrintInstanceDetails() throws Exception {
+    String output = "Instance Details:\n"
+        + "Index: 0\n"
+        + "State: RUNNING\n"
+        + "Disk Usage: 1\n"
+        + "CPU: 0.0\n"
+        + "Memory Usage: 1\n"
+        + "\n"
+        + "Index: 1\n"
+        + "State: RUNNING\n"
+        + "Disk Usage: 2\n"
+        + "CPU: 0.0\n"
+        + "Memory Usage: 2\n";
+    InstanceDetail detail0 = InstanceDetail.builder()
+                                 .cpu(0.0)
+                                 .index("0")
+                                 .diskQuota(1l)
+                                 .diskUsage(1l)
+                                 .memoryQuota(1l)
+                                 .memoryUsage(1l)
+                                 .state("RUNNING")
+                                 .build();
+
+    InstanceDetail detail1 = InstanceDetail.builder()
+                                 .cpu(0.0)
+                                 .index("1")
+                                 .diskQuota(2l)
+                                 .diskUsage(2l)
+                                 .memoryQuota(2l)
+                                 .memoryUsage(2l)
+                                 .state("RUNNING")
+                                 .build();
+
+    pcfCommandTaskHelper.printInstanceDetails(executionLogCallback, Arrays.asList(detail0, detail1));
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    verify(executionLogCallback).saveExecutionLog(captor.capture());
+    String val = captor.getValue();
+    assertThat(output).isEqualTo(val);
   }
 }
