@@ -1,5 +1,6 @@
 package software.wings.integration.SSO.LDAP;
 
+import static io.harness.rule.OwnerRule.AMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ACCOUNT_ID;
 import static software.wings.integration.SSO.LDAP.LdapIntegrationTestConstants.ADMIN_HARNESS_ID;
@@ -80,7 +81,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
-  @Owner(developers = "aman@harness.io")
+  @Owner(developers = AMAN)
   @Category(IntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapConnectionSettings() {
@@ -95,7 +96,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
-  @Owner(developers = "aman@harness.io")
+  @Owner(developers = AMAN)
   @Category(IntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapLogin() {
@@ -112,7 +113,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
-  @Owner(developers = "aman@harness.io")
+  @Owner(developers = AMAN)
   @Category(IntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapUserGroupLinking() {
