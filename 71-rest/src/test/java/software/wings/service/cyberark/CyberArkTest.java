@@ -1,6 +1,7 @@
 package software.wings.service.cyberark;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
@@ -149,6 +151,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void validateConfig() {
     CyberArkConfig cyberArkConfig = getCyberArkConfig("invalidCertificate");
@@ -174,6 +177,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getCyberArkConfigForAccount() {
     CyberArkConfig cyberArkConfig = getCyberArkConfig();
@@ -188,6 +192,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void saveAndEditConfig() {
     InputStream inputStream = CyberArkTest.class.getResourceAsStream("/certs/clientCert.pem");
@@ -232,6 +237,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testEncryptDecryptArtifactoryConfig() {
@@ -265,6 +271,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testEncryptDecryptJenkinsConfig() {
@@ -304,6 +311,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
     String name = UUID.randomUUID().toString();
@@ -336,6 +344,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void cyberArkSecretManager_Crud_shouldGenerate_Audit() {
     if (isGlobalKmsEnabled) {

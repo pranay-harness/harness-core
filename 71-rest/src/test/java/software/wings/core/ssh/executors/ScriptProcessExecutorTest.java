@@ -3,6 +3,7 @@ package software.wings.core.ssh.executors;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -17,6 +18,7 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -49,6 +51,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   private ShellExecutorConfig shellExecutorConfig;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithSweepingOutputOnDelegateSuccess() {
     Map<String, String> env = new HashMap<>();
@@ -80,6 +83,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithSweepingOutputOnDelegateFails() {
     Map<String, String> env = new HashMap<>();
@@ -107,6 +111,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldFailPowerShellOnDelegate() {
     shellExecutorConfig = ShellExecutorConfig.builder()
@@ -125,6 +130,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithWorkingDirectoryOnDelegateSuccess() {
     Map<String, String> env = new HashMap<>();
@@ -149,6 +155,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithoutWorkingDirectoryOnDelegateSuccess() {
     Map<String, String> env = new HashMap<>();
@@ -172,6 +179,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testScpOneFileSuccess() throws IOException {
     scriptProcessExecutor =
@@ -207,6 +215,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testScpOneFileFails() {
     scriptProcessExecutor =

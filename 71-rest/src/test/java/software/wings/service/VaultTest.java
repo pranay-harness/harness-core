@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +28,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.rule.Repeat;
 import io.harness.security.encryption.EncryptedRecord;
@@ -198,6 +200,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void invalidConfig() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -213,6 +216,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void saveConfig() {
     if (isKmsEnabled) {
@@ -320,6 +324,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void saveAndEditConfig() {
     Account renameAccount = getAccount(AccountType.PAID);
@@ -367,6 +372,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
     String name = UUID.randomUUID().toString();
@@ -399,6 +405,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void saveConfigDefaultWithDefaultKms() {
     if (isKmsEnabled) {
@@ -440,6 +447,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void saveConfigDefault() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -499,6 +507,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getConfigDefault() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -534,6 +543,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewVaultConfigIfUnavailable() {
     Account account = getAccount(AccountType.PAID);
@@ -554,6 +564,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultNullEncryption() throws Exception {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -591,6 +602,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultEncryptionWhileSaving() throws IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -634,6 +646,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultEncryptionSaveMultiple() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -650,6 +663,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultEncryptionUpdateObject() throws IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -731,6 +745,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoOnDemandMigrationOnSecretUpdate() {
     if (isKmsEnabled) {
@@ -780,6 +795,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultEncryptionUpdateFieldSettingAttribute() throws IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -914,6 +930,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void vaultEncryptionSaveServiceVariable() throws IllegalAccessException {
@@ -977,6 +994,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultEncryptionSaveServiceVariableTemplate() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -1014,6 +1032,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultEncryptionDeleteSettingAttribute() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -1026,6 +1045,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultEncryptionDeleteSettingAttributeQueryUuid() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -1044,6 +1064,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void transitionVault() throws InterruptedException, IllegalAccessException {
@@ -1112,6 +1133,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void transitionAndDeleteVault() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();
@@ -1182,6 +1204,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void transitionFromKmsToVault() throws InterruptedException, IllegalAccessException {
     if (isKmsEnabled) {
@@ -1256,6 +1279,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, IllegalAccessException {
@@ -1357,6 +1381,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void reuseYamlPasswordVaultEncryption() throws IllegalAccessException {
     VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
@@ -1444,6 +1469,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void vaultSecretManager_Crud_shouldGenerate_Audit() {
     if (isKmsEnabled) {
@@ -1471,6 +1497,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void secretText_createdBeforeLocalEncryption_shouldBeReturned() throws Exception {
     VaultConfig vaultConfig = getVaultConfig();
@@ -1512,6 +1539,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void WinRmConnections_shouldBeReturned_in_listSettingAttributes() {
     VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);

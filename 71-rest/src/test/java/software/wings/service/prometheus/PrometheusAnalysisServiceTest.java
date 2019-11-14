@@ -1,6 +1,7 @@
 package software.wings.service.prometheus;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,6 +58,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataCheckDelegateCalledTwice() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();
@@ -65,6 +68,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeData() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();
@@ -80,6 +84,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataBadHostCall() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();
@@ -96,6 +101,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNotReachable() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();

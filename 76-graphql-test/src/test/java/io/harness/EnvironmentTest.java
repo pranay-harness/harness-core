@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -18,6 +19,7 @@ import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -45,6 +47,7 @@ public class EnvironmentTest extends GraphQLTest {
   @Inject EnvironmentGenerator environmentGenerator;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironment() {
     final Seed seed = new Seed(0);
@@ -99,6 +102,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingEnvironment() {
     String query = $GQL(/*
@@ -116,6 +120,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironments() {
     final Seed seed = new Seed(0);

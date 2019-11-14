@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -13,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,6 +51,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeeded() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
@@ -60,6 +63,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeededTrueCase() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
@@ -79,6 +83,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeededFalseCase() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
@@ -98,6 +103,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeededException() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();

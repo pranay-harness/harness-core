@@ -110,6 +110,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void accessManagementPermissionTestForGet() {
@@ -140,6 +141,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForIPWhitelisting() {
@@ -149,6 +151,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void updateNotificationSettingsInUserGroup() {
@@ -160,6 +163,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForAPIKeys() {
@@ -169,6 +173,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForLDAP() {
@@ -177,6 +182,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void amNoPermissionToPostForSAML() {
@@ -185,6 +191,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void updateIPWhitelistingTest() {
@@ -194,6 +201,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void deleteIPWhitelistingTest() {
@@ -203,6 +211,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Owner(emails = SWAMY)
   //  @Category(FunctionalTests.class)
   //  public void updateAndDeleteApiKeysTest() {

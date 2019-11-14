@@ -1,14 +1,17 @@
 package software.wings.beans.config;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class ArtifactoryConfigTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {
     ArtifactoryConfig artifactoryConfig = new ArtifactoryConfig();
@@ -20,6 +23,7 @@ public class ArtifactoryConfigTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldArtifactoryHasCredentials() {
     ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder()
@@ -31,6 +35,7 @@ public class ArtifactoryConfigTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldArtifactoryHasNoCredentials() {
     ArtifactoryConfig artifactoryConfig = new ArtifactoryConfig();

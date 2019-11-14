@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.cv;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -16,6 +17,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import okhttp3.Request;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -141,6 +143,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInitNewRelicServiceWhenNoTxsToCollect() {
     NewRelicDataCollectionInfoV2 newRelicDataCollectionInfo = createDataCollectionInfo();
@@ -150,6 +153,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInitNewRelicServiceWhenWebTxsArePresent() throws IOException {
     String txs = "WebTransactionTotalTime/JSP/index.jsp";
@@ -165,6 +169,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMetricNewRelicServiceWhenWebTxsArePresent() throws IOException {
     mockListMetricNames("WebTransactionTotalTime/JSP/index.jsp");
@@ -178,6 +183,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMetricWithHostFilterWhenSpecialCharInMetricName() throws IOException {
     mockListMetricNames("WebTransaction/JSP/login{}.jsp/");
@@ -194,6 +200,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMetricWithoutHostWhenSpecialCharInMetricName() throws IOException {
     mockListMetricNames("WebTransaction/JSP/login{}.jsp/");
@@ -210,6 +217,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMetricNewRelicServiceWhenHostMetricAreNotAvailable() throws IOException {
     mockListMetricNames("WebTransaction/JSP/login.jsp/");
@@ -223,6 +231,7 @@ public class NewRelicDataCollectorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMetricNewRelicServiceWithoutHostFilters() throws IOException {
     mockListMetricNames("WebTransactionTotalTime/JSP/index.jsp");

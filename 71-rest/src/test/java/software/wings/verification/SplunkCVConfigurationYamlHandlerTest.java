@@ -1,5 +1,6 @@
 package software.wings.verification;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -115,6 +117,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -140,6 +143,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -164,6 +168,7 @@ public class SplunkCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

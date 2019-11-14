@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
@@ -17,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -39,6 +41,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Mock private AppService appService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
@@ -49,6 +52,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotQueued() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
@@ -59,6 +63,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueueBuildWorkflow() throws Exception {
     WorkflowExecution queuedExecution =
@@ -73,6 +78,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueueWorkflow() throws Exception {
     WorkflowExecution queuedExecution = WorkflowExecution.builder()
@@ -94,6 +100,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueueWorkflowInfraRefactor() throws Exception {
     when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);

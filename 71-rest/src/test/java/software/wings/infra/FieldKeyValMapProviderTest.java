@@ -1,9 +1,11 @@
 package software.wings.infra;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.infra.data.DummyPerson;
@@ -17,6 +19,7 @@ public class FieldKeyValMapProviderTest extends CategoryTest {
   public static final String CUSTOM_KEY = "customKey";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getQueryMapForClass() {
     DummyPerson person = new DummyPerson(ID, NAME, OCCUPATION);

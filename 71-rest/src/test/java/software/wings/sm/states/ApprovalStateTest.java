@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +46,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -190,6 +192,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecutePipeline() {
     PageResponse pageResponse = new PageResponse();
@@ -212,6 +215,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteWorkflow() {
     PageResponse pageResponse = new PageResponse();
@@ -233,6 +237,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSkipDisabledStep() {
     PageResponse pageResponse = new PageResponse();
@@ -247,6 +252,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = approvalState.getTimeoutMillis();
@@ -254,6 +260,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -262,6 +269,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandlePipelineAbortWithTimeoutMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -286,6 +294,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleWorkflowAbortWithTimeoutMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -309,6 +318,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandlePipelineAbortWithAbortMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -332,6 +342,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleWorkflowAbortWithAbortMsg() {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
@@ -355,6 +366,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPlaceholderValues() {
     ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
@@ -379,6 +391,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForWorkflow() {
     when(context.getStateExecutionInstance())
@@ -397,6 +410,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForPipelineWithApproval() {
     when(context.getStateExecutionInstance())
@@ -414,6 +428,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testApprovalNeededAlertParamsForPipelineWithWorkflowApproval() {
     when(context.getStateExecutionInstance())
@@ -438,6 +453,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseProperties() {
     final Map<String, Object> properties = new HashMap<>();
@@ -447,6 +463,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetPipelineVariables() {
     final ExecutionContext executionContextMock = mock(ExecutionContext.class);

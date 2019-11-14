@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
@@ -19,6 +20,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -48,6 +50,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstSwapRoutesTaskHandler spotInstSwapRoutesTaskHandler;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteDeploy() throws Exception {
     String oldId = "oldId";
@@ -78,6 +81,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteRollback() throws Exception {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);

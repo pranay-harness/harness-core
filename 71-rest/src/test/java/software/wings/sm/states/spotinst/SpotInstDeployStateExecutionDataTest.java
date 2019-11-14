@@ -1,10 +1,12 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -15,6 +17,7 @@ import java.util.Map;
 
 public class SpotInstDeployStateExecutionDataTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStateData() {
     String oldId = "oldId";

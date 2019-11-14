@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,6 +48,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
@@ -181,6 +183,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances, 1 EC2, 2 AMI,
   // expected EC2 Delete, 2 AMI Update
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_instanceSync() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
@@ -298,6 +301,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances, 1 EC2, 2 AMI,
   // expected EC2 Delete, 2 AMI Update
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_Rollback() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();

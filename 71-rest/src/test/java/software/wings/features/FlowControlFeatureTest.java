@@ -1,5 +1,6 @@
 package software.wings.features;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -11,6 +12,7 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,6 +56,7 @@ public class FlowControlFeatureTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void workflowWithFlowControl() {
     when(workflowService.listWorkflows(Mockito.any(PageRequest.class)))
@@ -67,6 +70,7 @@ public class FlowControlFeatureTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void workflowWithoutFlowControl() {
     when(workflowService.listWorkflows(Mockito.any(PageRequest.class)))

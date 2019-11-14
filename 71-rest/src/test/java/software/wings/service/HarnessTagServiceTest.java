@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,6 +71,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() {
     harnessTagService.create(colorTag);
@@ -79,6 +82,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void invalidKeyTest() {
     try {
@@ -90,6 +94,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void invalidKeyLengthTest() {
     try {
@@ -106,6 +111,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void invalidAllowedValueTest() {
     try {
@@ -120,6 +126,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void invalidAllowedValuesLengthTest() {
     try {
@@ -137,6 +144,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @RealMongo
   @Category(UnitTests.class)
   public void updateTest() {
@@ -153,6 +161,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteTagTest() {
     harnessTagService.create(colorTag);
@@ -164,6 +173,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void attachTagSmokeTest() {
     harnessTagService.attachTag(HarnessTagLink.builder()
@@ -191,6 +201,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void updateTagValueTest() {
     HarnessTagLink tagLink = HarnessTagLink.builder()
@@ -237,6 +248,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void tryToDeleteInUseTagTest() {
     harnessTagService.attachTag(HarnessTagLink.builder()
@@ -263,6 +275,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void tryToDeleteInUseAllowedValueTest() {
     colorTag.setAllowedValues(Sets.newHashSet("red"));
@@ -288,6 +301,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getInUseValuesTest() {
     when(resourceLookupService.getWithResourceId(TEST_ACCOUNT_ID, "id1")).thenReturn(getResourceLookupWithId("id1"));
@@ -330,6 +344,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAttachTagWithEmptyValue() {
     HarnessTagLink tagLink = HarnessTagLink.builder()
@@ -359,6 +374,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAttachTagWithNullValue() {
     HarnessTagLink tagLink = HarnessTagLink.builder()
@@ -378,6 +394,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidTagKey() {
     testInvalidTagKeyUtil("", "Tag name cannot be blank");
@@ -392,6 +409,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidTagKey() {
     testValidTagKeyUtil(" tagKey", "tagKey");
@@ -404,6 +422,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidTagValue() {
     testInvalidTagValueUtil(null, "Tag value cannot be null");
@@ -416,6 +435,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateSystemTag() {
     HarnessTag tag = HarnessTag.builder().accountId(TEST_ACCOUNT_ID).key("system/key").build();
@@ -467,6 +487,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @RealMongo
   @Category(UnitTests.class)
   public void testUpdateTagAllowedValues() {
@@ -491,6 +512,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateAllowedValuesDifferentFromInUseValues() {
     harnessTagService.attachTag(HarnessTagLink.builder()

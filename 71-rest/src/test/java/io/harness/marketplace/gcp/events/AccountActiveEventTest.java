@@ -1,9 +1,11 @@
 package io.harness.marketplace.gcp.events;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -13,6 +15,7 @@ import java.io.IOException;
 
 public class AccountActiveEventTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSerialization() throws IOException {
     ObjectMapper mapper = new ObjectMapper();

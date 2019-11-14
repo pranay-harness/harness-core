@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -10,6 +11,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.template.Template;
@@ -24,6 +26,7 @@ import java.util.List;
 
 public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
@@ -40,6 +43,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
@@ -96,6 +100,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteTemplate() {
     Template template = constructCustomArtifactTemplateEntity();

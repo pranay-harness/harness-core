@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.aws;
 
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -80,6 +81,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreadAutoScalingGroupAndProvisionNodes() {
     DescribeAutoScalingGroupsResult autoScalingGroupsResult =
@@ -121,6 +123,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeployService() {
     String serviceJson =
@@ -147,6 +150,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     ecsContainerService.deleteService(
@@ -178,6 +182,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetIdFromArn() {
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
@@ -187,6 +192,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHasServiceReachedSteadyState() throws Exception {
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
@@ -212,6 +218,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testJson() throws Exception {
     String json =

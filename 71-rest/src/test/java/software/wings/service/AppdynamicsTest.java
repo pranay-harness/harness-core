@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -91,6 +93,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void validateConfig() {
@@ -100,6 +103,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void validateConfigInvalidURL() {
     ((AppDynamicsConfig) settingAttribute.getValue())
@@ -112,6 +116,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void getAllApplications() throws IOException {
@@ -120,6 +125,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void getTiers() throws IOException {
@@ -131,6 +137,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void getDependentTiers() throws IOException {

@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -59,6 +60,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -279,6 +281,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
@@ -287,6 +290,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes_New_Route_Name() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
@@ -337,6 +341,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_NPE_Validation() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -354,6 +359,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_infra_tempRoute() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
@@ -398,6 +404,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfOldAPP_infra_route() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_OLD_APP_NAME + "}");
@@ -444,6 +451,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfOldAPP_infra_tempRoute() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_OLD_APP_NAME + "}");
@@ -488,6 +496,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_BG_routes() {
     on(context).set("serviceTemplateService", serviceTemplateService);

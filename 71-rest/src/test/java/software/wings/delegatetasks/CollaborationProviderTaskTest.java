@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -13,6 +14,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -51,6 +53,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
           notifyResponseData -> {}, () -> true);
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmailNotification() {
     EmailRequest emailRequest = new EmailRequest();
@@ -58,6 +61,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailure() {
     doThrow(new WingsException(ErrorCode.EMAIL_FAILED))
@@ -70,6 +74,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllSupportedCommunicationTypes() {
     CollaborationProviderRequest request = Mockito.mock(CollaborationProviderRequest.class);

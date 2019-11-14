@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Objects.deepEquals;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,6 +96,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import org.junit.After;
 import org.junit.Before;
@@ -327,6 +329,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testUsageMetrics() {
@@ -350,6 +353,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallTestInstanceStats() {
@@ -410,6 +414,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetAppInstanceSummaryStatsByService() {
@@ -434,6 +439,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetServiceInstanceStats() {
@@ -457,6 +463,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetServiceInstanceDashboard() {

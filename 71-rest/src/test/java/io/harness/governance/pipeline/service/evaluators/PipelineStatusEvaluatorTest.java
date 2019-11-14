@@ -1,5 +1,6 @@
 package io.harness.governance.pipeline.service.evaluators;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +13,7 @@ import io.harness.governance.pipeline.service.model.MatchType;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.service.model.Tag;
 import io.harness.persistence.UuidAccess;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -32,6 +34,7 @@ public class PipelineStatusEvaluatorTest extends WingsBaseTest {
   private static final String SOME_ACCOUNT_ID = "some-account-id-" + PipelineStatusEvaluatorTest.class.getSimpleName();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStatus() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();

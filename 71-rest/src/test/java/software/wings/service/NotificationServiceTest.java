@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -28,6 +29,7 @@ import com.google.inject.Injector;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -73,6 +75,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     PageRequest pageRequest = aPageRequest().addFilter("appId", EQ, APP_ID).build();
@@ -84,6 +87,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     final InformationNotification informationNotification = InformationNotification.builder().appId(APP_ID).build();
@@ -101,6 +105,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should send notification async.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendNotificationAsync() {
     InformationNotification notification =
@@ -120,6 +125,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should mark notification completed.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMarkNotificationCompleted() {
     notificationService.markNotificationCompleted(APP_ID, NOTIFICATION_ID);
@@ -130,6 +136,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should act.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAct() {
     ApprovalNotification approvalNotification = Mockito.spy(anApprovalNotification()

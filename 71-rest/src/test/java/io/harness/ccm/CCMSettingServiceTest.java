@@ -1,5 +1,6 @@
 package io.harness.ccm;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -78,6 +80,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsCloudCostEnabledForCloudProvider() {
     boolean result = ccmSettingService.isCloudCostEnabled(settingAttribute);
@@ -85,6 +88,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsCloudCostEnabledForCluster() {
     boolean result = ccmSettingService.isCloudCostEnabled(clusterRecord);
@@ -92,6 +96,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotMaskCCMConfig() {
     SettingAttribute maskedSettingAttribute = ccmSettingService.maskCCMConfig(settingAttribute);
@@ -99,6 +104,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMaskCCMConfig() {
     String accountIdNoCCM = "ACCOUNT_NO_CCM";

@@ -1,10 +1,12 @@
 package io.harness.functional.trigger;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.trigger.Action.ActionType.WORKFLOW;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.trigger.DeploymentTrigger;
@@ -14,6 +16,7 @@ import software.wings.beans.trigger.WorkflowAction;
 
 public class DepTriggerScheduledFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCRUDAndExecuteScheduleTriggerForWorkflow() {
     String name = "Scheduled Trigger" + System.currentTimeMillis();

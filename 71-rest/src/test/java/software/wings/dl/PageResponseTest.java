@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 
 import com.google.common.collect.Lists;
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,6 +25,7 @@ public class PageResponseTest extends WingsBaseTest {
    * Should return page response as an object.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnPageResponseAsAnObject() {
     PageResponse pageResponse = new PageResponse();

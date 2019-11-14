@@ -1,6 +1,7 @@
 package io.harness.ccm;
 
 import static io.harness.perpetualtask.PerpetualTaskType.K8S_WATCH;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -19,6 +20,7 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -71,6 +73,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePerpetualTasksForCloudProvider() {
     manager.createPerpetualTasks(cloudProvider);
@@ -78,6 +81,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResetPerpetualTasksForCloudProvider() {
     manager.createPerpetualTasks(cloudProvider);
@@ -88,6 +92,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeletePerpetualTasksForCloudProvider() {
     manager.createPerpetualTasks(clusterRecord);
@@ -98,6 +103,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePerpetualTasksForCluster() {
     manager.createPerpetualTasks(clusterRecord);
@@ -105,6 +111,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResetPerpetualTasksForCluster() {
     manager.createPerpetualTasks(clusterRecord);
@@ -115,6 +122,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeletePerpetualTaskForCluster() {
     manager.createPerpetualTasks(clusterRecord);

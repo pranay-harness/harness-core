@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -20,6 +21,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -52,6 +54,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTestHelper 
   @Inject private ArtifactSourceTemplateProcessor artifactSourceTemplateProcessor;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactStreamLinked() {
     Template template = constructCustomArtifactTemplateEntity();

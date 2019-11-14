@@ -2,6 +2,7 @@ package io.harness.persistence;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
@@ -11,6 +12,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.TestEntity.TestEntityKeys;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -39,6 +41,7 @@ public class HPersistenceTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSave() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
@@ -47,6 +50,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveList() {
     List<TestEntity> list = Lists.newArrayList();
@@ -59,6 +63,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveIgnoringDuplicateKeysList() {
     List<TestEntity> list = Lists.newArrayList();
@@ -78,6 +83,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInsert() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
@@ -86,6 +92,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotInsertTwice() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
@@ -95,6 +102,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInsertIgnoringDuplicateKeys() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("foo").build();
@@ -105,6 +113,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldGet").build();
@@ -115,6 +124,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteUuid() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteUuid").build();
@@ -134,6 +144,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteQuery() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteQuery").build();
@@ -153,6 +164,7 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteEntity() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteEntity").build();

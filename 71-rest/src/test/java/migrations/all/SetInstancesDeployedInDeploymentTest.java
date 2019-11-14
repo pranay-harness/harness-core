@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import migrations.timescaledb.data.SetInstancesDeployedInDeployment;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +42,7 @@ public class SetInstancesDeployedInDeploymentTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SetInstancesDeployedInDeployment setInstancesDeployedInDeployment;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMigrate() throws SQLException {
     String workflowExecutionId = generateUuid();

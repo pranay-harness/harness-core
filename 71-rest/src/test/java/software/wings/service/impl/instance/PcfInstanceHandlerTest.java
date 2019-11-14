@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -37,6 +38,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -130,6 +132,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
   // 2 existing PCF instances,
   // expected 1 Delete, 1 Update
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
@@ -216,6 +219,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_2() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
@@ -290,6 +294,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_rollback() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();

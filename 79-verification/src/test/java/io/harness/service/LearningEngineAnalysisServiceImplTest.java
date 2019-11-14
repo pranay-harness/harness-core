@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
@@ -92,6 +93,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_ForWorkflow() {
     boolean result = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
@@ -110,6 +112,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_ForWorkflowWithTags() {
     analysisTask.setTag("default");
@@ -131,6 +134,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_ForServiceGuard() {
     analysisTask.set24x7Task(true);
@@ -151,6 +155,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_AlreadyQueued() {
     int numOfTasks = 5;
@@ -175,6 +180,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithTimeOut() throws InterruptedException {
     LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.SECONDS.toMillis(5);
@@ -215,6 +221,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_AlreadyQueuedForMinute() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
@@ -236,6 +243,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithStatus() {
     int numOfTasks = 100;
@@ -271,6 +279,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithStatus24x7Task() {
     int numOfTasks = 100;
@@ -301,6 +310,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineAnalysisTask_QueueWithAnalysisType() {
     int numOfTasks = 100;
@@ -350,6 +360,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineExperimentalAnalysisTask_WithoutDuplicate() {
     boolean result = learningEngineService.addLearningEngineExperimentalAnalysisTask(experimentalAnalysisTask);
@@ -367,6 +378,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLearningEngineExperimentalAnalysisTask_WithDuplicates() {
     learningEngineService.addLearningEngineExperimentalAnalysisTask(experimentalAnalysisTask);
@@ -376,6 +388,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextLearningEngineAnalysisTask_WhenPresent() {
     learningEngineService.addLearningEngineAnalysisTask(analysisTask);
@@ -388,6 +401,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextLearningEngineAnalysisTask_WithSpecificAnalysisType() {
     analysisTask.setMl_analysis_type(MLAnalysisType.LOG_ML);
@@ -401,6 +415,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextLearningEngineAnalysisTask_WhenAbsent() {
     learningEngineService.addLearningEngineAnalysisTask(analysisTask);
@@ -411,6 +426,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRetryExceeded() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
@@ -427,6 +443,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextLearningEngineExperimentalAnalysisTask_WhenPresent() {
     experimentalAnalysisTask.setExperiment_name(experimentName);
@@ -441,6 +458,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextLearningEngineExperimentalAnalysisTask_WhenAbsent() {
     experimentalAnalysisTask.setExperiment_name(experimentName);
@@ -454,6 +472,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHasAnalysisTimedOut_False() {
     analysisTask.setAppId(appId);
@@ -464,6 +483,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHasAnalysisTimedOut_True() {
     analysisTask.setAppId(appId);
@@ -476,6 +496,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkCompleted() {
     analysisTask.setMl_analysis_type(MLAnalysisType.LOG_ML);
@@ -497,6 +518,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkCompleted_WithTaskId() {
     analysisTask.setMl_analysis_type(MLAnalysisType.LOG_ML);
@@ -518,6 +540,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkExpTaskCompleted() {
     experimentalAnalysisTask.setMl_analysis_type(MLAnalysisType.LOG_ML);
@@ -561,6 +584,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInitializeServiceSecretKeys() {
     learningEngineService.initializeServiceSecretKeys();
@@ -573,6 +597,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetServiceSecretKey() {
     learningEngineService.initializeServiceSecretKeys();
@@ -582,6 +607,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetExperiments() {
     MLExperiments exp = MLExperiments.builder().ml_analysis_type(MLAnalysisType.LOG_ML).experimentName("log").build();
@@ -592,6 +618,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextVerificationAnalysisTask() {
     Map<String, String> nodes = new HashMap<>();
@@ -619,6 +646,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkJobScheduled() {
     Map<String, String> nodes = new HashMap<>();
@@ -646,6 +674,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCheckAndUpdateFailedLETask() {
     analysisTask.setRetry(2);
@@ -661,6 +690,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyFailure_AfterMaxRetries() {
     analysisTask.setRetry(3);
@@ -685,6 +715,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyFailure_BeforeMaxRetries() {
     analysisTask.setRetry(1);
@@ -712,6 +743,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyFailure_WithMultipleTasks() {
     LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
@@ -790,6 +822,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldUseSupervisedModel_WithServiceId() {
     SupervisedTrainingStatus status =
@@ -802,6 +835,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldUseSupervisedModel_WithStateExecutionId() {
     StateExecutionInstance instance = new StateExecutionInstance();
@@ -825,6 +859,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldUseSupervisedModel_EmptyList() {
     boolean result = learningEngineService.shouldUseSupervisedModel("serviceId", serviceId);
@@ -832,6 +867,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldUseSupervisedModel_WithDuplicates() {
     SupervisedTrainingStatus status =
@@ -849,6 +885,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetServiceIdFromStateExecutionId() {
     StateExecutionInstance instance = new StateExecutionInstance();
@@ -868,6 +905,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextServiceGuardBackoffCountPreviousTask_Null() {
     int result =
@@ -876,6 +914,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextServiceGuardBackoffCountPreviousTask_Backoff0() {
     MLAnalysisType mlAnalysisType = MLAnalysisType.LOG_ML;
@@ -890,6 +929,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextServiceGuardBackoffCountPreviousTask_BackoffUnderLimit() {
     MLAnalysisType mlAnalysisType = MLAnalysisType.LOG_ML;
@@ -903,6 +943,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNextServiceGuardBackoffCountPreviousTask_BackoffOverLimit() {
     MLAnalysisType mlAnalysisType = MLAnalysisType.LOG_ML;
@@ -916,6 +957,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsTaskRunningOrQueued_NoTasks() {
     boolean result = learningEngineService.isTaskRunningOrQueued(cvConfigId, 1054);
@@ -923,6 +965,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsTaskRunningOrQueued_WithQueuedTask() {
     analysisTask.setCvConfigId(cvConfigId);
@@ -934,6 +977,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsEligibleToCreateTask_PreviousTaskNull() {
     boolean result =
@@ -942,6 +986,7 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsEligibleToCreateTask_WithPreviousTask() {
     MLAnalysisType mlAnalysisType = MLAnalysisType.LOG_ML;

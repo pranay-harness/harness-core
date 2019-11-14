@@ -1,5 +1,6 @@
 package software.wings.expression;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.FunctorException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,6 +41,7 @@ public class ConfigFileFunctorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void canReadFileWithinLimit() {
     ConfigFile configFile = new ConfigFile();
@@ -52,6 +55,7 @@ public class ConfigFileFunctorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void readLargeFileThrowsException() {
     ConfigFile configFile = new ConfigFile();

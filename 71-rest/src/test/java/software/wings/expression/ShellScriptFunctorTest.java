@@ -1,10 +1,12 @@
 package software.wings.expression;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.SecretString;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -16,6 +18,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   public static final String DON_T = "don't";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyBash() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);
@@ -23,6 +26,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyPowershell() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.POWERSHELL);
@@ -30,6 +34,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyQuote() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);
@@ -38,6 +43,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyQuotePowerShell() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.POWERSHELL);
@@ -46,6 +52,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifySecret() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);
@@ -54,6 +61,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyLateBindingSecret() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);

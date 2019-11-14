@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -22,6 +23,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -64,6 +66,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams().withAppId(APP_ID).build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecutePreDeployStep() {
     PhaseElement phaseElement =
@@ -99,6 +102,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateContainerDeploy() {
     ServiceElement serviceElement = ServiceElement.builder().uuid(generateUuid()).name("service1").build();
@@ -126,6 +130,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowNullPhaseType() {
     try {
@@ -140,6 +145,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncPreDeploy() {
     ExecutionContextImpl context = new ExecutionContextImpl(aStateExecutionInstance().uuid(generateUuid()).build());
@@ -152,6 +158,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncProvisionNode() {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
@@ -194,6 +201,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncEcsSetup() {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
@@ -230,6 +238,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowInvalidEcsSetup() {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
@@ -261,6 +270,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncKubernetesSetup() {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
@@ -297,6 +307,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowInvalidKubernetesSetup() {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))

@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -12,6 +13,7 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,6 +39,7 @@ public class ConnectorTest extends GraphQLTest {
 }*/ ConnectorTest.class);
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryConnector() {
     final Seed seed = new Seed(0);
@@ -58,6 +61,7 @@ public class ConnectorTest extends GraphQLTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryConnectors() {
     final Seed seed = new Seed(0);

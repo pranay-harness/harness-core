@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -23,6 +24,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,6 +86,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecute() {
     ExecutionResponse executionResponse = bambooState.execute(executionContext);
@@ -96,6 +99,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponse() {
     when(executionContext.getStateExecutionData()).thenReturn(BambooExecutionData.builder().build());
@@ -113,6 +117,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = bambooState.getTimeoutMillis();
@@ -120,6 +125,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     bambooState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
@@ -128,6 +134,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAbort() {
     when(executionContext.getStateExecutionData())

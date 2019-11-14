@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.mail;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.common.Constants.HARNESS_NAME;
 
@@ -132,6 +133,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendTemplatedEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()

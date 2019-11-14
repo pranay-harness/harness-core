@@ -3,6 +3,7 @@ package io.harness.lock;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -42,6 +43,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     String uuid = generateUuid();
@@ -66,6 +68,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireEphemeralLock() {
     String uuid = generateUuid();
@@ -79,6 +82,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testConcurrentAcquireEphemeralLock() {
@@ -93,6 +97,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockAfterDestroy() {
     assertThatCode(() -> {
@@ -110,6 +115,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTryToAcquireEphemeralLock() {
     assertThatCode(() -> {
@@ -122,6 +128,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTryToAcquireLock() {
     String uuid = generateUuid();

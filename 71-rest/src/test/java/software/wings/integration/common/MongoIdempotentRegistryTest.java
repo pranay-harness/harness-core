@@ -1,6 +1,7 @@
 package software.wings.integration.common;
 
 import static io.harness.eraro.mongo.MongoError.DUPLICATE_KEY;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +19,7 @@ import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
 import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
@@ -75,6 +77,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoRegisterNewAssumptions() {
@@ -88,6 +91,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMongoRegisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
@@ -101,6 +105,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoRegisterSucceededAssumptions() {
@@ -118,6 +123,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMongoUnregisterMissingAssumptions() {
     wingsPersistence.delete(Idempotent.class, id.getValue());
@@ -127,6 +133,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMongoUnregisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
@@ -138,6 +145,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMongoUnregisterSucceededAssumptions() {
     Idempotent doneIdempotent = Idempotent.builder().uuid(id.getValue()).state(SUCCEEDED).build();
@@ -150,6 +158,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testConcurrency() throws InterruptedException {
@@ -172,6 +181,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testResult() throws InterruptedException, UnableToRegisterIdempotentOperationException {
@@ -181,6 +191,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {

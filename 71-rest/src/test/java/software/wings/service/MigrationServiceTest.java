@@ -1,8 +1,10 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import migrations.MigrationList;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -14,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MigrationServiceTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void versionsShouldBeUnique() {
     Set<Integer> versions = new HashSet<>();
@@ -24,6 +27,7 @@ public class MigrationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void versionsShouldBeSequential() {
     AtomicInteger last = new AtomicInteger(-1);

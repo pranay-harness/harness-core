@@ -1,5 +1,6 @@
 package software.wings.integration.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
@@ -64,6 +66,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testListNamesByProvisionerId() {
     InfrastructureDefinition id1 = InfrastructureDefinition.builder()
@@ -88,6 +91,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testListNamesByConnectionAttr() {
     final String connectionAttr1 = "private-key-1";
@@ -121,6 +125,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testListNamesByComputeProviderId() {
     InfrastructureDefinitionBuilder infrastructureDefinitionBuilder =

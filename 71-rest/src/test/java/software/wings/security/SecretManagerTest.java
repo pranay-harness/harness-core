@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 import com.auth0.jwt.interfaces.Claim;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -22,6 +24,7 @@ public class SecretManagerTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGenerateToken() {
     String token =
@@ -30,6 +33,7 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldVerifyToken() {
     String jwtToken =
@@ -40,6 +44,7 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenNoTokenFoundOnValidation() {
     assertThatExceptionOfType(WingsException.class)
@@ -47,6 +52,7 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenResourceDoesntMatchOnValiation() {
     String token = secretManager.generateJWTToken(null, JWT_CATEGORY.EXTERNAL_SERVICE_SECRET);

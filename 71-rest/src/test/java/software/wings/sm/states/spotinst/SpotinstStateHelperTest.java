@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,6 +37,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.junit.Test;
@@ -85,6 +87,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstStateHelper spotInstStateHelper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLoadBalancerConfigAfterExpressionEvaluation() throws Exception {
     ExecutionContext context = mock(ExecutionContext.class);
@@ -119,6 +122,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareStateExecutionData() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -190,6 +194,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateSpotInstCommandRequest() {
     AwsAmiInfrastructureMapping infrastructureMapping = anAwsAmiInfrastructureMapping()
@@ -210,6 +215,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareNewElastiGroupConfigForRollback() {
     String id = "newId";
@@ -229,6 +235,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareOldElastiGroupConfigForRollback() {
     String id = "oldId";
@@ -248,6 +255,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDelegateTask() {
     String tag = "tag";

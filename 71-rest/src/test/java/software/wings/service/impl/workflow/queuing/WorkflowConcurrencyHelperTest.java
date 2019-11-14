@@ -1,6 +1,7 @@
 package software.wings.service.impl.workflow.queuing;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Strategy;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,6 +56,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void noConcurrencyIfStrategyNotPresent() {
     Workflow workflow = constructCanaryWorkflowWithPhase();
@@ -70,6 +73,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureConcurrencyForAlreadyProvisioned() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(false);
@@ -95,6 +99,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureConcurrencyForDynamicallyProvisionedWithProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);
@@ -120,6 +125,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureConcurrencyForDynamicallyProvisionedWithNoProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);

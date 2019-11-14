@@ -1,14 +1,17 @@
 package io.harness.windows;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class CmdUtilsTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapeEnvironmentValue() {
     assertThat(CmdUtils.escapeEnvValueSpecialChars("path")).isEqualTo("path");
@@ -19,6 +22,7 @@ public class CmdUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapeEnvironmentValueWithPercentage() {
     assertThat(CmdUtils.escapeEnvValueSpecialChars("%path%")).isEqualTo("^%path^%");

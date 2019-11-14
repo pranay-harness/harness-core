@@ -1,5 +1,6 @@
 package software.wings.stencils;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
@@ -18,6 +19,7 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import lombok.Value;
 import org.junit.Before;
@@ -60,6 +62,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExpandStencilOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -85,6 +88,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -100,6 +104,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -114,6 +119,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheAccessorMethod() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(

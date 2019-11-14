@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +32,7 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -187,6 +189,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteWithLastService() {
     ReplicationController kubernetesReplicationController =
@@ -209,6 +212,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateCustomMetricHorizontalPodAutoscalar() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -265,6 +269,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBasicHorizontalPodAutoscalar() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -333,6 +338,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBlueGreenValidationServiceNotAllowedWithBlueGreen() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -352,6 +358,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBlueGreenValidationEmptyBlueGreenConfig() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -372,6 +379,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBlueGreenValidationServiceNonePrimaryService() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -396,6 +404,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBlueGreenValidationSmokeTest() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -415,6 +424,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteWithDownsize() {
     String controllerName0 = KubernetesConvention.getControllerName(

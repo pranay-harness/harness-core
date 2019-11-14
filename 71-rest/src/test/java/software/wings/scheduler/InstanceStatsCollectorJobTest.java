@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -13,6 +14,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.Locker;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +41,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_createStats() {
     final Locker locker = mock(Locker.class);
@@ -54,6 +57,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_createStats_disabled() {
     final Locker locker = mock(Locker.class);
@@ -68,6 +72,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
     verify(statsCollector, times(1)).createStats(ACCOUNTID);
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_createStats_nolock() {
     final Locker locker = mock(Locker.class);

@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -23,6 +24,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -146,6 +148,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   public void testShouldDownloadArtifactThroughPowerShell(ArtifactStreamType artifactStreamType) {
@@ -176,6 +179,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   @TestCaseName("{method}-{0}")
@@ -197,6 +201,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getScriptType")
   public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
@@ -210,6 +215,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWithInvalidArtifactDownloadDir() {
     downloadArtifactCommandUnit.setScriptType(ScriptType.BASH);

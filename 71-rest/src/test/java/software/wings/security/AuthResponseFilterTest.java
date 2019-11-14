@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -11,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,12 +42,14 @@ public class AuthResponseFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = RAMA)
   @Category(UnitTests.class)
   public void testUpdateCustomDashboard() {
     testCustomDashboardActions("PUT");
   }
 
   @Test
+  @Owner(emails = RAMA)
   @Category(UnitTests.class)
   public void testDeleteCustomDashboard() {
     testCustomDashboardActions("DELETE");

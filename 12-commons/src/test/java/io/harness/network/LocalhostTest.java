@@ -1,9 +1,11 @@
 package io.harness.network;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -13,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 public class LocalhostTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetLocalHostAddress() {
     String address = Localhost.getLocalHostAddress();
@@ -20,6 +23,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteHostname() throws InterruptedException, ExecutionException, IOException {
     String hostname = Localhost.executeHostname();
@@ -27,6 +31,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteHostnameShort() throws InterruptedException, ExecutionException, IOException {
     String hostname = Localhost.executeHostnameShort();
@@ -34,6 +39,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetLocalHostName() {
     String hostname = Localhost.getLocalHostName();
@@ -41,6 +47,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAddress() throws SocketException {
     String address = Localhost.getAddress();

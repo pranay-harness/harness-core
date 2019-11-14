@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -13,6 +14,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,6 +76,7 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
    *
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateAndRead() {
     GovernanceConfig defaultConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(false).build();

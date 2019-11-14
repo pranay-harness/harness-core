@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -16,6 +18,7 @@ import java.util.Map;
 
 public class PrometheusTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmptyTxns() {
     final Map<String, String> invalidFields = PrometheusResource.validateTransactions(null, false);
@@ -24,6 +27,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidUrl() {
     final TimeSeries timeSeries1 =
@@ -62,6 +66,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSameMetricDifferentTypes() {
     final TimeSeries timeSeries1 =
@@ -100,6 +105,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnlyThroughput() {
     final TimeSeries timeSeries = TimeSeries.builder()
@@ -116,6 +122,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnlyError() {
     final TimeSeries timeSeries1 = TimeSeries.builder()
@@ -138,6 +145,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnlyResponseTime() {
     final TimeSeries timeSeries1 = TimeSeries.builder()
@@ -160,6 +168,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMultipleThroughPuts() {
     final TimeSeries timeSeries1 = TimeSeries.builder()
@@ -188,6 +197,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidError() {
     final TimeSeries timeSeries1 = TimeSeries.builder()
@@ -214,6 +224,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidResponseTime() {
     final TimeSeries timeSeries1 = TimeSeries.builder()
@@ -240,6 +251,7 @@ public class PrometheusTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidNonError() {
     final TimeSeries timeSeries1 = TimeSeries.builder()

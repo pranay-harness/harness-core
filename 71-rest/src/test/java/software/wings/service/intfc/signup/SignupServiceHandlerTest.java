@@ -1,11 +1,13 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -22,6 +24,7 @@ public class SignupServiceHandlerTest extends WingsBaseTest {
   @Inject @InjectMocks SignupService signupService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateTokenShouldSucceed() throws URISyntaxException {
     when(azureMarketplaceIntegrationService.validate(Mockito.anyString())).thenReturn(true);
@@ -30,6 +33,7 @@ public class SignupServiceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateTokenShouldFail() throws URISyntaxException {
     when(azureMarketplaceIntegrationService.validate(Mockito.anyString())).thenReturn(true);

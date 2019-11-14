@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +26,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -115,6 +117,7 @@ public class ActivityResourceTest extends CategoryTest {
    * Should list activities.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListActivities() {
     RestResponse<PageResponse<Activity>> restResponse =
@@ -136,6 +139,7 @@ public class ActivityResourceTest extends CategoryTest {
    * Should get activity.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetActivity() {
     RestResponse<Activity> restResponse = RESOURCES.client()
@@ -152,6 +156,7 @@ public class ActivityResourceTest extends CategoryTest {
    * Should list command units.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListCommandUnits() {
     when(ACTIVITY_SERVICE.getCommandUnits(APP_ID, ACTIVITY_ID))
@@ -171,6 +176,7 @@ public class ActivityResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListCommandUnitLogs() {
     PageResponse<Log> pageResponse = new PageResponse<>();
@@ -203,6 +209,7 @@ public class ActivityResourceTest extends CategoryTest {
    * @throws IOException the io exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDownloadActivityLogFile() throws IOException {
     when(LOG_SERVICE.exportLogs(APP_ID, ACTIVITY_ID)).thenReturn(testFolder.newFile("FILE_NAME"));

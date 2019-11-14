@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,6 +17,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -87,6 +89,7 @@ public class UserResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListUsers() {
     when(USER_SERVICE.list(any(PageRequest.class), anyBoolean()))
@@ -101,6 +104,7 @@ public class UserResourceTest extends CategoryTest {
   }
 
   @Test(expected = BadRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldErrorOnListWhenAccountIdIsNotFound() {
     RestResponse<PageResponse<User>> restResponse =

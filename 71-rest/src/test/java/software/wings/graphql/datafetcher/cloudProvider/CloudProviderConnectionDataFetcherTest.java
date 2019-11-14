@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,6 +38,7 @@ public class CloudProviderConnectionDataFetcherTest extends AbstractDataFetcherT
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudProviderDataFetcher() {
     List<QLCloudProviderFilter> filters =

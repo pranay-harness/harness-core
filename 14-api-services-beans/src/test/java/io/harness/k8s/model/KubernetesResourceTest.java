@@ -1,6 +1,7 @@
 package io.harness.k8s.model;
 
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -15,6 +16,7 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,6 +28,7 @@ import java.util.function.UnaryOperator;
 
 public class KubernetesResourceTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void setAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -56,6 +59,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void arrayFieldsSetAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/two-containers.yaml");
@@ -80,6 +84,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void addAnnotationTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -96,6 +101,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void addLabelsTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -113,6 +119,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void nameUpdateTests() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -128,6 +135,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLabelsInPodSpecNullPodTemplateSpec() throws Exception {
     URL url = this.getClass().getResource("/null-pod-template.yaml");
@@ -138,6 +146,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTransformConfigMapAndSecretRef() throws Exception {
     URL url = this.getClass().getResource("/spec-in-template-null.yaml");
@@ -148,6 +157,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSpecForStatefulSet() throws Exception {
     URL url1 = this.getClass().getResource("/denormalized-stateful-set-spec.yaml");
@@ -172,6 +182,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSpecForNonStatefulSet() throws Exception {
     URL url1 = this.getClass().getResource("/deploy.yaml");

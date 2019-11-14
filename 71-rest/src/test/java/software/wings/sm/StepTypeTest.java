@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
@@ -10,11 +11,13 @@ import static software.wings.sm.StepType.AWS_AMI_SERVICE_SETUP;
 import io.harness.CategoryTest;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class StepTypeTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForECS() {
     StepType stepType = StepType.ECS_SERVICE_SETUP;
@@ -75,6 +78,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForSpotinst() {
     StepType stepType = StepType.SPOTINST_SETUP;
@@ -104,6 +108,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForPcf() {
     StepType stepType = StepType.PCF_SETUP;
@@ -128,6 +133,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForOnesNotAddingTypeYet() {
     StepType stepType = AWS_AMI_SERVICE_SETUP;

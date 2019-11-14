@@ -1,5 +1,6 @@
 package io.harness.functional.trigger;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.trigger.Action.ActionType.WORKFLOW;
@@ -8,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.artifact.Artifact;
@@ -19,6 +21,7 @@ import software.wings.beans.trigger.WorkflowAction;
 
 public class DepTriggerNewArtifactFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCRUDArtifactTriggerForWorkflow() {
     String name = "New Artifact Trigger" + System.currentTimeMillis();

@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -23,6 +24,7 @@ import com.amazonaws.services.codedeploy.model.S3Location;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -45,6 +47,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsCodeDeployHelperServiceDelegateImpl awsCodeDeployHelperServiceDelegate;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListApplications() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -61,6 +64,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListDeploymentConfiguration() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -79,6 +83,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListDeploymentGroups() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -97,6 +102,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testlListDeploymentInstances() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -117,6 +123,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListAppRevision() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);

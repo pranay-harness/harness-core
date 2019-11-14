@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -32,6 +33,7 @@ import com.amazonaws.services.ec2.model.InstanceState;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,6 +93,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHostsPublicDns() {
     Filter filter = new Filter("instance-state-name", asList("running"));
@@ -124,6 +127,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHostsPrivateDns() {
     Filter filter = new Filter("instance-state-name", asList("running"));
@@ -156,6 +160,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHostsEmpty() {
     Filter filter = new Filter("instance-state-name", asList("running"));
@@ -182,6 +187,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveHost() {
     Host reqHost = aHost().withHostName(HOST_NAME).build();
@@ -195,6 +201,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
@@ -202,6 +209,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateHostConnAttrs() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
@@ -215,6 +223,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldProvisionHosts() {
     String region = Regions.US_EAST_1.getName();

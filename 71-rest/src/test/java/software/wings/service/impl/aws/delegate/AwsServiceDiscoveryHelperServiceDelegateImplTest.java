@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -17,6 +18,7 @@ import com.amazonaws.services.servicediscovery.model.Namespace;
 import com.amazonaws.services.servicediscovery.model.Service;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -32,6 +34,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImplTest extends WingsBaseT
   @Spy @InjectMocks private AwsServiceDiscoveryHelperServiceDelegateImpl awsServiceDiscoveryHelperServiceDelegate;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRecordValueForService() {
     AWSServiceDiscovery mockClient = mock(AWSServiceDiscovery.class);

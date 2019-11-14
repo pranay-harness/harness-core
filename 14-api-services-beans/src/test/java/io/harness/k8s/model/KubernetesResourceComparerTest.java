@@ -1,9 +1,11 @@
 package io.harness.k8s.model;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -13,6 +15,7 @@ import java.util.stream.Collectors;
 
 public class KubernetesResourceComparerTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void OrderTest1() {
     List<KubernetesResource> resources = new ArrayList<>();
@@ -30,6 +33,7 @@ public class KubernetesResourceComparerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void OrderTest2() {
     List<KubernetesResource> resources = new ArrayList<>();
@@ -51,6 +55,7 @@ public class KubernetesResourceComparerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void OrderTest3() {
     List<KubernetesResource> resources = new ArrayList<>();
@@ -68,6 +73,7 @@ public class KubernetesResourceComparerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void OrderTest4() {
     List<KubernetesResource> resources = new ArrayList<>();

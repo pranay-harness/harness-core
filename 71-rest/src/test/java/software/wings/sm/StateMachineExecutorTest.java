@@ -3,6 +3,7 @@ package software.wings.sm;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
@@ -31,6 +32,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.NotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -91,6 +93,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTrigger() throws InterruptedException {
     String appId = generateUuid();
@@ -146,6 +149,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerFailedTransition() throws InterruptedException {
     String appId = generateUuid();
@@ -209,6 +213,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerAndFail() throws InterruptedException {
     String appId = generateUuid();
@@ -270,6 +275,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerAsync() throws InterruptedException {
     String appId = generateUuid();
@@ -340,6 +346,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerFailedAsync() throws InterruptedException {
     String appId = generateUuid();
@@ -413,6 +420,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAdviceToMarkSuccess() throws InterruptedException {
     String appId = generateUuid();
@@ -476,6 +484,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAdviceToMarkFailed() throws InterruptedException {
     String appId = generateUuid();
@@ -539,6 +548,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAdviceToMarkAborted() throws InterruptedException {
     String appId = generateUuid();
@@ -625,6 +635,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerAndFailAsync() throws InterruptedException {
     String appId = generateUuid();
@@ -684,6 +695,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailAfterException() throws InterruptedException {
     String appId = generateUuid();
@@ -743,6 +755,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerSimpleFork() throws InterruptedException {
     String appId = generateUuid();
@@ -787,6 +800,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerMixedFork() throws InterruptedException {
     String appId = generateUuid();
@@ -842,6 +856,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCleanForRetry() {
     List<ContextElement> originalNotifyElements = asList(anInstanceElement().displayName("foo").build());
@@ -875,6 +890,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSendManualInterventionNeededNotification() {
     NotificationRule notificationRule = aNotificationRule()

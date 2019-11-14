@@ -1,6 +1,7 @@
 package io.harness.k8s.manifest;
 
 import static io.harness.k8s.model.ReleaseHistory.createFromData;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -13,11 +14,13 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class ReleaseHistoryTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() throws Exception {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -31,6 +34,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void noReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -51,6 +55,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void createReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -82,6 +87,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getLastSuccessfulReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();

@@ -1,5 +1,6 @@
 package software.wings.verification;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,6 +47,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() throws Exception {
     final String appId = "appId";
@@ -62,6 +65,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -86,6 +90,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
   }
 
   @Test(expected = VerificationOperationException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertBadMetridDefinition() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

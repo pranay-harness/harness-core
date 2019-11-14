@@ -1,14 +1,17 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 public class DockerConfigTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   // test with a URL that doesn't end on a / and make sure a / gets added
   public void testConstructorWithUrlWithoutSlash() {
@@ -22,6 +25,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {
     // Normal Config
@@ -33,6 +37,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDockerHasCredentials() {
     DockerConfig dockerConfig = DockerConfig.builder()
@@ -44,6 +49,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDockerHasNoCredentials() {
     DockerConfig dockerConfig = new DockerConfig();

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -58,6 +59,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -322,6 +324,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
@@ -356,6 +359,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTrimIngressYaml() {
     kubernetesSetup.setIngressYaml(null);
@@ -375,6 +379,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTrimCustomMetricYaml() {
     kubernetesSetup.setCustomMetricYamlConfig(null);
@@ -394,6 +399,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBuildContainerServiceElement() {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", "5", 0);
@@ -404,6 +410,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBuildContainerServiceElementEmptyValues() {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement(null, null, 0);
@@ -414,6 +421,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBuildContainerServiceElementEmptyValuesEmptyFixed() {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", null, 0);
@@ -424,6 +432,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBuildContainerServiceElementZero() {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement("0", "0", 0);
@@ -434,6 +443,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBuildContainerServiceElementMoreActive() {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement("5", "5", 10);
@@ -444,6 +454,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBuildContainerServiceElementFewerActive() {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement("5", "5", 3);

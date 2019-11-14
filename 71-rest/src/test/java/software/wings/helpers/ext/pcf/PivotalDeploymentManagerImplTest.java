@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
@@ -23,6 +25,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @InjectMocks @Inject PcfDeploymentManagerImpl deploymentManager;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetOrganizations() throws Exception {
     OrganizationSummary summary1 = OrganizationSummary.builder().id("1").name("org1").build();
@@ -35,6 +38,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getAppPrefixByRemovingNumber() {
     assertThat(StringUtils.EMPTY).isEqualTo(deploymentManager.getAppPrefixByRemovingNumber(null));
@@ -42,6 +46,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getMatchesPrefix() {
     ApplicationSummary applicationSummary = ApplicationSummary.builder()

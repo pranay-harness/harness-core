@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -20,6 +21,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -46,6 +48,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstDeployTaskHandler deployTaskHandler;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testScaleElastigroup() throws Exception {
     doNothing()
@@ -59,6 +62,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testScaleElastigroupNull() throws Exception {
     doNothing().when(deployTaskHandler).createAndFinishEmptyExecutionLog(any(), anyString(), anyString());
@@ -68,6 +72,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteTaskInternal() throws Exception {
     ElastiGroup newElastigroup = ElastiGroup.builder()
@@ -107,6 +112,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteTaskInternalResizeOldFirst() throws Exception {
     ElastiGroup newElastigroup = ElastiGroup.builder()
@@ -146,6 +152,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteTaskInternalRollback() throws Exception {
     ElastiGroup newElastigroup = ElastiGroup.builder()

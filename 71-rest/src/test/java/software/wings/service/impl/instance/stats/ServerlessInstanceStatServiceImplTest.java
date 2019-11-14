@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance.stats;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -19,6 +20,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -64,6 +66,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_save() {
     setup_wingspersistence();
@@ -78,6 +81,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getLastSnapshotTime() {
     final Mocks mocks = setup_wingspersistence();
@@ -89,6 +93,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getFirstSnapshotTime() {
     final Mocks mocks = setup_wingspersistence();
@@ -100,6 +105,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_aggregate() {
     final Mocks mocks = setup_AggregationPipeline();

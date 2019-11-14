@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -44,6 +46,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
   @Mock private CustomBuildService customBuildService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     ArtifactStream customArtifactStream =

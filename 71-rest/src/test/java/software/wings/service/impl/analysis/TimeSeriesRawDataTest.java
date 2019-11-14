@@ -1,10 +1,12 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.metrics.MetricType;
@@ -88,6 +90,7 @@ public class TimeSeriesRawDataTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRecordPopulation() {
     Map<String, Map<String, TimeSeriesRawData>> existingRawDataMap = new HashMap<>();

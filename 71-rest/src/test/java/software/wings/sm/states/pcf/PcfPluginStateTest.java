@@ -3,6 +3,7 @@ package software.wings.sm.states.pcf;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -59,6 +60,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -291,6 +293,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_findPathFromScript() {
     String script = "echo '${path.root}/abc/test any text sfkjsdfk \n /wrong/path \\${path.root}/xyz.json some text' ";
@@ -300,6 +303,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_executeGitTask() {
     final DelegateTask delegateTask = DelegateTask.builder().build();
@@ -324,6 +328,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     verify(delegateService, times(1)).queueTask(delegateTask);
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_executePcfPluginTask() {
     on(context).set("serviceTemplateService", serviceTemplateService);
@@ -344,6 +349,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_handleAsyncResponseForGitTask() {
     final GitFetchFilesFromMultipleRepoResult gitFetchFilesFromMultipleRepoResult =
@@ -373,6 +379,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_handleAsyncResponseForPluginTask() {
     final PcfCommandExecutionResponse commandExecutionResponse =

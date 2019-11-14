@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -23,6 +24,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,6 +86,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecute() {
     ExecutionResponse executionResponse = jenkinsState.execute(executionContext);
@@ -96,6 +99,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsStartTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -115,6 +119,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsPollTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -134,6 +139,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldStartJenkinsPollTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -168,6 +174,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = jenkinsState.getTimeoutMillis();
@@ -175,6 +182,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     jenkinsState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
@@ -183,6 +191,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAbort() {
     when(executionContext.getStateExecutionData())

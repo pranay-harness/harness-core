@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -14,6 +15,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.NoResultFoundException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,6 +59,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_save() {
     setup_AggregationPipeline();
@@ -70,6 +73,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test(expected = NoResultFoundException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_save_error() {
     setup_AggregationPipeline();
@@ -106,6 +110,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_get() {
     setup_AggregationPipeline();
@@ -115,6 +120,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_delete() {
     setup_wingspersistence();
@@ -124,6 +130,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_update() {
     setup_wingspersistence();
@@ -135,6 +142,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test(expected = NoResultFoundException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_update_error() {
     setup_wingspersistence();
@@ -146,6 +154,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getSyncStatus() {
     setup_wingspersistence();

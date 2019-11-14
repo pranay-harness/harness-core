@@ -1,6 +1,7 @@
 package software.wings.service.impl.workflow;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -28,6 +29,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.listener.EventListener;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.NotifyEventListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -84,6 +86,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReportDeploymentEventToSegmentByTrigger() throws IllegalAccessException, URISyntaxException {
     SegmentConfig segmentConfig =
@@ -103,6 +106,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReportDeploymentEventToSegmentByUser() throws IllegalAccessException, URISyntaxException {
     Account account = testUtils.createAccount();

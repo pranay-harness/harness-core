@@ -4,12 +4,14 @@
 
 package software.wings.common;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,6 +32,7 @@ public class PartitionProcessorTest extends CategoryTest {
    * Should partition by count.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionByCount() {
     SampleElement e1 = new SampleElement("e1");
@@ -55,6 +58,7 @@ public class PartitionProcessorTest extends CategoryTest {
    * Should partition by pct.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionByPct() {
     SampleElement e1 = new SampleElement("e1");
@@ -85,6 +89,7 @@ public class PartitionProcessorTest extends CategoryTest {
    * Should partition by pct with all.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionByPctWithAll() {
     SampleElement e1 = new SampleElement("e1");
@@ -121,6 +126,7 @@ public class PartitionProcessorTest extends CategoryTest {
    * Should partition by mixed pct and count.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionByMixedPctAndCount() {
     SampleElement e1 = new SampleElement("e1");
@@ -148,6 +154,7 @@ public class PartitionProcessorTest extends CategoryTest {
    * Should partition with mixed pct and count.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionWithMixedPctAndCount() {
     SampleElement e1 = new SampleElement("e1");
@@ -176,6 +183,7 @@ public class PartitionProcessorTest extends CategoryTest {
    * Should partition by with pct.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionByWithPct() {
     SampleElement e1 = new SampleElement("e1");
@@ -206,6 +214,7 @@ public class PartitionProcessorTest extends CategoryTest {
    * Should partition by with count.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionByWithCount() {
     SampleElement e1 = new SampleElement("e1");

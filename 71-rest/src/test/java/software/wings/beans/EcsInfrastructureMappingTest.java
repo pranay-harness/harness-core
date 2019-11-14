@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -13,6 +16,7 @@ import java.util.Map;
 
 public class EcsInfrastructureMappingTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     EcsInfrastructureMapping infrastructureMapping = new EcsInfrastructureMapping();

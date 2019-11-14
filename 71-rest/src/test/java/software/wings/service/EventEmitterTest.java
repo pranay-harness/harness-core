@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
@@ -12,6 +13,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
@@ -53,6 +55,7 @@ public class EventEmitterTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
@@ -68,6 +71,7 @@ public class EventEmitterTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendToGeneralChannelWhenIdisNull() throws Exception {
     Event event = anEvent().withType(Type.UPDATE).build();
@@ -77,6 +81,7 @@ public class EventEmitterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountIdToBroadcast() throws Exception {
     when(appService.get(APP_ID)).thenReturn(anApplication().accountId("ACCOUNT_ID").appId(APP_ID).build());

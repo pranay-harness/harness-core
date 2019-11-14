@@ -20,6 +20,7 @@
 //  @Inject FeatureFlagService featureFlagService;
 //
 //  @Test
+//  @Owner(emails = UNKNOWN)
 //  @Category(IntegrationTests.class)
 //  public void testEnableAccount() {
 //    shouldEnableWhenFeatureFlagNotAlreadyPresent();

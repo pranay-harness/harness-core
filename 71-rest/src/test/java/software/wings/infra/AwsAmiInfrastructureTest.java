@@ -1,5 +1,6 @@
 package software.wings.infra;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.infra.InfraDefinitionTestConstants.CLASSIC_LOAD_BALANCERS;
 import static software.wings.infra.InfraDefinitionTestConstants.HOSTNAME_CONVENTION;
@@ -10,6 +11,7 @@ import static software.wings.infra.InfraDefinitionTestConstants.TARGET_GROUP_ARN
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -32,6 +34,7 @@ public class AwsAmiInfrastructureTest extends CategoryTest {
           .build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetInfraMapping() {
     InfrastructureMapping infrastructureMapping = awsAmiInfrastructure.getInfraMapping();
@@ -52,6 +55,7 @@ public class AwsAmiInfrastructureTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMappingClass() {
     Class<? extends InfrastructureMapping> mappingClass = awsAmiInfrastructure.getMappingClass();
@@ -61,6 +65,7 @@ public class AwsAmiInfrastructureTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFieldMapForClass() {
     Map<String, Object> fieldMap = awsAmiInfrastructure.getFieldMapForClass();

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -43,6 +45,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks private K8sTaskHelper helper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTargetInstancesForCanary() {
     ExecutionLogCallback mockLogCallback = mock(ExecutionLogCallback.class);
@@ -52,6 +55,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetResourcesInTableFormat() {
     String expectedResourcesInTableFormat = "\n"

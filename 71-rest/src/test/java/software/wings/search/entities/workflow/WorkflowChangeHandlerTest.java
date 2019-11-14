@@ -1,6 +1,7 @@
 package software.wings.search.entities.workflow;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -133,6 +135,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = workflowChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
@@ -153,6 +156,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
     Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
@@ -166,6 +170,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
     Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
@@ -179,6 +184,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
@@ -192,6 +198,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.UPDATE);
@@ -203,6 +210,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentUpdateChange() {
     ChangeEvent environmentUpdateChangeEvent =
@@ -216,6 +224,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
@@ -230,6 +239,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
     ChangeEvent pipelineUpdateChangeEvent =
@@ -255,6 +265,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineDeleteChange() {
     ChangeEvent pipelineDeleteChangeEvent =
@@ -273,6 +284,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
@@ -288,6 +300,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
@@ -300,6 +313,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionChange() {
     ChangeEvent workflowExecutionDeleteChangeEvent =

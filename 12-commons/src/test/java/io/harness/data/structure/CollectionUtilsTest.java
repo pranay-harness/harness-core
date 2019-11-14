@@ -1,9 +1,11 @@
 package io.harness.data.structure;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.Test;
@@ -19,6 +21,7 @@ public class CollectionUtilsTest extends CategoryTest {
       Arrays.asList(new DummyPerson("Oliver", 25), new DummyPerson("Jack", 36), new DummyPerson("John", 59));
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestIsPresent() {
     boolean present;
@@ -34,6 +37,7 @@ public class CollectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestFetchIndex() {
     int index;
@@ -49,6 +53,7 @@ public class CollectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestFilterAndGetFirst() {
     Optional<DummyPerson> personOptional =

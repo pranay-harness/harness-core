@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.eclipse.jetty.util.ArrayQueue;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,6 +25,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchSyncJob elasticsearchSyncJob;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testElasticsearchSyncTask() {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);
@@ -50,6 +53,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testErroredElasticsearchSyncTask() {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);

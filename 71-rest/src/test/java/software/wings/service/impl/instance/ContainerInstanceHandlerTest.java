@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -136,6 +138,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
   // expected 1 Delete
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstancesDelete_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
@@ -180,6 +183,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
   // expected  1 add
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstancesAdd_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
@@ -238,6 +242,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewDeployment_DeleteOlderInstance_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
@@ -291,6 +296,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewDeployment_AddNewInstance_ECS() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.AWS_ECS.name()))
@@ -362,6 +368,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_DeleteInstance_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
@@ -407,6 +414,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_AddInstance_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
@@ -461,6 +469,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewDeployment_DeleteOldInstances_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
@@ -516,6 +525,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewDeployment_AddNewInstance_Kubernetes() throws Exception {
     doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
@@ -556,6 +566,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewDeployment_Kubernetes_Rollback() throws Exception {
     doReturn(Optional.of(

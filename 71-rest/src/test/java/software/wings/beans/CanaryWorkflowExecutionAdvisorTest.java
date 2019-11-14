@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -9,6 +10,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.FailureType;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.sm.ExecutionContextImpl;
@@ -21,12 +23,14 @@ import java.util.List;
 
 public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNulls() {
     assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(null, null, "dummy")).isNull();
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNullStrategy() {
     final List<FailureStrategy> failureStrategies = asList(
@@ -41,6 +45,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNullError() {
     final List<FailureStrategy> failureStrategies =
@@ -56,6 +61,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyFindMatching() {
     final List<FailureStrategy> failureStrategies =
@@ -72,6 +78,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStepWithNull() {
     final List<FailureStrategy> failureStrategies =
@@ -82,6 +89,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStepWithNone() {
     final List<FailureStrategy> failureStrategies =
@@ -91,6 +99,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStep() {
     final List<FailureStrategy> failureStrategies =
@@ -101,6 +110,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopNonMatchingCombo() {
     final List<FailureStrategy> failureStrategies = asList(
@@ -118,6 +128,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectTopMatchingCombo() {
     final List<FailureStrategy> failureStrategies = asList(
@@ -139,6 +150,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnTrueWhenExecutionHostsPresent() {
     CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
@@ -153,6 +165,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnFalseWhenExecutionHostsNotPresent() {
     CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();

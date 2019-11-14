@@ -2,6 +2,7 @@ package io.harness.batch.processing.integration.writer;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Timestamp;
@@ -16,6 +17,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Test;
@@ -57,6 +59,7 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
   private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateContainerInstanceData() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
@@ -77,6 +80,7 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateEc2InstanceLifecycle() throws Exception {
     shouldCreateContainerInstanceData();

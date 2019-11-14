@@ -1,11 +1,13 @@
 package io.harness;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import graphql.ExecutionResult;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -16,6 +18,7 @@ public class GraphQLExceptionHandlingTest extends GraphQLTest {
   private static final String INCORRECT_ENVIRONMENT_ID = "TEST";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironment() {
     String query = $GQL(/*

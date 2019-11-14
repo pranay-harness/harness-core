@@ -1,11 +1,13 @@
 package software.wings.licensing;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -42,6 +44,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   @Inject private MethodLicensedObject methodLicensedObject;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInterceptMethodCallExtendedWithLicensing() throws Exception {
     methodLicensedObject.licensedMethod("ACCOUNT_ID");
@@ -49,6 +52,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotInterceptMethodCallNotExtendedWithLicensing() throws Exception {
     methodLicensedObject.anotherMethod();
@@ -56,6 +60,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotInterceptMethodCallMissingLicenseKeyWithLicensing() throws Exception {
     methodLicensedObject.licensedMethodWithoutKey("ACCOUNT_ID");
@@ -63,6 +68,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInterceptAllCallsFromClassAnnotatedWithLicenseAnnotation() throws Exception {
     classLicensedObject.method("ACCOUNT_ID");

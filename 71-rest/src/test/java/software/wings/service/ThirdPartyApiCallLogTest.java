@@ -1,9 +1,11 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -76,6 +78,7 @@ public class ThirdPartyApiCallLogTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStatusTag() throws IOException {
     String failedCallLogJson = JsonUtils.asJson(failedCallLog);

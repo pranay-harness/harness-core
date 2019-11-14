@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -7,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -21,6 +23,7 @@ public class PermitServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private PermitService permitService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAcquirePermit() {
     assertThat(acquirePermit()).isNotNull();
@@ -38,6 +41,7 @@ public class PermitServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReleasePermitByKey() {
     String permitId = acquirePermit();

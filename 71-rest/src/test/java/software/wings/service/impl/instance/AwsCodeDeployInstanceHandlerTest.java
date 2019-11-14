@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,6 +46,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Reservation;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
@@ -177,6 +179,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_syncJob() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
@@ -255,6 +258,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_NewDeployment() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
@@ -342,6 +346,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstances_NewDeployment_Rollback() throws Exception {
     doReturn(Optional.of(DeploymentSummary.builder()

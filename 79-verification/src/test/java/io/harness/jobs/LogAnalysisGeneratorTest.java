@@ -1,5 +1,6 @@
 package io.harness.jobs;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -14,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.junit.Before;
@@ -94,6 +96,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBugsnagNonNN() {
     analysisContext.setStateType(StateType.BUG_SNAG);
@@ -108,6 +111,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNonBugsnagNN() {
     analysisContext.setStateType(StateType.APP_DYNAMICS);

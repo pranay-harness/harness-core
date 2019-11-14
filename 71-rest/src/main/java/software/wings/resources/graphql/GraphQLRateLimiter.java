@@ -27,7 +27,6 @@ import software.wings.beans.Account;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-
 import javax.validation.constraints.NotNull;
 
 /**

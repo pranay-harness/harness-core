@@ -1,10 +1,12 @@
 package software.wings.service.impl.instance.stats.collector;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.base.Suppliers;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -36,6 +38,7 @@ public class InstanceMapperTest extends WingsBaseTest {
               new App(RandomStringUtils.randomAlphabetic(5), RandomStringUtils.randomAlphabetic(5))));
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMapping() {
     Instant ts = Instant.now();
@@ -66,6 +69,7 @@ public class InstanceMapperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMappingWithEmptySet() {
     Instant ts = Instant.now();

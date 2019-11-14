@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
@@ -21,6 +22,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.ClassRule;
@@ -92,6 +94,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListVariables() throws Exception {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
@@ -116,6 +119,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.saveWithChecks(anyString(), any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
@@ -134,6 +138,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetVariable() throws Exception {
     when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, MASKED)).thenReturn(SERVICE_VARIABLE);
@@ -152,6 +157,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.updateWithChecks(anyString(), anyString(), any(ServiceVariable.class)))
@@ -171,6 +177,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteServiceVariable() throws Exception {
     Response restResponse =
@@ -188,6 +195,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shoudlDeleteByEntity() throws Exception {
     Response restResponse = RESOURCES.client()

@@ -1,6 +1,7 @@
 package software.wings.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,6 +112,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -127,6 +130,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYamlMultipleServiceMethods() {
     DynaTraceCVServiceConfiguration cvServiceConfiguration =
@@ -143,6 +147,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -164,6 +169,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertEmptyServiceMethod() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -180,6 +186,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertMultipleServiceMethods() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

@@ -1,5 +1,6 @@
 package io.harness.limits.checker.rate;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 
@@ -11,6 +12,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.LimitChecker;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -78,6 +80,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsume() throws Exception {
     int maxReq = 10;
@@ -97,6 +100,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testVicinity() throws Exception {
     int maxReq = 10;
@@ -115,6 +119,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsumeConcurrent() throws Exception {
     int maxAllowedReq = 40;

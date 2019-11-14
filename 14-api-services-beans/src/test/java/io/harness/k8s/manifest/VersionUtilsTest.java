@@ -2,6 +2,7 @@ package io.harness.k8s.manifest;
 
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.base.Charsets;
@@ -10,6 +11,7 @@ import com.google.common.io.Resources;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -18,6 +20,7 @@ import java.util.List;
 
 public class VersionUtilsTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapAndPodEnvTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-env.yaml");
@@ -38,6 +41,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapsAndPodEnvTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-env.yaml");
@@ -56,6 +60,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void twoConfigMapsAndPodEnvTest() throws Exception {
     URL url = this.getClass().getResource("/two-configmap-pod-env.yaml");
@@ -84,6 +89,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapsAndPodEnvFromTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-envfrom.yaml");
@@ -104,6 +110,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapsAndPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-volume.yaml");
@@ -124,6 +131,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapAndRedisPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-redis-pod-volume.yaml");
@@ -144,6 +152,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void secretAndPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/secret-pod-volume.yaml");
@@ -164,6 +173,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void nginxDeploymentVersionTest() throws Exception {
     URL url = this.getClass().getResource("/nginx-full.yaml");
@@ -196,6 +206,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapWithDirectApplyAndPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-skip-versioning-pod-env.yaml");

@@ -1,6 +1,7 @@
 package io.harness.event;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -19,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.model.GenericEvent;
 import io.harness.event.usagemetrics.UsageMetricsService;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,6 +81,7 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmitCVMetricsHappyCase() {
     Account account = Builder.anAccount()
@@ -116,6 +119,7 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmitCVMetricsOnePaidOneCommunity() {
     Account account = Builder.anAccount()

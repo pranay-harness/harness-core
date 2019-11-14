@@ -1,11 +1,13 @@
 package io.harness.integration;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.category.element.IntegrationTests;
 import io.harness.resources.intfc.ExperimentalLogAnalysisResource;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,6 +29,7 @@ public class ExperimentalLogAnalysisResourceIntegrationTest extends Verification
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogExpAnalysisInfo() throws UnknownHostException {
     WebTarget getTarget = client.target(VERIFICATION_API_BASE + "/"

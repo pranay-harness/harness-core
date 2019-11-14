@@ -1,6 +1,7 @@
 package io.harness.limits.configuration;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -10,6 +11,7 @@ import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +48,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSaveAndGet() {
     ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(SOME_ACCOUNT_ID, new StaticLimit(10), CREATE_APPLICATION);
@@ -60,6 +63,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpsert() {
     String accountId = SOME_ACCOUNT_ID;
@@ -80,6 +84,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpsertForRateLimits() {
     String accountId = SOME_ACCOUNT_ID;

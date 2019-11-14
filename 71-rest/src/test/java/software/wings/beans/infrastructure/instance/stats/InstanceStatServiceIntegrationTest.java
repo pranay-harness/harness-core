@@ -1,11 +1,13 @@
 package software.wings.beans.infrastructure.instance.stats;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
@@ -53,6 +55,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSave() {
     val stats = sampleSnapshot();
@@ -72,6 +75,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testAggregateOverPeriod() {
     val from = Instant.now();
@@ -109,6 +113,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testPercentile() {
     val from = Instant.now();
@@ -150,6 +155,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLastSnapshotTime() {
     val before = Instant.now();

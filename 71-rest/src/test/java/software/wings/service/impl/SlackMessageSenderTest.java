@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import okhttp3.ResponseBody;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,6 +31,7 @@ public class SlackMessageSenderTest extends WingsBaseTest {
   @Mock private Call<ResponseBody> responseBodyCall;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMessageSending() throws IOException {
     SlackMessage slackMessage = new SlackMessage("https://hooks.slack.com/services/", "#channel", "sender",

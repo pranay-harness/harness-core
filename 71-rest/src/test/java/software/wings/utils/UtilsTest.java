@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.Utils.escapifyString;
 import static software.wings.utils.Utils.getNameWithNextRevision;
@@ -8,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.NameValuePair;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 public class UtilsTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testToProperties() {
     List<NameValuePair> nameValuePairList = new ArrayList<>();
@@ -31,6 +34,7 @@ public class UtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyString() {
     assertThat(escapifyString("ab\\")).isEqualTo("ab\\\\");
@@ -48,6 +52,7 @@ public class UtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNameWithNextRevision() {
     assertThat(getNameWithNextRevision(ImmutableList.of("abc-def"), "abc-def")).isEqualTo("abc-def-1");

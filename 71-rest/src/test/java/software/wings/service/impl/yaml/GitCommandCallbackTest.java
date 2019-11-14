@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -18,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,6 +54,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionFailure() throws Exception {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
@@ -70,6 +73,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionSuccess() throws Exception {
     ResponseData notifyResponseData =
@@ -94,6 +98,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyOnErrorCase() {
     ResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
@@ -109,6 +114,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyWithUnhandledGitCommandType() {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()

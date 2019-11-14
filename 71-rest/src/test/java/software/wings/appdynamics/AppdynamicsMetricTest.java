@@ -1,10 +1,12 @@
 package software.wings.appdynamics;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -18,6 +20,7 @@ import java.util.List;
  */
 public class AppdynamicsMetricTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppdynamicsMetricParse() throws Exception {
     final String metricResponse = "[{\"name\": \"Average Response Time (ms)\", \"type\": \"leaf\"},"

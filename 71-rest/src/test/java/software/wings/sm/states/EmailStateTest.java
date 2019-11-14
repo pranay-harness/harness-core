@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.doThrow;
@@ -20,6 +21,7 @@ import com.google.inject.Injector;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -102,6 +104,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should send email.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmail() {
     emailState.setBody("body");
@@ -126,6 +129,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should evaluate context elements for email subject and body.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateContextElementsForEmailSubjectAndBody() {
     emailState.setBody("Deployed to host ${host.hostName}");
@@ -157,6 +161,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should capture error message when failed to send email.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCaptureErrorMessageWhenFailedToSendEmail() {
     doThrow(new RuntimeException("Test exception")).when(emailNotificationService).send(emailData);
@@ -178,6 +183,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should return execution result as error when not ignored.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnExecutionResultAsErrorWhenNotIgnored() {
     doThrow(new RuntimeException("Test exception")).when(emailNotificationService).send(emailData);
@@ -200,6 +206,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should render deployment triggered by for email subject and body.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderDeploymentTriggeredBy() {
     emailState.setBody("Deployment triggered by: ${deploymentTriggeredBy}");

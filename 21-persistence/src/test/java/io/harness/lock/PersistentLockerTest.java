@@ -1,6 +1,7 @@
 package io.harness.lock;
 
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -40,6 +41,7 @@ public class PersistentLockerTest extends PersistenceTest {
   @Inject @InjectMocks private PersistentLocker persistentLocker;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     Duration timeout = ofMillis(1000);
@@ -63,6 +65,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockDoNotRunTheBody() {
     DistributedLock distributedLock = mock(DistributedLock.class);
@@ -84,6 +87,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTryAcquireLockDoNotThrowException() {
     DistributedLock distributedLock = mock(DistributedLock.class);
@@ -104,6 +108,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockNonLockedAtRelease() throws IllegalAccessException {
     Duration timeout = ofMillis(1000);
@@ -128,6 +133,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockLogging() throws IllegalAccessException {
     DistributedLock distributedLock = mock(DistributedLock.class);

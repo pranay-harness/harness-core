@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -35,6 +36,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -135,6 +137,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
@@ -160,6 +163,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should save.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSave() {
     serviceVariableService.save(SERVICE_VARIABLE);
@@ -173,6 +177,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should throw exception for unsupported entity types.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
     ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -195,6 +200,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     ServiceVariable variable = ServiceVariable.builder().build();
@@ -210,6 +216,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get by template.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetByTemplate() {
     ServiceTemplate serviceTemplate =
@@ -236,6 +243,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNone() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -257,6 +265,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should override service variable.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -283,6 +292,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should override service variable (Name null).
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAllowUpdateServiceVariableWhenNameNull() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -306,6 +316,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should Allow service variable override (Saved name = current name).
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAllowUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -336,6 +347,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should Throw exception for service variable override.
    */
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -368,6 +380,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateValueAndType() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -387,6 +400,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateAllowedList() {
     List<String> allowedList = new ArrayList<>();
@@ -411,6 +425,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     ServiceVariable variable = ServiceVariable.builder().entityType(EntityType.SERVICE_TEMPLATE).build();
@@ -430,6 +445,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get for entity.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetForEntity() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
@@ -449,6 +465,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should delete by entity id.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteByEntityId() {
     AuditServiceHelper auditServiceHelper = mock(AuditServiceHelper.class);
@@ -468,6 +485,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should mask encrypted fields.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMaskEncryptedFields() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();

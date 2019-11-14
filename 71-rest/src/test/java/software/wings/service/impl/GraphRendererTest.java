@@ -15,6 +15,7 @@ import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
@@ -31,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,6 +50,7 @@ public class GraphRendererTest extends WingsBaseTest {
   @Inject GraphRenderer graphRenderer;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsSubWorkflow() {
     assertThat(GraphRenderer.isSubWorkflow(null)).isFalse();
@@ -59,6 +62,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSanity() {
     List<StateExecutionInstance> stateExecutionInstances = asList(aStateExecutionInstance()
@@ -75,6 +79,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateHierarchyNode() {
     final StateExecutionInstance parent = aStateExecutionInstance()
@@ -167,6 +172,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testConvertToNode() {
     final StateExecutionInstance instance = aStateExecutionInstance()
@@ -190,6 +196,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAggregateStatus() {
     assertThat(GraphRenderer.aggregateStatus(asList(NEW, NEW, NEW))).isEqualTo(NEW);
@@ -232,6 +239,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAggregateNodeName() {
     assertThat(GraphRenderer.aggregateNodeName(true, 0, true)).isEqualTo("instances");

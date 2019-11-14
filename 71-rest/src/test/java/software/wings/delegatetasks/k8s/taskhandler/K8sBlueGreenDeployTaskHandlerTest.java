@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -21,6 +22,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -51,6 +53,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
@@ -78,6 +81,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
@@ -105,6 +109,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMissingLabelInService() {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
@@ -147,6 +152,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCleanupForBlueGreenForNPE() throws Exception {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();

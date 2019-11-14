@@ -1,5 +1,6 @@
 package io.harness.batch.processing.reader;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.batch.item.ItemReader;
@@ -22,6 +24,7 @@ public class MongoEventReaderFactoryTest extends WingsBaseTest {
   private final long END_TIME = NOW.getEpochSecond();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPublishedMessageMongoEventReader() {
     ItemReader<PublishedMessage> reader =

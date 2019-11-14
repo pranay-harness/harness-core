@@ -1,10 +1,12 @@
 package software.wings.notification;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -28,6 +30,7 @@ public class EmailNotificationListenerTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmailOnReceivingMessage() throws Exception {
     emailNotificationListener.onMessage(testEmailData);

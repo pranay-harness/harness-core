@@ -5,6 +5,7 @@ import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
@@ -306,6 +307,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultBaseline() {
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
@@ -327,6 +329,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultBaselineDatadogLog() {
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
@@ -380,6 +383,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFuture() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -414,6 +418,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFutureDatadogLog() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -446,6 +451,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsCollectionNoBaselineSet() {
     LogsCVConfiguration logsCVConfiguration =
@@ -461,6 +467,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsCollectionNoBaselineSetDatadogLog() {
     LogsCVConfiguration logsCVConfiguration =
@@ -606,6 +613,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -632,6 +640,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -657,6 +666,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionInvalidState() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -670,6 +680,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionInvalidState() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -683,6 +694,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionCompletedCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -700,6 +712,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionCompletedCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -718,6 +731,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionNextMinuteDataCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -736,6 +750,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerDatadogLogsCollectionNextMinuteDataCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -766,6 +781,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsL1ClusteringNothingNewPast2hours() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -806,6 +822,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsL1Clustering() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -870,6 +887,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsL2Clustering() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -938,6 +956,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsL2ClusteringRetryBackoff() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -1053,6 +1072,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAlertIfNecessary() {
     final NewRelicCVServiceConfiguration cvConfiguration = new NewRelicCVServiceConfiguration();
@@ -1267,6 +1287,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTaskNoPrevFeedbackAnalysisRecord() throws Exception {
     // setup mocks
@@ -1298,6 +1319,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTaskNoFeedbacks() throws Exception {
     // setup mocks
@@ -1327,6 +1349,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTaskNotYetTimeForNewTask() throws Exception {
     // setup mocks
@@ -1363,6 +1386,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisTaskBasedOnOldLE() throws Exception {
     // setup mocks
@@ -1397,6 +1421,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testELKLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -1423,6 +1448,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testELKLogsCollectionFailedCase() throws IOException {
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
@@ -1569,6 +1595,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDataCollectionAfter2Hours() throws Exception {
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -1603,6 +1630,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDataCollectionHappyCase() throws Exception {
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -1637,6 +1665,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDataCollectionFirstCollection() throws Exception {
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -1666,6 +1695,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsDataCollectionAfter2Hours() throws Exception {
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -1701,6 +1731,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsL1ClusteringHalfBefore2hoursAndHalfAfter() {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -1746,6 +1777,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsDataCollectionHappyCase() throws Exception {
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -1780,6 +1812,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsDataCollectionNoDataSoFar() throws Exception {
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -1813,6 +1846,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsDataCollectionBaselineEndMoreThan2Hours() throws Exception {
     long currentTime = Timestamp.currentMinuteBoundary();
@@ -1843,6 +1877,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFeedbackEngineTaskRestartAfter2HoursNoNewLogTask() throws Exception {
     // mock setup
@@ -1886,6 +1921,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFeedbackEngineTaskRestartAfter2HoursNewLogTask() throws Exception {
     // mock setup
@@ -1933,6 +1969,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLockCleanup() {
     DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, "quartz_verification_locks");
@@ -1961,6 +1998,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAnalysisHappyCase() {
     String cvConfigId = generateUuid(), accId = generateUuid();
@@ -1994,6 +2032,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAnalysisHappyCaseWithExperiment() {
     wingsPersistence.save(MLExperiments.builder()
@@ -2019,6 +2058,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAnalysisWithNoRawData() {
     String cvConfigId = generateUuid(), accId = generateUuid();
@@ -2038,6 +2078,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAnalysisWithNotYetTime() {
     String cvConfigId = generateUuid(), accId = generateUuid();
@@ -2077,6 +2118,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerTimeSeriesAnalysis2HoursSinceLastAnalysis() {
     String cvConfigId = generateUuid(), accId = generateUuid();
@@ -2117,6 +2159,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisBaseline() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -2164,6 +2207,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisAfterBaseline() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -2217,6 +2261,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisWithExperiment() throws Exception {
     wingsPersistence.save(
@@ -2243,6 +2288,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisBaselineMoreThan2HrsAgo() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -2289,6 +2335,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerLogAnalysisAfterBaselineMoreThan2hrs() throws Exception {
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());

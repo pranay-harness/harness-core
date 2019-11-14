@@ -1,5 +1,6 @@
 package io.harness.queue;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -20,6 +21,7 @@ import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.queue.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.version.VersionInfoManager;
 import org.junit.After;
 import org.junit.Before;
@@ -65,6 +67,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldProcessWhenReceivedMessageFromQueue() throws IOException {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -78,6 +81,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 1000)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldStopOnInterruptedException() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -97,6 +101,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 5000)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExtendHeartbeat() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -127,6 +132,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 5000)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldContinueProcessingOnAnyOtherException() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -155,6 +161,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRequeueMessageWhenRetriesAreSet() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -174,6 +181,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotRequeueMessageWhenRetriesAreZero() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {

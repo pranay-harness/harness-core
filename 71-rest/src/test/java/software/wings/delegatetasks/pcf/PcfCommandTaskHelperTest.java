@@ -3,6 +3,7 @@ package software.wings.delegatetasks.pcf;
 import static io.harness.pcf.model.PcfConstants.HOST_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
@@ -184,6 +186,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRevisionFromReleaseName() throws Exception {
     Integer revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
@@ -194,6 +197,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateManifestVarsYamlFileLocally() throws Exception {
     PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()
@@ -217,6 +221,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateManifestYamlFileLocally() throws Exception {
     File file = null;
@@ -253,6 +258,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPrefix() {
     Set<String> names = new HashSet<>();
@@ -268,6 +274,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDownsizePreviousReleases() throws Exception {
     PcfCommandDeployRequest request =
@@ -377,6 +384,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateManifestYamlForPush() throws Exception {
     List<String> routes = Arrays.asList("app.harness.io", "stage.harness.io");
@@ -454,6 +462,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleManifestWithNoRoute() {
     Map map = new HashMap<>();
@@ -470,6 +479,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleRandomRouteScenario() {
     Map map = new HashMap<>();
@@ -488,6 +498,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateYamlFileLocally() throws Exception {
     String data = "asd";
@@ -499,6 +510,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateDownsizeDetails() throws Exception {
     List<ApplicationSummary> previousReleases = new ArrayList<>();

@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -13,6 +14,7 @@ import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.observer.Subject;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,6 +38,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInformUponUpsert() {
     clusterRecordService.upsert(clusterRecord);
@@ -43,6 +46,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotInformUponUpdate() {
     clusterRecordService.upsert(clusterRecord);
@@ -52,6 +56,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteExistingClusters() {
     clusterRecordService.upsert(clusterRecord);

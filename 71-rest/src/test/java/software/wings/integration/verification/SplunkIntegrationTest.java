@@ -1,11 +1,13 @@
 package software.wings.integration.verification;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import com.splunk.Service;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
@@ -30,6 +32,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void initSplunkServiceWithToken()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -49,6 +52,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void initSplunkServiceWithBasicAuth()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -68,6 +72,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void splunkLogQueryCustomHostFieldTest()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -83,6 +88,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void splunkLogQuerAdvancedQueryTest()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {

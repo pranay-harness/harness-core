@@ -1,9 +1,12 @@
 package io.harness.dl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaModule;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -15,12 +18,14 @@ import software.wings.integration.dl.PageRequestTest.Dummy;
 @Slf4j
 public class VerificationMorphiaClassesTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testVerificationModule() {
     new VerificationMorphiaRegistrar().testClassesModule();
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testVerificationSearchAndList() {
     new MorphiaModule().testAutomaticSearch(
@@ -28,6 +33,7 @@ public class VerificationMorphiaClassesTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testVerificationImplementationClassesModule() {
     new VerificationMorphiaRegistrar().testImplementationClassesModule();

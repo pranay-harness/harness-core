@@ -1,11 +1,13 @@
 package io.harness.metrics;
 
 import static io.harness.metrics.HarnessMetricRegistry.getAbsoluteMetricName;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.codahale.metrics.MetricRegistry;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 import org.junit.Before;
@@ -25,6 +27,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
     harnessMetricRegistry = new HarnessMetricRegistry(metricRegistry, collectorRegistry);
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGaugeMetricRegister() {
     String metricName = "data_collection_test_metric";
@@ -34,6 +37,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGaugeMetricUpdate() {
     String metricName = "data_collection_test_metric1";

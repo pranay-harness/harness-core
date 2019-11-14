@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +21,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -65,6 +67,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateWorkflow() {
     Workflow workflow2 = aWorkflow()
@@ -88,6 +91,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneWorkflow() {
     Workflow workflow2 = aWorkflow()
@@ -112,6 +116,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should list workflows.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListWorkflow() {
     PageRequest<Workflow> pageRequest = aPageRequest().build();
@@ -136,6 +141,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should read workflow.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadWorkflow() {
     when(WORKFLOW_SERVICE.readWorkflow(APP_ID, WORKFLOW_ID, null)).thenReturn(WORKFLOW);

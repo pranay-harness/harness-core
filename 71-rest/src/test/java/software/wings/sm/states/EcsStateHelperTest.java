@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +44,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -100,6 +102,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private EcsStateHelper helper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBuildContainerSetupParams() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -158,6 +161,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateActivity() {
     ActivityService mockActivityService = mock(ActivityService.class);
@@ -182,6 +186,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testQueueDelegateTaskForEcsListenerUpdate() {
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).build();
@@ -223,6 +228,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBuildContainerServiceElement() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -262,6 +268,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareBagForEcsSetUp() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -325,6 +332,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenderEcsSetupContextVariables() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -348,6 +356,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPopulateFromDelegateResponse() {
     ContainerSetupCommandUnitExecutionData data = ContainerSetupCommandUnitExecutionData.builder()
@@ -391,6 +400,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetStateExecutionData() {
     EcsSetUpDataBag bag = EcsSetUpDataBag.builder()
@@ -417,6 +427,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateAndQueueDelegateTaskForEcsServiceSetUp() {
     EcsSetUpDataBag bag = EcsSetUpDataBag.builder()
@@ -451,6 +462,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleDelegateResponseForEcsDeploy() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -489,6 +501,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateAndQueueDelegateTaskForEcsServiceDeploy() {
     EcsDeployDataBag bag =
@@ -525,6 +538,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareBagForEcsDeploy() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

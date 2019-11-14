@@ -1,14 +1,17 @@
 package software.wings.utils;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class EcsConventionTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTaskFamily() {
     String asgNamePrefix = EcsConvention.getTaskFamily("appName", "serviceName", "envName");
@@ -31,6 +34,7 @@ public class EcsConventionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetServiceNamePrefixFromServiceName() {
     String serviceNamePrefix = EcsConvention.getServiceNamePrefixFromServiceName("abc__test__123");
@@ -44,6 +48,7 @@ public class EcsConventionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetContainerName() {
     String containerName = EcsConvention.getContainerName("container");
@@ -84,6 +89,7 @@ public class EcsConventionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetVolumeName() {
     String volumePath = EcsConvention.getVolumeName("path");
@@ -124,6 +130,7 @@ public class EcsConventionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRevisionFromServiceName() {
     int revision = EcsConvention.getRevisionFromServiceName("aaa__123");

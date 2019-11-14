@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -47,6 +49,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithNullEncryptionType() {
     validation.setParameters(new Object[] {});
@@ -57,6 +60,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithEncryptionConfig() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -68,6 +72,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithEncryptedDataDetails() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -81,6 +86,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithEncryptedDataDetailsList() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -94,6 +100,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithListOfNonEncryptedObjects() {
     validation.setParameters(new Object[] {Arrays.asList(new Object(), new Object())});
