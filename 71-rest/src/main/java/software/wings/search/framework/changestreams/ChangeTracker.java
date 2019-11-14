@@ -5,6 +5,7 @@ import static software.wings.dl.exportimport.WingsMongoExportImport.getCollectio
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -17,6 +18,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
+import com.mongodb.session.ClientSession;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,7 @@ public class ChangeTracker {
   private MongoDatabase mongoDatabase;
   private MongoClient mongoClient;
   private ReadPreference readPreference;
+  private ClientSession clientSession;
 
   private MongoClientURI mongoClientUri() {
     final String mongoClientUrl = mainConfiguration.getMongoConnectionFactory().getUri();
@@ -56,7 +59,7 @@ public class ChangeTracker {
     } else {
       final TagSet tags = new TagSet(new Tag(mainConfiguration.getElasticsearchConfig().getMongoTagKey(),
           mainConfiguration.getElasticsearchConfig().getMongoTagValue()));
-      readPreference = ReadPreference.secondaryPreferred(tags);
+      readPreference = ReadPreference.secondary(tags);
     }
     return new MongoClientURI(
         mongoClientUrl, MongoClientOptions.builder(MongoModule.mongoClientOptions).readPreference(readPreference));
@@ -65,10 +68,19 @@ public class ChangeTracker {
   private void connectToMongoDatabase() {
     MongoClientURI uri = mongoClientUri();
     mongoClient = new MongoClient(uri);
+    logger.info("Read preference for mongo client {}", mongoClient.getReadPreference());
+    logger.info("Connection details for mongo client {}", mongoClient.getAddress());
+    logger.info("Connection details for mongo client {}", mongoClient.getAllAddress());
+    if (readPreference.getClass() == ReadPreference.secondaryPreferred().getClass()) {
+      clientSession = null;
+    } else {
+      clientSession = mongoClient.startSession(ClientSessionOptions.builder().build());
+    }
     final String databaseName = uri.getDatabase();
     logger.info(String.format("Database is %s", databaseName));
     mongoDatabase =
         mongoClient.getDatabase(databaseName).withReadConcern(ReadConcern.MAJORITY).withReadPreference(readPreference);
+    logger.info("Read preference for mongo database {}", mongoDatabase.getReadPreference());
   }
 
   private void createChangeStreamTasks(Set<ChangeTrackingInfo<?>> changeTrackingInfos, CountDownLatch latch) {
@@ -78,10 +90,11 @@ public class ChangeTracker {
           mongoDatabase.getCollection(getCollectionName(changeTrackingInfo.getMorphiaClass()))
               .withDocumentClass(DBObject.class)
               .withReadPreference(readPreference);
+      logger.info("Connection details for mongo collection {}", collection.getReadPreference());
 
       ChangeStreamSubscriber changeStreamSubscriber = getChangeStreamSubscriber(changeTrackingInfo);
-      ChangeTrackingTask changeTrackingTask =
-          new ChangeTrackingTask(changeStreamSubscriber, collection, latch, changeTrackingInfo.getResumeToken());
+      ChangeTrackingTask changeTrackingTask = new ChangeTrackingTask(
+          changeStreamSubscriber, collection, clientSession, latch, changeTrackingInfo.getResumeToken());
       changeTrackingTasks.add(changeTrackingTask);
     }
   }

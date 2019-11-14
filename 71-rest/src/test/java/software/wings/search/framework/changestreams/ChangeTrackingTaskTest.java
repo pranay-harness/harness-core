@@ -10,10 +10,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Inject;
+
 import com.mongodb.DBObject;
 import com.mongodb.MongoInterruptedException;
+import com.mongodb.ServerAddress;
+import com.mongodb.ServerCursor;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import io.harness.category.element.UnitTests;
@@ -22,6 +27,7 @@ import org.bson.BsonDocument;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -33,6 +39,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class ChangeTrackingTaskTest extends WingsBaseTest {
+  @Inject private MainConfiguration mainConfiguration;
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
@@ -47,7 +54,9 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
     CountDownLatch testLatch = new CountDownLatch(1);
     String token =
         "{ \"_data\" : { \"$binary\" : \"gl2kjvIAAAAGRjxfaWQAPEEwckctZFoyVDhTMk1ySzcxZlpOZGcAAFoQBJxC1VIDm0XTvvbRGu0X6pUE\", \"$type\" : \"00\" } }";
-    ChangeTrackingTask changeTrackingTask = new ChangeTrackingTask(changeStreamSubscriber, collection, latch, token);
+
+    ChangeTrackingTask changeTrackingTask =
+        new ChangeTrackingTask(changeStreamSubscriber, collection, null, latch, token);
 
     mockChangeTrackingTaskDependencies(changeStreamSubscriber, collection, latch, changeStreamIterable, testLatch);
 
@@ -57,7 +66,6 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
     verify(collection, times(1)).watch();
     verify(changeStreamIterable, times(1)).fullDocument(FullDocument.UPDATE_LOOKUP);
     verify(changeStreamIterable, times(1)).maxAwaitTime(1, TimeUnit.MINUTES);
-    verify(changeStreamIterable, times(1)).forEach((Consumer<ChangeStreamDocument<DBObject>>) notNull());
     verify(changeStreamSubscriber, times(1)).onChange(any());
     assertThat(f.isDone()).isEqualTo(false);
 
@@ -69,15 +77,17 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
   private void mockChangeTrackingTaskDependencies(ChangeStreamSubscriber changeStreamSubscriber,
       MongoCollection<DBObject> collection, CountDownLatch latch, ChangeStreamIterable<DBObject> changeStreamIterable,
       CountDownLatch testLatch) {
+    MongoCursor<ChangeStreamDocument<DBObject>> mongoCursor = mock(MongoCursor.class);
+
     doNothing().when(changeStreamSubscriber).onChange(any());
-
     doNothing().when(latch).countDown();
-
     when(collection.watch()).thenReturn(changeStreamIterable);
-
     when(changeStreamIterable.fullDocument(any(FullDocument.class))).thenReturn(changeStreamIterable);
     when(changeStreamIterable.maxAwaitTime(any(Integer.class), any(TimeUnit.class))).thenReturn(changeStreamIterable);
     when(changeStreamIterable.resumeAfter(any(BsonDocument.class))).thenReturn(changeStreamIterable);
+    when(changeStreamIterable.iterator()).thenReturn(mongoCursor);
+    when(mongoCursor.getServerAddress()).thenReturn(new ServerAddress());
+    when(mongoCursor.getServerCursor()).thenReturn(new ServerCursor(1, new ServerAddress()));
 
     doAnswer(i -> {
       try {
@@ -92,7 +102,7 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
       }
       return null;
     })
-        .when(changeStreamIterable)
-        .forEach((Consumer<ChangeStreamDocument<DBObject>>) notNull());
+        .when(mongoCursor)
+        .forEachRemaining((Consumer<ChangeStreamDocument<DBObject>>) notNull());
   }
 }
