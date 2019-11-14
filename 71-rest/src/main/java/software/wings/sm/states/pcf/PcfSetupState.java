@@ -624,7 +624,7 @@ public class PcfSetupState extends State {
                                 .appManifestMap(appManifestMap)
                                 .activeVersionsToKeep(olderActiveVersionCountToKeep)
                                 .timeout(timeoutIntervalInMinutes)
-                                .useAppAutoscalar(/*useAppAutoscalar*/ true)
+                                .useAppAutoscalar(useAppAutoscalar)
                                 .enforceSslValidation(enforceSslValidation)
                                 .pcfAppNameFromLegacyWorkflow(pcfAppName)
                                 .maxInstanceCount(maxInstances)
