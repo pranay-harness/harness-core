@@ -22,10 +22,15 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Version;
+import org.mongodb.morphia.utils.IndexType;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -44,6 +49,13 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @Entity(value = "activities", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Indexes(@Index(options = @IndexOptions(name = "app_status_createdAt"),
+    fields =
+    {
+      @Field(value = ActivityKeys.appId)
+      , @Field(value = ActivityKeys.serviceInstanceId), @Field(value = ActivityKeys.status),
+          @Field(value = ActivityKeys.createdAt, type = IndexType.DESC)
+    }))
 public class Activity
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

@@ -46,7 +46,7 @@ public class ServiceCommand extends Base {
 
   @JsonIgnore private double order;
 
-  @SchemaIgnore private String templateUuid;
+  @Indexed @SchemaIgnore private String templateUuid;
 
   @SchemaIgnore private String templateVersion;
 
