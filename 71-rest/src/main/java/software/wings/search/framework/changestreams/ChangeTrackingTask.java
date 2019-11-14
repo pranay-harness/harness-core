@@ -5,8 +5,10 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoInterruptedException;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import com.mongodb.session.ClientSession;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
@@ -29,13 +31,15 @@ import java.util.function.Consumer;
 class ChangeTrackingTask implements Runnable {
   private ChangeStreamSubscriber changeStreamSubscriber;
   private MongoCollection<DBObject> collection;
+  private ClientSession clientSession;
   private CountDownLatch latch;
   private BsonDocument resumeToken;
 
   ChangeTrackingTask(ChangeStreamSubscriber changeStreamSubscriber, MongoCollection<DBObject> collection,
-      CountDownLatch latch, String tokenParam) {
+      ClientSession clientSession, CountDownLatch latch, String tokenParam) {
     this.changeStreamSubscriber = changeStreamSubscriber;
     this.collection = collection;
+    this.clientSession = clientSession;
     if (tokenParam != null) {
       this.resumeToken =
           Document.parse(tokenParam).toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
@@ -51,14 +55,20 @@ class ChangeTrackingTask implements Runnable {
 
   private void openChangeStream(Consumer<ChangeStreamDocument<DBObject>> changeStreamDocumentConsumer) {
     ChangeStreamIterable<DBObject> changeStreamIterable =
-        collection.watch().fullDocument(FullDocument.UPDATE_LOOKUP).maxAwaitTime(1, TimeUnit.MINUTES);
+        clientSession == null ? collection.watch() : collection.watch(clientSession);
+    changeStreamIterable =
+        changeStreamIterable.fullDocument(FullDocument.UPDATE_LOOKUP).maxAwaitTime(1, TimeUnit.MINUTES);
+    MongoCursor<ChangeStreamDocument<DBObject>> mongoCursor;
     if (resumeToken == null) {
       logger.info("Opening changeStream without resumeToken");
-      changeStreamIterable.forEach(changeStreamDocumentConsumer);
+      mongoCursor = changeStreamIterable.iterator();
     } else {
       logger.info("Opening changeStream with resumeToken");
-      changeStreamIterable.resumeAfter(resumeToken).forEach(changeStreamDocumentConsumer);
+      mongoCursor = changeStreamIterable.resumeAfter(resumeToken).iterator();
     }
+    logger.info("Connection details for mongo cursor {}", mongoCursor.getServerAddress());
+    logger.info("Connection details for mongo cursor {}", mongoCursor.getServerCursor());
+    mongoCursor.forEachRemaining(changeStreamDocumentConsumer);
   }
 
   public void run() {
