@@ -185,6 +185,7 @@ public class OwnerRule implements TestRule {
 
     try {
       final File file = new File(format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
+
       file.getParentFile().mkdirs();
       if (!file.createNewFile()) {
         logger.debug("The owner {} was already set", identify);
