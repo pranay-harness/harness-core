@@ -95,7 +95,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLastExecutionNodesECS()

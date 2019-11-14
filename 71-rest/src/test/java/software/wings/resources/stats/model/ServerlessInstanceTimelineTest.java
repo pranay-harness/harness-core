@@ -26,7 +26,7 @@ public class ServerlessInstanceTimelineTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_create() {
     final ServerlessInstanceTimeline serverlessInstanceTimeline = ServerlessInstanceTimeline.create(
@@ -35,7 +35,7 @@ public class ServerlessInstanceTimelineTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_copyWithLimit() {
     final ServerlessInstanceTimeline serverlessInstanceTimeline = ServerlessInstanceTimeline.create(

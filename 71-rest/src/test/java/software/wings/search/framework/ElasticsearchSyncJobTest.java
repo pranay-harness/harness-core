@@ -25,7 +25,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchSyncJob elasticsearchSyncJob;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testElasticsearchSyncTask() {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);
@@ -53,7 +53,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testErroredElasticsearchSyncTask() {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);

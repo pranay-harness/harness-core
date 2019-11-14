@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class InstanceUsageLimitCheckerImplTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsWithinLimit() {
     double actualUsage = 90;

@@ -40,7 +40,7 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
   @Inject private AwsSecretsManagerService secretsManagerService;
 
   @Test
-  @Owner(emails = MARK)
+  @Owner(developers = MARK)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testCRUDSecretsWithAwsSecretsManager() {

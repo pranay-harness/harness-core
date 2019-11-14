@@ -38,7 +38,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInformUponUpsert() {
     clusterRecordService.upsert(clusterRecord);
@@ -46,7 +46,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotInformUponUpdate() {
     clusterRecordService.upsert(clusterRecord);
@@ -56,7 +56,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteExistingClusters() {
     clusterRecordService.upsert(clusterRecord);

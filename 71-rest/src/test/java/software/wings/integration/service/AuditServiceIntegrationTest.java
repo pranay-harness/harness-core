@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 // this test fails intermittently
 public class AuditServiceIntegrationTest extends AuditServiceTest {
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateRequestPayload() throws Exception {
@@ -46,7 +46,7 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFinalize() throws Exception {
@@ -64,7 +64,7 @@ public class AuditServiceIntegrationTest extends AuditServiceTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeleteAuditRecordsRequestFiles() throws Exception {

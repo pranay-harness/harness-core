@@ -57,7 +57,7 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest extends CategoryTest 
   private final Timestamp INSTANCE_NEXT_STOP_TIMESTAMP = HTimestamps.fromInstant(NOW);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateEc2InstanceData() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
@@ -74,7 +74,7 @@ public class Ec2InstanceInfoLifecycleWriterIntegrationTest extends CategoryTest 
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateEc2InstanceLifecycle() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =

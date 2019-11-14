@@ -10,7 +10,7 @@ import org.junit.experimental.categories.Category;
 
 public class CategoryTimeoutRuleTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({UnitTests.class, CategoryTimeoutRule.RunMode.class})
   public void testTheTimeoutCapability() {}
 }

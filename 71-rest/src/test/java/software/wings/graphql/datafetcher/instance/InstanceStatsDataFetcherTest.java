@@ -140,7 +140,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSinglePointDataWithNoFilter() {
     // No Filter
@@ -152,7 +152,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppFilter() {
     // With Filter
@@ -166,7 +166,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvFilter() {
     QLInstanceFilter envFilter =
@@ -179,7 +179,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvAndServiceFilters() {
     QLInstanceFilter env2Filter =
@@ -198,7 +198,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceFilter() {
     QLInstanceFilter serviceFilter = QLInstanceFilter.builder()
@@ -212,7 +212,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTagFilter() {
     QLInstanceFilter prodTagFilter =
@@ -253,7 +253,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllTagsFilter() {
     QLInstanceFilter allEnvTypeTagFilter =
@@ -285,7 +285,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppAndServiceFilters() {
     // With multiple filters
@@ -305,7 +305,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMultipleORFilters() {
     // With multiple OR filters
@@ -320,7 +320,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppOneLevelAggregation() {
     // One level Aggregation
@@ -340,7 +340,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceOneLevelAggregation() {
     QLInstanceFilter appFilter =
@@ -366,7 +366,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvOneLevelAggregation() {
     QLInstanceFilter appFilter =
@@ -394,7 +394,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudProviderOneLevelAggregation() {
     // One level Aggregation
@@ -414,7 +414,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppTagOneLevelAggregation() {
     // One level Aggregation
@@ -449,7 +449,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceTagOneLevelAggregation() {
     // One level Aggregation
@@ -501,7 +501,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvTagOneLevelAggregation() {
     // One level Aggregation
@@ -583,7 +583,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHourlyOneLevelAggregation() throws SQLException {
     long millis = 1234455555233L;
@@ -621,7 +621,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppHourlyTwoLevelAggregation() throws SQLException {
     QLInstanceFilter appFilter =
@@ -644,7 +644,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceDailyTwoLevelAggregation() throws SQLException {
     QLInstanceFilter serviceFilter =
@@ -669,7 +669,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudProviderDailyTwoLevelAggregation() throws SQLException {
     QLInstanceFilter cloudProviderFilter =
@@ -693,7 +693,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDailyEnvTwoLevelAggregation() throws SQLException {
     QLInstanceFilter envFilter =
@@ -716,7 +716,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppTagDailyTwoLevelAggregation() throws SQLException {
     QLInstanceFilter prodTagFilter =
@@ -780,7 +780,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppServiceTwoLevelAggregation() {
     // One level Aggregation
@@ -816,7 +816,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppEnvTwoLevelAggregation() {
     // One level Aggregation
@@ -856,7 +856,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppCloudProviderTwoLevelAggregation() {
     // One level Aggregation
@@ -896,7 +896,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppInstanceTypeTwoLevelAggregation() {
     // One level Aggregation
@@ -928,7 +928,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppTagServiceTwoLevelAggregation() {
     // One level Aggregation
@@ -996,7 +996,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppTagServiceTagTwoLevelAggregation() {
     // One level Aggregation
@@ -1065,7 +1065,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppEnvTagTwoLevelAggregation() {
     // One level Aggregation

@@ -78,7 +78,7 @@ public class ThirdPartyApiCallLogTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStatusTag() throws IOException {
     String failedCallLogJson = JsonUtils.asJson(failedCallLog);

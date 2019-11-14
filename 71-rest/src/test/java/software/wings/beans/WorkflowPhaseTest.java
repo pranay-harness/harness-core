@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 public class WorkflowPhaseTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchTemplateExpressionNames() {
     WorkflowPhase workflowPhase = aWorkflowPhase()
@@ -32,7 +32,7 @@ public class WorkflowPhaseTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchEmptyTemplateExpressionNames() {
     WorkflowPhase workflowPhase = aWorkflowPhase().templateExpressions(new ArrayList<>()).build();

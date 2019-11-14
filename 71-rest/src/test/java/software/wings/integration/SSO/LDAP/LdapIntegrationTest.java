@@ -80,7 +80,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
-  @Owner(emails = "aman@harness.io")
+  @Owner(developers = "aman@harness.io")
   @Category(IntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapConnectionSettings() {
@@ -95,7 +95,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
-  @Owner(emails = "aman@harness.io")
+  @Owner(developers = "aman@harness.io")
   @Category(IntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapLogin() {
@@ -112,7 +112,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
   }
 
   @Test
-  @Owner(emails = "aman@harness.io")
+  @Owner(developers = "aman@harness.io")
   @Category(IntegrationTests.class)
   @Ignore("TODO: Aman to investigate and fix")
   public void testLdapUserGroupLinking() {

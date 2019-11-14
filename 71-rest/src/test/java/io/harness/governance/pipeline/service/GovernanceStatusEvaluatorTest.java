@@ -17,7 +17,7 @@ import java.util.List;
 
 public class GovernanceStatusEvaluatorTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testContainsAll() {
     List<HarnessTagLink> links = Arrays.asList(tagLink("color", "blue"), tagLink("onprem", null));
@@ -33,7 +33,7 @@ public class GovernanceStatusEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testContainsAny() {
     List<HarnessTagLink> links = Arrays.asList(tagLink("color", "blue"), tagLink("onprem", null));

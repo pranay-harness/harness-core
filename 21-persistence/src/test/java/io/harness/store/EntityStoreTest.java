@@ -23,7 +23,7 @@ public class EntityStoreTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDatastore() {
     persistence.register(Store.builder().name("foo").build(), "mongodb://localhost:27017/dummy");

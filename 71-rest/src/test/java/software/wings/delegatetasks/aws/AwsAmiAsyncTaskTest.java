@@ -40,7 +40,7 @@ public class AwsAmiAsyncTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsAmiRequest request = AwsAmiServiceSetupRequest.builder().build();

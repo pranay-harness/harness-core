@@ -33,7 +33,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void createDirectoryTest() throws IOException {
     final String directoryPath = getRandomTempDirectory();
@@ -52,7 +52,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void waitForDirectoryToBeAccessibleOutOfProcessPositiveTest() throws IOException {
     final String directoryPath = getRandomTempDirectory();
@@ -66,14 +66,14 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void waitForDirectoryToBeAccessibleOutOfProcessNegativeTest() {
     assertThat(waitForDirectoryToBeAccessibleOutOfProcess(getRandomTempDirectory(), 3)).isFalse();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteFileIfExistsTest() throws IOException {
     final String fileName = tempDirectory + "/testfile.txt";
@@ -89,7 +89,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteDirectoryAndItsContentTest() throws IOException {
     final String directoryName = getRandomTempDirectory();
@@ -107,7 +107,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void writeFileTest() throws IOException {
     final String directoryName = getRandomTempDirectory();
@@ -128,7 +128,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHomeDir() {
     String homeDir = getHomeDir();

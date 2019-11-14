@@ -98,14 +98,14 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateConnectionConfig() {
     assertThat(helper.validateConnectionConfig().getStatus()).isEqualTo(Status.SUCCESS);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateUserConfig() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
@@ -123,7 +123,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateGroupConfig() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
@@ -145,7 +145,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void populateGroupSize() throws LdapException {
     LdapEntry group = new LdapEntry("groupDN");
@@ -159,7 +159,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void populateGroupSizeWithoutExtendedMatchingFilterShouldFailAndThenSucceed() throws LdapException {
     LdapEntry group = new LdapEntry("groupDN");
@@ -175,7 +175,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getGroupByDn() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
@@ -188,7 +188,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void authenticate() throws Exception {
     mockLdapSearchBuilder(searchBuilder, search);

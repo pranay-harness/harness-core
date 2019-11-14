@@ -21,7 +21,7 @@ import software.wings.beans.trigger.WorkflowAction;
 
 public class DepTriggerNewArtifactFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCRUDArtifactTriggerForWorkflow() {
     String name = "New Artifact Trigger" + System.currentTimeMillis();

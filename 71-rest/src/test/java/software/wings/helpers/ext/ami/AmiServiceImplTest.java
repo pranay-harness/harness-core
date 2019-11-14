@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class AmiServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFiltersWithNullEmptyValues() {
     AmiServiceImpl service = new AmiServiceImpl();
@@ -55,7 +55,7 @@ public class AmiServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchAMIBuilds() {
     AmiServiceImpl amiServiceImpl = new AmiServiceImpl();
@@ -91,7 +91,7 @@ public class AmiServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFiltersWithTags() {
     AmiServiceImpl service = new AmiServiceImpl();
@@ -114,7 +114,7 @@ public class AmiServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFiltersWithFilterMap() {
     AmiServiceImpl service = new AmiServiceImpl();

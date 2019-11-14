@@ -102,7 +102,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = POOJA)
+  @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testWFWithRollback() throws Exception {

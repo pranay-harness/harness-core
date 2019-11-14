@@ -87,7 +87,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
   private static ExecutionArgs executionArgs;
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC1_createApplication() {
     // Test data setup
@@ -102,7 +102,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC2_createServiceAndCollectArtifact() {
     Service warService =
@@ -125,7 +125,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC3_createEnvironment() {
     Environment myEnv = anEnvironment().name(ENV_MAME).environmentType(EnvironmentType.NON_PROD).build();
@@ -160,7 +160,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC4_createWorkflow() {
     Workflow workflowBuilder =
@@ -182,7 +182,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL, intermittent = false)
+  @Owner(developers = SUNIL, intermittent = false)
   @Category(E2ETests.class)
   public void TC5_deployWorkflow() {
     String artifactStreamId = ArtifactStreamRestUtils.getArtifactStreamId(
@@ -200,7 +200,7 @@ public class BasicSSHDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL, intermittent = false)
+  @Owner(developers = SUNIL, intermittent = false)
   @Category(E2ETests.class)
   public void TC6_startAndCheck() {
     ExecutionRestUtils.executeAndCheck(

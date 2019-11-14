@@ -154,7 +154,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should save application.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveApplication() {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).description("Description1").build();
@@ -184,7 +184,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotSaveApplicationWithEmptySpaces() {
     Application app = anApplication().name("    ").accountId(ACCOUNT_ID).description("Description1").build();
@@ -203,7 +203,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListApplication() {
     Application application = anApplication().build();
@@ -216,7 +216,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListApplicationWithDetails() {
     Application application = anApplication().build();
@@ -232,7 +232,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should get application.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetApplicationWithDetails() {
     PageResponse<Notification> notificationPageResponse = new PageResponse<>();
@@ -244,7 +244,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetApplicationWithDefaults() {
     when(wingsPersistence.get(Application.class, APP_ID))
@@ -275,7 +275,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnTrueForExistingApplicationInExistApi() {
     when(query.getKey()).thenReturn(new Key<>(Application.class, "applications", APP_ID));
@@ -284,7 +284,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForNonExistentApplicationGet() {
     assertThatThrownBy(() -> appService.get("NON_EXISTENT_APP_ID"))
@@ -293,7 +293,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotThrowExceptionForNonExistentApplicationDelete() {
     assertThatCode(() -> {
@@ -307,7 +307,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateApplication() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
@@ -330,7 +330,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteApplication() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
@@ -351,7 +351,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
@@ -372,7 +372,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjectSomeFailed() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);

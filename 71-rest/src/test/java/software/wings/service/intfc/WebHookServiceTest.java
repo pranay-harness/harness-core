@@ -201,7 +201,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteNoService() {
     List<Map<String, String>> artifacts =
@@ -213,7 +213,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteWithService() {
     wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
@@ -226,7 +226,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteByEventNoTrigger() {
     String payLoad = "Some payload";
@@ -236,7 +236,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteByEventTriggerInvalidJson() {
@@ -248,7 +248,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteByEventTriggerBitBucket() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
@@ -268,7 +268,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonParsing() throws IOException {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
@@ -291,7 +291,7 @@ public class WebHookServiceTest extends WingsBaseTest {
         .isEqualTo("23 - MyVal - ${app.name}");
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonGitHubPushParsing() throws IOException {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
@@ -311,7 +311,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketPushParsing() throws IOException {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
@@ -329,7 +329,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketPull() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
@@ -351,7 +351,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketPullWithBranchName() throws IOException {
     webHookTriggerConditionWithBranch.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
@@ -373,7 +373,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketDeploymentTrigger() throws IOException {
     webHookTriggerConditionWithBranch.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
@@ -397,7 +397,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteDeploymentTriggerWithExpression() {
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
@@ -417,7 +417,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketRefChange() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
@@ -439,7 +439,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketFork() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
@@ -460,7 +460,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestJsonBitBucketForkWithPullRequest() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
@@ -482,7 +482,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowErrorJsonBitBucketFork() throws IOException {
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.REPO));
@@ -503,7 +503,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithoutActions() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
@@ -533,7 +533,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithClosedAction() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
@@ -565,7 +565,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS, intermittent = true)
+  @Owner(developers = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithDifferentEvent() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
@@ -596,7 +596,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS, intermittent = true)
+  @Owner(developers = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPRWithDifferentAction() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
@@ -628,7 +628,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS, intermittent = true)
+  @Owner(developers = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTriggerGitHubPushRequest() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
@@ -659,7 +659,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPopulateUrlFieldsWhenTriggering() {
     final Application application = anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).build();

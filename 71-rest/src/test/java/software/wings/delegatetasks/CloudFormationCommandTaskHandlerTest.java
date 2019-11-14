@@ -76,7 +76,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetIfStackExists() {
     String customStackName = "CUSTOM_STACK_NAME";
@@ -91,7 +91,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateStack() {
     String templateBody = "Template Body";
@@ -149,7 +149,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateStackGit() {
     String accessKey = "abcd";
@@ -219,7 +219,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateStack() {
     String templateBody = "Template Body";
@@ -266,7 +266,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeleteStack() {
     String accessKey = "abcd";
@@ -303,7 +303,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListStacks() {
     String accessKey = "abcd";

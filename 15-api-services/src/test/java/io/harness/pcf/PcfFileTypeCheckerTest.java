@@ -69,7 +69,7 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
       + "    max: 12";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCategory() {
     PcfFileTypeChecker pcfFileTypeChecker = new PcfFileTypeChecker();

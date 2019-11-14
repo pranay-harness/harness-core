@@ -25,7 +25,7 @@ public class PageResponseTest extends WingsBaseTest {
    * Should return page response as an object.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnPageResponseAsAnObject() {
     PageResponse pageResponse = new PageResponse();

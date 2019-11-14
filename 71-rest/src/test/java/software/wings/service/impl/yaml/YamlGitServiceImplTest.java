@@ -80,7 +80,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCheckForValidNameSyntax() throws Exception {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
@@ -127,7 +127,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getAllYamlErrorsForAccount() {
     yamlGitService.getAllYamlErrorsForAccount(ACCOUNT_ID);
@@ -136,7 +136,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getAllYamlErrorsForAllAccounts() {
     List<Account> accounts = Arrays.asList(anAccount().withAccountName("Name1").withUuid("AccId1").build(),
@@ -147,7 +147,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testProcessWebhookPost() throws Exception {
     SettingAttribute settingAttribute =

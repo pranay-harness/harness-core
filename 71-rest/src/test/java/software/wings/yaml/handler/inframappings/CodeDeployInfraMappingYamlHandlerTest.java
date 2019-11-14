@@ -54,7 +54,7 @@ public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlH
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);

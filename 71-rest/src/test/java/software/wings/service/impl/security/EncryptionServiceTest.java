@@ -54,7 +54,7 @@ public class EncryptionServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchDecryption() {
     String accountId = UUIDGenerator.generateUuid();

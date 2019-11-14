@@ -27,7 +27,7 @@ public class UuidValidatorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUuid() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();

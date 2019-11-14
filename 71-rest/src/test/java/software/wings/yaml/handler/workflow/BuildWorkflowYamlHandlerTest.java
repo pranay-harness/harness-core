@@ -48,7 +48,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
@@ -86,7 +86,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     testFailures(BUILD_VALID_YAML_CONTENT, BUILD_VALID_YAML_FILE_PATH, BUILD_INVALID_YAML_CONTENT,

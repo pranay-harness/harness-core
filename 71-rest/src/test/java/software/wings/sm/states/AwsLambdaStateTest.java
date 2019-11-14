@@ -49,7 +49,7 @@ public class AwsLambdaStateTest extends CategoryTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_fail() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

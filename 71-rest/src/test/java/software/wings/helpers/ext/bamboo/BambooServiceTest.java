@@ -39,13 +39,13 @@ public class BambooServiceTest extends WingsBaseTest {
                                           .build();
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetJobKeys() {}
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetPlanKeys() {
@@ -63,7 +63,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetPlanKeysException() {
@@ -78,13 +78,13 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {}
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsForJob() {
@@ -104,7 +104,7 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsForJobError() {
@@ -118,13 +118,13 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPath() {}
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadArtifact() {}

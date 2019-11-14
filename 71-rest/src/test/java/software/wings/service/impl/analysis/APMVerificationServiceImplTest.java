@@ -112,7 +112,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataValidCase() {
     APMVerificationConfig config = new APMVerificationConfig();
@@ -154,7 +154,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataDatadog() throws Exception {
     DataDogSetupTestNodeData nodeData =
@@ -191,7 +191,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataDatadogEmptyResponse() throws Exception {
     DataDogSetupTestNodeData nodeData =
@@ -228,7 +228,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataValidNoLoad() {
     APMVerificationConfig config = new APMVerificationConfig();
@@ -260,7 +260,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataNullServerConfigId() {
     APMVerificationConfig config = new APMVerificationConfig();
@@ -284,7 +284,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataNullFetchConfig() {
     APMVerificationConfig config = new APMVerificationConfig();
@@ -308,7 +308,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataExceptionWhileFetch() {
     APMVerificationConfig config = new APMVerificationConfig();
@@ -332,7 +332,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateDelegateTaskDatadog() {
     // Setup
@@ -374,7 +374,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateAppD24x7Task() {
     // Setup
@@ -415,7 +415,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateNewRelic24x7Task() {
     NewRelicConfig nrConfig = NewRelicConfig.builder().build();
@@ -454,7 +454,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreate24x7TaskBadState() {
     boolean response = service.collect247Data("cvConfigId", StateType.HTTP, 1540419553000l, 1540420454000l);
@@ -462,7 +462,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreate24x7TaskPrometheus() {
     PrometheusConfig nrConfig = PrometheusConfig.builder().build();
@@ -505,7 +505,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreate24x7TaskCloudWatch() {
     AwsConfig awsConfig = AwsConfig.builder().build();
@@ -539,7 +539,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateStackDriver24x7Task() throws Exception {
     String accountId = generateUuid();
@@ -571,7 +571,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateCustomLogs24x7Task() throws Exception {
     String accountId = generateUuid();
@@ -601,7 +601,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataCustomLogsValidCase() {
     APMVerificationConfig config = new APMVerificationConfig();

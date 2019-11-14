@@ -28,7 +28,7 @@ import software.wings.WingsBaseTest;
 
 public class WingsExceptionMapperTest extends WingsBaseTest implements MockableTestMixin {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void sanity() throws IllegalAccessException {
     final WingsException exception = WingsException.builder().code(DEFAULT_ERROR_CODE).build();
@@ -50,7 +50,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void missingParameter() throws IllegalAccessException {
     final WingsException exception = new WingsException(INVALID_ARTIFACT_SOURCE, USER);
@@ -65,7 +65,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void overrideMessage() throws IllegalAccessException {
     final WingsException exception =
@@ -88,7 +88,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotLogHarmless() throws IllegalAccessException {
     final WingsException exception = new WingsException(DEFAULT_ERROR_CODE, USER);
@@ -106,7 +106,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void recursiveParamTest() throws IllegalAccessException {
     assertThatCode(() -> {

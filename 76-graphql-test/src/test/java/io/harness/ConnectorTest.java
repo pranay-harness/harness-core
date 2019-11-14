@@ -39,7 +39,7 @@ public class ConnectorTest extends GraphQLTest {
 }*/ ConnectorTest.class);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryConnector() {
     final Seed seed = new Seed(0);
@@ -61,7 +61,7 @@ public class ConnectorTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryConnectors() {
     final Seed seed = new Seed(0);

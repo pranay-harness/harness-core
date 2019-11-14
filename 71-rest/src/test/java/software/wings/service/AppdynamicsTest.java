@@ -93,7 +93,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void validateConfig() {
@@ -103,7 +103,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateConfigInvalidURL() {
     ((AppDynamicsConfig) settingAttribute.getValue())
@@ -116,7 +116,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void getAllApplications() throws IOException {
@@ -125,7 +125,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void getTiers() throws IOException {
@@ -137,7 +137,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   public void getDependentTiers() throws IOException {

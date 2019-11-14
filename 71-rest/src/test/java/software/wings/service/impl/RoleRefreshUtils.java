@@ -40,7 +40,7 @@ public class RoleRefreshUtils extends WingsBaseTest {
   @Inject AppService appService;
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void recreateRoles() {

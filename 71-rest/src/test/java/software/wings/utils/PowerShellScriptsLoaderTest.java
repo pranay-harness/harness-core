@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class PowerShellScriptsLoaderTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() {
     for (Map.Entry<PsScript, String> entry : PowerShellScriptsLoader.psScriptMap.entrySet()) {

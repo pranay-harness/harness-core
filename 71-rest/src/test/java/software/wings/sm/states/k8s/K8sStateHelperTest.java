@@ -100,7 +100,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateK8sActivity() {
     List<CommandUnit> commandUnits = new ArrayList<>();
@@ -120,7 +120,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoManifestsUseArtifact() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()

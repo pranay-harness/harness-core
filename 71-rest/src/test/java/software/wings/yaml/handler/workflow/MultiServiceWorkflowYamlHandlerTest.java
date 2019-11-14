@@ -49,7 +49,7 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
@@ -91,7 +91,7 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     testFailures(MULTI_SERVICE_VALID_YAML_CONTENT, MULTI_SERVICE_VALID_YAML_FILE_PATH,

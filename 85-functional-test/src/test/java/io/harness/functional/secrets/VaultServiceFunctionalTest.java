@@ -40,7 +40,7 @@ public class VaultServiceFunctionalTest extends AbstractFunctionalTest {
   @Inject private VaultServiceImpl vaultService;
 
   @Test
-  @Owner(emails = MARK)
+  @Owner(developers = MARK)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void createVaultWithAppRoleAuth() throws IOException {

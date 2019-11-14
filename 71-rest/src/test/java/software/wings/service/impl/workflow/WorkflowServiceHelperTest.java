@@ -119,7 +119,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHPAYamlStringWithCustomMetric() throws Exception {
     WorkflowServiceHelper workflowServiceHelper = new WorkflowServiceHelper();
@@ -146,7 +146,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsDaemonSchedulingStrategy() throws Exception {
     EcsServiceSpecification serviceSpecification = EcsServiceSpecification.builder().build();
@@ -185,7 +185,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForECS_ReplicaStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
@@ -224,7 +224,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForECS_BG() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
@@ -245,7 +245,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForECS_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
@@ -270,7 +270,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateRollbackWorkflowPhaseForEcs_ReplicaStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
@@ -308,7 +308,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateRollbackWorkflowPhaseForEcs_BG() {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
@@ -329,7 +329,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateRollbackWorkflowPhaseForEcs_DaemonStrategy() throws Exception {
     doReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(null).build())
@@ -355,7 +355,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestWorkflowOverrideVariables() {
     List<Variable> variables =
@@ -405,7 +405,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowHasSshDeploymentPhase() {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow_ssh =
@@ -428,7 +428,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testObtainDeploymentTypes() {
     List<WorkflowPhase> workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().deploymentType(SSH).build(),
@@ -445,7 +445,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNeedArtifactCheckStep() {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = null;
@@ -519,7 +519,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnsureArtifactCheckInPreDeployment() {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
@@ -530,7 +530,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testObtainTemplatedEnvironmentId() {
     Workflow workflow = aWorkflow().envId(ENV_ID).build();
@@ -561,7 +561,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetGetKeywords() {
     Workflow workflow = aWorkflow()
@@ -583,7 +583,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateServiceAndInfraDefinition() {
     InfrastructureDefinition infraDef = InfrastructureDefinition.builder()
@@ -637,7 +637,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForSpotinstandOtherAwsAmiWorkflow() {
     InfrastructureDefinition awsAmiInfraDef = InfrastructureDefinition.builder()
@@ -767,7 +767,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForAWSLambda() {
     Service lambdaService =
@@ -786,7 +786,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForAWSCodeDeploy() {
     Service codeDeployService =
@@ -809,7 +809,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForECSBlueGreenRoute53() {
     Service ecsService = Service.builder().uuid(SERVICE_ID).appId(APP_ID).deploymentType(ECS).build();
@@ -827,7 +827,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForPCFBlueGreen() {
     Service pcfService = Service.builder().uuid(SERVICE_ID).appId(APP_ID).deploymentType(DeploymentType.PCF).build();
@@ -865,7 +865,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForPCF() {
     Service pcfService = Service.builder().uuid(SERVICE_ID).appId(APP_ID).deploymentType(DeploymentType.PCF).build();
@@ -888,7 +888,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForHelm() {
     Service helmService = Service.builder().uuid(SERVICE_ID).appId(APP_ID).deploymentType(HELM).build();
@@ -905,7 +905,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForKubernetes() {
     Service k8sService = Service.builder().appId(APP_ID).uuid(SERVICE_ID).deploymentType(KUBERNETES).build();
@@ -966,7 +966,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForSSH() {
     InfrastructureDefinition sshDefinition = InfrastructureDefinition.builder()
@@ -1012,7 +1012,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateNewWorkflowPhaseStepsForArtifactCollection() {
     WorkflowPhase workflowPhase = aWorkflowPhase().build();
@@ -1024,7 +1024,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsK8sV2Service() {
     Service k8sService = Service.builder().isK8sV2(true).build();

@@ -28,7 +28,7 @@ public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
   private final Instant PREV_START_INSTANT = NOW.minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchLastBatchJobScheduledData() {
     boolean createFirstEntry =

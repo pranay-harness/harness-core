@@ -65,7 +65,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListApplication() {
@@ -97,7 +97,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListApplicationRevisions() {
@@ -108,7 +108,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListDeploymentInstances() {

@@ -52,7 +52,7 @@ public class TagsManagementTest extends AbstractE2ETest {
   // Tag Management Test
 
   @Test
-  @Owner(emails = JUHI)
+  @Owner(developers = JUHI)
   @Category(E2ETests.class)
   public void TC0_listAllTags() {
     JsonPath tags = TagsManagementUtils.listTags(bearerToken, getAccount().getUuid());
@@ -60,7 +60,7 @@ public class TagsManagementTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = JUHI)
+  @Owner(developers = JUHI)
   @Category(E2ETests.class)
   public void TC1_createRestrictedTag() {
     Set<String> allowedValues = new HashSet<>();
@@ -75,7 +75,7 @@ public class TagsManagementTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = JUHI)
+  @Owner(developers = JUHI)
   @Category(E2ETests.class)
   public void TC2_createNormalTag() {
     HarnessTag tag = HarnessTag.builder().key(NORMAL_TAG_KEY).build();
@@ -86,7 +86,7 @@ public class TagsManagementTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = JUHI)
+  @Owner(developers = JUHI)
   @Category(E2ETests.class)
   public void TC3_EditTag() {
     Set<String> allowedValues = new HashSet<>();
@@ -109,7 +109,7 @@ public class TagsManagementTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = JUHI)
+  @Owner(developers = JUHI)
   @Category(E2ETests.class)
   public void TC4_AssociateTag() {
     Application tagsApp = anApplication().name(APPLICATION_NAME).build();
@@ -130,7 +130,7 @@ public class TagsManagementTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = JUHI)
+  @Owner(developers = JUHI)
   @Category(E2ETests.class)
   public void TC5_TagUsageDetails() {
     JsonPath tagsUsageDetails =
@@ -140,7 +140,7 @@ public class TagsManagementTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = JUHI)
+  @Owner(developers = JUHI)
   @Category(E2ETests.class)
   public void TC6_DeleteTag() {
     HarnessTag tag = HarnessTag.builder().key(DELETE_TAG_KEY).build();

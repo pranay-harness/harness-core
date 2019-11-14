@@ -28,7 +28,7 @@ import java.util.function.UnaryOperator;
 
 public class KubernetesResourceTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void setAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -59,7 +59,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void arrayFieldsSetAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/two-containers.yaml");
@@ -84,7 +84,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void addAnnotationTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -101,7 +101,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void addLabelsTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -119,7 +119,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void nameUpdateTests() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -135,7 +135,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLabelsInPodSpecNullPodTemplateSpec() throws Exception {
     URL url = this.getClass().getResource("/null-pod-template.yaml");
@@ -146,7 +146,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTransformConfigMapAndSecretRef() throws Exception {
     URL url = this.getClass().getResource("/spec-in-template-null.yaml");
@@ -157,7 +157,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSpecForStatefulSet() throws Exception {
     URL url1 = this.getClass().getResource("/denormalized-stateful-set-spec.yaml");
@@ -182,7 +182,7 @@ public class KubernetesResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSpecForNonStatefulSet() throws Exception {
     URL url1 = this.getClass().getResource("/deploy.yaml");

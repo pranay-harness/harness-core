@@ -55,7 +55,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getMetricStatistics() {
     doReturn(null).when(mockEncryptionService).decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class));
@@ -82,7 +82,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getMetricStatistics_error() {
     doReturn(null).when(mockEncryptionService).decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class));
@@ -111,7 +111,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldGetMetricData() throws Exception {
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
@@ -134,7 +134,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAmazonServiceExceptionWhenGetMetricData() {
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);
@@ -154,7 +154,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldHandleAmazonClientExceptionWhenGetMetricData() {
     final AmazonCloudWatchClient amazonCloudWatchClientMock = mock(AmazonCloudWatchClient.class);

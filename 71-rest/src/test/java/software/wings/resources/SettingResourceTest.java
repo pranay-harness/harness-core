@@ -66,7 +66,7 @@ public class SettingResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveSettingAttribute() {
     settingResource.save(APP_ID, ACCOUNT_ID, settingAttribute);
@@ -79,7 +79,7 @@ public class SettingResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateSettingAttribute() {
     settingResource.update(APP_ID, ACCOUNT_ID, settingAttribute);

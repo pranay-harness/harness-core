@@ -15,7 +15,7 @@ import java.io.IOException;
 
 public class AccountActiveEventTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSerialization() throws IOException {
     ObjectMapper mapper = new ObjectMapper();

@@ -135,7 +135,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveAndRead() {
     UserGroup userGroup = builder()
@@ -184,7 +184,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testList() {
     UserGroup userGroup1 = builder()
@@ -217,7 +217,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListByName() {
     UserGroup userGroup1 = builder()
@@ -237,7 +237,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloneUserGroup() {
     final UserGroup storedGroupToClone = builder()
@@ -268,7 +268,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUserGroup() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(anUser().withUuid(generateUuid()).build())) {
@@ -354,7 +354,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNotificationSettings() {
     UserGroup ug = builder().accountId(accountId).name("some-name").build();
@@ -373,7 +373,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateOverview() {
     UserGroup ug = builder().accountId(accountId).name("some-name").build();
@@ -386,7 +386,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateMembers() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
@@ -438,7 +438,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsUserAuthorizedToAcceptOrRejectApproval() {
     User user = createUser("User");
@@ -477,7 +477,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAdminUserGroupShouldNotBeDeleted() {
     UserGroup defaultUserGroup =
@@ -489,7 +489,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNonAdminUserGroupShouldBeDeleted() {
     UserGroup nonDefaultUserGroup =
@@ -502,7 +502,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUserGroups() {
     UserGroup defaultUserGroup = builder()

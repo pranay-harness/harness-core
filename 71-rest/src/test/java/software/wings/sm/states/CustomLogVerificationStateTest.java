@@ -66,7 +66,7 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testConstructLogDefinitions() throws IOException {
     CustomLogVerificationState state = new CustomLogVerificationState("dummy");

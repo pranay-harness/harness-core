@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class BlueprintProcessorTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateKeys() {
     AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();

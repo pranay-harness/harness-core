@@ -69,7 +69,7 @@ public class InstanceServiceTest extends WingsBaseTest {
    *
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveAndRead() {
     Instance instance = buildInstance();
@@ -99,7 +99,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testList() {
     Instance instance1 = buildInstance();
@@ -132,7 +132,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateAndRead() {
     Instance instance = buildInstance();
@@ -152,7 +152,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelete() {
     Instance instance = buildInstance();

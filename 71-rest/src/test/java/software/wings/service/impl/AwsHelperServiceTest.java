@@ -46,7 +46,7 @@ import java.util.Set;
 
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetInstanceId() {
     AwsHelperService awsHelperService = new AwsHelperService();
@@ -57,7 +57,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateStack() {
     String accessKey = "abcd";
@@ -76,7 +76,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteStack() {
     String accessKey = "abcd";
@@ -95,7 +95,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDescribeStack() {
     String accessKey = "qwer";
@@ -119,7 +119,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAllEvents() {
     String accessKey = "qwer";
@@ -145,7 +145,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateStack() {
     String accessKey = "abcd";
@@ -164,7 +164,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListStacks() {
     String accessKey = "qwer";
@@ -188,7 +188,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDescribeAutoScalingGroupActivities() {
     Activity incompleteActivity = new Activity()

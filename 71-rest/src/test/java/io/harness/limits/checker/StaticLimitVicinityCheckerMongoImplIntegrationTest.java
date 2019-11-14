@@ -29,7 +29,7 @@ public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseInte
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCrossed() {
     String key = "some-key-" + NAMESPACE + ":" + ActionType.DEPLOY;

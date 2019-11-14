@@ -30,7 +30,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   @Ignore("This test currently depends on access to the gRPC port for Perpetual Task Service.")
   public void testUpdateTaskIds() {
@@ -39,7 +39,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   @Ignore("This test currently depends on access to the gRPC port for Perpetual Task Service.")
   public void testGetTaskContext() {
@@ -50,7 +50,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   @Ignore("This test currently depends on access to a local perpetual task server.")
   public void testStartTask() throws Exception {
@@ -62,7 +62,7 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   @Ignore("This test currently depends on access to a local perpetual task server.")
   public void testStartAllTasks() throws Exception {

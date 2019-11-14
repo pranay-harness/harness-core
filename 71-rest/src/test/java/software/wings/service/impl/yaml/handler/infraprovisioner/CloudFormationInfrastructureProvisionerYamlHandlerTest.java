@@ -69,7 +69,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Base
       + "templateBody: Body\n";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext();

@@ -38,7 +38,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Inject MainConfiguration mainConfiguration;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testHandle() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
@@ -49,7 +49,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testErrorResponse() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
@@ -66,7 +66,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Repeat(times = 3, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")

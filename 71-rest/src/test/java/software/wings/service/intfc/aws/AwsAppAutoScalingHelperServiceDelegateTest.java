@@ -22,7 +22,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   @Inject private AwsAppAutoScalingHelperServiceDelegate scalingHelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetJsonForAwsScalableTarget() throws Exception {
     String json = "{\n"
@@ -43,7 +43,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetJsonForAwsScalingPolicy() throws Exception {
     String json = "{\n"
@@ -70,7 +70,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetJsonForAwsScalingPolicies() throws Exception {
     String json = "  [ {\n"

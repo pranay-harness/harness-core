@@ -42,7 +42,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
@@ -52,7 +52,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreate() {
     Preference createdPreference =
@@ -61,7 +61,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     preference.setAppId(GLOBAL_APP_ID);
@@ -76,7 +76,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdate() {
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
@@ -87,7 +87,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     wingsPersistence.saveAndGet(Preference.class, preference);

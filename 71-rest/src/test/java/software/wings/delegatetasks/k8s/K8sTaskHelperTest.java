@@ -45,7 +45,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks private K8sTaskHelper helper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTargetInstancesForCanary() {
     ExecutionLogCallback mockLogCallback = mock(ExecutionLogCallback.class);
@@ -55,7 +55,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetResourcesInTableFormat() {
     String expectedResourcesInTableFormat = "\n"

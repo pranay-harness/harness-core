@@ -26,7 +26,7 @@ public class ServerlessInstanceMapperTest extends CategoryTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_map() {
     final ServerlessInstanceMapper serverlessInstanceMapper = new ServerlessInstanceMapper(Instant.now(), "accountid");

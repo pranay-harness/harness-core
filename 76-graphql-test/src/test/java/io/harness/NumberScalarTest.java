@@ -17,7 +17,7 @@ public class NumberScalarTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseLiteralWithInvalidInput() {
     String invalidInput = "invalid";
@@ -27,7 +27,7 @@ public class NumberScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseLiteralWithValidInput() {
     String validInput = "2";
@@ -60,7 +60,7 @@ public class NumberScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseValueWithValidInput() {
     String validInput = "2";

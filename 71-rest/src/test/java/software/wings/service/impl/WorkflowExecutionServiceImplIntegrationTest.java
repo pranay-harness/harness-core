@@ -21,7 +21,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
   @Inject WorkflowExecutionServiceImpl workflowExecutionService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldGetStateExecutionInstancesForPhases() {
     StateExecutionInstance stateExecutionInstance1 = null, stateExecutionInstance2 = null,
@@ -47,7 +47,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldReturnEmptyWhenStateExecutionInstancesForPhasesNotExists() {
     List<StateExecutionInstance> stateExecutionInstancesForPhases =

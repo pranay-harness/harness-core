@@ -59,7 +59,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstanceStartPodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
@@ -70,7 +70,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInvalidInstancePodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
@@ -81,7 +81,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstanceStopPodEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
@@ -91,7 +91,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstancePodInfo() throws Exception {
     InstanceData instanceData = getNodeInstantData();
@@ -119,7 +119,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetHarnessServiceInfo() {
     HarnessServiceInfo harnessServiceInfo = k8sPodInfoProcessor.getHarnessServiceInfo(ACCOUNT_ID, new HashMap<>());

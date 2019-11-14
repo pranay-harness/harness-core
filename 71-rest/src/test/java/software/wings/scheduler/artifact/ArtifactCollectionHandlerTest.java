@@ -51,7 +51,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject private ArtifactCollectionHandler artifactCollectionHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleForNPEInAccountId() {
     PowerMockito.mockStatic(ExceptionLogger.class);
@@ -78,7 +78,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleWithValidAccountId() {
     PowerMockito.mockStatic(ExceptionLogger.class);
@@ -107,7 +107,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     // setup mock

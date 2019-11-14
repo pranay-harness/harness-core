@@ -78,7 +78,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
    * Should execute command for service instance.
    */
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteCommandForServiceInstance() {
@@ -92,7 +92,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
    * Should execute nested command for service instance.
    */
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteNestedCommandForServiceInstance() {

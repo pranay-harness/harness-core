@@ -73,7 +73,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePerpetualTasksForCloudProvider() {
     manager.createPerpetualTasks(cloudProvider);
@@ -81,7 +81,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResetPerpetualTasksForCloudProvider() {
     manager.createPerpetualTasks(cloudProvider);
@@ -92,7 +92,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeletePerpetualTasksForCloudProvider() {
     manager.createPerpetualTasks(clusterRecord);
@@ -103,7 +103,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePerpetualTasksForCluster() {
     manager.createPerpetualTasks(clusterRecord);
@@ -111,7 +111,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResetPerpetualTasksForCluster() {
     manager.createPerpetualTasks(clusterRecord);
@@ -122,7 +122,7 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeletePerpetualTaskForCluster() {
     manager.createPerpetualTasks(clusterRecord);

@@ -29,7 +29,7 @@ public class EntityNameCacheTest extends WingsBaseTest {
   @Inject @InjectMocks private EntityNameCache entityNameCache;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEntityCache() throws Exception {
     Query mockQuery = mock(Query.class);

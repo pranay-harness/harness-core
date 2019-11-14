@@ -135,7 +135,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = pipelineChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
@@ -155,7 +155,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineInsertChange() {
     Pipeline pipeline =
@@ -169,7 +169,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineDeleteChange() {
     Pipeline pipeline =
@@ -183,7 +183,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
     Pipeline pipeline =
@@ -197,7 +197,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.UPDATE);
@@ -209,7 +209,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentUpdateChange() {
     ChangeEvent environmentUpdateChangeEvent =
@@ -223,7 +223,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
@@ -238,7 +238,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
@@ -251,7 +251,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
@@ -269,7 +269,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
@@ -284,7 +284,7 @@ public class PipelineChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionChange() {
     ChangeEvent workflowExecutionDeleteChangeEvent =

@@ -81,7 +81,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
                                                      .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureResourceConstraintForInfrastructureThrottlingWhenExists() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraint.class));
@@ -97,7 +97,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureResourceConstraintForInfrastructureThrottlingWhenDoNotExists() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraint.class));
@@ -113,7 +113,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   @Ignore("This test is noop, rewrite to actually store resource constraints and check what the returns")
   public void shouldTestFetchEntityIdListForUnitAndEntityType() {
@@ -135,7 +135,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
 
   // TODO: YOGESH use fake mongo in all tests
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAllCurrentlyAcquiredPermits() {
     final int permits = 3;

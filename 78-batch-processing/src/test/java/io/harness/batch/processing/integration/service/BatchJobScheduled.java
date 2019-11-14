@@ -33,7 +33,7 @@ public class BatchJobScheduled {
   @Autowired private HPersistence hPersistence;
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   @Ignore("TODO: Not running it now, will run it in next iteration.")
   public void shouldCreateBatchJobScheduledData() {

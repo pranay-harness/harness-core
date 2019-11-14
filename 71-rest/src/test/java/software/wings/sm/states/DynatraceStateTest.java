@@ -101,7 +101,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
@@ -109,7 +109,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void compareTestAndControl() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
@@ -123,7 +123,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
     assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);

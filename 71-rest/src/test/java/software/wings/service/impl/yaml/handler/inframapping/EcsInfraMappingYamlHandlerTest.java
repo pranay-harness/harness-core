@@ -148,7 +148,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void tbsValidateNetworkParameters() {
     Yaml yaml = Yaml.builder()
@@ -194,7 +194,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     // testCrud(validYamlContent1);
@@ -231,7 +231,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);

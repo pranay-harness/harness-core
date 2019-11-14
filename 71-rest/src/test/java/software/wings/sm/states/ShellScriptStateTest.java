@@ -132,7 +132,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseOnShellScriptSuccessAndSaveSweepingOutput() {
     when(executionContext.getStateExecutionData())
@@ -160,7 +160,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseOnShellScriptFailureAndNotSaveSweepingOutput() {
     when(executionContext.getStateExecutionData())
@@ -182,7 +182,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailShellScriptStateOnErrorResponse() {
     ExecutionResponse executionResponse = shellScriptState.handleAsyncResponse(executionContext,
@@ -192,7 +192,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPatternsForRequiredContextElementType() {
     shellScriptState.setScriptString("echo \"Hello world\"");
@@ -203,7 +203,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldExecuteOnDelegate() throws IllegalAccessException {
     Map<String, Object> variableMap = new HashMap<>();
@@ -251,7 +251,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldExecuteOnTargetHostSSh() throws IllegalAccessException {
     on(shellScriptState).set("settingsService", settingsService);

@@ -22,7 +22,7 @@ public class SignupServiceTest extends WingsBaseTest {
   @Inject UserService userService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidUserCheckShouldSucceed() {
     try {
@@ -41,7 +41,7 @@ public class SignupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetEmailShouldSucceed() {
     String signupSecretToken = userService.createSignupSecretToken(EMAIL, 10);

@@ -43,7 +43,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsume() {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
@@ -74,7 +74,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsumeConcurrent() throws ExecutionException, InterruptedException {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;

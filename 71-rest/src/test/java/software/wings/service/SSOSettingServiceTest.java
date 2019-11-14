@@ -31,7 +31,7 @@ public class SSOSettingServiceTest extends WingsBaseTest {
   @Inject @InjectMocks SSOSettingService ssoSettingService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSamlSettingsCRUD() {
     Account account = Account.Builder.anAccount()
@@ -142,7 +142,7 @@ public class SSOSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNegativeTest() {
     try {

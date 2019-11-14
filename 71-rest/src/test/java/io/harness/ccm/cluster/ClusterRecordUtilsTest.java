@@ -18,7 +18,7 @@ public class ClusterRecordUtilsTest extends CategoryTest {
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFrom() {
     DirectKubernetesInfrastructureMapping k8sInfraMapping = DirectKubernetesInfrastructureMapping.builder()

@@ -59,7 +59,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_save() {
     setup_AggregationPipeline();
@@ -73,7 +73,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test(expected = NoResultFoundException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_save_error() {
     setup_AggregationPipeline();
@@ -110,7 +110,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_get() {
     setup_AggregationPipeline();
@@ -120,7 +120,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_delete() {
     setup_wingspersistence();
@@ -130,7 +130,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_update() {
     setup_wingspersistence();
@@ -142,7 +142,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test(expected = NoResultFoundException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_update_error() {
     setup_wingspersistence();
@@ -154,7 +154,7 @@ public class ServerlessInstanceServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getSyncStatus() {
     setup_wingspersistence();

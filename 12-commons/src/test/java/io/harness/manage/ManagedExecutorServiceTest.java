@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ManagedExecutorServiceTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnsureGlobalContext() {
     try (GlobalContextGuard contextGuard1 = ensureGlobalContextGuard()) {
@@ -39,7 +39,7 @@ public class ManagedExecutorServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMdcGlobalContext() throws Exception {
     try (GlobalContextGuard globalContextGuard = initGlobalContextGuard(new GlobalContext());
@@ -56,7 +56,7 @@ public class ManagedExecutorServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSubmitRunnable() throws Exception {
     ExecutorService executor = Executors.newSingleThreadExecutor();

@@ -39,7 +39,7 @@ public class EventServiceApplicationTest extends CategoryTest {
   @Inject private EventPublisher eventPublisher;
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   @RealMongo
   public void shouldEventuallyPersistPublishedEvent() throws Exception {

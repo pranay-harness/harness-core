@@ -43,7 +43,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = BRETT)
+  @Owner(developers = BRETT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDownloadDelegateZipWithWatcher()
@@ -90,7 +90,7 @@ public class DelegateIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = BRETT)
+  @Owner(developers = BRETT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRunDelegate() throws IOException, JSONException, TimeoutException, InterruptedException {

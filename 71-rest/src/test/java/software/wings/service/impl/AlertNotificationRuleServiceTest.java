@@ -38,7 +38,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateAlertNotificationRules() {
     List<AlertNotificationRule> rules =
@@ -53,7 +53,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCreateMoreThanOneDefaultAlertNotificationRulesInSameAccount() {
     List<AlertNotificationRule> rules = Arrays.asList(
@@ -67,7 +67,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteAllAlertNotificationRulesOfAnAccount() {
     List<AlertNotificationRule> rulesOfAccount1 = Arrays.asList(createDefaultAlertNotificationRule(ACCOUNT_1_ID),
@@ -85,7 +85,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteNonDefaultAlertNotificationRuleGivenRuleIdAndAccountId() {
     AlertNotificationRule ruleInAccount1 =
@@ -104,7 +104,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteDefaultAlertNotificationRuleOfAnAccount() {
     alertNotificationRuleService.create(createDefaultAlertNotificationRule(ACCOUNT_1_ID));
@@ -114,14 +114,14 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateNonExistingAlertNotificationRule() {
     alertNotificationRuleService.update(createDefaultAlertNotificationRule(ACCOUNT_1_ID));
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateExistingDefaultAlertNotificationRule() {
     AlertNotificationRule savedRule =
@@ -138,7 +138,7 @@ public class AlertNotificationRuleServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateExistingNonDefaultAlertNotificationRule() {
     AlertNotificationRule savedRule = alertNotificationRuleService.create(

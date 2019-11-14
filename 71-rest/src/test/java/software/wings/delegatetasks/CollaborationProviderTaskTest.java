@@ -53,7 +53,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
           notifyResponseData -> {}, () -> true);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmailNotification() {
     EmailRequest emailRequest = new EmailRequest();
@@ -61,7 +61,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailure() {
     doThrow(new WingsException(ErrorCode.EMAIL_FAILED))
@@ -74,7 +74,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllSupportedCommunicationTypes() {
     CollaborationProviderRequest request = Mockito.mock(CollaborationProviderRequest.class);

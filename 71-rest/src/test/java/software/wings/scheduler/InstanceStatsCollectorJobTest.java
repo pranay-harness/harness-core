@@ -41,7 +41,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_createStats() {
     final Locker locker = mock(Locker.class);
@@ -57,7 +57,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_createStats_disabled() {
     final Locker locker = mock(Locker.class);
@@ -72,7 +72,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
     verify(statsCollector, times(1)).createStats(ACCOUNTID);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_createStats_nolock() {
     final Locker locker = mock(Locker.class);

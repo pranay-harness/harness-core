@@ -67,7 +67,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAccountLevelRateLimiter() {
     String accountId = UUIDGenerator.generateUuid();
@@ -108,7 +108,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = MARK, intermittent = true)
+  @Owner(developers = MARK, intermittent = true)
   @Category(UnitTests.class)
   public void testGlobalRateLimiter() {
     // Global rate limiter should check against cross-account overall requests on global limit.
@@ -125,7 +125,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMixedCustDashExternalRateLimiterCallsForSameAccount() {
     boolean overExternalRateLimit = false;

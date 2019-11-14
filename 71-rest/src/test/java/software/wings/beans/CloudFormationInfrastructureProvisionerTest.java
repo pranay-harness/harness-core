@@ -12,7 +12,7 @@ import software.wings.beans.CloudFormationInfrastructureProvisioner.CloudFormati
 
 public class CloudFormationInfrastructureProvisionerTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudFormationProvisioner() {
     CloudFormationInfrastructureProvisionerBuilder builder = CloudFormationInfrastructureProvisioner.builder();

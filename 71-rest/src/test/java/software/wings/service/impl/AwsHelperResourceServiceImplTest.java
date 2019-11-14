@@ -23,7 +23,7 @@ public class AwsHelperResourceServiceImplTest extends WingsBaseTest {
   @Inject private AwsHelperResourceService awsHelperResourceService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetRegions() {
     List<NameValuePair> regions = awsHelperResourceService.getAwsRegions();

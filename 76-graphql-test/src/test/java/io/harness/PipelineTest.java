@@ -45,7 +45,7 @@ public class PipelineTest extends GraphQLTest {
   @Inject PipelineGenerator pipelineGenerator;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryPipeline() {
     final Seed seed = new Seed(0);
@@ -96,7 +96,7 @@ public class PipelineTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingPipeline() {
     String query = $GQL(/*
@@ -114,7 +114,7 @@ public class PipelineTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryPipelines() {
     final Seed seed = new Seed(0);

@@ -80,7 +80,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsInstanceWorkflow() {
@@ -110,7 +110,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsEcsEc2Workflow() {
@@ -137,7 +137,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunAwsLambdaWorkflow() {
@@ -157,7 +157,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunGcpK8sWorkflow() {
@@ -176,7 +176,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunGcpK8sTemplatizedWorkflow() {
@@ -202,7 +202,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldReuseInfraMapping() {
@@ -245,7 +245,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void shouldRunAzureWinRmCanaryWorkflow() {

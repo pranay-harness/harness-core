@@ -110,7 +110,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveWebhookConditionTrigger() {
     DeploymentTrigger trigger =
@@ -129,7 +129,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveWebhookConditionTriggerWithExpressions() {
     DeploymentTrigger trigger = TriggerServiceTestHelper.buildWebhookConditionTrigger();
@@ -156,7 +156,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateWebhookConditionTrigger() {
     DeploymentTrigger trigger =
@@ -176,7 +176,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveCustomWebhookConditionTrigger() {
     DeploymentTrigger trigger = TriggerServiceTestHelper.buildWebhookConditionTrigger();

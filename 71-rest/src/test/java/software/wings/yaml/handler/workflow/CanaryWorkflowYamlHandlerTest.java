@@ -50,7 +50,7 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
@@ -93,7 +93,7 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     testFailures(CANARY_VALID_YAML_CONTENT, CANARY_VALID_YAML_FILE_PATH, CANARY_INVALID_YAML_CONTENT,

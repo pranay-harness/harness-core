@@ -54,7 +54,7 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldWriteContainerInstanceInfo() throws Exception {
     when(instanceDataService.fetchInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID))
@@ -76,7 +76,7 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void updateContainerInstantStartTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(

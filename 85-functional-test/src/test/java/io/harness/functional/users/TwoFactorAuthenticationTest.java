@@ -28,7 +28,7 @@ public class TwoFactorAuthenticationTest extends AbstractFunctionalTest {
   String defaultPassword = "";
 
   @Test()
-  @Owner(emails = NATARAJA, intermittent = false)
+  @Owner(developers = NATARAJA, intermittent = false)
   @Category(FunctionalTests.class)
   public void verifyTwoFactorAuthLogin() {
     defaultPassword = scmSecret.decryptToString(new SecretName("user_default_password"));

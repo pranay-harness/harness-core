@@ -12,7 +12,7 @@ import org.junit.experimental.categories.Category;
 
 public class RegexFunctorTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtract() {
     final RegexFunctor regexFunctor = new RegexFunctor();

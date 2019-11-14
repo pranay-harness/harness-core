@@ -52,7 +52,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sCanaryDeployTaskHandler k8sCanaryDeployTaskHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams =
@@ -82,7 +82,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams =
@@ -112,7 +112,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentWorkloadsForCanary() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams = K8sCanaryDeployTaskParameters.builder().build();

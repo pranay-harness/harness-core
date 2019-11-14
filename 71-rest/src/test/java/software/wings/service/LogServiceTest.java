@@ -47,7 +47,7 @@ public class LogServiceTest extends WingsBaseTest {
    * Should list logs.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListLogs() {
     List<Log> logs = getLogsToSave(100);
@@ -62,7 +62,7 @@ public class LogServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotSaveMoreThanLimit() {
     List<Log> logs = getLogsToSave(2 * MAX_LOG_ROWS_PER_ACTIVITY);
@@ -77,7 +77,7 @@ public class LogServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExportLogs() throws IOException {
     List<Log> logs = getLogsToSave(100);

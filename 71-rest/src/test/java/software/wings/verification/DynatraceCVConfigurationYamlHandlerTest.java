@@ -112,7 +112,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -130,7 +130,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYamlMultipleServiceMethods() {
     DynaTraceCVServiceConfiguration cvServiceConfiguration =
@@ -147,7 +147,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -169,7 +169,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertEmptyServiceMethod() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -186,7 +186,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertMultipleServiceMethods() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

@@ -32,7 +32,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void initSplunkServiceWithToken()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -52,7 +52,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void initSplunkServiceWithBasicAuth()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -72,7 +72,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void splunkLogQueryCustomHostFieldTest()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
@@ -88,7 +88,7 @@ public class SplunkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void splunkLogQuerAdvancedQueryTest()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {

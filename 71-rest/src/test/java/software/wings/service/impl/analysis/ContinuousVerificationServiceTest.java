@@ -90,7 +90,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetVerificationStateExecutionData() {
     assertThat(continuousVerificationService.getVerificationStateExecutionData(generateUuid())).isNull();
@@ -202,7 +202,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVCertifiedDetailsForWorkflow() {
     String accountId = generateUuid();
@@ -240,7 +240,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVCertifiedDetailsForWorkflowFromResource() {
     String accountId = generateUuid();
@@ -279,7 +279,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVCertifiedDetailsForPipeline() {
     String accountId = generateUuid();
@@ -323,7 +323,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVCertifiedDetailsForPipelineFromResource() {
     String accountId = generateUuid();
@@ -368,7 +368,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVCertifiedDetailsForPipelineNoCVStates() {
     String accountId = generateUuid();
@@ -380,7 +380,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVCertifiedDetailsForWorkflowNoCVStates() {
     String accountId = generateUuid();
@@ -392,7 +392,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotification() {
     final NewRelicCVServiceConfiguration cvConfig = createCvConfig();

@@ -41,7 +41,7 @@ public class HttpConnectionExecutionCapabilityTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void fetchCapabilityBasis() {
     String capabilityBasis = httpConnectionExecutionCapability.fetchCapabilityBasis();

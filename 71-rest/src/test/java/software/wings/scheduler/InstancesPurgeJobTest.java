@@ -38,7 +38,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
   @Inject @InjectMocks private InstancesPurgeJob job;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPurgeCorrectly() {
     generateInstances();

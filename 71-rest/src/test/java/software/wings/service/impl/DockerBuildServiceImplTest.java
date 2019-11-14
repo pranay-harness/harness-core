@@ -40,7 +40,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private DockerBuildService dockerBuildService;
 
   @Test
-  @Owner(emails = GARVIT)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsWithoutCredentials() {
@@ -51,7 +51,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = GARVIT)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetBuildsWithCredentials() {
@@ -67,7 +67,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = GARVIT)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetLastSuccessfulBuild() {
@@ -82,7 +82,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = GARVIT)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldValidateInvalidUrl() {
@@ -102,7 +102,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = GARVIT)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldValidateCredentials() {

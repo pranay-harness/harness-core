@@ -73,7 +73,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewUserInviteHandleShouldSucceed() {
     when(signupService.getUserInviteByEmail(EMAIL)).thenReturn(null);
@@ -86,7 +86,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExistingUserInviteHandleShouldSucceed() {
     UserInvite existingUserInvite = createUserInvite();
@@ -102,7 +102,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExistingCompletedUserInviteHandleShouldSucceed() {
     UserInvite existingUserInvite = createUserInvite();
@@ -122,7 +122,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCompleteInviteFlowShouldSucceed() throws UnsupportedEncodingException {
     UpdatePasswordRequest passwordRequest = null;

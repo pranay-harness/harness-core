@@ -97,7 +97,7 @@ public class MongoStoreTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNominalUpdateGet() {
     TestNominalEntity foo =
@@ -112,7 +112,7 @@ public class MongoStoreTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testOrdinalUpdateGet() {
     Logger log = LoggerFactory.getLogger(MongoWireProtocolHandler.class);

@@ -73,7 +73,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
@@ -91,7 +91,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetRegionsForStackdriver() throws Exception {
@@ -104,7 +104,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetLoadBalancersForStackdriver() throws Exception {
@@ -118,7 +118,7 @@ public class StackDriverIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetSampleRecord() throws Exception {

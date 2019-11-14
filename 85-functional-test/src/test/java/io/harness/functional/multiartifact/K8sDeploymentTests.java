@@ -74,7 +74,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void testK8sCanaryWorkflow() {
@@ -82,7 +82,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void testK8sBlueGreenWorkflow() {
@@ -90,7 +90,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void testK8sRollingWorkflow() {

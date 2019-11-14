@@ -71,7 +71,7 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   @InjectMocks private EcsBGUpdateRoute53DNSWeightState state = new EcsBGUpdateRoute53DNSWeightState("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldService(true);
@@ -147,7 +147,7 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

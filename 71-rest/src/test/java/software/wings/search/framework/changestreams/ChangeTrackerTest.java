@@ -23,7 +23,7 @@ public class ChangeTrackerTest extends WingsBaseTest {
   @Inject private ChangeTracker changeTracker;
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @Ignore("Intermittent: will fix this test.")
   public void changeStreamTrackerTest() {

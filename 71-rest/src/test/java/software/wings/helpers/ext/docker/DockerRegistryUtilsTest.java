@@ -22,7 +22,7 @@ public class DockerRegistryUtilsTest extends WingsBaseTest {
   private static final String IMAGE_NAME = "IMAGE_NAME";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetLabelsIfEmptyTags() {
     List<Map<String, String>> labelsMap =

@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class MapperUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void mapObject() throws Exception {
     Map<String, Object> map = Maps.newLinkedHashMap();
@@ -34,7 +34,7 @@ public class MapperUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void mapSomeFields() throws Exception {
     EmailState emailState = new EmailState("name1");
@@ -52,7 +52,7 @@ public class MapperUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void mapObjectOnlyNonNull() {
     EmailState emailState1 = new EmailState("name1", "toAddress1", "ccAddress1", "subject1", "body1", true);

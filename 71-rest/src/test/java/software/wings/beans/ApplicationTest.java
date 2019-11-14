@@ -26,7 +26,7 @@ public class ApplicationTest extends WingsBaseTest {
    * Test serialize deserialize.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSerializeDeserialize() {
     Application app = new Application();

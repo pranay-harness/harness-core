@@ -73,7 +73,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExpandNextIterationsAllStay() {
     long now = System.currentTimeMillis();
@@ -90,7 +90,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExpandNextIterationsAllOld() {
     long now = System.currentTimeMillis();
@@ -107,7 +107,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExpandNextIterationsTruncatedMatch() {
     long now = System.currentTimeMillis();
@@ -124,7 +124,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExpandNextIterationsTruncatedNoMatch() {
     long now = System.currentTimeMillis();
@@ -141,7 +141,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("Bypass this test, it is not for running regularly")
   public void testNextReturnsJustAdded() throws IOException {

@@ -119,7 +119,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoAnalysisRecords() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
@@ -153,7 +153,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoMergingWithoutGap() {
     NewRelicCVServiceConfiguration cvServiceConfiguration =
@@ -283,7 +283,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
-  @Owner(emails = VAIBHAV_TULSYAN, intermittent = true)
+  @Owner(developers = VAIBHAV_TULSYAN, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testTimeSeries() {
@@ -486,7 +486,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudwatchMetricType() throws Exception {
     long endTime = Timestamp.currentMinuteBoundary();
@@ -518,7 +518,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWithActualData() throws IOException {
     readAndSaveAnalysisRecords();
@@ -531,7 +531,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {PRAVEEN}, intermittent = true)
+  @Owner(developers = {PRAVEEN}, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testSortingFromDB() throws IOException {
@@ -548,7 +548,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = {PRAVEEN}, intermittent = true)
+  @Owner(developers = {PRAVEEN}, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testDeeplinkUrlAppDynamicsFromDB() throws IOException {
@@ -634,7 +634,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testSorting() throws IOException {
@@ -725,7 +725,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRiskArray() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -801,7 +801,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTrafficLight() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -932,7 +932,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   // Test to be un-ignored as per https://harness.atlassian.net/browse/LE-1150
   @Test
-  @Owner(emails = VAIBHAV_TULSYAN, intermittent = true)
+  @Owner(developers = VAIBHAV_TULSYAN, intermittent = true)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testRiskArrayEndpointContainment() throws Exception {
@@ -1001,7 +1001,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRiskSortLevel() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -1078,7 +1078,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     wingsPersistence.save(riskSummaries);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoTxnMetricFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -1107,7 +1107,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTxnFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -1154,7 +1154,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMetricFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
@@ -1198,7 +1198,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTxnMetricFilter() throws Exception {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()

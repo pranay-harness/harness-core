@@ -45,7 +45,7 @@ public class GetApprovalsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getApprovalsTest() {
     // Running harness get approvals before executing a pipeline with approval step

@@ -143,7 +143,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    * Should execute command.
    */
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldExecuteCommand() {
@@ -157,7 +157,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    * Should capture failed execution command unit.
    */
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCaptureFailedExecutionCommandUnit() {

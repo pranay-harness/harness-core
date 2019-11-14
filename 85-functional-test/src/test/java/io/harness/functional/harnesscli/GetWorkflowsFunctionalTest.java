@@ -50,7 +50,7 @@ public class GetWorkflowsFunctionalTest extends AbstractFunctionalTest {
 
   @Inject HarnesscliHelper harnesscliHelper;
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getWorkflowsTest() {
     // Running harness get workflows before creating a new workflow
@@ -102,7 +102,7 @@ public class GetWorkflowsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getWorkflowsWithInvalidArgumentsTest() {
     // Running harness get workflows with invalid appId

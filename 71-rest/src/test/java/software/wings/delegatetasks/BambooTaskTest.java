@@ -70,7 +70,7 @@ public class BambooTaskTest extends CategoryTest {
         .thenReturn(Status.builder().finished(true).build());
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(bambooService.getBuildResult(bambooConfig, null, planKey))

@@ -45,7 +45,7 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testChangeTrackingTask() throws InterruptedException, ExecutionException {
     ChangeStreamSubscriber changeStreamSubscriber = mock(ChangeStreamSubscriber.class);

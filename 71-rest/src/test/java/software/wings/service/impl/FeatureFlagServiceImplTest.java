@@ -33,7 +33,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks FeatureFlagService featureFlagService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEnableWhenFeatureFlagNotAlreadyPresent() {
     Query query = mock(Query.class);
@@ -52,7 +52,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEnableWhenNullAccountIds() {
     Query query = mock(Query.class);
@@ -71,7 +71,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEnableWhenSomeAccountsPresent() {
     Query query = mock(Query.class);

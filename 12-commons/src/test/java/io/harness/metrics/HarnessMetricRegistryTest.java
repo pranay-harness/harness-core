@@ -27,7 +27,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
     harnessMetricRegistry = new HarnessMetricRegistry(metricRegistry, collectorRegistry);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGaugeMetricRegister() {
     String metricName = "data_collection_test_metric";
@@ -37,7 +37,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGaugeMetricUpdate() {
     String metricName = "data_collection_test_metric1";

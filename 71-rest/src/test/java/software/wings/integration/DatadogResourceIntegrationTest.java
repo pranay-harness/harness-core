@@ -80,7 +80,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForWorkflowWithoutServerConfigId() {
@@ -99,7 +99,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForWorkflow() {
@@ -118,7 +118,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetTimeseriesRecordsForServiceGuard() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG);
@@ -136,7 +136,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   @Ignore("Disabled due to rate limit issue on Datadog")
   public void testGetTimeseriesRecordsForServiceGuardWithoutServerConfigId() {
@@ -155,7 +155,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testDatadogLogsForWorkflow() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(true, StateType.DATA_DOG_LOG);
@@ -174,7 +174,7 @@ public class DatadogResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testDatadogLogsForServiceGuard() {
     DataDogSetupTestNodeData fetchConfig = getDatadogSetupTestNodedata(false, StateType.DATA_DOG_LOG);

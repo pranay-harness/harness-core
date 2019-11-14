@@ -121,7 +121,7 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogsWithCorrectDataCollectionMinuteOnMultipleCalls() throws Exception {
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
@@ -148,7 +148,7 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogsWithCorrectDataCollectionMinuteOnMultipleCallsVersion7() throws Exception {
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
@@ -175,7 +175,7 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogsWithCorrectParamsInSearch() throws Exception {
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
@@ -198,7 +198,7 @@ public class ElkLogzDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogsWithCorrectParamsInSearchVersion7() throws Exception {
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);

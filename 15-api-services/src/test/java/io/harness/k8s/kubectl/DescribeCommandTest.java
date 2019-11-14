@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class DescribeCommandTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() {
     Kubectl client = Kubectl.client(null, null);

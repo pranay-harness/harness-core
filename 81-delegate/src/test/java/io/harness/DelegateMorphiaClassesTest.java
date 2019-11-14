@@ -13,21 +13,21 @@ import org.junit.experimental.categories.Category;
 
 public class DelegateMorphiaClassesTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelegateClassesModule() {
     new DelegateMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelegateSearchAndList() {
     new MorphiaModule().testAutomaticSearch(ImmutableSet.<Class>builder().build());
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelegateImplementationClassesModule() {
     new DelegateMorphiaRegistrar().testImplementationClassesModule();

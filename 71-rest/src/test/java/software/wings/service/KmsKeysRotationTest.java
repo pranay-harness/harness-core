@@ -80,7 +80,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void rotateAwsKeysSameARN() throws Exception {
@@ -113,7 +113,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void rotateAwsKeysAndArn() throws Exception {

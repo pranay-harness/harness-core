@@ -48,7 +48,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSaveAndGet() {
     ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(SOME_ACCOUNT_ID, new StaticLimit(10), CREATE_APPLICATION);
@@ -63,7 +63,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpsert() {
     String accountId = SOME_ACCOUNT_ID;
@@ -84,7 +84,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpsertForRateLimits() {
     String accountId = SOME_ACCOUNT_ID;

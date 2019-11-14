@@ -12,7 +12,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 
 public class PcfSetupStateExecutionDataTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     String org = "org";

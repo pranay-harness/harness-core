@@ -60,21 +60,21 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(emails = PUNEET, intermittent = true)
+  @Owner(developers = PUNEET, intermittent = true)
   @Category(FunctionalTests.class)
   public void testK8sRollingWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.ROLLING);
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(emails = PUNEET, intermittent = true)
+  @Owner(developers = PUNEET, intermittent = true)
   @Category({FunctionalTests.class})
   public void testK8sCanaryWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.CANARY);
   }
 
   @Test(timeout = TIMEOUT)
-  @Owner(emails = PUNEET, intermittent = true)
+  @Owner(developers = PUNEET, intermittent = true)
   @Category(FunctionalTests.class)
   public void testK8sBlueGreenWorkflow() {
     testK8sWorkflow(OrchestrationWorkflowType.BLUE_GREEN);

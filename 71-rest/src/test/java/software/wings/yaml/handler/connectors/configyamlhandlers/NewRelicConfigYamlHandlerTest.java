@@ -38,7 +38,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();
@@ -51,7 +51,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();

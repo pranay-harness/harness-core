@@ -44,7 +44,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   @Mock HttpHeaders httpHeaders;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainWebhookSource() {
     when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT))
@@ -59,7 +59,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainGHPushBranchAndCommitId() throws IOException {
     when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).thenReturn(GitHubEventType.PUSH.getValue());
@@ -70,7 +70,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainGHPullRequestBranchName() throws IOException {
     when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).thenReturn(GitHubEventType.PULL_REQUEST.getValue());
@@ -79,7 +79,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainBitBucketPushBranchAndCommitId() throws IOException {
     when(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT)).thenReturn(BitBucketEventType.PUSH.getValue());
@@ -90,7 +90,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainBitBucketPullBranchName() throws IOException {
     when(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT))
@@ -100,7 +100,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainGitLabBranchAndCommitId() throws IOException {
     when(httpHeaders.getHeaderString(X_GIT_LAB_EVENT)).thenReturn(GitLabEventType.PUSH.getValue());
@@ -111,7 +111,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainGitLabBranchNameForPullRequest() throws IOException {
     when(httpHeaders.getHeaderString(X_GIT_LAB_EVENT)).thenReturn(GitLabEventType.PULL_REQUEST.getValue());

@@ -61,7 +61,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test GET preference
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -84,7 +84,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test LIST preferences
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListPreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -107,7 +107,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test POST preference
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -134,7 +134,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test PUT preference
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePreference() {
     Preference deployPref = new DeploymentPreference();
@@ -158,7 +158,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test DELETE preference
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeletePreference() {
     Preference deployPref = new DeploymentPreference();

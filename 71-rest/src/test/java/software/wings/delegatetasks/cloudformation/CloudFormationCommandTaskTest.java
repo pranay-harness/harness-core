@@ -48,7 +48,7 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     CloudFormationCreateStackRequest createStackRequest =

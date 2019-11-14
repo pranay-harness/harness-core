@@ -19,7 +19,7 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private ShellExecutionServiceImpl shellExecutionService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteShellScript() {
     ShellExecutionRequest shellExecutionRequest = ShellExecutionRequest.builder()
@@ -34,7 +34,7 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteScriptTimeout() {
     ShellExecutionRequest shellExecutionRequest =

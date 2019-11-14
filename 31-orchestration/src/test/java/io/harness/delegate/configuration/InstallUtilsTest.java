@@ -13,7 +13,7 @@ import org.junit.experimental.categories.Category;
 
 public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetOsPathWindows() throws Exception {
     setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", true);
@@ -21,7 +21,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetOsPathMac() throws Exception {
     setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
@@ -30,7 +30,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testGetOsPathLinux() throws Exception {
     setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);

@@ -26,7 +26,7 @@ public class CachingTest extends WingsBaseTest {
    * Should cache repeated calls.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCacheRepeatedCalls() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);
@@ -39,7 +39,7 @@ public class CachingTest extends WingsBaseTest {
    * Should not cache when key is different.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCacheWhenKeyIsDifferent() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);

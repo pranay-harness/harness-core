@@ -134,7 +134,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionInsertChange() {
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
@@ -148,7 +148,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionUpdateChange() {
     when(searchDao.upsertDocument(eq(DeploymentSearchEntity.TYPE), eq(workflowExecutionId), any())).thenReturn(true);
@@ -161,7 +161,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionDeleteChange() {
     when(searchDao.deleteDocument(eq(DeploymentSearchEntity.TYPE), anyString())).thenReturn(true);
@@ -174,7 +174,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
@@ -188,7 +188,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.UPDATE);
@@ -200,7 +200,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentUpdateChange() {
     ChangeEvent environmentUpdateChangeEvent =
@@ -213,7 +213,7 @@ public class DeploymentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =

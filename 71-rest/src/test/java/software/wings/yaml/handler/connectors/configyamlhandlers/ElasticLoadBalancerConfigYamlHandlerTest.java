@@ -56,7 +56,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String name = "ELB" + System.currentTimeMillis();
@@ -69,7 +69,7 @@ public class ElasticLoadBalancerConfigYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String name = "ELB" + System.currentTimeMillis();

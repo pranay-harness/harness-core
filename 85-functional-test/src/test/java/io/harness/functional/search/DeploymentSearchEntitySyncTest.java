@@ -85,7 +85,7 @@ public class DeploymentSearchEntitySyncTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testDeploymentCRUDSync() {
     if (isSearchDisabled()) {

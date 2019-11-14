@@ -73,7 +73,7 @@ public class NewRelicDeploymentMarkerStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestTriggered() {
     NewRelicConfig newRelicConfig = NewRelicConfig.builder()

@@ -20,7 +20,7 @@ import java.util.Map;
 
 public class UtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToProperties() {
     List<NameValuePair> nameValuePairList = new ArrayList<>();
@@ -34,7 +34,7 @@ public class UtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyString() {
     assertThat(escapifyString("ab\\")).isEqualTo("ab\\\\");
@@ -52,7 +52,7 @@ public class UtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNameWithNextRevision() {
     assertThat(getNameWithNextRevision(ImmutableList.of("abc-def"), "abc-def")).isEqualTo("abc-def-1");

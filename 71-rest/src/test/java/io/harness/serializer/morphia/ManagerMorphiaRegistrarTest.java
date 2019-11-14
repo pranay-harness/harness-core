@@ -44,14 +44,14 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Inject HObjectFactory objectFactory;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testManagerClassesModule() {
     new ManagerMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testManagerSearchAndList() {
     new MorphiaModule().testAutomaticSearch(
@@ -59,14 +59,14 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testManagerImplementationClassesModule() {
     new ManagerMorphiaRegistrar().testImplementationClassesModule();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testManagerImplementationClasses() {
     Map<String, Class> classes = new HashedMap(objectFactory.getMorphiaInterfaceImplementers());

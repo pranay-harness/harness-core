@@ -28,7 +28,7 @@ public class ScheduledTriggerJobTest extends WingsBaseTest {
   private static final String triggerId = "Dummy Trigger Id";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void selfPrune() throws SchedulerException, InterruptedException, TimeoutException {
     TestJobListener listener = new TestJobListener(ScheduledTriggerJob.GROUP + "." + triggerId);

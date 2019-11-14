@@ -49,7 +49,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validate_winrm_error() throws IllegalAccessException {
     final SettingAttribute connectionSetting = new SettingAttribute();
@@ -63,7 +63,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validate_ssh_error() throws IllegalAccessException {
     final SettingAttribute connectionSetting = new SettingAttribute();
@@ -75,7 +75,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCriteria() throws IllegalAccessException {
     final SettingAttribute connectionSetting = new SettingAttribute();
@@ -90,7 +90,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareResult() throws IllegalAccessException {
     final DelegateConnectionResult result1 =

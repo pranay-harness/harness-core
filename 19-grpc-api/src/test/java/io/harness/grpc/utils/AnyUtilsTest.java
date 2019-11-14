@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 
 public class AnyUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testToFqcnGivesCorrectClassName() throws Exception {
     Any any = Any.pack(Lifecycle.newBuilder().build());
@@ -26,7 +26,7 @@ public class AnyUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testToClassGivesCorrectClass() throws Exception {
     Any any = Any.pack(Lifecycle.newBuilder().build());
@@ -34,7 +34,7 @@ public class AnyUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldThrowDataFormatExceptionIfUnpackingInvalidProto() throws Exception {
     assertThatExceptionOfType(DataFormatException.class)
@@ -42,7 +42,7 @@ public class AnyUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldUnpackValidProto() throws Exception {
     assertThatCode(() -> AnyUtils.unpack(Any.pack(Lifecycle.newBuilder().build()), Lifecycle.class))

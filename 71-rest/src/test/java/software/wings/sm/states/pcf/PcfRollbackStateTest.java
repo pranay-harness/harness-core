@@ -92,7 +92,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() throws Exception {
     on(context).set("variableProcessor", variableProcessor);

@@ -35,7 +35,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = JATIN, intermittent = true)
+  @Owner(developers = JATIN, intermittent = true)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();

@@ -55,7 +55,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoQueuedTasks() {
     serviceGuardAccountPoller.recordQueuedTaskMetric();
@@ -72,7 +72,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testQueuedTasks() {
     wingsPersistence.save(LearningEngineAnalysisTask.builder()

@@ -213,7 +213,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     GitFileChange gitFileChange = new GitFileChange();
@@ -251,7 +251,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     // Invalid yaml path

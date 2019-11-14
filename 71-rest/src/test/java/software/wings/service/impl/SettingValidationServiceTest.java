@@ -47,7 +47,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testElkValidate() throws IOException {
     final String url = "https://ec2-34-207-78-53.compute-1.amazonaws.com:9200/";
@@ -72,7 +72,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHostConnectionValidationForPrivateKeyField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =
@@ -98,7 +98,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHostConnectionValidationForUsernameField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =

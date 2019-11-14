@@ -49,7 +49,7 @@ public class SftpServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() throws IOException {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt", "dir1/b.txt"));
@@ -58,7 +58,7 @@ public class SftpServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuildDetails() throws IOException {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt"));

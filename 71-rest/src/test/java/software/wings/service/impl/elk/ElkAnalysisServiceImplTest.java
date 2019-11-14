@@ -54,7 +54,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogDataByHostForTotalHitsAndThreshold() throws IOException {
     String accountId = generateUuid();
@@ -85,7 +85,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogDataByHostForTotalHitsAndThresholdVersion() throws IOException {
     String accountId = generateUuid();
@@ -116,7 +116,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryPassesIfTotalHitsIsLessThenTheThreshold() throws IOException {
     String accountId = generateUuid();
@@ -139,7 +139,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryPassesIfTotalHitsIsLessThenTheThresholdVersion7() throws IOException {
     String accountId = generateUuid();
@@ -162,7 +162,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryThrowsWingsExceptionIfTotalHitsIsLessThenTheThreshold() throws IOException {
     String accountId = generateUuid();
@@ -192,7 +192,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryThrowsWingsExceptionIfTotalHitsIsLessThenTheThresholdVersion7() throws IOException {
     String accountId = generateUuid();
@@ -222,7 +222,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryThrowsWingsExceptionIfSearchThrowsRuntimeException() throws IOException {
     String accountId = generateUuid();

@@ -69,7 +69,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = JATIN)
+  @Owner(developers = JATIN)
   @Repeat(times = 10, successes = 10)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -115,7 +115,7 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = JATIN)
+  @Owner(developers = JATIN)
   @Repeat(times = 10, successes = 10)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")

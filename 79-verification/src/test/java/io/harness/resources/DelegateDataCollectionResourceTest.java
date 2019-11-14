@@ -32,7 +32,7 @@ public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testPostCVActivityLog() {
     WebTarget target =

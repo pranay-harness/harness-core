@@ -81,7 +81,7 @@ public class K8sDeployment extends AbstractE2ETest {
   private static ExecutionArgs executionArgs_V2;
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC0_createApplication() {
     // Test data setup
@@ -98,7 +98,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC1_createK8sV1ServiceMapArtifactStream() {
     Service service = Service.builder().name(SERVICE_NAME_V1).artifactType(ArtifactType.DOCKER).build();
@@ -117,7 +117,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC2_createK8sV1EnvironmentAndInfraMapping() {
     Environment myEnv = anEnvironment().name(ENV_MAME_V1).environmentType(EnvironmentType.PROD).build();
@@ -148,7 +148,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC3_CreateK8sV1CanaryWorkflow() throws Exception {
     workflow_V1 = aWorkflow()
@@ -169,7 +169,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC4_DeployK8sV1Workflow() {
     String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
@@ -185,7 +185,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC5_checkV1ExecutionStarted() {
     ExecutionRestUtils.executeAndCheck(
@@ -193,7 +193,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC6_createK8sV2ServiceMapArtifactStream() {
     Service service = Service.builder()
@@ -217,7 +217,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC7_createK8sV2EnvironmentAndInfraMapping() {
     Environment myEnv = anEnvironment().name(ENV_MAME_V2).environmentType(EnvironmentType.PROD).build();
@@ -248,7 +248,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC8_CreateK8sV2CanaryWorkflow() throws Exception {
     workflow_V2 = aWorkflow()
@@ -269,7 +269,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC91_DeployK8sV2Workflow() {
     String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
@@ -285,7 +285,7 @@ public class K8sDeployment extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = UJJAWAL)
+  @Owner(developers = UJJAWAL)
   @Category(E2ETests.class)
   public void TC92_checkV2ExecutionStarted() {
     ExecutionRestUtils.executeAndCheck(

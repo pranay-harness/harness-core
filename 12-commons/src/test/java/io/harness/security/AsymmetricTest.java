@@ -30,7 +30,7 @@ public class AsymmetricTest extends CategoryTest {
   @Inject AsymmetricDecryptor asymmetricDecryptor;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEncoding()
       throws NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException,

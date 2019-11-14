@@ -62,7 +62,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSavePipelineTriggerNoArtifactSelections() {
     Pipeline pipeline = buildPipeline();
@@ -85,7 +85,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowConditionPipelineNotExistException() {
     pipelineTrigger.setCondition(PipelineCondition.builder().pipelineId("InvalidPipelineId").build());
@@ -94,7 +94,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowConditionPipelineExceptionForNull() {
     pipelineTrigger.setCondition(PipelineCondition.builder().pipelineId(null).build());
@@ -103,7 +103,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowActionPipelineNotExistException() {
     pipelineTrigger.setAction(
@@ -113,7 +113,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForSameActionAndCondition() {
     pipelineTrigger.setAction(
@@ -123,7 +123,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowActionPipelineExceptionForNull() {
     pipelineTrigger.setAction(
@@ -133,7 +133,7 @@ public class PipelineConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowConditionPipelineInvalidException() {
     pipelineTrigger.setCondition(PipelineCondition.builder().pipelineId("InvalidPipelineId").build());

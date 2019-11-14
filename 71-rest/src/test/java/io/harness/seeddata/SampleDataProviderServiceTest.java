@@ -51,7 +51,7 @@ public class SampleDataProviderServiceTest extends WingsBaseTest {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateSampleApp() {
     Account savedAccount = wingsPersistence.saveAndGet(Account.class,
@@ -103,7 +103,7 @@ public class SampleDataProviderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateSampleAppWithInfraDefinitions() {
     Account account =

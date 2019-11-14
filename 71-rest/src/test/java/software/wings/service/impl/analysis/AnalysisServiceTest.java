@@ -65,7 +65,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateJira() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -108,7 +108,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateJiraMissingTaskParams() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -136,7 +136,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateJiraMissingJiraConfigId() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -156,7 +156,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void changePriorityAfterJira() {
     testCreateJira();
@@ -178,7 +178,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFeedbackWithEmptyLogMessage() {
     CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()

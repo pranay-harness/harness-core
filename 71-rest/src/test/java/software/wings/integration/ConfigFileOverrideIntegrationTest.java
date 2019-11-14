@@ -181,7 +181,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(emails = BRETT)
+  @Owner(developers = BRETT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldApplyServiceConfigFilesIT() throws IOException {

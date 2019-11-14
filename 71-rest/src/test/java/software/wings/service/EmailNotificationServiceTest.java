@@ -146,7 +146,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmailWithTemplate() {
     emailDataNotificationService.send(nonSystemEmailTemplateData);
@@ -161,7 +161,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmailWithBody() {
     emailDataNotificationService.send(nonSystemEmailBodyData);
@@ -177,7 +177,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendSystemEmailWithTemplate() {
     emailDataNotificationService.send(systemEmailTemplateData);
@@ -192,7 +192,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendCustomerEmailWithBody() {
     emailDataNotificationService.send(customerEmailBodyData);
@@ -208,7 +208,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendAsyncEmailWithTemplate() {
     emailDataNotificationService.sendAsync(nonSystemEmailTemplateData);
@@ -221,7 +221,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void sendAsyncWithBody() {
     emailDataNotificationService.sendAsync(nonSystemEmailBodyData);
@@ -229,7 +229,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmailAlerts() {
     doThrow(new WingsException(ErrorCode.EMAIL_FAILED))
@@ -244,7 +244,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultToMainConfiguration() {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name()))
@@ -256,7 +256,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidSmtpConfiguration() {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name()))

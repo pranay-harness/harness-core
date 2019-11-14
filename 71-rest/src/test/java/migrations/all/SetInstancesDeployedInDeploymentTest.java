@@ -42,7 +42,7 @@ public class SetInstancesDeployedInDeploymentTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SetInstancesDeployedInDeployment setInstancesDeployedInDeployment;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMigrate() throws SQLException {
     String workflowExecutionId = generateUuid();

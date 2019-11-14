@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 public class HelmClientTest extends CategoryTest {
   private HelmClient helmClient = new HelmClientImpl();
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldInstall() throws InterruptedException, IOException, TimeoutException, ExecutionException {
@@ -44,7 +44,7 @@ public class HelmClientTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdate() throws InterruptedException, IOException, TimeoutException, ExecutionException {
@@ -63,7 +63,7 @@ public class HelmClientTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRollback() throws InterruptedException, IOException, TimeoutException {

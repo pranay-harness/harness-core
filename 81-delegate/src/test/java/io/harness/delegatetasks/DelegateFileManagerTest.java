@@ -108,7 +108,7 @@ public class DelegateFileManagerTest extends CategoryTest {
           .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
@@ -127,7 +127,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDownloadArtifactAtRuntimeForArtifactory() throws IOException, ExecutionException {
     String fileContent = "test";
@@ -146,7 +146,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetArtifactFileSize() {
     when(artifactCollectionTaskHelper.getArtifactFileSize(any(ArtifactStreamAttributes.class))).thenReturn(1234L);

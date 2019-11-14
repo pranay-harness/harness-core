@@ -36,7 +36,7 @@ public class ManifestFileYamlHandlerTest extends WingsBaseTest {
   @Inject @InjectMocks ManifestFileYamlHandler manifestFileYamlHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetManifestFileYamlTypeFromAppManifest() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).build();

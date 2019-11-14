@@ -39,7 +39,7 @@ public class ArtifactServiceImplTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchAMIBuilds() {
     artifactStream.setRegion("TestRegion");
@@ -48,7 +48,7 @@ public class ArtifactServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchNonAMIBuilds() {
     assertThat(artifactService.prepareArtifactWithMetadataQuery(jenkinsArtifactStream)).isNotNull();

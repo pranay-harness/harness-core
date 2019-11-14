@@ -41,7 +41,7 @@ public class SplunkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String splunkProviderName = "Splunk" + System.currentTimeMillis();
@@ -54,7 +54,7 @@ public class SplunkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String splunkProviderName = "Splunk" + System.currentTimeMillis();

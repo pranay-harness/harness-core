@@ -129,7 +129,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     when(searchDao.addTimestamp(
@@ -155,7 +155,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationInsertChange() {
     ChangeEvent applicationInsertChangeEvent =
@@ -166,7 +166,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationDeleteChange() {
     ChangeEvent applicationDeleteChangeEvent =
@@ -177,7 +177,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
@@ -188,7 +188,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceInsertChange() {
     ChangeEvent serviceInsertChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.INSERT);
@@ -200,7 +200,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceDeleteChange() {
     ChangeEvent serviceDeleteChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.DELETE);
@@ -212,7 +212,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.UPDATE);
@@ -224,7 +224,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentInsertChange() {
     ChangeEvent environmentInsertChangeEvent =
@@ -237,7 +237,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentDeleteChange() {
     ChangeEvent environmentDeleteChangeEvent =
@@ -250,7 +250,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentUpdateChange() {
     ChangeEvent environmentUpdateChangeEvent =
@@ -263,7 +263,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
     ChangeEvent workflowInsertChangeEvent =
@@ -276,7 +276,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
     ChangeEvent workflowDeleteChangeEvent =
@@ -289,7 +289,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
@@ -302,7 +302,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineInsertChange() {
     ChangeEvent pipelineInsertChangeEvent =
@@ -315,7 +315,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineDeleteChange() {
     ChangeEvent pipelineDeleteChangeEvent =
@@ -328,7 +328,7 @@ public class ApplicationChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
     ChangeEvent pipelineUpdateChangeEvent =

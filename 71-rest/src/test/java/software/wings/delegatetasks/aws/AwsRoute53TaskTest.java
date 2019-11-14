@@ -37,7 +37,7 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsRoute53Request request = AwsRoute53ListHostedZonesRequest.builder().build();

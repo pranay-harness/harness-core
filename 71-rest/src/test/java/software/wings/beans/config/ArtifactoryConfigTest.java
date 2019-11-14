@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class ArtifactoryConfigTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {
     ArtifactoryConfig artifactoryConfig = new ArtifactoryConfig();
@@ -23,7 +23,7 @@ public class ArtifactoryConfigTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldArtifactoryHasCredentials() {
     ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder()
@@ -35,7 +35,7 @@ public class ArtifactoryConfigTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldArtifactoryHasNoCredentials() {
     ArtifactoryConfig artifactoryConfig = new ArtifactoryConfig();

@@ -34,7 +34,7 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
   @Inject @InjectMocks private GitChangeSetRunnable gitChangeSetRunnable;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldPerformStuckJobCheck() throws IllegalAccessException {
     assertThat(gitChangeSetRunnable.shouldPerformStuckJobCheck()).isTrue();
@@ -49,7 +49,7 @@ public class GitChangeSetRunnableTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRetryAnyStuckYamlChangeSet() {
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder().accountId(WingsTestConstants.ACCOUNT_ID).build();

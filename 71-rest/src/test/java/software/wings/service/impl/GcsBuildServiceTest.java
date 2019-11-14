@@ -54,7 +54,7 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     List<BuildDetails> buildDetails = Lists.newArrayList(
@@ -68,7 +68,7 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuckets() {
     when(gcsService.listBuckets(gcpConfig, null, null))
@@ -78,7 +78,7 @@ public class GcsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(gcsService.getArtifactPaths(any(), any(), any())).thenReturn(Lists.newArrayList("path1"));

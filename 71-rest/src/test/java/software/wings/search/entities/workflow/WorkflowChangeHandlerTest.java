@@ -135,7 +135,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = workflowChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
@@ -156,7 +156,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
     Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
@@ -170,7 +170,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
     Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
@@ -184,7 +184,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     Workflow workflow = WorkflowEntityTestUtils.createWorkflow(
@@ -198,7 +198,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent = ServiceEntityTestUtils.createServiceChangeEvent(service, ChangeType.UPDATE);
@@ -210,7 +210,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentUpdateChange() {
     ChangeEvent environmentUpdateChangeEvent =
@@ -224,7 +224,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
@@ -239,7 +239,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
     ChangeEvent pipelineUpdateChangeEvent =
@@ -265,7 +265,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineDeleteChange() {
     ChangeEvent pipelineDeleteChangeEvent =
@@ -284,7 +284,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
@@ -300,7 +300,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
@@ -313,7 +313,7 @@ public class WorkflowChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionChange() {
     ChangeEvent workflowExecutionDeleteChangeEvent =

@@ -54,7 +54,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     doReturn(new DescribeServicesResult().withServices(

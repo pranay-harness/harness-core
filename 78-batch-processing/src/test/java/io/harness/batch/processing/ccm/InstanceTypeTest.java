@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class InstanceTypeTest extends CategoryTest {
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testInstanceType() {
     InstanceType instanceType = InstanceType.EC2_INSTANCE;

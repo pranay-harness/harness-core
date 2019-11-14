@@ -71,7 +71,7 @@ public class K8sScaleTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForFailure() {
     when(k8sStateHelper.getActivityId(context)).thenReturn(ACTIVITY_ID);

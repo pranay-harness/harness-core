@@ -47,7 +47,7 @@ public class EnvironmentTest extends GraphQLTest {
   @Inject EnvironmentGenerator environmentGenerator;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironment() {
     final Seed seed = new Seed(0);
@@ -102,7 +102,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingEnvironment() {
     String query = $GQL(/*
@@ -120,7 +120,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironments() {
     final Seed seed = new Seed(0);

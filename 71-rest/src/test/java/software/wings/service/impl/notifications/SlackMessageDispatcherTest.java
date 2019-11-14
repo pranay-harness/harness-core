@@ -37,7 +37,7 @@ public class SlackMessageDispatcherTest extends WingsBaseTest {
   @Mock private NotificationMessageResolver notificationMessageResolver;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendSlackMessage() {
     when(notificationMessageResolver.getSlackTemplate(ENTITY_CREATE_NOTIFICATION.name())).thenReturn("some template");

@@ -86,7 +86,7 @@ public class KubernetesSwapServiceSelectorsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     KubernetesSwapServiceSelectorsResponse kubernetesSwapServiceSelectorsResponse =
@@ -101,7 +101,7 @@ public class KubernetesSwapServiceSelectorsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     on(kubernetesSwapServiceSelectors).set("service1", "service1");

@@ -22,7 +22,7 @@ import java.net.URL;
 
 public class EncodingUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCompression() throws Exception {
     StringBuilder stringToCompress = new StringBuilder(generateUuid());
@@ -36,7 +36,7 @@ public class EncodingUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCompressionWithStringEncoding() throws Exception {
     StringBuilder stringToCompress = new StringBuilder(generateUuid());
@@ -50,7 +50,7 @@ public class EncodingUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBase64() throws Exception {
     URL url = this.getClass().getResource("/dos-config.yaml");

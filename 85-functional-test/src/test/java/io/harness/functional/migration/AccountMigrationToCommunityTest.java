@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTest {
   @Test
-  @Owner(emails = ANKIT)
+  @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)
   public void testMigrateAlreadyCompliantTrialAccountToCommunity() {
     updateAccountLicense(AccountType.COMMUNITY);
@@ -26,7 +26,7 @@ public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTes
   }
 
   @Test
-  @Owner(emails = ANKIT)
+  @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)
   public void testMigrateNonCompliantTrialAccountToCommunity() {
     makeAccountNonCompliant();

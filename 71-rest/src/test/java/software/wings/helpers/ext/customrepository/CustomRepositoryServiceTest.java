@@ -36,7 +36,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   private static final String ARTIFACT_RESULT_PATH = "ARTIFACT_RESULT_PATH";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildDetails() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"
@@ -81,7 +81,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildsWithCustomMapping() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"
@@ -121,7 +121,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildsWithInvalidCustomMappingWithoutArtifactRoot() {
     Map<String, String> attributeMapping = new HashMap<>();
@@ -137,7 +137,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildsWithInvalidCustomMappingWithoutBuildNo() {
     Map<String, String> attributeMapping = new HashMap<>();

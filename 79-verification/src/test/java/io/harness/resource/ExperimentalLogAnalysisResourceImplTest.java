@@ -71,7 +71,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveLogAnalysisMLRecords_shouldSuccess() throws IOException {
     Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);
@@ -87,7 +87,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveLogAnalysisMLRecordsNoWorkflow() throws IOException {
     Call<RestResponse<WorkflowExecution>> restCall = mock(Call.class);
@@ -103,7 +103,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogExpAnalysisInfo_shouldSuccess() throws IOException {
     List<ExpAnalysisInfo> expectedData = getLogMLExpAnalysisInfo();
@@ -114,7 +114,7 @@ public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTes
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExperimentalTask_shouldSuccess() throws IOException {
     RestResponse<Boolean> response =

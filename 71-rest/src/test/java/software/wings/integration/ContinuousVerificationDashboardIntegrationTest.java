@@ -144,7 +144,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getRecords() throws Exception {
     saveExecutions();
@@ -184,7 +184,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllCVDeploymentRecords() {
     // Setup
@@ -226,7 +226,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllDeploymentRecords() {
     // Setup
@@ -268,7 +268,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllDeploymentRecordsWFWithoutServiceIds() {
     // Setup
@@ -315,7 +315,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllCVRecordsHarnessAccount() {
     saveExecutions();
@@ -346,7 +346,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllCVRecordsNonHarnessAccount() {
     saveExecutions();

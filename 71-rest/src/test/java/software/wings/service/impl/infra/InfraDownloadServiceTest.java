@@ -73,7 +73,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInfraDownloadFailForEnvWhenNoServiceAccDefined() {
     String url = infraDownloadService.getDownloadUrlForDelegate("4333");
@@ -81,7 +81,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInfraDownloadFailForWatcherEnvWhenNoServiceAccDefined() {
     String url = infraDownloadService.getDownloadUrlForWatcher("4333");
@@ -89,7 +89,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInfraDownloadDelegate() throws Exception {
     String path = "tmp.json";
@@ -108,7 +108,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingToken() throws Exception {
     String path = "tmp.json";
@@ -132,7 +132,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingTokenCached() throws Exception {
     String path = "tmp.json";
@@ -157,7 +157,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingTokenBadToken() throws Exception {
     String path = "tmp.json";
@@ -174,7 +174,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingTokenNoServiceAcc() {
     AccessTokenBean token = infraDownloadService.getStackdriverLoggingToken();

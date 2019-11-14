@@ -17,7 +17,7 @@ import java.util.Random;
 
 public class AnalysisContextTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIteration() throws IllegalAccessException {
     final AnalysisContext analysisContext = AnalysisContext.builder().stateExecutionId(generateUuid()).build();

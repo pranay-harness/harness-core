@@ -77,7 +77,7 @@ public class SshDeploymentE2ETests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = OwnerRule.AADITI)
+  @Owner(developers = OwnerRule.AADITI)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void runBasicWorkflowWithServiceCommandLinkedToWorkflow() {

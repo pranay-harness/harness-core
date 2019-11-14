@@ -21,7 +21,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 
 public class PageRequestTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testElemMatchPageRequest() {
     MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
@@ -40,7 +40,7 @@ public class PageRequestTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMissingIndexPageRequest() {
     MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();

@@ -162,7 +162,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldExecutePipeline() {
     Workflow workflow = constructCanaryOrchestrationWorkflow();

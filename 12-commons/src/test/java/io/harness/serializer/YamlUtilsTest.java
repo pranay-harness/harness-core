@@ -33,7 +33,7 @@ public class YamlUtilsTest extends CategoryTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadCatalogs() throws IOException {
     URL url = this.getClass().getResource("/sample-catalogs.yml");

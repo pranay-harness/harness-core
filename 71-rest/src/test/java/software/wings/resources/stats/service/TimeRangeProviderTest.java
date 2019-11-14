@@ -16,7 +16,7 @@ import java.util.List;
 
 public class TimeRangeProviderTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void monthlyRanges() {
     LocalDateTime from = LocalDateTime.parse("2018-10-03T10:15:30");

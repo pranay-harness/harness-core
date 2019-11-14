@@ -56,7 +56,7 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldWriteEc2InstanceInfo() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
@@ -74,7 +74,7 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void updateEc2InstantStartTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(
@@ -94,7 +94,7 @@ public class Ec2InstanceInfoLifecycleWriterTest extends CategoryTest implements 
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void updateEc2InstantStopTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(

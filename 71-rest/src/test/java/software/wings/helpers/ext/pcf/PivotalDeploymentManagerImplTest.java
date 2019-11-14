@@ -37,7 +37,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @InjectMocks @Inject PcfDeploymentManagerImpl deploymentManager;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetOrganizations() throws Exception {
     OrganizationSummary summary1 = OrganizationSummary.builder().id("1").name("org1").build();
@@ -50,7 +50,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getAppPrefixByRemovingNumber() {
     assertThat(StringUtils.EMPTY).isEqualTo(deploymentManager.getAppPrefixByRemovingNumber(null));
@@ -58,7 +58,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getMatchesPrefix() {
     ApplicationSummary applicationSummary = ApplicationSummary.builder()
@@ -119,7 +119,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testChangeAutoscalarState() throws Exception {
     reset(client);
@@ -136,7 +136,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformConfigureAutoscalar() throws Exception {
     reset(client);

@@ -40,7 +40,7 @@ public class GrpcServiceConfigurationModuleTest extends BaseIntegrationTest {
       new YamlConfigurationFactory<>(MainConfiguration.class, validator, objectMapper, "dw");
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(E2ETests.class)
   @Ignore("This test should be enabled after the gRPC module removes dependency on PerpetualTaskService.")
   public void test() throws Exception {

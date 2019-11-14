@@ -91,7 +91,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeployIISAppWithPhysicalInfra() throws Exception {
@@ -136,7 +136,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeployIISAppWithAzureCloudProvider() throws Exception {

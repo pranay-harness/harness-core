@@ -38,7 +38,7 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private ElasticsearchBulkMigrationHelper elasticsearchBulkMigrationHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSearchEntityBulkMigration() throws IOException {
     Account account = new Account();

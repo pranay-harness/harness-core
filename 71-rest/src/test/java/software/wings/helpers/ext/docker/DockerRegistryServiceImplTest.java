@@ -31,14 +31,14 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
       DockerConfig.builder().dockerRegistryUrl(url).username("username").password("password".toCharArray()).build();
 
   @Test(expected = InvalidArtifactServerException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCredentialForIOException() {
     dockerRegistryService.validateCredentials(dockerConfig, null);
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCredentialForMissingPassword() {
     try {
@@ -52,7 +52,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildDetails() {
     try {
@@ -64,7 +64,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsSuccessfulNullResponse() {
     try {
@@ -76,7 +76,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsSuccessfulErrorCode500() {
     try {

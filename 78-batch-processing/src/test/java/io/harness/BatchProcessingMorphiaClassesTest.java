@@ -16,14 +16,14 @@ import software.wings.WingsBaseTest;
 
 public class BatchProcessingMorphiaClassesTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchProcessingClassesModule() {
     new BatchProcessingMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(emails = VIKAS)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   @Ignore("fix this later, the setup for this test project is incomplete")
   public void testEventSearchAndList() {
@@ -31,7 +31,7 @@ public class BatchProcessingMorphiaClassesTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchProcessingImplementationClassesModule() {
     new BatchProcessingMorphiaRegistrar().testImplementationClassesModule();

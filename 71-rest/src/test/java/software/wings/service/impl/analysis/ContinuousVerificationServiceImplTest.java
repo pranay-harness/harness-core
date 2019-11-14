@@ -175,7 +175,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         .build();
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNullUser() throws ParseException, IllegalAccessException {
     setupMocks();
@@ -191,7 +191,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllValidPermissions() throws ParseException {
     LinkedHashMap<Long,
@@ -206,7 +206,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoPermissionsForEnvironment() throws ParseException {
     AppPermissionSummary permissionSummary = buildAppPermissionSummary();
@@ -227,7 +227,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoPermissionsForService() throws ParseException {
     AppPermissionSummary permissionSummary = buildAppPermissionSummary();
@@ -246,7 +246,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDataDogMetricEndPointCreation() {
     String expectedDockerCPUMetricURL =
@@ -283,7 +283,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHeatMapResolutionEnum() {
     long endTime = System.currentTimeMillis();
@@ -334,7 +334,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateCVTask247() {
     CVConfiguration cvConfiguration = mock(CVConfiguration.class);
@@ -356,7 +356,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAppdynamicsMetricType() {
     AppDynamicsCVServiceConfiguration cvConfig = AppDynamicsCVServiceConfiguration.builder()
@@ -385,7 +385,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNewRelicMetricType() {
     NewRelicCVServiceConfiguration cvConfig =
@@ -404,7 +404,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDynatraceMetricType() {
     DynaTraceCVServiceConfiguration cvConfig =
@@ -428,7 +428,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPrometheusMetricType() {
     PrometheusCVServiceConfiguration cvConfig =
@@ -454,7 +454,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAPMMetricType() {
     APMCVServiceConfiguration cvConfig =
@@ -471,7 +471,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCloudWatchMetricType() {
     final Map<AwsNameSpace, List<CloudWatchMetric>> awsNameSpaceMetrics = CloudWatchServiceImpl.fetchMetrics();
@@ -493,7 +493,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDatadogetricType() throws IOException {
     YamlUtils yamlUtils = new YamlUtils();

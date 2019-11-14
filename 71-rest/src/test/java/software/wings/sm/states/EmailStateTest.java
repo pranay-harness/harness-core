@@ -104,7 +104,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should send email.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmail() {
     emailState.setBody("body");
@@ -129,7 +129,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should evaluate context elements for email subject and body.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateContextElementsForEmailSubjectAndBody() {
     emailState.setBody("Deployed to host ${host.hostName}");
@@ -161,7 +161,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should capture error message when failed to send email.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCaptureErrorMessageWhenFailedToSendEmail() {
     doThrow(new RuntimeException("Test exception")).when(emailNotificationService).send(emailData);
@@ -183,7 +183,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should return execution result as error when not ignored.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnExecutionResultAsErrorWhenNotIgnored() {
     doThrow(new RuntimeException("Test exception")).when(emailNotificationService).send(emailData);
@@ -206,7 +206,7 @@ public class EmailStateTest extends WingsBaseTest {
    * Should render deployment triggered by for email subject and body.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderDeploymentTriggeredBy() {
     emailState.setBody("Deployment triggered by: ${deploymentTriggeredBy}");

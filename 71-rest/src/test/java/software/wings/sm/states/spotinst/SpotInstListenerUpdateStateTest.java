@@ -65,7 +65,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   @InjectMocks SpotInstListenerUpdateState state = new SpotInstListenerUpdateState("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldElastiGroup(true);
@@ -138,7 +138,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

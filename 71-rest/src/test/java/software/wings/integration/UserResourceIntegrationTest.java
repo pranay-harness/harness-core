@@ -30,7 +30,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLoginTypeResponseForNewAdminUserShouldReturnUserPassWord() {
     String argument = "userName=admin@harness.io";
@@ -42,7 +42,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLoginTypeResponseForNonExistentUserShouldReturnUserPassWord() {
     String nonExistingUserArgument = "userName=random@xyz";

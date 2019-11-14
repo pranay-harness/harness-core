@@ -42,7 +42,7 @@ public class InstanceDataIntegrationTest extends BaseIntegrationTest {
   @Autowired private HPersistence hPersistence;
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   @Ignore("Under Investigation, as discussed with Owner")
   public void shouldCreateInstanceData() {

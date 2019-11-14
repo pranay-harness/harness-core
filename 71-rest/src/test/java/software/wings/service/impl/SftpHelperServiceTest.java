@@ -58,7 +58,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
                                                    .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSftpPaths() throws IOException {
     List<String> artifactPaths = new ArrayList<>();
@@ -77,7 +77,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSftpConnectionHost() {
     assertThat(sftpHelperService.getSFTPConnectionHost(SFTP_WIN_URL)).isNotEmpty().isEqualTo("10.0.0.1");
@@ -87,7 +87,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCheckConnectionSFTPServer() throws IOException {
     doNothing().when(sshClient).connect(sftpHelperService.getSFTPConnectionHost(SFTP_WIN_URL));
@@ -97,7 +97,7 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactBuildDetails() throws IOException {
     // Create SFTP client

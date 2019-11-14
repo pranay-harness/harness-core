@@ -92,7 +92,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncAppCreatedOnHarness() throws Exception {
@@ -111,7 +111,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncServiceCreatedOnHarness() throws Exception {
@@ -187,7 +187,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANSHUL)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncCloudProviderCreatedOnHarness() throws Exception {
@@ -209,7 +209,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANSHUL)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncInfraProvisionerCreatedOnHarness() throws Exception {
@@ -231,7 +231,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANSHUL)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncEnvironmentCreatedOnHarness() throws Exception {
@@ -252,7 +252,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
   // Environment with Physical Service Infra
   @Test
-  @Owner(emails = ANSHUL)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGitSyncEnvironment1CreatedOnHarness() throws Exception {

@@ -175,7 +175,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_Gcp() {
     List<ContainerInfo> result = containerService.getContainerInfos(gcpParams);
@@ -183,7 +183,7 @@ public class ContainerServiceTest extends WingsBaseTest {
     assertThat(result.size()).isEqualTo(1);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_Aws() {
     List<ContainerInfo> result = containerService.getContainerInfos(awsParams);
@@ -191,7 +191,7 @@ public class ContainerServiceTest extends WingsBaseTest {
     assertThat(result.size()).isEqualTo(0);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_DirectKube() {
     List<ContainerInfo> result = containerService.getContainerInfos(kubernetesConfigParams);

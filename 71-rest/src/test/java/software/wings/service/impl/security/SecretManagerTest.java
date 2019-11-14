@@ -100,7 +100,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMaskEncryptedFields() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
@@ -109,7 +109,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testResetUnchangedEncryptedFields() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build();
@@ -123,7 +123,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListSecrets_withEmptyResponse() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -145,7 +145,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListSecrets_withLargePageSize_multipleBatches() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -172,7 +172,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListSecrets_withFullResponse_singleBatch() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -197,7 +197,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListSecrets_withFullResponse_multiBatches() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -224,7 +224,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_Yaml_VaultPath_conversion() throws Exception {
     String encryptedDataId = UUIDGenerator.generateUuid();
@@ -282,7 +282,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSecretManager() {
     when(localEncryptionService.getEncryptionConfig(anyString()))
@@ -314,7 +314,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void encryptedDataDetails() {
     EncryptedData mockEncryptedData = mock(EncryptedData.class);
@@ -334,7 +334,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getEncryptionDetails() {
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, ACCOUNT_ID)).thenReturn(true);
@@ -386,7 +386,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testImportSecretsViaFile() {
     try {

@@ -130,7 +130,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnNoArtifactStream() {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(null);
@@ -141,7 +141,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteWithDelayQueue() {
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream)).thenReturn(null);
@@ -152,7 +152,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponse() {
     artifactCollectionState.handleAsyncResponse(executionContext,
@@ -162,7 +162,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldArtifactCollectionEvaluateBuildNo() {
     artifactCollectionState.setBuildNo("${regex.extract('...', ${workflow.variables.sourceCommitHash})}");
@@ -175,7 +175,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("for srinivas to modify; need to simulate real Jenkins")
   public void shouldArtifactCollectionEvaluateBuildNoFromDescription() {
@@ -189,7 +189,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = artifactCollectionState.getTimeoutMillis();
@@ -197,7 +197,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     artifactCollectionState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
@@ -206,7 +206,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAbort() {
     executionContext.getStateExecutionInstance().setStateExecutionMap(

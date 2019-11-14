@@ -76,7 +76,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getJobs() {
@@ -85,7 +85,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getPlans() {
@@ -94,7 +94,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getPlansWithType() {
@@ -106,7 +106,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getArtifactPaths() {
@@ -117,7 +117,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getBuilds() {
@@ -136,7 +136,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("Unit tests should not access external resources")
   public void getLastSuccessfulBuild() {

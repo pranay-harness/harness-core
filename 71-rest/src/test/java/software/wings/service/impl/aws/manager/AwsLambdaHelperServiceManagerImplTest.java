@@ -39,7 +39,7 @@ public class AwsLambdaHelperServiceManagerImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getFunctionDetails() throws InterruptedException {
     final AwsLambdaDetailsRequest awsLambdaDetailsRequest =
@@ -54,7 +54,7 @@ public class AwsLambdaHelperServiceManagerImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getFunctionDetails_error() throws InterruptedException {
     final AwsLambdaDetailsRequest awsLambdaDetailsRequest =

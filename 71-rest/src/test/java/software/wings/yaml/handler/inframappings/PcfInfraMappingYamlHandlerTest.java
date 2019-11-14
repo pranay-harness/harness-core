@@ -138,7 +138,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
@@ -171,7 +171,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =

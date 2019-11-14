@@ -309,7 +309,7 @@ public class SecureResourceTest extends CategoryTest {
    * Should get public resource without authorization.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPublicResourceWithoutAuthorization() {
     Response response = resources.client().target("/secure-resources/publicApiAuthTokenNotRequired").request().get();
@@ -320,7 +320,7 @@ public class SecureResourceTest extends CategoryTest {
    * Should deny access for non public resource without valid token.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
     Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
@@ -332,7 +332,7 @@ public class SecureResourceTest extends CategoryTest {
    * Should require authorization by default for non public resource.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRequireAuthorizationByDefaultForNonPublicResource() {
     RestResponse<User> response = resources.client()
@@ -347,7 +347,7 @@ public class SecureResourceTest extends CategoryTest {
    * Should authorize app scope resource read request for user with required permission.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAuthorizeAppScopeResourceReadRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceReadActionRole));
@@ -364,7 +364,7 @@ public class SecureResourceTest extends CategoryTest {
    * Should authorize app scope resource write request for user with required permission.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAuthorizeAppScopeResourceWriteRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceCreateActionRole));
@@ -381,7 +381,7 @@ public class SecureResourceTest extends CategoryTest {
    * Should authorize env scope resource read request for user with required permission.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
     user.setRoles(asList(envAllResourceReadActionRole));
@@ -399,7 +399,7 @@ public class SecureResourceTest extends CategoryTest {
    * Should authorize env scope resource write request for user with required permission.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAuthorizeEnvScopeResourceWriteRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceCreateActionRole));
@@ -414,7 +414,7 @@ public class SecureResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateTokenForDelegate() {
     RestResponse<String> response = resources.client()

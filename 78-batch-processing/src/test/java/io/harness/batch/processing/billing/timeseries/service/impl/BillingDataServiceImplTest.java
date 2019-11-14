@@ -45,7 +45,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testCreateBillingData() throws SQLException {
     when(statement.execute()).thenReturn(true);
@@ -55,7 +55,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testNullCreateBillingData() throws SQLException {
     when(statement.execute()).thenThrow(new SQLException());

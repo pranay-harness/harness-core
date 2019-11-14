@@ -22,7 +22,7 @@ public class VersionInfoManagerTest extends CategoryTest {
       + "timestamp : 180621-0636";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetVersionInfo() {
     VersionInfoManager versionInfoManager = new VersionInfoManager(sampleVersionInfoYaml);
@@ -35,7 +35,7 @@ public class VersionInfoManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetVersionInfoDefault() throws Exception {
     InputStream stream = VersionInfoManager.class.getClassLoader().getResourceAsStream("versionInfo.yaml");

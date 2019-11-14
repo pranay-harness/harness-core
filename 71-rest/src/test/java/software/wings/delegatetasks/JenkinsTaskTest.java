@@ -89,7 +89,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
@@ -115,7 +115,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
@@ -139,7 +139,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWhenBuildUnstable() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
@@ -162,7 +162,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWhenNoJobFound() throws Exception {
     when(build.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
@@ -180,7 +180,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPassWhenBuildUnstableAndUnstableSuccessSet() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
@@ -204,7 +204,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInjectEnvVarsWhenInjectEnvVarsSet() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
@@ -236,7 +236,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWhenGetEnvVarsThrows() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);

@@ -50,7 +50,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Test keepAlivePath is taken when delegate.KeepAlivePacket = true
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRequest_KeepAliveRequest() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -64,7 +64,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Test EcsDelegateRegistration path is taken, when delegate.KeepAlivePacket = false
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRequest_EcsDelegateRegistration() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -84,7 +84,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Test HandleEcsDelegateKeepAlivePacket flow
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateKeepAlivePacket() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -139,7 +139,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    *            - just update this same existing delegate
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_activeDelegateWithId() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -170,7 +170,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * Expected - Should throw exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_empty_UUid_token() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -205,7 +205,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * This existing delegate should be updated
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_with_valid_seqNum_token() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -254,7 +254,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * So new delegate record with hostname hostname_1 will be created.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_with_valid_seqNum_token_2() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -304,7 +304,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * - Test it takes path registerDelegateWithNewSequenceGeneration() in this case
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsDelegateRegistration_with_valid_seqNum_token_3() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -336,7 +336,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    *  - Delete any existing delegate associated with that config
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetInactiveDelegateSequenceConfigToReplace() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -376,7 +376,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSeqNumAndTokenMatchesConfig() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -414,7 +414,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    * New record should be {accId=1, seqNum=2, token="abc", hostname="host"}
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddNewDelegateSequenceConfigRecord() {
     delegateService = spy(DelegateServiceImpl.class);
@@ -453,7 +453,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
    *  - No stale config, we take path to create a new record for DelegateSequenceConfig
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterDelegateWithNewSequenceGeneration() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -537,7 +537,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDelegateHostNameByRemovingSeqNum() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -547,7 +547,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDelegateSeqNumFromHostName() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);
@@ -557,7 +557,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateExistingDelegateWithSequenceConfigData() throws Exception {
     delegateService = spy(DelegateServiceImpl.class);

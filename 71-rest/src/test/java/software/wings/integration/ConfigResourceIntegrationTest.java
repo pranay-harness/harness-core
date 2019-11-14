@@ -62,7 +62,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = MARK)
+  @Owner(developers = MARK)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testServiceLevelConfigFileCrud() {
@@ -99,7 +99,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = MARK)
+  @Owner(developers = MARK)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testMultipleConfigFileUpdate_shouldNot_OverwriteEachOther() {
@@ -143,7 +143,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = MARK)
+  @Owner(developers = MARK)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testEnvironmentLevelConfigFileOverrideCrud() {

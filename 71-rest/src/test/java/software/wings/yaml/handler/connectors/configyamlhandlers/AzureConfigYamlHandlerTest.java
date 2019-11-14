@@ -42,7 +42,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   private Class yamlClass = AzureConfig.Yaml.class;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String azureConfigName = "Azure" + System.currentTimeMillis();
@@ -54,7 +54,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String azureConfigName = "Azure" + System.currentTimeMillis();

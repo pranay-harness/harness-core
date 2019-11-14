@@ -41,7 +41,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulWorkflowWithData() {
     String execId = generateUuid();
@@ -74,7 +74,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulWorkflowWithDataDifferentInfra() {
     String execId = generateUuid();

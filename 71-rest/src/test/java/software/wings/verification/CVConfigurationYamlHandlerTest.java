@@ -15,7 +15,7 @@ import java.util.Set;
 
 public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testYamlClass() {
     Reflections reflections = new Reflections("software.wings");

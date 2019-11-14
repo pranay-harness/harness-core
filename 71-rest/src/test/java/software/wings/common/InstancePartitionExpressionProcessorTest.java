@@ -102,7 +102,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
    * Should partition.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPartitionInstances() {
     Application app =

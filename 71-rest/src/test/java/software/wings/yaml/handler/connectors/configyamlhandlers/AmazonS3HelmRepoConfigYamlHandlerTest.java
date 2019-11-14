@@ -60,7 +60,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String amazonS3HelmRepoSettingName = AMAZONS3_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
@@ -72,7 +72,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String amazonS3HelmRepoSettingName = AMAZONS3_HELM_CHART_SETTING_NAME + System.currentTimeMillis();

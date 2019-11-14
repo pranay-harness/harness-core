@@ -83,7 +83,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should list activities.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListActivities() {
     Activity activity = Activity.builder()
@@ -123,7 +123,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should get activity.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetActivity() {
     Activity activity = Activity.builder()
@@ -161,7 +161,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should save activity.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveActivity() {
     Activity activity = Activity.builder()
@@ -210,7 +210,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should get activity command units.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetActivityCommandUnits() {
     List<CommandUnit> commandUnitList = asList(new InitSshCommandUnit(),
@@ -258,7 +258,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Shouldget last activity for service.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetLastActivityForService() {
     Activity activity = Activity.builder()
@@ -297,7 +297,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Shouldget last production activity for service.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetLastProductionActivityForService() {
     Activity activity = Activity.builder()
@@ -337,7 +337,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    * Should update activity status.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateActivityStatus() {
     Activity activity = Activity.builder()
@@ -395,7 +395,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     activityService.pruneDescendingEntities(APP_ID, ACTIVITY_ID);

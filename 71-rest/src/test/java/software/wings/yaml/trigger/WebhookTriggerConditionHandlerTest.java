@@ -18,7 +18,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   @Inject private WebhookTriggerConditionHandler webhookTriggerConditionHandler = new WebhookTriggerConditionHandler();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void toYaml() {
     WebHookTriggerCondition webHookTriggerCondition =
@@ -32,7 +32,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void upsertFromYaml() {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()
@@ -48,7 +48,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void upsertFromYamlForBitBucket() {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()

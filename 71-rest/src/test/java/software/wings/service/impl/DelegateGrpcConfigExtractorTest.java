@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class DelegateGrpcConfigExtractorTest extends CategoryTest {
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldExtractTargetGivenUrlWithPrefix() throws Exception {
     String managerUrl = "https://pr.harness.io/ccm";
@@ -19,7 +19,7 @@ public class DelegateGrpcConfigExtractorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldExtractTargetGivenUrlWithoutPrefix() throws Exception {
     String managerUrl = "https://pr.harness.io";
@@ -27,7 +27,7 @@ public class DelegateGrpcConfigExtractorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldExtractAuthorityGivenUrlWithPrefix() throws Exception {
     // {prefix}-{svc}-{grpc}-{env}.harness.io
@@ -37,7 +37,7 @@ public class DelegateGrpcConfigExtractorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldExtractAuthorityGivenUrlWithoutPrefix() throws Exception {
     String managerUrl = "https://pr.harness.io";

@@ -138,7 +138,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     doNothing().when(scheduleTriggerHandler).wakeup();
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveScheduledConditionTrigger() {
     DeploymentTrigger trigger = deploymentTriggerService.save(scheduledConditionTrigger, false);
@@ -151,7 +151,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateScheduledConditionTrigger() {
     scheduledConditionTrigger = deploymentTriggerService.save(scheduledConditionTrigger, false);
@@ -169,7 +169,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowCronParseException() {
     scheduledConditionTrigger.setCondition(
@@ -179,7 +179,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowCronParseExceptionOnNullCronExpression() {
     scheduledConditionTrigger.setCondition(
@@ -189,7 +189,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowCronParseExceptionOnEmptyCronExpression() {
     scheduledConditionTrigger.setCondition(

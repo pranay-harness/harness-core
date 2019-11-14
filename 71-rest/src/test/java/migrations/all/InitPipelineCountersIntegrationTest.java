@@ -25,7 +25,7 @@ public class InitPipelineCountersIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long pipelineCount = wingsPersistence.createQuery(Pipeline.class).count();

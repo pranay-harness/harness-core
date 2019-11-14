@@ -86,7 +86,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecute() {
     ExecutionResponse executionResponse = jenkinsState.execute(executionContext);
@@ -99,7 +99,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsStartTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -119,7 +119,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsPollTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -139,7 +139,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldStartJenkinsPollTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -174,7 +174,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = jenkinsState.getTimeoutMillis();
@@ -182,7 +182,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     jenkinsState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
@@ -191,7 +191,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAbort() {
     when(executionContext.getStateExecutionData())

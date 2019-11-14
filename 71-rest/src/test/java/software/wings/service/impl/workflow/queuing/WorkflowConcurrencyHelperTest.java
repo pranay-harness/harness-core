@@ -56,7 +56,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void noConcurrencyIfStrategyNotPresent() {
     Workflow workflow = constructCanaryWorkflowWithPhase();
@@ -73,7 +73,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureConcurrencyForAlreadyProvisioned() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(false);
@@ -99,7 +99,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureConcurrencyForDynamicallyProvisionedWithProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);
@@ -125,7 +125,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureConcurrencyForDynamicallyProvisionedWithNoProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);

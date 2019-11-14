@@ -47,7 +47,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() throws Exception {
     final String appId = "appId";
@@ -65,7 +65,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -90,7 +90,7 @@ public class StackdriverMetricCVConfigurationYamlHandlerTest extends CVConfigura
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertBadMetridDefinition() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

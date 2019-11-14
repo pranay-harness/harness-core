@@ -76,7 +76,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetSampleLogRecordVerifyCall() {
@@ -90,7 +90,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetLogRecords() {

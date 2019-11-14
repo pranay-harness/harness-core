@@ -54,7 +54,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled for infra refactor")
   public void shouldRunAwsAmiWorkflow() {

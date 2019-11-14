@@ -74,7 +74,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreate() throws Exception {
     createAuditHeader();
@@ -86,7 +86,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() throws Exception {
     createAuditHeader();
@@ -112,7 +112,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUser() throws Exception {
     AuditHeader header = createAuditHeader();
@@ -126,7 +126,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteAuditRecords() throws Exception {
     createAuditHeader();
@@ -139,7 +139,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteAuditRecordsWithInRetentionTime() throws Exception {
     createAuditHeader();

@@ -49,7 +49,7 @@ public class GetServicesFunctionalTest extends AbstractFunctionalTest {
 
   @Inject HarnesscliHelper harnesscliHelper;
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getServicesTest() {
     // Running harness get services before creating a new service
@@ -101,7 +101,7 @@ public class GetServicesFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getServicesWithInvalidArgumentsTest() {
     // Running harness get services with invalid appId

@@ -143,7 +143,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
@@ -178,7 +178,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =

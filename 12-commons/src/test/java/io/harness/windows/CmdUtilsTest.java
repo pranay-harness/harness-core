@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class CmdUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapeEnvironmentValue() {
     assertThat(CmdUtils.escapeEnvValueSpecialChars("path")).isEqualTo("path");
@@ -22,7 +22,7 @@ public class CmdUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapeEnvironmentValueWithPercentage() {
     assertThat(CmdUtils.escapeEnvValueSpecialChars("%path%")).isEqualTo("^%path^%");

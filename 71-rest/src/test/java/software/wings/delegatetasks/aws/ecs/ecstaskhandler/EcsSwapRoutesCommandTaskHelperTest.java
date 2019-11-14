@@ -35,7 +35,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private EcsSwapRoutesCommandTaskHelper taskHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -51,7 +51,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDownsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -62,7 +62,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateServiceTags() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);

@@ -14,7 +14,7 @@ public class OwnerWatcherRule extends TestWatcher {
       return;
     }
 
-    for (String email : owner.emails()) {
+    for (String email : owner.developers()) {
       OwnerRule.fileOwnerAs(email, "failed");
     }
   }

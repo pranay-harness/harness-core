@@ -72,7 +72,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void metricCollectionInfos() throws IOException {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -103,7 +103,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFields() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -114,7 +114,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMapping() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -127,7 +127,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingMetricValue() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -143,7 +143,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingHostName() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -161,7 +161,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHostAndBaseline() {
     String metricName = generateUuid();
@@ -186,7 +186,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBaselineUrlHasHost() {
     String metricName = generateUuid();
@@ -211,7 +211,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidMultipleBaselineUrl() {
     String metricName1 = generateUuid();

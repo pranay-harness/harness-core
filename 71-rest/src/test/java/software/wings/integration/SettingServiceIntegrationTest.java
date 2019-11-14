@@ -61,7 +61,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   // TODO: Jenkins test need to be looked into later. Test is passing locally, however failing in Jenkins K8s after PR
   // push.
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Repeat(times = 5)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -91,7 +91,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionForUnreachableJenkinsUrl() {
@@ -119,7 +119,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveNexusConfig() {
@@ -146,7 +146,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSaveBambooConfig() {
@@ -173,7 +173,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void shouldSaveDockerConfig() {

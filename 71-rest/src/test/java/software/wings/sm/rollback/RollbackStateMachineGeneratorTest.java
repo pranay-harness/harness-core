@@ -81,7 +81,7 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
                                                          .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGenerateForRollbackExecution() {
     Workflow workflow = constructBasicWorkflowWithRollbackForAMI();
@@ -101,7 +101,7 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGenerateForRollback() {
     Workflow workflow = constructBasicWorkflowWithRollbackForAMI();

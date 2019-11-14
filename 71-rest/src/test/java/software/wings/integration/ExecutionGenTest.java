@@ -33,7 +33,7 @@ public class ExecutionGenTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void generateData() {

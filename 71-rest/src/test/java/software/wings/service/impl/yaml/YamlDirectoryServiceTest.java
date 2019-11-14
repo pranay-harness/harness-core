@@ -161,7 +161,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   private DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoApplications() {
     Map<String, AppPermissionSummary> appPermissionSummaryMap = new HashMap<>();
@@ -329,7 +329,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoEnvironments() {
     final Application application =
@@ -397,7 +397,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoCloudProviders() {
     SettingAttribute awsCp =
@@ -441,7 +441,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoCollaborationProviders() {
     SettingAttribute jiraConnector = aSettingAttribute()
@@ -479,7 +479,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoVerificationProviders() {
     SettingAttribute jenkinsProvider = aSettingAttribute()
@@ -517,7 +517,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoArtifactServers() {
     SettingAttribute dockerConnector = aSettingAttribute()
@@ -559,7 +559,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testObtainEntityRootPath() {
     // create entities
@@ -780,7 +780,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateEnvPcfOverridesFolder() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()

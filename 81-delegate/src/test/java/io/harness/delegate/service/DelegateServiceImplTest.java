@@ -51,7 +51,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotApplyFunctorIfNoSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();
@@ -69,7 +69,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldApplyFunctorForSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();

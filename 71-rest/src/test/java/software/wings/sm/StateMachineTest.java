@@ -47,7 +47,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should validate.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidate() {
     StateMachine sm = new StateMachine();
@@ -65,7 +65,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw dup error code.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowDupErrorCode() {
     try {
@@ -90,7 +90,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw null transition.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowNullTransition() {
     try {
@@ -113,7 +113,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw transition not linked.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowTransitionNotLinked() {
     try {
@@ -145,7 +145,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw transition to incorrect state.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowTransitionToIncorrectState() {
     try {
@@ -182,7 +182,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw states with Dup transitions.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowStatesWithDupTransitions() {
     try {
@@ -229,7 +229,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-fork state transition.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowNonForkStateTransitions() {
     try {
@@ -280,7 +280,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-repeat state transition.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowNonRepeatStateTransitions() {
     try {
@@ -331,7 +331,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-repeat state transition.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExpandRepeatState() {
     StateMachine sm = new StateMachine();
@@ -391,7 +391,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should expand repeat state in a complex scenario.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExpandRepeatStateInMultiplePaths() {
     StateMachine sm = new StateMachine();
@@ -477,7 +477,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should expand repeat state for each node that needs it.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExpandRepeatStateForEachNodeThatNeedsIt() {
     StateMachine sm = new StateMachine();
@@ -557,7 +557,7 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBreakRepeatTransitionsWhenNoNeeded() {
     StateMachine sm = new StateMachine();

@@ -110,7 +110,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   private String SERVICE2;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testQueries() {
     QLDeploymentFilter arrayIdFilter =
@@ -240,7 +240,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSingleDataPoint() {
     try {
@@ -317,7 +317,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAggregateData() {
     try {
@@ -352,7 +352,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackedData() {
     try {
@@ -430,7 +430,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeSeriesData() {
     try {
@@ -478,14 +478,14 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackedTimeSeriesDataForCount() {
     testStackedTimeSeriesData(QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build());
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackedTimeSeriesDataForInstancesDeployed() {
     testStackedTimeSeriesData(
@@ -557,7 +557,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void assertGroupByTag() {
     assertThat(dataFetcher.getGroupByEntityFromTag(

@@ -33,7 +33,7 @@ public class ConstraintTest extends CategoryTest {
   ConsumerId consumer4 = new ConsumerId("consumer4");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateConstraint() throws UnableToSaveConstraintException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
@@ -43,7 +43,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLoadConstraint() throws UnableToSaveConstraintException, UnableToLoadConstraintException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
@@ -60,7 +60,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterConsumer()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
@@ -77,7 +77,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterConsumerFIFO() throws UnableToSaveConstraintException, InvalidPermitsException,
                                                 UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
@@ -90,7 +90,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterConsumerASAP() throws UnableToSaveConstraintException, InvalidPermitsException,
                                                 UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
@@ -104,7 +104,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterConsumerUnblocked()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -131,7 +131,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterConsumerFinished()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -152,7 +152,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRunnableConsumersASAP()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -173,7 +173,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUnits() throws UnableToSaveConstraintException, InvalidPermitsException,
                                  UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
@@ -185,7 +185,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRunnableConsumersFIFO()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -206,7 +206,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSimulation() throws UnableToSaveConstraintException, InvalidPermitsException,
                                       UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {

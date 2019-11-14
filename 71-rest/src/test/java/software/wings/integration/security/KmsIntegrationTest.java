@@ -48,7 +48,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsSecretText_withBackupGlobalKMS_shouldSucceed() {
     String backupGlobalKmsConfigId = createGlobalKmsConfig(globalKmsBackup);
@@ -72,7 +72,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsSecretText_shouldSucceed() {
     String kmsConfigId = createKmsConfig(kmsConfig);
@@ -89,7 +89,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsEncryptedSecretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String kmsConfigId = createKmsConfig(kmsConfig);
@@ -106,7 +106,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsSecretTextName_shouldNotAlterSecretValue() {
     String kmsConfigId = createKmsConfig(kmsConfig);

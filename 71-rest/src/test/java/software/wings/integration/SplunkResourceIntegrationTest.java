@@ -80,7 +80,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
    * Test to verify fetch Log Records based.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");

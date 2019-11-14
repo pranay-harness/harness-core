@@ -28,7 +28,7 @@ public class PerpetualTaskRecordDaoIntegrationTest extends BaseIntegrationTest {
   String taskId2;
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   public void testResetDelegateId() {
     // insert two perpetual task records

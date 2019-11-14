@@ -108,7 +108,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void variablesTest() {

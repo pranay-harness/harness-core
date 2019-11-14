@@ -53,7 +53,7 @@ public class GitConnectorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_creationOfGitConnectorsWithinLimitInHarnessCommunity_shouldPass() {
     String accountId = "someAccountId";
@@ -71,7 +71,7 @@ public class GitConnectorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_creationOfGitConnectorsAboveLimitInHarnessCommunity_shouldFail() {
     String accountId = "someAccountId";

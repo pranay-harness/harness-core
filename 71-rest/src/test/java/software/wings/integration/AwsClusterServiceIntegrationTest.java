@@ -72,7 +72,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCluster() {
@@ -92,7 +92,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResizeCluster() {
@@ -101,13 +101,13 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDeleteCluster() {}
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionNode() {
@@ -132,7 +132,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateClusterFromCFTemplate() throws InterruptedException {

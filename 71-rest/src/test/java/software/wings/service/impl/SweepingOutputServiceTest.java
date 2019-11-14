@@ -25,7 +25,7 @@ public class SweepingOutputServiceTest extends WingsBaseTest {
   @Inject HPersistence persistence;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shouldGetInstanceId() {

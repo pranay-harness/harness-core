@@ -35,7 +35,7 @@ public class HealthResourceTest extends CategoryTest {
           .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetMongoUri() throws Exception {
     when(configuration.getMongoConnectionFactory())
@@ -57,7 +57,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetElasticsearchUri() throws Exception {
     String elasticsearchUri = "http://localhost:9200";
@@ -75,7 +75,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetIsSearchEnabled() {
     when(configuration.isSearchEnabled()).thenReturn(true);

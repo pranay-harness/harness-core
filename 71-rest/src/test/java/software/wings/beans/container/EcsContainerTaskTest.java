@@ -18,7 +18,7 @@ public class EcsContainerTaskTest extends CategoryTest {
   public static final String DOMAIN_NAME = "domain.name.co";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testcreateTaskDefinition() {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
@@ -83,7 +83,7 @@ public class EcsContainerTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateTaskDefinitionWithWhenNoMemoryProvided() {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
@@ -145,7 +145,7 @@ public class EcsContainerTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRemoveEmptySecretsContainerDefinitionString() throws Exception {
     String str = "{\n"

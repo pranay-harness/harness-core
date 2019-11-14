@@ -36,7 +36,7 @@ public class K8sResourceUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetResource() {
     Resource actualResource = K8sResourceUtils.getResource(k8sContainer);
@@ -44,7 +44,7 @@ public class K8sResourceUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTotalResourceRequest() {
     Resource actualResource = K8sResourceUtils.getTotalResourceRequest(k8sContainers);

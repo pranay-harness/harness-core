@@ -51,7 +51,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreate() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -74,7 +74,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -93,7 +93,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListArtifactStreams() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -110,7 +110,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStream() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -138,7 +138,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStreamAtConnectorLevel() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, GLOBAL_APP_ID);

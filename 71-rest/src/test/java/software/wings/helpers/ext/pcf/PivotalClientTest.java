@@ -91,7 +91,7 @@ public class PivotalClientTest extends WingsBaseTest {
     doReturn(wrapper).when(client).getCloudFoundryOperationsWrapper(any());
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandlePasswordForSpecialCharacters() throws Exception {
     String password = "Ab1~!@#$%^&*()_'\"c";
@@ -113,7 +113,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetOrganizations() throws Exception {
     OrganizationSummary summary1 = OrganizationSummary.builder().id("1").name("org1").build();
@@ -134,7 +134,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSpacesForOrganization() throws Exception {
     String[] spaces = new String[] {"space1", "space2", "space3"};
@@ -163,7 +163,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetApplications() throws Exception {
     ApplicationSummary applicationSummary1 = ApplicationSummary.builder()
@@ -199,7 +199,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetApplicationByName() throws Exception {
     ApplicationDetail applicationDetail = ApplicationDetail.builder()
@@ -220,7 +220,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAllRoutesForSpace() throws Exception {
     Route route1 = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
@@ -241,7 +241,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRoutesMapsByName() throws Exception {
     Route route1 = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
@@ -264,7 +264,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRouteMap() throws Exception {
     Route route_1 =
@@ -285,7 +285,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudFoundryOperationsClose() throws Exception {
     PcfClientImpl pcfClient = mock(PcfClientImpl.class);
@@ -306,7 +306,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCloudFoundryOperationsWrapper() throws Exception {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -321,7 +321,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCFOperationsWrapperForConnectionContextException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -336,7 +336,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCFOperationsWrapperForTokenProviderException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -353,7 +353,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetOrganizationsException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -371,7 +371,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetApplicationByNameException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -389,7 +389,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRouteMapException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -408,7 +408,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetApplicationsException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -425,7 +425,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSpacesForOrganizationException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -443,7 +443,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeleteApplicationException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -461,7 +461,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStopApplicationException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -479,7 +479,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTasksException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -497,7 +497,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testScaleApplicationsException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -515,7 +515,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testStartApplicationException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -533,7 +533,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testUnmapRouteMapForAppException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -553,7 +553,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testMapRouteMapForAppException() {
     PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
@@ -574,7 +574,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPushApplicationUsingManifest() throws Exception {
     PcfClientImpl client = spy(PcfClientImpl.class);
@@ -607,7 +607,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFindRoutesNeedToBeCreated() throws Exception {
     List<String> routes = new ArrayList<>();
@@ -646,7 +646,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testMapRoutesForApplication() throws Exception {
     PcfClientImpl pcfClient1 = spy(PcfClientImpl.class);
@@ -691,7 +691,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformConfigureAutoscalar() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -736,7 +736,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCheckIfAppHasAutoscalarAttached() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -769,7 +769,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCheckIfAppAutoscalarInstalled() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -797,7 +797,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testChangeAutoscalarState() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -831,7 +831,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetAppAutoscalarEnvMapForCustomPlugin() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -844,7 +844,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateProccessExecutorForPcfTask() throws Exception {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
@@ -861,7 +861,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateExecutorForAutoscalarPluginCheck() throws Exception {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
@@ -878,7 +878,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateChangeAutoscalarStateCommand() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -891,7 +891,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testLogInForAppAutoscalarCliCommand() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
@@ -909,7 +909,7 @@ public class PivotalClientTest extends WingsBaseTest {
   }
 
   @Test(expected = None.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_runPcfPluginScript()
       throws PivotalClientApiException, InterruptedException, TimeoutException, IOException {

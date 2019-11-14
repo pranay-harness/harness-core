@@ -57,7 +57,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testElkConfigNoPassword() {
     final ElkConfig elkConfig = new ElkConfig();
@@ -76,7 +76,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testElkConfigNoUserName() {
     final ElkConfig elkConfig = new ElkConfig();
@@ -95,7 +95,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidUrl() {
     final ElkConfig elkConfig = new ElkConfig();
@@ -113,7 +113,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testValidConfig() {

@@ -35,7 +35,7 @@ public class ArtifactTest extends GraphQLTest {
   @Inject ArtifactStreamManager artifactStreamManager;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryArtifact() {
     final Seed seed = new Seed(0);

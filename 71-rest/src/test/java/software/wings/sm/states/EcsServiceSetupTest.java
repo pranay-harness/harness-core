@@ -76,7 +76,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @InjectMocks private EcsServiceSetup state = new EcsServiceSetup("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setEcsServiceName("EcsSvc");
@@ -143,7 +143,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

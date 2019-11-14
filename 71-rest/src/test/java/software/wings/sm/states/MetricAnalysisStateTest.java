@@ -75,7 +75,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncErrorStatus() {
     for (ExecutionStatus executionStatus : ExecutionStatus.brokeStatuses()) {
@@ -105,7 +105,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncNoAnalysisQA() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -119,7 +119,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncNoMetricsQA() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -137,7 +137,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncQANotFailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -151,7 +151,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncFailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -164,7 +164,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncNoFailWithoutAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -177,7 +177,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncV2NoAnalysisQA() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -194,7 +194,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncV2NoMetricsQA() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -215,7 +215,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncV2QANotFailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -230,7 +230,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncV2FailWithAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -244,7 +244,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncV2NoFailWithoutAnomaly() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.SUCCESS, null);
@@ -266,7 +266,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyStateHandleAsyncNoVerificationData() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.RUNNING, null);
@@ -278,7 +278,7 @@ public class MetricAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyStateHandleAsyncV2NoVerificationData() {
     Map<String, ResponseData> dataAnalysisResponse = createDataAnalysisResponse(ExecutionStatus.RUNNING, null);

@@ -130,7 +130,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveAnalysisRecordsML() {
     int numOfGroups = 5;
@@ -168,7 +168,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSorting() throws IOException {
     final Gson gson = new Gson();
@@ -192,7 +192,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAnalysisTag() throws IOException {
     File file =
@@ -220,7 +220,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLocalAnalysis() throws IOException {
     File file = new File(
@@ -288,7 +288,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAnalysisNodeData() throws IOException {
     File file =
@@ -314,7 +314,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAnalysisDemoFailure() throws IOException {
     File file = new File(
@@ -349,7 +349,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAnalysisDemoSuccess() throws IOException {
     File file = new File(
@@ -385,7 +385,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLocalAnalysisNodeData() throws IOException {
     File file = new File(
@@ -440,7 +440,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHistoricalAnalysis() {
     // setup
@@ -470,7 +470,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHistoricalAnalysisNoHistorical() {
     // setup
@@ -500,7 +500,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHistoricalAnalysisBadAppIdCvConfigId() {
     // setup
@@ -529,7 +529,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCompression() throws IOException {
     long analysisMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
@@ -572,7 +572,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCleanup() {
     int numOfRecords = 10;

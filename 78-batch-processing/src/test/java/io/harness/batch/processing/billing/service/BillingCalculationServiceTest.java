@@ -50,7 +50,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private final double DEFAULT_INSTANCE_PRICE = 1.60;
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInInterval() {
     InstanceData instanceData = getInstanceWithTime(INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
@@ -60,7 +60,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInIntervalWhenStartedBefore() {
     InstanceData instanceData =
@@ -71,7 +71,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInIntervalWhenStartedAfter() {
     InstanceData instanceData =
@@ -82,7 +82,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInIntervalWhenStoppedBefore() {
     InstanceData instanceData =
@@ -93,7 +93,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSeconds() {
     InstanceData instanceData = InstanceData.builder()
@@ -107,7 +107,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsLessThanMinDuration() {
     InstanceData instanceData = InstanceData.builder()
@@ -121,7 +121,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceIsRunning() {
     InstanceData instanceData = InstanceData.builder()
@@ -134,7 +134,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsLessThanMinChargeableTime() {
     InstanceData instanceData = InstanceData.builder()
@@ -148,7 +148,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsEqualToMinChargeableTime() {
     InstanceData instanceData = InstanceData.builder()
@@ -162,7 +162,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsGreaterThanMinChargeableTime() {
     InstanceData instanceData = InstanceData.builder()
@@ -176,7 +176,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveStartTimeIsNotInRange() {
     InstanceData instanceData = InstanceData.builder()
@@ -189,7 +189,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveEndTimeIsNotInRange() {
     InstanceData instanceData = InstanceData.builder()
@@ -203,7 +203,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountForResource() {
     Resource instanceResource = getInstanceResource(256, 512);
@@ -217,7 +217,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmount() {
     PricingData pricingData = new PricingData(10, 256.0, 512.0);
@@ -234,7 +234,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountWhereResourceIsNotPresent() {
     PricingData pricingData = new PricingData(10, 256.0, 512.0);
@@ -249,7 +249,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForCompute() throws IOException {
     when(vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
@@ -273,7 +273,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForFargate() throws IOException {
     when(vmPricingService.getFargatePricingInfo(REGION)).thenReturn(createEcsFargatePricingInfo());

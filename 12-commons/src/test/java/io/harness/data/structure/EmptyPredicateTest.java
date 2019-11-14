@@ -28,7 +28,7 @@ public class EmptyPredicateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({FastUnitTests.class})
   public void testNull() {
     Custom custom = null;
@@ -93,7 +93,7 @@ public class EmptyPredicateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({FastUnitTests.class})
   public void testEmpty() {
     Custom custom = Custom.builder().empty(true).build();
@@ -158,7 +158,7 @@ public class EmptyPredicateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({FastUnitTests.class})
   public void testNotEmpty() {
     Custom custom = Custom.builder().empty(false).build();

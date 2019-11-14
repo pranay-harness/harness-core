@@ -71,7 +71,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWriteMessage() throws IOException {
     messageService.writeMessage("message-text", "p1", "p2");
@@ -87,7 +87,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadMessage() throws IOException {
     String line = Joiner.on(PRIMARY_DELIMITER)
@@ -106,7 +106,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendMessage() throws IOException {
     messageService.writeMessageToChannel(OTHER_MESSENGER_TYPE, otherProcessId, "message-text", "p1", "p2");
@@ -122,7 +122,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRetrieveMessage() throws IOException {
     String line = Joiner.on(PRIMARY_DELIMITER)
@@ -141,7 +141,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloseChannel() throws IOException {
     FileUtils.writeLines(messageFile,
@@ -169,7 +169,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWriteData() throws IOException {
     messageService.putData(data1, "foo", "bar");
@@ -191,7 +191,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @SuppressWarnings({"unchecked"})
   public void shouldReadData() throws IOException {
@@ -213,7 +213,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @SuppressWarnings({"unchecked"})
   public void shouldRemoveData() throws IOException {
@@ -231,7 +231,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloseData() throws IOException {
     Map<String, Object> map1 = new HashMap<>();

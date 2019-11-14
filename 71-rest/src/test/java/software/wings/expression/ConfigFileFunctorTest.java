@@ -41,7 +41,7 @@ public class ConfigFileFunctorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void canReadFileWithinLimit() {
     ConfigFile configFile = new ConfigFile();
@@ -55,7 +55,7 @@ public class ConfigFileFunctorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void readLargeFileThrowsException() {
     ConfigFile configFile = new ConfigFile();

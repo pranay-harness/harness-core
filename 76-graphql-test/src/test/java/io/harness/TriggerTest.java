@@ -53,7 +53,7 @@ public class TriggerTest extends GraphQLTest {
   @Inject private HarnessTagService harnessTagService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryTrigger() {
     final Seed seed = new Seed(0);
@@ -141,7 +141,7 @@ public class TriggerTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryTriggers() {
     final Seed seed = new Seed(0);

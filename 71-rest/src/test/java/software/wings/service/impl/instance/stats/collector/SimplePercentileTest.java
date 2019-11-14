@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 
 public class SimplePercentileTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPercentile() {
     List<Integer> numbers = new ArrayList<>(100);

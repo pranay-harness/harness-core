@@ -109,7 +109,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldSaveServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
@@ -126,7 +126,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldUpdateServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
@@ -156,7 +156,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldOverrideSimpleConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
@@ -192,7 +192,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldEnvironmentOverrideServiceConfigFile() throws IOException {
     // Entity is SERVICE
@@ -242,7 +242,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldOverrideEncryptedConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
@@ -286,7 +286,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldSaveEncryptedServiceConfigFile() throws IOException {
     String secretName = UUID.randomUUID().toString();

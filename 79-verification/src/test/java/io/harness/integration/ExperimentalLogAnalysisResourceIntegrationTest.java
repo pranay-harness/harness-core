@@ -29,7 +29,7 @@ public class ExperimentalLogAnalysisResourceIntegrationTest extends Verification
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogExpAnalysisInfo() throws UnknownHostException {
     WebTarget getTarget = client.target(VERIFICATION_API_BASE + "/"

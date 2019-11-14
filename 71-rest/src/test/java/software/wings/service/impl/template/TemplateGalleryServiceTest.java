@@ -66,7 +66,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -74,7 +74,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)")
   public void shouldNotSaveInvalidNameTemplateGallery() {
@@ -84,7 +84,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -103,7 +103,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -116,7 +116,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateGalleryNotExists() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -129,7 +129,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = ConstraintViolationException.class)
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("Enable when validations on accountName are in place(https://harness.atlassian.net/browse/CD-3700)")
   public void shouldNotUpdateInvalidTemplateGallery() {
@@ -143,7 +143,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -155,7 +155,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTemplateGalleryByAccount() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -167,7 +167,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTemplateGalleryByName() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -181,7 +181,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListTemplateGalleries() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -198,7 +198,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadHarnessGallery() {
     templateGalleryService.loadHarnessGallery();
@@ -219,7 +219,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveHarnessGallery() {
     TemplateGallery harnessGallery = templateGalleryService.saveHarnessGallery();
@@ -229,7 +229,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplates() {
     templateGalleryService.loadHarnessGallery();
@@ -243,7 +243,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteByAccountId() {
     templateGalleryService.loadHarnessGallery();
@@ -259,7 +259,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplatesToAccount() {
     templateGalleryService.loadHarnessGallery();
@@ -316,7 +316,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFromGalleryToAccounts() {
     templateGalleryService.loadHarnessGallery();
@@ -333,7 +333,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFromGalleryToAccountsV2() {
     // Yaml V2 of IIS Website
@@ -361,7 +361,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyNewVersionFromGlobalToAllAccounts() {
     templateGalleryService.loadHarnessGallery();

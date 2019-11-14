@@ -96,7 +96,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     ConfigFile configFile = ConfigFile.builder()
@@ -131,7 +131,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should save.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSave() {
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
@@ -162,7 +162,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should throw exception for unsupported entity types.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
     ConfigFile configFile =
@@ -179,7 +179,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     ConfigFile configFile = ConfigFile.builder().build();
@@ -196,7 +196,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should get config file by template.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetConfigFileByTemplate() {
     ServiceTemplate serviceTemplate =
@@ -224,7 +224,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should download.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDownload() {
     ConfigFile configFile = ConfigFile.builder()
@@ -253,7 +253,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdate() {
     ConfigFile configFile = ConfigFile.builder()
@@ -293,7 +293,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
@@ -307,7 +307,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should get config files for entity.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetConfigFilesForEntity() {
     ConfigFile configFile = ConfigFile.builder()
@@ -339,7 +339,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * Should delete by entity id.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteByEntityId() {
     ConfigFile configFile = ConfigFile.builder()
@@ -383,7 +383,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateAndResolveFilePath() throws Exception {
     assertThat(configService.validateAndResolveFilePath("config/abc.txt")).isEqualTo("config/abc.txt");

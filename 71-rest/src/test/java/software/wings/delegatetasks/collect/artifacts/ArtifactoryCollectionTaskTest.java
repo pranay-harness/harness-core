@@ -63,7 +63,7 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
           "delid1", collectionTask, notifyResponseData -> {}, () -> true);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNoMavenStyleFiles() {
     ListNotifyResponseData res = ListNotifyResponseData.Builder.aListNotifyResponseData().build();

@@ -90,7 +90,7 @@ public class TimeSeriesRawDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRecordPopulation() {
     Map<String, Map<String, TimeSeriesRawData>> existingRawDataMap = new HashMap<>();

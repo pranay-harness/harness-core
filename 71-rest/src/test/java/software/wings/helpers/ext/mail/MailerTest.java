@@ -56,7 +56,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
-  @Owner(emails = ANUBHAW, intermittent = true)
+  @Owner(developers = ANUBHAW, intermittent = true)
   @Category(UnitTests.class)
   public void shouldSendNormalEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
@@ -95,7 +95,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws IOException        the io exception
    */
   @Test
-  @Owner(emails = ANUBHAW, intermittent = true)
+  @Owner(developers = ANUBHAW, intermittent = true)
   @Category(UnitTests.class)
   public void shouldSendHtmlEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
@@ -133,7 +133,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendTemplatedEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()

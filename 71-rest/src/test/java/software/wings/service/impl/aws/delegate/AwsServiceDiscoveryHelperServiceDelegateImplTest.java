@@ -34,7 +34,7 @@ public class AwsServiceDiscoveryHelperServiceDelegateImplTest extends WingsBaseT
   @Spy @InjectMocks private AwsServiceDiscoveryHelperServiceDelegateImpl awsServiceDiscoveryHelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRecordValueForService() {
     AWSServiceDiscovery mockClient = mock(AWSServiceDiscovery.class);

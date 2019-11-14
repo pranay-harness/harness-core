@@ -41,7 +41,7 @@ public class ElasticsearchRealtimeSyncTaskTest extends WingsBaseTest {
   @Inject @InjectMocks private ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask;
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   @Ignore("Todo: Flaky on jenkins. Will fix and remove ignore")
   public void testRealtimeSyncProcess() throws InterruptedException, ExecutionException, TimeoutException {

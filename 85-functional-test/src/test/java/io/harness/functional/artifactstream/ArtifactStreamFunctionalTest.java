@@ -54,7 +54,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);

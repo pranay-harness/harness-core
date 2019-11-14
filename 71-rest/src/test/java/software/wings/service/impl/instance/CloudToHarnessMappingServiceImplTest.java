@@ -30,7 +30,7 @@ public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
   private final String INFRA_MAPPING_ID = "infra_mapping_id";
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetNullHarnessServiceInfo() {
     DeploymentSummary deploymentSummary = ecsDeploymentSummary();

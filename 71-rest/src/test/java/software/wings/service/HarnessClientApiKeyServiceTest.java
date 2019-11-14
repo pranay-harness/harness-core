@@ -25,7 +25,7 @@ public class HarnessClientApiKeyServiceTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUD() {
     String generatedApiKey = harnessApiKeyService.generate(ClientType.PROMETHEUS.name());

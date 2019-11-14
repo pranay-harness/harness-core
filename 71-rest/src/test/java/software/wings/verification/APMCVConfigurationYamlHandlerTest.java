@@ -134,7 +134,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -155,7 +155,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -176,7 +176,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertEmptyMetrics() throws Exception {
     when(yamlHelper.getNameFromYamlFilePath("TestAPMConfig.yaml")).thenReturn("TestAPMConfig");
@@ -195,7 +195,7 @@ public class APMCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

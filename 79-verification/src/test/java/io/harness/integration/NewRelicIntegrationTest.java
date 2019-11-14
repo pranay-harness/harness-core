@@ -142,7 +142,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testFeatureEnabled() {
     WebTarget target = client.target(API_BASE + "/account/feature-flag-enabled?accountId=" + accountId
@@ -158,7 +158,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public void getNewRelicApplications() throws Exception {
     WebTarget target =
@@ -176,7 +176,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(IntegrationTests.class)
   public void getAllTxnNames() throws Exception {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, newRelicConfigId);
@@ -192,7 +192,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getNewRelicApplicationInstances() throws Exception {
     WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
@@ -205,7 +205,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void getNewRelicTxnsWithData() throws Exception {
@@ -219,7 +219,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void getNewRelicDataForNode() {
@@ -282,7 +282,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMetricSave() throws Exception {
     final int numOfMinutes = 4;
@@ -561,7 +561,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void generateMetricsTest() throws Exception {
     // because of the CV_DEMO flag tests, all generate metrics tests should go here.
@@ -576,7 +576,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void noControlNoTest() throws IOException {
     final String workflowId = UUID.randomUUID().toString();
@@ -693,7 +693,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void controlNoTest() {
     final String workflowId = UUID.randomUUID().toString();
@@ -828,7 +828,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testNoControl() {
     final String workflowId = generateUuid();
@@ -965,7 +965,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRIRAM, intermittent = true)
+  @Owner(developers = SRIRAM, intermittent = true)
   @Category(IntegrationTests.class)
   public void txnInTestButNotControl() throws InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
@@ -1151,7 +1151,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getMetricTemplate() throws IOException, InterruptedException {
     final String serviceId = UUID.randomUUID().toString();

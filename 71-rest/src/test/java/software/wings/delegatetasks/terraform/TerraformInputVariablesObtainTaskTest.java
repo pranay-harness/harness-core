@@ -78,7 +78,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() throws IOException {
     String moduleDir = "some-dir";
@@ -97,7 +97,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoTerraformFilesFound() {
     when(gitUtilsDelegate.cloneRepo(any(), any(), any())).thenReturn(GitOperationContext.builder().build());

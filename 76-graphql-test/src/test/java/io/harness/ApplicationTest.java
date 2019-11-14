@@ -44,7 +44,7 @@ public class ApplicationTest extends GraphQLTest {
   @Inject ApplicationGenerator applicationGenerator;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryApplication() {
     final Seed seed = new Seed(0);
@@ -98,7 +98,7 @@ public class ApplicationTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingApplication() {
     String query = $GQL(/*
@@ -122,7 +122,7 @@ public class ApplicationTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryApplications() {
     final Seed seed = new Seed(0);

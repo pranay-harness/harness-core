@@ -48,7 +48,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstanceStartNodeEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
@@ -59,7 +59,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInvalidInstanceNodeEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
@@ -70,7 +70,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstanceStopNodeEvent() throws Exception {
     PublishedMessage k8sNodeEventMessage =
@@ -80,7 +80,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldCreateInstanceNodeInfo() throws Exception {
     Map<String, String> label = new HashMap<>();

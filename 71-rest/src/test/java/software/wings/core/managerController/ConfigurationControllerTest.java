@@ -68,7 +68,7 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = PUNEET, intermittent = true)
+  @Owner(developers = PUNEET, intermittent = true)
   @Category(UnitTests.class)
   public void primaryIsNotSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("2.0.0").build());
@@ -76,7 +76,7 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void primaryIsSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("1.0.0").build());

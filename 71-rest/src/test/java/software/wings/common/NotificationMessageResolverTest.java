@@ -51,7 +51,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should get decorated notification message.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDecoratedNotificationMessage() {
     String decoratedNotificationMessage = NotificationMessageResolver.getDecoratedNotificationMessage(
@@ -64,7 +64,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should fail on in complete map.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnInCompleteMap() {
     assertThatExceptionOfType(WingsException.class)
@@ -77,7 +77,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPlaceholderValues() {
     String ApprovalUrl =

@@ -62,7 +62,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSavingCustomThresholds() {
     int numOfTransactions = 5;

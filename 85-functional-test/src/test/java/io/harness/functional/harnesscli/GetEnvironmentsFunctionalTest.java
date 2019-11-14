@@ -49,7 +49,7 @@ public class GetEnvironmentsFunctionalTest extends AbstractFunctionalTest {
 
   @Inject HarnesscliHelper harnesscliHelper;
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getEnvironmentsTest() {
     // Running harness get environments before creating a new environment
@@ -100,7 +100,7 @@ public class GetEnvironmentsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getEnvironmentsWithInvalidArgumentsTest() {
     // Running harness get environment with invalid appId

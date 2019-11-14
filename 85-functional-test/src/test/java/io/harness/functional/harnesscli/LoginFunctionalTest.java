@@ -19,7 +19,7 @@ import java.util.List;
 public class LoginFunctionalTest extends AbstractFunctionalTest {
   @Inject HarnesscliHelper harnesscliHelper;
   @Test
-  @Owner(emails = DEEPAK)
+  @Owner(developers = DEEPAK)
   @Category(CliFunctionalTests.class)
   public void loginToLocalhost() {
     String domain = "localhost:9090", loginOutput = "";
@@ -48,7 +48,7 @@ public class LoginFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = DEEPAK)
+  @Owner(developers = DEEPAK)
   @Category(CliFunctionalTests.class)
   public void loginWithInvalidCredToLocalhost() {
     String domain, loginOutput = "";

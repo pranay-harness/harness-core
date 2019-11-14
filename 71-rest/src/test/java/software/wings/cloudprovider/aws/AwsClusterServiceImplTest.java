@@ -51,7 +51,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
                                                              .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateCluster() {
     awsClusterService.createCluster(
@@ -67,7 +67,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(),
@@ -78,7 +78,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     awsClusterService.deleteService(

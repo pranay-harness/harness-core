@@ -55,7 +55,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
   private static String dummyAppID = "dummy" + appId;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteApplication()
       throws SchedulerException, InterruptedException, ExecutionException, TimeoutException {

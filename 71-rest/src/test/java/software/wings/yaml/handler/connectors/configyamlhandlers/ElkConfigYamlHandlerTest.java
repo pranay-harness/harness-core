@@ -41,7 +41,7 @@ public class ElkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String elkProviderName = "Elk" + System.currentTimeMillis();
@@ -54,7 +54,7 @@ public class ElkConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String elkProviderName = "Elk" + System.currentTimeMillis();

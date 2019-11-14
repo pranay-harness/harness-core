@@ -41,7 +41,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private SlackNotificationService slackNotificationService;
 
   @Test
-  @Owner(emails = AMAN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void shouldSendMessageFromDelegate() {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(true);
@@ -54,7 +54,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = AMAN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void shouldSendMessageFromManager() {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
@@ -67,7 +67,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = AMAN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void shouldNotSendMessageIfWebhookUrlIsEmpty() {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);

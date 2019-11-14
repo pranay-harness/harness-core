@@ -70,7 +70,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPopulateParentFields() {
     List<Variable> workflowVariables = asList(
@@ -279,7 +279,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidatePipelineApprovalState() throws Exception {
     Pipeline pipeline =
@@ -315,7 +315,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateRelatedFieldsEnvironmentInfraMapping() throws Exception {
     List<Variable> workflowVariables = asList(aVariable().entityType(SERVICE).name("Service").build(),

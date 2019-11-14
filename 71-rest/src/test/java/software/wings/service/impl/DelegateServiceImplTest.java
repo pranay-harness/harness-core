@@ -55,7 +55,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteTask() {
     Delegate delegate = Delegate.builder()
@@ -88,7 +88,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Sync() {
     DelegateTask delegateTask = getDelegateTask();
@@ -100,7 +100,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Async() {
     DelegateTask delegateTask = getDelegateTask();

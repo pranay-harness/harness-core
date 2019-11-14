@@ -20,7 +20,7 @@ import java.util.Arrays;
 public class AuthRuleFilterTest extends WingsBaseTest {
   @Inject AuthRuleFilter authRuleFilter;
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsAccountLevelPermission() {
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.AUDIT_VIEWER, Action.READ);

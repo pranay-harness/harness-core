@@ -43,7 +43,7 @@ public class SlackValidationTest extends WingsBaseTest {
           .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getCriteriaTest() {
     List<String> criteria = slackValidation.getCriteria();
@@ -52,7 +52,7 @@ public class SlackValidationTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getCriteriaTestShouldFail() {
     DelegateTask delegateTask =
@@ -73,7 +73,7 @@ public class SlackValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateSuccessTest() {
     List<DelegateConnectionResult> result = slackValidation.validate();

@@ -68,7 +68,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @InjectMocks private EcsServiceDeploy state = new EcsServiceDeploy("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setInstanceCount("20");
@@ -114,7 +114,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

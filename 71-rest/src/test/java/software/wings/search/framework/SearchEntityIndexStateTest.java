@@ -17,7 +17,7 @@ public class SearchEntityIndexStateTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBulkSyncTest() {
     SearchEntityIndexState searchEntityIndexState =

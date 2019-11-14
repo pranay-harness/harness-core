@@ -54,7 +54,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionFailure() throws Exception {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
@@ -73,7 +73,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionSuccess() throws Exception {
     ResponseData notifyResponseData =
@@ -98,7 +98,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyOnErrorCase() {
     ResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
@@ -114,7 +114,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyWithUnhandledGitCommandType() {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()

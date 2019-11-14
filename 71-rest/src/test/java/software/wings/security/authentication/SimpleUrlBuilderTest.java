@@ -11,7 +11,7 @@ import software.wings.WingsBaseTest;
 
 public class SimpleUrlBuilderTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBuildUrl() {
     String url = new SimpleUrlBuilder("http://google.com").addQueryParam("a", "1").addQueryParam("b", "2").build();

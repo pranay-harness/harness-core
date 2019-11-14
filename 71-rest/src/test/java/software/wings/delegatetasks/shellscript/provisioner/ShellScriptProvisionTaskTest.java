@@ -38,7 +38,7 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCombinedVariablesMap() throws IOException {
     assertThat(shellScriptProvisionTask.getCombinedVariablesMap(null, null)).isEmpty();

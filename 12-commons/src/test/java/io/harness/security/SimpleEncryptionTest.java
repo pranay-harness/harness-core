@@ -25,7 +25,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEncryptAndDecrypt() {
     String testInput = "abc";
@@ -39,7 +39,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEncryptAndDecryptWithCustomKey() {
     char[] KEY = "abcdefghijklmnopabcdefghijklmnop".toCharArray();
@@ -54,7 +54,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEncryptDecryptCharsWithCustomKey() {
     String testInput = "test";
@@ -69,7 +69,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWithIncorrectKeyLength() {
     thrown.expect(WingsException.class);
@@ -81,7 +81,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHaveJCEEnabled() {
     try {

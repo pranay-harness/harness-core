@@ -96,7 +96,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void toYaml() {
     final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
@@ -106,7 +106,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void upsertFromYaml() {
     final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
@@ -120,7 +120,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateServiceVariables() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
@@ -137,14 +137,14 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getYamlClass() {
     assertThat(serviceYamlHandler.getYamlClass()).isEqualTo(Yaml.class);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void get() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);

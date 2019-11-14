@@ -38,7 +38,7 @@ public class BambooExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     assertThat(bambooExecutionData.getExecutionSummary())
@@ -49,7 +49,7 @@ public class BambooExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionDetails() {
     assertThat(bambooExecutionData.getExecutionDetails())

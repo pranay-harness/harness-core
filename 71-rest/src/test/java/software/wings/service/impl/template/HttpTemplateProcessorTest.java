@@ -63,7 +63,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Inject private TemplateService templateService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadDefaultHttpTemplates() {
     templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -74,7 +74,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -97,7 +97,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -141,7 +141,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateEntitiesIfNotLinked() {
     Template savedTemplate = createHttpTemplate();
@@ -227,14 +227,14 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
     updateLinkedEntities(GLOBAL_APP_ID);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesWhenLinkedAppTemplateUpdated() {
     updateLinkedEntities(APP_ID);

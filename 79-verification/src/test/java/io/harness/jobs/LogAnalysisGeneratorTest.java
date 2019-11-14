@@ -96,7 +96,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBugsnagNonNN() {
     analysisContext.setStateType(StateType.BUG_SNAG);
@@ -111,7 +111,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNonBugsnagNN() {
     analysisContext.setStateType(StateType.APP_DYNAMICS);

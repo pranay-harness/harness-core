@@ -93,7 +93,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeployInstall() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
@@ -109,7 +109,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeployUpgrade() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
@@ -126,7 +126,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepo()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
@@ -149,7 +149,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepoWithVariableYamlFiles()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
@@ -174,7 +174,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddValuesYamlFromGitRepoWithException()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {

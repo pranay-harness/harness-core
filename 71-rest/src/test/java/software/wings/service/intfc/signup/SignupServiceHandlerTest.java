@@ -24,7 +24,7 @@ public class SignupServiceHandlerTest extends WingsBaseTest {
   @Inject @InjectMocks SignupService signupService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateTokenShouldSucceed() throws URISyntaxException {
     when(azureMarketplaceIntegrationService.validate(Mockito.anyString())).thenReturn(true);
@@ -33,7 +33,7 @@ public class SignupServiceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateTokenShouldFail() throws URISyntaxException {
     when(azureMarketplaceIntegrationService.validate(Mockito.anyString())).thenReturn(true);

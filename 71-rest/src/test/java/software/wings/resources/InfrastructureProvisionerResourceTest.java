@@ -42,7 +42,7 @@ public class InfrastructureProvisionerResourceTest extends WingsBaseTest {
       ResourceTestRule.builder().addResource(infrastructureProvisionerResource).build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGet() {
     InfrastructureProvisioner expectedProvisioner =

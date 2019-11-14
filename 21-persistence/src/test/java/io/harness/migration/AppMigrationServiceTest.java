@@ -20,7 +20,7 @@ public class AppMigrationServiceTest extends PersistenceTest {
   @Inject HPersistence persistence;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInitBaseline() {
     serviceAppMixin.updateStoreMigrationJobInstances(HPersistence.DEFAULT_STORE);
@@ -31,7 +31,7 @@ public class AppMigrationServiceTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateStoreMigrationJobInstances() {
     final MigrationJobInstance dummyInstance = MigrationJobInstance.builder().build();

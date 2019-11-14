@@ -75,7 +75,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query by in operator.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueryByINOperator() {
     TestEntity entity = new TestEntity();
@@ -101,7 +101,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query by in operator.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueryListByINOperator() {
     TestEntity entity = new TestEntity();
@@ -127,7 +127,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query by in operator.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueryListObjectByINOperator() {
     TestEntityB b11 = new TestEntityB("b11");
@@ -170,7 +170,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should paginate filter sort.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPaginateFilterSort() {
     createEntitiesForPagination();
@@ -194,7 +194,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParams() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -223,7 +223,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params in simplified form.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParamsInSimplifiedForm() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -249,7 +249,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    */
   // Query will look like search[0][value]=fieldA1&search[0][value]=fieldA2
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParamsWithInOp() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -280,7 +280,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should work with query with number values.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWithQueryWithNumberValues() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -310,7 +310,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should take query params in simplified form.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTakeQueryParamsForReferenceArrays() {
     TestEntityB testEntityB1 = new TestEntityB();
@@ -358,7 +358,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should update map
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateMap() {
     TestEntity entity = new TestEntity();
@@ -386,7 +386,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should update map entry
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateMapEntry() {
     TestEntity entity = new TestEntity();
@@ -420,7 +420,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query map
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueryMap() {
     TestEntity entity = new TestEntity();
@@ -491,7 +491,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query Count only
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueryCountOnly() {
     createEntitiesForPagination();
@@ -513,7 +513,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query Count only
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueryListOnly() {
     createEntitiesForPagination();
@@ -537,7 +537,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should query Count only
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueryCountAndList() {
     createEntitiesForPagination();
@@ -557,7 +557,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * Should save referenced object.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveReferencedObject() {
     TestEntityB entityB = new TestEntityB();
@@ -587,7 +587,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * A couple of tests to check on encrypted behavior.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldStoreAndRetrieveEncryptedPassword() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
@@ -622,7 +622,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateEncryptedPassword() {
     String rand = String.valueOf(Math.random());
@@ -657,7 +657,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldStoreAndRetrieveEncryptedConfigValue() {
     String rand = String.valueOf(Math.random());
@@ -680,7 +680,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldStoreAndRetrieveUnencryptedConfigValue() {
     String rand = String.valueOf(Math.random());

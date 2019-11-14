@@ -16,7 +16,7 @@ import software.wings.beans.trigger.WorkflowAction;
 
 public class DepTriggerScheduledFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCRUDAndExecuteScheduleTriggerForWorkflow() {
     String name = "Scheduled Trigger" + System.currentTimeMillis();

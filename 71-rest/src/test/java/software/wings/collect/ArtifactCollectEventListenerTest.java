@@ -74,7 +74,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendJenkinsTask() {
     SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
@@ -103,7 +103,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendBambooTask() {
     SettingAttribute SETTING_ATTRIBUTE =
@@ -145,7 +145,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
     artifactCollectEventListener.onMessage(aCollectEvent()

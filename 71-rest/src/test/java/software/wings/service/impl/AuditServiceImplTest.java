@@ -42,7 +42,7 @@ public class AuditServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks protected AuditServiceImpl auditServiceImpl;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveEntityYamlForAudit() {
     RestResponse mockRestResponse = mock(RestResponse.class);
@@ -64,7 +64,7 @@ public class AuditServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLatestYamlRecordIdForEntity() {
     String yamlPath = "YAML_PATH";

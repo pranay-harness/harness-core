@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 public class AccessMgmtApiKeysTest extends AbstractE2ETest {
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void apiKeysCRUD() {
     logger.info("Creating a userGroup");

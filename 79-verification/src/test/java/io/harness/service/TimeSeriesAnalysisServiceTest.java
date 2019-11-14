@@ -116,7 +116,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     FieldUtils.writeField(timeSeriesAnalysisService, "managerClientHelper", managerClientHelper, true);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricDataIfMetricDataIsEmpty() {
     assertThat(
@@ -125,7 +125,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricDataIfStateExecutionIdIsInvalid() throws IllegalAccessException {
     NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder().build();
@@ -138,7 +138,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricDataForAddingValidUntil() throws IllegalAccessException {
     NewRelicMetricDataRecord newRelicMetricDataRecord =
@@ -155,7 +155,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricDataForWorkflowAsNewRelicDataRecord() throws IllegalAccessException {
     NewRelicMetricDataRecord newRelicMetricDataRecord =
@@ -181,7 +181,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricDataForServiceGuard() throws IllegalAccessException {
     NewRelicMetricDataRecord newRelicMetricDataRecord =
@@ -210,7 +210,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveAnalysisRecords() {
     NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
@@ -224,7 +224,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTimeSeriesMLScores() {
     String workflowId = generateUuid();
@@ -247,7 +247,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRecordsIfNoRecordsAvailable() {
     Set<NewRelicMetricDataRecord> records =
@@ -256,7 +256,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRecordsWhenRecordsAreAvailable() {
     NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
@@ -275,7 +275,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRecordsAndExcludeHeartbeatRecord() {
     NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
@@ -313,7 +313,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPreviousRecordsAndExcludeHeartbeatRecord() {
     NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
@@ -351,7 +351,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPreviousRecordsIfWorkflowExecutionIdIsEmpty() {
     NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
@@ -370,7 +370,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMaxControlMinuteWithData() {
     String workflowId = generateUuid();
@@ -404,7 +404,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMaxControlMinuteWithNoData() {
     String workflowId = generateUuid();
@@ -414,7 +414,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMinControlMinuteWithData() {
     String workflowId = generateUuid();
@@ -448,7 +448,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMinControlMinuteWithNoData() {
     String workflowId = generateUuid();
@@ -458,7 +458,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPreviousAnalysis() {
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
@@ -472,7 +472,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     assertThat(result).isNotNull();
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVMetricRecords() {
     int numOfHosts = 5;
@@ -542,7 +542,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCompressTimeSeriesMetricRecords() {
     int numOfTxns = 5;
@@ -591,7 +591,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHeartBeat() {
     for (int i = 0; i < 10; i++) {
@@ -616,14 +616,14 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastCVAnalysisMinuteIfEmpty() {
     assertThat(timeSeriesAnalysisService.getLastCVAnalysisMinute(appId, cvConfigId)).isEqualTo(-1);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastCVAnalysisMinuteIfAvailable() {
     TimeSeriesMLAnalysisRecord analysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
@@ -645,14 +645,14 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMaxCVCollectionMinuteIfEmpty() {
     assertThat(timeSeriesAnalysisService.getMaxCVCollectionMinute(appId, cvConfigId, accountId)).isEqualTo(-1);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMaxCVCollectionMinuteIfAvailable() {
     TimeSeriesDataRecord analysisRecord =
@@ -665,7 +665,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetTagInAnomRecords() {
     Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomMap = new HashMap<>();
@@ -709,7 +709,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCumulativeSumsWithTimeRange() {
     String cvConfigId = generateUuid();
@@ -740,7 +740,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCumulativeSumsWithTag() {
     String cvConfigId = generateUuid();
@@ -760,7 +760,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     assertThat(result.iterator().next().getTag()).isEqualTo("tag1");
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCumulativeSumsForRangeWhenNoCumulativeSumAvailable() {
     Set<TimeSeriesCumulativeSums> timeSeriesCumulativeSums =
@@ -769,21 +769,21 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCumulativeSumsForRangeInCaseOfInvalidParams() {
     timeSeriesAnalysisService.getCumulativeSumsForRange(generateUuid(), null, 10, 20, "test-tag");
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCumulativeSumsForRangeInCaseOfInvalidTimeRange() {
     timeSeriesAnalysisService.getCumulativeSumsForRange(generateUuid(), generateUuid(), 21, 20, "test-tag");
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastDataCollectedMinuteWhenRecordDoesNotExist() {
     long minute = timeSeriesAnalysisService.getLastDataCollectedMinute(appId, stateExecutionId, StateType.APP_DYNAMICS);
@@ -791,7 +791,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastDataCollectedMinuteWhenRecordDoesExists() {
     int dataCollectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
@@ -819,7 +819,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     assertThat(minute).isEqualTo(dataCollectionMinute + 1);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulWorkflowExecutionIdWithDataInCaseOfNoData() {
     List<String> lastSuccessfulWorkflowExecutionIds = Lists.newArrayList(generateUuid(), generateUuid());
@@ -852,7 +852,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulWorkflowExecutionIdWithDataInCaseData() {
     List<String> lastSuccessfulWorkflowExecutionIds = Lists.newArrayList(generateUuid(), generateUuid());
@@ -885,7 +885,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulWorkflowExecutionIdWithDataIfNoRecords() {
     List<String> lastSuccessfulWorkflowExecutionIds = Lists.newArrayList(generateUuid(), generateUuid());
@@ -899,7 +899,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricTemplateWithCategorizedThresholdsWhenOnlyDefaultThresholdsAreDefinedForNewRelic() {
     Map<String, Map<String, TimeSeriesMetricDefinition>> metricTemplateWithCategorizedThresholds =
@@ -1038,7 +1038,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
         .isEqualTo(parser.parse(expectedJson));
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricTemplates() {
     TimeSeriesMetricDefinition timeSeriesMetricDefinition =
@@ -1054,7 +1054,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricTemplates() {
     TimeSeriesMetricDefinition timeSeriesMetricDefinition =
@@ -1076,7 +1076,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricGroups() {
     TimeSeriesMlAnalysisGroupInfo timeSeriesMlAnalysisGroupInfo =
@@ -1100,7 +1100,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricGroupsIfNoTimeSeriesMetricGroup() {
     Map<String, TimeSeriesMlAnalysisGroupInfo> defaultMap =
@@ -1118,7 +1118,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBumpCollectionMinuteToProcess() {
     wingsPersistence.save(NewRelicMetricDataRecord.builder()
@@ -1166,7 +1166,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     newRelicMetricDataRecords.forEach(record -> assertThat(record.getLevel()).isEqualTo(ClusterLevel.HF));
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAnalysisMinuteForLastHeartbeatRecord() {
     wingsPersistence.save(NewRelicMetricDataRecord.builder()
@@ -1208,7 +1208,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAnalysisMinuteIfNoHeartbeatAvailable() {
     wingsPersistence.save(NewRelicMetricDataRecord.builder()
@@ -1234,7 +1234,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHistoricalAnalysis() {
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
@@ -1251,7 +1251,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPreviousAnomaliesWithFiltering() {
     Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies = new HashMap<>();
@@ -1276,7 +1276,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPreviousAnomaliesWhenNoData() {
     Map<String, List<String>> metrics = new HashMap<>();
@@ -1287,7 +1287,7 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPreviousAnomaliesWhenMetricsIsEmpty() {
     Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies = new HashMap<>();

@@ -43,7 +43,7 @@ public class AwsEc2TaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsEc2Request request = AwsEc2ValidateCredentialsRequest.builder().build();

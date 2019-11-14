@@ -56,7 +56,7 @@ public class EcsIntegrationTest extends CategoryTest {
   private ObjectMapper mapper = new ObjectMapper();
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDescribeCluster() {
@@ -70,7 +70,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldDescribeContainerInstances() {
@@ -84,7 +84,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCluster() {
@@ -94,7 +94,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldFetchContainerInstanceForService() {
@@ -106,7 +106,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateTaskDefinition() throws IOException {
@@ -140,7 +140,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateService() throws IOException {
@@ -161,7 +161,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdateService() throws IOException {
@@ -173,7 +173,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldScaleUpTheService() throws IOException {
@@ -185,7 +185,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldScaleDownTheService() throws IOException {
@@ -197,7 +197,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldAddContainerInstance() {
@@ -221,7 +221,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldScaleContainerInstanceCluster() {
@@ -240,7 +240,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldWaitTillAllInstanceaAreReady() {
@@ -253,7 +253,7 @@ public class EcsIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldReturnServices() {

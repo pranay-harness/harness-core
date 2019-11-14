@@ -94,7 +94,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    * Should list catalogs.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListCatalogs() {
     when(catalogService.getCatalogItems(anyString())).thenReturn(new ArrayList<>());
@@ -123,7 +123,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    * @param settingAttribute      the setting attribute
    */
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: this test is not working after upgrade of assertJ")
   @Parameters(method = "catalogNames")

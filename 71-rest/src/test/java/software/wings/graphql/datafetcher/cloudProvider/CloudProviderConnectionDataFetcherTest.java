@@ -38,7 +38,7 @@ public class CloudProviderConnectionDataFetcherTest extends AbstractDataFetcherT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudProviderDataFetcher() {
     List<QLCloudProviderFilter> filters =

@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class MapUtilTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPutIfNotEmpty() {
     Map<String, String> input = new HashMap<>();
@@ -23,7 +23,7 @@ public class MapUtilTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotPutIfEmpty() {
     Map<String, String> input = new HashMap<>();

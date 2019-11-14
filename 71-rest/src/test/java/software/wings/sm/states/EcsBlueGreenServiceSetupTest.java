@@ -76,7 +76,7 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
   @InjectMocks private EcsBlueGreenServiceSetup state = new EcsBlueGreenServiceSetup("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setEcsServiceName("EcsSvc");
@@ -151,7 +151,7 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

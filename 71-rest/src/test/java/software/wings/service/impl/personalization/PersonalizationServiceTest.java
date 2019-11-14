@@ -37,7 +37,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   @Mock private TemplateService templateService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddFavoriteStep() {
     String accountId = generateUuid();
@@ -57,7 +57,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRemoveFavoriteStep() {
     String accountId = generateUuid();
@@ -87,7 +87,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNormalizeRecent() {
     LinkedList<String> recent = null;
@@ -120,7 +120,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddRecentStep() {
     String accountId = generateUuid();
@@ -148,7 +148,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddFavoriteTemplate() {
     String accountId = generateUuid();
@@ -188,7 +188,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRemoveFavoriteTemplate() {
     String accountId = generateUuid();
@@ -233,7 +233,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchFavoriteTemplates() {
     String accountId = generateUuid();

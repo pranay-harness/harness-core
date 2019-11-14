@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     PhysicalInfrastructureMapping infrastructureMapping = Builder.aPhysicalInfrastructureMapping().build();

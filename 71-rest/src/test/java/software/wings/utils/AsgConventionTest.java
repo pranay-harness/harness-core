@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class AsgConventionTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRevisionFromTag() {
     int revision = AsgConvention.getRevisionFromTag("aaa__123");
@@ -31,7 +31,7 @@ public class AsgConventionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAsgNamePrefix() {
     String asgNamePrefix = AsgConvention.getAsgNamePrefix("appName", "serviceName", "envName");

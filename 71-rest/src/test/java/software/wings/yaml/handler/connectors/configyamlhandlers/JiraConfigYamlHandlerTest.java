@@ -38,7 +38,7 @@ public class JiraConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String name = "JIRA" + System.currentTimeMillis();

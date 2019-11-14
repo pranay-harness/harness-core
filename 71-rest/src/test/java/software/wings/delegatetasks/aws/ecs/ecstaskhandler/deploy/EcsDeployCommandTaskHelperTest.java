@@ -56,7 +56,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   @Spy @InjectMocks @Inject private EcsDeployCommandTaskHelper helper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeregisterAutoScalarsIfExists() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -87,7 +87,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeleteAutoScalarForNewService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -120,7 +120,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRestoreAutoScalarConfigs() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -154,7 +154,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateAutoScalarConfigIfServiceReachedMaxSize() {
     ContextData data = ContextData.builder()
@@ -192,7 +192,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDeployingToHundredPercent() {
     EcsResizeParams resizeParams = anEcsResizeParams()
@@ -206,7 +206,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNewInstanceData() {
     ContextData data = ContextData.builder()
@@ -229,7 +229,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetOldInstanceData() {
     ContextData data = ContextData.builder()
@@ -267,7 +267,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListOfStringArrayToMap() {
     Map<String, Integer> map =

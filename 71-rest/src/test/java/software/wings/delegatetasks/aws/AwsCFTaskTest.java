@@ -38,7 +38,7 @@ public class AwsCFTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsCFRequest request = AwsCFGetTemplateParamsRequest.builder().build();

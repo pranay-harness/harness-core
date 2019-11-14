@@ -51,7 +51,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeeded() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
@@ -63,7 +63,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeededTrueCase() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
@@ -83,7 +83,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeededFalseCase() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();
@@ -103,7 +103,7 @@ public class TriggerTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentNeededException() {
     TriggerDeploymentNeededRequest triggerRequest = getTriggerDeploymentNeededRequest();

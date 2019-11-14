@@ -164,7 +164,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetServiceExpressions() {
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
@@ -176,7 +176,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetApplDefaultsExpressions() {
     Set<String> expressions = builderService.listExpressions(APP_ID, APP_ID, APPLICATION);
@@ -192,7 +192,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetServiceExpressionsCommand() {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
@@ -209,7 +209,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetServiceVariableExpressions() {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
@@ -223,7 +223,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAllServiceVariableExpressions() {
     when(serviceResourceService.list(
@@ -243,7 +243,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetServiceTemplateVariableExpressions() {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE)).thenReturn(serviceTemplates);
@@ -261,7 +261,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetEnvironmentExpressions() {
     when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), any())).thenReturn(aPageResponse().build());
@@ -272,7 +272,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetEnvironmentServiceVariableExpressions() {
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
@@ -285,7 +285,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetEnvironmentServiceVariableOverridesExpressions() {
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
@@ -312,7 +312,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWorkflowExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
@@ -337,7 +337,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWorkflowVariablesExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
@@ -363,7 +363,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWorkflowStateExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build(),
@@ -405,7 +405,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWorkflowNotificationGroupExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build(),
@@ -447,7 +447,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWorkflowStateExpressionsAllService() {
     when(serviceResourceService.list(
@@ -486,7 +486,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWorkflowCodeDeployStateExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
@@ -516,7 +516,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWorkflowCommandStateExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
@@ -533,7 +533,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuildWorkflowExpressions() {
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());

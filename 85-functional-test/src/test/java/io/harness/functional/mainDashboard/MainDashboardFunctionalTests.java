@@ -56,7 +56,7 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(FunctionalTests.class)
   public void dashboardUpdateTest() {
     // REST API.
@@ -106,7 +106,7 @@ public class MainDashboardFunctionalTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(FunctionalTests.class)
   public void mostActiveServicesTest() {
     // REST API.

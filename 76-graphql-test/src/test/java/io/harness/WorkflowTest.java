@@ -56,7 +56,7 @@ public class WorkflowTest extends GraphQLTest {
   @Inject private HarnessTagService harnessTagService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryWorkflow() {
     final Seed seed = new Seed(0);
@@ -110,7 +110,7 @@ public class WorkflowTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingPipeline() {
     String query = $GQL(/*
@@ -127,7 +127,7 @@ public class WorkflowTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryWorkflows() {
     final Seed seed = new Seed(0);

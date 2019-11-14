@@ -40,7 +40,7 @@ import javax.validation.ConstraintViolationException;
 
 public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteRootFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -48,7 +48,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -64,7 +64,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = ConstraintViolationException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotSaveInvalidNameTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -74,7 +74,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -97,7 +97,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -114,7 +114,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -137,7 +137,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = ConstraintViolationException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateWithInvalidNameTemplateFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -153,7 +153,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadTemplateFolders() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
@@ -163,7 +163,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTree() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, null, null);
@@ -178,7 +178,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetGlobalTemplateRootTree() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY, null);
@@ -196,7 +196,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTreeByKeyword() {
     TemplateFolder templateFolder = templateFolderService.getTemplateTree(GLOBAL_ACCOUNT_ID, TOMCAT_COMMANDS, null);
@@ -214,7 +214,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -234,7 +234,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTreeByKeywordAndTypes() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -255,7 +255,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetGlobalTemplateTreeByKeywordAndTypesNotMatching() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -265,7 +265,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -286,7 +286,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountTemplateTree() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -306,7 +306,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadTomcatStandardInstallCommand() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -338,7 +338,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetRootFolder() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -356,7 +356,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetFolderByPath() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -402,14 +402,14 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveTemplateFolderAtApplicationLevel() {
     TemplateFolder myTemplateFolder = createAppLevelTemplateFolder();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveTemplateFoldersWithSameNameAccountAndApplicationLevel() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -437,7 +437,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldNotSaveTemplateFoldersWithSameNameApplicationLevel() {
@@ -457,7 +457,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateFolderAtApplicationLevel() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -483,7 +483,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteTemplateFolderApplicationLevel() {
     TemplateFolder myTemplateFolder = createAppLevelTemplateFolder();
@@ -507,7 +507,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTemplateFolderForApplication() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -523,7 +523,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotMoveFolderFromApplicationToAccount() {
     TemplateFolder myTemplateFolder = createAppLevelTemplateFolder();
@@ -532,7 +532,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountTemplateTreeUsingGlobalAppId() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -552,7 +552,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAppTemplateTree() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -576,7 +576,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAppTemplateTreeByKeyword() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -599,7 +599,7 @@ public class TemplateFolderServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAppLevelFolderByPath() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);

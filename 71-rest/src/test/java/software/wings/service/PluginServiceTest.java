@@ -92,7 +92,7 @@ public class PluginServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
@@ -383,7 +383,7 @@ public class PluginServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))

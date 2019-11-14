@@ -59,7 +59,7 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
   private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateContainerInstanceData() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
@@ -80,7 +80,7 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateEc2InstanceLifecycle() throws Exception {
     shouldCreateContainerInstanceData();

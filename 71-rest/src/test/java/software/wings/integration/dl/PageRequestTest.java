@@ -58,7 +58,7 @@ public class PageRequestTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRequestElemMatch() {
     {
@@ -91,7 +91,7 @@ public class PageRequestTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRequestNestedElemMatchQueries() {
     Dummy dummy1 =

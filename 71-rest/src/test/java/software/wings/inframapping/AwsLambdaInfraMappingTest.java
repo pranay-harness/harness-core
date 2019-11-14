@@ -25,7 +25,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
@@ -42,7 +42,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidKey() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
@@ -53,7 +53,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMandatoryFields() {
     Map<String, Object> outputVariablesMap = new HashMap<>();

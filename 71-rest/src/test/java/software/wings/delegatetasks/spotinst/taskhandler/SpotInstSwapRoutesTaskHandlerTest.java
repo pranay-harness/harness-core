@@ -50,7 +50,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstSwapRoutesTaskHandler spotInstSwapRoutesTaskHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteDeploy() throws Exception {
     String oldId = "oldId";
@@ -81,7 +81,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteRollback() throws Exception {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);

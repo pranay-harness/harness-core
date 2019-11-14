@@ -30,7 +30,7 @@ public class GCPUsageReportServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void createGCPUsageReport() {
     Instant startInstance = Instant.now().truncatedTo(ChronoUnit.HOURS);

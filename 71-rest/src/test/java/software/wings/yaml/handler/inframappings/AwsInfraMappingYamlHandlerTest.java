@@ -100,14 +100,14 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet1() throws HarnessException, IOException {
     testCRUDAndGet(validYamlContent1);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet2() throws HarnessException, IOException {
     testCRUDAndGet(validYamlContent2);

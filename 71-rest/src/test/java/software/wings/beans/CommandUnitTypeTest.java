@@ -36,7 +36,7 @@ public class CommandUnitTypeTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   public void shouldCreateNewInstanceFor(String commandUnitTypeName) throws Exception {

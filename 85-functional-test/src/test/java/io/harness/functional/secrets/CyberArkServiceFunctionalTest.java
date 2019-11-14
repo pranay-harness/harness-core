@@ -42,7 +42,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(emails = MARK)
+  @Owner(developers = MARK)
   @Category(FunctionalTests.class)
   @Ignore("This test is depending on a ephemeral CyberArk installation in skytap.com which need manually brought up")
   public void testCRUDSecretsWithCyberArkSecretManager() throws Exception {

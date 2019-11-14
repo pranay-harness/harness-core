@@ -107,7 +107,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricData() throws IllegalAccessException {
     when(timeSeriesAnalysisService.saveMetricData(
@@ -120,7 +120,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricData() throws IOException {
     boolean compareCurrent = true;
@@ -145,7 +145,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMLAnalysisRecords() throws IOException {
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder().build();
@@ -162,7 +162,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetScores() throws IOException {
     when(timeSeriesAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, 0, 1))
@@ -173,7 +173,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricTemplate() {
     when(timeSeriesAnalysisService.getMetricTemplate(

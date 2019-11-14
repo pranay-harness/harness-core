@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ElkLogFetchRequestTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonFormat() {
     Set<String> hosts = new HashSet<>();
@@ -81,7 +81,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonFormatWithIndices() {
     Set<String> hosts = new HashSet<>();
@@ -139,7 +139,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParse() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
@@ -152,7 +152,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParsing() {
     String jsonString =

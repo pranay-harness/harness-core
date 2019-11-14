@@ -32,7 +32,7 @@ public class CloudProviderDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudProviderDataFetcher() {
     QLCloudProvider qlCloudProvider = cloudProviderDataFetcher.fetch(

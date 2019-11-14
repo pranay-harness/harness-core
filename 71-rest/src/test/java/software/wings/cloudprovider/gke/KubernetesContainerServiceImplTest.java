@@ -129,17 +129,17 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBackendController() {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateFrontendController() {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteController() {
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
@@ -151,17 +151,17 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateFrontendService() {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBackendService() {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     kubernetesContainerService.deleteService(KUBERNETES_CONFIG, Collections.emptyList(), "service");
@@ -173,7 +173,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = BRETT)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSetControllerPodCount() {
@@ -188,7 +188,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetControllerPodCount() {
     when(scalableReplicationController.get())

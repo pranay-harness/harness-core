@@ -37,7 +37,7 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateIterator() {
     // disable setup
@@ -51,7 +51,7 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreatePumpIteratorWithDedicatedThreadPool() {
     // disable setup

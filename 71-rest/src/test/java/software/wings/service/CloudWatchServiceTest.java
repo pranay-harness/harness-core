@@ -73,7 +73,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListNamespaces() {
     List<String> namespaces = cloudWatchService.listNamespaces(SETTING_ID, "us-east-1");
@@ -81,7 +81,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListMetrics() {
     List<String> namespaces = cloudWatchService.listMetrics(SETTING_ID, "us-east-1", NAMESPACE);
@@ -89,7 +89,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListDimensions() {
     List<String> namespaces = cloudWatchService.listDimensions(SETTING_ID, "us-east-1", NAMESPACE, METRIC_NAME);
@@ -97,7 +97,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMetricsAllMetrics() {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics = CloudWatchServiceImpl.fetchMetrics();
@@ -109,7 +109,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchSpecificMetrics() {
     CloudWatchCVServiceConfiguration cvServiceConfiguration = CloudWatchCVServiceConfiguration.builder().build();
@@ -132,7 +132,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchSpecificMetricsNone() {
     CloudWatchCVServiceConfiguration cvServiceConfiguration = CloudWatchCVServiceConfiguration.builder().build();
@@ -147,7 +147,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetStatisticsAndUnit() {
     List<CloudWatchMetric> cloudWatchMetrics = Lists.newArrayList(CloudWatchMetric.builder()
@@ -166,7 +166,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchCloudWatchLambdaMetricType() {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics = CloudWatchServiceImpl.fetchMetrics();

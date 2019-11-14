@@ -92,7 +92,7 @@ public class PipelineServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePipeline() {
     final Account account = createAccount();

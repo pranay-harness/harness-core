@@ -54,7 +54,7 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
         .thenReturn(true);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSavingHeartbeatsForAllHosts() throws DataCollectionException, IOException {
     LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
@@ -75,7 +75,7 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIfFetchCalledForEachHostParallelly() throws DataCollectionException, IOException {
     LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();

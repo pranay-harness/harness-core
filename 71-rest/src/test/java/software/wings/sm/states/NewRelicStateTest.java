@@ -153,7 +153,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAnalysisType() {
     nrState.setComparisonStrategy("COMPARE_WITH_CURRENT");
@@ -161,7 +161,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAnalysisTypePredictive() {
     nrState.setComparisonStrategy("PREDICTIVE");
@@ -169,7 +169,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateGroup() {
     // setup
@@ -195,7 +195,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMetricsCorrespondingToMetricNames() {
     /*
@@ -247,7 +247,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void metricNames() {
     List<NewRelicState.Metric> actualMetrics = newRelicService.getListOfMetrics();
@@ -263,7 +263,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void metricDefinitions() {
     Map<String, TimeSeriesMetricDefinition> expectedMetricDefinitions = new HashMap<>();
@@ -288,7 +288,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricType() {
     String errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
@@ -306,7 +306,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestTriggered() throws IOException, IllegalAccessException {
     NewRelicConfig newRelicConfig = NewRelicConfig.builder()

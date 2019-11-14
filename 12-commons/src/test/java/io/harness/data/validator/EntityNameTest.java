@@ -29,7 +29,7 @@ public class EntityNameTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllowedCharSet() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();

@@ -109,7 +109,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetExperimentalMetricAnalysisSummary_WithoutMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))
@@ -123,7 +123,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetExperimentalMetricAnalysisSummary_WithMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))

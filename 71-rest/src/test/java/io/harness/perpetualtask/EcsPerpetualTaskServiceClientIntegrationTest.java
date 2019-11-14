@@ -29,7 +29,7 @@ public class EcsPerpetualTaskServiceClientIntegrationTest extends BaseIntegratio
   private final String DEFAULT_CLUSTER_NAME = "clusterName";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreatePerpetualTask() {
     EcsPerpetualTaskClientParams ecsPerpetualTaskClientParams =

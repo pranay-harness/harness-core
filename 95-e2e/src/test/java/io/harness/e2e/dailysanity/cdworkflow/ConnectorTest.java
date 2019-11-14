@@ -31,7 +31,7 @@ public class ConnectorTest extends AbstractE2ETest {
   private static String connectorId;
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC0_listAllConnectors() {
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -39,7 +39,7 @@ public class ConnectorTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC1_createNexusConnector() {
     String NEXUS_URL = "https://nexus2.harness.io";
@@ -71,7 +71,7 @@ public class ConnectorTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC2_deleteConnector() {
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), connectorId);

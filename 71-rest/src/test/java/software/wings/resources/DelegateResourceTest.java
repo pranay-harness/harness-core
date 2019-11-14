@@ -106,7 +106,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListDelegates() {
     PageResponse<Delegate> pageResponse = new PageResponse<>();
@@ -126,7 +126,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDelegateStatus() {
     when(DELEGATE_SERVICE.getDelegateStatus(any()))
@@ -140,7 +140,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRegisterDelegate() {
     when(DELEGATE_SERVICE.register(any(Delegate.class)))
@@ -163,7 +163,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddDelegate() {
     Delegate delegate = Delegate.builder().build();
@@ -185,7 +185,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateDelegate() {
     Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
@@ -209,7 +209,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateDelegateDescription() {
     final String newDesc = "newDescription";
@@ -230,7 +230,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     Response restResponse =
@@ -240,7 +240,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
@@ -256,7 +256,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDownloadUrl() {
     when(httpServletRequest.getRequestURI()).thenReturn("/delegates/downloadUrl");
@@ -277,7 +277,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDownloadDelegate() throws Exception {
     File file = File.createTempFile("test", ".txt");
@@ -300,7 +300,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = BRETT)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldAcceptDelegateResponse() {

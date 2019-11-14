@@ -65,7 +65,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     List<BuildDetails> buildDetails = Lists.newArrayList(
@@ -78,7 +78,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetBuildsForArtifactPathWithTrailingSlash() {
     List<BuildDetails> buildDetails = Lists.newArrayList(Builder.aBuildDetails()
@@ -104,7 +104,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetBuildsForArtifactPathWithWildcard() {
     List<BuildDetails> buildDetails = Lists.newArrayList(Builder.aBuildDetails()
@@ -137,7 +137,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(amazonS3Service.getBuckets(awsConfig, null))
@@ -147,7 +147,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(amazonS3Service.getArtifactPaths(any(), any(), any())).thenReturn(Lists.newArrayList("path1"));

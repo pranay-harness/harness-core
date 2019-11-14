@@ -36,7 +36,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsIamHelperServiceDelegateImpl awsIamHelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListIAMRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);
@@ -55,7 +55,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListIamInstanceRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);

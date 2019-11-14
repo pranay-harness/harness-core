@@ -41,7 +41,7 @@ public class EntityHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private EntityHelper entityHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLoad() {
     Environment environment = anEnvironment().name(ENV_NAME).appId(APP_ID).build();
@@ -59,7 +59,7 @@ public class EntityHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetYamlPathForDeploymentSpecification() {
     EntityAuditRecord record = EntityAuditRecord.builder().appName(APP_NAME).affectedResourceName(SERVICE_NAME).build();
@@ -70,7 +70,7 @@ public class EntityHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFullYamlPathForEntity() {
     doReturn("Setup/Application/APP_NAME/Services/SERVICE_NAME/Manifests")

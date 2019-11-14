@@ -76,7 +76,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldExecuteShellScriptTemplateWorkflow() {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
@@ -94,7 +94,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void createUpdateDeleteShellScriptTemplate() {
     // Create template
@@ -218,7 +218,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testCRUDTemplateRBAC() {
     String readOnlyPassword = "readonlyuser";
@@ -321,7 +321,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = AADITI, intermittent = true)
+  @Owner(developers = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldNotUpdateTemplateWithDuplicateNameInSameFolder() {
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {};
@@ -344,7 +344,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testAddFetchRemoveTemplateFavorites() {
     GenericType<RestResponse<Set<String>>> responseType = new GenericType<RestResponse<Set<String>>>() {};
@@ -383,7 +383,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testMarkInvalidTemplateAsFavorite() {
     assertThat(Setup.portal()

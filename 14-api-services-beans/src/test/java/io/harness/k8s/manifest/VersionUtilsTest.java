@@ -20,7 +20,7 @@ import java.util.List;
 
 public class VersionUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapAndPodEnvTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-env.yaml");
@@ -41,7 +41,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapsAndPodEnvTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-env.yaml");
@@ -60,7 +60,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void twoConfigMapsAndPodEnvTest() throws Exception {
     URL url = this.getClass().getResource("/two-configmap-pod-env.yaml");
@@ -89,7 +89,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapsAndPodEnvFromTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-envfrom.yaml");
@@ -110,7 +110,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapsAndPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-pod-volume.yaml");
@@ -131,7 +131,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapAndRedisPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-redis-pod-volume.yaml");
@@ -152,7 +152,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void secretAndPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/secret-pod-volume.yaml");
@@ -173,7 +173,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void nginxDeploymentVersionTest() throws Exception {
     URL url = this.getClass().getResource("/nginx-full.yaml");
@@ -206,7 +206,7 @@ public class VersionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void configMapWithDirectApplyAndPodVolumeTest() throws Exception {
     URL url = this.getClass().getResource("/configmap-skip-versioning-pod-env.yaml");

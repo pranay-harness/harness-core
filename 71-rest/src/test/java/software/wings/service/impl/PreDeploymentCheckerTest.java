@@ -79,7 +79,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
   @Mock private MainConfiguration mainConfiguration;
 
   @Test
-  @Owner(emails = JATIN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void checkDeploymentRateLimit() {
@@ -109,7 +109,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowPreDeploymentCheckerViolation() {
     Workflow workflow = getWorkflow(true);
@@ -120,7 +120,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelinePreDeploymentCheckerViolation() {
     Pipeline pipeline = getPipeline();

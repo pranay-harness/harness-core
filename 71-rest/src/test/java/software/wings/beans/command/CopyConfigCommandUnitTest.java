@@ -52,7 +52,7 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyConfigForWinRm() throws IOException {
     // Create a test web.config file

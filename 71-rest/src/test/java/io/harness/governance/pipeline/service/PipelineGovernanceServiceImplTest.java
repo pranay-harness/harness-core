@@ -60,7 +60,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testList() {
     List<PipelineGovernanceConfig> initialList = pipelineGovernanceService.list(SOME_ACCOUNT_ID);
@@ -75,7 +75,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdate() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
@@ -101,7 +101,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAdd() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(

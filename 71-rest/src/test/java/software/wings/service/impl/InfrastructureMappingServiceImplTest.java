@@ -22,7 +22,7 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
   @Inject InfrastructureMappingServiceImpl infrastructureMappingService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void hostsListShouldReturnEmptyWhenDynamicInfra() {
     InfrastructureMapping infraMapping = PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()

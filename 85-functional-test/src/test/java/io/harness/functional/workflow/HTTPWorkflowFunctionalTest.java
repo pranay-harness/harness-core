@@ -54,7 +54,7 @@ public class HTTPWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = POOJA)
+  @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
   public void shouldCreateHTTPStepInWorkflow() throws Exception {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);

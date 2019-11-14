@@ -62,7 +62,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExpandStencilOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -88,7 +88,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -104,7 +104,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -119,7 +119,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheAccessorMethod() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(

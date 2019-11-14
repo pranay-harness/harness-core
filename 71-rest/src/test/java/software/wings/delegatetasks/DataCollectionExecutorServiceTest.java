@@ -21,7 +21,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   @Inject private DataCollectionExecutorService executorService;
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void executeParallelWithException() throws IOException {
     List<Callable<Boolean>> callables = new ArrayList<>();
@@ -31,7 +31,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void executeParallel() throws WingsException {
     List<Callable<Boolean>> callables = new ArrayList<>();

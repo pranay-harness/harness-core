@@ -37,7 +37,7 @@ public class AwsIamTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsIamRequest request = AwsIamListRolesRequest.builder().build();

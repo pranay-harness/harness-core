@@ -37,7 +37,7 @@ public class AwsEcsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsEcsRequest request = AwsEcsListClustersRequest.builder().build();

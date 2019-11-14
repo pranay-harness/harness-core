@@ -23,7 +23,7 @@ public class PermitServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private PermitService permitService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAcquirePermit() {
     assertThat(acquirePermit()).isNotNull();
@@ -41,7 +41,7 @@ public class PermitServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReleasePermitByKey() {
     String permitId = acquirePermit();

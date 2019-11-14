@@ -76,7 +76,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetServiceInstanceStatistics() {
     when(appService.list(any(PageRequest.class)))
@@ -116,7 +116,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDeploymentStatistics() {
     List<ElementExecutionSummary> serviceExecutionSummaries =

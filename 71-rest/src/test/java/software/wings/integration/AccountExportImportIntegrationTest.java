@@ -54,7 +54,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testAccountExportImport() throws Exception {
     byte[] exportedAccountData = exportAccountData(accountId);
@@ -79,7 +79,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testImportBrandNewAccountDataFromZipFile() {
     String qaHarnessAccountId = "zEaak-FLS425IEO7OLzMUg";
@@ -119,7 +119,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testImportQEAccountDataFromZipFile() {
     String qaHarnessAccountId = "eWZFoTkESDSkPfnGwAp0lQ";
@@ -153,7 +153,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSpecificExport() throws Exception {
     byte[] exportedAccountData =
@@ -177,7 +177,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSpecificExport_noEntityTypes_shouldFail() {
     assertThatExceptionOfType(Exception.class).isThrownBy(() -> {

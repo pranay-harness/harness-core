@@ -45,7 +45,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSerialization() {
     val snapshot = getSampleSnapshot();

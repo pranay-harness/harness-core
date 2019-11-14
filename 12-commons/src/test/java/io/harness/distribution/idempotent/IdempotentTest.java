@@ -48,7 +48,7 @@ public class IdempotentTest extends CategoryTest {
       IdempotentRegistry.Response.<BooleanIdempotentResult>builder().state(State.DONE).result(TRUE).build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewIdempotentFailed() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
@@ -63,7 +63,7 @@ public class IdempotentTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewIdempotentSucceeded() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
@@ -79,7 +79,7 @@ public class IdempotentTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFinishedIdempotent() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
@@ -94,7 +94,7 @@ public class IdempotentTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testIdempotentAfterTtl() {
@@ -144,7 +144,7 @@ public class IdempotentTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 10, successes = 10)
   @Category(UnitTests.class)
   public void testInprocRegistryConcurrency() throws InterruptedException {

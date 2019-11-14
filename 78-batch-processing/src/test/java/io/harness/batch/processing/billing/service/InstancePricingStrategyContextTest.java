@@ -22,7 +22,7 @@ public class InstancePricingStrategyContextTest extends CategoryTest {
   @Mock private VMPricingServiceImpl vmPricingService;
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstancePricingStrategy() {
     InstancePricingStrategyContext instancePricingStrategyContext = new InstancePricingStrategyContext(

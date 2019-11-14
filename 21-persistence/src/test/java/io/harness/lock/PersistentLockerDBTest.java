@@ -43,7 +43,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     String uuid = generateUuid();
@@ -68,7 +68,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireEphemeralLock() {
     String uuid = generateUuid();
@@ -82,7 +82,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testConcurrentAcquireEphemeralLock() {
@@ -97,7 +97,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockAfterDestroy() {
     assertThatCode(() -> {
@@ -115,7 +115,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTryToAcquireEphemeralLock() {
     assertThatCode(() -> {
@@ -128,7 +128,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTryToAcquireLock() {
     String uuid = generateUuid();
@@ -141,7 +141,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.")
   public void testAcquireAfterTimeout() throws InterruptedException {

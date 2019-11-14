@@ -68,7 +68,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
    * Disbaling this temporarily until our team completes this from framework level.
    */
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   @Ignore("This has some issue with datagen model, which may turn other tests flaky. Runs in E2ETest.")
   public void secretsCRUDTests() {

@@ -21,7 +21,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   String accountId = "ACCOUNTID";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardCreate() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -36,7 +36,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardCreateUpdate() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -60,7 +60,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardInvalidUpdate() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -82,7 +82,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardDelete() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -102,7 +102,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDashboardSummary() {
     for (int i = 0; i < 10; i++) {

@@ -71,7 +71,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_executeTaskInternal() throws PivotalClientApiException {
     doNothing().when(pcfClient).runPcfPluginScript(
@@ -113,7 +113,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_handleError() {
     final PcfCommandExecutionResponse commandExecutionResponse = pcfRunPluginCommandTaskHandler.handleError(

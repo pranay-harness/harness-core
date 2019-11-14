@@ -35,7 +35,7 @@ public class ShellScriptStateIntegrationTest extends WingsBaseTest {
   @Inject private TemplateService templateService;
 
   @Test(expected = WingsException.class)
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateUpdateDeleteShellScriptTemplate() {

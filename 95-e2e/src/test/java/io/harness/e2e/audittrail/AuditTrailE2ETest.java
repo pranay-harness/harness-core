@@ -82,7 +82,7 @@ public class AuditTrailE2ETest extends AbstractE2ETest {
 
   /* Test to check whether a audit entry is created when a new application is added*/
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(E2ETests.class)
   public void TC1_applicationCreationEntryExistTest() {
     /* We are querying for audit entry in time interval [-1min, 5 min]*/
@@ -109,7 +109,7 @@ public class AuditTrailE2ETest extends AbstractE2ETest {
 
   /* Test to check that the yaml diff when we update the application*/
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(E2ETests.class)
   public void TC2_correctYamlForApplicationUpdateTest() {
     String filterString = (new JSONObject()

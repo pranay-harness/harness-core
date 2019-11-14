@@ -24,7 +24,7 @@ public class ConnectorsSourceRepoTest extends AbstractFunctionalTest {
   private static String CONNECTOR_GIT_PREFIX = "Automation-GIT-Connector-";
 
   @Test
-  @Owner(emails = SHASWAT)
+  @Owner(developers = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC0_listAllConnectors() {
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -32,7 +32,7 @@ public class ConnectorsSourceRepoTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHASWAT)
+  @Owner(developers = SHASWAT)
   @Category(FunctionalTests.class)
   public void TC1_createAndDeleteGitConnector() {
     String connectorName = CONNECTOR_GIT_PREFIX + System.currentTimeMillis();

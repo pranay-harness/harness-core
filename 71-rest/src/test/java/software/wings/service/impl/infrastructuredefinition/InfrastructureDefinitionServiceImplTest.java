@@ -103,7 +103,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnNonResolutionOfExpressions() {
     String wrongVariable = "${WRONG_VARIABLE}";
@@ -120,7 +120,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnNullRenderedValueOfExpression() {
     String wrongVariable = "${WRONG_VARIABLE}";
@@ -137,7 +137,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnStringNullRenderedValueOfExpression() {
     String wrongVariable = "${WRONG_VARIABLE}";
@@ -154,7 +154,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResolveExpressions() {
     String workflowVariable = "abc-${workflow.variables.var}";
@@ -171,7 +171,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldIgnoreReleaseNameResolutionFailure() {
     InfrastructureDefinition infrastructureDefinition =
@@ -188,7 +188,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldIgnoreReleaseNameWithSomeConstantResolutionFailure() {
     String releaseName = "release-" + INFRA_KUBERNETES_INFRAID_EXPRESSION;
@@ -205,7 +205,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnsureSafeToDelete_error() {
     final InfrastructureDefinition infrastructureDefinition =
@@ -218,7 +218,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnsureSafeToDelete_error1() {
     final InfrastructureDefinition infrastructureDefinition =
@@ -236,7 +236,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnsureSafeToDelete_error2() {
     final InfrastructureDefinition infrastructureDefinition =
@@ -258,7 +258,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDeploymentTypeCloudProviderOptions() {
     assertThat(infrastructureDefinitionService.getDeploymentTypeCloudProviderOptions().size()
@@ -267,7 +267,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAwsEcsInfraWithProvisioner() {
     //    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -294,7 +294,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidatePhysicalInfraWithProvisioner() {
     //    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -312,7 +312,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateGoogleKubernetesEngineInfraWithProvisioner() {
     //    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -330,7 +330,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAwsLambdaInfraWithProvisioner() {
     //    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -348,7 +348,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAwsAmiInfraWithProvisioner() {
     //    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -366,7 +366,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAwsInstanceInfraWithProvisioner() {
     //    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -390,7 +390,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRemoveUnsupportedExpressions() {
     //    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -408,7 +408,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloneAndSaveWith() {
     InfrastructureDefinitionService spyInfrastructureDefinitionService = spy(InfrastructureDefinitionServiceImpl.class);
@@ -438,7 +438,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
     mockPhysicalInfra();
@@ -450,7 +450,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
     mockPhysicalInfra();
@@ -466,7 +466,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
     mockPhysicalInfra();
@@ -486,7 +486,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExpressionAnnotatedFields() {
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -501,7 +501,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnEmptyExpressionAnnotatedFields() {
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
@@ -514,7 +514,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplySearchFilter() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -534,7 +534,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateImmutableFields() {
     InfrastructureDefinition oldInfraDefinition = InfrastructureDefinition.builder()
@@ -560,7 +560,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateInfraDefinition() {
     InfrastructureDefinition valid = null;
@@ -705,7 +705,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testContainsExpression() {
     assertThat(infrastructureDefinitionService.containsExpression("org")).isFalse();
@@ -713,7 +713,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListRoutesForPcf() throws Exception {
     InfrastructureDefinitionServiceImpl definitionService = spy(InfrastructureDefinitionServiceImpl.class);
@@ -746,7 +746,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloudProviderNameForDefinition() {
     SettingAttribute cloudProvider =

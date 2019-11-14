@@ -98,7 +98,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject PcfApplicationDetailsCommandTaskHandler pcfApplicationDetailsCommandTaskHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPerformSetup() throws Exception {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
@@ -228,7 +228,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPerformDeploy_nonBlueGreen() throws Exception {
     PcfCommandRequest pcfCommandRequest =
@@ -376,7 +376,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPerformRollback() throws Exception {
     PcfCommandRequest pcfCommandRequest =
@@ -481,7 +481,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testperformDataFetch() throws Exception {
     PcfInfraMappingDataRequest pcfCommandRequest = PcfInfraMappingDataRequest.builder()
@@ -535,7 +535,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testperformAppDetails() throws Exception {
     PcfInstanceSyncRequest pcfInstanceSyncRequest = PcfInstanceSyncRequest.builder()
@@ -590,7 +590,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPerformSwapRouteExecute() throws Exception {
     PcfRouteUpdateRequestConfigData routeUpdateRequestConfigData =
@@ -655,7 +655,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSwapRouteExecutionNeeded() throws Exception {
     assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(null)).isFalse();
@@ -671,7 +671,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCheckIfVarsFilePresent() throws Exception {
     PcfManifestsPackage manifestsPackage = PcfManifestsPackage.builder().build();
@@ -688,7 +688,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareVarsYamlFile() throws Exception {
     File f1 = mock(File.class);

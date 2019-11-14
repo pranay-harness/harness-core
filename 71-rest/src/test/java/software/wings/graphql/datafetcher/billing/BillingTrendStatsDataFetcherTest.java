@@ -70,7 +70,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBillingTrend() throws SQLException {
     prepareDataForTrend();
@@ -90,7 +90,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBillingTrendWithForecast() throws SQLException {
     prepareDataForTrend();
@@ -118,7 +118,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetEmptyBillingTrend() throws SQLException {
     Statement mockStatement = mock(Statement.class);
@@ -137,7 +137,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
@@ -149,7 +149,7 @@ public class BillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenQueryThrowsException() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
