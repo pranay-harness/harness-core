@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import io.harness.data.validator.Trimmed;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -56,7 +57,7 @@ import javax.validation.constraints.NotNull;
 public class Environment extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
 
-  @NotEmpty @EntityName private String name;
+  @NotEmpty @EntityName @Trimmed private String name;
   private String description;
   private String configMapYaml;
   private String helmValueYaml;
