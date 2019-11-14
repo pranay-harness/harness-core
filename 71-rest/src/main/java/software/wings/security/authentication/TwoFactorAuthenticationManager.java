@@ -107,7 +107,11 @@ public class TwoFactorAuthenticationManager {
   private Optional<Account> getDefaultAccount(User user) {
     String defaultAccountId = user.getDefaultAccountId();
     if (isEmpty(defaultAccountId)) {
-      defaultAccountId = user.getAccounts().get(0).getUuid();
+      if (user.getAccounts() != null) {
+        defaultAccountId = user.getAccounts().get(0).getUuid();
+      } else {
+        throw new InvalidRequestException("No account exists for the user");
+      }
     }
 
     // PL-2771: Need to look up from DB to get up-to-date account settings including whether account-level 2FA is
