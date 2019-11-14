@@ -1,6 +1,6 @@
 package io.harness.e2e.dailysanity.platform.paid;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
@@ -44,7 +44,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
   static final int DELAY_IN_MS = 6000;
   static final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void createGoogleOauth() {
     logger.info("Starting the google oauth test");
@@ -62,7 +62,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void testLDAPAuthentication() {
     final String QUERY = "Manager";
@@ -144,7 +144,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void createSAMLSettingsInPaid() {
     logger.info("Starting the SAML test");

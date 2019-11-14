@@ -1,6 +1,6 @@
 package io.harness.functional.rbac;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
@@ -23,7 +23,7 @@ import software.wings.beans.security.UserGroup;
 @Slf4j
 public class AccessManagementNPTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForList() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -57,7 +57,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
     logger.info("No permission test for GET");
@@ -68,7 +68,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -79,7 +79,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUserGroup() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -88,7 +88,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForIPWhitelisting() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -97,7 +97,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForAPIKeys() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -109,7 +109,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForLDAP() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -118,7 +118,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForSAML() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -127,7 +127,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateIPWhitelistingTest() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -136,7 +136,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteIPWhitelistingTest() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -145,7 +145,7 @@ public class AccessManagementNPTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateAndDeleteApiKeysTest() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";

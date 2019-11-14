@@ -1,6 +1,6 @@
 package io.harness.functional.apikeys;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 public class AccessMgmtApiKeysTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void apiKeysCRUD() {
     logger.info("Creating a userGroup");

@@ -1,6 +1,6 @@
 package io.harness.functional.users;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -59,7 +59,7 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void listUsers() {
     logger.info("Starting the list users test");
@@ -71,7 +71,7 @@ public class UserTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = SWAMY, intermittent = true)
+  @Owner(emails = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void testUserInvite() throws IOException, MessagingException {
     Account account = this.getAccount();
