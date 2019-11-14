@@ -1,10 +1,12 @@
 package software.wings.scheduler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.quartz.SchedulerException;
@@ -26,6 +28,7 @@ public class ScheduledTriggerJobTest extends WingsBaseTest {
   private static final String triggerId = "Dummy Trigger Id";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void selfPrune() throws SchedulerException, InterruptedException, TimeoutException {
     TestJobListener listener = new TestJobListener(ScheduledTriggerJob.GROUP + "." + triggerId);

@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
@@ -411,6 +412,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSaveConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -421,6 +423,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testNewRelicConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -492,6 +495,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testAppDynamicsConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -523,6 +527,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testAPMCVConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -631,6 +636,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testPrometheusConfiguration() {
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + PROMETHEUS;
@@ -688,6 +694,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testCloudWatchConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -718,6 +725,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testCloudWatchConfigurationNoMetricsShouldFail() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -738,6 +746,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testCloudWatchConfigurationWithoutAnyMetric() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -775,6 +784,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testCloudWatchConfigurationWithOnlyLamdaMetrics() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -1062,6 +1072,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSplunkConfiguration() {
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + SPLUNKV2;
@@ -1156,6 +1167,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfiguration() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -1246,6 +1258,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationValidUntil() throws InterruptedException {
@@ -1419,6 +1432,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLogsConfigurationResetBaseline() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -1597,6 +1611,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLogsConfigurationUpdateAlert() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -1754,6 +1769,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCustomThresholdsCrud() throws UnsupportedEncodingException {
     String txnName = URLEncoder.encode("some valid txn / with slash", StandardCharsets.UTF_8.name());

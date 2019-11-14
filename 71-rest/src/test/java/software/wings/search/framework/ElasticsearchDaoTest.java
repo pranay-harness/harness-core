@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
@@ -31,6 +33,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchDao elasticsearchDao;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void upsertDocumentTest() throws IOException {
     String entityType = "entityType";
@@ -62,6 +65,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteDocumentTest() throws IOException {
     String entityType = "entityType";

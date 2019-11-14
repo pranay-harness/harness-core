@@ -2,10 +2,12 @@ package software.wings.beans;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
@@ -34,6 +36,7 @@ public class CommandUnitTypeTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   public void shouldCreateNewInstanceFor(String commandUnitTypeName) throws Exception {

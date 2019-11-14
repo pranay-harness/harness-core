@@ -1,11 +1,13 @@
 package software.wings.delegatetasks.shellscript.provisioner;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +38,7 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCombinedVariablesMap() throws IOException {
     assertThat(shellScriptProvisionTask.getCombinedVariablesMap(null, null)).isEmpty();

@@ -3,6 +3,7 @@ package io.harness.distribution.barrier;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
 import static io.harness.distribution.barrier.Barrier.State.ENDURE;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,6 +15,7 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.barrier.Barrier.State;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,6 +33,7 @@ public class BarrierTest extends CategoryTest {
                           .build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateBarrier() throws UnableToSaveBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -42,6 +45,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLoadBarrier() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -55,6 +59,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRunningForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -72,6 +77,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testChildFailedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -89,6 +95,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testChildMixedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -106,6 +113,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTopAbsentForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -122,6 +130,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTopSucceededForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -138,6 +147,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAbandonedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();

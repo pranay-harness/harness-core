@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Filter;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -30,12 +32,14 @@ public class AwsUtilsTest extends WingsBaseTest {
   @InjectMocks @Inject private AwsUtils utils;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHostnameFromPrivateDnsName() {
     assertThat(utils.getHostnameFromPrivateDnsName("ip-172-31-18-241.ec2.internal")).isEqualTo("ip-172-31-18-241");
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHostnameFromConvention() {
     doReturn(HOST_NAME).when(mockExpressionEvaluator).substitute(anyString(), any());
@@ -44,6 +48,7 @@ public class AwsUtilsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAwsFilters() {
     AwsInfrastructureMapping awsInfrastructureMapping =

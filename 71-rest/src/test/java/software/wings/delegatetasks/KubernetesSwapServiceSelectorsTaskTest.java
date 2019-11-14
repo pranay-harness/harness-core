@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -17,6 +18,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -55,6 +57,7 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() {
     Service service1 = createService("service1", ImmutableMap.of("label", "A"));

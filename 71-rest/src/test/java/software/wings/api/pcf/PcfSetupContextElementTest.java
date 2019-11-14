@@ -8,10 +8,12 @@ import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_ROUTES;
 import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_GUID;
 import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_NAME;
 import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_ROUTES;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
@@ -22,6 +24,7 @@ import java.util.Map;
 
 public class PcfSetupContextElementTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     String guid = "1234_0";

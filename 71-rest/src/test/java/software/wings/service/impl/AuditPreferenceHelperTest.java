@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -314,6 +316,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTopLevelCriteria_1() throws Exception {
     AuditPreference auditPreference =
@@ -355,6 +358,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_OnlyAccountAndTopLevelCriteriaGiven() throws Exception {
     AuditPreference auditPreference =
@@ -416,6 +420,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_onlyAppLevelCriteria() throws Exception {
     AuditPreference auditPreference =
@@ -491,6 +496,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_AppAndAccountLevelCriteria() throws Exception {
     AuditPreference auditPreference =

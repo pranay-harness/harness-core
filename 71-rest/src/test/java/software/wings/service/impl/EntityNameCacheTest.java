@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.NameAccess;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -27,6 +29,7 @@ public class EntityNameCacheTest extends WingsBaseTest {
   @Inject @InjectMocks private EntityNameCache entityNameCache;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEntityCache() throws Exception {
     Query mockQuery = mock(Query.class);

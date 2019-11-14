@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
@@ -41,6 +42,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw invalid argument for null state execution instance.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForNullStateExecutionInstance() {
     Application app =
@@ -72,6 +74,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw invalid argument for invalid state execution instance.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForInvalidStateExecutionInstance() {
     Application app =
@@ -102,6 +105,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for resume.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowStateNotForResume() {
     Application app =
@@ -130,6 +134,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for retry.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowStateNotForRetry() {
     Application app =
@@ -158,6 +163,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for pause.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowStateNotForPause() {
     Application app =
@@ -189,6 +195,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw state not for abort.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowStateNotForAbort() {
     Application app =
@@ -256,6 +263,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw pause all already.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowPauseAllAlready() {
     Application app =
@@ -291,6 +299,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should pause all clear previous resume all.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPauseAllClearPreviousResumeAll() {
     Application app =
@@ -332,6 +341,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw resume all already.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowResumeAllAlready() {
     Application app =
@@ -358,6 +368,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should resume all clear prev pause all.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResumeAllClearPrevPauseAll() {
     Application app =
@@ -392,6 +403,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
    * Should throw resume all already 2.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowResumeAllAlready2() {
     Application app =

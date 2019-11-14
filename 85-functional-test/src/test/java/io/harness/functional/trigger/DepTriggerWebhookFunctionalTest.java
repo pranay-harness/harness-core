@@ -1,5 +1,6 @@
 package io.harness.functional.trigger;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.trigger.Action.ActionType.WORKFLOW;
 import static software.wings.beans.trigger.TriggerExecution.Status.RUNNING;
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
@@ -33,6 +35,7 @@ public class DepTriggerWebhookFunctionalTest extends AbstractTriggerFunctionalTe
   final String token = CryptoUtils.secureRandAlphaNumString(40);
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCRUDAndExecuteWebhookTriggerForWorkflow() {
     String name = "Webhook" + System.currentTimeMillis();

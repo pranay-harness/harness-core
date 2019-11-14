@@ -6,6 +6,7 @@ package software.wings.sm;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -28,6 +29,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -85,6 +87,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute new execution.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldComputeNewExecution() {
     State s1 = aRepeatState()
@@ -127,6 +130,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute inprogress estimate.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldComputeInprogressEstimate() {
     State s1 = aRepeatState()
@@ -220,6 +224,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute inprogress estimate with failed node.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldComputeInprogressEstimateWithFailedNode() {
     State s1 = aRepeatState()

@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
@@ -19,6 +20,7 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -33,6 +35,7 @@ public class YamlResourceServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject YamlResourceServiceImpl yamlResourceService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetManifestFileYamlTypeFromAppManifest() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).build();

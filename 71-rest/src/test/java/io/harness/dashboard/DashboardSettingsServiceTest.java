@@ -1,5 +1,6 @@
 package io.harness.dashboard;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static junit.framework.TestCase.fail;
 
 import com.google.inject.Inject;
@@ -8,6 +9,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,6 +21,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   String accountId = "ACCOUNTID";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardCreate() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -33,6 +36,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardCreateUpdate() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -56,6 +60,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardInvalidUpdate() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -77,6 +82,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDashboardDelete() {
     DashboardSettings dashboardSettings = getDashboardSettings(accountId, 1);
@@ -96,6 +102,7 @@ public class DashboardSettingsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDashboardSummary() {
     for (int i = 0; i < 10; i++) {

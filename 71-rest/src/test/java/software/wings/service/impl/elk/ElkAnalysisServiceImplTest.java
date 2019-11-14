@@ -1,6 +1,7 @@
 package software.wings.service.impl.elk;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -15,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import org.junit.Before;
@@ -52,6 +54,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogDataByHostForTotalHitsAndThreshold() throws IOException {
     String accountId = generateUuid();
@@ -82,6 +85,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLogDataByHostForTotalHitsAndThresholdVersion() throws IOException {
     String accountId = generateUuid();
@@ -112,6 +116,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryPassesIfTotalHitsIsLessThenTheThreshold() throws IOException {
     String accountId = generateUuid();
@@ -134,6 +139,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryPassesIfTotalHitsIsLessThenTheThresholdVersion7() throws IOException {
     String accountId = generateUuid();
@@ -156,6 +162,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryThrowsWingsExceptionIfTotalHitsIsLessThenTheThreshold() throws IOException {
     String accountId = generateUuid();
@@ -185,6 +192,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryThrowsWingsExceptionIfTotalHitsIsLessThenTheThresholdVersion7() throws IOException {
     String accountId = generateUuid();
@@ -214,6 +222,7 @@ public class ElkAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateQueryThrowsWingsExceptionIfSearchThrowsRuntimeException() throws IOException {
     String accountId = generateUuid();

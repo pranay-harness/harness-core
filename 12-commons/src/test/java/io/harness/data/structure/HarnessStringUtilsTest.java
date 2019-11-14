@@ -1,7 +1,10 @@
 package io.harness.data.structure;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -11,6 +14,7 @@ import java.util.Arrays;
 
 public class HarnessStringUtilsTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldJoinIfIndividualElements() {
     String joinedString = HarnessStringUtils.join("/", "foo", "bar", "hello-world");
@@ -20,6 +24,7 @@ public class HarnessStringUtilsTest extends CategoryTest {
     Assertions.assertThat(joinedString).isEqualTo("foobarhello-world");
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldJoinIfIterableElements() {
     String joinedString = HarnessStringUtils.join("/", Arrays.asList("foo", "bar", "hello-world"));

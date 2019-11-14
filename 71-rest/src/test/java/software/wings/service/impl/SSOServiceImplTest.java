@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
@@ -10,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -32,6 +34,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   @Inject private SSOSettingService ssoSettingService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_OauthAndUserPasswordCoexistence() {
     Account account = Account.Builder.anAccount()
@@ -77,6 +80,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_UserPasswordToSAMLAuthMechanismUpdate() {
     Account account = Account.Builder.anAccount()
@@ -97,6 +101,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_UserPasswordToLDAPAuthMechanismUpdate() {
     Account account = Account.Builder.anAccount()
@@ -117,6 +122,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_uploadOauthSetting_thenSetAuthMechanismAsOauth() {
     Account account = Account.Builder.anAccount()

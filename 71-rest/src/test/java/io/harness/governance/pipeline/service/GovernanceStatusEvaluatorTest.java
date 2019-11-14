@@ -1,9 +1,11 @@
 package io.harness.governance.pipeline.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.service.model.Tag;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -15,6 +17,7 @@ import java.util.List;
 
 public class GovernanceStatusEvaluatorTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testContainsAll() {
     List<HarnessTagLink> links = Arrays.asList(tagLink("color", "blue"), tagLink("onprem", null));
@@ -30,6 +33,7 @@ public class GovernanceStatusEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testContainsAny() {
     List<HarnessTagLink> links = Arrays.asList(tagLink("color", "blue"), tagLink("onprem", null));

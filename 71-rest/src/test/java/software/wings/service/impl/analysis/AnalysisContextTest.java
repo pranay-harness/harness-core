@@ -1,10 +1,12 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -15,6 +17,7 @@ import java.util.Random;
 
 public class AnalysisContextTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIteration() throws IllegalAccessException {
     final AnalysisContext analysisContext = AnalysisContext.builder().stateExecutionId(generateUuid()).build();

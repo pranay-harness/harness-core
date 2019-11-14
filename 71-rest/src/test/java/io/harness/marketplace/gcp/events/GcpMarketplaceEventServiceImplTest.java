@@ -1,5 +1,6 @@
 package io.harness.marketplace.gcp.events;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.IntegrationTests;
 import io.harness.marketplace.gcp.events.AccountActiveEvent.Account;
 import io.harness.marketplace.gcp.events.GcpMarketplaceEvent.GcpMarketplaceEventKeys;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
@@ -43,6 +45,7 @@ public class GcpMarketplaceEventServiceImplTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSave() {
     String messageId = "message-id-" + NAMESPACE;

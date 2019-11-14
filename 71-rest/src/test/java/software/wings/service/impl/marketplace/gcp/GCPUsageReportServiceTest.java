@@ -1,10 +1,12 @@
 package software.wings.service.impl.marketplace.gcp;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,6 +30,7 @@ public class GCPUsageReportServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void createGCPUsageReport() {
     Instant startInstance = Instant.now().truncatedTo(ChronoUnit.HOURS);

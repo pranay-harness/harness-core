@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -28,6 +29,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,6 +70,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPopulateParentFields() {
     List<Variable> workflowVariables = asList(
@@ -276,6 +279,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidatePipelineApprovalState() throws Exception {
     Pipeline pipeline =
@@ -311,6 +315,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateRelatedFieldsEnvironmentInfraMapping() throws Exception {
     List<Variable> workflowVariables = asList(aVariable().entityType(SERVICE).name("Service").build(),

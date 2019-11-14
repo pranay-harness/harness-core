@@ -1,5 +1,6 @@
 package io.harness.delegatetasks;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateFileManagerImpl;
 import io.harness.managerclient.ManagerClient;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -106,6 +108,7 @@ public class DelegateFileManagerTest extends CategoryTest {
           .build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
@@ -124,6 +127,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDownloadArtifactAtRuntimeForArtifactory() throws IOException, ExecutionException {
     String fileContent = "test";
@@ -142,6 +146,7 @@ public class DelegateFileManagerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetArtifactFileSize() {
     when(artifactCollectionTaskHelper.getArtifactFileSize(any(ArtifactStreamAttributes.class))).thenReturn(1234L);

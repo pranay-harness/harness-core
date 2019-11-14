@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -8,6 +9,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -48,6 +50,7 @@ public class KmsEncryptDecryptClientIntegrationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {

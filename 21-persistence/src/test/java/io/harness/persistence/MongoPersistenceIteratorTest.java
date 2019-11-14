@@ -1,5 +1,6 @@
 package io.harness.persistence;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,6 +9,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,6 +36,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsTargetInterval() {
     MongoPersistenceIterator iterator =
@@ -42,6 +45,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsMaximumDelayForCheck() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
@@ -52,6 +56,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsZero() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
@@ -64,6 +69,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsNextIteration() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
@@ -77,6 +83,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationLimitedAsNextIteration() {
     MongoPersistenceIterator iterator =
@@ -89,6 +96,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationLimitedAsMaximumDelayForCheck() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()

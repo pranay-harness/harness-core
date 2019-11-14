@@ -1,4 +1,6 @@
 package software.wings.service.impl.artifact;
+
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -10,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,6 +39,7 @@ public class ArtifactServiceImplTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchAMIBuilds() {
     artifactStream.setRegion("TestRegion");
@@ -44,6 +48,7 @@ public class ArtifactServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchNonAMIBuilds() {
     assertThat(artifactService.prepareArtifactWithMetadataQuery(jenkinsArtifactStream)).isNotNull();

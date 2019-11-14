@@ -3,10 +3,12 @@ package io.harness.observer;
 import static io.harness.observer.AsyncInformObserverTest.Sync.CALLBACK_IS_DONE;
 import static io.harness.observer.AsyncInformObserverTest.Sync.FIRE_IS_DONE;
 import static io.harness.observer.AsyncInformObserverTest.Sync.INITIAL;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,6 +60,7 @@ public class AsyncInformObserverTest extends CategoryTest {
   }
 
   @Test(timeout = 1000)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testResealingAsyncCall() throws InterruptedException {
     assertThatCode(() -> {

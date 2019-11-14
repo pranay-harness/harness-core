@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -22,6 +23,7 @@ import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -50,6 +52,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sCanaryDeployTaskHandler k8sCanaryDeployTaskHandler;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams =
@@ -79,6 +82,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams =
@@ -108,6 +112,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeploymentWorkloadsForCanary() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams = K8sCanaryDeployTaskParameters.builder().build();

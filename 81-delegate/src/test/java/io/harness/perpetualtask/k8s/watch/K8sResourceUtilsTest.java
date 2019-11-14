@@ -1,11 +1,13 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,6 +36,7 @@ public class K8sResourceUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetResource() {
     Resource actualResource = K8sResourceUtils.getResource(k8sContainer);
@@ -41,6 +44,7 @@ public class K8sResourceUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTotalResourceRequest() {
     Resource actualResource = K8sResourceUtils.getTotalResourceRequest(k8sContainers);

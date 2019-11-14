@@ -1,5 +1,6 @@
 package io.harness.seeddata;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_BASIC_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLOW_NAME;
@@ -16,6 +17,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -49,6 +51,7 @@ public class SampleDataProviderServiceTest extends WingsBaseTest {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateSampleApp() {
     Account savedAccount = wingsPersistence.saveAndGet(Account.class,
@@ -100,6 +103,7 @@ public class SampleDataProviderServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateSampleAppWithInfraDefinitions() {
     Account account =

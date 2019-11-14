@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -75,6 +77,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCreateStats() throws URISyntaxException {
     Datastore ds = persistence.getDatastore(Instance.class);

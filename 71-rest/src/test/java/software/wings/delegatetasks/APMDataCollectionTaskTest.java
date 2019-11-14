@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -10,6 +11,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -77,6 +79,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
     return m;
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchingHosts() throws Exception {
     setup();
@@ -90,6 +93,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMoreThanFiftyHostsInBatch() throws Exception {
     setup();
@@ -117,6 +121,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmptyEncryptedCredentialsInitDataCollection() {
     setup();

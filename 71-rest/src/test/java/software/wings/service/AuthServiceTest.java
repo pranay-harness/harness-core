@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -128,6 +129,7 @@ public class AuthServiceTest extends WingsBaseTest {
    * Should validate valid token.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateValidToken() {
     AuthToken authToken = authService.validateToken(VALID_TOKEN);
@@ -138,6 +140,7 @@ public class AuthServiceTest extends WingsBaseTest {
    * Should throw invalid token exception for invalid token.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowInvalidTokenExceptionForInvalidToken() {
     assertThatThrownBy(() -> authService.validateToken(INVALID_TOKEN))
@@ -149,6 +152,7 @@ public class AuthServiceTest extends WingsBaseTest {
    * Should throw expired token exception for expired token.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExpiredTokenExceptionForExpiredToken() {
     assertThatThrownBy(() -> authService.validateToken(EXPIRED_TOKEN))
@@ -157,6 +161,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAuthorizeWithAccountAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build();
@@ -167,6 +172,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDenyWithoutAccountAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).build();
@@ -181,6 +187,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAuthorizeWithAppAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(APP_ID).build();
@@ -191,6 +198,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAuthorizeReadWithEnvAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
@@ -201,6 +209,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDenyWithDiffAppAdminAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId("APP_ID2").build();
@@ -214,6 +223,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDenyWriteWithEnvAccess() {
     Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
@@ -227,6 +237,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateDelegateToken() {
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
@@ -234,6 +245,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
     TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
@@ -245,6 +257,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowThrowInavlidTokenForDelegate() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, "Dummy"))
@@ -253,6 +266,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenUnableToDecryptToken() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
@@ -275,6 +289,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
@@ -307,6 +322,7 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);

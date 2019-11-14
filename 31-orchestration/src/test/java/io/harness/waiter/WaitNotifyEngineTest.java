@@ -3,6 +3,7 @@ package io.harness.waiter;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.queue.QueueListenerController;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Poller;
 import org.junit.Before;
@@ -58,6 +60,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
@@ -82,6 +85,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void stressWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
@@ -110,6 +114,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyBeforeWait() throws IOException {
     String uuid = generateUuid();
@@ -141,6 +146,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation ids.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationIds() throws IOException {
     String uuid1 = generateUuid();
@@ -196,6 +202,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id for multiple wait instances.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationIdForMultipleWaitInstances() throws IOException {
     String uuid = generateUuid();
@@ -228,6 +235,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCleanZombieNotifyResponse() {
     final NotifyResponse notifyResponse = NotifyResponse.builder()

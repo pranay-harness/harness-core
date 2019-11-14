@@ -1,15 +1,18 @@
 package software.wings.service.impl.yaml.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.appmanifest.AppManifestKind.PCF_OVERRIDE;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
 public class YamlHelperTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAppManifestKindFromPath() {
     YamlHelper yamlHelper = new YamlHelper();

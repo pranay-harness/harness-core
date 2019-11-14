@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -15,6 +16,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,6 +69,7 @@ public class InstanceServiceTest extends WingsBaseTest {
    *
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveAndRead() {
     Instance instance = buildInstance();
@@ -96,6 +99,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testList() {
     Instance instance1 = buildInstance();
@@ -128,6 +132,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateAndRead() {
     Instance instance = buildInstance();
@@ -147,6 +152,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelete() {
     Instance instance = buildInstance();

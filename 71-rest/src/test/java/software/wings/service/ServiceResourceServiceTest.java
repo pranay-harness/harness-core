@@ -7,6 +7,7 @@ import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -324,6 +325,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
@@ -367,6 +369,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveService() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
@@ -404,6 +407,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetService() {
     when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
@@ -414,6 +418,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateService() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
@@ -442,6 +447,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     Query mockQuery = mock(Query.class);
@@ -470,6 +476,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
@@ -486,6 +493,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByInfraProvisioner() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
@@ -508,6 +516,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
@@ -529,6 +538,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
@@ -552,6 +562,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     srs.pruneDescendingEntities(APP_ID, SERVICE_ID);
@@ -564,6 +575,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailCloneWhenServiceNameIsNull() {
     Service originalService = Service.builder().build();
@@ -573,6 +585,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchServiceNamesByUuids() {
     List<String> serviceIds = asList(SERVICE_ID);
@@ -598,6 +611,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneService() throws IOException {
     PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
@@ -719,6 +733,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddCommand() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
@@ -770,6 +785,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should add command state.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddCommandWithCommandUnits() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
@@ -824,6 +840,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandChanged() {
     Command oldCommand =
@@ -892,6 +909,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should update command when command graph changed.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandWhenNameChanged() {
     Graph oldCommandGraph = aGraph()
@@ -965,6 +983,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandUnitsChanged() {
     Command oldCommand = commandBuilder.build();
@@ -1016,6 +1035,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandWhenCommandUnitsOrderChanged() {
     Graph oldCommandGraph = aGraph()
@@ -1115,6 +1135,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateCommandNothingChanged() {
     Graph oldCommandGraph = getGraph();
@@ -1167,6 +1188,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateCommandWhenCommandUnitsOrderNotChanged() {
     Graph oldCommandGraph = aGraph()
@@ -1242,6 +1264,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateVersionWhenNothingChanged() {
     Graph oldCommandGraph = getGraph();
@@ -1310,6 +1333,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should not update command nothing changed.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandNameAndTypeChanged() {
     Graph oldCommandGraph = getGraph();
@@ -1383,6 +1407,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandsOrder() {
     Graph oldCommandGraph = aGraph()
@@ -1499,6 +1524,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should delete command state.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteCommand() {
     when(workflowService.listWorkflows(any(PageRequest.class)))
@@ -1517,6 +1543,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
@@ -1531,6 +1558,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotThrowExceptionOnReferencedServiceCommandDelete() {
     ServiceCommand serviceCommand = serviceCommandBuilder.but().build();
@@ -1679,6 +1707,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command categories
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCommandCategories() {
     when(mockWingsPersistence.createQuery(ServiceCommand.class)).thenReturn(serviceCommandQuery);
@@ -1708,6 +1737,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should get command by name.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCommandByName() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
@@ -1726,6 +1756,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCommandByNameAndEnv() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
@@ -1744,6 +1775,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCommandByNameAndEnvForSpecificEnv() {
     when(mockWingsPersistence.getWithAppId(eq(Service.class), anyString(), anyString()))
@@ -1763,6 +1795,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCommandByNameAndEnvForSpecificEnvNotTargetted() {
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
@@ -1781,6 +1814,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLambdaValidation() {
     FunctionSpecification functionSpecification = FunctionSpecification.builder()
@@ -1821,6 +1855,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateContainerTaskAdvanced() {
     wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
@@ -1863,6 +1898,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCompareCommandUnits() {
     assertThatCode(() -> {
@@ -1877,6 +1913,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddCommandFromTemplate() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
@@ -1907,6 +1944,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandLinkedToTemplate() {
     Command oldCommand = commandBuilder.build();
@@ -1962,6 +2000,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateLinkedCommandVariables() {
     Command oldCommand = commandBuilder.build();
@@ -2123,6 +2162,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowWingsExceptionIfNullCommand() {
     Command oldCommand = commandBuilder.build();
@@ -2150,6 +2190,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreatePCFSpecCreatesManifestFile() {
     String fileContent = "pcf spec";
@@ -2181,6 +2222,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdatePCFSpecUpdatesManifestFile() {
     String fileContent = "pcf spec";
@@ -2210,6 +2252,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreatePCFV2Service() throws IOException {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
@@ -2256,6 +2299,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetPcfV2ServiceFromAppManifestIfRequired() {
     Query mockQuery = mock(Query.class);
@@ -2275,6 +2319,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreatePCFV2ServiceWithExistingAppManifest() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
@@ -2303,6 +2348,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
 
   public void testSetPcfV2ServiceFromAppManifestIfRequiredInvalidSource() {
@@ -2318,6 +2364,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetPcfV2ServiceFromAppManifestIfRequiredNonExistentService() {
     Query mockQuery = mock(Query.class);
@@ -2336,6 +2383,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFlattenCommandUnits() {
     final Command command_1 =
@@ -2392,6 +2440,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExistingEcsServiceSpecification() {
     EcsServiceSpecification org = EcsServiceSpecification.builder().serviceId(SERVICE_ID).build();

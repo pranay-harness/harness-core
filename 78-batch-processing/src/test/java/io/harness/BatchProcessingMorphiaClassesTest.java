@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VIKAS;
 
 import com.google.common.collect.ImmutableSet;
@@ -15,6 +16,7 @@ import software.wings.WingsBaseTest;
 
 public class BatchProcessingMorphiaClassesTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchProcessingClassesModule() {
     new BatchProcessingMorphiaRegistrar().testClassesModule();
@@ -29,6 +31,7 @@ public class BatchProcessingMorphiaClassesTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchProcessingImplementationClassesModule() {
     new BatchProcessingMorphiaRegistrar().testImplementationClassesModule();

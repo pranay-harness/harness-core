@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.gke;
 
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -128,14 +129,17 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBackendController() {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateFrontendController() {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteController() {
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
@@ -147,14 +151,17 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateFrontendService() {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBackendService() {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     kubernetesContainerService.deleteService(KUBERNETES_CONFIG, Collections.emptyList(), "service");
@@ -181,6 +188,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetControllerPodCount() {
     when(scalableReplicationController.get())

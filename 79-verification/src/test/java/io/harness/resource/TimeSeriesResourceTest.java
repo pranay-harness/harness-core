@@ -1,6 +1,7 @@
 package io.harness.resource;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -17,6 +18,7 @@ import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.DelegateDataCollectionResource;
 import io.harness.resources.TimeSeriesResource;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -105,6 +107,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMetricData() throws IllegalAccessException {
     when(timeSeriesAnalysisService.saveMetricData(
@@ -117,6 +120,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricData() throws IOException {
     boolean compareCurrent = true;
@@ -141,6 +145,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveMLAnalysisRecords() throws IOException {
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder().build();
@@ -157,6 +162,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetScores() throws IOException {
     when(timeSeriesAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, 0, 1))
@@ -167,6 +173,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetricTemplate() {
     when(timeSeriesAnalysisService.getMetricTemplate(

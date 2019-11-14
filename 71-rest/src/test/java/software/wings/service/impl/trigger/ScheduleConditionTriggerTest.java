@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -34,6 +35,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -136,6 +138,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     doNothing().when(scheduleTriggerHandler).wakeup();
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveScheduledConditionTrigger() {
     DeploymentTrigger trigger = deploymentTriggerService.save(scheduledConditionTrigger, false);
@@ -148,6 +151,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateScheduledConditionTrigger() {
     scheduledConditionTrigger = deploymentTriggerService.save(scheduledConditionTrigger, false);
@@ -165,6 +169,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowCronParseException() {
     scheduledConditionTrigger.setCondition(
@@ -174,6 +179,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowCronParseExceptionOnNullCronExpression() {
     scheduledConditionTrigger.setCondition(
@@ -183,6 +189,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowCronParseExceptionOnEmptyCronExpression() {
     scheduledConditionTrigger.setCondition(

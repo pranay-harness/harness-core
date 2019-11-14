@@ -1,5 +1,6 @@
 package software.wings.common;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
@@ -24,6 +25,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -49,6 +51,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should get decorated notification message.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDecoratedNotificationMessage() {
     String decoratedNotificationMessage = NotificationMessageResolver.getDecoratedNotificationMessage(
@@ -61,6 +64,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should fail on in complete map.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnInCompleteMap() {
     assertThatExceptionOfType(WingsException.class)
@@ -73,6 +77,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPlaceholderValues() {
     String ApprovalUrl =

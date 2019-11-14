@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +47,7 @@ public class LogServiceTest extends WingsBaseTest {
    * Should list logs.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListLogs() {
     List<Log> logs = getLogsToSave(100);
@@ -59,6 +62,7 @@ public class LogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotSaveMoreThanLimit() {
     List<Log> logs = getLogsToSave(2 * MAX_LOG_ROWS_PER_ACTIVITY);
@@ -73,6 +77,7 @@ public class LogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExportLogs() throws IOException {
     List<Log> logs = getLogsToSave(100);

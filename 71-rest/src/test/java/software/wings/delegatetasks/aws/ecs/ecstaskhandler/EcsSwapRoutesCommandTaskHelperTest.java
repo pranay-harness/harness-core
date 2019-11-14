@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -16,6 +17,7 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -33,6 +35,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private EcsSwapRoutesCommandTaskHelper taskHelper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -48,6 +51,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDownsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -58,6 +62,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateServiceTags() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);

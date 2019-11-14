@@ -1,6 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -29,6 +30,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.junit.Test;
@@ -63,6 +65,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   @InjectMocks SpotInstListenerUpdateState state = new SpotInstListenerUpdateState("stateName");
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldElastiGroup(true);
@@ -135,6 +138,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

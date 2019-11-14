@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyObject;
@@ -94,6 +95,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidUrl() {
     final ElkConfig elkConfig = new ElkConfig();

@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -37,6 +39,7 @@ public class ElasticsearchBulkSyncTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBulkSyncProcess() {
     String newIndexName = "newIndexName";

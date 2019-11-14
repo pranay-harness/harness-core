@@ -1,7 +1,10 @@
 package software.wings.beans.infrastructure.instance.info;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -13,6 +16,7 @@ import java.util.Collections;
 
 public class ServerlessInstanceInfoTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEquals() {
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo1 = getAwsLambdaInstanceInfo1();
@@ -56,6 +60,7 @@ public class ServerlessInstanceInfoTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHashCode() {
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo1 = getAwsLambdaInstanceInfo1();

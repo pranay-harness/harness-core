@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static jersey.repackaged.com.google.common.collect.Maps.newHashMap;
@@ -44,6 +45,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -123,6 +125,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @InjectMocks private AwsAmiServiceDeployState state = new AwsAmiServiceDeployState("stateName");
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setInstanceUnitType(PERCENTAGE);
@@ -219,6 +222,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

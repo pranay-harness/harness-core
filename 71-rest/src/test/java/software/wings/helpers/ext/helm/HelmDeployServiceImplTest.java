@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -15,6 +16,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -91,6 +93,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeployInstall() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
@@ -106,6 +109,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeployUpgrade() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
@@ -122,6 +126,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepo()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
@@ -144,6 +149,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepoWithVariableYamlFiles()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
@@ -168,6 +174,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddValuesYamlFromGitRepoWithException()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {

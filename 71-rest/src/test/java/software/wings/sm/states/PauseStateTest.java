@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.verify;
@@ -18,6 +19,7 @@ import com.google.inject.Injector;
 import freemarker.template.TemplateException;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,6 +98,7 @@ public class PauseStateTest extends WingsBaseTest {
    * @throws IOException       the io exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmailAndReturnCorrelationIdOnExecute() throws EmailException, TemplateException, IOException {
     pauseState.setBody("body");

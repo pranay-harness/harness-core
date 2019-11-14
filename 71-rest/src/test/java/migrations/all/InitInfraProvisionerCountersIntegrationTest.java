@@ -1,5 +1,6 @@
 package migrations.all;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,6 +26,7 @@ public class InitInfraProvisionerCountersIntegrationTest extends BaseIntegration
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long infraProvisionerCount = wingsPersistence.createQuery(InfrastructureProvisioner.class).count();

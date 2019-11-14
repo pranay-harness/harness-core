@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.CategoryTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.artifact.Artifact;
@@ -29,6 +31,7 @@ public class ArtifactComparatorTest extends CategoryTest {
                                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSortArtifactDescendingOrder() {
     List<Artifact> artifacts =

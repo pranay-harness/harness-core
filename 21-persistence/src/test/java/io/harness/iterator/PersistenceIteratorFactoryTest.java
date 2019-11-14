@@ -1,6 +1,7 @@
 package io.harness.iterator;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -10,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.config.WorkersConfiguration;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +37,7 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateIterator() {
     // disable setup
@@ -48,6 +51,7 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreatePumpIteratorWithDedicatedThreadPool() {
     // disable setup

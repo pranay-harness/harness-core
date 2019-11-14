@@ -1,11 +1,13 @@
 package software.wings.beans.container;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -16,6 +18,7 @@ public class EcsContainerTaskTest extends CategoryTest {
   public static final String DOMAIN_NAME = "domain.name.co";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testcreateTaskDefinition() {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
@@ -80,6 +83,7 @@ public class EcsContainerTaskTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateTaskDefinitionWithWhenNoMemoryProvided() {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
@@ -141,6 +145,7 @@ public class EcsContainerTaskTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRemoveEmptySecretsContainerDefinitionString() throws Exception {
     String str = "{\n"

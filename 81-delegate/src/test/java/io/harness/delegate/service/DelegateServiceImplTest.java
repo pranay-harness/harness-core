@@ -1,5 +1,6 @@
 package io.harness.delegate.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -14,6 +15,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.managerclient.ManagerClient;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.EncryptionConfig;
 import org.junit.Before;
@@ -49,6 +51,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotApplyFunctorIfNoSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();
@@ -66,6 +69,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldApplyFunctorForSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();

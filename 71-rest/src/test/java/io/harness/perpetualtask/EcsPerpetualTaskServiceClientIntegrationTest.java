@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -10,6 +11,7 @@ import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Test;
@@ -27,6 +29,7 @@ public class EcsPerpetualTaskServiceClientIntegrationTest extends BaseIntegratio
   private final String DEFAULT_CLUSTER_NAME = "clusterName";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreatePerpetualTask() {
     EcsPerpetualTaskClientParams ecsPerpetualTaskClientParams =

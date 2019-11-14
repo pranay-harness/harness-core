@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -33,6 +34,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -137,6 +139,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateCluster() throws Exception {
     final List<Boolean> firstTime = new ArrayList<>(1);
@@ -162,6 +165,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCreateClusterIfExists() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
@@ -175,6 +179,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCreateClusterIfError() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
@@ -188,6 +193,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCreateClusterIfOperationQueryFailed() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
@@ -203,6 +209,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteCluster() throws Exception {
     Operation pendingOperation = new Operation().setStatus("RUNNING");
@@ -217,6 +224,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteClusterIfNotExists() throws Exception {
     when(clustersDelete.execute()).thenThrow(notFoundException);
@@ -228,6 +236,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteClusterIfOperationFailed() throws Exception {
     Operation pendingOperation = new Operation().setStatus("RUNNING");
@@ -242,6 +251,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteClusterIfOperationQueryFailed() throws Exception {
     Operation pendingOperation = new Operation().setStatus("RUNNING");
@@ -255,6 +265,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCluster() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
@@ -269,6 +280,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetClusterIfNotExists() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
@@ -284,6 +296,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetClusterIfError() throws Exception {
     when(clustersGet.execute()).thenThrow(new IOException());
@@ -299,6 +312,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetClusterIfOtherJsonError() throws Exception {
     GoogleJsonError googleJsonError = new GoogleJsonError();
@@ -319,6 +333,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListClusters() throws Exception {
     List<Cluster> clusterList = ImmutableList.of(CLUSTER_1, CLUSTER_2);
@@ -332,6 +347,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotListClustersIfError() throws Exception {
     when(clustersList.execute()).thenThrow(new IOException());
@@ -343,6 +359,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetNodePoolAutoscaling() throws Exception {
     Operation pendingOperation = new Operation().setStatus("RUNNING");
@@ -358,6 +375,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetNodePoolAutoscalingWithPoolId() throws Exception {
     Operation pendingOperation = new Operation().setStatus("RUNNING");
@@ -375,6 +393,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotSetNodePoolAutoscalingIfError() throws Exception {
     when(clustersUpdate.execute()).thenThrow(new IOException());
@@ -387,6 +406,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotSetNodePoolAutoscalingIfOperationQueryFailed() throws Exception {
     Operation pendingOperation = new Operation().setStatus("RUNNING");
@@ -401,6 +421,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNodePoolAutoscaling() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_2);
@@ -416,6 +437,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNodePoolAutoscalingWithPoolId() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
@@ -431,6 +453,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetNodePoolAutoscalingIfNotExists() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
@@ -443,6 +466,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetNodePoolAutoscalingIfNodePoolNotExists() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
@@ -455,6 +479,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnMissingNodePoolIdWhenMultiplePools() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);

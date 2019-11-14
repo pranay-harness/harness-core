@@ -1,12 +1,14 @@
 package io.harness.logging;
 
 import static io.harness.logging.LoggingInitializer.RESPONSE_MESSAGE_FILE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 public class ErrorCodePropertiesTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testErrorCodesInProperties() {
     Properties messages = new Properties();

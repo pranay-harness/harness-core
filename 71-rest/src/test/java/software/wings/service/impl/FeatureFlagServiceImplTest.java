@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -10,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +33,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks FeatureFlagService featureFlagService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEnableWhenFeatureFlagNotAlreadyPresent() {
     Query query = mock(Query.class);
@@ -49,6 +52,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEnableWhenNullAccountIds() {
     Query query = mock(Query.class);
@@ -67,6 +71,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEnableWhenSomeAccountsPresent() {
     Query query = mock(Query.class);

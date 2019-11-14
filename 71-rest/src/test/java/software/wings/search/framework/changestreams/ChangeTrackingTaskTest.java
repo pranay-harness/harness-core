@@ -1,5 +1,6 @@
 package software.wings.search.framework.changestreams;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.notNull;
@@ -22,6 +23,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.junit.Test;
@@ -43,6 +45,7 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testChangeTrackingTask() throws InterruptedException, ExecutionException {
     ChangeStreamSubscriber changeStreamSubscriber = mock(ChangeStreamSubscriber.class);

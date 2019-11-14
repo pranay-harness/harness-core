@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -10,6 +11,7 @@ import com.google.common.collect.Lists;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -52,6 +54,7 @@ public class EncryptionServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchDecryption() {
     String accountId = UUIDGenerator.generateUuid();

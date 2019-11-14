@@ -1,5 +1,6 @@
 package software.wings.search.framework;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.PersistentEntity;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -21,6 +23,7 @@ public class SearchSyncHeartbeatTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSearchSyncHeartbeatRun() {
     WingsPersistence spyWingsPersistence = spy(wingsPersistence);

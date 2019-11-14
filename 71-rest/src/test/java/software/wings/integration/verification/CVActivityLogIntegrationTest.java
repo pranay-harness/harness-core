@@ -1,5 +1,6 @@
 package software.wings.integration.verification;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetActivityLogsByStateExecutionId() {
     long now = System.currentTimeMillis();
@@ -65,6 +68,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetCVActivityLog() {
     long now = System.currentTimeMillis();

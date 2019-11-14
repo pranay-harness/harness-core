@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -9,6 +10,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -41,6 +43,7 @@ public class SlackValidationTest extends WingsBaseTest {
           .build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getCriteriaTest() {
     List<String> criteria = slackValidation.getCriteria();
@@ -49,6 +52,7 @@ public class SlackValidationTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getCriteriaTestShouldFail() {
     DelegateTask delegateTask =
@@ -69,6 +73,7 @@ public class SlackValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void validateSuccessTest() {
     List<DelegateConnectionResult> result = slackValidation.validate();

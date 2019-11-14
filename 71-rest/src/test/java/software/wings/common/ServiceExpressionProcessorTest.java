@@ -5,6 +5,7 @@
 package software.wings.common;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -21,6 +22,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -55,6 +57,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return matching services.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnMatchingServices() {
     List<ServiceElement> services = Lists.newArrayList(ServiceElement.builder().name("A1234").build(),
@@ -87,6 +90,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return list all.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnListAll() {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
@@ -119,6 +123,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return list all from context.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnListAllFromContext() {
     Service serviceC = Service.builder().name("C1234").uuid(SERVICE_ID).build();
@@ -142,6 +147,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return list some by name.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnListSomeByName() {
     List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
@@ -171,6 +177,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return list some by name.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnSelectedListSomeByName() {
     when(context.getApp()).thenReturn(Application.Builder.anApplication().uuid(appId).build());
@@ -195,6 +202,7 @@ public class ServiceExpressionProcessorTest extends CategoryTest {
    * Should return not from context.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnNotFromContext() {
     Service serviceC = Service.builder().name("C1234").build();

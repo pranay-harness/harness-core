@@ -1,5 +1,6 @@
 package software.wings.service.impl.infra;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -12,6 +13,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.environment.SystemEnvironment;
 import io.harness.logging.AccessTokenBean;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -71,6 +73,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInfraDownloadFailForEnvWhenNoServiceAccDefined() {
     String url = infraDownloadService.getDownloadUrlForDelegate("4333");
@@ -78,6 +81,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInfraDownloadFailForWatcherEnvWhenNoServiceAccDefined() {
     String url = infraDownloadService.getDownloadUrlForWatcher("4333");
@@ -85,6 +89,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInfraDownloadDelegate() throws Exception {
     String path = "tmp.json";
@@ -103,6 +108,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingToken() throws Exception {
     String path = "tmp.json";
@@ -126,6 +132,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingTokenCached() throws Exception {
     String path = "tmp.json";
@@ -150,6 +157,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingTokenBadToken() throws Exception {
     String path = "tmp.json";
@@ -166,6 +174,7 @@ public class InfraDownloadServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStackdriverLoggingTokenNoServiceAcc() {
     AccessTokenBean token = infraDownloadService.getStackdriverLoggingToken();

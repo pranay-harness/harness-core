@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -53,6 +54,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -331,6 +333,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_createStackState() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
@@ -339,6 +342,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_createStackStateWithAwsTemplatized() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
@@ -382,6 +386,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_deleteStackState() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
@@ -391,6 +396,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_deleteStackStateAwsTempaltized() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());

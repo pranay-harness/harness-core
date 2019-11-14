@@ -1,9 +1,11 @@
 package io.harness.version;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
@@ -20,6 +22,7 @@ public class VersionInfoManagerTest extends CategoryTest {
       + "timestamp : 180621-0636";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetVersionInfo() {
     VersionInfoManager versionInfoManager = new VersionInfoManager(sampleVersionInfoYaml);
@@ -32,6 +35,7 @@ public class VersionInfoManagerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetVersionInfoDefault() throws Exception {
     InputStream stream = VersionInfoManager.class.getClassLoader().getResourceAsStream("versionInfo.yaml");

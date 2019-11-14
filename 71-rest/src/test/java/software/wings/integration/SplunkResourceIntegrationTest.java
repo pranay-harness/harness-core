@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
@@ -78,6 +80,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
    * Test to verify fetch Log Records based.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");

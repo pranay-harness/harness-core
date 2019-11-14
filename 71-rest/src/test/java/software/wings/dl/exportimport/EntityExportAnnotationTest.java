@@ -1,11 +1,13 @@
 package software.wings.dl.exportimport;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
 import io.harness.annotation.HarnessEntity;
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.junit.Test;
@@ -25,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class EntityExportAnnotationTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void findExportableEntityTypes() {
     Set<Class> morphiaClasses = collectMorphiaClasses();

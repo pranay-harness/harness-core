@@ -1,10 +1,12 @@
 package software.wings.beans.infrastructure.instance.stats;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
@@ -43,6 +45,7 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSerialization() {
     val snapshot = getSampleSnapshot();

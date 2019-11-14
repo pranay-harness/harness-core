@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,6 +15,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,6 +40,7 @@ public class VersionResourceTest extends CategoryTest {
                                                        .build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListVersions() throws Exception {
     PageResponse<EntityVersion> pageResponse = new PageResponse<>();

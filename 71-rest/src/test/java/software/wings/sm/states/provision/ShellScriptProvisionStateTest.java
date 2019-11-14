@@ -1,8 +1,10 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -19,6 +21,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
       new ShellScriptProvisionState(InfrastructureProvisionerType.SHELL_SCRIPT.name());
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseOutput() {
     assertThat(state.parseOutput(null)).isEqualTo(Collections.emptyMap());

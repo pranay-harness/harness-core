@@ -3,6 +3,7 @@ package software.wings.integration;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -108,6 +109,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithValidJSONQuery() {
     String query = "{\"bool\":{\"must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -20,6 +21,7 @@ import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -54,6 +56,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   @Spy @InjectMocks @Inject private EcsDeployCommandTaskHelper helper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeregisterAutoScalarsIfExists() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -84,6 +87,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeleteAutoScalarForNewService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -116,6 +120,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRestoreAutoScalarConfigs() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -149,6 +154,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateAutoScalarConfigIfServiceReachedMaxSize() {
     ContextData data = ContextData.builder()
@@ -186,6 +192,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDeployingToHundredPercent() {
     EcsResizeParams resizeParams = anEcsResizeParams()
@@ -199,6 +206,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNewInstanceData() {
     ContextData data = ContextData.builder()
@@ -221,6 +229,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetOldInstanceData() {
     ContextData data = ContextData.builder()
@@ -258,6 +267,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListOfStringArrayToMap() {
     Map<String, Integer> map =

@@ -1,5 +1,6 @@
 package io.harness.health;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Morpheus;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,6 +26,7 @@ public class HealthServiceTest extends CategoryTest {
   private ExecutorService executorService = Executors.newFixedThreadPool(25);
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmpty() throws Exception {
     final HealthService healthService = new HealthService(executorService);
@@ -31,6 +34,7 @@ public class HealthServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSimpleMonitor() throws Exception {
     final HealthMonitor mock = mock(HealthMonitor.class);
@@ -46,6 +50,7 @@ public class HealthServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRateLimited() throws Exception {
     final HealthMonitor mock = mock(HealthMonitor.class);
@@ -63,6 +68,7 @@ public class HealthServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdate() throws Exception {
     final HealthMonitor mock = mock(HealthMonitor.class);

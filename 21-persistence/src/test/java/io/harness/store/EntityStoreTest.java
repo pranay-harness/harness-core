@@ -1,5 +1,6 @@
 package io.harness.store;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -10,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.Store;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -21,6 +23,7 @@ public class EntityStoreTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDatastore() {
     persistence.register(Store.builder().name("foo").build(), "mongodb://localhost:27017/dummy");

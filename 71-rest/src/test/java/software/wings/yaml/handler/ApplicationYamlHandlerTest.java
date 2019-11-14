@@ -1,5 +1,6 @@
 package software.wings.yaml.handler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,6 +63,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -100,6 +103,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     // Invalid yaml path

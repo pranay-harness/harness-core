@@ -1,10 +1,12 @@
 package io.harness.security;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,6 +25,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEncryptAndDecrypt() {
     String testInput = "abc";
@@ -36,6 +39,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEncryptAndDecryptWithCustomKey() {
     char[] KEY = "abcdefghijklmnopabcdefghijklmnop".toCharArray();
@@ -50,6 +54,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEncryptDecryptCharsWithCustomKey() {
     String testInput = "test";
@@ -64,6 +69,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWithIncorrectKeyLength() {
     thrown.expect(WingsException.class);
@@ -75,6 +81,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHaveJCEEnabled() {
     try {

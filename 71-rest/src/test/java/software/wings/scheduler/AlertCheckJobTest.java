@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -13,6 +14,7 @@ import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfigur
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,6 +56,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are active
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteInternal_noAlert() {
     saveDelegate("host1", 2, true);
@@ -66,6 +69,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are down
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteInternal_noDelegateAlert() {
     saveDelegate("host1", 12, false);
@@ -85,6 +89,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * Some of the delegates are down
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteInternal_delegatesDownAlert() {
     saveDelegate("host1", 2, true);
@@ -112,6 +117,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSMTPAlert() {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);

@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static software.wings.security.UserThreadLocal.userGuard;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,6 +74,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreate() throws Exception {
     createAuditHeader();
@@ -83,6 +86,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() throws Exception {
     createAuditHeader();
@@ -108,6 +112,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUser() throws Exception {
     AuditHeader header = createAuditHeader();
@@ -121,6 +126,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteAuditRecords() throws Exception {
     createAuditHeader();
@@ -133,6 +139,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteAuditRecordsWithInRetentionTime() throws Exception {
     createAuditHeader();

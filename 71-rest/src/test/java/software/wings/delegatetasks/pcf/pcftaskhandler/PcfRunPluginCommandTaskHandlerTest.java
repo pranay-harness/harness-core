@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -13,6 +14,7 @@ import com.google.common.collect.ImmutableList;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -69,6 +71,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_executeTaskInternal() throws PivotalClientApiException {
     doNothing().when(pcfClient).runPcfPluginScript(
@@ -110,6 +113,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_handleError() {
     final PcfCommandExecutionResponse commandExecutionResponse = pcfRunPluginCommandTaskHandler.handleError(

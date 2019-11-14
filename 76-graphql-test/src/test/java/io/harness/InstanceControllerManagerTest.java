@@ -1,11 +1,13 @@
 package io.harness;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -40,6 +42,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   private final String TESTSERVICEID = "TESTSERVICEID";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPhysicalHostInstance() {
     Instance instance = Instance.builder()
@@ -67,6 +70,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAutoScalingGroupInstanceInfo() {
     final String TESTAUTOSCALINGGROUP = "TESTAUTOSCALINGGROUP";
@@ -97,6 +101,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCodeDeployInstanceInfo() {
     final String TESTDEPLOYMENTID = "TESTDEPLOYMENTID";
@@ -128,6 +133,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEcsContainerInfo() {
     Instance instance = Instance.builder()
@@ -162,6 +168,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testK8sPodInfo() {
     Instance instance = Instance.builder()
@@ -203,6 +210,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testKubernetesContainerInfo() {
     Instance instance = Instance.builder()
@@ -235,6 +243,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPcfInstanceInfo() {
     Instance instance = Instance.builder()

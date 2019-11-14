@@ -1,5 +1,6 @@
 package software.wings.inframapping;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
@@ -7,6 +8,7 @@ import com.google.common.collect.Maps;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -21,6 +23,7 @@ import java.util.Map;
 
 public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     PhysicalInfrastructureMapping infrastructureMapping = Builder.aPhysicalInfrastructureMapping().build();

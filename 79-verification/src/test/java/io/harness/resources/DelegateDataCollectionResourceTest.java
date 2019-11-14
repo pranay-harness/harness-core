@@ -1,6 +1,7 @@
 package io.harness.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,6 +32,7 @@ public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testPostCVActivityLog() {
     WebTarget target =

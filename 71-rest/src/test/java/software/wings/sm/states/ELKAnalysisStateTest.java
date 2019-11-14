@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -24,6 +25,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,6 +96,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     ElkAnalysisState elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
@@ -101,6 +104,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void noTestNodes() {
     ElkAnalysisState spyState = spy(elkAnalysisState);
@@ -123,6 +127,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void noControlNodesCompareWithCurrent() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
@@ -149,6 +154,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void compareWithCurrentSameTestAndControlNodes() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
@@ -177,6 +183,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
     assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);

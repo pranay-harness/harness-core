@@ -1,5 +1,6 @@
 package software.wings.common.cache;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,6 +15,7 @@ import io.harness.cache.Distributable;
 import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -95,6 +97,7 @@ public class MongoStoreTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNominalUpdateGet() {
     TestNominalEntity foo =
@@ -109,6 +112,7 @@ public class MongoStoreTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOrdinalUpdateGet() {
     Logger log = LoggerFactory.getLogger(MongoWireProtocolHandler.class);

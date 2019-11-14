@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.cv;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -12,6 +13,7 @@ import com.splunk.Job;
 import com.splunk.Service;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.intellij.lang.annotations.Language;
 import org.junit.Before;
@@ -46,6 +48,7 @@ public class SplunkDataCollectorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInitSplunkService() {
     DataCollectionExecutionContext dataCollectionExecutionContext = mock(DataCollectionExecutionContext.class);
@@ -55,6 +58,7 @@ public class SplunkDataCollectorTest extends CategoryTest {
   // TODO: test creating job object with right arguments
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchLogsWithoutHost() {
     DataCollectionExecutionContext dataCollectionExecutionContext = mock(DataCollectionExecutionContext.class);

@@ -1,6 +1,7 @@
 package io.harness.functional.trigger;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -18,6 +19,7 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -50,6 +52,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCreateWebHookTriggerForWorkflow() {
     owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));

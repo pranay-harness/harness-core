@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
@@ -74,6 +76,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetBugsnagApplications() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
@@ -92,6 +95,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetBugsnagOrganizations() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
@@ -109,6 +113,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogRecords() {
     BugsnagSetupTestData testNodedata = getBugsnagSampledata();

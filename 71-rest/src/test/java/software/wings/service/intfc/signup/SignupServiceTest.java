@@ -1,10 +1,12 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -20,6 +22,7 @@ public class SignupServiceTest extends WingsBaseTest {
   @Inject UserService userService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidUserCheckShouldSucceed() {
     try {
@@ -38,6 +41,7 @@ public class SignupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetEmailShouldSucceed() {
     String signupSecretToken = userService.createSignupSecretToken(EMAIL, 10);

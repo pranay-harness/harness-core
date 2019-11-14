@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -34,6 +36,7 @@ public class SSOSettingServiceImplTest extends WingsBaseTest {
   private String message = "errorMessage";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRaiseSyncFailureAlert() {
     doAnswer(i -> CompletableFuture.completedFuture("0")).when(alertService).openAlert(any(), any(), any(), any());

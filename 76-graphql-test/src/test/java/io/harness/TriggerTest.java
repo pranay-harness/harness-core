@@ -2,6 +2,7 @@ package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerKeys;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
@@ -18,6 +19,7 @@ import io.harness.generator.PipelineGenerator;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.graphql.QLTestObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -51,6 +53,7 @@ public class TriggerTest extends GraphQLTest {
   @Inject private HarnessTagService harnessTagService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryTrigger() {
     final Seed seed = new Seed(0);
@@ -138,6 +141,7 @@ public class TriggerTest extends GraphQLTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryTriggers() {
     final Seed seed = new Seed(0);

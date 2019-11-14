@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -16,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -94,6 +96,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void toYaml() {
     final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
@@ -103,6 +106,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void upsertFromYaml() {
     final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
@@ -116,6 +120,7 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateServiceVariables() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
@@ -132,12 +137,14 @@ public class ServiceYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getYamlClass() {
     assertThat(serviceYamlHandler.getYamlClass()).isEqualTo(Yaml.class);
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void get() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,6 +69,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenTrue() {
     wingsPersistence.save(ffTrue);
@@ -74,6 +77,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeDisabledWhenFalse() {
     wingsPersistence.save(ffFalse);
@@ -81,6 +85,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrue() {
     wingsPersistence.save(ffTrue);
@@ -88,6 +93,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalse() {
     wingsPersistence.save(ffFalse);
@@ -95,6 +101,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrueWith() {
     wingsPersistence.save(ffTrueWith);
@@ -102,6 +109,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalseWith() {
     wingsPersistence.save(ffFalseWith);
@@ -109,6 +117,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingTrueWithout() {
     wingsPersistence.save(ffTrueWithout);
@@ -116,6 +125,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWorkWhenAccountIdMissingFalseWithout() {
     wingsPersistence.save(ffFalseWithout);
@@ -123,6 +133,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedTrueWith() {
     wingsPersistence.save(ffTrueWith);
@@ -130,6 +141,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedFalseWith() {
     // This tests whitelisting
@@ -138,6 +150,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedTrueWithout() {
     wingsPersistence.save(ffTrueWithout);
@@ -145,6 +158,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeEnabledWhenWhiteListedFalseWithout() {
     wingsPersistence.save(ffFalseWithout);
@@ -152,6 +166,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFeatureFlagEnabledInConfig() {
     when(mainConfiguration.getFeatureNames()).thenReturn(FEATURE.name());
@@ -165,6 +180,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFeatureFlagEnabledInConfigSaas() {
     when(mainConfiguration.getFeatureNames()).thenReturn(FEATURE.name());
@@ -178,6 +194,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWithBadFlagEnabledValues() {
     when(mainConfiguration.getFeatureNames()).thenReturn("wrongName");

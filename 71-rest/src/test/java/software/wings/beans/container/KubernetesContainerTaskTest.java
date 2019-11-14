@@ -1,5 +1,6 @@
 package software.wings.beans.container;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -9,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -31,6 +33,7 @@ public class KubernetesContainerTaskTest extends WingsBaseTest {
   @Inject @InjectMocks private ServiceResourceService serviceResourceService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCheckDaemonSet() {
     KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
@@ -49,6 +52,7 @@ public class KubernetesContainerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSetAdvancedConfig() {
     KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
@@ -70,6 +74,7 @@ public class KubernetesContainerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void validateDomainNameReplacement() {
     String domainName = "abc.xyz.com";
@@ -144,6 +149,7 @@ public class KubernetesContainerTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDecimalCPUInKubernetesContainerTask() {
     wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());

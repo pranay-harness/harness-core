@@ -1,10 +1,12 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,6 +30,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLoginTypeResponseForNewAdminUserShouldReturnUserPassWord() {
     String argument = "userName=admin@harness.io";
@@ -39,6 +42,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLoginTypeResponseForNonExistentUserShouldReturnUserPassWord() {
     String nonExistingUserArgument = "userName=random@xyz";

@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -21,6 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -107,6 +109,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldSaveServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
@@ -123,6 +126,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldUpdateServiceConfigFile() throws IOException {
     ConfigFile appConfigFile = getConfigFile();
@@ -152,6 +156,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldOverrideSimpleConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
@@ -187,6 +192,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldEnvironmentOverrideServiceConfigFile() throws IOException {
     // Entity is SERVICE
@@ -236,6 +242,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldOverrideEncryptedConfigFile() throws IOException {
     ConfigFile configFile = getConfigFile();
@@ -279,6 +286,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldSaveEncryptedServiceConfigFile() throws IOException {
     String secretName = UUID.randomUUID().toString();

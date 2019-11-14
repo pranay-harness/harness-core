@@ -1,5 +1,6 @@
 package software.wings.verification;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,6 +39,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSaveDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
@@ -53,6 +56,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateGoodCase() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
@@ -77,6 +81,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =

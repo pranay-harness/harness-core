@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +29,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -146,6 +148,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void tbsValidateNetworkParameters() {
     Yaml yaml = Yaml.builder()
@@ -191,6 +194,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     // testCrud(validYamlContent1);
@@ -227,6 +231,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -69,6 +71,7 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   @InjectMocks private EcsBGUpdateRoute53DNSWeightState state = new EcsBGUpdateRoute53DNSWeightState("stateName");
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldService(true);
@@ -144,6 +147,7 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

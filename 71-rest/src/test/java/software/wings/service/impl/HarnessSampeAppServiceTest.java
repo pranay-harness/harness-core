@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.seeddata.SampleDataProviderConstants.ARTIFACT_VARIABLE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR;
@@ -157,6 +158,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureSampleAppHealthIsBad() {
     // Create a sample app v1
@@ -237,6 +239,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureSampleAppHealthIsGood() {
     // Create a sample app v1
@@ -262,6 +265,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureSampleAppRestore() {
     // Create a sample app

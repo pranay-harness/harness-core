@@ -1,5 +1,6 @@
 package io.harness.governance.pipeline.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +14,7 @@ import io.harness.governance.pipeline.service.model.Restriction;
 import io.harness.governance.pipeline.service.model.Restriction.RestrictionType;
 import io.harness.governance.pipeline.service.model.Tag;
 import io.harness.persistence.UuidAccess;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -42,6 +44,7 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
   private String SOME_ACCOUNT_ID = "some-account-id-" + PipelineGovernanceReportEvaluatorTest.class.getSimpleName();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsConfigValidForApp() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();
@@ -90,6 +93,7 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPipelineReportCard_emptyIfNoEnabledStandards() {
     String appId = "some-app-id";

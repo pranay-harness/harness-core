@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.common.Constants.HARNESS_NAME;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -45,6 +47,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailSavingAccountWithoutLicense() {
     thrown.expect(WingsException.class);
@@ -54,6 +57,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveTrialAccountWithDefaultValues() {
     long expiryTime = LicenseUtils.getDefaultTrialExpiryTime();
@@ -75,6 +79,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveAccountWithSpecificType() {
     long timestamp = System.currentTimeMillis() + 100000;
@@ -97,6 +102,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveAccountWithSpecificTypeAndExpiryTime() {
     long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
@@ -117,6 +123,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePaidAccountWithDefaultValues() {
     long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
@@ -139,6 +146,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTrialAccountWithDefaultValues() {
     long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
@@ -168,6 +176,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailToUpdateTrialAccountWithNullLicenseInfo() {
     long expiryTime = LicenseUtils.getDefaultTrialExpiryTime();
@@ -189,6 +198,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTrialAccount3WithDefaultValues() {
     long expiryTime = LicenseUtils.getDefaultTrialExpiryTime();
@@ -219,6 +229,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateAccountWithSpecificType() {
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -244,6 +255,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateAccountWithSpecificTypeAndExpiryTime() {
     long expiryTime = LicenseUtils.getDefaultTrialExpiryTime() + 100000;
@@ -273,6 +285,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateOnPremTrialAccountWithDefaultValues() {
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -301,6 +314,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateOnPremTrialAccountWithSpecificValues() {
     LicenseInfo licenseInfo = new LicenseInfo();
@@ -331,6 +345,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNewLicense() {
     Calendar calendar = Calendar.getInstance();
@@ -360,6 +375,7 @@ public class LicenseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCheckForLicenseExpiry() throws InterruptedException {
     long expiryTime = System.currentTimeMillis() + 1000;

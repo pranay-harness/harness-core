@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -12,6 +13,7 @@ import com.jayway.jsonpath.DocumentContext;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtilsTest.Base.BaseType;
 import io.harness.serializer.JsonUtilsTest.CustomResponse.Result;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should get authors.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAuthors() {
     List<String> authors = JsonUtils.jsonPath(json, "$.store.book[*].author");
@@ -59,6 +62,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should get title and cheap books.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTitleAndCheapBooks() {
     DocumentContext ctx = JsonUtils.parseJson(json);
@@ -75,6 +79,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should return correct object in case of inheritence.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnCorrectObjectInCaseOfInheritence() {
     BaseA baseA = new BaseA();
@@ -102,6 +107,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnCorrectObjectInCaseOfInheritanceWithoutInterface() {
     TypeA typeA = new TypeA();
@@ -127,6 +133,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUseClassNameWhenUsingMapperForCloning() {
     BaseA baseA = new BaseA();
@@ -158,6 +165,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should generate json schema.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGenerateJsonSchema() {
     JsonFluentAssert.assertThatJson(JsonUtils.jsonSchema(BaseA.class))
@@ -167,6 +175,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public void testGetBuildDetails() throws IOException {
@@ -204,6 +213,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCustomArtifactMapping() {
     String json =

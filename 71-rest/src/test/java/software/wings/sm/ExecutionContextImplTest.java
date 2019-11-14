@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +35,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,6 +104,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchContextElement() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -122,6 +125,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowStandardParams() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -137,6 +141,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowWhenNoContextElements() {
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
@@ -144,6 +149,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowWhenNoWorkflowStandardParams() {
     ExecutionContextImpl context = new ExecutionContextImpl(new StateExecutionInstance());
@@ -153,6 +159,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldfetchNoArtifacts() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -174,6 +181,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchRequiredApp() {
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
@@ -187,6 +195,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchRequiredEnv() {
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
@@ -200,6 +209,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldfetchNoArtifactsForService() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -254,6 +264,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderExpression() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -299,6 +310,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderExpressionList() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -311,6 +323,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderExpressionListNoSeparator() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -323,6 +336,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderExpressionListNull() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -332,6 +346,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderExpressionListWithCustomSeparator() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -378,6 +393,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateIndirectExpression() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -414,6 +430,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
    * Should evaluate indirect references
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderTemplateVariableExpression() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -454,6 +471,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForPipelineScope() {
     String appId = generateUuid();
@@ -470,6 +488,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForPipelineScopeJustAWorkflow() {
     String appId = generateUuid();
@@ -486,6 +505,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForWorkflowScope() {
     String appId = generateUuid();
@@ -501,6 +521,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForPhaseScope() {
     String appId = generateUuid();
@@ -520,6 +541,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPrepareSweepingOutputBuilderForStateScope() {
     String appId = generateUuid();

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -18,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -39,6 +41,7 @@ public class EntityHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private EntityHelper entityHelper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLoad() {
     Environment environment = anEnvironment().name(ENV_NAME).appId(APP_ID).build();
@@ -56,6 +59,7 @@ public class EntityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetYamlPathForDeploymentSpecification() {
     EntityAuditRecord record = EntityAuditRecord.builder().appName(APP_NAME).affectedResourceName(SERVICE_NAME).build();
@@ -66,6 +70,7 @@ public class EntityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFullYamlPathForEntity() {
     doReturn("Setup/Application/APP_NAME/Services/SERVICE_NAME/Manifests")

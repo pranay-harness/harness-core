@@ -1,12 +1,14 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +43,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     stateExecutionId = generateUuid();
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSavingLogIfFeatureFlagEnabled() {
     String cvConfigId = generateUuid();
@@ -56,6 +59,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSavingLogWithTimestampParams() {
     String cvConfigId = generateUuid();
@@ -71,6 +75,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAnsi() {
     String cvConfigId = generateUuid();
@@ -89,6 +94,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     assertThat(cvActivityLog.getAnsiLog()).isEqualTo("activity log from test");
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSavingLogIfFeatureFlagDisabled() {
     String cvConfigId = generateUuid();
@@ -103,6 +109,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFindByCVConfigIdToReturnEmptyIfNoLogs() {
     String cvConfigId = generateUuid();
@@ -110,6 +117,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFindByCVConfigIdWithSameStartTimeAndEndTime() {
     String cvConfigId = generateUuid();
@@ -130,6 +138,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFindByStateExecutionId() {
     String stateExecutionId = generateUuid();
@@ -145,6 +154,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFindByCVConfigIdWithDiffSameStartTimeAndEndTime() {
     String cvConfigId = generateUuid();
@@ -168,6 +178,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveActivityLogs() {
     List<CVActivityLog> cvActivityLogs =
@@ -177,6 +188,7 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     assertThat(cvActivityLogs).isEqualTo(savedActivityLogs);
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIfCVTaskValidUntilIsBeingSetTo2Weeks() {
     CVActivityLog cvActivityLog = createLog(UUID.randomUUID().toString(), System.currentTimeMillis(), "Test log");

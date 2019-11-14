@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -78,6 +80,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCheckForValidNameSyntax() throws Exception {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
@@ -124,6 +127,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getAllYamlErrorsForAccount() {
     yamlGitService.getAllYamlErrorsForAccount(ACCOUNT_ID);
@@ -132,6 +136,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getAllYamlErrorsForAllAccounts() {
     List<Account> accounts = Arrays.asList(anAccount().withAccountName("Name1").withUuid("AccId1").build(),
@@ -142,6 +147,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testProcessWebhookPost() throws Exception {
     SettingAttribute settingAttribute =

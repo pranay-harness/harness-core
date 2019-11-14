@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -239,6 +240,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarketPlaceSignUp() {
     when(configuration.getPortal().getJwtMarketPlaceSecret()).thenReturn("TESTSECRET");
@@ -320,6 +322,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRegisterNewUser() {
     User savedUser = userBuilder.withUuid(USER_ID)
@@ -360,6 +363,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldIncludeEnvPathInTrialSignupEmailUrl() {
     when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
@@ -381,6 +385,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBlockBlacklistedEmailRegistration() {
     when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(false);
@@ -395,6 +400,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateTrialSignupEmailWithIllegalChars() {
     when(configuration.isBlacklistedEmailDomainsAllowed()).thenReturn(false);
@@ -417,6 +423,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRegisterExistingUser() {
     User existingUser = userBuilder.withUuid(generateUuid()).build();
@@ -462,6 +469,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should match password.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchPassword() {
     String hashpw = hashpw(new String(PASSWORD), BCrypt.gensalt());
@@ -472,6 +480,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should update user.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUser() {
     List<Role> roles = Lists.newArrayList(
@@ -492,6 +501,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should update user profile.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUserProfile() {
     User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).withName(USER_NAME).build();
@@ -505,6 +515,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUserProfileWithoutName() {
     User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withAppId(APP_ID).build();
@@ -518,6 +529,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void addEventToUserMarketoCampaigns() {
     EventType eventType = EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
@@ -537,6 +549,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should list users.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListUsers() {
     PageRequest<User> request = new PageRequest<>();
@@ -553,6 +566,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should delete user.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteUser() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -566,6 +580,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should fetch user.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchUser() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -578,6 +593,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should throw exception if user does not exist.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionIfUserDoesNotExist() {
     assertThatThrownBy(() -> userService.get("INVALID_USER_ID"))
@@ -589,6 +605,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should verify email.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldVerifyEmail() {
     when(verificationQuery.get())
@@ -610,6 +627,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws IOException       the io exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmail() throws EmailException, TemplateException, IOException {
     emailDataNotificationService.send(
@@ -620,6 +638,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Test assign role to user.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddRole() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -637,6 +656,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Test revoke role to user.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRevokeRole() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -654,6 +674,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should invite new user.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInviteNewUser() {
     UserInvite userInvite = UserInviteBuilder.anUserInvite()
@@ -702,6 +723,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should invite new user - mixed case email.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInviteNewUserMixedCaseEmail() throws EmailException, TemplateException, IOException {
     String mixedEmail = "UseR@wings.software ";
@@ -730,6 +752,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInviteNewUser_invalidEmail_shouldFail() {
     UserInvite userInvite = UserInviteBuilder.anUserInvite()
@@ -806,6 +829,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should complete invite.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCompleteInvite() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -829,6 +853,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should get account role.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountRole() {
     List<Role> roles =
@@ -854,6 +879,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should get account for all aps admin role.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountForAllApsAdminRole() {
     List<Role> roles = asList(aRole()
@@ -883,6 +909,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should get application role.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetApplicationRole() {
     List<Role> roles =
@@ -911,6 +938,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws IOException       the io exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendResetPasswordEmail() throws EmailException, TemplateException, IOException {
     ArrayList<Account> accounts = new ArrayList<>();
@@ -931,6 +959,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldJoinAccount() {
     ArrayList<Account> accounts = new ArrayList<>();
@@ -964,6 +993,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws UnsupportedEncodingException the unsupported encoding exception
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePassword() throws UnsupportedEncodingException {
     when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -1007,6 +1037,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testJWTToken() {
     PortalConfig portalConfig = mock(PortalConfig.class);
@@ -1039,6 +1070,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Should resend the invitation email
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void resendInvitationEmail() {
     User user = userBuilder.withUuid(USER_ID)
@@ -1074,6 +1106,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUserVerified() {
     Account account = anAccount()

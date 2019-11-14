@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,6 +25,7 @@ public class HarnessClientApiKeyServiceTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUD() {
     String generatedApiKey = harnessApiKeyService.generate(ClientType.PROMETHEUS.name());

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.cv;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -15,6 +16,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -57,6 +59,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSavingHeartbeatsForAllHosts() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
@@ -90,6 +93,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIfFetchCalledForEachHostParallelly() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
@@ -104,6 +108,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIfNewRelicMetricDataRecordsAreSaved() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();

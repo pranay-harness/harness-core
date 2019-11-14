@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.persistence.HQuery.allChecks;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -69,6 +70,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Subject;
 import io.harness.persistence.HQuery;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.api.Assertions;
@@ -213,6 +215,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
@@ -233,6 +236,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSave() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
@@ -289,6 +293,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
@@ -310,6 +315,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdate() {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
@@ -362,6 +368,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateInfraComputerProviderId() {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
@@ -443,6 +450,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateWinRmConnectionAttribute() {
     final String winrmConnectionAttributeId1 = "winrm-id-1";
@@ -537,6 +545,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
@@ -563,6 +572,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     infrastructureMappingService.pruneDescendingEntities(APP_ID, INFRA_MAPPING_ID);
@@ -571,6 +581,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
     mockPhysicalInfra();
@@ -601,6 +612,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
     mockPhysicalInfra();
@@ -614,6 +626,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
     mockPhysicalInfra();
@@ -629,6 +642,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSelectServiceInstancesForPhysicalInfrastructure() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
@@ -662,6 +676,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSelectServiceInstancesForAwsInfrastructure() {
     AwsInfrastructureMapping awsInfrastructureMapping =
@@ -714,6 +729,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHostsForAzureSSHDeployment() {
     AzureInfrastructureMapping azureInfrastructureMapping = anAzureInfrastructureMapping()
@@ -746,6 +762,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListPhysicalComputeProviderHosts() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
@@ -772,6 +789,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListAwsComputeProviderHosts() {
     AwsInfrastructureMapping awsInfrastructureMapping =
@@ -826,6 +844,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldProvisionNodes() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
@@ -882,6 +901,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerRunningInstancesDirectKubernetes() {
     DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
@@ -919,6 +939,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerRunningInstancesGcp() {
     GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
@@ -954,6 +975,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerRunningInstancesEcs() {
     EcsInfrastructureMapping ecsInfrastructureMapping = anEcsInfrastructureMapping()
@@ -988,6 +1010,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleEcsInfraMapping() throws Exception {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
@@ -1023,6 +1046,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandlePcdInfraMapping() throws Exception {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
@@ -1048,6 +1072,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListInfraMappings() {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
@@ -1060,6 +1085,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAzureInfraMappingTypes() {
     AzureInfrastructureMapping azureSSHInfrastructureMapping =
@@ -1088,6 +1114,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAwsLambdaInfrastructureMapping() {
     AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();
@@ -1111,6 +1138,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateProvisionerConfig() {
     InfrastructureMapping infrastructureMapping = new AwsLambdaInfraStructureMapping();
@@ -1124,6 +1152,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAwsAmiInfrastructureMapping() {
     AwsAmiInfrastructureMapping infrastructureMapping = new AwsAmiInfrastructureMapping();
@@ -1150,6 +1179,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractRegionFromInfraMapping() {
     String region = "region";
@@ -1164,6 +1194,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateGcpInfraMapping() {
     InfrastructureMappingServiceImpl infrastructureMappingService =

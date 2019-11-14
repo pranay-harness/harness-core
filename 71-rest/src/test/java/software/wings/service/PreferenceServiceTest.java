@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
@@ -10,6 +11,7 @@ import static software.wings.service.impl.PreferenceServiceImpl.USER_ID_KEY;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +42,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
@@ -49,6 +52,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreate() {
     Preference createdPreference =
@@ -57,6 +61,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     preference.setAppId(GLOBAL_APP_ID);
@@ -71,6 +76,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdate() {
     Preference savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
@@ -81,6 +87,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     wingsPersistence.saveAndGet(Preference.class, preference);

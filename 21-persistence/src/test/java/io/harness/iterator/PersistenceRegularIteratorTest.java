@@ -5,6 +5,7 @@ import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -73,12 +74,14 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPumpWithEmptyCollection() {
     assertThatCode(() -> { iterator.process(PUMP); }).doesNotThrowAnyException();
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testProcessEntity() {
     final TestRegularIterableEntity entity =
@@ -88,6 +91,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLoopWithEmptyCollection() throws IOException {
     assertThatCode(() -> {

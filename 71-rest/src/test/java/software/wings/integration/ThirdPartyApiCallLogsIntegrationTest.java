@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +13,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,6 +46,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSaveApiCallLogs() throws Exception {
     int numOfApiCallLogs = 12;

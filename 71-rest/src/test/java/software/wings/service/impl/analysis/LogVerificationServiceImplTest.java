@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,6 +44,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBugsnagOrgs() {
     BugsnagConfig config = new BugsnagConfig();
@@ -67,6 +70,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBugsnagApplications() {
     BugsnagConfig config = new BugsnagConfig();
@@ -92,6 +96,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBugsnagApplicationsBadState() {
     BugsnagConfig config = new BugsnagConfig();

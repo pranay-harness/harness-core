@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -30,6 +32,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sApplyTaskHandler k8sApplyTaskHandler;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sApplyTaskParameters k8sApplyTaskParameters =
@@ -53,6 +56,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sApplyTaskParameters k8sApplyTaskParameters =

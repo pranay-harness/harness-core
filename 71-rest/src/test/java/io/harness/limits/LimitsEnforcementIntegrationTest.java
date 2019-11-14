@@ -2,6 +2,7 @@ package io.harness.limits;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static io.harness.limits.ActionType.DEPLOY;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -13,6 +14,7 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.LimitChecker;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Assert;
@@ -60,6 +62,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLimitEnforcement() {
     // configure limits
@@ -77,6 +80,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits

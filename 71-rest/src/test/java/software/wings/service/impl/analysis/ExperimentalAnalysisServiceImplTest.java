@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -107,6 +109,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetExperimentalMetricAnalysisSummary_WithoutMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))
@@ -120,6 +123,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetExperimentalMetricAnalysisSummary_WithMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))

@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,6 +29,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void encryptFields() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -45,6 +48,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void encryptFieldsMasked() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -64,6 +68,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void encryptDataDetails() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -84,6 +89,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void encryptFieldsParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -103,6 +109,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void encryptDataDetailsParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -123,6 +130,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void createAPMValidateCollectorConfig() throws IOException {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -154,6 +162,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void collectionHeaders() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -171,6 +180,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void collectionParams() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
@@ -188,6 +198,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetValidationUrlEncoded() {
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();

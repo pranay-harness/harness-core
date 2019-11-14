@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -10,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,6 +29,7 @@ public class ExecutionLogWriterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() {
     ExecutionLogWriter testWriter = ExecutionLogWriter.builder()

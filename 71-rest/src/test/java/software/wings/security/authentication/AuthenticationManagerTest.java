@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -18,6 +19,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.codec.binary.Base64;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -72,6 +74,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Inject @InjectMocks private AuthenticationManager authenticationManager;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getAuthenticationMechanism() {
     User mockUser = mock(User.class);
@@ -94,6 +97,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getLoginTypeResponse() {
     User mockUser = mock(User.class);
@@ -139,6 +143,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLoginType_emailUnverified_shouldFail() throws MaxLoginAttemptExceededException {
     User mockUser = mock(User.class);
@@ -160,6 +165,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void authenticate() {
     User mockUser = spy(new User());
@@ -184,6 +190,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCredentialDecoding() {
     User mockUser = spy(new User());
@@ -213,6 +220,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFakeTokens() {
     try {
@@ -231,6 +239,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void extractToken() {
     try {

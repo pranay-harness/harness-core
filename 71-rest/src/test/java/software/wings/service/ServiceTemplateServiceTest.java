@@ -5,6 +5,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -117,6 +118,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should list saved service templates.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListSavedServiceTemplates() {
     PageResponse<ServiceTemplate> pageResponse =
@@ -138,6 +140,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should save service template.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveServiceTemplate() {
     when(wingsPersistence.saveAndGet(eq(ServiceTemplate.class), any(ServiceTemplate.class)))
@@ -151,6 +154,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should create default service template by env.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateDefaultServiceTemplateByEnv() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
@@ -172,6 +176,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should create default service template by service.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateDefaultServiceTemplateByService() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
@@ -194,6 +199,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should update service template.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateServiceTemplate() {
     ServiceTemplate template = builder.build();
@@ -210,6 +216,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should delete service template.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteServiceTemplate() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
@@ -226,6 +233,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should prune by environment.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneByEnvironment() {
     when(query.asList())
@@ -245,6 +253,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should delete by service.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneByService() {
     doNothing().when(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
@@ -265,6 +274,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should override config files.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldOverrideConfigFiles() {
     ConfigFile configFile1 = ConfigFile.builder().relativeFilePath("app.properties").build();
@@ -313,6 +323,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPopulateServiceAndOverrideValuesManifestFile() {
     PageResponse<ServiceTemplate> pageResponse =
@@ -354,6 +365,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPopulateServiceAndOverrideValuesManifestFileForValues() {
     PageResponse<ServiceTemplate> pageResponse =

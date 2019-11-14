@@ -8,6 +8,7 @@ import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ObjectYamlUtils.toYaml;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -24,6 +25,7 @@ import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.ExceptionLogger;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +45,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void toYamlSmokeTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -57,6 +60,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void processYamlSmokeTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
@@ -69,6 +73,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void processYamlMultiResourceTest() throws Exception {
     URL url = this.getClass().getResource("/mongo.yaml");
@@ -91,6 +96,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void invalidYamlTest() {
     try {
@@ -103,6 +109,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void invalidYamlObjectTest() {
     try {
@@ -115,6 +122,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void processYamlMissingKindTest() throws Exception {
     URL url = this.getClass().getResource("/missing-kind.yaml");
@@ -129,6 +137,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void processYamlMissingNameTest() throws Exception {
     URL url = this.getClass().getResource("/missing-name.yaml");
@@ -144,6 +153,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNormalizeFolderPath() {
     assertThat(ManifestHelper.normalizeFolderPath("abc")).isEqualTo("abc/");
@@ -151,6 +161,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMapFromValuesFileContent() throws Exception {
     URL url = this.getClass().getResource("/sample-values.yaml");
@@ -174,6 +185,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMapFromValuesFileContentWithInvalidYaml() {
     try {
@@ -190,6 +202,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetValuesExpressionKeysFromMap() throws Exception {
     URL url = this.getClass().getResource("/sample-values.yaml");
@@ -208,6 +221,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetValuesExpressionKeysFromMapWithDepthLimit() {
     Map map = getMapFromValuesFileContent("A:\n"
@@ -238,6 +252,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateValuesFileContentGoodCases() {
     validateValuesFileContents("");
@@ -247,6 +262,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateValuesFileContentNotAMap() {
     try {
@@ -260,6 +276,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateValuesFileContentInvalidStructure() {
     try {
@@ -275,6 +292,7 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetWorkloadsForCanary() {
     KubernetesResource deployment = KubernetesResource.builder()

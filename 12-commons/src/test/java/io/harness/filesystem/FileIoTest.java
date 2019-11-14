@@ -7,11 +7,13 @@ import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static io.harness.filesystem.FileIo.getHomeDir;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeFile;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.nio.file.Files.lines;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,6 +33,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void createDirectoryTest() throws IOException {
     final String directoryPath = getRandomTempDirectory();
@@ -49,6 +52,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void waitForDirectoryToBeAccessibleOutOfProcessPositiveTest() throws IOException {
     final String directoryPath = getRandomTempDirectory();
@@ -62,12 +66,14 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void waitForDirectoryToBeAccessibleOutOfProcessNegativeTest() {
     assertThat(waitForDirectoryToBeAccessibleOutOfProcess(getRandomTempDirectory(), 3)).isFalse();
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteFileIfExistsTest() throws IOException {
     final String fileName = tempDirectory + "/testfile.txt";
@@ -83,6 +89,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteDirectoryAndItsContentTest() throws IOException {
     final String directoryName = getRandomTempDirectory();
@@ -100,6 +107,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void writeFileTest() throws IOException {
     final String directoryName = getRandomTempDirectory();
@@ -120,6 +128,7 @@ public class FileIoTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHomeDir() {
     String homeDir = getHomeDir();

@@ -1,5 +1,6 @@
 package software.wings.service.impl.verification;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.Thread.sleep;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -57,6 +59,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveCVTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
@@ -67,6 +70,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidAfterWhenNotSetOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
@@ -77,6 +81,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidAfterWhenSetToFutureOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
@@ -87,6 +92,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidAfterWhenSetToPastOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
@@ -98,6 +104,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecutionStatusFilterOnGettingNextTask() {
     CVTask cvTask = createCVTaskWithStateExecutionId();
@@ -113,6 +120,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecutionStatusUpdateOnGettingNextTask() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
@@ -123,6 +131,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOrderOnGettingNextTask() throws InterruptedException {
     List<CVTask> cvTasks = new ArrayList<>();
@@ -143,6 +152,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
     assertThat(cvTaskService.getNextTask(accountId).isPresent()).isFalse();
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
@@ -153,6 +163,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCVTaskById() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
@@ -160,6 +171,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnqueueSeqTasks() {
     long startTime = Instant.now().toEpochMilli();
@@ -190,6 +202,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateTaskStatusWhenTaskResultIsSuccessful() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
@@ -204,6 +217,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateTaskStatusWhenTaskHasFailed() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
@@ -224,6 +238,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateNotifyErrorWhenTaskHasFailed() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
@@ -246,6 +261,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExpireLongRunningTasksIfTaskIsExpired() throws IllegalAccessException {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);
@@ -259,6 +275,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDependentTaskStatusUpdateIfTaskExpired() throws IllegalAccessException {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId(ExecutionStatus.RUNNING);

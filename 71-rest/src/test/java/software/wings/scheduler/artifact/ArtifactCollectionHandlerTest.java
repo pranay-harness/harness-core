@@ -1,5 +1,6 @@
 package software.wings.scheduler.artifact;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -19,6 +20,7 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,6 +51,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject private ArtifactCollectionHandler artifactCollectionHandler;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleForNPEInAccountId() {
     PowerMockito.mockStatic(ExceptionLogger.class);
@@ -75,6 +78,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleWithValidAccountId() {
     PowerMockito.mockStatic(ExceptionLogger.class);
@@ -103,6 +107,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     // setup mock

@@ -1,9 +1,11 @@
 package software.wings.graphql.datafetcher.connector;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static junit.framework.TestCase.fail;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
@@ -16,6 +18,7 @@ import java.util.List;
 
 public class ConnectorControllerTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testConnectorImplementations() {
     SettingAttribute attribute = new SettingAttribute();

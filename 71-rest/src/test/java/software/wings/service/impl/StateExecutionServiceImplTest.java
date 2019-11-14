@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
@@ -10,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +48,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnHostsForMultiplePhases() {
     PhaseElement phaseElement = PhaseElement.builder().infraDefinitionId(INFRA_DEFINITION_ID).build();
@@ -76,6 +79,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnEmptyWhenNoPreviousPhases() {
     PhaseElement phaseElement = PhaseElement.builder().infraDefinitionId(INFRA_DEFINITION_ID).build();
@@ -91,6 +95,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnHostsForMultiplePhasesForFeatureFlagOff() {
     PhaseElement phaseElement = PhaseElement.builder().infraMappingId(INFRA_MAPPING_ID).build();

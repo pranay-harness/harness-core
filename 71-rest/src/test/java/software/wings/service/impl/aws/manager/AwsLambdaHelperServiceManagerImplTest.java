@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -10,6 +11,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +39,7 @@ public class AwsLambdaHelperServiceManagerImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getFunctionDetails() throws InterruptedException {
     final AwsLambdaDetailsRequest awsLambdaDetailsRequest =
@@ -51,6 +54,7 @@ public class AwsLambdaHelperServiceManagerImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getFunctionDetails_error() throws InterruptedException {
     final AwsLambdaDetailsRequest awsLambdaDetailsRequest =

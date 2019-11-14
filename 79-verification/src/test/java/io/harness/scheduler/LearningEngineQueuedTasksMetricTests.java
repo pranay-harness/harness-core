@@ -1,6 +1,7 @@
 package io.harness.scheduler;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +31,7 @@ import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +55,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoQueuedTasks() {
     serviceGuardAccountPoller.recordQueuedTaskMetric();
@@ -69,6 +72,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testQueuedTasks() {
     wingsPersistence.save(LearningEngineAnalysisTask.builder()

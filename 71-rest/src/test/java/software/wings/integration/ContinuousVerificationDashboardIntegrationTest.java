@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.IntegrationTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -142,6 +144,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getRecords() throws Exception {
     saveExecutions();
@@ -181,6 +184,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllCVDeploymentRecords() {
     // Setup
@@ -222,6 +226,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllDeploymentRecords() {
     // Setup
@@ -263,6 +268,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllDeploymentRecordsWFWithoutServiceIds() {
     // Setup
@@ -309,6 +315,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllCVRecordsHarnessAccount() {
     saveExecutions();
@@ -339,6 +346,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAllCVRecordsNonHarnessAccount() {
     saveExecutions();

@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,6 +17,7 @@ import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.Service;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -33,6 +35,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEcsHelperServiceDelegateImpl awsEcsHelperServiceDelegate;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListClusters() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
@@ -48,6 +51,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListServicesForCluster() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);

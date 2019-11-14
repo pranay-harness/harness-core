@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mongodb.DBCollection;
@@ -8,6 +9,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.IndexManager.Accesses;
 import io.harness.mongo.IndexManager.IndexCreator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,6 +24,7 @@ import java.util.Map;
 
 public class IndexManagerTest extends PersistenceTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testIndexCreators() {

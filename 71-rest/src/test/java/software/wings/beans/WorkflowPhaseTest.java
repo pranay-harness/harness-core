@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -9,6 +10,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.pre
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 
 public class WorkflowPhaseTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchTemplateExpressionNames() {
     WorkflowPhase workflowPhase = aWorkflowPhase()
@@ -29,6 +32,7 @@ public class WorkflowPhaseTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchEmptyTemplateExpressionNames() {
     WorkflowPhase workflowPhase = aWorkflowPhase().templateExpressions(new ArrayList<>()).build();

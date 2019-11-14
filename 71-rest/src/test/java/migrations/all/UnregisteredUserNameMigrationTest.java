@@ -1,11 +1,13 @@
 package migrations.all;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static migrations.all.UnregisteredUserNameMigration.NOT_REGISTERED;
 
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +34,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMigrationOfAllUnregisteredUsers() {
     long initialCount = 10;
@@ -44,6 +47,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoMigrationOfRegisteredUsers() {
     long initialCount = 10;
@@ -56,6 +60,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMigrationOfSomeRegisteredUsers() {
     long initialCount = 10;

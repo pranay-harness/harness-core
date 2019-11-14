@@ -1,5 +1,6 @@
 package software.wings.metrics;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.TreeBasedTable;
 import io.fabric8.utils.Lists;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -66,6 +68,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getTimeSeriesDataRecordsFromNewRelicDataRecords() {
     DateTime now = DateTime.now();
@@ -113,6 +116,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getNewRelicDataRecordsFromTimeSeriesDataRecords() {
     DateTime now = DateTime.now();

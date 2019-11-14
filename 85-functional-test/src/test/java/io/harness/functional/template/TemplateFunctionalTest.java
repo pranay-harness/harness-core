@@ -5,6 +5,7 @@ import static io.harness.generator.AccountGenerator.readOnlyEmail;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.APP_FOLDER_SHELL_SCRIPTS;
 import static io.harness.generator.TemplateFolderGenerator.TemplateFolders.TEMPLATE_FOLDER_SHELL_SCRIPTS;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -75,6 +76,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldExecuteShellScriptTemplateWorkflow() {
     GenericType<RestResponse<WorkflowExecution>> workflowExecutionType =
@@ -92,6 +94,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void createUpdateDeleteShellScriptTemplate() {
     // Create template
@@ -215,6 +218,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testCRUDTemplateRBAC() {
     String readOnlyPassword = "readonlyuser";
@@ -340,6 +344,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testAddFetchRemoveTemplateFavorites() {
     GenericType<RestResponse<Set<String>>> responseType = new GenericType<RestResponse<Set<String>>>() {};
@@ -378,6 +383,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testMarkInvalidTemplateAsFavorite() {
     assertThat(Setup.portal()

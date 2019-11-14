@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -21,6 +22,7 @@ import com.google.inject.Injector;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.YamlUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +66,7 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testConstructLogDefinitions() throws IOException {
     CustomLogVerificationState state = new CustomLogVerificationState("dummy");

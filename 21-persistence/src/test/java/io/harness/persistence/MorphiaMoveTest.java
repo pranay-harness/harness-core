@@ -1,6 +1,7 @@
 package io.harness.persistence;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableSet;
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.MorphiaMove;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -25,6 +27,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   @SuppressWarnings("PMD")
   public void shouldCacheMissingClass() {
@@ -50,6 +53,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadOldClass() {
     TestHolderEntity entity =
@@ -66,6 +70,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadFutureClass() {
     persistence.save(MorphiaMove.builder()

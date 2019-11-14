@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
@@ -19,6 +20,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -59,6 +61,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test GET preference
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -81,6 +84,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test LIST preferences
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListPreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -103,6 +107,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test POST preference
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -129,6 +134,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test PUT preference
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePreference() {
     Preference deployPref = new DeploymentPreference();
@@ -152,6 +158,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test DELETE preference
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeletePreference() {
     Preference deployPref = new DeploymentPreference();

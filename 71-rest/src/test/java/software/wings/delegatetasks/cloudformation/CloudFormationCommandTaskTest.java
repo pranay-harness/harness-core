@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.cloudformation;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,6 +48,7 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     CloudFormationCreateStackRequest createStackRequest =

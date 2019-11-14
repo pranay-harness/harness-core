@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -12,6 +13,7 @@ import com.google.gson.JsonPrimitive;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -93,6 +95,7 @@ public class AccountExportImportResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFindClashedUserIdMapping() {
     Map<String, String> userIdMapping = accountExportImportResource.findClashedUserIdMapping(accountId, users);

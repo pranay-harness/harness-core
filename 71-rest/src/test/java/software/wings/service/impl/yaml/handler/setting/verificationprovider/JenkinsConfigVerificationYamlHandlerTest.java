@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,6 +43,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   public void setUp() throws HarnessException, IOException {}
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
@@ -53,6 +56,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
@@ -63,6 +67,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testToBeanForNullValues() {
     ChangeContext<VerificationYaml> changeContext =

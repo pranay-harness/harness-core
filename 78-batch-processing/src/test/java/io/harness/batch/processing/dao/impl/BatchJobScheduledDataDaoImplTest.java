@@ -1,5 +1,6 @@
 package io.harness.batch.processing.dao.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -7,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -26,6 +28,7 @@ public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
   private final Instant PREV_START_INSTANT = NOW.minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchLastBatchJobScheduledData() {
     boolean createFirstEntry =

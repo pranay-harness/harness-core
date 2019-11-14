@@ -1,11 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.integration.BaseIntegrationTest;
@@ -19,6 +21,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
   @Inject WorkflowExecutionServiceImpl workflowExecutionService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldGetStateExecutionInstancesForPhases() {
     StateExecutionInstance stateExecutionInstance1 = null, stateExecutionInstance2 = null,
@@ -44,6 +47,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldReturnEmptyWhenStateExecutionInstancesForPhasesNotExists() {
     List<StateExecutionInstance> stateExecutionInstancesForPhases =

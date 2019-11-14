@@ -1,11 +1,13 @@
 package software.wings.integration.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.category.element.IntegrationTests;
 import io.harness.expression.SecretString;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,6 +90,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_LocalEncryption_shouldSucceed() {
     String secretValue = "TestSecret";
@@ -105,6 +108,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_VaultOperations_accountLocalEncryptionEnabled_shouldFail() {
     // 1. Create a new Vault config.
@@ -137,6 +141,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testListVaultSecretEngines() {
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -154,6 +159,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  @Category(IntegrationTests.class)
   //  public void testUpdateSecret_changeDefaultSecretManager_fromVaultToKms_shouldSucceed() {
   //    // Start with VAULT as default secret manager
@@ -186,6 +192,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   //  }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateVaultEncryptedSeretFile_withNoContent_shouldNot_UpdateFileContent() {
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -200,6 +207,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCreateUpdateDeleteVaultConfig_shouldSucceed() {
     // 1. Create a new Vault config.
@@ -223,6 +231,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_updateVaultBasePath_shouldSucceed() {
     // Create the first default vault config
@@ -243,6 +252,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateVaultSecretTextName_shouldNotAlterSecretValue() {
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -257,6 +267,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_createNewDefaultVault_shouldUnsetPreviousDefaultVaultConfig() {
     // Create the first default vault config
@@ -292,6 +303,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_UpdateSecretTextWithValue_VaultWithBasePath_shouldSucceed() {
     // Create the first default vault config
@@ -303,6 +315,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_UpdateSecretTextWithValue_VaultWithBasePath2_shouldSucceed() {
     // Create the first default vault config
@@ -314,6 +327,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_UpdateSecretTextWithValue_shouldSucceed() {
     // Create the first default vault config
@@ -325,6 +339,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_CreateSecretText_WithInvalidPath_shouldFail() {
     // Create the first default vault config
@@ -344,6 +359,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_UpdateSecretText_WithInvalidPath_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -375,6 +391,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_CreateSecretText_withInvalidPathReference_shouldFail() {
     String vaultConfigId = createVaultConfig(vaultConfig);
@@ -397,12 +414,14 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_CreateSecretText_WithValidPath_shouldSucceed() {
     testCreateSecretText(vaultConfig);
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_importSecrets_fromCSV_shouldSucceed() {
     importSecretTextsFromCsv("./encryption/secrets.csv");
@@ -411,6 +430,7 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_listSettingAttributes_shoudlSucceed() throws IllegalAccessException {
     List<SettingAttribute> settingAttributes = listSettingAttributes();
@@ -430,18 +450,21 @@ public class VaultIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_CreateSecretText_vaultWithBasePath_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath);
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_CreateSecretText_vaultWithBasePath2_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath2);
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_CreateSecretText_vaultWithBasePath3_validPath_shouldSucceed() {
     testCreateSecretText(vaultConfigWithBasePath3);

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -80,6 +81,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
                                                      .build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureResourceConstraintForInfrastructureThrottlingWhenExists() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraint.class));
@@ -95,6 +97,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureResourceConstraintForInfrastructureThrottlingWhenDoNotExists() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraint.class));
@@ -132,6 +135,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
 
   // TODO: YOGESH use fake mongo in all tests
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAllCurrentlyAcquiredPermits() {
     final int permits = 3;

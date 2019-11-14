@@ -5,6 +5,7 @@
 package software.wings.expression;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,6 +17,7 @@ import com.amazonaws.services.ec2.model.Tag;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.Value;
@@ -38,6 +40,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private SweepingOutputService sweepingOutputService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstituteHostUrl() {
     Host host = new Host();
@@ -50,6 +53,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstitutePartially() {
     Host host = new Host();
@@ -64,6 +68,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateEc2Instance() {
     Instance ec2 = new Instance();
@@ -92,6 +97,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderSweepingOutputFunctor() {
     String appId = generateUuid();
@@ -130,6 +136,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderSweepingOutputValue() {
     String appId = generateUuid();
@@ -171,6 +178,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderSweepingOutputValueByValue() {
     String appId = generateUuid();

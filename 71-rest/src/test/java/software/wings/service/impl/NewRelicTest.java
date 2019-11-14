@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_SPECIAL_CHARS;
@@ -61,6 +62,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void cvdemo() throws IOException {
     // DO NOT REMOVE CV_DEMO FEATURE FLAG
@@ -115,6 +117,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeStampCreations() {
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
@@ -122,6 +125,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMetricsBatching() {
     Set<NewRelicMetric> metricNames =
@@ -153,6 +157,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUrlNotEndingWithSlash() {
     APMValidateCollectorConfig config =
@@ -161,6 +166,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUrlBeginingWithSlash() {
     APMValidateCollectorConfig config = APMValidateCollectorConfig.builder()

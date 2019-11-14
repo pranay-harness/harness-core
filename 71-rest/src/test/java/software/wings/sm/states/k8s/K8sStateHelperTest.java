@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
@@ -30,6 +31,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -98,6 +100,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateK8sActivity() {
     List<CommandUnit> commandUnits = new ArrayList<>();
@@ -117,6 +120,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDoManifestsUseArtifact() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()

@@ -1,6 +1,7 @@
 package io.harness.governance.pipeline.service;
 
 import static graphql.Assert.assertNotEmpty;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -13,6 +14,7 @@ import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.service.model.Restriction;
 import io.harness.governance.pipeline.service.model.Restriction.RestrictionType;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,6 +60,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testList() {
     List<PipelineGovernanceConfig> initialList = pipelineGovernanceService.list(SOME_ACCOUNT_ID);
@@ -72,6 +75,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdate() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
@@ -97,6 +101,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAdd() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(

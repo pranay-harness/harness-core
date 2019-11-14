@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +10,7 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,6 +41,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testAccountMigration() {
     disableAccount(accountId, true);
@@ -76,6 +79,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shallCreateAndDeleteAccount() {
     Account account = new Account();
@@ -109,6 +113,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldEnableAndDisableCloudCost() {
     Account account = new Account();

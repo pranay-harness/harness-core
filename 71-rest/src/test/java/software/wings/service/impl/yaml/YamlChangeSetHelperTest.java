@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,6 +69,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenameYamlChangeForInfraMapping() throws Exception {
     GitFileChange gitFileChangeForDelete = GitFileChange.Builder.aGitFileChange()
@@ -117,6 +120,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateYamlChangeForInfraMapping() throws Exception {
     GitFileChange gitFileChangeForModify = GitFileChange.Builder.aGitFileChange()
@@ -151,6 +155,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenameYamlChangeForArtifactStream() throws Exception {
     GitFileChange gitFileChangeForDelete = GitFileChange.Builder.aGitFileChange()
@@ -202,6 +207,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateYamlChangeForArtifactStream() throws Exception {
     GitFileChange gitFileChangeForModify = GitFileChange.Builder.aGitFileChange()

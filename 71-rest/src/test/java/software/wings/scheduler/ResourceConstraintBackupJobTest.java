@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -15,6 +16,7 @@ import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.ConsumerId;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -39,6 +41,7 @@ public class ResourceConstraintBackupJobTest extends WingsBaseTest {
   @Inject ResourceConstraintBackupJob job;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void jobExecute() throws Exception {
     final String accountId = generateUuid();

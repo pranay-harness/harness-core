@@ -1,6 +1,7 @@
 package software.wings.integration.network;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -69,6 +70,7 @@ public class ProxyTest extends CategoryTest {
    * @throws IOException
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testWithNoProxyConfigured_OkHttpClient() throws IOException {
     OkHttpClient.Builder builder = new Builder();
@@ -132,6 +134,7 @@ public class ProxyTest extends CategoryTest {
    * @throws IOException
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testWithProxyAuthFailWithInvalidCreds_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
@@ -157,6 +160,7 @@ public class ProxyTest extends CategoryTest {
    * Using proxy with Auth
    */
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void testWithProxyWithNoAuthSuccess_OkHttpClient() throws IOException {
   //    Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHostNoAuth, proxyPort));
   //    OkHttpClient.Builder builder = new OkHttpClient.Builder().proxy(proxy);
@@ -222,6 +226,7 @@ public class ProxyTest extends CategoryTest {
   }
 
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void testGetResponseFromUrlProxyNoAuth() throws IOException {
   //    Executor executor = Executor.newInstance();
   //    org.apache.http.client.fluent.Request request =
@@ -235,6 +240,7 @@ public class ProxyTest extends CategoryTest {
   //  }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetResponseFromUrlNoProxy() throws IOException {
     Executor executor = Executor.newInstance();

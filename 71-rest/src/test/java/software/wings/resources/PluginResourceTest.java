@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -42,6 +44,7 @@ public class PluginResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     RestResponse<List<AccountPlugin>> restResponse = RESOURCES.client()
@@ -52,6 +55,7 @@ public class PluginResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetInstalledPluginSettingSchema() throws Exception {
     RestResponse<Map<String, JsonNode>> restResponse =

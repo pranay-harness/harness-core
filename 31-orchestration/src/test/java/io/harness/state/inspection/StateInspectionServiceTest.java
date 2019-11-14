@@ -1,6 +1,7 @@
 package io.harness.state.inspection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,6 +10,7 @@ import com.google.inject.Inject;
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -19,6 +21,7 @@ public class StateInspectionServiceTest extends OrchestrationTest {
   @Inject private StateInspectionService stateInspectionService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMerge() throws IOException {
     final String uuid = generateUuid();

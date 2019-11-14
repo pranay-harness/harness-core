@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.delegatecapability;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.CapabilityUtils;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.TaskType;
@@ -21,6 +23,7 @@ public class DelegateCapabilityUtilsTest extends CategoryTest {
       ImmutableSet.of("JENKINS", "BAMBOO", "GCS", "DOCKER", "NEXUS", "ARTIFACTORY");
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllExpectedTaskMovedToCapabilityFramework() {
     List<TaskType> taskTypeList =

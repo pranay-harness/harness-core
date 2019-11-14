@@ -1,5 +1,6 @@
 package io.harness.functional.identity;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -9,6 +10,7 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +52,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientLoginUser() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -62,6 +65,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListUsers() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -74,6 +78,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListAccounts() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -86,6 +91,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientGetAccountSettings() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -100,6 +106,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientGetPublicUserInfo() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -110,6 +117,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientSignupOauthUser() {
     String userEmail = "oauth_trial_user_" + System.currentTimeMillis() + "@harness.io";

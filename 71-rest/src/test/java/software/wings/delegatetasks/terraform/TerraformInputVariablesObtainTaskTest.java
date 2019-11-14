@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -8,6 +9,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -76,6 +78,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() throws IOException {
     String moduleDir = "some-dir";
@@ -94,6 +97,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoTerraformFilesFound() {
     when(gitUtilsDelegate.cloneRepo(any(), any(), any())).thenReturn(GitOperationContext.builder().build());

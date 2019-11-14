@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -15,6 +16,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -163,6 +165,7 @@ public class GitClientImplTest extends WingsBaseTest {
       + "-----END RSA PRIVATE KEY-----\n";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddToGitDiffResult() throws Exception {
     DiffEntry entry = mock(DiffEntry.class);
@@ -255,6 +258,7 @@ public class GitClientImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloneRepoWithSSH() throws Exception {
     try {

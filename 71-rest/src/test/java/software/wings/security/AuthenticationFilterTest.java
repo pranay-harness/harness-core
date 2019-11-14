@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,6 +22,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -79,6 +81,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAuthenticationFilterTestOptions() throws IOException {
     when(context.getMethod()).thenReturn(HttpMethod.OPTIONS);
@@ -92,6 +95,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoAuthorizationToken() throws IOException {
     try {
@@ -106,6 +110,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelegateRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Delegate token");
@@ -123,6 +128,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLearningEngineRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("LearningEngine token");
@@ -136,6 +142,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIdentityServiceRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("IdentityService token");
@@ -149,6 +156,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRequestAuthenticatedByIdentitySvc() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("IdentityService token");
@@ -166,6 +174,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExternalApiAuthentication() throws IOException {
     String apiKey = "ApiKey";
@@ -186,6 +195,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExternalApiRateLimiting() throws IOException {
     String apiKey = "ApiKey";
@@ -205,6 +215,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidBearerTokenPresent() throws IOException {
     try {
@@ -223,6 +234,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidBearerTokenPresent() throws IOException {
     try {
@@ -242,6 +254,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIncorrectToken() throws IOException {
     try {

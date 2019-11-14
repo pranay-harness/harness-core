@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
@@ -28,6 +29,7 @@ import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.event.reconciliation.deployment.DetectionStatus;
 import io.harness.event.reconciliation.deployment.ReconcilationAction;
 import io.harness.event.reconciliation.deployment.ReconciliationStatus;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,6 +113,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllOK() {
     try {
@@ -135,6 +138,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMissingRecords() throws Exception {
     final long durationStartTs = System.currentTimeMillis() - 2000000;
@@ -151,6 +155,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMissingRecordsDuplicatesFound() throws Exception {
     activateDuplicatesFound();
@@ -170,6 +175,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testDuplicatesDetected() {
     try {
@@ -193,6 +199,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldPerformReconciliation() {
     DeploymentReconRecord reconRecord = DeploymentReconRecord.builder()

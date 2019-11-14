@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -15,6 +16,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.network.Http;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +65,7 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void validationVaultReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
@@ -73,6 +76,7 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void validationVaultUnReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
@@ -83,6 +87,7 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void validationNewRelicUnReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(false);

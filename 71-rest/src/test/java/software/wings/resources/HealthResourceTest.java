@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.configuration.ConfigurationType;
 import io.harness.mongo.MongoConfig;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.AsymmetricEncryptor;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -33,6 +35,7 @@ public class HealthResourceTest extends CategoryTest {
           .build();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetMongoUri() throws Exception {
     when(configuration.getMongoConnectionFactory())
@@ -54,6 +57,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetElasticsearchUri() throws Exception {
     String elasticsearchUri = "http://localhost:9200";
@@ -71,6 +75,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetIsSearchEnabled() {
     when(configuration.isSearchEnabled()).thenReturn(true);

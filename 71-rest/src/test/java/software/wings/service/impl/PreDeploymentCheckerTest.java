@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -108,6 +109,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
   }
 
   @Test()
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowPreDeploymentCheckerViolation() {
     Workflow workflow = getWorkflow(true);
@@ -118,6 +120,7 @@ public class PreDeploymentCheckerTest extends WingsBaseTest {
   }
 
   @Test()
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelinePreDeploymentCheckerViolation() {
     Pipeline pipeline = getPipeline();

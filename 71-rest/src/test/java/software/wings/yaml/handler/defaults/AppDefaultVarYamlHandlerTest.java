@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.defaults;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HarnessException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -107,6 +109,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
@@ -159,6 +162,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);

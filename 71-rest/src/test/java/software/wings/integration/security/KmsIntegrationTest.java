@@ -1,8 +1,10 @@
 package software.wings.integration.security;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,6 +48,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsSecretText_withBackupGlobalKMS_shouldSucceed() {
     String backupGlobalKmsConfigId = createGlobalKmsConfig(globalKmsBackup);
@@ -69,6 +72,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsSecretText_shouldSucceed() {
     String kmsConfigId = createKmsConfig(kmsConfig);
@@ -85,6 +89,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsEncryptedSecretFile_withNoContent_shouldNot_UpdateFileContent() throws IOException {
     String kmsConfigId = createKmsConfig(kmsConfig);
@@ -101,6 +106,7 @@ public class KmsIntegrationTest extends BaseSecretManagementIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateKmsSecretTextName_shouldNotAlterSecretValue() {
     String kmsConfigId = createKmsConfig(kmsConfig);

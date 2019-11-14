@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -30,6 +31,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.event.model.Event;
 import io.harness.event.publisher.EventPublisher;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -104,6 +106,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListAlerts() {
     alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
@@ -116,6 +119,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldOpenAlert() {
     alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
@@ -137,6 +141,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldOpenPendingAlert() {
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
@@ -176,6 +181,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotOpenMatchingAlert() {
     alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
@@ -191,6 +197,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloseAlert() {
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
@@ -203,6 +210,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCloseAlertNoneFound() {
     alertService.closeAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, noEligibleDelegatesAlert);
@@ -211,6 +219,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloseAlertsWhenDelegateUpdated() {
     alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoActiveDelegates, noActiveDelegatesAlert);
@@ -228,6 +237,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloseAlertsWhenDeploymentAborted() {
     alertService.openAlert(ACCOUNT_ID, APP_ID, ApprovalNeeded, approvalNeededAlert);
@@ -243,6 +253,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBuildAlertTitle() {
     AlertData alertData = NoEligibleDelegatesAlert.builder()
@@ -261,6 +272,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStream() {
     AlertData alertData = ArtifactCollectionFailedAlert.builder()
@@ -283,6 +295,7 @@ public class AlertServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStreamAtConnectorLevel() {
     AlertData alertData = ArtifactCollectionFailedAlert.builder().artifactStreamId(ARTIFACT_STREAM_ID).build();

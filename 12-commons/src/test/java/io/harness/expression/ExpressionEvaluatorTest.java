@@ -1,5 +1,6 @@
 package io.harness.expression;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -48,6 +50,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   };
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNormalizeExpression() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -63,6 +66,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstituteWithNull() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -72,6 +76,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCrashWithNull() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -82,6 +87,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateRecursively() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -90,6 +96,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateVar() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -102,6 +109,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateWithNull() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -111,6 +119,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateWithNameValue() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -135,6 +144,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateWithMap() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -147,6 +157,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateWithDefaultPrefix() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -159,6 +170,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEvaluateWithSubexpression() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -171,6 +183,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstituteWithDefaultPrefix() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -186,6 +199,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNormalizeExpressionDoNotExpandRegex() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -196,6 +210,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstituteReExtract() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -230,6 +245,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotHangForCircle() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -241,6 +257,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testSubstituteDoNotExpandRe() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -251,6 +268,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstituteReReplace() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -268,6 +286,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstituteReMatch() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -289,6 +308,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAccessJson() throws IOException {
     URL url = getClass().getResource("/store.json");
@@ -303,6 +323,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSelectJsonPath() throws IOException {
     URL url = getClass().getResource("/store.json");
@@ -320,6 +341,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListJsonPath() throws IOException {
     URL url = getClass().getResource("/store.json");
@@ -335,6 +357,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFormatAsJson() throws IOException {
     Map<String, Object> context =
@@ -347,6 +370,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSelectXPath() throws IOException {
     URL url = getClass().getResource("/store.xml");
@@ -362,6 +386,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCollideVars() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -376,6 +401,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeOkWithSameVarsFromDifferentIterations() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -386,6 +412,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDetectExponentialGrowth() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -399,6 +426,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRenderLateBoundValue() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -416,6 +444,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldEscapeSpecialCharacters() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -429,6 +458,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test(expected = FunctorException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testThrowExceptionFunctor() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
@@ -437,6 +467,7 @@ public class ExpressionEvaluatorTest extends CategoryTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowInValidVariableName() {
     ExpressionEvaluator.isValidVariableName("${invalidVar}");

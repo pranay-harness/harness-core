@@ -1,10 +1,12 @@
 package io.harness.event.handler.impl.segment;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.IntegrationTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,6 +37,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSchedule() {
     String accountId = "some-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();
@@ -58,6 +61,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testScheduleNewDocumentIsCreated() {
     String accountId = "some-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();

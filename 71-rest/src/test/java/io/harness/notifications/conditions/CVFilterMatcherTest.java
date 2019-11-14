@@ -1,5 +1,6 @@
 package io.harness.notifications.conditions;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
@@ -8,6 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.notifications.beans.CVAlertFilters;
 import io.harness.notifications.beans.Conditions;
 import io.harness.notifications.beans.Conditions.Operator;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -21,6 +23,7 @@ import java.util.List;
 
 public class CVFilterMatcherTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testMatch() {
     List<String> appIds = Lists.newArrayList("app1", "app2");

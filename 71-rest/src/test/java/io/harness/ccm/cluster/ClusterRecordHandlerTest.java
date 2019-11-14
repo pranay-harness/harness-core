@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +52,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnSaved() {
     handler.onSaved(infrastructureMapping);
@@ -57,6 +60,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnUpdated() {
     handler.onUpdated(infrastructureMapping);
@@ -64,6 +68,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnDeleted() {
     handler.onDeleted(settingAttribute);

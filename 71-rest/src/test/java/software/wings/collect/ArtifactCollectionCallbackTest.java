@@ -1,5 +1,6 @@
 package software.wings.collect;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.waiter.ListNotifyResponseData.Builder.aListNotifyResponseData;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
@@ -21,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,6 +78,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));

@@ -2,6 +2,7 @@ package io.harness.jobs;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -25,6 +26,7 @@ import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -234,6 +236,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeSeriesCronDisabled() throws IOException {
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
@@ -245,6 +248,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeSeriesCronEnabled() {
     workflowTimeSeriesAnalysisJob.handle(timeSeriesAnalysisContext);
@@ -252,6 +256,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeSeriesAnalysisJobQueuePreviousWithPredictive() {
     workflowTimeSeriesAnalysisJob.execute(timeSeriesContext);
@@ -262,6 +267,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeSeriesAnalysisJobQueuePreviousWithPredictiveIterator() throws IOException {
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
@@ -277,6 +283,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeSeriesAnalysisJobSuccess() throws IOException {
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
@@ -296,6 +303,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogsCronDisabled() throws IOException {
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
@@ -307,6 +315,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogAnalysisCronEnabled() {
     workflowLogAnalysisJob.handle(logAnalysisContext);
@@ -314,6 +323,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogAnalysisJobQueuePrevious() {
     workflowLogAnalysisJob.execute(logAnalysisExecutionContext);
@@ -321,6 +331,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogAnalysisJobIterator() throws IOException {
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
@@ -336,6 +347,7 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogAnalysisJobSuccess() throws IOException {
     final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);

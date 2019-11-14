@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 
@@ -8,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,12 +31,14 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
       DockerConfig.builder().dockerRegistryUrl(url).username("username").password("password".toCharArray()).build();
 
   @Test(expected = InvalidArtifactServerException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCredentialForIOException() {
     dockerRegistryService.validateCredentials(dockerConfig, null);
   }
 
   @Test()
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCredentialForMissingPassword() {
     try {
@@ -48,6 +52,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   }
 
   @Test()
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildDetails() {
     try {
@@ -59,6 +64,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   }
 
   @Test()
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsSuccessfulNullResponse() {
     try {
@@ -70,6 +76,7 @@ public class DockerRegistryServiceImplTest extends WingsBaseTest {
   }
 
   @Test()
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsSuccessfulErrorCode500() {
     try {

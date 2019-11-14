@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -14,6 +15,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,6 +40,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   @Mock SettingsService settingsService;
 
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void shouldReturnSupportedChannelTypes() {
   //    List<SettingAttribute> settingList = Lists.newArrayList(new SettingAttribute());
   //    String appId = UUIDGenerator.generateUuid();
@@ -48,6 +51,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateNotificationGroup() {
     String accountId = generateUuid();
@@ -61,6 +65,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void listDefaultNotificationGroup() {
     String accountId = generateUuid();
@@ -85,6 +90,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void updateNotificationGroupDefaultValue() {
     String accountId = generateUuid();
@@ -114,6 +120,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListNotificationGroups() {
     String accountId = generateUuid();
@@ -134,6 +141,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountId() {
     String accountId = generateUuid();
@@ -153,6 +161,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountIdName() {
     String accountId = generateUuid();
@@ -172,6 +181,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteNotificationGroup() {
     String accountId = generateUuid();
@@ -182,6 +192,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadNotificationGroup() {
     String accountId = generateUuid();
@@ -214,6 +225,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void TestGetUserEmailAddressFromNotificationGroups() {
     String accountId = generateUuid();
@@ -247,12 +259,14 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void shouldCreateNotificationRule() {
   //    String appId = UUIDGenerator.generateUuid();
   //    createAndAssertNotificationRule(appId);
   //  }
 
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void shouldListNotificationRule() {
   //    String appId = UUIDGenerator.generateUuid();
   //    createAndAssertNotificationRule(appId);
@@ -267,6 +281,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void shouldListNotificationRuleByAppId() {
   //    String appId = UUIDGenerator.generateUuid();
   //    createAndAssertNotificationRule(appId);
@@ -280,6 +295,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void shouldReadNotificationRule() {
   //    String appId = UUIDGenerator.generateUuid();
   //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
@@ -290,6 +306,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void shouldDeleteNotificationRule() {
   //    String appId = UUIDGenerator.generateUuid();
   //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);

@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -32,6 +33,7 @@ import com.mongodb.DBCursor;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -62,6 +64,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   @Inject private TemplateService templateService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadDefaultTemplates() {
     templateService.loadDefaultTemplates(TemplateType.SHELL_SCRIPT, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -70,6 +73,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveShellScriptTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -96,6 +100,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateShellScriptTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -124,6 +129,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateEntitiesIfNotLinked() {
     Template savedTemplate = createShellScriptTemplate();
@@ -150,6 +156,7 @@ public class ShellScriptTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);

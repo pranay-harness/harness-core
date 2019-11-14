@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -14,6 +15,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +65,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCVDataCollectionAlert() {
     DataCollectionCallback dataCollectionCallback =

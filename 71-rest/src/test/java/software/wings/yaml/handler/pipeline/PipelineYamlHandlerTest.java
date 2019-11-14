@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.pipeline;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -35,6 +36,7 @@ import io.harness.exception.WingsException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -211,6 +213,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     GitFileChange gitFileChange = new GitFileChange();
@@ -248,6 +251,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     // Invalid yaml path

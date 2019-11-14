@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -18,6 +19,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -55,6 +57,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidArgument() {
     try {
@@ -81,6 +84,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBasicTokenValidationNoUserFound() {
     try {
@@ -93,6 +97,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBasicTokenValidationEmailNotVerified() {
     try {
@@ -106,6 +111,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBasicTokenValidationInvalidCredentials() throws MaxLoginAttemptExceededException {
     try {
@@ -126,6 +132,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailedAttemptLimitExceeded() throws MaxLoginAttemptExceededException {
     try {
@@ -149,6 +156,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBasicTokenValidationValidCredentials() {
     User mockUser = new User();

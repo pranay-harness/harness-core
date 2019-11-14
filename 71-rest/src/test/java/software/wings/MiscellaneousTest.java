@@ -1,5 +1,6 @@
 package software.wings;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.openpojo.reflection.PojoClassFilter;
@@ -17,6 +18,7 @@ import com.openpojo.validation.test.impl.GetterTester;
 import com.openpojo.validation.test.impl.SetterTester;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.ServiceSecretKey;
@@ -59,6 +61,7 @@ public class MiscellaneousTest extends CategoryTest {
    * Should provide coverage to getter setter and to string.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldProvideCoverageToGetterSetterAndToString() {
     Validator validator =
@@ -71,6 +74,7 @@ public class MiscellaneousTest extends CategoryTest {
    * Should validate code governance rules.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateCodeGovernanceRules() {
     Validator validator = ValidatorBuilder.create()
@@ -87,6 +91,7 @@ public class MiscellaneousTest extends CategoryTest {
    * Should validate test governance rules.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateTestGovernanceRules() {
     Validator validator = ValidatorBuilder.create().with(new TestClassMustBeProperlyNamedRule()).build();
@@ -95,6 +100,7 @@ public class MiscellaneousTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseApisVersion() {
     ServiceSecretKey.ServiceApiVersion latestVersion =

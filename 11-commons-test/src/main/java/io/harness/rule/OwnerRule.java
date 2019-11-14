@@ -65,6 +65,7 @@ public class OwnerRule implements TestRule {
   public static final String VENKATESH = "venkatesh.kotrike@harness.io";
   public static final String VIKAS = "vikas.naiyar@harness.io";
   public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
+  @Deprecated public static final String UNKNOWN = "unknown";
 
   @Value
   @Builder
@@ -117,6 +118,7 @@ public class OwnerRule implements TestRule {
                                                          .put(VENKATESH, DevInfo.builder().build())
                                                          .put(VIKAS, DevInfo.builder().build())
                                                          .put(YOGESH_CHAUHAN, DevInfo.builder().build())
+                                                         .put(UNKNOWN, DevInfo.builder().slack("channel").build())
                                                          .build();
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -131,7 +133,7 @@ public class OwnerRule implements TestRule {
   public Statement apply(Statement statement, Description description) {
     Owner owner = description.getAnnotation(Owner.class);
     if (owner == null) {
-      return statement;
+      throw new CategoryConfigException("Owner annotation is obligatory.");
     }
 
     for (String email : owner.emails()) {

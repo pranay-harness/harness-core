@@ -1,5 +1,6 @@
 package io.harness.event.timeseries.processor;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -17,6 +18,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,6 +44,7 @@ public class DeploymentEventProcessorTest extends WingsBaseTest {
   @Inject @InjectMocks DeploymentEventProcessor deploymentEventProcessor;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListExecutions() throws SQLException {
     Map<String, String> stringData = new HashMap<>();

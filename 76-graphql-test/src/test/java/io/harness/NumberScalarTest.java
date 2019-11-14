@@ -1,7 +1,10 @@
 package io.harness;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
+
 import graphql.schema.CoercingParseLiteralException;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,6 +17,7 @@ public class NumberScalarTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseLiteralWithInvalidInput() {
     String invalidInput = "invalid";
@@ -23,6 +27,7 @@ public class NumberScalarTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseLiteralWithValidInput() {
     String validInput = "2";
@@ -55,6 +60,7 @@ public class NumberScalarTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseValueWithValidInput() {
     String validInput = "2";

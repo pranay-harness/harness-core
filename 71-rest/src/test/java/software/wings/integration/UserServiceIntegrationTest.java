@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -82,6 +83,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testDisableEnableUser() {
     User user = userService.getUserByEmail(defaultEmail);
@@ -121,6 +123,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testBlankEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=");
@@ -132,6 +135,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testInvalidEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz.com");
@@ -143,6 +147,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testDomainNotAllowed() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@some-domain.io");
@@ -151,6 +156,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUserExists() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=admin@harness.io");
@@ -162,6 +168,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testValidEmail() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=" + validEmail);
@@ -171,6 +178,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testValidEmailWithSpace() {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=%20" + validEmail + "%20");
@@ -180,6 +188,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSwitchAccount() {
     WebTarget target = client.target(API_BASE + "/users/switch-account?accountId=" + accountId);
@@ -201,6 +210,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLoginTypeWithAccountId() {
     WebTarget target =
@@ -214,6 +224,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testDefaultLoginWithAccountId() {
     WebTarget target = client.target(API_BASE + "/users/login?accountId=" + defaultAccountId);
@@ -228,6 +239,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSetDefaultAccount() {
     WebTarget target = client.target(API_BASE + "/users/set-default-account/" + accountId);
@@ -240,6 +252,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLoginUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user/login?email=" + adminUserEmail);
@@ -260,6 +273,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user");
@@ -289,6 +303,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testTrialSignupSuccess() {
     final String name = "Mark Lu";
@@ -359,6 +374,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSignupSuccess() {
     final String name = "Raghu Singh";
@@ -421,6 +437,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testInvalidUserInviteShouldFail() {
     String invalidInviteId = UUIDGenerator.generateUuid();
@@ -438,6 +455,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSignupSuccessWithSpaces() throws IOException {
     final String name = "  Brad  Pitt    ";
@@ -474,6 +492,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSignupEmailWithSpace() throws IOException {
     final String name = "Brad  Pitt    ";
@@ -506,6 +525,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSignupBadEmail() throws IOException {
     final String name = "Brad  Pitt    ";
@@ -538,6 +558,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSignupEmailExists() throws IOException {
     final String name = "Brad  Pitt    ";
@@ -570,6 +591,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testAccountCreationWithKms() {
     loginAdminUser();
@@ -606,6 +628,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testResendInvitationAndCompleteInvitation() {
     Account adminAccount =

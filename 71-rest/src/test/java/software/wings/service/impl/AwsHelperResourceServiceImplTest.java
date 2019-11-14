@@ -1,11 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -21,6 +23,7 @@ public class AwsHelperResourceServiceImplTest extends WingsBaseTest {
   @Inject private AwsHelperResourceService awsHelperResourceService;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetRegions() {
     List<NameValuePair> regions = awsHelperResourceService.getAwsRegions();

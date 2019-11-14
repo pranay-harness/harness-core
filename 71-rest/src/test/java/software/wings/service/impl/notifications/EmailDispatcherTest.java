@@ -1,5 +1,6 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
@@ -13,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -36,6 +38,7 @@ public class EmailDispatcherTest extends WingsBaseTest {
   @Mock private NotificationMessageResolver notificationMessageResolver;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmailIsSent() {
     List<String> toAddresses = Arrays.asList("a@b.com, c@d.com");

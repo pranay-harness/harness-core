@@ -4,6 +4,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -172,6 +173,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should list settings.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListSettings() {
     settingsService.list(aPageRequest().build(), null, null);
@@ -182,6 +184,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should save setting attribute.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveSettingAttribute() {
     settingsService.save(aSettingAttribute()
@@ -196,6 +199,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by app id.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetByAppId() {
     settingsService.get(APP_ID, SETTING_ID);
@@ -210,6 +214,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by app id and env id.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetByAppIdAndEnvId() {
     settingsService.get(APP_ID, ENV_ID, SETTING_ID);
@@ -224,6 +229,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by id.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetById() {
     settingsService.get(SETTING_ID);
@@ -234,6 +240,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDelete() {
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -259,6 +266,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteSettingAttributesByType() {
     settingsService.deleteSettingAttributesByType(ACCOUNT_ID, APP_ID, ENV_ID, "JENKINS");
@@ -266,6 +274,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThroeExceptionIfReferencedConnectorDeleted() {
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -291,6 +300,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThroeExceptionIfReferencedCloudProviderDeleted() {
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -316,6 +326,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should get by name.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetByName() {
     settingsService.getByName(ACCOUNT_ID, APP_ID, "NAME");
@@ -328,6 +339,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetByNameAndValueType() {
     when(spyQuery.get()).thenReturn(aSettingAttribute().build());
@@ -348,6 +360,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should list connection attributes.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListConnectionAttributes() {
     settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
@@ -358,6 +371,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    * Should list bastion host connection attributes.
    */
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListBastionHostConnectionAttributes() {
     settingsService.getSettingAttributesByType(
@@ -366,6 +380,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void updateShouldFailIfSettingAttributeDoesNotExist() {
     SettingAttribute aSettingAttribute =
@@ -388,6 +403,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void updateShouldWorkWithSameData() {
     final String uuid = UUID.randomUUID().toString();
@@ -411,6 +427,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void updateShouldMaskHostConnectionPrivateKey() {
     final String uuid = UUID.randomUUID().toString();
@@ -447,6 +464,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateWhenValid() {
     final String uuid = UUID.randomUUID().toString();
@@ -466,6 +484,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateWhenNotValid() {
     final String uuid = UUID.randomUUID().toString();
@@ -485,6 +504,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateIdValid() {
     final String uuid = UUID.randomUUID().toString();
@@ -505,6 +525,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateIdWhenNotExists() {
     final String uuid = UUID.randomUUID().toString();
@@ -742,6 +763,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetApplicationDefaults() {
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
@@ -773,6 +795,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountDefaults() {
     when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);

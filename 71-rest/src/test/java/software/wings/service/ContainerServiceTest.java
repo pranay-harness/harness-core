@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +26,7 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -173,6 +175,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_Gcp() {
     List<ContainerInfo> result = containerService.getContainerInfos(gcpParams);
@@ -180,6 +183,7 @@ public class ContainerServiceTest extends WingsBaseTest {
     assertThat(result.size()).isEqualTo(1);
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_Aws() {
     List<ContainerInfo> result = containerService.getContainerInfos(awsParams);
@@ -187,6 +191,7 @@ public class ContainerServiceTest extends WingsBaseTest {
     assertThat(result.size()).isEqualTo(0);
   }
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetContainerInfos_DirectKube() {
     List<ContainerInfo> result = containerService.getContainerInfos(kubernetesConfigParams);

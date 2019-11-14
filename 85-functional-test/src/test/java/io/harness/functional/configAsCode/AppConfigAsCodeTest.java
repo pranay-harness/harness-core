@@ -49,7 +49,6 @@ public class AppConfigAsCodeTest extends AbstractFunctionalTest {
   }
 
   @Test
-  // TODO: To uncomment @Owner(emails = SHASWAT, intermittent = true)
   @Owner(emails = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC0_createAppWithGit() {

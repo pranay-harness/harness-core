@@ -1,5 +1,6 @@
 package io.harness.reflection;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -93,6 +95,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getFieldByNameTest() {
     assertThat(ReflectionUtils.getFieldByName(Field.class, "dummy")).isNull();
@@ -104,6 +107,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getAllDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getAllDeclaredAndInheritedFields(Field.class)
@@ -114,6 +118,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void getDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getDeclaredAndInheritedFields(Field.class, f -> f.getName().endsWith("Field")))
@@ -121,6 +126,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void updateField() {
     Field dummy = new Field();
@@ -131,6 +137,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void updateListField() {
     Field dummy = new Field();
@@ -144,6 +151,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAccessorMethods() {
     final List<String> accessorMethods = ReflectionUtils.getAccessorMethods(Accessors.class)

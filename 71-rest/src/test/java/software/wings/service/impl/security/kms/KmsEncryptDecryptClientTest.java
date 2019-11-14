@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.kms;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -14,6 +15,7 @@ import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DecryptResult;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
@@ -47,6 +49,7 @@ public class KmsEncryptDecryptClientTest extends WingsBaseTest {
   private KmsConfig kmsConfig;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void testDecryptionFallbackToDelegate()

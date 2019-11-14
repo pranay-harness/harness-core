@@ -1,11 +1,13 @@
 package software.wings.delegatetasks;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -19,6 +21,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   @Inject private HelmCommandHelper helmCommandHelper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYaml() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
@@ -36,6 +39,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlNull() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
@@ -50,6 +54,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlInvalid() throws Exception {
     try {
@@ -65,6 +70,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlMultiple() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("name: ABC\n"

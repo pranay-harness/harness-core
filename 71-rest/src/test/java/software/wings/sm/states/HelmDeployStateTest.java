@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -55,6 +56,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -294,6 +296,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() throws InterruptedException {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
@@ -331,6 +334,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWithNullChartSpec() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID)).thenReturn(null);
@@ -339,6 +343,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWithNullReleaseName() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID)).thenReturn(null);
@@ -348,6 +353,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testErrorResponseFromDelegate() throws InterruptedException {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
@@ -363,6 +369,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmptyHelmChartSpec() {
     helmDeployState.execute(context);
@@ -371,6 +378,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmptyHelmChartSpecWithGit() {
     when(settingsService.fetchGitConfigFromConnectorId(GIT_CONNECTOR_ID)).thenReturn(GitConfig.builder().build());
@@ -387,6 +395,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWithCommandFlags() {
     helmDeployState.setCommandFlags(COMMAND_FLAGS);
@@ -412,6 +421,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWithHelmRollbackForCommandFlags() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
@@ -445,6 +455,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForHelmTaskInSuccess() {
     HelmCommandExecutionResponse helmCommandResponse =
@@ -486,6 +497,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForHelmTaskInFailure() {
     HelmCommandExecutionResponse helmCommandResponse = HelmCommandExecutionResponse.builder()
@@ -508,6 +520,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForHelmTaskWithInstallCommandResponseFailure() {
     HelmCommandExecutionResponse helmCommandResponse =
@@ -536,6 +549,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForGitFetchFilesTaskForFailure() throws InterruptedException {
     GitCommandExecutionResponse gitCommandExecutionResponse =
@@ -560,6 +574,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForHelmFetchTaskForFailure() throws InterruptedException {
     HelmValuesFetchTaskResponse helmValuesFetchTaskResponse =
@@ -582,6 +597,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHelmDeployWithCustomArtifact() {
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))

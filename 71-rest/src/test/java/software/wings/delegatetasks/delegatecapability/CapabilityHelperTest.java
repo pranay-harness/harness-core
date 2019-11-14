@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.delegatecapability;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.DelegateTask;
@@ -7,6 +8,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -35,6 +37,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public static final String AWS_KMS_URL = "https://kms.us-east-2.amazonaws.com";
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmbedCapabilitiesInDelegateTask_HTTP_VaultConfig() {
     TaskData taskData =
@@ -58,6 +61,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmbedCapabilitiesInDelegateTask_HTTP_KmsConfig() {
     TaskData taskData =
@@ -81,6 +85,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchEncryptionDetailsListFromParameters() {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
@@ -98,6 +103,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchEncryptionDetailsListFromParameters_VaultConfig() throws Exception {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
@@ -121,6 +127,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchEncryptionDetailsListFromParameters_KmsConfig() throws Exception {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
@@ -143,6 +150,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
@@ -151,6 +159,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
@@ -159,6 +168,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHttpCapabilityForDecryption_secretconfig() throws Exception {
     EncryptionConfig encryptionConfig = CyberArkConfig.builder().cyberArkUrl("https://harness.cyberark.com").build();

@@ -1,5 +1,6 @@
 package software.wings.service.impl.notifications;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
@@ -17,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -50,6 +52,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   @Mock private SlackMessageDispatcher slackDispatcher;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotificationGroupBasedDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
@@ -86,6 +89,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUserGroupBasedDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");

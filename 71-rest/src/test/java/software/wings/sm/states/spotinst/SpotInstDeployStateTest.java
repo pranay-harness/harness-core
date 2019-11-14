@@ -1,6 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -33,6 +34,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.junit.Test;
@@ -74,6 +76,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   @InjectMocks SpotInstDeployState state = new SpotInstDeployState("stateName");
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setInstanceUnitType(PERCENTAGE);
@@ -145,6 +148,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -183,6 +187,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFields() {
     SpotInstDeployState stateLocal = new SpotInstDeployState("stateName_2");

@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.queue.QueueListener;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -53,6 +55,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
   private static String dummyAppID = "dummy" + appId;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteApplication()
       throws SchedulerException, InterruptedException, ExecutionException, TimeoutException {

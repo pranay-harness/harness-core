@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import freemarker.template.Configuration;
@@ -8,6 +9,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,6 +25,7 @@ import java.util.Map;
  */
 public class OutgoingEmailTest extends CategoryTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmailTemplates() throws Exception {
     Configuration cfg = new Configuration(VERSION_2_3_23);

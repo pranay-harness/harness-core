@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +65,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateJira() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -105,6 +108,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateJiraMissingTaskParams() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -132,6 +136,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateJiraMissingJiraConfigId() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -151,6 +156,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void changePriorityAfterJira() {
     testCreateJira();
@@ -172,6 +178,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = IllegalStateException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFeedbackWithEmptyLogMessage() {
     CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()

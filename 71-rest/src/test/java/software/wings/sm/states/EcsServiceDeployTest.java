@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -27,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -66,6 +68,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @InjectMocks private EcsServiceDeploy state = new EcsServiceDeploy("stateName");
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setInstanceCount("20");
@@ -111,6 +114,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

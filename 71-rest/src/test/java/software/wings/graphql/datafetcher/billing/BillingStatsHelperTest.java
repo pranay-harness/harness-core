@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -15,6 +17,7 @@ public class BillingStatsHelperTest extends WingsBaseTest {
   @Inject @InjectMocks QLBillingStatsHelper statsHelper;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void TestStatsHelper() {
     String appId = statsHelper.getEntityName(BillingDataMetaDataFields.APPID, "appId");

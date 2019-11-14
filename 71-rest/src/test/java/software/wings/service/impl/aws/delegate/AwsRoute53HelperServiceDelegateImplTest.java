@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -15,6 +16,7 @@ import com.amazonaws.services.route53.model.HostedZone;
 import com.amazonaws.services.route53.model.ListHostedZonesResult;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -33,6 +35,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsRoute53HelperServiceDelegateImpl awsRoute53HelperServiceDelegate;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListHostedZones() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);
@@ -51,6 +54,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertRoute53ParentRecord() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);

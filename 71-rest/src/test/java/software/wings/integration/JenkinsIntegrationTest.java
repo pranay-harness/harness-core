@@ -20,6 +20,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   //  }
   //
   //  @Test
+  //  @Owner(emails = UNKNOWN)
   //  public void testSettingsOverwrite() throws Exception {
   //    super.setUp();
   //    loginAdminUser();
@@ -30,7 +31,8 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   //  }
   //
   //  @Test
-  //    @Ignore("TODO: please provide clear motivation why this test is ignored")
+  //  @Owner(emails = UNKNOWN)
+  //  @Ignore("TODO: please provide clear motivation why this test is ignored")
   //  public void testGetJobs() {
   //    JenkinsConfig jenkinsConfig = obtainJenkinsConfig();
   //

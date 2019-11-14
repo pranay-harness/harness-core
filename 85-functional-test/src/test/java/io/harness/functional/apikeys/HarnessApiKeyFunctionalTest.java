@@ -1,5 +1,6 @@
 package io.harness.functional.apikeys;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -9,6 +10,7 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.rest.RestResponse;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testCRUD() {
     String createdKey = generateHarnessClientApiKey(ClientType.PROMETHEUS);

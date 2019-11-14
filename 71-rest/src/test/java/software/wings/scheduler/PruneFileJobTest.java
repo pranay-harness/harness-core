@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.doNothing;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,6 +60,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void selfPruneTheJobWhenSucceed() throws Exception {
     when(wingsPersistence.get(Artifact.class, ENTITY_ID)).thenReturn(null);
@@ -74,6 +77,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void selfPruneTheJobIfServiceStillThereFirstTime() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
@@ -89,6 +93,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void selfPruneTheJobIfServiceStillThere() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
@@ -104,6 +109,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void UnhandledClass() throws Exception {
     when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
@@ -122,6 +128,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void WrongClass() throws Exception {
     JobExecutionContext context = mock(JobExecutionContext.class);
@@ -134,6 +141,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void retryIfServiceThrew() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(null);

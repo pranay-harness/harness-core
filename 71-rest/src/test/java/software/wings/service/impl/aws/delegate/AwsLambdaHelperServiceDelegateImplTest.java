@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +36,7 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -60,6 +62,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteFunction() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -82,6 +85,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWf_FxDoesNotExist() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -118,6 +122,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWf_FxExists() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -160,6 +165,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testTagExistingFunction() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -179,12 +185,14 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAlternateNormalizedFunctionName() {
     assertThat(awsLambdaHelperServiceDelegate.getAlternateNormalizedFunctionName("foo_bar")).isEqualTo("foo-bar");
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getFunctionDetails() {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
@@ -212,6 +220,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test()
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getFunctionDetails_error() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);

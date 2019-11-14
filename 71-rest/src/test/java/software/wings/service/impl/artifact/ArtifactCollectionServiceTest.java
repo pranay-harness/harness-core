@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -37,6 +38,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -138,6 +140,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectJenkinsArtifact() {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
@@ -153,6 +156,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectJenkinsArtifactConnectorLevel() {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
@@ -173,6 +177,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectS3Artifact() {
     BuildDetails s3BuildDetails = getS3BuildDetails();
@@ -207,6 +212,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsDocker() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
@@ -231,6 +237,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsEcr() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
@@ -255,6 +262,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsGcr() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
@@ -278,6 +286,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsAcr() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
@@ -301,6 +310,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsAmi() {
     String buildNumber = "AMI-Image";
@@ -325,6 +335,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsNexusDocker() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
@@ -348,6 +359,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsNexus() {
     String buildNUmber = "1.1";
@@ -375,6 +387,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsArtifactoryDocker() {
     BuildDetails dockerBuildDetails = aBuildDetails().withNumber(LATEST_BUILD_NUMBER).build();
@@ -395,6 +408,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsArtifactoryGeneric() {
     String buildNumber = "todolist.rpm";
@@ -422,6 +436,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsS3() {
     BuildDetails s3BuildDetails = getS3BuildDetails();
@@ -439,6 +454,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsJenkins() {
     BuildDetails jenkinsBuildDetails = getJenkinsBuildDetails();
@@ -460,6 +476,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectNewArtifactsBamboo() {
     String buildNumber = "20";
@@ -484,6 +501,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCollectSmbArtifact() {
     BuildDetails smbBuildDetails = getSmbBuildDetails();
@@ -501,6 +519,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForDockerWithCredentials() {
     Map<String, String> metadata = new HashMap<>();
@@ -544,6 +563,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForDockerWithoutCredentials() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -578,6 +598,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForEcr() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -617,6 +638,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForAcr() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -653,6 +675,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForArtifactoryDocker() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -705,6 +728,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForNexus() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -754,6 +778,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForGcr() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -782,6 +807,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForCustom() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -800,6 +826,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchContainerImageDetailsForUnsupportedType() {
     Artifact artifact = Artifact.Builder.anArtifact()
@@ -816,6 +843,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildSourceParametersForJenkins() {
     // multi-artifact flag off
@@ -858,6 +886,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildSourceParametersForAmiWithMultiArtifact() {
     AmiArtifactStream amiArtifactStream = AmiArtifactStream.builder()
@@ -889,6 +918,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildSourceParametersForAmamzonS3() {
     // multi-artifact flag off
@@ -916,6 +946,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNewBuildDetailsForAmazonS3() {
     Set<String> savedBuildDetailsKeys = new HashSet<>();
@@ -946,6 +977,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNewBuildDetailsNoNewArtifacts() {
     Set<String> set = new HashSet<>();
@@ -957,6 +989,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNewBuildDetailsNoSavedArtifacts() {
     List<BuildDetails> buildDetails = artifactCollectionUtils.getNewBuildDetails(Collections.emptySet(),
@@ -967,6 +1000,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDockerConfigWithoutCredentials() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -989,6 +1023,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDockerConfigWithCredentials() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -1014,6 +1049,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenderCustomArtifactScriptString() {
     CustomArtifactStream.Script script =
@@ -1040,6 +1076,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenderCustomArtifactScriptStringWithEmptyRoot() {
     CustomArtifactStream.Script script =
@@ -1059,6 +1096,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenderCustomArtifactScriptStringWithEmptyBuildNo() {
     CustomArtifactStream.Script script =

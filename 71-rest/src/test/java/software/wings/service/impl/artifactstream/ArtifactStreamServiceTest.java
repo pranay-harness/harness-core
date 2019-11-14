@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyBoolean;
@@ -49,6 +50,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -150,6 +152,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSupportedBuildSourceTypesForDocker() {
     // For DOCKER Service Artifact Type
@@ -164,6 +167,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSupportedBuildSourceTypesForAwsLambda() {
     // For AWS Lambda Service Artifact Type
@@ -177,6 +181,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSupportedBuildSourceTypesForAmi() {
     // For AWS Lambda Service Artifact Type
@@ -190,6 +195,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSupportedBuildSourceTypesForOther() {
     // For AWS Lambda Service Artifact Type
@@ -203,6 +209,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSupportedBuildSourceTypesForWar() {
     // For AWS Lambda Service Artifact Type
@@ -216,6 +223,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
@@ -226,6 +234,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddJenkinsArtifactStreamAtConnectorLevel() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
@@ -282,6 +291,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateJenkinsArtifactStream() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
@@ -300,6 +310,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateJenkinsArtifactStreamAtConnectorLevel() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
@@ -364,6 +375,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddBambooArtifactStream() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
@@ -384,6 +396,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddBambooArtifactStreamAtConnectorLevel() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
@@ -401,6 +414,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateBambooArtifactStream() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
@@ -424,6 +438,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateBambooArtifactStreamAtConnectorLevel() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
@@ -488,6 +503,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream("nexus1");
@@ -500,12 +516,14 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStreamWithExtensionAndClassifier() {
     createAndValidateNexusArtifactStream();
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateExtensionForNexusArtifactStream() {
     ArtifactStream artifactStream = createAndValidateNexusArtifactStream();
@@ -515,6 +533,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateClassifierForNexusArtifactStream() {
     ArtifactStream artifactStream = createAndValidateNexusArtifactStream();
@@ -524,6 +543,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void canUpdateExtensionOnSourceChangedForNexus() {
     ArtifactStream artifactStream = createAndValidateNexusArtifactStream();
@@ -550,6 +570,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddNexusArtifactStreamAtConnectorLevel() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel("conn-nexus1");
@@ -638,6 +659,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream("nexus1");
@@ -645,6 +667,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStreamWithExtensionAndClassifier() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStreamWithExtensionAndClassifier();
@@ -652,6 +675,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNexusArtifactStreamAtConnectorLevel() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStreamAtConnectorLevel("conn-nexus2");
@@ -659,6 +683,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateNexusArtifactStreamWithDifferentRepositoryFormat() {
     NexusArtifactStream savedNexusArtifactStream =
@@ -672,6 +697,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateNexusArtifactStreamWithDifferentExtension() {
     NexusArtifactStream savedNexusArtifactStream =
@@ -685,6 +711,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateNexusArtifactStreamWithDifferentClassifier() {
     NexusArtifactStream savedNexusArtifactStream =
@@ -756,6 +783,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddNexusDockerArtifactStream() {
     NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
@@ -773,6 +801,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddNexusDockerArtifactStreamAtConnectorLevel() {
     NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
@@ -813,6 +842,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNexusDockerArtifactStream() {
     NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
@@ -834,6 +864,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNexusDockerArtifactStreamAtConnectorLevel() {
     NexusArtifactStream nexusDockerArtifactStream = NexusArtifactStream.builder()
@@ -907,6 +938,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddArtifactoryArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -923,6 +955,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddArtifactoryArtifactStreamAtConnectorLevel() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -967,6 +1000,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactoryArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -982,6 +1016,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactoryArtifactStreamAtConnectorLevel() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -997,6 +1032,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateArtifactoryArtifactStreamAtConnectorLevelWithDifferentRepositoryType() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -1068,6 +1104,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddArtifactoryMavenArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream =
@@ -1085,6 +1122,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddArtifactoryMavenArtifactStreamAtConnectorLevel() {
     ArtifactoryArtifactStream artifactoryArtifactStream =
@@ -1128,6 +1166,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactoryMavenArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream =
@@ -1201,6 +1240,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddArtifactoryDockerArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -1244,6 +1284,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactoryDockerArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -1320,6 +1361,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddAmiArtifactStream() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
@@ -1338,6 +1380,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddAmiArtifactStreamAtCloudProviderLevel() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
@@ -1372,6 +1415,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateAmiArtifactStream() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
@@ -1396,6 +1440,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateAmiArtifactStreamAtCloudProviderLevel() {
     AmiArtifactStream.Tag tag = new AmiArtifactStream.Tag();
@@ -1463,6 +1508,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddS3ArtifactStream() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
@@ -1478,6 +1524,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddS3ArtifactStreamAtConnectorLevel() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
@@ -1510,6 +1557,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateS3ArtifactStream() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
@@ -1525,6 +1573,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateS3ArtifactStreamAtConnectorLevel() {
     AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
@@ -1576,6 +1625,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddDockerArtifactStream() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -1590,6 +1640,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddDockerArtifactStreamAtConnectorLevel() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -1622,6 +1673,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateDockerArtifactStream() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -1636,6 +1688,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateDockerArtifactStreamAtConnectorLevel() {
     DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
@@ -1683,6 +1736,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddEcrArtifactStream() {
     EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
@@ -1698,6 +1752,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddEcrArtifactStreamAtCloudProviderLevel() {
     EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
@@ -1732,6 +1787,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateEcrArtifactStream() {
     EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
@@ -1747,6 +1803,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateEcrArtifactStreamAtCloudProviderLevel() {
     EcrArtifactStream dockerArtifactStream = EcrArtifactStream.builder()
@@ -1797,6 +1854,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddGcrArtifactStream() {
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
@@ -1812,6 +1870,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddGcrArtifactStreamAtCloudProviderLevel() {
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
@@ -1848,6 +1907,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateGcrArtifactStream() {
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
@@ -1863,6 +1923,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateGcrArtifactStreamAtCloudProviderLevel() {
     GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
@@ -1917,6 +1978,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddAcrArtifactStream() {
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
@@ -1933,6 +1995,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddAcrArtifactStreamAtCloudProviderLevel() {
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
@@ -1973,6 +2036,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateAcrArtifactStream() {
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
@@ -1990,6 +2054,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateAcrArtifactStreamAtCloudProviderLevel() {
     AcrArtifactStream acrArtifactStream = AcrArtifactStream.builder()
@@ -2056,6 +2121,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListArtifactStreams() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStream();
@@ -2090,6 +2156,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListArtifactStreamsAtConnectorLevel() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
@@ -2118,6 +2185,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -2140,6 +2208,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactStreamAtConnectorLevel() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
@@ -2152,6 +2221,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteArtifactStreamAtConnectorLevel() {
     JenkinsArtifactStream jenkinsArtifactStream = getJenkinsStreamAtConnectorLevel();
@@ -2161,6 +2231,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -2180,6 +2251,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotDeleteArtifactStream() {
     ArtifactoryArtifactStream artifactoryArtifactStream = ArtifactoryArtifactStream.builder()
@@ -2203,6 +2275,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDockerArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2234,6 +2307,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDockerArtifactSourcePropertiesWhenArtifactStreamDeleted() {
     Map<String, String> artifactSourceProperties =
@@ -2242,6 +2316,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetGcrArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2267,6 +2342,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAcrArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2294,6 +2370,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetEcrArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2319,6 +2396,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetJenkinsArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2342,6 +2420,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBabmooArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2373,6 +2452,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNexusArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2405,6 +2485,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNexusDockerArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2436,6 +2517,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactoryArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2468,6 +2550,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactoryDockerArtifactStreamSourceProperties() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
@@ -2504,6 +2587,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListArtifactStreamIdsofService() {
     ArtifactStream savedArtifactSteam = createArtifactStream(buildArtifactoryStream());
@@ -2514,6 +2598,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListArtifactStreamsofService() {
     ArtifactStream savedArtifactSteam = createArtifactStream(buildArtifactoryStream());
@@ -2526,6 +2611,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCRUDCustomArtifactStream() {
     ArtifactStream customArtifactStream =
@@ -2579,6 +2665,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
     List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();
@@ -2662,6 +2749,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCRUDCustomArtifactStreamWithCustomMappingFromTemplateLibrary() {
     // create Custom artifact stream by linking from template library
@@ -2761,6 +2849,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListArtifactStreamSummaryWithFeatureFlagDisabled() {
     createNexusArtifactStream("nexus1");
@@ -2770,6 +2859,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListArtifactStreamSummaryWithFeatureFlagEnabled() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
@@ -2780,6 +2870,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetArtifactStreamByName() {
     ArtifactStream savedArtifactStream = createNexusArtifactStreamAtConnectorLevel("test");
@@ -2792,6 +2883,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListByAppIdConnectorLevel() {
     List<ArtifactStream> artifactStreams = artifactStreamService.listByAppId(GLOBAL_APP_ID);
@@ -2799,6 +2891,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testListByAppIdSettingId() {
     ArtifactStream artifactStream1 = createNexusArtifactStreamAtConnectorLevel("nexus1");
@@ -2814,6 +2907,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = NotFoundException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldNotInvalidArtifactStream() {
     ArtifactStream artifactStream = createNexusArtifactStreamAtConnectorLevel("test");
@@ -2822,6 +2916,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCannotUpdateArtifactStreamType() {
     ArtifactStream artifactStream = createNexusArtifactStreamAtConnectorLevel("test");
@@ -2830,6 +2925,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCannotUpdateMetadataDataOnlyField() {
     ArtifactStream artifactStream = createNexusArtifactStreamAtConnectorLevel("test");
@@ -2838,6 +2934,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldListArtifactStreams() {
     createNexusArtifactStreamAtConnectorLevel("test-1");
@@ -2858,6 +2955,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldListArtifactStreamsWithSearchString() {
     constructNexusArtifacts(GLOBAL_APP_ID, "test-1");
@@ -2937,6 +3035,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldListArtifactStreamsWithSearchStringAndArtifactType() {
     constructNexusArtifacts(GLOBAL_APP_ID, "test-1");

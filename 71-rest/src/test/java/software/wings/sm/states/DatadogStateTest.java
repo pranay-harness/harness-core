@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.KUBERNETES;
 
@@ -9,6 +10,7 @@ import com.google.common.collect.Sets;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,6 +33,7 @@ import java.util.Set;
 
 public class DatadogStateTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void metrics() {
     Map<String, DatadogState.Metric> metrics =
@@ -46,6 +49,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void metricDefinitions() {
     Map<String, DatadogState.Metric> metrics =
@@ -62,6 +66,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void metricEndpointsInfo() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.of("todolist"),
@@ -81,6 +86,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void metricEndpointsInfoTransformation() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
@@ -98,6 +104,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void metricEndpointsInfoDocker() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
@@ -114,6 +121,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void metricEndpointsInfoDocker24x7() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
@@ -130,6 +138,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testBadMetric() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo =
@@ -138,6 +147,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testServletSystemMetrics() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(Optional.empty(),
@@ -147,6 +157,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testServiceLevelMetrics() {
     Map<String, List<APMMetricInfo>> metricEndpointsInfo = DatadogState.metricEndpointsInfo(
@@ -160,6 +171,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCustomDatadogMetricsValidateTxnName() {
     Map<String, Set<Metric>> customMetricMap = new HashMap<>();
@@ -208,6 +220,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCustomFields2Throughput() {
     Map<String, Set<Metric>> customMetricMap = new HashMap<>();
@@ -219,6 +232,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCustomFieldsOnlyThroughput() {
     Map<String, Set<Metric>> customMetricMap = new HashMap<>();
@@ -232,6 +246,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCustomFieldsMissingThroughput() {
     Map<String, Set<Metric>> customMetricMap = new HashMap<>();
@@ -245,6 +260,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateCustomFieldsGoodCase() {
     Map<String, Set<Metric>> customMetricMap = new HashMap<>();
@@ -258,6 +274,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateTraceMetricInWorkflowHappyCase() {
     String metrics = "docker.mem.rss,kubernetes.cpu.usage.total";
@@ -268,6 +285,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateTraceMetricInWorkflowTraceMetrics() {
     String metrics = "docker.mem.rss,kubernetes.cpu.usage.total,trace.servlet.request.errors";
@@ -279,6 +297,7 @@ public class DatadogStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testCustomMetricMetricType() {
     Map<String, Set<Metric>> customMetrics = new HashMap<>();

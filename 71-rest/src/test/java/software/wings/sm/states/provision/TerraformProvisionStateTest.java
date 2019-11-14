@@ -1,10 +1,12 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,6 +29,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldParseOutputs() throws IOException {
     assertThat(TerraformProvisionState.parseOutputs(null).size()).isEqualTo(0);
@@ -42,6 +45,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateProvisionerWorkspaces() {
     when(infrastructureProvisionerService.update(any())).thenReturn(null);
@@ -57,6 +61,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleDefaultWorkspace() {
     assertThat(state.handleDefaultWorkspace(null) == null).isTrue();
@@ -65,6 +70,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAndFilterVariables() {
     NameValuePair prov_var_1 = NameValuePair.builder().name("access_key").valueType("TEXT").build();

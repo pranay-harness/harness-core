@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -50,6 +52,7 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCopyConfigForWinRm() throws IOException {
     // Create a test web.config file

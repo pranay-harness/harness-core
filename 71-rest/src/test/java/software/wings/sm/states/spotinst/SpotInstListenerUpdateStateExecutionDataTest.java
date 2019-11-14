@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -7,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -17,6 +19,7 @@ import java.util.Map;
 
 public class SpotInstListenerUpdateStateExecutionDataTest extends WingsBaseTest {
   @Test
+  @Owner(emails = UNKNOWN)
   @Category(UnitTests.class)
   public void testStateData() {
     String oldId = "oldId";
