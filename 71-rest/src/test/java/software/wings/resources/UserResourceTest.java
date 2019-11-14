@@ -124,7 +124,7 @@ public class UserResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = DEEPAK)
+  @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void shouldLoginUserUsingPostRequest() {
     when(AUTHENTICATION_MANAGER.defaultLoginAccount(anyString(), anyString())).thenReturn(new User());
