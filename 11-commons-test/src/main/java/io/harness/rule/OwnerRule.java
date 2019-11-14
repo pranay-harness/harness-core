@@ -14,6 +14,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -140,6 +141,10 @@ public class OwnerRule implements TestRule {
       if (!active.containsKey(email)) {
         throw new CategoryConfigException(format("Email %s is not active.", email));
       }
+
+      if (owner.intermittent()) {
+        fileOwnerAs(email, "intermittent");
+      }
     }
 
     final String prEmail = System.getenv("ghprbPullAuthorEmail");
@@ -161,5 +166,25 @@ public class OwnerRule implements TestRule {
     }
 
     return statement;
+  }
+
+  public static void fileOwnerAs(String email, String type) {
+    final DevInfo devInfo = getActive().get(email);
+    if (devInfo == null) {
+      return;
+    }
+
+    String identify = devInfo.getSlack() == null ? email : "@" + devInfo.getSlack();
+
+    try {
+      final File file =
+          new File(String.format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
+      file.getParentFile().mkdirs();
+      if (!file.createNewFile()) {
+        logger.debug("The owner {} was already set", identify);
+      }
+    } catch (Exception ignore) {
+      // Ignore the exceptions
+    }
   }
   }
