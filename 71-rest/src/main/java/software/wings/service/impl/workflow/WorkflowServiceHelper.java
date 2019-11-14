@@ -2028,11 +2028,9 @@ public class WorkflowServiceHelper {
         phase.setDeploymentType(infrastructureDefinition.getDeploymentType());
         resetNodeSelection(phase);
       }
+    } else if (envChanged && !infraChanged) {
+      unsetInfraDefinitionsDetails(phase);
     }
-    //    Not Needed as Infra Is independent of Environment
-    //    else if (envChanged && !infraChanged) {
-    //      unsetInfraMappingDetails(phase);
-    //    }
   }
 
   private void handleCanaryOrMultiServiceWorkflow(OrchestrationWorkflow orchestrationWorkflow,
@@ -2283,6 +2281,13 @@ public class WorkflowServiceHelper {
     phase.setComputeProviderId(null);
     phase.setInfraMappingId(null);
     phase.setInfraMappingName(null);
+    // phase.setDeploymentType(null);
+  }
+
+  public void unsetInfraDefinitionsDetails(WorkflowPhase phase) {
+    phase.setComputeProviderId(null);
+    phase.setInfraDefinitionId(null);
+    phase.setInfraDefinitionName(null);
     // phase.setDeploymentType(null);
   }
 
