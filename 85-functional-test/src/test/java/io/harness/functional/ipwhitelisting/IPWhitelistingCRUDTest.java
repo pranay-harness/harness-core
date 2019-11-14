@@ -1,6 +1,6 @@
 package io.harness.functional.ipwhitelisting;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
@@ -16,7 +16,7 @@ import software.wings.beans.security.access.WhitelistStatus;
 @Slf4j
 public class IPWhitelistingCRUDTest extends AbstractFunctionalTest {
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void testIPWhitelistingCRUD() {
     final String IP_WHITELIST_VAL = "0.0.0.0";

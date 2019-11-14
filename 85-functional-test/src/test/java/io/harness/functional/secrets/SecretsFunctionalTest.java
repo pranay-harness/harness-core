@@ -1,6 +1,6 @@
 package io.harness.functional.secrets;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -68,7 +68,7 @@ public class SecretsFunctionalTest extends AbstractFunctionalTest {
    * Disbaling this temporarily until our team completes this from framework level.
    */
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   @Ignore("This has some issue with datagen model, which may turn other tests flaky. Runs in E2ETest.")
   public void secretsCRUDTests() {

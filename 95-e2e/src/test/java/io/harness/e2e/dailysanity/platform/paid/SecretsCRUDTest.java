@@ -1,6 +1,6 @@
 package io.harness.e2e.dailysanity.platform.paid;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.E2ETests;
@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 public class SecretsCRUDTest extends AbstractE2ETest {
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void secretsTextCRUDTests() {
     logger.info("Local secrets text test starts");
@@ -60,7 +60,7 @@ public class SecretsCRUDTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void secretsFileCRUDTests() {
     logger.info("Local secrets file test starts");
@@ -96,7 +96,7 @@ public class SecretsCRUDTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void secretsTextCRUDTestsWithUsageRestrictions() {
     logger.info("Local secrets text test starts");

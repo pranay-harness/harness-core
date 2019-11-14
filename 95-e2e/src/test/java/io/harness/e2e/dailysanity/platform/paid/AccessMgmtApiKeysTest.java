@@ -1,6 +1,6 @@
 package io.harness.e2e.dailysanity.platform.paid;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 public class AccessMgmtApiKeysTest extends AbstractE2ETest {
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void apiKeysCRUD() {
     logger.info("Creating a userGroup");

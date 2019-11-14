@@ -57,7 +57,6 @@ public class OwnerRule implements TestRule {
   public static final String SRINIVAS = "srinivas@harness.io";
   public static final String SRIRAM = "sriram@harness.io";
   public static final String SUNIL = "sunil@harness.io";
-  public static final String SWAMY = "swamy@harness.io";
   public static final String UJJAWAL = "ujjawal.prasad@harness.io";
   public static final String UTKARSH = "utkarsh.gupta@harness.io";
   public static final String VAIBHAV_SI = "vaibhav.si@harness.io";
@@ -83,7 +82,7 @@ public class OwnerRule implements TestRule {
                                                          .put(ANSHUL, DevInfo.builder().build())
                                                          .put(ANUBHAW, DevInfo.builder().build())
                                                          .put(AVMOHAN, DevInfo.builder().build())
-                                                         .put(BRETT, DevInfo.builder().build())
+                                                         .put(BRETT, DevInfo.builder().slack("brett").build())
                                                          .put(DEEPAK, DevInfo.builder().build())
                                                          .put(GARVIT, DevInfo.builder().build())
                                                          .put(GEORGE, DevInfo.builder().slack("george").build())
@@ -95,13 +94,13 @@ public class OwnerRule implements TestRule {
                                                          .put(KAMAL, DevInfo.builder().build())
                                                          .put(MARK, DevInfo.builder().build())
                                                          .put(MEENAKSHI, DevInfo.builder().build())
-                                                         .put(NATARAJA, DevInfo.builder().build())
+                                                         .put(NATARAJA, DevInfo.builder().slack("Nataraja M").build())
                                                          .put(PARNIAN, DevInfo.builder().build())
                                                          .put(POOJA, DevInfo.builder().build())
                                                          .put(PRANJAL, DevInfo.builder().build())
                                                          .put(PRAVEEN, DevInfo.builder().build())
                                                          .put(PUNEET, DevInfo.builder().build())
-                                                         .put(RAGHU, DevInfo.builder().build())
+                                                         .put(RAGHU, DevInfo.builder().slack("raghu").build())
                                                          .put(RAMA, DevInfo.builder().build())
                                                          .put(ROHIT, DevInfo.builder().build())
                                                          .put(RUSHABH, DevInfo.builder().build())
@@ -111,7 +110,6 @@ public class OwnerRule implements TestRule {
                                                          .put(SRINIVAS, DevInfo.builder().build())
                                                          .put(SRIRAM, DevInfo.builder().build())
                                                          .put(SUNIL, DevInfo.builder().build())
-                                                         .put(SWAMY, DevInfo.builder().build())
                                                          .put(UJJAWAL, DevInfo.builder().build())
                                                          .put(UTKARSH, DevInfo.builder().build())
                                                          .put(VAIBHAV_SI, DevInfo.builder().build())

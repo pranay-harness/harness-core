@@ -1,6 +1,6 @@
 package io.harness.functional.sso;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.FunctionalTests;
@@ -18,7 +18,7 @@ import software.wings.beans.sso.LdapSettings;
 @Slf4j
 public class SSOCRUDTest extends AbstractFunctionalTest {
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void testLDAPCRUD() {
     logger.info("Starting the LDAP test");
@@ -35,7 +35,7 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void testSAMLCRUD() {
     logger.info("Starting the SAML test");

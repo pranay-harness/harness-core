@@ -1,6 +1,6 @@
 package io.harness.e2e.dailysanity.platform.paid;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.E2ETests;
@@ -16,7 +16,7 @@ import software.wings.beans.security.access.WhitelistStatus;
 @Slf4j
 public class IPWhitelistingCRUDTest extends AbstractE2ETest {
   @Test()
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(E2ETests.class)
   public void testIPWhitelistingCRUD() {
     final String IP_WHITELIST_VAL = "0.0.0.0";

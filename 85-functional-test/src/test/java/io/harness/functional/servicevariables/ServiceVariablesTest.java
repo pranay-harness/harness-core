@@ -1,7 +1,7 @@
 package io.harness.functional.servicevariables;
 
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -108,7 +108,7 @@ public class ServiceVariablesTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void variablesTest() {

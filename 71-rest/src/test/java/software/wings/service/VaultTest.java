@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -1064,7 +1065,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(emails = RAGHU)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void transitionVault() throws InterruptedException, IllegalAccessException {

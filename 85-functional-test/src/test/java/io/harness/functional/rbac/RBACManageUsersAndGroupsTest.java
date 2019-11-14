@@ -1,6 +1,6 @@
 package io.harness.functional.rbac;
 
-import static io.harness.rule.OwnerRule.SWAMY;
+import static io.harness.rule.OwnerRule.NATARAJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 
@@ -49,7 +49,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
     logger.info("Logging in as a rbac2 user");
@@ -60,7 +60,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amPermissionToPostForUser() {
     final String READ_ONLY_USER = "rbac2@harness.io";
@@ -70,7 +70,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void createApplicationFail() {
     logger.info("Check if create application test fails");
@@ -91,7 +91,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteApplicationFail() {
     logger.info("Check if delete application test fails");
@@ -120,7 +120,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   //  }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void amPermissionToPostForUserGroup() {
     final String READ_ONLY_USER = "rbac2@harness.io";
@@ -129,7 +129,7 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SWAMY)
+  @Owner(emails = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateMembersAndPermissionsInUserGroup() {
     logger.info("Logging in as a rbac2 user");
