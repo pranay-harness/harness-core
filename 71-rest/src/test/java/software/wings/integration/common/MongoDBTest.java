@@ -31,7 +31,7 @@ public class MongoDBTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   // this test was used to validate mongo setting for dirty reads
   // there is no need it to be run again and again

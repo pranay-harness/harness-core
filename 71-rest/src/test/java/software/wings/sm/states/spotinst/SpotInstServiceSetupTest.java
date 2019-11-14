@@ -46,7 +46,7 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
   @InjectMocks SpotInstServiceSetup state = new SpotInstServiceSetup("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setBlueGreen(true);
@@ -71,7 +71,7 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     state.setUseCurrentRunningCount(true);
@@ -118,7 +118,7 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFields() {
     SpotInstServiceSetup stateLocal = new SpotInstServiceSetup("stateName2");

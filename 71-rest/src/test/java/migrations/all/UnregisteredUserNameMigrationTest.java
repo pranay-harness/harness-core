@@ -34,7 +34,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMigrationOfAllUnregisteredUsers() {
     long initialCount = 10;
@@ -47,7 +47,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoMigrationOfRegisteredUsers() {
     long initialCount = 10;
@@ -60,7 +60,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMigrationOfSomeRegisteredUsers() {
     long initialCount = 10;

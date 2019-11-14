@@ -44,7 +44,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
   static final int DELAY_IN_MS = 6000;
   static final Retry<Object> retry = new Retry<>(MAX_RETRIES, DELAY_IN_MS);
   @Test()
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void createGoogleOauth() {
     logger.info("Starting the google oauth test");
@@ -62,7 +62,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void testLDAPAuthentication() {
     final String QUERY = "Manager";
@@ -144,7 +144,7 @@ public class SSOTestPaidTest extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void createSAMLSettingsInPaid() {
     logger.info("Starting the SAML test");

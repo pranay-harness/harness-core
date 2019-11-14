@@ -23,21 +23,21 @@ public class SubjectTest extends CategoryTest {
   }
 
   @Test(expected = NullPointerException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterNPE() {
     subject.register(null);
   }
 
   @Test(expected = NullPointerException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUnregisterNPE() {
     subject.unregister(null);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterUnregister() {
     subject.register(OBSERVER_KEY);
@@ -53,7 +53,7 @@ public class SubjectTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFireApproveFromAllWithArg() {
     subject.register(OBSERVER_KEY);

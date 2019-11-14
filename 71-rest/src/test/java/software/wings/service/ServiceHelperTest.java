@@ -17,7 +17,7 @@ public class ServiceHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private ServiceHelper serviceHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddPlaceholderTexts() {
     PcfServiceSpecification pcfServiceSpecification =

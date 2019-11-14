@@ -18,14 +18,14 @@ import software.wings.integration.dl.PageRequestTest.Dummy;
 @Slf4j
 public class VerificationMorphiaClassesTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testVerificationModule() {
     new VerificationMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testVerificationSearchAndList() {
     new MorphiaModule().testAutomaticSearch(
@@ -33,7 +33,7 @@ public class VerificationMorphiaClassesTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testVerificationImplementationClassesModule() {
     new VerificationMorphiaRegistrar().testImplementationClassesModule();

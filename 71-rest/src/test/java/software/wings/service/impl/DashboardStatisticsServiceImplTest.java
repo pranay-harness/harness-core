@@ -329,7 +329,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testUsageMetrics() {
@@ -353,7 +353,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallTestInstanceStats() {
@@ -414,7 +414,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetAppInstanceSummaryStatsByService() {
@@ -439,7 +439,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetServiceInstanceStats() {
@@ -463,7 +463,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetServiceInstanceDashboard() {

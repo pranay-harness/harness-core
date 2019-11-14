@@ -316,7 +316,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTopLevelCriteria_1() throws Exception {
     AuditPreference auditPreference =
@@ -358,7 +358,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_OnlyAccountAndTopLevelCriteriaGiven() throws Exception {
     AuditPreference auditPreference =
@@ -420,7 +420,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_onlyAppLevelCriteria() throws Exception {
     AuditPreference auditPreference =
@@ -496,7 +496,7 @@ public class AuditPreferenceHelperTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_AppAndAccountLevelCriteria() throws Exception {
     AuditPreference auditPreference =

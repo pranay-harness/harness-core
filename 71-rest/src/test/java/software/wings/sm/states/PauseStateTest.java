@@ -98,7 +98,7 @@ public class PauseStateTest extends WingsBaseTest {
    * @throws IOException       the io exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendEmailAndReturnCorrelationIdOnExecute() throws EmailException, TemplateException, IOException {
     pauseState.setBody("body");

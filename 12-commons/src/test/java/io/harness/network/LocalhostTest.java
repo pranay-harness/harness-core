@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 public class LocalhostTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetLocalHostAddress() {
     String address = Localhost.getLocalHostAddress();
@@ -23,7 +23,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteHostname() throws InterruptedException, ExecutionException, IOException {
     String hostname = Localhost.executeHostname();
@@ -31,7 +31,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteHostnameShort() throws InterruptedException, ExecutionException, IOException {
     String hostname = Localhost.executeHostnameShort();
@@ -39,7 +39,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetLocalHostName() {
     String hostname = Localhost.getLocalHostName();
@@ -47,7 +47,7 @@ public class LocalhostTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAddress() throws SocketException {
     String address = Localhost.getAddress();

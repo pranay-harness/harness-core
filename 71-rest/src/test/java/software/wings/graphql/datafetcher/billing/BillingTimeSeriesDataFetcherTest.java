@@ -79,7 +79,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
@@ -91,7 +91,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenQueryThrowsException() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
@@ -108,7 +108,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMethodInBillingTimeSeriesDataFetcher() {
     String[] appIdFilterValues = new String[] {APP1_ID_ACCOUNT1};

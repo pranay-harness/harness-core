@@ -43,7 +43,7 @@ public class SmtpConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String name = "SMTP" + System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class SmtpConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String name = "SMTP" + System.currentTimeMillis();

@@ -293,7 +293,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_findPathFromScript() {
     String script = "echo '${path.root}/abc/test any text sfkjsdfk \n /wrong/path \\${path.root}/xyz.json some text' ";
@@ -303,7 +303,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_executeGitTask() {
     final DelegateTask delegateTask = DelegateTask.builder().build();
@@ -328,7 +328,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     verify(delegateService, times(1)).queueTask(delegateTask);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_executePcfPluginTask() {
     on(context).set("serviceTemplateService", serviceTemplateService);
@@ -349,7 +349,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_handleAsyncResponseForGitTask() {
     final GitFetchFilesFromMultipleRepoResult gitFetchFilesFromMultipleRepoResult =
@@ -379,7 +379,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_handleAsyncResponseForPluginTask() {
     final PcfCommandExecutionResponse commandExecutionResponse =

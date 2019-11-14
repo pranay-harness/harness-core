@@ -231,7 +231,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void saveSecret() throws IllegalAccessException {
     String secretName = generateUuid();
@@ -243,7 +243,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void saveAndUpdateSecret() throws IllegalAccessException {
     UsageRestrictions usageRestrictions =
@@ -349,7 +349,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void saveSecretUsingLocalMode() throws IllegalAccessException {
     if (encryptionType != EncryptionType.LOCAL) {
@@ -480,7 +480,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void updateSecretRef() {
@@ -633,7 +633,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void multipleVariableReference() {
     String secretName = generateUuid();
@@ -742,7 +742,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteSecret() {
     String secretName = generateUuid();
@@ -833,7 +833,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void listSecrets() {
     int numOfSecrets = 3;
@@ -913,7 +913,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void listSecretsWithSummary() throws IOException, IllegalAccessException {
     int numOfSecrets = 3;
@@ -995,7 +995,7 @@ public class SecretTextTest extends WingsBaseTest {
     }
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void secretTextUsage() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
@@ -1058,7 +1058,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void saveAndUpdateFile() throws IOException, IllegalAccessException {
@@ -1181,7 +1181,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void multipleFileRefrence() throws IOException {
@@ -1277,7 +1277,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void deleteSecretFile() throws IOException, InterruptedException {
@@ -1366,7 +1366,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void deleteEncryptedConfigFile() throws IOException, InterruptedException {
@@ -1429,7 +1429,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void updateLocalToKms() {
     if (encryptionType != EncryptionType.LOCAL) {
@@ -1524,7 +1524,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableSearchTags() throws InterruptedException {
@@ -1689,7 +1689,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableTemplateSearchTags() {
@@ -1876,7 +1876,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void serviceVariableEnvironmentSearchTags() {
@@ -2020,7 +2020,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void serviceVariableSyncSearchTags() {
     String secretName = generateUuid();
@@ -2100,7 +2100,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void filterSecretSearchTags() {
     int numOfServiceVariables = 6;

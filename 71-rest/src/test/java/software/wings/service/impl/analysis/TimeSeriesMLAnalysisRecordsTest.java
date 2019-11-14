@@ -22,7 +22,7 @@ import java.nio.charset.Charset;
 @RunWith(MockitoJUnitRunner.class)
 public class TimeSeriesMLAnalysisRecordsTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParsing() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");

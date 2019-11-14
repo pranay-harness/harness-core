@@ -89,7 +89,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAlertFiredForVault() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
@@ -117,7 +117,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAlertFiredForVaultRenewal() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
@@ -152,7 +152,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAlertFiredForKms() throws InterruptedException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -180,7 +180,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoAlertForInactiveAccount() {
     accountId =

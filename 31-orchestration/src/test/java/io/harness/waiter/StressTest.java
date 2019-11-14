@@ -30,7 +30,7 @@ public class StressTest extends OrchestrationTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   @Ignore("Bypass this test, it is not for running regularly")

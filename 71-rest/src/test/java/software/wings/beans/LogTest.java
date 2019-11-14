@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 
 public class LogTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogColor() {
     String foo = color("foo", Yellow);
@@ -31,7 +31,7 @@ public class LogTest extends CategoryTest {
     assertThat(doneColoring(foo)).isEqualTo("\033[0;" + Yellow.value + "m\033[40mfoo" + NO_FORMATTING);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogColorNested() {
     String bar = color("abc" + color("foo", Yellow) + "def", Blue);
@@ -43,7 +43,7 @@ public class LogTest extends CategoryTest {
             + "m\033[40mdef" + NO_FORMATTING);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogColorMultiple() {
     String two = "a" + color("b", Yellow) + "c" + color("d", Blue) + "e";
@@ -61,7 +61,7 @@ public class LogTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogWeight() {
     String foo = color("foo", Yellow, Bold);
@@ -71,7 +71,7 @@ public class LogTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLogBackground() {
     String foo = color("foo", White, Normal, RedDark);

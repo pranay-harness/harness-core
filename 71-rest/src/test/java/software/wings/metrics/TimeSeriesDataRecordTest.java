@@ -68,7 +68,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getTimeSeriesDataRecordsFromNewRelicDataRecords() {
     DateTime now = DateTime.now();
@@ -116,7 +116,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getNewRelicDataRecordsFromTimeSeriesDataRecords() {
     DateTime now = DateTime.now();

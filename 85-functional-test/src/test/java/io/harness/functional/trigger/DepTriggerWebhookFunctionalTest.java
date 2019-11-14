@@ -35,7 +35,7 @@ public class DepTriggerWebhookFunctionalTest extends AbstractTriggerFunctionalTe
   final String token = CryptoUtils.secureRandAlphaNumString(40);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCRUDAndExecuteWebhookTriggerForWorkflow() {
     String name = "Webhook" + System.currentTimeMillis();

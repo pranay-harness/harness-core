@@ -87,7 +87,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstStateHelper spotInstStateHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddLoadBalancerConfigAfterExpressionEvaluation() throws Exception {
     ExecutionContext context = mock(ExecutionContext.class);
@@ -122,7 +122,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareStateExecutionData() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -194,7 +194,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateSpotInstCommandRequest() {
     AwsAmiInfrastructureMapping infrastructureMapping = anAwsAmiInfrastructureMapping()
@@ -215,7 +215,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareNewElastiGroupConfigForRollback() {
     String id = "newId";
@@ -235,7 +235,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPrepareOldElastiGroupConfigForRollback() {
     String id = "oldId";
@@ -255,7 +255,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDelegateTask() {
     String tag = "tag";

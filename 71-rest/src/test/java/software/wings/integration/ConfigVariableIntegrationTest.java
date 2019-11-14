@@ -75,7 +75,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldOverrideServiceConfigVariable() {
     // Config variable - Entity type as Service
@@ -107,7 +107,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldOverrideEncryptedServiceConfigVariable() {
     String encryptedId = wingsPersistence.save(EncryptedData.builder()

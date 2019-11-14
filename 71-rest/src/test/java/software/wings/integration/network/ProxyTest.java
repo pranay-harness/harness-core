@@ -70,7 +70,7 @@ public class ProxyTest extends CategoryTest {
    * @throws IOException
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testWithNoProxyConfigured_OkHttpClient() throws IOException {
     OkHttpClient.Builder builder = new Builder();
@@ -95,7 +95,7 @@ public class ProxyTest extends CategoryTest {
    */
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testWithProxyAuthSuccess_OkHttpClient() throws IOException {
@@ -134,7 +134,7 @@ public class ProxyTest extends CategoryTest {
    * @throws IOException
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testWithProxyAuthFailWithInvalidCreds_OkHttpClient() throws IOException {
     Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
@@ -191,7 +191,7 @@ public class ProxyTest extends CategoryTest {
   //  }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetResponseFromUrlProxyAuth() throws IOException {
@@ -209,7 +209,7 @@ public class ProxyTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetResponseFromUrlProxyAuth_Fail() throws IOException {
@@ -240,7 +240,7 @@ public class ProxyTest extends CategoryTest {
   //  }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetResponseFromUrlNoProxy() throws IOException {
     Executor executor = Executor.newInstance();

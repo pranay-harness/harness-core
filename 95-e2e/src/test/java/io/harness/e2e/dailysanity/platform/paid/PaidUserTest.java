@@ -25,7 +25,7 @@ public class PaidUserTest extends AbstractE2ETest {
   final String EXPECTED_SUBJECT = "You have been invited to join the Automation One account at Harness";
 
   @Test()
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void listUsers() {
     logger.info("Starting the list users test");
@@ -36,7 +36,7 @@ public class PaidUserTest extends AbstractE2ETest {
   }
 
   @Test()
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void testUserInvite() throws IOException, MessagingException {
     Account account = getAccount();

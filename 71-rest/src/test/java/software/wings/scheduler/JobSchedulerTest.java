@@ -47,7 +47,7 @@ public class JobSchedulerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {

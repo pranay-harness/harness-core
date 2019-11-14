@@ -34,7 +34,7 @@ public class AwsAmiInfrastructureTest extends CategoryTest {
           .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetInfraMapping() {
     InfrastructureMapping infrastructureMapping = awsAmiInfrastructure.getInfraMapping();
@@ -55,7 +55,7 @@ public class AwsAmiInfrastructureTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMappingClass() {
     Class<? extends InfrastructureMapping> mappingClass = awsAmiInfrastructure.getMappingClass();
@@ -65,7 +65,7 @@ public class AwsAmiInfrastructureTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetFieldMapForClass() {
     Map<String, Object> fieldMap = awsAmiInfrastructure.getFieldMapForClass();

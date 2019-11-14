@@ -62,7 +62,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLimitEnforcement() {
     // configure limits
@@ -80,7 +80,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits

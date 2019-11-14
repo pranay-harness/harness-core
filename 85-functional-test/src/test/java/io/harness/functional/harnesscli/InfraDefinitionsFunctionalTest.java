@@ -45,7 +45,7 @@ public class InfraDefinitionsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void getInfraDefinitionsTest() throws IOException {
@@ -63,7 +63,7 @@ public class InfraDefinitionsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void getInfraDefinitionsWithWrongAppIdTest() throws IOException {
@@ -76,7 +76,7 @@ public class InfraDefinitionsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Enable once feature flag is enabled")
   public void getInfraDefinitionsWithWrongEnvIdTest() throws IOException {

@@ -73,7 +73,7 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAppend() {
     String message = "my log message";
@@ -82,7 +82,7 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubmit() {
     String message = "my log message";

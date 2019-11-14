@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class GCPUsageReportTimeProviderTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testProvider() {
     Instant currentTime = Instant.now();

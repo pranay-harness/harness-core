@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class ArtifactUtilitiesTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExtractNexusRegistryUrl() {
     assertThat(ArtifactUtilities.getNexusRegistryUrl("https://nexus.harness.io", "5000", null))
@@ -34,7 +34,7 @@ public class ArtifactUtilitiesTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExtractNexusRepositoryName() {
     assertThat(
@@ -63,7 +63,7 @@ public class ArtifactUtilitiesTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getFileSearchPatternTest() {
     assertThat(ArtifactUtilities.getFileSearchPattern("harness/todolist-sample")).isEqualTo("todolist-sample");
@@ -75,7 +75,7 @@ public class ArtifactUtilitiesTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getFileParentPathTest() {
     assertThat(ArtifactUtilities.getFileParentPath("harness/todolist-sample")).isEqualTo("harness");

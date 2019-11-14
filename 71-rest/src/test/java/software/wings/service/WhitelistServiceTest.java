@@ -97,7 +97,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
    *
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveAndRead() {
     Whitelist whitelist =
@@ -118,7 +118,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testList() {
     Whitelist whitelist1 = Whitelist.builder().accountId(accountId).description(description).filter(cidrFilter).build();
@@ -136,7 +136,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsValidIpAddress() {
     createWhitelists();
@@ -167,7 +167,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsValidIpAddressTrueIfFeatureIsUnavailable() {
     createWhitelists();
@@ -226,7 +226,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInputValidation() {
     // Negative cases
@@ -306,7 +306,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateAndRead() {
     Whitelist whitelist =
@@ -327,7 +327,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateWithInvalidInputs() {
     Whitelist whitelist =
@@ -385,7 +385,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelete() {
     Whitelist whitelist =

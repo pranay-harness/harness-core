@@ -74,14 +74,14 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPumpWithEmptyCollection() {
     assertThatCode(() -> { iterator.process(PUMP); }).doesNotThrowAnyException();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testProcessEntity() {
     final TestRegularIterableEntity entity =
@@ -91,7 +91,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLoopWithEmptyCollection() throws IOException {
     assertThatCode(() -> {
@@ -103,7 +103,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("Bypass this test, it is not for running regularly")
   public void testWakeup() throws IOException {
@@ -129,7 +129,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("Bypass this test, it is not for running regularly")
   public void testNextReturnsJustAdded() throws IOException {

@@ -44,7 +44,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBugsnagOrgs() {
     BugsnagConfig config = new BugsnagConfig();
@@ -70,7 +70,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBugsnagApplications() {
     BugsnagConfig config = new BugsnagConfig();
@@ -96,7 +96,7 @@ public class LogVerificationServiceImplTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBugsnagApplicationsBadState() {
     BugsnagConfig config = new BugsnagConfig();

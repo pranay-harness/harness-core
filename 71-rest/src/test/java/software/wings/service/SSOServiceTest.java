@@ -98,7 +98,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void uploadSamlConfiguration() throws IOException, SamlException {
     Account account = new Account();
@@ -132,7 +132,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void setAuthenticationMechanism() {
     Account account = new Account();
@@ -149,7 +149,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateLdapConnectionSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -160,7 +160,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateLdapUserSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -171,7 +171,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateLdapGroupSettings() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -182,7 +182,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateLdapAuthentication() {
     when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
@@ -201,7 +201,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void searchGroupsByName() {
     EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);

@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = NATARAJA, intermittent = true)
+  @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void secretsTextCRUDTests() {
     logger.info("Local secrets text test starts");
@@ -65,7 +65,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
    * TO-DO: Work with Rama to have this resolved
    */
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   @Ignore("TODO: Ignored because it was causing RBAC errors when running in parallel")
   public void secretsTextCRUDTestsWithUsageRestrictions() {
@@ -107,7 +107,7 @@ public class SecretsLocalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA, intermittent = true)
+  @Owner(developers = NATARAJA, intermittent = true)
   @Category(FunctionalTests.class)
   public void secretsFileCRUDTests() {
     logger.info("Local secrets file test starts");

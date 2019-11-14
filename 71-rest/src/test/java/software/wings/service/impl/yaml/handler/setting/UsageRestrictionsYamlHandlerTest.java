@@ -71,7 +71,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
@@ -85,7 +85,7 @@ public class UsageRestrictionsYamlHandlerTest extends BaseSettingValueConfigYaml
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGetNullRestrictions() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();

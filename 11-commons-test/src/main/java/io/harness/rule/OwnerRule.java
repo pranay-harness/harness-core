@@ -20,115 +20,120 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Map.Entry;
 
 @Slf4j
 public class OwnerRule implements TestRule {
-  public static final String AADITI = "aaditi.joag@harness.io";
-  public static final String ADWAIT = "adwait.bhandare@harness.io";
-  public static final String AMAN = "aman.singh@harness.io";
-  public static final String ANKIT = "ankit.singhal@harness.io";
-  public static final String ANSHUL = "anshul@harness.io";
-  public static final String ANUBHAW = "anubhaw@harness.io";
-  public static final String AVMOHAN = "abhijith.mohan@harness.io";
-  public static final String BRETT = "brett@harness.io";
-  public static final String DEEPAK = "deepak.patankar@harness.io";
-  public static final String GARVIT = "garvit.pahal@harness.io";
-  public static final String GEORGE = "george@harness.io";
-  public static final String HANTANG = "hannah.tang@harness.io";
-  public static final String HARSH = "harsh.jain@harness.io";
-  public static final String HITESH = "hitesh.aringa@harness.io";
-  public static final String JATIN = "jatin@harness.io";
-  public static final String JUHI = "juhi.agrawal@harness.io";
-  public static final String KAMAL = "kamal.joshi@harness.io";
-  public static final String MARK = "mark.lu@harness.io";
-  public static final String MEENAKSHI = "meenakshi.raikwar@harness.io";
-  public static final String NATARAJA = "nataraja@harness.io";
-  public static final String PARNIAN = "parnian@harness.io";
-  public static final String POOJA = "pooja@harness.io";
-  public static final String PRANJAL = "pranjal@harness.io";
-  public static final String PRAVEEN = "praveen.sugavanam@harness.io";
-  public static final String PUNEET = "puneet.saraswat@harness.io";
-  public static final String RAGHU = "raghu@harness.io";
-  public static final String RAMA = "rama@harness.io";
-  public static final String ROHIT = "rohit.reddy@harness.io";
-  public static final String RUSHABH = "rushabh@harness.io";
-  public static final String SHASWAT = "shaswat.deep@harness.io";
-  public static final String SHUBHANSHU = "shubhanshu.verma@harness.io";
-  public static final String SOWMYA = "sowmya.k@harness.io";
-  public static final String SRINIVAS = "srinivas@harness.io";
-  public static final String SRIRAM = "sriram@harness.io";
-  public static final String SUNIL = "sunil@harness.io";
-  public static final String UJJAWAL = "ujjawal.prasad@harness.io";
-  public static final String UTKARSH = "utkarsh.gupta@harness.io";
-  public static final String VAIBHAV_SI = "vaibhav.si@harness.io";
-  public static final String VAIBHAV_TULSYAN = "vaibhav.tulsyan@harness.io";
-  public static final String VENKATESH = "venkatesh.kotrike@harness.io";
-  public static final String VIKAS = "vikas.naiyar@harness.io";
-  public static final String YOGESH_CHAUHAN = "yogesh.chauhan@harness.io";
-  public static final String ROHIT_KUMAR = "rohit.kumar@harness.io";
+  public static final String AADITI = "aaditi.joag";
+  public static final String ADWAIT = "adwait.bhandare";
+  public static final String AMAN = "aman.singh";
+  public static final String ANKIT = "ankit.singhal";
+  public static final String ANSHUL = "anshul";
+  public static final String ANUBHAW = "anubhaw";
+  public static final String AVMOHAN = "abhijith.mohan";
+  public static final String BRETT = "brett";
+  public static final String DEEPAK = "deepak.patankar";
+  public static final String GARVIT = "garvit.pahal";
+  public static final String GEORGE = "george";
+  public static final String HANTANG = "hannah.tang";
+  public static final String HARSH = "harsh.jain";
+  public static final String HITESH = "hitesh.aringa";
+  public static final String JATIN = "jatin";
+  public static final String JUHI = "juhi.agrawal";
+  public static final String KAMAL = "kamal.joshi";
+  public static final String MARK = "mark.lu";
+  public static final String MEENAKSHI = "meenakshi.raikwar";
+  public static final String NATARAJA = "nataraja";
+  public static final String PARNIAN = "parnian";
+  public static final String POOJA = "pooja";
+  public static final String PRANJAL = "pranjal";
+  public static final String PRAVEEN = "praveen.sugavanam";
+  public static final String PUNEET = "puneet.saraswat";
+  public static final String RAGHU = "raghu";
+  public static final String RAMA = "rama";
+  public static final String ROHIT = "rohit.reddy";
+  public static final String ROHIT_KUMAR = "rohit.kumar";
+  public static final String RUSHABH = "rushabh";
+  public static final String SHASWAT = "shaswat.deep";
+  public static final String SHUBHANSHU = "shubhanshu.verma";
+  public static final String SOWMYA = "sowmya.k";
+  public static final String SRINIVAS = "srinivas";
+  public static final String SRIRAM = "sriram";
+  public static final String SUNIL = "sunil";
+  public static final String UJJAWAL = "ujjawal.prasad";
+  public static final String UTKARSH = "utkarsh.gupta";
+  public static final String VAIBHAV_SI = "vaibhav.si";
+  public static final String VAIBHAV_TULSYAN = "vaibhav.tulsyan";
+  public static final String VENKATESH = "venkatesh.kotrike";
+  public static final String VIKAS = "vikas.naiyar";
+  public static final String YOGESH_CHAUHAN = "yogesh.chauhan";
   @Deprecated public static final String UNKNOWN = "unknown";
 
   @Value
   @Builder
   public static class DevInfo {
+    private String email;
     private String slack;
   }
 
   @Getter
-  private static final Map<String, DevInfo> active = ImmutableMap.<String, DevInfo>builder()
-                                                         .put(AADITI, DevInfo.builder().build())
-                                                         .put(ADWAIT, DevInfo.builder().build())
-                                                         .put(ANKIT, DevInfo.builder().build())
-                                                         .put(AMAN, DevInfo.builder().build())
-                                                         .put(ANSHUL, DevInfo.builder().build())
-                                                         .put(ANUBHAW, DevInfo.builder().build())
-                                                         .put(AVMOHAN, DevInfo.builder().build())
-                                                         .put(BRETT, DevInfo.builder().slack("brett").build())
-                                                         .put(DEEPAK, DevInfo.builder().build())
-                                                         .put(GARVIT, DevInfo.builder().build())
-                                                         .put(GEORGE, DevInfo.builder().slack("george").build())
-                                                         .put(HANTANG, DevInfo.builder().build())
-                                                         .put(HARSH, DevInfo.builder().build())
-                                                         .put(HITESH, DevInfo.builder().build())
-                                                         .put(JATIN, DevInfo.builder().build())
-                                                         .put(JUHI, DevInfo.builder().build())
-                                                         .put(KAMAL, DevInfo.builder().build())
-                                                         .put(MARK, DevInfo.builder().build())
-                                                         .put(MEENAKSHI, DevInfo.builder().build())
-                                                         .put(NATARAJA, DevInfo.builder().slack("Nataraja M").build())
-                                                         .put(PARNIAN, DevInfo.builder().build())
-                                                         .put(POOJA, DevInfo.builder().build())
-                                                         .put(PRANJAL, DevInfo.builder().build())
-                                                         .put(PRAVEEN, DevInfo.builder().build())
-                                                         .put(PUNEET, DevInfo.builder().build())
-                                                         .put(RAGHU, DevInfo.builder().slack("raghu").build())
-                                                         .put(RAMA, DevInfo.builder().build())
-                                                         .put(ROHIT, DevInfo.builder().build())
-                                                         .put(RUSHABH, DevInfo.builder().build())
-                                                         .put(SHASWAT, DevInfo.builder().build())
-                                                         .put(SHUBHANSHU, DevInfo.builder().build())
-                                                         .put(SOWMYA, DevInfo.builder().build())
-                                                         .put(SRINIVAS, DevInfo.builder().build())
-                                                         .put(SRIRAM, DevInfo.builder().build())
-                                                         .put(SUNIL, DevInfo.builder().build())
-                                                         .put(UJJAWAL, DevInfo.builder().build())
-                                                         .put(UTKARSH, DevInfo.builder().build())
-                                                         .put(VAIBHAV_SI, DevInfo.builder().build())
-                                                         .put(VAIBHAV_TULSYAN, DevInfo.builder().build())
-                                                         .put(VENKATESH, DevInfo.builder().build())
-                                                         .put(VIKAS, DevInfo.builder().build())
-                                                         .put(YOGESH_CHAUHAN, DevInfo.builder().build())
-                                                         .put(ROHIT_KUMAR, DevInfo.builder().build())
-                                                         .put(UNKNOWN, DevInfo.builder().slack("channel").build())
-                                                         .build();
+  private static final Map<String, DevInfo> active =
+      ImmutableMap.<String, DevInfo>builder()
+          .put(AADITI, DevInfo.builder().email("aaditi.joag@harness.io").build())
+          .put(ADWAIT, DevInfo.builder().email("adwait.bhandare@harness.io").build())
+          .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").build())
+          .put(ANKIT, DevInfo.builder().email("ankit.singhal@harness.io").build())
+          .put(ANSHUL, DevInfo.builder().email("anshul@harness.io").build())
+          .put(ANUBHAW, DevInfo.builder().email("anubhaw@harness.io").build())
+          .put(AVMOHAN, DevInfo.builder().email("abhijith.mohan@harness.io").build())
+          .put(BRETT, DevInfo.builder().email("brett@harness.io").slack("brett").build())
+          .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").build())
+          .put(GARVIT, DevInfo.builder().email("garvit.pahal@harness.io").build())
+          .put(GEORGE, DevInfo.builder().email("george@harness.io").slack("george").build())
+          .put(HANTANG, DevInfo.builder().email("hannah.tang@harness.io").build())
+          .put(HARSH, DevInfo.builder().email("harsh.jain@harness.io").build())
+          .put(HITESH, DevInfo.builder().email("hitesh.aringa@harness.io").build())
+          .put(JATIN, DevInfo.builder().email("jatin@harness.io").build())
+          .put(JUHI, DevInfo.builder().email("juhi.agrawal@harness.io").build())
+          .put(KAMAL, DevInfo.builder().email("kamal.joshi@harness.io").build())
+          .put(MARK, DevInfo.builder().email("mark.lu@harness.io").build())
+          .put(MEENAKSHI, DevInfo.builder().email("meenakshi.raikwar@harness.io").build())
+          .put(NATARAJA, DevInfo.builder().email("nataraja@harness.io").slack("Nataraja M").build())
+          .put(PARNIAN, DevInfo.builder().email("parnian@harness.io").build())
+          .put(POOJA, DevInfo.builder().email("pooja@harness.io").build())
+          .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").build())
+          .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").build())
+          .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").build())
+          .put(RAGHU, DevInfo.builder().email("raghu@harness.io").slack("raghu").build())
+          .put(RAMA, DevInfo.builder().email("rama@harness.io").build())
+          .put(ROHIT, DevInfo.builder().email("rohit.reddy@harness.io").build())
+          .put(ROHIT_KUMAR, DevInfo.builder().email("rohit.kumar@harness.io").build())
+          .put(RUSHABH, DevInfo.builder().email("rushabh@harness.io").build())
+          .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").build())
+          .put(SHUBHANSHU, DevInfo.builder().email("shubhanshu.verma@harness.io").build())
+          .put(SOWMYA, DevInfo.builder().email("sowmya.k@harness.io").build())
+          .put(SRINIVAS, DevInfo.builder().email("srinivas@harness.io").build())
+          .put(SRIRAM, DevInfo.builder().email("sriram@harness.io").build())
+          .put(SUNIL, DevInfo.builder().email("sunil@harness.io").build())
+          .put(UJJAWAL, DevInfo.builder().email("ujjawal.prasad@harness.io").build())
+          .put(UTKARSH, DevInfo.builder().email("utkarsh.gupta@harness.io").build())
+          .put(VAIBHAV_SI, DevInfo.builder().email("vaibhav.si@harness.io").build())
+          .put(VAIBHAV_TULSYAN, DevInfo.builder().email("vaibhav.tulsyan@harness.io").build())
+          .put(VENKATESH, DevInfo.builder().email("venkatesh.kotrike@harness.io").build())
+          .put(VIKAS, DevInfo.builder().email("vikas.naiyar@harness.io").build())
+          .put(YOGESH_CHAUHAN, DevInfo.builder().email("yogesh.chauhan@harness.io").build())
+          .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
+          .build();
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
   public @interface Owner {
-    String[] emails();
+    String[] developers();
 
     boolean intermittent() default false;
   }
+
+  private static String prDeveloperId = findDeveloperId(System.getenv("ghprbPullAuthorEmail"));
 
   @Override
   public Statement apply(Statement statement, Description description) {
@@ -137,35 +142,37 @@ public class OwnerRule implements TestRule {
       throw new CategoryConfigException("Owner annotation is obligatory.");
     }
 
-    for (String email : owner.emails()) {
-      if (!active.containsKey(email)) {
-        throw new CategoryConfigException(format("Email %s is not active.", email));
+    for (String developer : owner.developers()) {
+      if (!active.containsKey(developer)) {
+        throw new CategoryConfigException(format("Developer %s is not active.", developer));
       }
 
       if (owner.intermittent()) {
-        fileOwnerAs(email, "intermittent");
+        fileOwnerAs(developer, "intermittent");
       }
     }
 
-    final String prEmail = System.getenv("ghprbPullAuthorEmail");
-    if (prEmail == null) {
-      if (owner.intermittent()) {
-        return new NoopStatement();
-      }
-      return statement;
-    }
-
-    logger.info("ghprbPullAuthorEmail = {}", prEmail);
-
-    // If there is email, it should match
-    final boolean match = Arrays.asList(owner.emails()).contains(prEmail);
-    if (!match) {
+    if (prDeveloperId == null || !Arrays.asList(owner.developers()).contains(prDeveloperId)) {
       if (owner.intermittent()) {
         return new NoopStatement();
       }
     }
 
     return statement;
+  }
+
+  private static String findDeveloperId(String email) {
+    if (email == null) {
+      return null;
+    }
+
+    for (Entry<String, DevInfo> entry : getActive().entrySet()) {
+      if (entry.getValue().getEmail().equals(email)) {
+        return entry.getKey();
+      }
+    }
+
+    return null;
   }
 
   public static void fileOwnerAs(String email, String type) {
@@ -177,8 +184,7 @@ public class OwnerRule implements TestRule {
     String identify = devInfo.getSlack() == null ? email : "@" + devInfo.getSlack();
 
     try {
-      final File file =
-          new File(String.format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
+      final File file = new File(format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
       file.getParentFile().mkdirs();
       if (!file.createNewFile()) {
         logger.debug("The owner {} was already set", identify);

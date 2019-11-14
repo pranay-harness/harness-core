@@ -47,7 +47,7 @@ public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstSyncTaskHandler handler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListElastigroups() throws Exception {
     doReturn(Collections.singletonList(ElastiGroup.builder().id("id").build()))
@@ -68,7 +68,7 @@ public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testgetElastigroupJson() throws Exception {
     doReturn("JSON").when(mockSpotInstHelperServiceDelegate).getElastigroupJson(anyString(), anyString(), anyString());
@@ -85,7 +85,7 @@ public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testgetElastigroupInstances() throws Exception {
     doReturn(Collections.singletonList(new Instance().withInstanceId("id-1234")))

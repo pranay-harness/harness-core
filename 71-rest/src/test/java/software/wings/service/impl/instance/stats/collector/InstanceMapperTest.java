@@ -38,7 +38,7 @@ public class InstanceMapperTest extends WingsBaseTest {
               new App(RandomStringUtils.randomAlphabetic(5), RandomStringUtils.randomAlphabetic(5))));
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMapping() {
     Instant ts = Instant.now();
@@ -69,7 +69,7 @@ public class InstanceMapperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMappingWithEmptySet() {
     Instant ts = Instant.now();

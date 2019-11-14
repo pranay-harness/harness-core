@@ -92,7 +92,7 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteWithLastService() {
     com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();

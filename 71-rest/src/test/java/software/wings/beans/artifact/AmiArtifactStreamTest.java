@@ -14,7 +14,7 @@ import software.wings.beans.artifact.AmiArtifactStream.Tag;
 
 public class AmiArtifactStreamTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSourceName() {
     AmiArtifactStream artifactStream = new AmiArtifactStream();

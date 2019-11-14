@@ -30,7 +30,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   private final long HEARTBEAT_MILLIS = Instant.now().toEpochMilli();
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testSetDelegateId() {
     String taskId = perpetualTaskRecordDao.save(PerpetualTaskRecord.builder().accountId(ACCOUNT_ID).build());
@@ -41,7 +41,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testResetDelegateId() {
     String taskId = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
@@ -52,7 +52,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testRemovePerpetualTask() {
     String taskId = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
@@ -62,7 +62,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testSaveHeartbeat() {
     String taskId = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
@@ -75,7 +75,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testListAssignedTaskIds() {
     String taskIdOne = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
@@ -86,7 +86,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetExistingPerpetualTask() {
     PerpetualTaskClientContext clientContext = getClientContext();

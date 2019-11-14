@@ -26,7 +26,7 @@ import java.util.List;
 
 public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
@@ -43,7 +43,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCustomArtifactSourceTemplate() {
     Template template = constructCustomArtifactTemplateEntity();
@@ -100,7 +100,7 @@ public class CustomArtifactSourceTemplateTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteTemplate() {
     Template template = constructCustomArtifactTemplateEntity();

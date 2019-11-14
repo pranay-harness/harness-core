@@ -56,7 +56,7 @@ public class HostResourceTest extends WingsBaseTest {
    * Should list hosts.
    */
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldListHosts() {

@@ -219,7 +219,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_PDS() {
     endsAtTime = System.currentTimeMillis();
@@ -265,7 +265,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_AmiInfraMapping() {
     endsAtTime = System.currentTimeMillis();
@@ -308,7 +308,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_CodeDeployInfraMapping() {
     endsAtTime = System.currentTimeMillis();
@@ -350,7 +350,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AMI() {
     endsAtTime = System.currentTimeMillis();
@@ -417,7 +417,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_CodeDeploy() {
     endsAtTime = System.currentTimeMillis();
@@ -473,7 +473,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_ECS() {
     endsAtTime = System.currentTimeMillis();
@@ -537,7 +537,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
@@ -606,7 +606,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
@@ -671,7 +671,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes_rollback() {
     endsAtTime = System.currentTimeMillis();
@@ -740,7 +740,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsSupported() throws Exception {
     assertThat(instanceHelper.isSupported(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH)).isFalse();
@@ -754,7 +754,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPrivateDnsName() throws Exception {
     String privateDnsName = "ip-172-31-11-6.ec2.internal";
@@ -793,7 +793,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testManualSyncSuccess() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
@@ -850,7 +850,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testManualSyncFailure() throws Exception {
     InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
@@ -909,7 +909,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_shouldSaveDeploymentSummary() {
     final DeploymentSummary deploymentSummary =
@@ -926,7 +926,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_saveDeploymentSummary() {
     final DeploymentSummary deploymentSummarySaved = DeploymentSummary.builder().build();
@@ -945,7 +945,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_hasDeploymentKey() {
     assertThat(
@@ -955,7 +955,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_isSyncEnabledForAccount() {
     doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());

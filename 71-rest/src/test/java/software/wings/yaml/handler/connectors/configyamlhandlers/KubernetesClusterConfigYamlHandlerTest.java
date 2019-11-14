@@ -36,7 +36,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
   private Class yamlClass = KubernetesClusterConfig.Yaml.class;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();

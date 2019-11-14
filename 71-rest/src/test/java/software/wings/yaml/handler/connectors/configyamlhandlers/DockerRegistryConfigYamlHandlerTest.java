@@ -40,7 +40,7 @@ public class DockerRegistryConfigYamlHandlerTest extends BaseSettingValueConfigY
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String bambooProviderName = "Docker" + System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class DockerRegistryConfigYamlHandlerTest extends BaseSettingValueConfigY
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String bambooProviderName = "Docker" + System.currentTimeMillis();

@@ -14,7 +14,7 @@ import org.slf4j.MDC;
 
 public class AutoLogContextTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPreserveSameValue() {
     String key = "foo";
@@ -29,7 +29,7 @@ public class AutoLogContextTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPreserveSameValueOnOverride() {
     String key = "foo";
@@ -44,7 +44,7 @@ public class AutoLogContextTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNestDifferentValueOnOverride() {
     String key = "foo";

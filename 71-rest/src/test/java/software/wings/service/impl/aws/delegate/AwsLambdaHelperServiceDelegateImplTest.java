@@ -62,7 +62,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteFunction() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -85,7 +85,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWf_FxDoesNotExist() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -122,7 +122,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWf_FxExists() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -165,7 +165,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTagExistingFunction() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
@@ -185,14 +185,14 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAlternateNormalizedFunctionName() {
     assertThat(awsLambdaHelperServiceDelegate.getAlternateNormalizedFunctionName("foo_bar")).isEqualTo("foo-bar");
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getFunctionDetails() {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
@@ -220,7 +220,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getFunctionDetails_error() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);

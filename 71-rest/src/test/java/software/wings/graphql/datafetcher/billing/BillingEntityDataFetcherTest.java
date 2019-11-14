@@ -76,7 +76,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
@@ -88,7 +88,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFetchMethodInBillingEntitySeriesDataFetcher() {
     Long filterTime = 0L;

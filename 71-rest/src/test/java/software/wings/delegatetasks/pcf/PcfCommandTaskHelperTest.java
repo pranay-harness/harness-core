@@ -192,7 +192,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper;
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetRevisionFromReleaseName() throws Exception {
     Integer revision = pcfCommandTaskHelper.getRevisionFromReleaseName("app_serv_env__1");
@@ -203,7 +203,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateManifestVarsYamlFileLocally() throws Exception {
     PcfCreateApplicationRequestData requestData = PcfCreateApplicationRequestData.builder()
@@ -227,7 +227,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateManifestYamlFileLocally() throws Exception {
     File file = null;
@@ -264,7 +264,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetPrefix() {
     Set<String> names = new HashSet<>();
@@ -280,7 +280,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testDownSizeListOfInstances() throws Exception {
     reset(pcfDeploymentManager);
@@ -318,7 +318,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testDownsizePreviousReleases() throws Exception {
     PcfCommandDeployRequest request =
@@ -429,7 +429,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testDownsizePreviousReleases_autoscalar() throws Exception {
     PcfCommandDeployRequest request =
@@ -515,7 +515,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateManifestYamlForPush() throws Exception {
     List<String> routes = Arrays.asList("app.harness.io", "stage.harness.io");
@@ -593,7 +593,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testHandleManifestWithNoRoute() {
     Map map = new HashMap<>();
@@ -610,7 +610,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testHandleRandomRouteScenario() {
     Map map = new HashMap<>();
@@ -629,7 +629,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateYamlFileLocally() throws Exception {
     String data = "asd";
@@ -641,7 +641,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateDownsizeDetails() throws Exception {
     List<ApplicationSummary> previousReleases = new ArrayList<>();
@@ -673,7 +673,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPrintInstanceDetails() throws Exception {
     String output = "Instance Details:\n"

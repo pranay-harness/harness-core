@@ -32,7 +32,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sRollingDeployTaskHandler k8sRollingDeployTaskHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sRollingDeployTaskParameters rollingDeployTaskParams =
@@ -62,7 +62,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sRollingDeployTaskParameters rollingDeployTaskParams =

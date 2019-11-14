@@ -29,7 +29,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldParseOutputs() throws IOException {
     assertThat(TerraformProvisionState.parseOutputs(null).size()).isEqualTo(0);
@@ -45,7 +45,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateProvisionerWorkspaces() {
     when(infrastructureProvisionerService.update(any())).thenReturn(null);
@@ -61,7 +61,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleDefaultWorkspace() {
     assertThat(state.handleDefaultWorkspace(null) == null).isTrue();
@@ -70,7 +70,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAndFilterVariables() {
     NameValuePair prov_var_1 = NameValuePair.builder().name("access_key").valueType("TEXT").build();

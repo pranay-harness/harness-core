@@ -79,7 +79,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
     return m;
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchingHosts() throws Exception {
     setup();
@@ -93,7 +93,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMoreThanFiftyHostsInBatch() throws Exception {
     setup();
@@ -121,7 +121,7 @@ public class APMDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmptyEncryptedCredentialsInitDataCollection() {
     setup();

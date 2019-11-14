@@ -78,7 +78,7 @@ public class ExecutionResourceTest extends CategoryTest {
    * Test find by name.
    */
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testListExecutions() {
@@ -101,7 +101,7 @@ public class ExecutionResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = RAMA)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testGetExecution() {
     String appId = generateUuid();

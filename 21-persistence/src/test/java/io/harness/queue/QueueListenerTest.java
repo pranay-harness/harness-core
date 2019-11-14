@@ -67,7 +67,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldProcessWhenReceivedMessageFromQueue() throws IOException {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -81,7 +81,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 1000)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldStopOnInterruptedException() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -101,7 +101,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 5000)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExtendHeartbeat() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -132,7 +132,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test(timeout = 5000)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldContinueProcessingOnAnyOtherException() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -161,7 +161,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRequeueMessageWhenRetriesAreSet() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
@@ -181,7 +181,7 @@ public class QueueListenerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotRequeueMessageWhenRetriesAreZero() throws Exception {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {

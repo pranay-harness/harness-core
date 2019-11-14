@@ -61,7 +61,7 @@ public class NewRelicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   /**
    * Integration test for getAllMetricNames

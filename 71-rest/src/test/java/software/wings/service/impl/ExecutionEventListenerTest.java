@@ -41,7 +41,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Mock private AppService appService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
@@ -52,7 +52,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotQueued() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
@@ -63,7 +63,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueueBuildWorkflow() throws Exception {
     WorkflowExecution queuedExecution =
@@ -78,7 +78,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueueWorkflow() throws Exception {
     WorkflowExecution queuedExecution = WorkflowExecution.builder()
@@ -100,7 +100,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldQueueWorkflowInfraRefactor() throws Exception {
     when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);

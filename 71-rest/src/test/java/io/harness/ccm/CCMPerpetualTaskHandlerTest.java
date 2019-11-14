@@ -47,7 +47,7 @@ public class CCMPerpetualTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnUpserted() {
     handler.onUpserted(clusterRecord);
@@ -55,7 +55,7 @@ public class CCMPerpetualTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnDeleting() {
     handler.onDeleting(clusterRecord);

@@ -193,7 +193,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should list environments.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListEnvironments() {
     Environment environment = anEnvironment().appId(APP_ID).uuid(ENV_ID).build();
@@ -222,7 +222,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should get environment.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetEnvironment() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
@@ -234,7 +234,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetEnvironmentOnly() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
@@ -244,7 +244,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnTrueForExistingEnvironmentInExistApi() {
     when(query.getKey()).thenReturn(new Key<>(Environment.class, "environments", ENV_ID));
@@ -257,7 +257,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should save environment.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveEnvironment() {
     Environment environment = anEnvironment().appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
@@ -339,7 +339,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should clone environment.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneEnvironment() {
     shouldCloneEnvironment(false);
@@ -349,7 +349,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should clone environment.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneEnvironmentAcrossApp() {
     shouldCloneEnvironment(true);
@@ -359,7 +359,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should update environment.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateEnvironment() {
     Environment savedEnv = anEnvironment().appId(APP_ID).uuid(ENV_ID).name("PROD").build();
@@ -380,7 +380,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should delete environment.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteEnvironment() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
@@ -396,7 +396,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
   // We are not throwing an exception anymore and this will be ignored for now
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnReferencedEnvironmentDelete() {
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID))
@@ -413,7 +413,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneByApplication() {
     when(query.asList()).thenReturn(asList(anEnvironment().appId(APP_ID).uuid(ENV_ID).name("PROD").build()));
@@ -427,7 +427,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     environmentService.pruneDescendingEntities(APP_ID, ENV_ID);
@@ -438,7 +438,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjectsSomeFailed() {
     doThrow(new WingsException("Forced exception")).when(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
@@ -454,7 +454,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    * Should create default environments.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateDefaultEnvironments() {
     doReturn(anEnvironment().build()).when(spyEnvService).save(any(Environment.class));
@@ -466,7 +466,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetServicesWithOverridesEmpty() {
     Environment environment =
@@ -507,7 +507,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainEnvironmentSummaries() {
     when(query.project(EnvironmentKeys.name, true)).thenReturn(query);
@@ -526,7 +526,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetServicesWithOverrides() {
     Environment environment =
@@ -595,7 +595,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateValues() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -626,7 +626,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateValuesWithExistingAppManifest() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -658,7 +658,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateValues() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -693,7 +693,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateValuesWithException() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).build();
@@ -707,7 +707,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateValuesWithEnvServiceOverride() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -741,7 +741,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateValuesWithExistingAppManifestForEnvServiceOverride() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -780,7 +780,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateValuesWithEnvServiceOverride() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -821,7 +821,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateValuesWithEnvServiceOverrideException() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).build();
@@ -837,7 +837,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloneEnvironmentWithoutValidateInfraMappings() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
@@ -853,7 +853,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateEnvPcfOverrides() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -884,7 +884,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateEnvPcfOverridesWithException() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -907,7 +907,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetConfigMapYamlForService() {
     Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).build();
@@ -928,7 +928,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSetConfigMapYamlForServiceForException() {
     when(persistentLocker.waitToAcquireLock(Environment.class, ENV_ID, ofSeconds(5), ofSeconds(10))).thenReturn(null);
@@ -942,7 +942,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetOnNonExistentEnvironment() {
     try {

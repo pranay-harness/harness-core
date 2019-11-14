@@ -85,7 +85,7 @@ public class SpotinstAmiInstanceHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject private SpotinstAmiInstanceHandler spotinstAmiInstanceHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSyncInstancesForElastigroup() {
     com.amazonaws.services.ec2.model.Instance ec2Instance1 = new com.amazonaws.services.ec2.model.Instance();

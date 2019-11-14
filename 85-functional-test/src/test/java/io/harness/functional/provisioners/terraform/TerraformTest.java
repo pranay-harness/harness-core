@@ -99,7 +99,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = YOGESH_CHAUHAN, intermittent = true)
+  @Owner(developers = YOGESH_CHAUHAN, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldRunTerraformWorkflow() {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
@@ -109,7 +109,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   public void shouldFetchTerraformTargets() throws Exception {
     final String accountId = terraformInfrastructureProvisioner.getAccountId();
@@ -121,7 +121,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   public void shouldFetchTerraformVariables() throws Exception {
     final String accountId = terraformInfrastructureProvisioner.getAccountId();

@@ -66,7 +66,7 @@ public class MarketoHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAMA)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testCreateLeadAndTriggerCampaign() {

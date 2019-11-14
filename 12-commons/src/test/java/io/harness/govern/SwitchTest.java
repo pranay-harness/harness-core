@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 
 public class SwitchTest extends CategoryTest implements MockableTestMixin {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void unhandled() throws IllegalAccessException {
     Logger mockLogger = mock(Logger.class);

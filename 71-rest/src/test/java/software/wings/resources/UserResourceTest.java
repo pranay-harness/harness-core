@@ -89,7 +89,7 @@ public class UserResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListUsers() {
     when(USER_SERVICE.list(any(PageRequest.class), anyBoolean()))
@@ -104,7 +104,7 @@ public class UserResourceTest extends CategoryTest {
   }
 
   @Test(expected = BadRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldErrorOnListWhenAccountIdIsNotFound() {
     RestResponse<PageResponse<User>> restResponse =

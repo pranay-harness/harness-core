@@ -55,7 +55,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void azureAuthenticationTest() {
     AzureConfig config = getAzureConfig();
@@ -63,7 +63,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getSubscriptionsTest() {
     AzureConfig config = getAzureConfig();
@@ -73,7 +73,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getContainerRegistriesTest() {
     AzureConfig config = getAzureConfig();
@@ -90,7 +90,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getVirtualMachineScaleSetsTest() {
     AzureConfig config = getAzureConfig();
@@ -106,7 +106,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getAvailabilitySets() {
     AzureConfig config = getAzureConfig();
@@ -122,7 +122,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = PUNEET, intermittent = true)
+  @Owner(developers = PUNEET, intermittent = true)
   @Category(IntegrationTests.class)
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
@@ -140,7 +140,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = PUNEET, intermittent = true)
+  @Owner(developers = PUNEET, intermittent = true)
   @Category(IntegrationTests.class)
   @Ignore("Ignoring for now as its flaky")
   public void getHostsByResourceGroupAndTag() {
@@ -179,7 +179,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
@@ -204,7 +204,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = PUNEET, intermittent = true)
+  @Owner(developers = PUNEET, intermittent = true)
   @Category(IntegrationTests.class)
   public void getKubernetesClusters() {
     AzureConfig config = getAzureConfig();

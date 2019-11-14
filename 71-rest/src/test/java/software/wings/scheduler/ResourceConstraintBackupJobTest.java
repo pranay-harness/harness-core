@@ -41,7 +41,7 @@ public class ResourceConstraintBackupJobTest extends WingsBaseTest {
   @Inject ResourceConstraintBackupJob job;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void jobExecute() throws Exception {
     final String accountId = generateUuid();

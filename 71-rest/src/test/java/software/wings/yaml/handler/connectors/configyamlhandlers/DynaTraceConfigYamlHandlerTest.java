@@ -41,7 +41,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String dynatraceProviderName = "dynaTrace" + System.currentTimeMillis();
@@ -54,7 +54,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String dynatraceProviderName = "dynaTrace" + System.currentTimeMillis();

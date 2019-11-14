@@ -25,7 +25,7 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForIpAddressAuthority() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("1.0.42104").build());
@@ -35,7 +35,7 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForInvalidVersion() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("${build.fullVersion}").build());
@@ -45,7 +45,7 @@ public class ManagerGrpcClientModuleTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForValidVersion() throws Exception {
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version("1.0.42104").build());

@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class CloudWatchStateTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsInvalidCase() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -35,7 +35,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseLambdaProvided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -51,7 +51,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseECSProvided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -67,7 +67,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseLoadBalancerProvided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -88,7 +88,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseEC2Provided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");

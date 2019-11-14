@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class ExceptionUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCause() {
     assertThat(ExceptionUtils.cause(Exception.class, null)).isNull();

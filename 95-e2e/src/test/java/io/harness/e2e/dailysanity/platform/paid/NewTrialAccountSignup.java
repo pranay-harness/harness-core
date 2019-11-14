@@ -29,7 +29,7 @@ import javax.mail.MessagingException;
 @Slf4j
 public class NewTrialAccountSignup extends AbstractE2ETest {
   @Test()
-  @Owner(emails = NATARAJA, intermittent = false)
+  @Owner(developers = NATARAJA, intermittent = false)
   @Category(E2ETests.class)
   public void testTrialSignUp() throws IOException, MessagingException {
     String testPassword = new ScmSecret().decryptToString(new SecretName("user_readonly_password"));

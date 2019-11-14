@@ -76,7 +76,7 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
    *
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateAndRead() {
     GovernanceConfig defaultConfig = GovernanceConfig.builder().accountId(accountId).deploymentFreeze(false).build();

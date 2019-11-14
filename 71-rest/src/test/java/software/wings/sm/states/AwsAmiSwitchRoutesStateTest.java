@@ -60,7 +60,7 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @InjectMocks private AwsAmiSwitchRoutesState state = new AwsAmiSwitchRoutesState("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldAsg(true);
@@ -118,7 +118,7 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

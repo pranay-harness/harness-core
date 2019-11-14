@@ -62,7 +62,7 @@ public class ServiceSearchEntitySyncTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testServiceCRUDSync() {
     if (isSearchDisabled()) {

@@ -48,7 +48,7 @@ public class InfrastructureDefinitionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetInfraMapping() {
     InfrastructureMapping infrastructureMapping = infrastructureDefinition.getInfraMapping();

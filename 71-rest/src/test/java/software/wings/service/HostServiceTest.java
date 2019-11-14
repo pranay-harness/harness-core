@@ -113,7 +113,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should list hosts.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();
@@ -135,7 +135,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should get host.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetHost() {
     Host host = hostBuilder.build();
@@ -152,7 +152,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should update host.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateHost() {
     Host host = hostBuilder.withUuid(HOST_ID).build();
@@ -167,7 +167,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should delete host.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteHost() {
     Host host = hostBuilder.withAppId(APP_ID).withUuid(HOST_ID).build();
@@ -182,7 +182,7 @@ public class HostServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     hostService.pruneDescendingEntities(APP_ID, HOST_ID);
@@ -195,7 +195,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should get hosts by host ids.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetHostsByHostIds() {
     when(hostQuery.asList()).thenReturn(asList(hostBuilder.withUuid(HOST_ID).build()));
@@ -214,7 +214,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should bulk save.
    */
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldBulkSave() {
@@ -255,7 +255,7 @@ public class HostServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetInfrastructureHostUsageByApplication() {

@@ -37,7 +37,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testConfigure() throws Exception {
     StaticLimit limit = new StaticLimit(10);
@@ -55,7 +55,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testConfigureRateLimit() throws Exception {
     RateLimit limit = new RateLimit(10, 24, TimeUnit.HOURS);

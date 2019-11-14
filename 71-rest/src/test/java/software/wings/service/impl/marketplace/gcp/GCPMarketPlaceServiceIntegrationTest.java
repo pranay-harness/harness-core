@@ -59,7 +59,7 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGCPUsageReport() {
     val currentTime = Instant.now();

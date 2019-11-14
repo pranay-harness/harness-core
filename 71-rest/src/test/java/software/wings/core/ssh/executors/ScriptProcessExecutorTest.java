@@ -51,7 +51,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   private ShellExecutorConfig shellExecutorConfig;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithSweepingOutputOnDelegateSuccess() {
     Map<String, String> env = new HashMap<>();
@@ -83,7 +83,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithSweepingOutputOnDelegateFails() {
     Map<String, String> env = new HashMap<>();
@@ -111,7 +111,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldFailPowerShellOnDelegate() {
     shellExecutorConfig = ShellExecutorConfig.builder()
@@ -130,7 +130,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithWorkingDirectoryOnDelegateSuccess() {
     Map<String, String> env = new HashMap<>();
@@ -155,7 +155,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteBashScriptWithoutWorkingDirectoryOnDelegateSuccess() {
     Map<String, String> env = new HashMap<>();
@@ -179,7 +179,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testScpOneFileSuccess() throws IOException {
     scriptProcessExecutor =
@@ -215,7 +215,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testScpOneFileFails() {
     scriptProcessExecutor =

@@ -39,7 +39,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testValidateConnectorHappyCase() {
     options.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
@@ -57,7 +57,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRAVEEN, intermittent = true)
+  @Owner(developers = PRAVEEN, intermittent = true)
   @Category(IntegrationTests.class)
   public void testValidateConnectorHappyCaseNoCollectionMethod() {
     options.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
@@ -74,7 +74,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testValidateConnectorHappyCaseDatadogConfig() {
     DatadogConfig ddConfig =
@@ -93,7 +93,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testValidateConnectorHappyCasePost() {
     APMValidateCollectorConfig config =

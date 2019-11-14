@@ -180,7 +180,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePipelineFromJson() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
@@ -203,7 +203,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateLargePipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
@@ -247,7 +247,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreatePipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
@@ -284,7 +284,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePipeline() {
     FailureStrategy failureStrategy =
@@ -306,7 +306,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePipelineWithDisableAssertion() {
     FailureStrategy failureStrategy =
@@ -329,7 +329,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdatePipelineWithDisableAssertion() {
     FailureStrategy failureStrategy =
@@ -363,7 +363,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPipeline() {
     mockPipeline();
@@ -374,7 +374,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPipelineWithServices() {
     mockPipeline();
@@ -399,7 +399,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadPipelineWithDetails() {
     Map<String, Object> properties = new HashMap<>();
@@ -474,7 +474,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPipelineWithServicesAndEnvs() {
     mockPipeline();
@@ -500,7 +500,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotIncludeDisableStepServices() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
@@ -556,7 +556,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPipelineWithTemplatizedServices() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
@@ -596,7 +596,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadPipelineWithNoPipelineVariables() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
@@ -641,7 +641,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadPipelineWithResolvedPipelineVariables() {
     Pipeline pipelineWithVariables =
@@ -696,7 +696,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeletePipeline() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
@@ -709,7 +709,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void deletePipelineExecutionInProgress() {
     mockPipeline();
@@ -722,7 +722,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     pipelineService.pruneDescendingEntities(APP_ID, PIPELINE_ID);
@@ -731,7 +731,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCheckIfEnvReferenced() {
     Map<String, Object> properties = new HashMap<>();
@@ -779,7 +779,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCheckTemplatedEntityReferenced() {
     Map<String, Object> properties = new HashMap<>();
@@ -820,7 +820,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListPipelines() {
     Map<String, Object> properties = new HashMap<>();
@@ -865,7 +865,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListPipelinesWithDetails() {
     Map<String, Object> properties = new HashMap<>();
@@ -935,7 +935,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListPipelinesWithVariables() {
     Map<String, Object> properties = new HashMap<>();
@@ -1019,7 +1019,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListPipelinesWithDetailsWithSshInfraMapping() {
     PipelineStage pipelineStage = prepareStageSimple();
@@ -1063,7 +1063,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetRequiredEntities() {
     mockPipeline();
@@ -1090,7 +1090,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetRequiredEntitiesForBuildPipeline() {
     mockPipeline();
@@ -1110,7 +1110,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = UsageLimitExceededException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCreatePipelineWhenLimitExceeds() {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
@@ -1142,7 +1142,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotIncludeRequiredEntitiesForDisabledStep() {
     when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
@@ -1201,7 +1201,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreatePipelineWithSameName() {
     try {
@@ -1224,7 +1224,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     }
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testClonePipelineWithSameName() {
     try {
@@ -1249,21 +1249,21 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadata() {
     validateFetchDeploymentMetadata(false, false);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadataWithId() {
     validateFetchDeploymentMetadata(true, false);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadataWithIdAndDefaultArtifact() {
     validateFetchDeploymentMetadata(true, true);
@@ -1386,7 +1386,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadataForBuildPipeline() {
     String workflowId0 = WORKFLOW_ID + "_0";

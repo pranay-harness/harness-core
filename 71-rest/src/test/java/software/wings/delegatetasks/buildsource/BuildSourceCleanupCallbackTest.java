@@ -128,7 +128,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessWithEmptyBuilds() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -140,7 +140,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessWithDeleteArtifacts() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -156,7 +156,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessWithAMIDeleteArtifacts() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_3);
@@ -172,7 +172,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSkipDeleteWithEmptyArtifacts() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_3);
@@ -188,7 +188,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccess() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -206,7 +206,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessWithNullResponse() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -217,7 +217,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyWithExecutorRejectedQueueException() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -230,7 +230,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyOnErrorNotifyResponseDataResponse() {
     buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);

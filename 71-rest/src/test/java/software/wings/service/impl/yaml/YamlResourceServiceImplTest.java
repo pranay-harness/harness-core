@@ -35,7 +35,7 @@ public class YamlResourceServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject YamlResourceServiceImpl yamlResourceService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetManifestFileYamlTypeFromAppManifest() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).build();

@@ -32,7 +32,7 @@ public class K8sJobTest extends BaseIntegrationTest {
   @Autowired @Qualifier(value = "k8sJob") private Job job;
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   public void testK8sJob() throws Exception {
     Instant startInstant = Instant.now();

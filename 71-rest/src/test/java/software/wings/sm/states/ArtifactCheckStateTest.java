@@ -57,7 +57,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void emptyArtifacts() {
     ExecutionResponse executionResponse = artifactCheckState.execute(context);
@@ -65,7 +65,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void failedArtifacts() {
     String failedArtifactId = wingsPersistence.save(anArtifact().withStatus(Status.FAILED).withAppId(appId).build());
@@ -77,7 +77,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void allDownloadedArtifacts() {
     String artifactId1 = wingsPersistence.save(anArtifact()
@@ -100,7 +100,7 @@ public class ArtifactCheckStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void kickDownloadArtifacts() {
     ArtifactStream artifactStream1 = new JenkinsArtifactStream();

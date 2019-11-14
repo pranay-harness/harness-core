@@ -62,7 +62,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void cvdemo() throws IOException {
     // DO NOT REMOVE CV_DEMO FEATURE FLAG
@@ -70,7 +70,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -81,7 +81,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -93,7 +93,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -117,7 +117,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimeStampCreations() {
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
@@ -125,7 +125,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMetricsBatching() {
     Set<NewRelicMetric> metricNames =
@@ -157,7 +157,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUrlNotEndingWithSlash() {
     APMValidateCollectorConfig config =
@@ -166,7 +166,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUrlBeginingWithSlash() {
     APMValidateCollectorConfig config = APMValidateCollectorConfig.builder()

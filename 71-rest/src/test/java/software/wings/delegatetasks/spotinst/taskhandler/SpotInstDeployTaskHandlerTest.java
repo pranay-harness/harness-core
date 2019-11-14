@@ -48,7 +48,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstDeployTaskHandler deployTaskHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testScaleElastigroup() throws Exception {
     doNothing()
@@ -62,7 +62,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testScaleElastigroupNull() throws Exception {
     doNothing().when(deployTaskHandler).createAndFinishEmptyExecutionLog(any(), anyString(), anyString());
@@ -72,7 +72,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteTaskInternal() throws Exception {
     ElastiGroup newElastigroup = ElastiGroup.builder()
@@ -112,7 +112,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteTaskInternalResizeOldFirst() throws Exception {
     ElastiGroup newElastigroup = ElastiGroup.builder()
@@ -152,7 +152,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteTaskInternalRollback() throws Exception {
     ElastiGroup newElastigroup = ElastiGroup.builder()

@@ -33,7 +33,7 @@ public class ArtifactCleanupHandlerTest extends WingsBaseTest {
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @InjectMocks @Inject ArtifactCleanupHandler artifactCleanupHandler;
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     // setup mock

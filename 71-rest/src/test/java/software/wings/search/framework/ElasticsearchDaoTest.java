@@ -33,7 +33,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchDao elasticsearchDao;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void upsertDocumentTest() throws IOException {
     String entityType = "entityType";
@@ -65,7 +65,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteDocumentTest() throws IOException {
     String entityType = "entityType";

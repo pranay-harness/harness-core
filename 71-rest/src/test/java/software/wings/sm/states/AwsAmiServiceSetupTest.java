@@ -86,7 +86,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @InjectMocks private AwsAmiServiceSetup state = new AwsAmiServiceSetup("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     String asgName = "foo";
@@ -165,7 +165,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -190,7 +190,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFields() {
     AwsAmiServiceSetup localState = new AwsAmiServiceSetup("stateName2");

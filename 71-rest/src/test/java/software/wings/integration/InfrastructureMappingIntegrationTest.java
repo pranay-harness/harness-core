@@ -90,7 +90,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldSelectServiceInstances() {
     SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(
@@ -180,7 +180,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSelectAwsInfrastructureInstances() {
@@ -219,7 +219,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = ANUBHAW)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldProvisionAwsNodes() {

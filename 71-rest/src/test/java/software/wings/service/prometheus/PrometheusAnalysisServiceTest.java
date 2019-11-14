@@ -58,7 +58,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataCheckDelegateCalledTwice() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();
@@ -68,7 +68,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeData() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();
@@ -84,7 +84,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNodeDataBadHostCall() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();
@@ -101,7 +101,7 @@ public class PrometheusAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNotReachable() throws Exception {
     PrometheusSetupTestNodeData nodeData = buildInput();

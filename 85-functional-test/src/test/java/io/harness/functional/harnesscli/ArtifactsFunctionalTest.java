@@ -55,7 +55,7 @@ public class ArtifactsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void getArtifactsTest() throws IOException {
     String command = "harness get artifacts --service " + serviceId;
@@ -64,7 +64,7 @@ public class ArtifactsFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void getArtifactsWithWrongServiceIdTest() throws IOException {
     String command = "harness get artifacts --service "

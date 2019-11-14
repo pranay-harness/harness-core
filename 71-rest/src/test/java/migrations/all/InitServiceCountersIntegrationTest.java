@@ -25,7 +25,7 @@ public class InitServiceCountersIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long serviceCount = wingsPersistence.createQuery(Service.class).count();

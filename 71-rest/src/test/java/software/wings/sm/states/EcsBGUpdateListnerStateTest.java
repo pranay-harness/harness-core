@@ -74,7 +74,7 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
   @InjectMocks private EcsBGUpdateListnerState state = new EcsBGUpdateListnerState("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldService(true);
@@ -141,7 +141,7 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

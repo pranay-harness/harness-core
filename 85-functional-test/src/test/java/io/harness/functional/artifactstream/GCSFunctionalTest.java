@@ -62,7 +62,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ANSHUL)
+  @Owner(developers = ANSHUL)
   @Category(FunctionalTests.class)
   @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void shouldCollectGCSArtifact() {
@@ -98,7 +98,7 @@ public class GCSFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ANSHUL)
+  @Owner(developers = ANSHUL)
   @Category(FunctionalTests.class)
   @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void shouldCollectGCSArtifactWithRegex() {

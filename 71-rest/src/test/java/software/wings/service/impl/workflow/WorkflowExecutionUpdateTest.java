@@ -86,7 +86,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReportDeploymentEventToSegmentByTrigger() throws IllegalAccessException, URISyntaxException {
     SegmentConfig segmentConfig =
@@ -106,7 +106,7 @@ public class WorkflowExecutionUpdateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReportDeploymentEventToSegmentByUser() throws IllegalAccessException, URISyntaxException {
     Account account = testUtils.createAccount();

@@ -21,7 +21,7 @@ public class StateInspectionServiceTest extends OrchestrationTest {
   @Inject private StateInspectionService stateInspectionService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMerge() throws IOException {
     final String uuid = generateUuid();

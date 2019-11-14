@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit;
 
 public class SnapshotTimeProviderTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testProvider() {
     Instant lastTs = Instant.now().minus(21, ChronoUnit.MINUTES);

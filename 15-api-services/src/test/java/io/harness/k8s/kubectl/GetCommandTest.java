@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class GetCommandTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllResources() {
     Kubectl client = Kubectl.client(null, null);
@@ -22,7 +22,7 @@ public class GetCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllPodsInNamespace() {
     Kubectl client = Kubectl.client(null, null);
@@ -33,7 +33,7 @@ public class GetCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSpecificPod() {
     Kubectl client = Kubectl.client(null, null);
@@ -44,7 +44,7 @@ public class GetCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllPodsAndServices() {
     Kubectl client = Kubectl.client(null, null);
@@ -55,7 +55,7 @@ public class GetCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetEvents() {
     Kubectl client = Kubectl.client(null, null);

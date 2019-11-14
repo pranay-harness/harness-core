@@ -92,7 +92,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     SplunkV2State splunkState = new SplunkV2State("SplunkState");
@@ -100,7 +100,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void noTestNodes() {
     SplunkV2State spyState = spy(splunkState);
@@ -124,7 +124,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void noControlNodesCompareWithCurrent() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
@@ -153,7 +153,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void compareWithCurrentSameTestAndControlNodes() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
@@ -185,7 +185,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException, IllegalAccessException {
     assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
@@ -292,7 +292,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void handleAsyncSummaryFail() {
     VerificationStateAnalysisExecutionData logAnalysisExecutionData =
@@ -321,7 +321,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void handleAsyncSummaryPassNoData() {
     doReturn("exception").when(executionContext).renderExpression(anyString());
@@ -377,7 +377,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTimestampFormat() {
     SimpleDateFormat sdf = new SimpleDateFormat(ElkAnalysisState.DEFAULT_TIME_FORMAT);

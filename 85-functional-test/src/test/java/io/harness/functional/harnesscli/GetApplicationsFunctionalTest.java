@@ -41,7 +41,7 @@ public class GetApplicationsFunctionalTest extends AbstractFunctionalTest {
 
   @Inject HarnesscliHelper harnesscliHelper;
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getApplicationsTest() {
     // Running harness get applications before creating a new application

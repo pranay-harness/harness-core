@@ -38,7 +38,7 @@ public class EmailDispatcherTest extends WingsBaseTest {
   @Mock private NotificationMessageResolver notificationMessageResolver;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmailIsSent() {
     List<String> toAddresses = Arrays.asList("a@b.com, c@d.com");

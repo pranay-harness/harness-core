@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class OutgoingEmailTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmailTemplates() throws Exception {
     Configuration cfg = new Configuration(VERSION_2_3_23);

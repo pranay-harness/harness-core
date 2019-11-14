@@ -40,7 +40,7 @@ public class VMPricingServiceImplTest extends CategoryTest {
   private final double DEFAULT_INSTANCE_PRICE = 1.60;
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetVMCacheKey() {
     String vmCacheKey = vmPricingService.getVMCacheKey(InstanceType.ECS_TASK_EC2.name(), REGION, CloudProvider.AWS);
@@ -48,7 +48,7 @@ public class VMPricingServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetComputeVMPricingInfo() throws IOException {
     Call<PricingResponse> pricingInfoCall = mock(Call.class);
@@ -68,7 +68,7 @@ public class VMPricingServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testShouldReturnNullVMPricingInfo() throws IOException {
     Call<PricingResponse> pricingInfoCall = mock(Call.class);
@@ -81,7 +81,7 @@ public class VMPricingServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetFargatePricingInfo() {
     EcsFargatePricingInfo fargatePricingInfo = vmPricingService.getFargatePricingInfo(REGION);

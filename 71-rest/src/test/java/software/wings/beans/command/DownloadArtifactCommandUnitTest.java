@@ -148,7 +148,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                            .build());
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   public void testShouldDownloadArtifactThroughPowerShell(ArtifactStreamType artifactStreamType) {
@@ -179,7 +179,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getData")
   @TestCaseName("{method}-{0}")
@@ -201,7 +201,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @Parameters(method = "getScriptType")
   public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
@@ -215,7 +215,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailWithInvalidArtifactDownloadDir() {
     downloadArtifactCommandUnit.setScriptType(ScriptType.BASH);

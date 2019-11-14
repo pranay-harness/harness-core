@@ -80,7 +80,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsume() throws Exception {
     int maxReq = 10;
@@ -100,7 +100,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testVicinity() throws Exception {
     int maxReq = 10;
@@ -119,7 +119,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsumeConcurrent() throws Exception {
     int maxAllowedReq = 40;

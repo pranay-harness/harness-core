@@ -86,7 +86,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecute() {
     ExecutionResponse executionResponse = bambooState.execute(executionContext);
@@ -99,7 +99,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponse() {
     when(executionContext.getStateExecutionData()).thenReturn(BambooExecutionData.builder().build());
@@ -117,7 +117,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = bambooState.getTimeoutMillis();
@@ -125,7 +125,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     bambooState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
@@ -134,7 +134,7 @@ public class BambooStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHandleAbort() {
     when(executionContext.getStateExecutionData())

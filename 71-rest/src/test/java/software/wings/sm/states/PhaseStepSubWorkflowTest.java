@@ -57,7 +57,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCallGetInfraMappingWhenAlreadyAvailable() {
     when(executionContext.fetchInfraMappingId()).thenReturn("INFRA_MAPPING_ID");
@@ -68,7 +68,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateInfraMappingWhenNonProvisioner() {
     doReturn(null).when(executionContext).fetchInfraMappingId();
@@ -95,7 +95,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCreateInfraMappingWhenProvisionerOutputsNotAvailable() {
     doReturn(null).when(executionContext).fetchInfraMappingId();
@@ -118,7 +118,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateInfraMappingWhenProvisionerOutputsAvailable() {
     doReturn(null).when(executionContext).fetchInfraMappingId();
@@ -148,7 +148,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotCreateInfraMappingForBuildWorkflow() {
     doReturn(null).when(executionContext).fetchInfraMappingId();

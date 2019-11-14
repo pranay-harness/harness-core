@@ -48,7 +48,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = RAMA, intermittent = false)
+  @Owner(developers = RAMA, intermittent = false)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignup() {
     UserInvite invite = constructInvite("password");
@@ -61,7 +61,7 @@ public class NewTrialSignupTest extends AbstractFunctionalTest {
   }
 
   @Test()
-  @Owner(emails = RAMA, intermittent = false)
+  @Owner(developers = RAMA, intermittent = false)
   @Category(FunctionalTests.class)
   public void verifyTrialUserSignupInvalidPassword() {
     UserInvite invite = constructInvite("pass");

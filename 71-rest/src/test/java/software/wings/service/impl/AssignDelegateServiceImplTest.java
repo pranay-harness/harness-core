@@ -81,7 +81,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAssignDelegateWithNoScope() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -102,7 +102,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAssignDelegateWithMatchingIncludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -124,7 +124,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotAssignDelegateWithoutMatchingIncludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -146,7 +146,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAssignDelegateWithoutMatchingExcludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -168,7 +168,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotAssignDelegateWithMatchingExcludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -190,7 +190,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAssignTaskWithAllMatchingTags() {
     DelegateTask delegateTask =
@@ -213,7 +213,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithPartialMatchingTags() {
     DelegateTask delegateTask =
@@ -236,7 +236,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithNoMatchingTags() {
     DelegateTask delegateTask =
@@ -259,7 +259,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAssignTaskWithEmptyDelegateTaskTags() {
     DelegateTask delegateTask =
@@ -282,7 +282,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotAssignTaskWithEmptyDelegateTags() {
     DelegateTask delegateTask =
@@ -305,7 +305,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveConnectionResults() {
     List<DelegateConnectionResult> results = singletonList(DelegateConnectionResult.builder()
@@ -324,7 +324,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateConnectionResults() {
     wingsPersistence.save(DelegateConnectionResult.builder()
@@ -352,7 +352,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldBeWhitelisted() {
     wingsPersistence.save(DelegateConnectionResult.builder()
@@ -378,7 +378,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotBeWhitelistedDiffCriteria() {
     wingsPersistence.save(DelegateConnectionResult.builder()
@@ -403,7 +403,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotBeWhitelistedWhenNotValidated() {
     wingsPersistence.save(DelegateConnectionResult.builder()
@@ -428,7 +428,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetConnectedWhitelistedDelegates() {
     DelegateTask delegateTask = createDelegateTask(true, "criteria");
@@ -469,7 +469,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesNotValidated() {
     DelegateTask delegateTask = createDelegateTask(false, "criteria");
@@ -480,7 +480,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOldHeartbeat() {
     Delegate delegate = Delegate.builder()
@@ -516,7 +516,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOtherCriteria() {
     DelegateTask delegateTask = createDelegateTask(true, "criteria-other");
@@ -527,7 +527,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNullFirstAttemptDelegate() {
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
@@ -547,7 +547,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetFirstAttemptDelegate() {
     DelegateTask delegateTask = createDelegateTask(true, "criteria");
@@ -558,7 +558,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAssignDelegateWithNullIncludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -579,7 +579,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAssignDelegateWithNullExcludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -601,7 +601,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAssignDelegateWithMultipleIncludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
@@ -627,7 +627,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAssignDelegateWithInfrastructureMappingScope() {
     InfrastructureMapping infrastructureMapping =

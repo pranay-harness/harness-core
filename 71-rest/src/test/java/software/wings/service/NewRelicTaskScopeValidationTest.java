@@ -65,7 +65,7 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validationVaultReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
@@ -76,7 +76,7 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validationVaultUnReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
@@ -87,7 +87,7 @@ public class NewRelicTaskScopeValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validationNewRelicUnReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(false);

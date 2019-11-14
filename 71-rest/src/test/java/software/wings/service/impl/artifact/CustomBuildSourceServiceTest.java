@@ -46,7 +46,7 @@ public class CustomBuildSourceServiceTest extends WingsBaseTest {
   @Mock private CustomBuildService customBuildService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     ArtifactStream customArtifactStream =

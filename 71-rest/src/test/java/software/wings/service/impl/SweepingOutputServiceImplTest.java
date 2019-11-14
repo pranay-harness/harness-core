@@ -51,7 +51,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSweepingOutputObtainValue() {
     SweepingOutputInstance savedSweepingOutputInstance =
@@ -67,7 +67,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCopyOutputsForAnotherWorkflowExecution() {
     final String anotherWorkflowId = generateUuid();
@@ -104,7 +104,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCopyOutputsForAnotherWorkflowExecutionForSameExecution() {
     sweepingOutputService.copyOutputsForAnotherWorkflowExecution(sweepingOutputInstance.getAppId(),

@@ -51,7 +51,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateNotificationGroup() {
     String accountId = generateUuid();
@@ -65,7 +65,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void listDefaultNotificationGroup() {
     String accountId = generateUuid();
@@ -90,7 +90,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void updateNotificationGroupDefaultValue() {
     String accountId = generateUuid();
@@ -120,7 +120,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListNotificationGroups() {
     String accountId = generateUuid();
@@ -141,7 +141,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountId() {
     String accountId = generateUuid();
@@ -161,7 +161,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountIdName() {
     String accountId = generateUuid();
@@ -181,7 +181,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteNotificationGroup() {
     String accountId = generateUuid();
@@ -192,7 +192,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadNotificationGroup() {
     String accountId = generateUuid();
@@ -225,7 +225,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void TestGetUserEmailAddressFromNotificationGroups() {
     String accountId = generateUuid();

@@ -13,7 +13,7 @@ import org.junit.experimental.categories.Category;
 
 public class UtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void latestRevisionTest() {
     String rolloutHistory = "deployments \"demo1-nginx-deployment\"\n"
@@ -35,7 +35,7 @@ public class UtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void encloseWithQuotesIfNeededTest() {
     assertThat(encloseWithQuotesIfNeeded("kubectl")).isEqualTo("kubectl");

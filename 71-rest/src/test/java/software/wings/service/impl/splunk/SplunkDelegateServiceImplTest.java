@@ -38,7 +38,7 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void initSplunkService() throws IllegalAccessException {
     SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());
@@ -49,7 +49,7 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = Exception.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void initSplunkServiceOnlyToken() throws IllegalAccessException {
     SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());

@@ -65,7 +65,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should create whitelist config.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateWhitelist() {
     Whitelist whitelist2 = Whitelist.builder()
@@ -90,7 +90,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should update whitelist config.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateWhitelist() {
     Whitelist whitelist2 = Whitelist.builder()
@@ -115,7 +115,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should update whitelist config.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteWhitelist() {
     when(WHITELIST_SERVICE.delete(ACCOUNT_ID, WHITELIST_ID)).thenReturn(true);
@@ -133,7 +133,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should list whitelist config.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     PageResponse<Whitelist> pageResponse = aPageResponse().withResponse(Lists.newArrayList(WHITELIST)).build();
@@ -155,7 +155,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should read whitelist config.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRead() {
     when(WHITELIST_SERVICE.get(ACCOUNT_ID, WHITELIST_ID)).thenReturn(WHITELIST);
@@ -173,7 +173,7 @@ public class WhitelistResourceTest extends WingsBaseTest {
    * Should read whitelist config.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void isIpWhitelisted() {
     when(WHITELIST_SERVICE.isValidIPAddress(ACCOUNT_ID, "127.0.0.1")).thenReturn(true);

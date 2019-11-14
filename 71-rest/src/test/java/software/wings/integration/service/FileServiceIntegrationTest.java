@@ -53,7 +53,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldSaveFileWithMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder()
@@ -71,7 +71,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithFileMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder().mimeType("text/plain").build();
@@ -85,7 +85,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldSaveBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
@@ -101,7 +101,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldUpdateEntityId() throws Exception {
     final BaseFile baseFile = new BaseFile();
@@ -120,7 +120,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();

@@ -52,7 +52,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedback() {
     // setup
@@ -69,7 +69,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedbackGetFirstNonLabeled() {
     // setup
@@ -90,7 +90,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedbackGetLabelSamples() {
     // setup
@@ -134,7 +134,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveLabelIgnoreFeedback() {
     CVFeedbackRecord record =

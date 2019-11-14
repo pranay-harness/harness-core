@@ -55,7 +55,7 @@ public class EventEmitterTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
@@ -71,7 +71,7 @@ public class EventEmitterTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendToGeneralChannelWhenIdisNull() throws Exception {
     Event event = anEvent().withType(Type.UPDATE).build();
@@ -81,7 +81,7 @@ public class EventEmitterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountIdToBroadcast() throws Exception {
     when(appService.get(APP_ID)).thenReturn(anApplication().accountId("ACCOUNT_ID").appId(APP_ID).build());

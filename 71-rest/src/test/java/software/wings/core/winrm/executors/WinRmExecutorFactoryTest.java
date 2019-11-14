@@ -15,7 +15,7 @@ public class WinRmExecutorFactoryTest extends CategoryTest {
   @Mock WinRmSessionConfig winRmSessionConfig;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetWinRmExecutor() {
     assertThat(winRmExecutorFactory.getExecutor(winRmSessionConfig)).isNotNull().isInstanceOf(WinRmExecutor.class);

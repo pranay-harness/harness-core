@@ -26,7 +26,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   @InjectMocks @Inject private InstanceUsageLimitExcessHandler usageLimitExcessHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAlertRaised() {
     String accountId = "some-account-id";
@@ -40,7 +40,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAlertIsClosedWhenWithinLimit() {
     String accountId = "some-account-id";

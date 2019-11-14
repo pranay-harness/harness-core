@@ -64,7 +64,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStats() {
     doReturn(mock(InstanceSummaryStats.class))
@@ -79,7 +79,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getAppInstanceCountStats() {
     doReturn(mock(PageResponse.class))
@@ -92,7 +92,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getServiceInstanceStats() {
     doReturn(mock(PageResponse.class))
@@ -103,7 +103,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getInstanceDetails() {
     doReturn(mock(ServerlessInstance.class)).when(serverlessDashboardService).getInstanceDetails(anyString());
@@ -112,7 +112,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_manualSync() {
     doReturn("").when(instanceHelper).manualSync(anyString(), anyString());
@@ -121,7 +121,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getManualSyncJobStatus() {
     doReturn(Collections.emptyList()).when(instanceHelper).getManualSyncJobsStatus(anyString(), anySetOf(String.class));
@@ -130,7 +130,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getTimeRanges() {
     doReturn(Instant.now().minus(31, ChronoUnit.DAYS))
@@ -141,7 +141,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getInstanceStatsForGivenTime() {
     doReturn(new ServerlessInstanceTimeline(null))

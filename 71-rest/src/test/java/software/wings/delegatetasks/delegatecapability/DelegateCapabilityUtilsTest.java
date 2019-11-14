@@ -23,7 +23,7 @@ public class DelegateCapabilityUtilsTest extends CategoryTest {
       ImmutableSet.of("JENKINS", "BAMBOO", "GCS", "DOCKER", "NEXUS", "ARTIFACTORY");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllExpectedTaskMovedToCapabilityFramework() {
     List<TaskType> taskTypeList =

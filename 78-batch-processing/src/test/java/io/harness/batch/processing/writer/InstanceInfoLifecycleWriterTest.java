@@ -43,7 +43,7 @@ public class InstanceInfoLifecycleWriterTest extends CategoryTest implements Ecs
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldWriteInstanceInfo() throws Exception {
     InstanceInfo instanceInfo = InstanceInfo.builder()
@@ -58,7 +58,7 @@ public class InstanceInfoLifecycleWriterTest extends CategoryTest implements Ecs
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldWriteInstanceEvent() throws Exception {
     InstanceEvent instanceEvent = InstanceEvent.builder()

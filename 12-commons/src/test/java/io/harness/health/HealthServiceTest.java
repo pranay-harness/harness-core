@@ -26,7 +26,7 @@ public class HealthServiceTest extends CategoryTest {
   private ExecutorService executorService = Executors.newFixedThreadPool(25);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmpty() throws Exception {
     final HealthService healthService = new HealthService(executorService);
@@ -34,7 +34,7 @@ public class HealthServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSimpleMonitor() throws Exception {
     final HealthMonitor mock = mock(HealthMonitor.class);
@@ -50,7 +50,7 @@ public class HealthServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRateLimited() throws Exception {
     final HealthMonitor mock = mock(HealthMonitor.class);
@@ -68,7 +68,7 @@ public class HealthServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdate() throws Exception {
     final HealthMonitor mock = mock(HealthMonitor.class);

@@ -41,7 +41,7 @@ public class PersistentLockerTest extends PersistenceTest {
   @Inject @InjectMocks private PersistentLocker persistentLocker;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     Duration timeout = ofMillis(1000);
@@ -65,7 +65,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockDoNotRunTheBody() {
     DistributedLock distributedLock = mock(DistributedLock.class);
@@ -87,7 +87,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTryAcquireLockDoNotThrowException() {
     DistributedLock distributedLock = mock(DistributedLock.class);
@@ -108,7 +108,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockNonLockedAtRelease() throws IllegalAccessException {
     Duration timeout = ofMillis(1000);
@@ -133,7 +133,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAcquireLockLogging() throws IllegalAccessException {
     DistributedLock distributedLock = mock(DistributedLock.class);
@@ -152,7 +152,7 @@ public class PersistentLockerTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("TODO: enable when we can have timeout logic")
   public void testAcquireTimeout() throws InterruptedException {

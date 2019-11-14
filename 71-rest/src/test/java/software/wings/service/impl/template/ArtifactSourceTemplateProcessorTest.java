@@ -54,7 +54,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTestHelper 
   @Inject private ArtifactSourceTemplateProcessor artifactSourceTemplateProcessor;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactStreamLinked() {
     Template template = constructCustomArtifactTemplateEntity();

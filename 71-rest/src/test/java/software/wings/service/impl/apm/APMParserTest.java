@@ -32,7 +32,7 @@ import java.util.Optional;
 
 public class APMParserTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParser() throws IOException {
     String textLoad =
@@ -66,7 +66,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParserStringValue() throws IOException {
     String textLoad =
@@ -100,7 +100,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParserGraphana() throws IOException {
     String text500 =
@@ -139,7 +139,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParserGraphanaMapping2() throws IOException {
     String text500 =
@@ -178,7 +178,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParserGraphanaMappingArray() throws IOException {
     String text500 = Resources.toString(
@@ -217,7 +217,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParserInsightsResponse() throws IOException {
     String text500 =
@@ -262,7 +262,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJsonParserArrayInsideArray() throws IOException {
     String text500 =
@@ -307,7 +307,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void apmVerificationstateYaml() throws IOException {
     String yaml =

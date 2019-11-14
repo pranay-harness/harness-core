@@ -25,7 +25,7 @@ import java.util.Set;
 @Slf4j
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void alertsCRUD() {
     Set<String> userGroups = new HashSet<>();
@@ -55,7 +55,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateAllAlertTypes() {
     Set<String> userGroups = new HashSet<>();
@@ -84,7 +84,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateAlertConditions() {
     Set<String> userGroups = new HashSet<>();
@@ -112,7 +112,7 @@ public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateAlertCategory() {
     Set<String> userGroups = new HashSet<>();

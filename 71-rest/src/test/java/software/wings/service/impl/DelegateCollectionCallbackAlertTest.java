@@ -65,7 +65,7 @@ public class DelegateCollectionCallbackAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCVDataCollectionAlert() {
     DataCollectionCallback dataCollectionCallback =

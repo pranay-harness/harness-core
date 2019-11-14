@@ -28,7 +28,7 @@ import java.net.SocketException;
 @PowerMockIgnore({"javax.net.ssl.*", "javax.security.*"})
 public class HttpTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidUrl() {
     assertThat(Http.validUrl("http://localhost")).isTrue();
@@ -52,7 +52,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldUseNonProxy() {
     assertThat(Http.shouldUseNonProxy("http://wings.jenkins.com", "*.jenkins.com|*.localhost|*.sumologic.com"))
@@ -66,7 +66,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDomain() {
     assertThat(Http.getDomain("http://localhost.com/temp")).isEqualTo("localhost.com");
@@ -76,7 +76,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDomainWithPort() {
     assertThat(Http.getDomainWithPort("http://localhost.com/temp")).isEqualTo("localhost.com");
@@ -88,7 +88,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBaseUrl() {
     assertThat(Http.getBaseUrl("http://localhost.com/temp")).isEqualTo("http://localhost.com/");
@@ -100,7 +100,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJoinHostPort() {
     assertThat(Http.joinHostPort("localhost", "443")).isEqualTo("localhost:443");
@@ -110,14 +110,14 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void concurrencyTest() {
     Concurrent.test(5, i -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsHttpServerConnectable() throws IOException {
     PowerMockito.spy(Http.class);
@@ -134,7 +134,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsHttpServerConnectable_error() throws IOException {
     PowerMockito.spy(Http.class);
@@ -145,7 +145,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testConnectableHttpUrl() throws IOException {
     PowerMockito.spy(Http.class);
@@ -162,7 +162,7 @@ public class HttpTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testConnectableHttpUrl_error() throws IOException {
     PowerMockito.spy(Http.class);

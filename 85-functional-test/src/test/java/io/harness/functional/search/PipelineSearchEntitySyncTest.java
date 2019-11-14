@@ -60,7 +60,7 @@ public class PipelineSearchEntitySyncTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testPipelineCRUDSync() {
     if (isSearchDisabled()) {

@@ -62,7 +62,7 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
   @Autowired private InstanceDataService instanceDataService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateTaskData() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
@@ -87,7 +87,7 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldCreateEc2InstanceLifecycle() throws Exception {
     shouldCreateTaskData();

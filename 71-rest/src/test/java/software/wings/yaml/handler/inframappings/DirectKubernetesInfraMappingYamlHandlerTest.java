@@ -137,7 +137,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
@@ -172,7 +172,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =

@@ -37,7 +37,7 @@ public class ScmSecretTest extends CategoryTest {
   @Inject ScmSecret scmSecret;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testVault() throws VaultException {
     if (!scmSecret.isInitialized()) {
@@ -47,7 +47,7 @@ public class ScmSecretTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDecrypt() {
     if (!scmSecret.isInitialized()) {
@@ -57,7 +57,7 @@ public class ScmSecretTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEncoding() {
     if (!scmSecret.isInitialized()) {
@@ -83,7 +83,7 @@ public class ScmSecretTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("Bypass this test, it is not for running regularly")
   public void rebuildSecretProperties() throws URISyntaxException, IOException {

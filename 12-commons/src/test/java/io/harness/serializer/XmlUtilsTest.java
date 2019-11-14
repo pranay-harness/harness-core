@@ -33,7 +33,7 @@ public class XmlUtilsTest extends CategoryTest {
    * @throws IOException                  Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetXpath()
       throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {

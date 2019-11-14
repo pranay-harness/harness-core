@@ -58,7 +58,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldCreateNewArtifactTriggerForWorkflow() {
     final Service service =

@@ -65,7 +65,7 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldWriteTaskInfo() throws Exception {
     when(instanceDataService.fetchInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN))
@@ -93,7 +93,7 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenParentResourceNotPresent() throws Exception {
     when(instanceDataService.fetchInstanceData(TEST_ACCOUNT_ID, TEST_CONTAINER_ARN)).thenReturn(null);
@@ -104,7 +104,7 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void updateTaskStartTime() throws Exception {
     when(instanceDataService.fetchActiveInstanceData(
@@ -125,7 +125,7 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetFargateInstanceType() {
     PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(
@@ -136,7 +136,7 @@ public class EcsTaskInfoLifecycleWriterTest extends CategoryTest implements EcsE
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetNullInstanceType() {
     PublishedMessage ec2InstanceInfoMessage = getTaskInfoMessage(

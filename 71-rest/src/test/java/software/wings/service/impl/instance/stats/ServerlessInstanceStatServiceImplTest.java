@@ -66,7 +66,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_save() {
     setup_wingspersistence();
@@ -81,7 +81,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getLastSnapshotTime() {
     final Mocks mocks = setup_wingspersistence();
@@ -93,7 +93,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_getFirstSnapshotTime() {
     final Mocks mocks = setup_wingspersistence();
@@ -105,7 +105,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_aggregate() {
     final Mocks mocks = setup_AggregationPipeline();

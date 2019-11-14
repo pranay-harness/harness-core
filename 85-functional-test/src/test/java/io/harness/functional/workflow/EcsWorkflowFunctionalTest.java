@@ -134,7 +134,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateBasicEcsWorkflow() throws Exception {
@@ -147,7 +147,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateDaemonEcsWorkflow() throws Exception {
@@ -158,7 +158,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldCreateCanaryEcsWorkflow() throws Exception {

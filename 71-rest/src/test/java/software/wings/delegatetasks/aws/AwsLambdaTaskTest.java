@@ -39,7 +39,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteWf() {
     AwsLambdaRequest request = AwsLambdaExecuteWfRequest.builder().build();
@@ -48,7 +48,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteFunction() {
     AwsLambdaRequest request = AwsLambdaExecuteFunctionRequest.builder().build();

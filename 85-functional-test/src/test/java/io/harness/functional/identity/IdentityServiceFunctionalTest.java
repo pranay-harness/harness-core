@@ -52,7 +52,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientLoginUser() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -65,7 +65,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListUsers() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -78,7 +78,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListAccounts() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -91,7 +91,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientGetAccountSettings() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -106,7 +106,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientGetPublicUserInfo() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -117,7 +117,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientSignupOauthUser() {
     String userEmail = "oauth_trial_user_" + System.currentTimeMillis() + "@harness.io";

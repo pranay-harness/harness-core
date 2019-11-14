@@ -71,7 +71,7 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getTargetModulesTest() {
     List<String> targetModules = terraformFetchTargetsTask.getTargetModules(parsedContentWithModulesAndResources);
@@ -84,7 +84,7 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getTargetResourcesTest() {
     List<String> targetResources = terraformFetchTargetsTask.getTargetResources(parsedContentWithModulesAndResources);

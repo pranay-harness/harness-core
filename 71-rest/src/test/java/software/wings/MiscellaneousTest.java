@@ -61,7 +61,7 @@ public class MiscellaneousTest extends CategoryTest {
    * Should provide coverage to getter setter and to string.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldProvideCoverageToGetterSetterAndToString() {
     Validator validator =
@@ -74,7 +74,7 @@ public class MiscellaneousTest extends CategoryTest {
    * Should validate code governance rules.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateCodeGovernanceRules() {
     Validator validator = ValidatorBuilder.create()
@@ -91,7 +91,7 @@ public class MiscellaneousTest extends CategoryTest {
    * Should validate test governance rules.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateTestGovernanceRules() {
     Validator validator = ValidatorBuilder.create().with(new TestClassMustBeProperlyNamedRule()).build();
@@ -100,7 +100,7 @@ public class MiscellaneousTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseApisVersion() {
     ServiceSecretKey.ServiceApiVersion latestVersion =

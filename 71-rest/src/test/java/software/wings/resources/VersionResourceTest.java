@@ -40,7 +40,7 @@ public class VersionResourceTest extends CategoryTest {
                                                        .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListVersions() throws Exception {
     PageResponse<EntityVersion> pageResponse = new PageResponse<>();

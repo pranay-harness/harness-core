@@ -38,7 +38,7 @@ public class ClusterLevelTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHeartbeatAndNextClusterLevel() {
     if (heartbeatLevel == null) {

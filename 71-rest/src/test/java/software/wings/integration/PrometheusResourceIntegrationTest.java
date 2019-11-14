@@ -66,7 +66,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL)
+  @Owner(developers = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -87,7 +87,7 @@ public class PrometheusResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL)
+  @Owner(developers = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")

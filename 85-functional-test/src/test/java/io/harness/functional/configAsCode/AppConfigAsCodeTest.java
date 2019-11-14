@@ -49,7 +49,7 @@ public class AppConfigAsCodeTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHASWAT, intermittent = true)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC0_createAppWithGit() {
     gitConnector();
@@ -72,7 +72,7 @@ public class AppConfigAsCodeTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHASWAT, intermittent = true)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC1_updateAppWithGit() {
     gitConnector();
@@ -96,7 +96,7 @@ public class AppConfigAsCodeTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHASWAT, intermittent = true)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC2_addEnvInAppWithGit() {
     gitConnector();

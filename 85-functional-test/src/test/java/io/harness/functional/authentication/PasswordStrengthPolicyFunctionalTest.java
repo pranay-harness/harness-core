@@ -35,7 +35,7 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
   @Inject private LoginSettingsService loginSettingsService;
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC0_setPasswordPolicy() {
     passwordStrengthPolicy = PasswordStrengthPolicy.builder()
@@ -65,7 +65,7 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC1_updatePasswordPolicy() {
     passwordStrengthPolicy = PasswordStrengthPolicy.builder()
@@ -87,7 +87,7 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC2_changePasswordSuccess() {
     final String TEST_PASSWORD = "Helloafsddsfasdsas1@";
@@ -95,7 +95,7 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC3_changePasswordFailure() {
     final String TEST_PASSWORD = "Helloafsddsfasdsas1";
@@ -111,7 +111,7 @@ public class PasswordStrengthPolicyFunctionalTest extends AbstractFunctionalTest
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC4_disablePasswordPolicy() {
     passwordStrengthPolicy = PasswordStrengthPolicy.builder().enabled(PASSWORD_STRENGTH_POLICY_DISABLED).build();

@@ -16,7 +16,7 @@ import software.wings.beans.security.access.WhitelistStatus;
 @Slf4j
 public class IPWhitelistingCRUDTest extends AbstractFunctionalTest {
   @Test()
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void testIPWhitelistingCRUD() {
     final String IP_WHITELIST_VAL = "0.0.0.0";

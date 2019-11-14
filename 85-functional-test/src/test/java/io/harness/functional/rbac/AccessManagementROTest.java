@@ -43,7 +43,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
     logger.info("Logging in as a ReadOnly user");
@@ -53,7 +53,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -64,7 +64,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
     logger.info("Readonly test for GET");
@@ -75,7 +75,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUserGroup() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -84,7 +84,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForIPWhitelisting() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
@@ -93,7 +93,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForAPIKeys() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -102,7 +102,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForLDAP() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -111,7 +111,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForSAML() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -120,7 +120,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateIPWhitelistingTest() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -129,7 +129,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteIPWhitelistingTest() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -138,7 +138,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateAndDeleteApiKeysTest() {
     final String READ_ONLY_USER = "rbac1@harness.io";
@@ -148,7 +148,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void createApplicationFail() {
     logger.info("Check if create application test fails");
@@ -169,7 +169,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteApplicationFail() {
     logger.info("Check if delete application test fails");

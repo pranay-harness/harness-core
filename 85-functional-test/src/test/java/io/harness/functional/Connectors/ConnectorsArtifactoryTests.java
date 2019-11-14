@@ -48,7 +48,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   private static String ArtifactoryConnectorId;
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(FunctionalTests.class)
   public void TC0_listAllConnectors() {
     JsonPath connectors = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -56,7 +56,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = MEENAKSHI)
+  @Owner(developers = MEENAKSHI)
   @Category(FunctionalTests.class)
   public void runNexusConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC1_createNexusConnector, booleanMatcher, true);
@@ -68,7 +68,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = MEENAKSHI, intermittent = true)
+  @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
   public void runJenkinsConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC4_createJenkinsConnector, booleanMatcher, true);
@@ -80,7 +80,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = MEENAKSHI, intermittent = true)
+  @Owner(developers = MEENAKSHI, intermittent = true)
   @Category(FunctionalTests.class)
   public void runDockerConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC7_createDockerConnector, booleanMatcher, true);
@@ -92,7 +92,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = MEENAKSHI, intermittent = false)
+  @Owner(developers = MEENAKSHI, intermittent = false)
   @Category(FunctionalTests.class)
   public void runBambooConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC10_createBambooConnector, booleanMatcher, true);
@@ -104,7 +104,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = MEENAKSHI)
+  @Owner(developers = MEENAKSHI)
   @Category(FunctionalTests.class)
   public void runArtifactoryConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC13_createArtifactoryConnector, booleanMatcher, true);

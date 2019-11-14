@@ -31,7 +31,7 @@ public class ArtifactComparatorTest extends CategoryTest {
                                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSortArtifactDescendingOrder() {
     List<Artifact> artifacts =

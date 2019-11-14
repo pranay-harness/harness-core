@@ -20,7 +20,7 @@ public class LdapUserResponseTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getEmailGetterTest() {
     assertThat(ldapUserResponse.getEmail()).isEqualTo(capitalLettersEmail.toLowerCase());

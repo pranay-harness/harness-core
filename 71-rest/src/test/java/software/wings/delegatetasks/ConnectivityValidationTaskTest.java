@@ -54,7 +54,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     ConnectivityValidationDelegateRequest request =

@@ -26,7 +26,7 @@ import java.util.List;
 
 public class WorkflowUtilsTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetWorkflowUsages() {
     Workflow jiraWorkflow =

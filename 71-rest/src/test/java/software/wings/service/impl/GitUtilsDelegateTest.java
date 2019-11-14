@@ -16,7 +16,7 @@ public class GitUtilsDelegateTest extends WingsBaseTest {
   @Inject private GitUtilsDelegate gitUtilsDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRequestDataFromFile() {
     String nonExistentPath = "/thisPathDoesNotExistOnDelegate/nonExistentFile.yaml";

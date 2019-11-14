@@ -46,7 +46,7 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSaveApiCallLogs() throws Exception {
     int numOfApiCallLogs = 12;

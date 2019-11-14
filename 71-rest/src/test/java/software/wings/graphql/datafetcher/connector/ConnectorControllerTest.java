@@ -18,7 +18,7 @@ import java.util.List;
 
 public class ConnectorControllerTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testConnectorImplementations() {
     SettingAttribute attribute = new SettingAttribute();

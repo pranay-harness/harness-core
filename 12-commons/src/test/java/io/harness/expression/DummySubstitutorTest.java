@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class DummySubstitutorTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSubstitute() {
     assertThat(DummySubstitutor.substitute("http://user:${password}@host.com/index.php?var=${variable}"))

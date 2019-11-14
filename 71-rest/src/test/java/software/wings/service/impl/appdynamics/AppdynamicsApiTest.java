@@ -104,7 +104,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = RAGHU, intermittent = true)
+  @Owner(developers = RAGHU, intermittent = true)
   @Category(UnitTests.class)
   public void testUnreachableAppdynamicsServer() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
@@ -125,7 +125,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNullApplicationName() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
@@ -144,7 +144,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidCredential() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
@@ -173,7 +173,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidConfig() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
@@ -187,7 +187,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetApplications() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
@@ -212,7 +212,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTiers() throws IOException {
     Call<Set<AppdynamicsTier>> restCall = mock(Call.class);
@@ -231,7 +231,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = PARNIAN)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetTierDependencies() throws IOException {
@@ -280,7 +280,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBTs() throws IOException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
@@ -313,7 +313,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBTData() throws IOException {
     Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);

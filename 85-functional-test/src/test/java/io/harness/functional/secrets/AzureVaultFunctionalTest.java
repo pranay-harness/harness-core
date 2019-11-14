@@ -47,7 +47,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(emails = MARK)
+  @Owner(developers = MARK)
   @Category(FunctionalTests.class)
   @Ignore("Marked as ignore as this test is flaky and failing intermittently")
   public void testCRUDSecretsWithAzureVaultSecretManager() throws Exception {

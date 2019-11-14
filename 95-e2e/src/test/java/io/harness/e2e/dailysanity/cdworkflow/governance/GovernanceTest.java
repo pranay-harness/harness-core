@@ -76,7 +76,7 @@ public class GovernanceTest extends AbstractE2ETest {
   private static ExecutionArgs executionArgs;
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC1_governanceStatusCheck() {
     // Checking initial Governance status
@@ -97,7 +97,7 @@ public class GovernanceTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC2_createTestApplication() {
     // Test data setup
@@ -112,7 +112,7 @@ public class GovernanceTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC3_createTestServiceMapArtifactStream() {
     Service testService = Service.builder().name(SERVICE_NAME).artifactType(ArtifactType.DOCKER).build();
@@ -132,7 +132,7 @@ public class GovernanceTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC4_createTestEnvironmentAndInfraMapping() {
     Environment testEnv = anEnvironment().name(ENV_NAME).environmentType(EnvironmentType.PROD).build();
@@ -163,7 +163,7 @@ public class GovernanceTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC5_createTestCanaryWorkflow() {
     workflow = aWorkflow()
@@ -184,7 +184,7 @@ public class GovernanceTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC6_workflowDeployment() {
     String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
@@ -200,7 +200,7 @@ public class GovernanceTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC7_checkWorkflowDeployed() {
     WorkflowExecution deploymentsAllowed =
@@ -209,7 +209,7 @@ public class GovernanceTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(E2ETests.class)
   public void TC8_shouldBlockDeploymentsWhenFreezeIsEnabled() {
     // Setting deployment freeze : true

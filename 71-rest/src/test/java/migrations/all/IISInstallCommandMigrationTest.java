@@ -21,7 +21,7 @@ public class IISInstallCommandMigrationTest extends TemplateBaseTestHelper {
   @InjectMocks @Inject private IISInstallCommandMigration iisInstallCommandMigration;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMigration() {
     iisInstallCommandMigration.migrate();

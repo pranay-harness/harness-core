@@ -69,7 +69,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenameYamlChangeForInfraMapping() throws Exception {
     GitFileChange gitFileChangeForDelete = GitFileChange.Builder.aGitFileChange()
@@ -120,7 +120,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateYamlChangeForInfraMapping() throws Exception {
     GitFileChange gitFileChangeForModify = GitFileChange.Builder.aGitFileChange()
@@ -155,7 +155,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenameYamlChangeForArtifactStream() throws Exception {
     GitFileChange gitFileChangeForDelete = GitFileChange.Builder.aGitFileChange()
@@ -207,7 +207,7 @@ public class YamlChangeSetHelperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateYamlChangeForArtifactStream() throws Exception {
     GitFileChange gitFileChangeForModify = GitFileChange.Builder.aGitFileChange()

@@ -21,7 +21,7 @@ public class ExtendsCategoryEnforcerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldNotFailCompliantTest() throws Exception {
     assertThatCode(
@@ -30,7 +30,7 @@ public class ExtendsCategoryEnforcerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldFailNonCompliantTest() throws Exception {
     assertThatExceptionOfType(AssertionError.class)
@@ -41,7 +41,7 @@ public class ExtendsCategoryEnforcerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldNotFailCompliantTestFromDifferentClassloader() throws Exception {
     ClassLoader powermockCl = new MockClassLoader(null, null, null);

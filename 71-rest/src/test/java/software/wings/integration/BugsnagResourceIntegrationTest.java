@@ -76,7 +76,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetBugsnagApplications() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
@@ -95,7 +95,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetBugsnagOrganizations() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
@@ -113,7 +113,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogRecords() {
     BugsnagSetupTestData testNodedata = getBugsnagSampledata();

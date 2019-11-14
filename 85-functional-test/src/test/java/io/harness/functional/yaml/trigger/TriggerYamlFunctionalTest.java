@@ -62,7 +62,7 @@ public class TriggerYamlFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = HARSH)
+  @Owner(developers = HARSH)
   @Category(FunctionalTests.class)
   @Ignore("TODO: We are refactoring trigger and it does not require now")
   public void testTriggerYamlSupport() {

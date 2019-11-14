@@ -123,7 +123,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListExecutions() {
     CountsByStatuses countsByStatuses = aCountsByStatuses().build();
@@ -153,7 +153,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListExecutionsForPipeline() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
@@ -169,7 +169,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchExecutionWithoutSummary() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -213,7 +213,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestExecutionDetails() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
@@ -232,7 +232,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestExecutionDetailsWithFinalStage() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
@@ -249,7 +249,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestExecutionDetailsWithFinalStage1() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
@@ -266,7 +266,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNotes() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
@@ -282,7 +282,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAppendInfraMappingIds() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
@@ -296,7 +296,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateInfraMappingIds() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.PIPELINE);
@@ -311,7 +311,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetApprovalAuthorization() {
     user = eventTestHelper.createUser(null);
@@ -322,7 +322,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainLastGoodDeployedVariables() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
@@ -342,7 +342,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldObtainLastGoodDeployedArtifacts() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
@@ -365,7 +365,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
         .isNotEmpty();
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRefreshCollectedArtifacts() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
@@ -411,7 +411,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchLatestExecutionForServiceIds() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
@@ -436,7 +436,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchExecutionForVerification() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
@@ -459,7 +459,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchLatestExecutionForInfraMappingIds() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
@@ -478,7 +478,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowExecutionList() {
     ExecutionArgs executionArgs = createExecutionArgs(WorkflowType.ORCHESTRATION);
@@ -499,7 +499,7 @@ public class WorkflowExecutionServiceDBTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListDeployedNodes() {
     String appId = generateUuid();

@@ -56,7 +56,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are active
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteInternal_noAlert() {
     saveDelegate("host1", 2, true);
@@ -69,7 +69,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are down
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteInternal_noDelegateAlert() {
     saveDelegate("host1", 12, false);
@@ -89,7 +89,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * Some of the delegates are down
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecuteInternal_delegatesDownAlert() {
     saveDelegate("host1", 2, true);
@@ -117,7 +117,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSMTPAlert() {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);

@@ -140,7 +140,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = environmentChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
@@ -160,7 +160,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentInsertChange() {
     Environment environment =
@@ -174,7 +174,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentDeleteChange() {
     Environment environment =
@@ -188,7 +188,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentUpdateChange() {
     Environment environment =
@@ -202,7 +202,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
@@ -226,7 +226,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineDeleteChange() {
     ChangeEvent serviceUpdateChangeEvent =
@@ -245,7 +245,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
@@ -260,7 +260,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
@@ -286,7 +286,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
     ChangeEvent workflowInsertChangeEvent =
@@ -301,7 +301,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
     ChangeEvent workflowDeleteChangeEvent =
@@ -321,7 +321,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
@@ -339,7 +339,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
@@ -354,7 +354,7 @@ public class EnvironmentChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testWorkflowExecutionChange() {
     ChangeEvent workflowExecutionDeleteChangeEvent =

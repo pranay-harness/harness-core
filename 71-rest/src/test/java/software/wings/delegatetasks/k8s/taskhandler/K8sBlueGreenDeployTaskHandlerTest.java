@@ -53,7 +53,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
@@ -81,7 +81,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
@@ -109,7 +109,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMissingLabelInService() {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
@@ -152,7 +152,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCleanupForBlueGreenForNPE() throws Exception {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();

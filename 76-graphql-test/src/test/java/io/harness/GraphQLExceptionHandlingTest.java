@@ -18,7 +18,7 @@ public class GraphQLExceptionHandlingTest extends GraphQLTest {
   private static final String INCORRECT_ENVIRONMENT_ID = "TEST";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironment() {
     String query = $GQL(/*

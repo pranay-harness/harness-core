@@ -54,7 +54,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
                                                  .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSmbPaths() throws IOException {
     // Mock SmbClient, Connection, DiskShare and Session
@@ -72,7 +72,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSmbConnectionHost() {
     assertThat(smbHelperService.getSMBConnectionHost(SHARE_URL)).isNotEmpty().isEqualTo("10.0.0.1");
@@ -80,7 +80,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSmbSharedFolder() {
     assertThat(smbHelperService.getSharedFolderName(SHARE_URL)).isNotEmpty().isEqualTo("share");
@@ -88,7 +88,7 @@ public class SmbHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetSmbArtifactDetails() throws IOException {
     // Mock SmbClient, Connection, DiskShare and Session

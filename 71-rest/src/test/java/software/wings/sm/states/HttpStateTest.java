@@ -162,7 +162,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPatternsForRequiredContextElementType() {
     List<String> patternsForRequiredContextElementType =
@@ -174,7 +174,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetTemplatedHttpPatternsForRequiredContextElementType() {
     HttpState.Builder jsonHttpStateBuilder =
@@ -199,7 +199,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate JSON response.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateJsonResponse() {
     wireMockRule.stubFor(
@@ -248,7 +248,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateJsonResponseWithVariables() {
     wireMockRule.stubFor(
@@ -309,7 +309,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -344,7 +344,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponseWithVariables() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -380,7 +380,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponseWithInstance() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -428,7 +428,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and get summary/details.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionDataSummaryDetails() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -457,7 +457,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on socket timeout.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnSocketTimeout() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -492,7 +492,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on empty response.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnEmptyResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -522,7 +522,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on malformed response.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnMalformedResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -551,7 +551,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on random data.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnRandomData() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -580,7 +580,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on connect timeout.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailOnConnectTimeout() {
     context.pushContextElement(aHostElement().hostName("www.google.com").build());

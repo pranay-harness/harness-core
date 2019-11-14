@@ -68,7 +68,7 @@ public class K8sApplyStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     on(context).set("variableProcessor", variableProcessor);

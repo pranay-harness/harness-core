@@ -49,7 +49,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   @Inject @InjectMocks private StaticInfrastructureProvider infrastructureProvider = new StaticInfrastructureProvider();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHosts() {
     Host host = aHost().withHostName(HOST_NAME).build();
@@ -63,7 +63,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveHost() {
     Host reqHost = aHost().withHostName(HOST_NAME).build();
@@ -77,7 +77,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
@@ -85,7 +85,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateHostConnAttrs() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =

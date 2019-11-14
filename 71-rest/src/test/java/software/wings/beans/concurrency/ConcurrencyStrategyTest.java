@@ -15,7 +15,7 @@ import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 
 public class ConcurrencyStrategyTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsEnabled() {
     ConcurrencyStrategy concurrencyStrategy = ConcurrencyStrategy.builder().build();
@@ -23,7 +23,7 @@ public class ConcurrencyStrategyTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotEnabled() {
     ConcurrencyStrategy concurrencyStrategy = ConcurrencyStrategy.builder().unitType(UnitType.NONE).build();
@@ -31,7 +31,7 @@ public class ConcurrencyStrategyTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBuildFromUnit() {
     ConcurrencyStrategy concurrencyStrategy = ConcurrencyStrategy.buildFromUnit("INFRA");
@@ -41,7 +41,7 @@ public class ConcurrencyStrategyTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidUnit() {
     assertThatThrownBy(() -> ConcurrencyStrategy.buildFromUnit("RANDOM")).isInstanceOf(InvalidArgumentsException.class);

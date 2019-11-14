@@ -56,7 +56,7 @@ public class FlowControlFeatureTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void workflowWithFlowControl() {
     when(workflowService.listWorkflows(Mockito.any(PageRequest.class)))
@@ -70,7 +70,7 @@ public class FlowControlFeatureTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void workflowWithoutFlowControl() {
     when(workflowService.listWorkflows(Mockito.any(PageRequest.class)))

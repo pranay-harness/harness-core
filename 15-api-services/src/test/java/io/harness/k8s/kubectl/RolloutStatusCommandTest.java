@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class RolloutStatusCommandTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() throws Exception {
     Kubectl client = Kubectl.client(null, null);
@@ -22,7 +22,7 @@ public class RolloutStatusCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void watchFalseTest() throws Exception {
     Kubectl client = Kubectl.client(null, null);

@@ -11,7 +11,7 @@ import software.wings.WingsBaseTest;
 
 public class ValidatorTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStringTypeCheck() {
     assertThatThrownBy(() -> Validator.ensureType(String.class, 1, "Not of string type"));

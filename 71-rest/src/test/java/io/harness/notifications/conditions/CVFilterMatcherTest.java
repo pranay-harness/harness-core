@@ -23,7 +23,7 @@ import java.util.List;
 
 public class CVFilterMatcherTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMatch() {
     List<String> appIds = Lists.newArrayList("app1", "app2");

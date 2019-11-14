@@ -54,7 +54,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
   @InjectMocks private EventPublisherServerImpl publisherServer;
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldFailIfAccountIdIsNotSet() {
     assertThatExceptionOfType(NullPointerException.class)
@@ -62,7 +62,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldPersistMessages() {
     Instant occurredAt = Instant.now().minus(20, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MILLIS);
@@ -101,7 +101,7 @@ public class EventPublisherServerImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = AVMOHAN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldRespondErrorWhenPersistFail() {
     RuntimeException exception = new RuntimeException("Persistence error");

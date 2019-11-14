@@ -42,7 +42,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   private final String TESTSERVICEID = "TESTSERVICEID";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPhysicalHostInstance() {
     Instance instance = Instance.builder()
@@ -70,7 +70,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAutoScalingGroupInstanceInfo() {
     final String TESTAUTOSCALINGGROUP = "TESTAUTOSCALINGGROUP";
@@ -101,7 +101,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCodeDeployInstanceInfo() {
     final String TESTDEPLOYMENTID = "TESTDEPLOYMENTID";
@@ -133,7 +133,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEcsContainerInfo() {
     Instance instance = Instance.builder()
@@ -168,7 +168,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testK8sPodInfo() {
     Instance instance = Instance.builder()
@@ -210,7 +210,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testKubernetesContainerInfo() {
     Instance instance = Instance.builder()
@@ -243,7 +243,7 @@ public class InstanceControllerManagerTest extends GraphQLMockBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPcfInstanceInfo() {
     Instance instance = Instance.builder()

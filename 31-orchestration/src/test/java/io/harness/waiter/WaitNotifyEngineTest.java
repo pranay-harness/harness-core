@@ -60,7 +60,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
@@ -85,7 +85,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stressWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
@@ -114,7 +114,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotifyBeforeWait() throws IOException {
     String uuid = generateUuid();
@@ -146,7 +146,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation ids.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationIds() throws IOException {
     String uuid1 = generateUuid();
@@ -202,7 +202,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id for multiple wait instances.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationIdForMultipleWaitInstances() throws IOException {
     String uuid = generateUuid();
@@ -235,7 +235,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCleanZombieNotifyResponse() {
     final NotifyResponse notifyResponse = NotifyResponse.builder()

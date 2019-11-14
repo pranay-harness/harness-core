@@ -333,7 +333,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_createStackState() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
@@ -342,7 +342,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_createStackStateWithAwsTemplatized() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
@@ -386,7 +386,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_deleteStackState() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
@@ -396,7 +396,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_deleteStackStateAwsTempaltized() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());

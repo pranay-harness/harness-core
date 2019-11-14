@@ -80,7 +80,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @InjectMocks private EcsSteadyStateCheck check = new EcsSteadyStateCheck("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -129,7 +129,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

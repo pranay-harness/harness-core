@@ -102,7 +102,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
    * Should get app.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -127,7 +127,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchRequiredApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -141,7 +141,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowOnFetchRequiredApp() {
     WorkflowStandardParams std = new WorkflowStandardParams();
@@ -150,7 +150,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchRequiredEnv() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -166,7 +166,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowOnFetchRequiredEnv() {
     WorkflowStandardParams std = new WorkflowStandardParams();
@@ -183,7 +183,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactForService() {
     when(artifactService.get(ARTIFACT_ID))
@@ -203,7 +203,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNullArtifact() {
     when(artifactService.get(ARTIFACT_ID)).thenReturn(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
@@ -220,7 +220,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactWithSourceProperties() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -267,7 +267,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetAccountDefaults() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

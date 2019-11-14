@@ -41,7 +41,7 @@ public class LicenseCheckHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleWithValidAccountId() throws InterruptedException {
     Account account = new Account();

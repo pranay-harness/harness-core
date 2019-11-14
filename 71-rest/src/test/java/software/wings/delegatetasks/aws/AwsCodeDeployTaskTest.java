@@ -42,7 +42,7 @@ public class AwsCodeDeployTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsCodeDeployRequest request = AwsCodeDeployListAppRequest.builder().build();

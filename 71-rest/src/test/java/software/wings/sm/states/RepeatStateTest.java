@@ -39,7 +39,7 @@ public class RepeatStateTest extends CategoryTest {
    * Should execute serial.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteSerial() {
     String stateName = "test";
@@ -71,7 +71,7 @@ public class RepeatStateTest extends CategoryTest {
    * Should execute parallel.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteParallel() {
     List<ContextElement> repeatElements = getTestRepeatElements();

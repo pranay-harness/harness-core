@@ -58,7 +58,7 @@ public class ManagerDecryptionServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBatchDecryption() {
     List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails =

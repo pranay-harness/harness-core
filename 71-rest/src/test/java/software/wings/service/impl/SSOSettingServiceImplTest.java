@@ -36,7 +36,7 @@ public class SSOSettingServiceImplTest extends WingsBaseTest {
   private String message = "errorMessage";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRaiseSyncFailureAlert() {
     doAnswer(i -> CompletableFuture.completedFuture("0")).when(alertService).openAlert(any(), any(), any(), any());

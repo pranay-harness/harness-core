@@ -39,7 +39,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSaveDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
@@ -56,7 +56,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateGoodCase() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
@@ -81,7 +81,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testUpdateDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =

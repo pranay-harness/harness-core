@@ -104,7 +104,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteBashScriptSuccessfullyOnDelegate() {
     ArgumentCaptor<ShellExecutorConfig> shellExecutorConfigArgumentCaptor =
@@ -151,7 +151,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailBashScriptOnDelegate() {
     ShellScriptParameters params = ShellScriptParameters.builder()
@@ -173,7 +173,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailPowershellScriptOnDelegate() {
     when(shellExecutorFactory.getExecutor(any())).thenReturn(scriptProcessExecutor);
@@ -196,7 +196,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteBashOnTargetHostSuccess() {
     ShellScriptParameters params =
@@ -253,7 +253,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecutePowershellScriptOnTargetHostSuccess() {
     ShellScriptParameters params = ShellScriptParameters.builder()

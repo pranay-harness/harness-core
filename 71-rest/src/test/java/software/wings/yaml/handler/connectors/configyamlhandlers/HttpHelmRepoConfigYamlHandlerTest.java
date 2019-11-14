@@ -34,7 +34,7 @@ public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYam
       + "type: DOCKER";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String httpHelmRepoSettingName = HTTP_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
@@ -46,7 +46,7 @@ public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYam
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String httpHelmRepoSettingName = HTTP_HELM_CHART_SETTING_NAME + System.currentTimeMillis();

@@ -28,7 +28,7 @@ public class TwoFactorAuthenticationE2ETest extends AbstractE2ETest {
   String defaultPassword = TestUtils.getDecryptedValue("e2etest_autouser_password");
 
   @Test()
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void twoFactorAuthTest() {
     logger.info("Login to harness account");

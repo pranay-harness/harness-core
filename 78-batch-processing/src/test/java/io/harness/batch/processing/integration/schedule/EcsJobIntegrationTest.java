@@ -103,7 +103,7 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
   }
 
   @Test
-  @Owner(emails = HITESH, intermittent = true)
+  @Owner(developers = HITESH, intermittent = true)
   @Category(IntegrationTests.class)
   public void shouldRunEcsJob() throws Exception {
     batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);

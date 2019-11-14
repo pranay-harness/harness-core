@@ -134,7 +134,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetEc2Metrics() throws Exception {
@@ -146,7 +146,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetLoadBalancersTest() throws Exception {
@@ -158,7 +158,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
@@ -176,7 +176,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLambdaFunctionNamesPermissionsNotAvailable() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
@@ -186,7 +186,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetECSClusternNames() throws Exception {
@@ -201,7 +201,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetEC2InstancesNames() throws Exception {

@@ -10,14 +10,14 @@ import org.junit.experimental.categories.Category;
 
 public class CommonMorphiaClassesTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCommonClassesModule() {
     new CommonMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCommonImplementationClassesModule() {
     new CommonMorphiaRegistrar().testImplementationClassesModule();

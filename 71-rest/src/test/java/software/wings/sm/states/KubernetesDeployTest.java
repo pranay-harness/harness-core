@@ -272,7 +272,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecute() {
     on(context).set("sweepingOutputService", sweepingOutputService);
@@ -303,7 +303,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteAsync() {
     on(context).set("variableProcessor", variableProcessor);
@@ -322,7 +322,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteAsyncWithOldRControllerWithNoInstance() {
     on(context).set("variableProcessor", variableProcessor);

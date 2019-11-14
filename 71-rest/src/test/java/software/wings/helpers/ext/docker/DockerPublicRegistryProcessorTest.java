@@ -41,7 +41,7 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
       DockerConfig.builder().dockerRegistryUrl(url).username("username").password("password".toCharArray()).build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPaginate() throws Exception {
     List<BuildDetails> images = dockerPublicRegistryProcessor.paginate(null, dockerConfig, "image", null, 10);
@@ -57,7 +57,7 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildsWithUnAuthorisedException() throws IOException {
     try {
@@ -69,7 +69,7 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildsWithNotFoundException() throws IOException {
     try {
@@ -81,7 +81,7 @@ public class DockerPublicRegistryProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBuildsPaginatedException() throws IOException {
     try {

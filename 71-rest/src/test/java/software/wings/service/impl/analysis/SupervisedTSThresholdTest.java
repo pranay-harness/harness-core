@@ -20,7 +20,7 @@ public class SupervisedTSThresholdTest extends WingsBaseTest {
       SupervisedTSThreshold.builder().maxThreshold(2.1).minThreshold(-1.8).build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getThresholdsTestInfraMetric() {
     supervisedTSThreshold.setMetricType(MetricType.INFRA);
@@ -33,7 +33,7 @@ public class SupervisedTSThresholdTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getThresholdsTestResponseTimeMetric() {
     supervisedTSThreshold.setMetricType(MetricType.RESP_TIME);
@@ -46,7 +46,7 @@ public class SupervisedTSThresholdTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getThresholdsTestThroughputMetric() {
     supervisedTSThreshold.setMetricType(MetricType.THROUGHPUT);

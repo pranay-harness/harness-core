@@ -34,7 +34,7 @@ public class CatalogServiceTest extends WingsBaseTest {
    * Should get cardview sort by.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCardviewSortBy() {
     List<CatalogItem> catalogItems = catalogService.getCatalogItems("CARD_VIEW_SORT_BY");
@@ -47,7 +47,7 @@ public class CatalogServiceTest extends WingsBaseTest {
    * Should get catalogs.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetCatalogs() {
     Map<String, List<CatalogItem>> catalogs = catalogService.getCatalogs("CARD_VIEW_SORT_BY", "ARTIFACT_TYPE");

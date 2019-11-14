@@ -58,7 +58,7 @@ public class UiApprovalCrudTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(FunctionalTests.class)
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);

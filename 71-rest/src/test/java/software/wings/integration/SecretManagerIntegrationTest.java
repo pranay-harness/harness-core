@@ -33,7 +33,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_crudSecret_shouldSucceed() {
     // 1. Create a new secret text
@@ -63,7 +63,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void test_crudEncryptedFile_shouldSucceed() throws Exception {
     // 1. Create a new encrypted file.

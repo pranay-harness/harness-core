@@ -45,7 +45,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void shouldCreatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
@@ -57,7 +57,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void shouldCreateDuplicatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
@@ -69,7 +69,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void shouldDeletePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
@@ -79,7 +79,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void shouldUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(

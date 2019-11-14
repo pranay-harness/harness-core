@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class VariableResolverTrackerTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTrackVariables() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();

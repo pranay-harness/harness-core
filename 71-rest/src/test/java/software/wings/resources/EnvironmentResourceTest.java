@@ -50,7 +50,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
           .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetLocalOverrideManifestFiles() {
     when(appManifestService.getOverrideManifestFilesByEnvId(any(), any()))
@@ -68,7 +68,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateValuesForService() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VARS_YML).build();
@@ -87,7 +87,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateValuesForService() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VARS_YML).build();
@@ -107,7 +107,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateValues() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VALUES_YAML_KEY).build();
@@ -125,7 +125,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateValues() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VALUES_YAML_KEY).build();

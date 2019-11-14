@@ -77,7 +77,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoWorkflowExecution() {
     String workflowExecutionId = UUID.randomUUID().toString();
@@ -92,7 +92,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoPipelineExecutionsForPipeline() {
     WorkflowExecution workflowExecution =
@@ -108,7 +108,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoWorkflowExecutionsForPipeline() {
     WorkflowExecution workflowExecution =
@@ -126,7 +126,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNoVerificationSteps() {
     WorkflowExecution workflowExecution =
@@ -149,7 +149,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForPipeline() {
     int numOfWorkflowExecutions = 10;
@@ -284,7 +284,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkBaselinesUpdateForPipeline() {
     int numOfWorkflowExecutions = 10;
@@ -431,7 +431,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForWorkflow() {
     int numOfWorkflowExecutions = 10;
@@ -515,7 +515,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForPipelineAndWorkflow() {
     int numOfWorkflowExecutions = 10;
@@ -646,7 +646,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetBaselineDetails() throws IllegalAccessException {
     StateMachineExecutor stateMachineExecutor = Mockito.mock(StateMachineExecutor.class);

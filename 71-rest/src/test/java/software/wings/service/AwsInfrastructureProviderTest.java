@@ -93,7 +93,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHostsPublicDns() {
     Filter filter = new Filter("instance-state-name", asList("running"));
@@ -127,7 +127,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHostsPrivateDns() {
     Filter filter = new Filter("instance-state-name", asList("running"));
@@ -160,7 +160,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListHostsEmpty() {
     Filter filter = new Filter("instance-state-name", asList("running"));
@@ -187,7 +187,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveHost() {
     Host reqHost = aHost().withHostName(HOST_NAME).build();
@@ -201,7 +201,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
@@ -209,7 +209,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateHostConnAttrs() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
@@ -223,7 +223,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldProvisionHosts() {
     String region = Regions.US_EAST_1.getName();

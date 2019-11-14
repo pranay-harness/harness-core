@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class AccountMigrationToEssentialsTest extends AbstractAccountMigrationTest {
   @Test
-  @Owner(emails = ANKIT)
+  @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)
   public void testMigrateAlreadyCompliantTrialAccountToEssentials() {
     updateAccountLicense(AccountType.ESSENTIALS);
@@ -26,7 +26,7 @@ public class AccountMigrationToEssentialsTest extends AbstractAccountMigrationTe
   }
 
   @Test
-  @Owner(emails = ANKIT)
+  @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)
   public void testMigrateNonCompliantTrialAccountToEssentials() {
     makeAccountNonCompliant();

@@ -70,7 +70,7 @@ public class DeployInfoFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployInfoForTemplateWorkflow() throws IOException {
@@ -94,7 +94,7 @@ public class DeployInfoFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployInfoForUserVariablesInWorkflow() throws IOException {
@@ -120,7 +120,7 @@ public class DeployInfoFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployInfoTemplatePipeline() throws IOException {

@@ -57,7 +57,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, ARTIFACT_RETENTION_SIZE))
@@ -69,7 +69,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(bambooService.getPlanKeys(bambooConfig, null))
@@ -80,7 +80,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, null, bambooConfig, null);
@@ -88,7 +88,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuild() {
     when(bambooService.getLastSuccessfulBuild(bambooConfig, null, BUILD_JOB_NAME))
@@ -99,7 +99,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     BambooConfig bambooConfig =

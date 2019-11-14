@@ -47,7 +47,7 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateConfigBadUrl() throws IOException, IllegalAccessException {
     when(sumoConfig.getSumoUrl()).thenReturn("htt//localhost:9000/");
@@ -63,7 +63,7 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = SumoClientException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSumoException() throws IOException {
     doThrow(new SumoServerException("https://localhost:9000/", "{\"message\": \"This is broken\"}"))

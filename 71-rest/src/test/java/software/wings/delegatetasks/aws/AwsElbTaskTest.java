@@ -42,7 +42,7 @@ public class AwsElbTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRun() {
     AwsElbRequest request = AwsElbListClassicElbsRequest.builder().build();

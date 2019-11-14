@@ -32,7 +32,7 @@ public class StressTest extends PersistenceTest {
   @Inject private Queue<TestUnversionedQueuableObject> unversionedQueue;
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   @Ignore("Bypass this test, it is not for running regularly")
@@ -77,7 +77,7 @@ public class StressTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @RealMongo
   @Ignore("Bypass this test, it is not for running regularly")

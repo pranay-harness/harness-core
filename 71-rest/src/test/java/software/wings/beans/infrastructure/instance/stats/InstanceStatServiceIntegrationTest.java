@@ -55,7 +55,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSave() {
     val stats = sampleSnapshot();
@@ -75,7 +75,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testAggregateOverPeriod() {
     val from = Instant.now();
@@ -113,7 +113,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testPercentile() {
     val from = Instant.now();
@@ -155,7 +155,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLastSnapshotTime() {
     val before = Instant.now();

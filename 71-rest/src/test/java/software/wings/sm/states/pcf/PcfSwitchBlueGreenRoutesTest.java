@@ -14,7 +14,7 @@ import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 public class PcfSwitchBlueGreenRoutesTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetNewApplicationName() {
     PcfSwitchBlueGreenRoutes pcfSwitchBlueGreenRoutes = new PcfSwitchBlueGreenRoutes("");

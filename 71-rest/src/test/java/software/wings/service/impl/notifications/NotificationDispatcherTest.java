@@ -52,7 +52,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   @Mock private SlackMessageDispatcher slackDispatcher;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNotificationGroupBasedDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
@@ -89,7 +89,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUserGroupBasedDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");

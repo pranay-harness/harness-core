@@ -158,7 +158,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureSampleAppHealthIsBad() {
     // Create a sample app v1
@@ -239,7 +239,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureSampleAppHealthIsGood() {
     // Create a sample app v1
@@ -253,7 +253,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = AADITI)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   @Ignore("TODO: Enable when mutli-artifact feature is rolled out")
   public void ensureSampleAppHealthIsGoodForMultiArtifact() throws IllegalAccessException {
@@ -265,7 +265,7 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void ensureSampleAppRestore() {
     // Create a sample app

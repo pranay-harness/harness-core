@@ -92,7 +92,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAccountGroupMessageToSegment() {
     UserThreadLocal.set(user);

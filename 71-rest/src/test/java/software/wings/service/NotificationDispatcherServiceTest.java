@@ -61,7 +61,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<NotificationBatch> updateOperations;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerNotificationGroupDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
@@ -99,7 +99,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTriggerUserGroupDispatcher() {
     String accountId = "some-account-id";

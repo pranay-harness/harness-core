@@ -52,7 +52,7 @@ public class VariableProcessorTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetNoVariables() throws Exception {
     assertThat(variableProcessor.getVariables(new ArrayDeque<>(), null)).isEmpty();
@@ -64,7 +64,7 @@ public class VariableProcessorTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetVariablesForInstanceElement() throws Exception {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))

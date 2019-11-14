@@ -12,7 +12,7 @@ import software.wings.WingsBaseTest;
 
 public class YamlHelperTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAppManifestKindFromPath() {
     YamlHelper yamlHelper = new YamlHelper();

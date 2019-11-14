@@ -75,7 +75,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadTomcatStandardCommands() {
     Template template = templateService.loadYaml(SSH, TOMCAT_WAR_STOP_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -90,7 +90,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -99,7 +99,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldLoadIISCommands() {
     Template template =
@@ -117,7 +117,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddCommandTemplate() {
     Template template = getSshCommandTemplate();
@@ -165,7 +165,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandTemplate() {
     Template template = getSshCommandTemplate();
@@ -207,7 +207,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommandsLinked() {
     Template template = getSshCommandTemplate();
@@ -266,7 +266,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDCommandTemplate() {
     // Create individual commands like MyStart, MyStop, MyAnotherCommand
@@ -325,7 +325,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateTemplateDuplicateVariablesDifferentFixedValues() {
     // Create individual commands like MyStart, MyStop, MyAnotherCommand
@@ -377,7 +377,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateTemplateVariableNotPassedInParent() {
     // Create individual commands like MyStart, MyStop, MyAnotherCommand
@@ -552,7 +552,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotLinkAppLevelTemplateToAccountLevelTemplate() {
     // Create individual commands like MyStart, MyStop
@@ -588,7 +588,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotLinkTemplatesAcrossApps() {
     // Create individual commands like MyStop with ANOTHER_APP_ID
@@ -618,7 +618,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCanLinkAccountLevelTemplateToAppLevelTemplate() {
     // Create individual commands like MyStop with GLOBAL_APP_ID
@@ -626,7 +626,7 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInvalidUpdateWhenLinkingTemplatesAcrossApps() {
     Template savedTemplate = linkAccountLevelToAppLevelAndValidate();

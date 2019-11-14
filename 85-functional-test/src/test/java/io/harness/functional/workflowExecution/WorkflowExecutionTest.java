@@ -61,7 +61,7 @@ public class WorkflowExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({FunctionalTests.class})
   public void fetchExecutionsInRange() throws Exception {
     final Seed seed = new Seed(0);

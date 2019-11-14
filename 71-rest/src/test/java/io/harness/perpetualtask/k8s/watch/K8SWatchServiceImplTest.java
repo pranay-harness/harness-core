@@ -14,7 +14,7 @@ public class K8SWatchServiceImplTest extends BaseIntegrationTest {
   @Inject K8sWatchPerpetualTaskServiceClient k8SWatchPerpetualTaskServiceClient;
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   public void testCreate() {
     K8sWatchTaskParams params = K8sWatchTaskParams
@@ -27,7 +27,7 @@ public class K8SWatchServiceImplTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = HANTANG)
+  @Owner(developers = HANTANG)
   @Category(IntegrationTests.class)
   public void testDelete() {}
 }

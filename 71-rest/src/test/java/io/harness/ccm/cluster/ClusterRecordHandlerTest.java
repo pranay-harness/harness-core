@@ -52,7 +52,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnSaved() {
     handler.onSaved(infrastructureMapping);
@@ -60,7 +60,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnUpdated() {
     handler.onUpdated(infrastructureMapping);
@@ -68,7 +68,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testOnDeleted() {
     handler.onDeleted(settingAttribute);

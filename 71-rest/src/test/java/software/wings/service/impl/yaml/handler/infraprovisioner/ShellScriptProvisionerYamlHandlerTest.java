@@ -80,7 +80,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     ShellScriptInfrastructureProvisioner provisioner = prepareProvisioner();
@@ -90,7 +90,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreationFromYaml() {
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -109,7 +109,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSavedProvisioner() {
     ShellScriptInfrastructureProvisioner saved = ShellScriptInfrastructureProvisioner.builder().build();
@@ -119,7 +119,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdationFromYaml() {
     ShellScriptInfrastructureProvisioner saved =

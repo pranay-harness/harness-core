@@ -20,7 +20,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseLiteralWithInvalidInput() {
     Integer invalidInput = 1;
@@ -30,7 +30,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseLiteral() {
     long currentTimeInMillis = System.currentTimeMillis();
@@ -41,7 +41,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSerializeWithInvalidInput() {
     Integer invalidInput = 1;
@@ -51,7 +51,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSerialize() {
     long currentTimeInMillis = System.currentTimeMillis();

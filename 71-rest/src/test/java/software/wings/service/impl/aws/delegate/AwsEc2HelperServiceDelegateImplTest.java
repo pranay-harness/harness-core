@@ -49,7 +49,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEc2HelperServiceDelegateImpl awsEc2HelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredential() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -62,7 +62,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListRegions() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -81,7 +81,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListVPCs() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -99,7 +99,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListSubnets() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -118,7 +118,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListSGs() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -138,7 +138,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListTags() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -157,7 +157,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListEc2Instances_1() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -177,7 +177,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListEc2Instances_2() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
@@ -197,7 +197,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListBlockDeviceNamesOfAmi() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);

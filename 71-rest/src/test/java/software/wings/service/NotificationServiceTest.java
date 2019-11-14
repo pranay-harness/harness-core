@@ -75,7 +75,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldList() {
     PageRequest pageRequest = aPageRequest().addFilter("appId", EQ, APP_ID).build();
@@ -87,7 +87,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGet() {
     final InformationNotification informationNotification = InformationNotification.builder().appId(APP_ID).build();
@@ -105,7 +105,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should send notification async.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSendNotificationAsync() {
     InformationNotification notification =
@@ -125,7 +125,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should mark notification completed.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMarkNotificationCompleted() {
     notificationService.markNotificationCompleted(APP_ID, NOTIFICATION_ID);
@@ -136,7 +136,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    * Should act.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAct() {
     ApprovalNotification approvalNotification = Mockito.spy(anApprovalNotification()

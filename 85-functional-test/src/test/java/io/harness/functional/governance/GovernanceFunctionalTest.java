@@ -64,7 +64,7 @@ public class GovernanceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = RAMA)
+  @Owner(developers = RAMA)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldBlockDeploymentsWhenFreezeIsEnabled() throws Exception {

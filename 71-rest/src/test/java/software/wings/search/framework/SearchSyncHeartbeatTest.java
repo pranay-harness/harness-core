@@ -23,7 +23,7 @@ public class SearchSyncHeartbeatTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSearchSyncHeartbeatRun() {
     WingsPersistence spyWingsPersistence = spy(wingsPersistence);

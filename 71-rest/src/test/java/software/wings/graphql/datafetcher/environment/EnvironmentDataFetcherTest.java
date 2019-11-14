@@ -34,7 +34,7 @@ public class EnvironmentDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEnvironmentDataFetcher() {
     Environment environment = createEnv(

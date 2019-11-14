@@ -46,7 +46,7 @@ public class DataCollectionInfoServiceTest extends WingsBaseTest {
     FieldUtils.writeField(dataCollectionInfoService, "secretManager", secretManager, true);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSplunkDataCollectionInfoCreation() {
     SplunkCVConfiguration splunkCVConfiguration = createSplunkCVConfig();
@@ -68,7 +68,7 @@ public class DataCollectionInfoServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNewRelicDataCollectionInfoCreation() {
     NewRelicCVServiceConfiguration newRelicCVConfig = createNewRelicCVConfig();

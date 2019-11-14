@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class AwsInfrastructureMappingTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testInfrastructureMapping() {
     Map<String, Object> map = new HashMap<>();
@@ -56,7 +56,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testASGNameAndLBName() {
     Map<String, Object> map = new HashMap<>();
@@ -75,7 +75,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testChangeOfFilterType() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping().build();
@@ -91,7 +91,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEcs() {
     Map<String, Object> map = new HashMap<>();
@@ -110,7 +110,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     AwsInfrastructureMapping infrastructureMapping = Builder.anAwsInfrastructureMapping().build();

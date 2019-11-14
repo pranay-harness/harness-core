@@ -11,7 +11,7 @@ import software.wings.WingsBaseTest;
 
 public class DockerServiceTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldParseLink() {
     String link =

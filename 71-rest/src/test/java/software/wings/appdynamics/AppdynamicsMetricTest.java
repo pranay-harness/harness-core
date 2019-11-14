@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class AppdynamicsMetricTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppdynamicsMetricParse() throws Exception {
     final String metricResponse = "[{\"name\": \"Average Response Time (ms)\", \"type\": \"leaf\"},"

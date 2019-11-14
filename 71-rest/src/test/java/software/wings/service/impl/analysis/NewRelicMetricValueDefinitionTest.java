@@ -24,7 +24,7 @@ import java.util.Set;
 
 public class NewRelicMetricValueDefinitionTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetTestHostValues() {
     String stateExecutionId = generateUuid();

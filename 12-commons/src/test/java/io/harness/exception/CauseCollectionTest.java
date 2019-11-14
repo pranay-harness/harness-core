@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class CauseCollectionTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void collectCauseCollection() {
     final CauseCollection collection = new CauseCollection()
@@ -33,7 +33,7 @@ public class CauseCollectionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void causeCollectionLimit() {
     CauseCollection collection = new CauseCollection().addCause(new Exception(new Exception()));
@@ -52,7 +52,7 @@ public class CauseCollectionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void causeCollectionDeduplication() {
     final Exception exception = new Exception(new Exception(new Exception()));

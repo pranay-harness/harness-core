@@ -15,7 +15,7 @@ public class UsageMetricsEventPublisherUnitTest extends WingsBaseTest {
   @Inject UsageMetricsEventPublisher usageMetricsEventPublisher;
 
   @Test
-  @Owner(emails = "rushabh@harness.io")
+  @Owner(developers = "rushabh@harness.io")
   @Category(UnitTests.class)
   public void testConstructDeploymentEvent() {
     WorkflowExecution workflowExecution = UsageMetricsTestUtils.generateWorkflowExecution(0);

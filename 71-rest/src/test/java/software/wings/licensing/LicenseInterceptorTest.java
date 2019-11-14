@@ -44,7 +44,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   @Inject private MethodLicensedObject methodLicensedObject;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInterceptMethodCallExtendedWithLicensing() throws Exception {
     methodLicensedObject.licensedMethod("ACCOUNT_ID");
@@ -52,7 +52,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotInterceptMethodCallNotExtendedWithLicensing() throws Exception {
     methodLicensedObject.anotherMethod();
@@ -60,7 +60,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotInterceptMethodCallMissingLicenseKeyWithLicensing() throws Exception {
     methodLicensedObject.licensedMethodWithoutKey("ACCOUNT_ID");
@@ -68,7 +68,7 @@ public class LicenseInterceptorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldInterceptAllCallsFromClassAnnotatedWithLicenseAnnotation() throws Exception {
     classLicensedObject.method("ACCOUNT_ID");

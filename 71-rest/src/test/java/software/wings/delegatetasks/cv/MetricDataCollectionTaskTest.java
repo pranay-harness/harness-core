@@ -59,7 +59,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSavingHeartbeatsForAllHosts() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
@@ -93,7 +93,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIfFetchCalledForEachHostParallelly() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
@@ -108,7 +108,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIfNewRelicMetricDataRecordsAreSaved() throws DataCollectionException {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();

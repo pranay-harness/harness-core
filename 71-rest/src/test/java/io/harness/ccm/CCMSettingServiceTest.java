@@ -80,7 +80,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsCloudCostEnabledForCloudProvider() {
     boolean result = ccmSettingService.isCloudCostEnabled(settingAttribute);
@@ -88,7 +88,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsCloudCostEnabledForCluster() {
     boolean result = ccmSettingService.isCloudCostEnabled(clusterRecord);
@@ -96,7 +96,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotMaskCCMConfig() {
     SettingAttribute maskedSettingAttribute = ccmSettingService.maskCCMConfig(settingAttribute);
@@ -104,7 +104,7 @@ public class CCMSettingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMaskCCMConfig() {
     String accountIdNoCCM = "ACCOUNT_NO_CCM";

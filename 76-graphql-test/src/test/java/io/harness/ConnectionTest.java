@@ -64,7 +64,7 @@ public class ConnectionTest extends GraphQLTest {
 }*/ CloudProviderTest.class);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testConnectionPaging() {
     final Seed seed = new Seed(0);
@@ -194,7 +194,7 @@ public class ConnectionTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testPagingArguments() {
     final Seed seed = new Seed(0);

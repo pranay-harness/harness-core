@@ -46,7 +46,7 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
 
   @Inject HarnesscliHelper harnesscliHelper;
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getPipelinesTest() {
     // Running harness get pipelines before creating a new pipeline
@@ -98,7 +98,7 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getPipelinesWithInvalidArgumentsTest() {
     // Running harness get pipelines with invalid appId

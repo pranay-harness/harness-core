@@ -25,7 +25,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
       delegateTaskResponse -> {}, () -> true);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getTargetsArgsTest() {
     assertThat(terraformProvisionTask.getTargetArgs(null)).isEqualTo("");
@@ -37,7 +37,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseOutput() {
     String workspaceCommandOutput = "* w1\n  w2\n w3";

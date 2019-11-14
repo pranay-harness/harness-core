@@ -31,7 +31,7 @@ public class CloudProviderTest extends AbstractE2ETest {
   private static String cloudProviderId;
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC0_listCloudProviders() {
     JsonPath cloudProviders = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -39,7 +39,7 @@ public class CloudProviderTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC1_createCloudProvider() {
     SettingAttribute settingAttribute =
@@ -67,7 +67,7 @@ public class CloudProviderTest extends AbstractE2ETest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(E2ETests.class)
   public void TC2_deleteCloudProvider() {
     SettingsUtils.delete(bearerToken, getAccount().getUuid(), cloudProviderId);

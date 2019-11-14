@@ -66,7 +66,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testListNamesByProvisionerId() {
     InfrastructureDefinition id1 = InfrastructureDefinition.builder()
@@ -91,7 +91,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testListNamesByConnectionAttr() {
     final String connectionAttr1 = "private-key-1";
@@ -125,7 +125,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testListNamesByComputeProviderId() {
     InfrastructureDefinitionBuilder infrastructureDefinitionBuilder =

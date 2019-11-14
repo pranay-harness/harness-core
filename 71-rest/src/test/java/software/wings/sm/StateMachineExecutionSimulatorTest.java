@@ -87,7 +87,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute new execution.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldComputeNewExecution() {
     State s1 = aRepeatState()
@@ -130,7 +130,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute inprogress estimate.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldComputeInprogressEstimate() {
     State s1 = aRepeatState()
@@ -224,7 +224,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
    * Should compute inprogress estimate with failed node.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldComputeInprogressEstimateWithFailedNode() {
     State s1 = aRepeatState()

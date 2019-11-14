@@ -29,7 +29,7 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
   private final String INFRA_MAPPING_ID = "infra_mapping_id";
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetDeploymentSummaryForEcs() {
     ContainerDeploymentKey containerDeploymentKey =
@@ -51,7 +51,7 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetDeploymentSummaryForK8s() {
     K8sDeploymentKey k8sDeploymentKey = K8sDeploymentKey.builder().releaseName(RELEASE_NAME).build();

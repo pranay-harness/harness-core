@@ -44,7 +44,7 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
   private String SOME_ACCOUNT_ID = "some-account-id-" + PipelineGovernanceReportEvaluatorTest.class.getSimpleName();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsConfigValidForApp() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();
@@ -93,7 +93,7 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetPipelineReportCard_emptyIfNoEnabledStandards() {
     String appId = "some-app-id";

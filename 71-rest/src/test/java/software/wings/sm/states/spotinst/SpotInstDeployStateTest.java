@@ -76,7 +76,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   @InjectMocks SpotInstDeployState state = new SpotInstDeployState("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setInstanceUnitType(PERCENTAGE);
@@ -148,7 +148,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -187,7 +187,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFields() {
     SpotInstDeployState stateLocal = new SpotInstDeployState("stateName_2");

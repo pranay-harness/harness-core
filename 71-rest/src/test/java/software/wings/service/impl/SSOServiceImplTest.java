@@ -34,7 +34,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   @Inject private SSOSettingService ssoSettingService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_OauthAndUserPasswordCoexistence() {
     Account account = Account.Builder.anAccount()
@@ -80,7 +80,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_UserPasswordToSAMLAuthMechanismUpdate() {
     Account account = Account.Builder.anAccount()
@@ -101,7 +101,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_UserPasswordToLDAPAuthMechanismUpdate() {
     Account account = Account.Builder.anAccount()
@@ -122,7 +122,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void test_uploadOauthSetting_thenSetAuthMechanismAsOauth() {
     Account account = Account.Builder.anAccount()

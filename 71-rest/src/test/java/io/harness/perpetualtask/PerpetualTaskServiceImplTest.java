@@ -34,7 +34,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   public void setup() {}
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testCreateTask() {
     String taskId = perpetualTaskService.createTask(
@@ -46,7 +46,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
@@ -56,7 +56,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldNotUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(

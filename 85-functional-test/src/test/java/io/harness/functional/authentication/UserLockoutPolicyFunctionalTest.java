@@ -39,7 +39,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   @Inject private UserService userService;
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC0_setUserLockoutPolicy() {
     userLockoutPolicy = UserLockoutPolicy.builder()
@@ -62,7 +62,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC1_updateUserLockoutPolicy() {
     userLockoutPolicy = UserLockoutPolicy.builder()
@@ -83,7 +83,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC2_checkUserLockout() {
     user = loginUserOrNull(TEST_EMAIL, CORRECT_PASSWORD);
@@ -98,7 +98,7 @@ public class UserLockoutPolicyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void TC3_disableUserLockoutPolicy() {
     userLockoutPolicy = UserLockoutPolicy.builder().enableLockoutPolicy(DISABLE_LOCKOUT_POLICY).build();

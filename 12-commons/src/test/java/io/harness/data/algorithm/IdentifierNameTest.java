@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class IdentifierNameTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRandom() {
     String identifier = IdentifierName.random();

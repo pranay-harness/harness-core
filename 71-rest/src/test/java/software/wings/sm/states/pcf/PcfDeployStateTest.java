@@ -199,7 +199,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
@@ -233,7 +233,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetDownsizeUpdateCount() {
     // PERCENT

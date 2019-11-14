@@ -28,7 +28,7 @@ public class CVLogsIngestionTest extends WingsBaseTest {
   CloseableHttpClient httpclient = HttpClients.createDefault();
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("This is used by QA to generate load for sumo")
   public void generateSumoLog() throws Exception {

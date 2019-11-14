@@ -34,7 +34,7 @@ public class PipelineDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPipelineDataFetcher() {
     Pipeline pipeline = createPipeline(ACCOUNT1_ID, APP1_ID_ACCOUNT1, PIPELINE1);

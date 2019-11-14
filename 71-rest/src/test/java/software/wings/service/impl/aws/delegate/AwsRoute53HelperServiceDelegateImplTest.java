@@ -35,7 +35,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsRoute53HelperServiceDelegateImpl awsRoute53HelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListHostedZones() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);
@@ -54,7 +54,7 @@ public class AwsRoute53HelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertRoute53ParentRecord() {
     AmazonRoute53 mockClient = mock(AmazonRoute53.class);

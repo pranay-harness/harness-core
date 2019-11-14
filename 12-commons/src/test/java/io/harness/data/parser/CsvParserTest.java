@@ -13,7 +13,7 @@ import java.util.List;
 
 public class CsvParserTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCsvParseCommaSeparatedString() {
     {

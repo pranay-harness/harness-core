@@ -42,7 +42,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetActivityLogsByStateExecutionId() {
     long now = System.currentTimeMillis();
@@ -68,7 +68,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetCVActivityLog() {
     long now = System.currentTimeMillis();

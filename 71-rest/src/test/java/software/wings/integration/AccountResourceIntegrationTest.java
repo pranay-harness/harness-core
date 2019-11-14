@@ -41,7 +41,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testAccountMigration() {
     disableAccount(accountId, true);
@@ -79,7 +79,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shallCreateAndDeleteAccount() {
     Account account = new Account();
@@ -113,7 +113,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldEnableAndDisableCloudCost() {
     Account account = new Account();

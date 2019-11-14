@@ -21,7 +21,7 @@ public class DownloadTokenServiceTest extends WingsBaseTest {
   @Inject private DownloadTokenService downloadTokenService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateToken() {
     String token = downloadTokenService.createDownloadToken("resource");
@@ -29,7 +29,7 @@ public class DownloadTokenServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateToken() {
     String token = downloadTokenService.createDownloadToken("resource");
@@ -37,7 +37,7 @@ public class DownloadTokenServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenNoTokenFoundOnValidation() {
     assertThatExceptionOfType(WingsException.class)
@@ -45,7 +45,7 @@ public class DownloadTokenServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenResourceDoesntMatchOnValiation() {
     String token = downloadTokenService.createDownloadToken("resource");

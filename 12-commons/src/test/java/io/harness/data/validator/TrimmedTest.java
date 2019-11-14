@@ -21,7 +21,7 @@ public class TrimmedTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTrimmed() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();

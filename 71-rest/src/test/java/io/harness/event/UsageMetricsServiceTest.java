@@ -81,7 +81,7 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmitCVMetricsHappyCase() {
     Account account = Builder.anAccount()
@@ -119,7 +119,7 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEmitCVMetricsOnePaidOneCommunity() {
     Account account = Builder.anAccount()

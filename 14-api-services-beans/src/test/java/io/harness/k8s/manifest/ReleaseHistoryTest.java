@@ -20,7 +20,7 @@ import org.junit.experimental.categories.Category;
 
 public class ReleaseHistoryTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() throws Exception {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -34,7 +34,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void noReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -55,7 +55,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void createReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -87,7 +87,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getLastSuccessfulReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();

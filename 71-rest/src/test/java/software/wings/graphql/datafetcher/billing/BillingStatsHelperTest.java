@@ -17,7 +17,7 @@ public class BillingStatsHelperTest extends WingsBaseTest {
   @Inject @InjectMocks QLBillingStatsHelper statsHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void TestStatsHelper() {
     String appId = statsHelper.getEntityName(BillingDataMetaDataFields.APPID, "appId");

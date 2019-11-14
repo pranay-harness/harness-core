@@ -123,7 +123,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -148,7 +148,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     mockYamlHelper();
@@ -195,7 +195,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertBadMetricsEmptyMetrics() throws Exception {
     mockYamlHelper();
@@ -211,7 +211,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertBadMetricsBadUrl() throws Exception {
     mockYamlHelper();
@@ -230,7 +230,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertBadMetricsDuplicate() throws Exception {
     mockYamlHelper();

@@ -89,7 +89,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void testGetAllApplications() throws Exception {
@@ -109,7 +109,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void testGetAllTiers() throws Exception {
@@ -142,7 +142,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -184,7 +184,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void testGetDependentTiers() throws IOException {
@@ -223,7 +223,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = OwnerRule.KAMAL, intermittent = true)
+  @Owner(developers = OwnerRule.KAMAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());

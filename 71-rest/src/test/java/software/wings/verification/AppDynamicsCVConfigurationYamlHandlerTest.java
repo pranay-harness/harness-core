@@ -134,7 +134,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -153,7 +153,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -174,7 +174,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertBadApplicationID() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -191,7 +191,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertBadTierName() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -208,7 +208,7 @@ public class AppDynamicsCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

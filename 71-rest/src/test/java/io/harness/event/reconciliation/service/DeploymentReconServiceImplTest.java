@@ -113,7 +113,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllOK() {
     try {
@@ -138,7 +138,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMissingRecords() throws Exception {
     final long durationStartTs = System.currentTimeMillis() - 2000000;
@@ -155,7 +155,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMissingRecordsDuplicatesFound() throws Exception {
     activateDuplicatesFound();
@@ -175,7 +175,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDuplicatesDetected() {
     try {
@@ -199,7 +199,7 @@ public class DeploymentReconServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testShouldPerformReconciliation() {
     DeploymentReconRecord reconRecord = DeploymentReconRecord.builder()

@@ -40,7 +40,7 @@ public class AppDynamicsConfigYamlHandlerTest extends BaseSettingValueConfigYaml
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String appdProviderName = "Appdynamics" + System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class AppDynamicsConfigYamlHandlerTest extends BaseSettingValueConfigYaml
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String appdProviderName = "Appdynamics" + System.currentTimeMillis();

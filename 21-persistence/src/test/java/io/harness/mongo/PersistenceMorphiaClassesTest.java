@@ -22,14 +22,14 @@ import org.junit.experimental.categories.Category;
 
 public class PersistenceMorphiaClassesTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPersistenceModule() {
     new PersistenceMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPersistenceSearchAndList() {
     new MorphiaModule().testAutomaticSearch(ImmutableSet.<Class>builder()
@@ -45,7 +45,7 @@ public class PersistenceMorphiaClassesTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPersistencImplementationClassesModule() {
     new PersistenceMorphiaRegistrar().testImplementationClassesModule();

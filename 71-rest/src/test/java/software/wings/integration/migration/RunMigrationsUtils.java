@@ -24,7 +24,7 @@ public class RunMigrationsUtils extends WingsBaseTest {
   @Inject private Injector injector;
 
   @Test
-  @Owner(emails = BRETT)
+  @Owner(developers = BRETT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void runMigrations() {
@@ -32,7 +32,7 @@ public class RunMigrationsUtils extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = BRETT)
+  @Owner(developers = BRETT)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void runSpecificMigration() {

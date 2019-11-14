@@ -21,7 +21,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
   @Inject AuditServiceHelper auditServiceHelper;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddEntityOperationIdentifierDataToAuditContext_Service() throws Exception {
     try (GlobalContextGuard guard = GlobalContextManager.initGlobalContextGuard(null)) {
@@ -70,7 +70,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddEntityOperationIdentifierDataToAuditContext_Environment() throws Exception {
     try (GlobalContextGuard guard = GlobalContextManager.initGlobalContextGuard(null)) {

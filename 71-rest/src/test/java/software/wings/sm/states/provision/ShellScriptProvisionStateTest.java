@@ -21,7 +21,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
       new ShellScriptProvisionState(InfrastructureProvisionerType.SHELL_SCRIPT.name());
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseOutput() {
     assertThat(state.parseOutput(null)).isEqualTo(Collections.emptyMap());

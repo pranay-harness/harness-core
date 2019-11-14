@@ -159,7 +159,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -189,7 +189,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -217,7 +217,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertEmptyMetrics() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -237,7 +237,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertInvalidLambdaFunction() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -254,7 +254,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertInvalidEC2Instance() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -271,7 +271,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertInvalidECSCluster() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -288,7 +288,7 @@ public class CloudWatchCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertInvalidLoadBalancer() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

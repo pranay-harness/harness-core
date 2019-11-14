@@ -57,7 +57,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(FunctionalTests.class)
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     logger.info("Creating the workflow");

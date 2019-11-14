@@ -95,7 +95,7 @@ public class AccountExportImportResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFindClashedUserIdMapping() {
     Map<String, String> userIdMapping = accountExportImportResource.findClashedUserIdMapping(accountId, users);

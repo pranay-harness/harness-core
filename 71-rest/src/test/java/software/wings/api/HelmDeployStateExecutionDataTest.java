@@ -19,7 +19,7 @@ public class HelmDeployStateExecutionDataTest extends CategoryTest {
       HelmDeployStateExecutionData.builder().chartName("Chart_Name").build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetExecutionSummaryForMaxErrorMessageLength() {
     // Generate an errorMessage that is greater than HelmDeployStateExecutionData.MAX_ERROR_MSG_LENGTH
@@ -39,7 +39,7 @@ public class HelmDeployStateExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetExecutionSummaryForErrorMessageLength() {
     helmDeployStateExecutionData.setErrorMsg(errorMessage);

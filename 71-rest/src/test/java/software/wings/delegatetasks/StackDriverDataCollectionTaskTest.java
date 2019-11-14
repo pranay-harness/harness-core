@@ -198,7 +198,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetMetrics() throws Exception {
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
@@ -215,7 +215,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetServiceGuardMetrics() throws Exception {
     // setup

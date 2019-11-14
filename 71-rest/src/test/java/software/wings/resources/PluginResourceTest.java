@@ -44,7 +44,7 @@ public class PluginResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetInstalledPlugins() throws Exception {
     RestResponse<List<AccountPlugin>> restResponse = RESOURCES.client()
@@ -55,7 +55,7 @@ public class PluginResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetInstalledPluginSettingSchema() throws Exception {
     RestResponse<Map<String, JsonNode>> restResponse =

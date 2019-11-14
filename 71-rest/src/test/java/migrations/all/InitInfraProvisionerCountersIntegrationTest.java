@@ -26,7 +26,7 @@ public class InitInfraProvisionerCountersIntegrationTest extends BaseIntegration
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long infraProvisionerCount = wingsPersistence.createQuery(InfrastructureProvisioner.class).count();

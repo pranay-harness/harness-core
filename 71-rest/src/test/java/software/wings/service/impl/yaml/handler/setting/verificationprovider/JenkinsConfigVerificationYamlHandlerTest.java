@@ -43,7 +43,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
@@ -67,7 +67,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToBeanForNullValues() {
     ChangeContext<VerificationYaml> changeContext =

@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class EntityExportAnnotationTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void findExportableEntityTypes() {
     Set<Class> morphiaClasses = collectMorphiaClasses();

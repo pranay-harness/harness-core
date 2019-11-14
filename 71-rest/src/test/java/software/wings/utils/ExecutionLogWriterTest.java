@@ -29,7 +29,7 @@ public class ExecutionLogWriterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void smokeTest() {
     ExecutionLogWriter testWriter = ExecutionLogWriter.builder()

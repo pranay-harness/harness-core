@@ -50,7 +50,7 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public <T extends CVConfiguration> void testLogsConfigurationResetBaseline() {
     final String appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());

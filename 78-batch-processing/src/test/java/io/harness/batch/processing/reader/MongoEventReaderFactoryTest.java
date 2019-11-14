@@ -24,7 +24,7 @@ public class MongoEventReaderFactoryTest extends WingsBaseTest {
   private final long END_TIME = NOW.getEpochSecond();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testPublishedMessageMongoEventReader() {
     ItemReader<PublishedMessage> reader =

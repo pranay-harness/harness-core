@@ -35,7 +35,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEcsHelperServiceDelegateImpl awsEcsHelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListClusters() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
@@ -51,7 +51,7 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testListServicesForCluster() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);

@@ -20,7 +20,7 @@ public class ExternalApiRateLimitingServiceTest extends WingsBaseTest {
   @Inject private ExternalApiRateLimitingService service;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllowedRequests() {
     String key = "abcd";

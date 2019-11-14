@@ -31,7 +31,7 @@ public class SlackMessageSenderTest extends WingsBaseTest {
   @Mock private Call<ResponseBody> responseBodyCall;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testMessageSending() throws IOException {
     SlackMessage slackMessage = new SlackMessage("https://hooks.slack.com/services/", "#channel", "sender",

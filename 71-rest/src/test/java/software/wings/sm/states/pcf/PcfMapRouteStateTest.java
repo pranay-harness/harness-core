@@ -281,7 +281,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
@@ -290,7 +290,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_Infra_routes_New_Route_Name() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
@@ -341,7 +341,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_NPE_Validation() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -359,7 +359,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_infra_tempRoute() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
@@ -404,7 +404,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfOldAPP_infra_route() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_OLD_APP_NAME + "}");
@@ -451,7 +451,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfOldAPP_infra_tempRoute() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_OLD_APP_NAME + "}");
@@ -496,7 +496,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_Switch_BG_routes() {
     on(context).set("serviceTemplateService", serviceTemplateService);

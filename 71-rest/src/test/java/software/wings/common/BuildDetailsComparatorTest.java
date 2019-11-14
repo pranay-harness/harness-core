@@ -18,7 +18,7 @@ public class BuildDetailsComparatorTest extends CategoryTest {
   private BuildDetails.Builder buildDetails = BuildDetails.Builder.aBuildDetails();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSortDescendingOrder() {
     buildDetails.withNumber("todolist-1.0-1.x86_64.rpm").build();

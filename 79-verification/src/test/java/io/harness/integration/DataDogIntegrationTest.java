@@ -84,7 +84,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void fetch() {
@@ -135,7 +135,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SOWMYA, intermittent = true)
+  @Owner(developers = SOWMYA, intermittent = true)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void txnDatadog() throws InterruptedException {

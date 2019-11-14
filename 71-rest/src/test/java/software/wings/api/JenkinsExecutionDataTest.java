@@ -25,7 +25,7 @@ public class JenkinsExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     assertThat(jenkinsExecutionData.getExecutionSummary())
@@ -36,7 +36,7 @@ public class JenkinsExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionDetails() {
     assertThat(jenkinsExecutionData.getExecutionDetails())

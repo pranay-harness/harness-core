@@ -75,7 +75,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void queryHostData() {
@@ -92,7 +92,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithNormalQuery() {
     ElkSetupTestNodeData elkSetupTestNodeData = getElkSetupTestNodedata("error");
@@ -109,7 +109,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithValidJSONQuery() {
     String query = "{\"bool\":{\"must\":[{\"query_string\":{\"query\":\"log:error\",\"analyze_wildcard\":true,"
@@ -129,7 +129,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = PRANJAL, intermittent = true)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testGetLogRecordsWithInvalidJSONQuery() {
     // doesnt start with '{' its an invalid query String

@@ -13,7 +13,7 @@ public class CryptoUtilsTest extends CategoryTest {
   public static final int LEN = 10;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSecureRandAlphaNumString() {
     String alphaNumericPattern = "^[a-zA-Z0-9]*$";

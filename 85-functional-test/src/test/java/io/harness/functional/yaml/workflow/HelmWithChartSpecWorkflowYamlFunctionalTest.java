@@ -68,7 +68,7 @@ public class HelmWithChartSpecWorkflowYamlFunctionalTest extends AbstractFunctio
   }
 
   @Test
-  @Owner(emails = ANSHUL, intermittent = true)
+  @Owner(developers = ANSHUL, intermittent = true)
   @Category(FunctionalTests.class)
   public void testHelmWorkflowWithChartSpec() {
     uploadYamlZipFile(ACCOUNT_ID, OLD_APP_NAME, SETUP_FOLDER_PATH + APPLICATIONS_FOLDER);

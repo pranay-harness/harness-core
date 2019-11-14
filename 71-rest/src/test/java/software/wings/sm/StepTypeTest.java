@@ -17,7 +17,7 @@ import org.junit.experimental.categories.Category;
 
 public class StepTypeTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForECS() {
     StepType stepType = StepType.ECS_SERVICE_SETUP;
@@ -78,7 +78,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForSpotinst() {
     StepType stepType = StepType.SPOTINST_SETUP;
@@ -108,7 +108,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForPcf() {
     StepType stepType = StepType.PCF_SETUP;
@@ -133,7 +133,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldMatchForOnesNotAddingTypeYet() {
     StepType stepType = AWS_AMI_SERVICE_SETUP;

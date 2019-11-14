@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class SpotInstDeployStateExecutionDataTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStateData() {
     String oldId = "oldId";

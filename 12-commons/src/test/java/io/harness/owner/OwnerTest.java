@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 @Slf4j
 public class OwnerTest extends CategoryTest {
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   @Ignore("This is dummy failing on purpose tests to test the owner infrastructure")
   public void reportOwner() {
@@ -23,7 +23,7 @@ public class OwnerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("This is dummy failing on purpose tests to test the owner infrastructure")
   public void reportOwner2() {

@@ -91,7 +91,7 @@ public class GraphQLExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category({FunctionalTests.class, GraphQLTests.class})
   public void fetchExecutionsInRange() throws Exception {
     final Seed seed = new Seed(0);
@@ -125,7 +125,7 @@ id
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category({FunctionalTests.class, GraphQLTests.class})
   public void fetchWorkflowExecution() throws Exception {
     final Seed seed = new Seed(0);
@@ -236,7 +236,7 @@ id
   }
 
   @Test
-  @Owner(emails = GEORGE)
+  @Owner(developers = GEORGE)
   @Category({FunctionalTests.class, GraphQLTests.class})
   public void fetchPipelineExecution() throws Exception {
     final Seed seed = new Seed(0);

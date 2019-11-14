@@ -21,7 +21,7 @@ public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
   //  private final String baseUrl = "https://appd.cfapps.io";
   //  private final String baseUrl = "http://localhost:8080";
   @Test
-  @Owner(emails = RAGHU)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void generateLoadTest() throws InterruptedException {

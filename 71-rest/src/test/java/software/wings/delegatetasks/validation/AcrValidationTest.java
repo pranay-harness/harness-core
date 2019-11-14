@@ -54,7 +54,7 @@ public class AcrValidationTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getCriteriaTest() {
     List<String> criteria = acrValidation.getCriteria();
@@ -63,7 +63,7 @@ public class AcrValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void validateSuccessTest() {
     List<DelegateConnectionResult> result = acrValidation.validate();

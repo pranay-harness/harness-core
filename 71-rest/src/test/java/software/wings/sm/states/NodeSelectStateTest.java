@@ -154,7 +154,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
@@ -182,7 +182,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestDonotExcludeHostsWithSameArtifactForRolling() {
     nodeSelectState.setInstanceCount(3);
@@ -211,7 +211,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestExcludeHostsForPhysicalSshInfra() {
     nodeSelectState.setInstanceCount(3);
@@ -243,7 +243,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
@@ -266,7 +266,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSucceedForPartialPercentageInstances() {
     nodeSelectState.setInstanceCount(1);
@@ -297,7 +297,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFailForZeroTotalInstances() {
     nodeSelectState.setInstanceCount(100);
@@ -326,7 +326,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReturnFalseWhenExecutionHostsNotPresent() {
     WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
@@ -338,7 +338,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldOverrideForFirstPhase() {
     WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams()
@@ -362,7 +362,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSkipSubsequentPhases() {
     WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams()

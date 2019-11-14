@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 public class PcfCommandValidationTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithNullEncryptionType() {
     Consumer consumer = mock(Consumer.class);

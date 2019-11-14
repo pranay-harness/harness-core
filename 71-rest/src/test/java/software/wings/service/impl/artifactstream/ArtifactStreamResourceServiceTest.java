@@ -63,7 +63,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should create artifact stream.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateArtifactStream() {
     assertThat(artifactStreamService.create(artifactStream)).isNotNull();
@@ -73,7 +73,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should list all artifact streams.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListAllArtifactStreams() {
     List<ArtifactStream> artifactStreams = Lists.newArrayList();
@@ -87,7 +87,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should delete artifact stream.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteArtifactStream() {
     ArtifactStream dbArtifactStream = artifactStreamService.create(artifactStream);

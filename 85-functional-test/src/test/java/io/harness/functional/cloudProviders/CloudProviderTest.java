@@ -47,7 +47,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   private static final BooleanMatcher booleanMatcher = new BooleanMatcher();
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(FunctionalTests.class)
   public void listCloudProviders() {
     JsonPath cloudProviders = SettingsUtils.listCloudproviderConnector(bearerToken, getAccount().getUuid(), CATEGORY);
@@ -55,7 +55,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SUNIL)
+  @Owner(developers = SUNIL)
   @Category(FunctionalTests.class)
   public void runAWSCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createAWSCloudProvider, booleanMatcher, true);
@@ -67,7 +67,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = DEEPAK, intermittent = true)
+  @Owner(developers = DEEPAK, intermittent = true)
   @Category(FunctionalTests.class)
   public void runAzureCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createAzureCloudProvider, booleanMatcher, true);
@@ -79,7 +79,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = UTKARSH, intermittent = true)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
   public void runGCPCloudProviderCRUDTests() {
     // TODO: this test always fails in jenkins but passes in local. Fix this test and uncomment.
@@ -92,7 +92,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = DEEPAK)
+  @Owner(developers = DEEPAK)
   @Category(FunctionalTests.class)
   public void runPhysicalDataCenterCloudProvider() {
     retry.executeWithRetry(this ::createPhysicalDataCenterCloudProvider, booleanMatcher, true);

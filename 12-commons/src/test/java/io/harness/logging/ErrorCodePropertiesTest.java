@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class ErrorCodePropertiesTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testErrorCodesInProperties() {
     Properties messages = new Properties();

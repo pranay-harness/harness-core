@@ -40,7 +40,7 @@ public class BambooConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String bambooProviderName = "Bamboo" + System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class BambooConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandl
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String bambooProviderName = "Bamboo" + System.currentTimeMillis();

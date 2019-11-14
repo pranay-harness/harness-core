@@ -53,7 +53,7 @@ public class GetDeploymentsFunctionalTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
   public void getDeploymentsTest() {
     // Running harness get deployments before deploying a workflow

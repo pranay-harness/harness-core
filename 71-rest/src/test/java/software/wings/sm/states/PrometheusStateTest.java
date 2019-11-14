@@ -55,14 +55,14 @@ public class PrometheusStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultComparisionStrategy() {
     assertThat(prometheusState.getComparisonStrategy()).isEqualTo(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS);
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRenderURLExpression() throws IllegalAccessException {
     AnalysisContext analysisContext = mock(AnalysisContext.class);

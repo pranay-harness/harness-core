@@ -11,7 +11,7 @@ import software.wings.WingsBaseTest;
 
 public class DockerConfigTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   // test with a URL that doesn't end on a / and make sure a / gets added
   public void testConstructorWithUrlWithoutSlash() {
@@ -25,7 +25,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {
     // Normal Config
@@ -37,7 +37,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDockerHasCredentials() {
     DockerConfig dockerConfig = DockerConfig.builder()
@@ -49,7 +49,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDockerHasNoCredentials() {
     DockerConfig dockerConfig = new DockerConfig();

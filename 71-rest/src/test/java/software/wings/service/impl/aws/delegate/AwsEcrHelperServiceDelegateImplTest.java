@@ -34,7 +34,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEcrHelperServiceDelegateImpl awsEcrHelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetEcrImageUrl() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
@@ -50,7 +50,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAmazonEcrAuthToken() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);

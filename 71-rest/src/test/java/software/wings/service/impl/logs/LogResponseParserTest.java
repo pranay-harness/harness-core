@@ -26,7 +26,7 @@ import java.util.Map;
 
 public class LogResponseParserTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseValidResponse() throws IOException {
     String textLoad =
@@ -60,7 +60,7 @@ public class LogResponseParserTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testParseValidResponseMultiple() throws IOException {
     String textLoad = Resources.toString(

@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class CloudProviderTest extends CategoryTest {
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testAwsCloudProvider() {
     CloudProvider cloudProvider = CloudProvider.AWS;
@@ -20,7 +20,7 @@ public class CloudProviderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGcpCloudProvider() {
     CloudProvider cloudProvider = CloudProvider.GCP;

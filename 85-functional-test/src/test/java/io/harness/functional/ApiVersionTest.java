@@ -10,7 +10,7 @@ import org.junit.experimental.categories.Category;
 
 public class ApiVersionTest extends AbstractFunctionalTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(FunctionalTests.class)
   public void shouldApiReady() {
     Setup.portal().when().get("/version").then().statusCode(200);

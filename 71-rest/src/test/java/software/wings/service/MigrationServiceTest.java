@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MigrationServiceTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void versionsShouldBeUnique() {
     Set<Integer> versions = new HashSet<>();
@@ -27,7 +27,7 @@ public class MigrationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void versionsShouldBeSequential() {
     AtomicInteger last = new AtomicInteger(-1);

@@ -17,14 +17,14 @@ import software.wings.integration.dl.PageRequestTest.Dummy;
 @Slf4j
 public class LimitMorphiaRegistrarTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLimitsModule() {
     new LimitsMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLimitsSearchAndList() {
     new MorphiaModule().testAutomaticSearch(
@@ -32,7 +32,7 @@ public class LimitMorphiaRegistrarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLimitsImplementationClassesModule() {
     new LimitsMorphiaRegistrar().testImplementationClassesModule();

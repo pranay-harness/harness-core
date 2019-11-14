@@ -34,7 +34,7 @@ public class WorkflowStatusEvaluatorTest extends WingsBaseTest {
   private static final String SOME_ACCOUNT_ID = "some-account-id-" + WorkflowStatusEvaluatorTest.class.getSimpleName();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStatus() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();

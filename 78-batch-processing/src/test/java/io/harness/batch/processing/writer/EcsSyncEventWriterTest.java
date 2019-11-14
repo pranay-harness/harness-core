@@ -55,7 +55,7 @@ public class EcsSyncEventWriterTest extends CategoryTest implements EcsEventGene
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldStopInactiveInstance() throws Exception {
     when(instanceDataService.fetchClusterActiveInstanceData(

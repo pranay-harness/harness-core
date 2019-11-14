@@ -43,7 +43,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertDocument() {
     String entityJson = "entity_json";
@@ -53,7 +53,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testNestedQuery() {
     String value = "value";
@@ -73,7 +73,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddTimestamp() {
     when(elasticsearchDao.addTimestamp(entityType, listToUpdate, documentId, timestamp, daysToRetain)).thenReturn(true);
@@ -83,7 +83,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddTimestamps() {
     when(elasticsearchDao.addTimestamp(entityType, listToUpdate, documentIds, timestamp, daysToRetain))
@@ -94,7 +94,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDeleteDocument() {
     String entityJson = "entity_json";
@@ -104,7 +104,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateKeyInMultipleDocuments() {
     String filterKey = "filter_key";
@@ -118,7 +118,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateListInMultipleDocuments() {
     String elementKey = "element_key";
@@ -131,7 +131,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppendToListInSingleDocument() {
     when(elasticsearchDao.appendToListInSingleDocument(entityType, listToUpdate, documentId, newElement))
@@ -142,7 +142,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppendToListInSingleDocumentWithLimit() {
     when(elasticsearchDao.appendToListInSingleDocument(entityType, listToUpdate, documentId, newElement, limit))
@@ -153,7 +153,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppendToListInMultipleDocuments() {
     when(elasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement))
@@ -164,7 +164,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAppendToListInMultipleDocumentsWithLimit() {
     when(elasticsearchDao.appendToListInMultipleDocuments(entityType, listToUpdate, documentIds, newElement, limit))
@@ -175,7 +175,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRemoveFromListInMultipleDocuments() {
     String idToBeDeleted = generateUuid();
@@ -187,7 +187,7 @@ public class SynchronousElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRemoveFromListInMultipleDocument() {
     String idToBeDeleted = generateUuid();

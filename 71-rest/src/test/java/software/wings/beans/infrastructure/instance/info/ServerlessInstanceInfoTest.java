@@ -16,7 +16,7 @@ import java.util.Collections;
 
 public class ServerlessInstanceInfoTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEquals() {
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo1 = getAwsLambdaInstanceInfo1();
@@ -60,7 +60,7 @@ public class ServerlessInstanceInfoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHashCode() {
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo1 = getAwsLambdaInstanceInfo1();

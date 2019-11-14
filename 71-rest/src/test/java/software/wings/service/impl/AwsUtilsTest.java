@@ -32,14 +32,14 @@ public class AwsUtilsTest extends WingsBaseTest {
   @InjectMocks @Inject private AwsUtils utils;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHostnameFromPrivateDnsName() {
     assertThat(utils.getHostnameFromPrivateDnsName("ip-172-31-18-241.ec2.internal")).isEqualTo("ip-172-31-18-241");
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetHostnameFromConvention() {
     doReturn(HOST_NAME).when(mockExpressionEvaluator).substitute(anyString(), any());
@@ -48,7 +48,7 @@ public class AwsUtilsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetAwsFilters() {
     AwsInfrastructureMapping awsInfrastructureMapping =

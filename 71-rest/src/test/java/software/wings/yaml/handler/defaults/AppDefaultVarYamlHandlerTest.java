@@ -109,7 +109,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);
@@ -162,7 +162,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(APP_ID);

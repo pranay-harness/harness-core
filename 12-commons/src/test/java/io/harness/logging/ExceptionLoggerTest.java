@@ -27,7 +27,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCollectResponseMessages() {
     final WingsException exception =
@@ -36,7 +36,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExcludeReportTarget() {
     final WingsException exception =
@@ -52,7 +52,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCalculateErrorMessage() {
     WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
@@ -67,7 +67,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCalculateErrorMessageForChain() {
     WingsException innerException = new WingsException(DEFAULT_ERROR_CODE);

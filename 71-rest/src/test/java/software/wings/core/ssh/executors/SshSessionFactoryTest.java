@@ -13,7 +13,7 @@ import java.io.File;
 
 public class SshSessionFactoryTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getKeyPath() {
     SshSessionConfig config = SshSessionConfig.Builder.aSshSessionConfig().build();

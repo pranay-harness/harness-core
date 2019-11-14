@@ -41,7 +41,7 @@ public class CloudProviderTest extends GraphQLTest {
 }*/ CloudProviderTest.class);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryCloudProvider() {
     final Seed seed = new Seed(0);
@@ -93,7 +93,7 @@ public class CloudProviderTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryCloudProviders() {
     final Seed seed = new Seed(0);

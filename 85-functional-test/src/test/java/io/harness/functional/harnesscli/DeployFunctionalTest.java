@@ -110,7 +110,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void deployWorkflowWithInfraMapping() throws IOException {
     Workflow rollingWorkflow =
@@ -128,7 +128,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployWithWrongApplicationId() throws IOException {
@@ -142,7 +142,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployWithWrongWorkflowId() throws IOException {
@@ -154,7 +154,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployWithWrongPipelineId() throws IOException {
@@ -166,7 +166,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployWithWrongArtifactId() throws IOException {
@@ -181,7 +181,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void deployWithoutParams() throws IOException {
@@ -193,7 +193,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void shouldDeployWorkflow() throws IOException {
@@ -211,7 +211,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void shouldDeployTemplateWorkflow() throws IOException {
@@ -241,7 +241,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void shouldDeployWorkflowUsingConfigFile() throws IOException {
@@ -266,7 +266,7 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   @Ignore("Will be enabled along with InfraDefs Feature Flag")
   public void shouldDeployPipeline() throws IOException {

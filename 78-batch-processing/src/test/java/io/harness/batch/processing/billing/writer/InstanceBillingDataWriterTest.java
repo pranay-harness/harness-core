@@ -69,7 +69,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetValueForKeyFromInstanceMetaData() {
     Map<String, String> metaData = new HashMap<>();
@@ -81,7 +81,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetNullValueForKeyFromInstanceMetaData() {
     InstanceData instanceData = InstanceData.builder().build();
@@ -91,7 +91,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetEmptyHarnessServiceInfo() {
     InstanceData instanceData = InstanceData.builder().build();
@@ -101,7 +101,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetHarnessServiceInfo() {
     InstanceData instanceData = InstanceData.builder().harnessServiceInfo(getHarnessServiceInfo()).build();
@@ -111,7 +111,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testWriteBillingData() throws Exception {
     Map<String, String> metaDataMap = new HashMap<>();

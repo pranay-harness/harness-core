@@ -91,7 +91,7 @@ public class EcsSyncEventWriterIntegrationTest extends CategoryTest implements E
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void shouldStopEc2Instance() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =

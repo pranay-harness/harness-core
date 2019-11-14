@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class IndexManagerTest extends PersistenceTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @RealMongo
   public void testIndexCreators() {

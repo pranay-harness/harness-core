@@ -78,7 +78,7 @@ public class EcsBlueGreenServiceSetupRoute53DNSTest extends WingsBaseTest {
   @InjectMocks private EcsBlueGreenServiceSetupRoute53DNS state = new EcsBlueGreenServiceSetupRoute53DNS("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setEcsServiceName("EcsSvc");
@@ -153,7 +153,7 @@ public class EcsBlueGreenServiceSetupRoute53DNSTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -189,7 +189,7 @@ public class EcsBlueGreenServiceSetupRoute53DNSTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidateFields() {
     EcsBlueGreenServiceSetupRoute53DNS stateLocal = new EcsBlueGreenServiceSetupRoute53DNS("stateName2");

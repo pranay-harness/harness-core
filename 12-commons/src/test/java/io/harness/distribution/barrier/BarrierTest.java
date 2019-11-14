@@ -33,7 +33,7 @@ public class BarrierTest extends CategoryTest {
                           .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateBarrier() throws UnableToSaveBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -45,7 +45,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testLoadBarrier() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -59,7 +59,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRunningForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -77,7 +77,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testChildFailedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -95,7 +95,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testChildMixedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -113,7 +113,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTopAbsentForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -130,7 +130,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTopSucceededForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
@@ -147,7 +147,7 @@ public class BarrierTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAbandonedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();

@@ -43,7 +43,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
     logger.info("Logging in as a default user");
@@ -53,7 +53,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {
     String email = "testemail2@harness.mailinator.com";
@@ -63,7 +63,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
     logger.info("Readonly test for GET");
@@ -73,7 +73,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUserGroup() {
     AccessManagementUtils.testPermissionToPostInUserGroup(
@@ -81,7 +81,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForIPWhitelisting() {
     AccessManagementUtils.amNoPermissionToPostForIPWhitelisting(
@@ -89,7 +89,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForAPIKeys() {
     AccessManagementUtils.runAPIKeyPostTest(
@@ -97,7 +97,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void createApplicationFail() {
     logger.info("Check if create application test fails");
@@ -118,7 +118,7 @@ public class RBACOtherAccountsTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(emails = NATARAJA)
+  @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteApplicationFail() {
     logger.info("Check if delete application test fails");

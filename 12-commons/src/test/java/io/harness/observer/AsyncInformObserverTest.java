@@ -60,7 +60,7 @@ public class AsyncInformObserverTest extends CategoryTest {
   }
 
   @Test(timeout = 1000)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testResealingAsyncCall() throws InterruptedException {
     assertThatCode(() -> {

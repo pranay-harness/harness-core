@@ -63,7 +63,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should list services.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListServices() {
     PageResponse<Service> pageResponse = new PageResponse<>();
@@ -88,7 +88,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should get service.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetService() {
     when(RESOURCE_SERVICE.getWithHelmValues(APP_ID, SERVICE_ID, SetupStatus.COMPLETE)).thenReturn(aSERVICE);
@@ -104,7 +104,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should save service.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveService() {
     when(RESOURCE_SERVICE.save(any(Service.class))).thenReturn(aSERVICE);
@@ -121,7 +121,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should update service.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateService() {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
@@ -139,7 +139,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should delete service.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     Response restResponse =
@@ -152,7 +152,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should add command.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAddCommand() {
     when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), eq(true)))
@@ -171,7 +171,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should delete command.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteCommand() {
     when(RESOURCE_SERVICE.deleteCommand(APP_ID, SERVICE_ID, "START")).thenReturn(aSERVICE);
@@ -189,7 +189,7 @@ public class ServiceResourceTest extends CategoryTest {
    * Should update command.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCommand() {
     when(RESOURCE_SERVICE.updateCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class))).thenReturn(aSERVICE);

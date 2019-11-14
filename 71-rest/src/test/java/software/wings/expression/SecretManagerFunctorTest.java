@@ -40,7 +40,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   private static final String WORKFLOW_EXECUTION_ID = "WORKFLOW_EXECUTION_ID";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDecryptLocalEncryptedServiceVariables() {
     final String secretName = "MySecretName";
@@ -114,7 +114,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDecryptKMSEncryptedServiceVariables() {
     final String secretName = "MySecretName";
@@ -152,7 +152,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   }
 
   @Test(expected = FunctorException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldRejectInternalFunctor() {
     final String secretName = "MySecretName";

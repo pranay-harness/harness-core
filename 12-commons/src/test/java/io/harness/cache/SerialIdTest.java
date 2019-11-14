@@ -37,7 +37,7 @@ class Dummy implements Distributable, Nominal {
 
 public class SerialIdTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSanity() {
     final Dummy dummy = new Dummy();

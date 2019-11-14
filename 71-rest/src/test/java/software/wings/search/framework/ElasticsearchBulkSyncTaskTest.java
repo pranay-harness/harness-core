@@ -39,7 +39,7 @@ public class ElasticsearchBulkSyncTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testBulkSyncProcess() {
     String newIndexName = "newIndexName";

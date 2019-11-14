@@ -19,7 +19,7 @@ public class FieldKeyValMapProviderTest extends CategoryTest {
   public static final String CUSTOM_KEY = "customKey";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getQueryMapForClass() {
     DummyPerson person = new DummyPerson(ID, NAME, OCCUPATION);

@@ -165,7 +165,7 @@ public class GitClientImplTest extends WingsBaseTest {
       + "-----END RSA PRIVATE KEY-----\n";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAddToGitDiffResult() throws Exception {
     DiffEntry entry = mock(DiffEntry.class);
@@ -258,7 +258,7 @@ public class GitClientImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloneRepoWithSSH() throws Exception {
     try {

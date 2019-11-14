@@ -13,7 +13,7 @@ import org.quartz.Trigger;
 
 public class HQuartzSchedulerTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testJobCompare() {
     JobDetail nullJob = null;
@@ -21,7 +21,7 @@ public class HQuartzSchedulerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testTriggerCompare() {
     Trigger nullTrigger = null;

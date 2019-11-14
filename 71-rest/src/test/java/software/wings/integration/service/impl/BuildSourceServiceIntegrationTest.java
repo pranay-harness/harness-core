@@ -298,7 +298,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -316,7 +316,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -333,7 +333,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -352,7 +352,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -370,7 +370,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -387,7 +387,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -423,7 +423,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -459,7 +459,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = SRINIVAS)
+  @Owner(developers = SRINIVAS)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
@@ -488,7 +488,7 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = GARVIT)
+  @Owner(developers = GARVIT)
   @Category(IntegrationTests.class)
   public void getLabels() {
     switch (type) {

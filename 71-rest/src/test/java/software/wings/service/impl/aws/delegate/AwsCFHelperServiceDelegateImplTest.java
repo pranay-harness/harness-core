@@ -35,7 +35,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsCFHelperServiceDelegateImpl awsCFHelperServiceDelegate;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetParamsData() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
@@ -63,7 +63,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetStackBody() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
@@ -75,7 +75,7 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetCapabilities() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);

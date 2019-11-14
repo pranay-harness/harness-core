@@ -25,7 +25,7 @@ public class TriggerExecutionServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private TriggerExecutionService triggerExecutionService;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldFetchLastSuccessTriggerExecution() {
     String webhookToken = generateUuid();

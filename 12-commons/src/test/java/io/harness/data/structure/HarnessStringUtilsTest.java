@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 public class HarnessStringUtilsTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldJoinIfIndividualElements() {
     String joinedString = HarnessStringUtils.join("/", "foo", "bar", "hello-world");
@@ -24,7 +24,7 @@ public class HarnessStringUtilsTest extends CategoryTest {
     Assertions.assertThat(joinedString).isEqualTo("foobarhello-world");
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldJoinIfIterableElements() {
     String joinedString = HarnessStringUtils.join("/", Arrays.asList("foo", "bar", "hello-world"));

@@ -46,7 +46,7 @@ public class InfrastructureMappingFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void getInfraMappingsTest() throws IOException {
     String command =
@@ -64,7 +64,7 @@ public class InfrastructureMappingFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void getInfraMappingsTestWithWrongAppIdTest() throws IOException {
     String command = "harness get inframappings --application "
@@ -76,7 +76,7 @@ public class InfrastructureMappingFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void getInfraMappingsTestWithWrongEnvIdTest() throws IOException {
     String command = "harness get inframappings --application " + appId + " --environment "
@@ -88,7 +88,7 @@ public class InfrastructureMappingFunctionalTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(emails = ROHIT)
+  @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void getInfraMappingsTestWithWrongServiceIdTest() throws IOException {
     String command = "harness get inframappings --application " + appId + " --environment " + envId + " --service "

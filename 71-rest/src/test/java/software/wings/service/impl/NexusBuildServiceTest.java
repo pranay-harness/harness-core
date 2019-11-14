@@ -65,7 +65,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
           .build();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(nexusService.getRepositories(nexusConfig, null))
@@ -75,7 +75,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetJobs() {
     when(nexusService.getRepositories(nexusConfig, null))
@@ -86,7 +86,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(Lists.newArrayList("/fakepath"));
@@ -95,7 +95,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     when(nexusService.getVersions(nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME, null, null))
@@ -107,7 +107,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     NexusConfig nexusConfig = NexusConfig.builder()

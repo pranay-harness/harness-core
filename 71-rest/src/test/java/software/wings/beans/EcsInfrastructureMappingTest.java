@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class EcsInfrastructureMappingTest extends WingsBaseTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     EcsInfrastructureMapping infrastructureMapping = new EcsInfrastructureMapping();

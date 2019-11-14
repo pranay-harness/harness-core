@@ -44,7 +44,7 @@ public class DeploymentEventProcessorTest extends WingsBaseTest {
   @Inject @InjectMocks DeploymentEventProcessor deploymentEventProcessor;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListExecutions() throws SQLException {
     Map<String, String> stringData = new HashMap<>();

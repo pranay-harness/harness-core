@@ -49,7 +49,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     resourceConstraintBackupHandler.registerIterators();
@@ -59,7 +59,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleBlockedInstance() {
     resourceConstraintInstance.setState(State.BLOCKED.name());
@@ -70,7 +70,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleActiveInstance() {
     resourceConstraintInstance.setState(State.ACTIVE.name());
@@ -81,7 +81,7 @@ public class ResourceConstraintBackupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCatchExceptionInUpdateResourceConstraint() {
     resourceConstraintInstance.setState(State.ACTIVE.name());

@@ -77,7 +77,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCreateStats() throws URISyntaxException {
     Datastore ds = persistence.getDatastore(Instance.class);

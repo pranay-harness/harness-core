@@ -41,7 +41,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void processYamlFilesAsTar() throws IOException {
     InputStream zipfile = getClass().getResourceAsStream("yaml_zip_test.zip");
@@ -57,7 +57,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFilterInvalidFilePaths() throws Exception {
     List<GitFileChange> gitFileChange = new ArrayList<>();

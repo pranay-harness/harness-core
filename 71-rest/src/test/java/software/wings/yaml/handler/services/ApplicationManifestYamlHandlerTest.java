@@ -143,7 +143,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGetForLocal() throws HarnessException, IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext =
@@ -163,7 +163,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGetForRemote() throws HarnessException, IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext = createChangeContext(remoteYamlContent, validYamlFilePath);
@@ -182,7 +182,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<ApplicationManifest.Yaml> changeContext =
@@ -233,7 +233,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGetForEnvOverrideWithLocalStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
@@ -259,7 +259,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGetForEnvOverrideWithRemoteStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
@@ -291,7 +291,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGetForEnvServiceOverrideWithLocalStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()
@@ -318,7 +318,7 @@ public class ApplicationManifestYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGetForEnvServiceOverrideWithRemoteStoreType() throws HarnessException, IOException {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()

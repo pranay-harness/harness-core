@@ -47,7 +47,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testCreateGCPUsageReport() {
     val gcpUsageReport = getSampleGCPUsageReport();
@@ -64,7 +64,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testLastGCPUsageReportTime() {
     val gcpUsageReport = getSampleGCPUsageReport();

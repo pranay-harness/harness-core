@@ -58,7 +58,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerate() {
     ApiKeyEntry savedApiKeyEntry = generateKey();
@@ -79,7 +79,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdate() {
     ApiKeyEntry apiKeyEntry = generateKey();
@@ -98,7 +98,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelete() {
     ApiKeyEntry apiKeyEntry = generateKey();
@@ -113,7 +113,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGet() {
     ApiKeyEntry apiKeyEntry = generateKey();
@@ -124,7 +124,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testList() {
     generateKey();
@@ -134,7 +134,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidate() {
     ApiKeyEntry apiKeyEntry = generateKey();

@@ -37,7 +37,7 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
   private Class yamlClass = PcfConfig.Yaml.class;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String pcfConfigName = "Pcf" + System.currentTimeMillis();
@@ -49,7 +49,7 @@ public class PcfConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandlerT
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String pcfConfigName = "Pcf" + System.currentTimeMillis();

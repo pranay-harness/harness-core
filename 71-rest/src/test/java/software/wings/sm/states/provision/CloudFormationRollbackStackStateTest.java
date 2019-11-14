@@ -78,7 +78,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   @InjectMocks private CloudFormationRollbackStackState state = new CloudFormationRollbackStackState("stateName");
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testExecute() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -135,7 +135,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testHandleAsync() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

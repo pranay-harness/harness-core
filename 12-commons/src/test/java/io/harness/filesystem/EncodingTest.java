@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
 
 public class EncodingTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDefaultEncoding() {
     assertThat(Charset.defaultCharset()).isEqualTo(Charsets.UTF_8);

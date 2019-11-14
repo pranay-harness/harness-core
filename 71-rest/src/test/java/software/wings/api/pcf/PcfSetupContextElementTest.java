@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class PcfSetupContextElementTest extends CategoryTest {
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     String guid = "1234_0";

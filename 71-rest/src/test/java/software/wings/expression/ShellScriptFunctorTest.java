@@ -18,7 +18,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   public static final String DON_T = "don't";
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyBash() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);
@@ -26,7 +26,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyPowershell() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.POWERSHELL);
@@ -34,7 +34,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyQuote() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);
@@ -43,7 +43,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyQuotePowerShell() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.POWERSHELL);
@@ -52,7 +52,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifySecret() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);
@@ -61,7 +61,7 @@ public class ShellScriptFunctorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testEscapifyLateBindingSecret() {
     ShellScriptFunctor shellScriptFunctor = new ShellScriptFunctor(ScriptType.BASH);

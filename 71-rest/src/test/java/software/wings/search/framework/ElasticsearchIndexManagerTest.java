@@ -36,7 +36,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchIndexManager elasticsearchIndexManager;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void createIndexTest() throws IOException {
     String indexName = "indexName";
@@ -59,7 +59,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteIndexTest() throws IOException {
     String indexName = "indexName";
@@ -95,7 +95,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void removeIndexFromAlias() throws IOException {
     String indexName = "indexName";
@@ -124,7 +124,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void attachIndexToAlias() throws IOException {
     String indexName = "indexName";
@@ -149,7 +149,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getIndexName() {
     String indexName = "indexName";
@@ -165,7 +165,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void getAliasName() {
     String type = "type";

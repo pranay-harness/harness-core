@@ -49,7 +49,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithNullEncryptionType() {
     validation.setParameters(new Object[] {});
@@ -60,7 +60,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithEncryptionConfig() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -72,7 +72,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithEncryptedDataDetails() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -86,7 +86,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithEncryptedDataDetailsList() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -100,7 +100,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationWithListOfNonEncryptedObjects() {
     validation.setParameters(new Object[] {Arrays.asList(new Object(), new Object())});

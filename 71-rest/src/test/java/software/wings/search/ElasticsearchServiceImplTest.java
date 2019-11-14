@@ -43,7 +43,7 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
   public void setup() throws IOException {}
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetSearchResults() throws IOException {
     String searchString = "value";

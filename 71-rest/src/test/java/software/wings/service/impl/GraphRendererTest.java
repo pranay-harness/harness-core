@@ -50,7 +50,7 @@ public class GraphRendererTest extends WingsBaseTest {
   @Inject GraphRenderer graphRenderer;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testIsSubWorkflow() {
     assertThat(GraphRenderer.isSubWorkflow(null)).isFalse();
@@ -62,7 +62,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSanity() {
     List<StateExecutionInstance> stateExecutionInstances = asList(aStateExecutionInstance()
@@ -79,7 +79,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGenerateHierarchyNode() {
     final StateExecutionInstance parent = aStateExecutionInstance()
@@ -172,7 +172,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testConvertToNode() {
     final StateExecutionInstance instance = aStateExecutionInstance()
@@ -196,7 +196,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAggregateStatus() {
     assertThat(GraphRenderer.aggregateStatus(asList(NEW, NEW, NEW))).isEqualTo(NEW);
@@ -239,7 +239,7 @@ public class GraphRendererTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAggregateNodeName() {
     assertThat(GraphRenderer.aggregateNodeName(true, 0, true)).isEqualTo("instances");

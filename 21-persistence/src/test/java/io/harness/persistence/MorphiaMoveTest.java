@@ -27,7 +27,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   @SuppressWarnings("PMD")
   public void shouldCacheMissingClass() {
@@ -53,7 +53,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadOldClass() {
     TestHolderEntity entity =
@@ -70,7 +70,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadFutureClass() {
     persistence.save(MorphiaMove.builder()

@@ -464,7 +464,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadWorkflow() {
     Workflow workflow = workflowService.createWorkflow(constructBasicWorkflow());
@@ -473,7 +473,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldSaveAndRead() {
     StateMachine sm = new StateMachine();
@@ -508,7 +508,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateCustomWorkflow() {
     createCustomWorkflow();
@@ -518,7 +518,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Clone workflow within the same application
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneWorkflow() {
     Workflow workflow2 = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
@@ -549,7 +549,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Clone workflow within the same application
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneWorkflowAcrossApps() {
     when(serviceResourceService.getWithDetails(TARGET_APP_ID, TARGET_SERVICE_ID))
@@ -579,7 +579,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Clone workflow within the same application
    */
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneWorkflowAcrossAppsDifferentArtifactType() {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
@@ -610,7 +610,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Should update workflow.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCustomWorkflow() {
     Workflow workflow = createCustomWorkflow();
@@ -648,7 +648,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Should delete workflow.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteWorkflow() {
     Workflow workflow = createCustomWorkflow();
@@ -660,7 +660,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     workflowService.pruneDescendingEntities(APP_ID, WORKFLOW_ID);
@@ -669,7 +669,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnReferencedWorkflowDelete() {
     Workflow workflow = createCustomWorkflow();
@@ -687,7 +687,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * Should delete workflow.
    */
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void deleteWorkflowExecutionInProgress() {
     Workflow workflow = createCustomWorkflow();
@@ -715,7 +715,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencils() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, null, null);
@@ -728,7 +728,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForPipeline() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
@@ -742,7 +742,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForOrchestration() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
@@ -756,7 +756,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterWorkflow() throws IllegalArgumentException {
     Workflow workflow2 = workflowService.createWorkflow(constructCanaryWorkflow());
@@ -773,7 +773,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForBuildWorkflow() throws IllegalArgumentException {
     Workflow workflow = workflowService.createWorkflow(constructBuildWorkflow());
@@ -789,7 +789,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterWorkflowPhase() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils = getStateTypeScopeListMap();
@@ -821,7 +821,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterGKInfra() throws IllegalArgumentException {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
@@ -846,7 +846,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterECSInfra() throws IllegalArgumentException {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
@@ -871,7 +871,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void stencilsForOrchestrationFilterPhysicalInfra() throws IllegalArgumentException {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
@@ -895,7 +895,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateCanaryWorkflow() {
     Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflow());
@@ -933,7 +933,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBasicDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflowWithPhase();
@@ -962,7 +962,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBasicDirectKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
@@ -997,7 +997,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBasicGCPKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
@@ -1031,7 +1031,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBasicPhysicalInfraDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
@@ -1056,7 +1056,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBlueGreenCPKubernetesDeploymentWorkflow() {
     Workflow workflow = constructBlueGreenWorkflow();
@@ -1095,7 +1095,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBasicEcsDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
@@ -1126,7 +1126,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBasicAwsAmiDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
@@ -1154,7 +1154,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBasicAwsLambdaDeploymentWorkflow() {
     Workflow workflow = constructBasicWorkflow();
@@ -1182,7 +1182,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateCanaryHelmDeploymentWorkflow() {
     Map<String, Object> properties = new HashMap<>();
@@ -1230,7 +1230,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateMultiServiceWorkflow() {
     Workflow workflow = constructMultiServiceWorkflow();
@@ -1255,7 +1255,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldValidateWorkflow() {
     Workflow workflow2 = workflowService.createWorkflow(constructEcsWorkflow());
@@ -1303,7 +1303,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCanary() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1325,7 +1325,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateBasicDeploymentEnvironment() {
     Workflow workflow1 = createBasicWorkflow();
@@ -1355,7 +1355,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateBasicDeploymentEnvironmentServiceInfraMapping() {
     Workflow workflow1 = createBasicWorkflow();
@@ -1405,7 +1405,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateBasicEnvironmentServiceInfraMappingIncompatible() {
     Workflow workflow1 = createBasicWorkflow();
@@ -1437,7 +1437,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateBasicDeploymentInCompatibleService() {
     Workflow workflow1 = createBasicWorkflow();
@@ -1479,7 +1479,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateMulitServiceDeploymentEnvironment() {
     Workflow workflow1 = workflowService.createWorkflow(constructMultiServiceWorkflowWithPhase());
@@ -1510,7 +1510,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateMultiServiceDeploymentEnvironmentServiceInfraMapping() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
@@ -1558,7 +1558,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateMultiServiceDeploymentInCompatibleService() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
@@ -1593,7 +1593,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCanaryDeploymentEnvironmentNoPhases() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1610,7 +1610,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCanaryDeploymentEnvironment() {
     Workflow workflow1 = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
@@ -1641,7 +1641,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCanaryDeploymentEnvironmentServiceInfraMapping() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
@@ -1689,7 +1689,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateCanaryInCompatibleService() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
@@ -1724,7 +1724,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePreDeployment() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1773,7 +1773,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdatePostDeployment() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1798,7 +1798,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1831,7 +1831,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1868,7 +1868,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateWorkflowPhaseInvalidServiceandInframapping() {
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
@@ -1885,7 +1885,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateWorkflowPhaseInvalidServiceandInfra() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID_CHANGED, false))
@@ -1919,7 +1919,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneWorkflowPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -1953,7 +1953,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateMultiServiceWorkflowPhase() {
     Workflow workflow1 = createMultiServiceWorkflow();
@@ -1986,7 +1986,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateMultiServiceWorkflowPhase() {
     Workflow workflow1 = createMultiServiceWorkflow();
@@ -2015,7 +2015,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeleteWorkflowPhase() {
     Workflow workflow1 = workflowService.createWorkflow(constructCanaryWorkflowWithTwoPhases());
@@ -2050,7 +2050,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateWorkflowPhaseRollback() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2093,7 +2093,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNode() {
     Workflow workflow = constructCanaryWithHttpStep();
@@ -2141,7 +2141,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldHaveGraph() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2202,7 +2202,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateNotificationRules() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2219,7 +2219,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateFailureStrategies() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2237,7 +2237,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testValidationFailuresForUpdateFailureStrategies() {
     try {
@@ -2304,7 +2304,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUserVariables() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2320,7 +2320,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUserVariablesValidationFixedEmptyValue() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2330,7 +2330,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateUserVariablesValidationDuplicateNames() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2341,7 +2341,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateComplexWorkflow() {
     Workflow workflow1 = constructCanaryWorkflowWithPhase();
@@ -2379,7 +2379,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTemplatizeBasicDeploymentOnCreation() {
     Workflow workflow2 = workflowService.createWorkflow(constructBasicDeploymentTemplateWorkflow());
@@ -2396,7 +2396,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTemplatizeBasicDeployment() {
     Workflow workflow1 = createBasicWorkflow();
@@ -2415,7 +2415,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTemplatizeMultiServiceEnvThenTemplatizeInfra() {
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
@@ -2461,7 +2461,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTemplatizeCanaryEnvThenTemplatizeInfra() {
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
@@ -2518,7 +2518,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTemplatizeCanaryPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2545,7 +2545,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTemplatizeExpressionsBasicDeployment() {
     Workflow workflow1 = createBasicWorkflow();
@@ -2633,7 +2633,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateTemplatizeExpressionsCanary() {
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.SSH);
@@ -2717,7 +2717,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTemplatizeBasicPhase() {
     Workflow workflow = createBasicWorkflow();
@@ -2750,7 +2750,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeTemplatizeBasicDeployment() {
     Workflow workflow1 = createBasicWorkflow();
@@ -2800,7 +2800,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeTemplatizeOnlyInfraCanaryPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2833,7 +2833,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDeTemplatizeOnlyServiceandInfraCanaryPhase() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -2886,7 +2886,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateBuildDeploymentWorkflow() {
     Workflow workflow2 = workflowService.createWorkflow(constructBuildWorkflow());
@@ -2902,7 +2902,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAwsCodeDeployStateDefaults() {
     when(artifactStreamService.fetchArtifactStreamsForService(APP_ID, SERVICE_ID)).thenReturn(asList(artifactStream));
@@ -2914,14 +2914,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldAwsCodeDeployNoStateDefaults() {
     assertThat(workflowService.getStateDefaults(APP_ID, SERVICE_ID, AWS_CODEDEPLOY_STATE)).isEmpty();
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestWorkflowHasSshInfraMapping() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
@@ -2943,7 +2943,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTemplatizeAppDElkState() {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID))
@@ -3003,7 +3003,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * @throws Exception
    */
   @Test
-  @Owner(emails = ADWAIT)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testGetHPAYamlStringWithCustomMetric() throws Exception {
@@ -3028,7 +3028,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetResolvedServices() {
     Workflow workflow1 = constructCanaryWorkflowWithPhase();
@@ -3040,7 +3040,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetResolvedTemplatizedServices() {
     Workflow workflow1 = createCanaryWorkflow();
@@ -3085,7 +3085,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetResolvedInfraMappings() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
@@ -3109,7 +3109,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetResolvedTemplatizedInfraMappings() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
@@ -3168,7 +3168,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetResolvedEnvironmentId() {
     Workflow workflow2 = workflowService.createWorkflow(constructBasicWorkflowWithPhase());
@@ -3180,7 +3180,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetResolvedEnvironmentIdForTemplatizedWorkflow() {
     Workflow workflow = constructBasicWorkflowWithPhase();
@@ -3206,7 +3206,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSettingsServiceDeleting() {
     String uuid = generateUuid();
@@ -3240,7 +3240,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateWorkflowLinkHttpTemplate() {
     Workflow savedWorkflow = createLinkedTemplateWorkflow();
@@ -3276,7 +3276,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateLinkedWorkflowVariables() {
     Workflow savedWorkflow = createLinkedTemplateWorkflow();
@@ -3326,7 +3326,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateLinkedPreDeploymentVersionChange() {
     Workflow savedWorkflow = createLinkedTemplateWorkflow();
@@ -3355,7 +3355,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateLinkedPostDeploymentVersionChange() {
     Workflow savedWorkflow = createLinkedTemplateWorkflow();
@@ -3386,7 +3386,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateLinkedWorkflowPhaseVersionChange() {
     Workflow savedWorkflow = createLinkedTemplateWorkflow();
@@ -3424,7 +3424,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateLinkedWorkflowVersionChange() {
     Workflow savedWorkflow = createLinkedTemplateWorkflow();
@@ -3493,7 +3493,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestGetGraphNodeInPredeploymentStep() {
     Workflow workflow = workflowService.createWorkflow(constructCanaryWithHttpStep());
@@ -3512,7 +3512,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestGetGraphNodeInPostdeploymentStep() {
     Workflow workflow = workflowService.createWorkflow(constructCanaryHttpAsPostDeploymentStep());
@@ -3529,7 +3529,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldTestGetGraphNodeInPhaseStep() {
     Workflow workflow = workflowService.createWorkflow(constructCanaryWithHttpPhaseStep());
@@ -3546,7 +3546,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCheckEnvironmentServiceOrInfraReferenced() {
     Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
@@ -3567,7 +3567,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetadataForLinkedHttpWorkflow() {
     Workflow workflow = createLinkedWorkflow(TemplateType.HTTP);
@@ -3577,7 +3577,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetadataForLinkedShellScriptWorkflow() {
     Workflow workflow = createLinkedWorkflow(TemplateType.SHELL_SCRIPT);
@@ -3587,7 +3587,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetadataForLinkedCommandWorkflow() {
     Workflow workflow = createLinkedWorkflow(TemplateType.SSH);
@@ -3597,7 +3597,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetadataWithDeploymentFFTurnOn() {
     Workflow workflow = createLinkedWorkflow(TemplateType.SSH);
@@ -3609,7 +3609,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactVariablesWithoutDefaultArtifact() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
@@ -3621,7 +3621,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactVariablesWithDefaultArtifact() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
@@ -3679,7 +3679,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldNotUpdateDefaultArtifactWithFFOff() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
@@ -3705,7 +3705,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(artifactVariable2.getArtifactStreamSummaries().get(0).getDefaultArtifact()).isEqualTo(null);
   }
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactVariablesWithDefaultArtifactAndExecution() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
@@ -3740,7 +3740,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactForService() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
@@ -3759,7 +3759,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactForEnv() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
@@ -3778,7 +3778,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactForWorkflow() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
@@ -3797,7 +3797,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactForInvalidArtifactVariable() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
@@ -3813,7 +3813,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactForInvalidArtifactId() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(false);
@@ -3829,7 +3829,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactForEmptyArtifacts() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithArtifactVariables(true);
@@ -3853,7 +3853,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactWithoutVariables() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
@@ -3867,7 +3867,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactNoArtifacts() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(true);
@@ -3880,7 +3880,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactNoAllowedList() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
@@ -3892,7 +3892,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactInvalidArtifactStreamId() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
@@ -3904,7 +3904,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetArtifactVariableDefaultArtifactDeletedArtifact() {
     WorkflowExecution workflowExecution = prepareWorkflowExecutionWithoutArtifactVariables(false);
@@ -3925,7 +3925,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDisplayInfoForService() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
@@ -3937,7 +3937,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDisplayInfoForInvalidService() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(null);
@@ -3948,7 +3948,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDisplayInfoForEnv() {
     String serviceId1 = "SERVICE_ID_1";
@@ -3974,7 +3974,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDisplayInfoForInvalidEnv() {
     when(environmentService.get(APP_ID, ENV_ID)).thenReturn(null);
@@ -3985,7 +3985,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDisplayInfoForWorkflow() {
     String serviceId1 = "SERVICE_ID_1";
@@ -4019,7 +4019,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDisplayInfoForInvalidWorkflow() {
     Map<String, List<String>> displayInfo = workflowService.getDisplayInfo(
@@ -4029,7 +4029,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldGetDisplayInfoForInvalidEntityType() {
     Map<String, List<String>> displayInfo =
@@ -4057,7 +4057,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCloneWorkflowWithSameName() {
     try {
@@ -4073,7 +4073,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreateWorkflowWithSameName() {
     try {
@@ -4088,7 +4088,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void categoriesForBuildWorkflow() throws IllegalArgumentException {
     Workflow workflow = workflowService.createWorkflow(constructBuildWorkflowWithPhase());
@@ -4155,7 +4155,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void categoriesForBasicWorkflow() throws IllegalArgumentException {
     Workflow workflow = workflowService.createWorkflow(constructBasicWorkflowWithInfraNodeDeployServicePhaseStep());
@@ -4187,7 +4187,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void categoriesForEcsWorkflow() throws IllegalArgumentException {
     Workflow workflow = workflowService.createWorkflow(constructEcsWorkflow());
@@ -4212,7 +4212,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void categoriesForHelmWorkflow() throws IllegalArgumentException {
     Map<String, Object> properties = new HashMap<>();
@@ -4240,7 +4240,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void categoriesForK8SWorkflow() throws IllegalArgumentException {
     Workflow workflow = workflowService.createWorkflow(constructK8SWorkflow());
@@ -4267,7 +4267,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void categoriesForAmiWorkflowRollbackSection() {
     Workflow workflow = workflowService.createWorkflow(constructAmiWorkflow());
@@ -4292,7 +4292,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testAllStateTypesDefinedInStepTypes() {
     List<StateType> excludedStateTypes = asList(SUB_WORKFLOW, REPEAT, FORK, WAIT, PAUSE, ENV_STATE, PHASE, PHASE_STEP,
@@ -4327,7 +4327,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectNodesForAwsSshWorkflow() {
     Workflow workflow = workflowService.createWorkflow(constructBasicWorkflowWithInfraNodeDeployServicePhaseStep());
@@ -4347,7 +4347,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSelectNodesForAwsSshWorkflowWithInfraDefinition() {
     Set<String> favorites = new HashSet<>();
@@ -4391,7 +4391,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateConcurrencyStrategy() {
     Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflowWithConcurrencyStrategy());

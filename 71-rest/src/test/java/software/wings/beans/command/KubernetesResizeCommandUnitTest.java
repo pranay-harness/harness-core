@@ -94,7 +94,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldExecuteFail() {
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
@@ -113,7 +113,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUseMaxInstancesWithPercentage() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
@@ -131,7 +131,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUsePercentageOfMaxInstances() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
@@ -149,7 +149,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldResizeAndDownsize() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
@@ -170,7 +170,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldDownsizeMultiple() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
@@ -197,7 +197,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUseFixedInstancesWithCount() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
@@ -224,7 +224,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCapCountAtFixed() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
@@ -246,7 +246,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldUseFixedInstancesWithPercentage() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();

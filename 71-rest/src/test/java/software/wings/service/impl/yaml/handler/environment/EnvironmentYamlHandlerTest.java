@@ -147,7 +147,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws IOException {
     GitFileChange gitFileChange = new GitFileChange();
@@ -184,7 +184,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFailures() throws IOException {
     // Invalid yaml path
@@ -213,7 +213,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testGetRequiredServiceTemplates() {
     int pageSize = PageRequest.DEFAULT_UNLIMITED;
@@ -233,7 +233,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testCreate_VariableOverride() {
     final String encryped_yaml_ref = "safeharness:some-secret";
@@ -263,7 +263,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpdateDelete_variableOverride() throws Exception {
     final String encryped_yaml_ref = "safeharness:some-secret";
@@ -327,7 +327,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testDelete() {
     Environment env = getDefaultEnvironment();

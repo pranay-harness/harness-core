@@ -37,7 +37,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testSchedule() {
     String accountId = "some-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();
@@ -61,7 +61,7 @@ public class SegmentGroupEventJobServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(IntegrationTests.class)
   public void testScheduleNewDocumentIsCreated() {
     String accountId = "some-account-" + SegmentGroupEventJobServiceTest.class.getSimpleName();

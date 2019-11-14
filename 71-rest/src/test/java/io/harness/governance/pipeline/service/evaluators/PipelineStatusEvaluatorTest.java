@@ -34,7 +34,7 @@ public class PipelineStatusEvaluatorTest extends WingsBaseTest {
   private static final String SOME_ACCOUNT_ID = "some-account-id-" + PipelineStatusEvaluatorTest.class.getSimpleName();
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testStatus() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();

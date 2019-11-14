@@ -113,7 +113,7 @@ public class LogsCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -135,7 +135,7 @@ public class LogsCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsert() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -159,7 +159,7 @@ public class LogsCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

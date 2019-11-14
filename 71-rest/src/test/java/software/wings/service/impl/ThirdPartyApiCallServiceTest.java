@@ -44,7 +44,7 @@ public class ThirdPartyApiCallServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testSaveAndGetApiCallLogs() throws Exception {
     int numOfApiCallLogs = 10;

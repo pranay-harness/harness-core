@@ -42,14 +42,14 @@ public class AuthResponseFilterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(emails = RAMA)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateCustomDashboard() {
     testCustomDashboardActions("PUT");
   }
 
   @Test
-  @Owner(emails = RAMA)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testDeleteCustomDashboard() {
     testCustomDashboardActions("DELETE");

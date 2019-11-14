@@ -70,7 +70,7 @@ public class AppResourceTest extends CategoryTest {
    * Test find by name.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void testFindByName() {
     when(appService.get(TEST_UUID, true)).thenReturn(testApp);

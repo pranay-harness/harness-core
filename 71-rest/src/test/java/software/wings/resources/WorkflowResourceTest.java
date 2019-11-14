@@ -67,7 +67,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCreateWorkflow() {
     Workflow workflow2 = aWorkflow()
@@ -91,7 +91,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldCloneWorkflow() {
     Workflow workflow2 = aWorkflow()
@@ -116,7 +116,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should list workflows.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldListWorkflow() {
     PageRequest<Workflow> pageRequest = aPageRequest().build();
@@ -141,7 +141,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should read workflow.
    */
   @Test
-  @Owner(emails = UNKNOWN)
+  @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
   public void shouldReadWorkflow() {
     when(WORKFLOW_SERVICE.readWorkflow(APP_ID, WORKFLOW_ID, null)).thenReturn(WORKFLOW);
