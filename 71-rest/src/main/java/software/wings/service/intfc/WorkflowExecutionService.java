@@ -211,4 +211,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   Map<String, Object> extractServiceInfrastructureDetails(String appId, WorkflowExecution execution);
 
   int getInstancesDeployedFromExecution(WorkflowExecution workflowExecution);
+
+  List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds);
 }

@@ -255,6 +255,7 @@ import java.io.ObjectStreamClass;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
@@ -3511,24 +3512,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds) {
-    if (EmptyPredicate.isNotEmpty(entityIds)) {
-      return wingsPersistence.createQuery(WorkflowExecution.class)
-          .project(WorkflowExecutionKeys.appId, true)
-          .project(WorkflowExecutionKeys.status, true)
-          .project(WorkflowExecutionKeys.workflowId, true)
-          .project(WorkflowExecutionKeys.createdAt, true)
-          .project(WorkflowExecutionKeys.uuid, true)
-          .project(WorkflowExecutionKeys.startTs, true)
-          .project(WorkflowExecutionKeys.endTs, true)
-          .project(WorkflowExecutionKeys.name, true)
-          .project(WorkflowExecutionKeys.envId, true)
-          .filter(WorkflowExecutionKeys.appId, appId)
-          .field(WorkflowExecutionKeys.uuid)
-          .in(entityIds)
-          .asList();
-    } else {
+  @Override
+  public List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds) {
+    if (EmptyPredicate.isEmpty(entityIds)) {
       return Collections.emptyList();
     }
+    final List<WorkflowExecution> workflowExecutions = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                           .project(WorkflowExecutionKeys.appId, true)
+                                                           .project(WorkflowExecutionKeys.status, true)
+                                                           .project(WorkflowExecutionKeys.workflowId, true)
+                                                           .project(WorkflowExecutionKeys.createdAt, true)
+                                                           .project(WorkflowExecutionKeys.uuid, true)
+                                                           .project(WorkflowExecutionKeys.startTs, true)
+                                                           .project(WorkflowExecutionKeys.endTs, true)
+                                                           .project(WorkflowExecutionKeys.name, true)
+                                                           .project(WorkflowExecutionKeys.envId, true)
+                                                           .filter(WorkflowExecutionKeys.appId, appId)
+                                                           .field(WorkflowExecutionKeys.uuid)
+                                                           .in(entityIds)
+                                                           .asList();
+    workflowExecutions.sort(Comparator.comparing(item -> entityIds.indexOf(item.getUuid())));
+    return workflowExecutions;
   }
 }
