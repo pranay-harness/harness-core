@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
@@ -504,6 +505,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testUpdateConfiguration_UpdateMetrics() throws Exception {
     StackDriverMetricCVConfiguration stackDriverConfig = createStackDriverConfig(accountId);
