@@ -144,7 +144,7 @@ public class LogMLResource {
   @ExceptionMetered
   public RestResponse<List<CVFeedbackRecord>> getFeedbacks(@QueryParam("accountId") String accountId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId) {
-    return new RestResponse<>(analysisService.getFeedbacks(cvConfigId, stateExecutionId));
+    return new RestResponse<>(analysisService.getFeedbacks(cvConfigId, stateExecutionId, false));
   }
 
   @GET
@@ -154,7 +154,7 @@ public class LogMLResource {
   @ExceptionMetered
   public RestResponse<List<CVFeedbackRecord>> getFeedbacksLE(@QueryParam("accountId") String accountId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("stateExecutionId") String stateExecutionId) {
-    return new RestResponse<>(analysisService.getFeedbacks(cvConfigId, stateExecutionId));
+    return new RestResponse<>(analysisService.getFeedbacks(cvConfigId, stateExecutionId, false));
   }
 
   @GET

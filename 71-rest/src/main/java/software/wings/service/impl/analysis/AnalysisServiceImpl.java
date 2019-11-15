@@ -489,7 +489,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId) {
+  public List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId, boolean isDemoPath) {
     PageRequest<CVFeedbackRecord> feedbackRecordPageRequest = PageRequestBuilder.aPageRequest().build();
     String serviceId = null, envId = null;
     if (isNotEmpty(cvConfigId)) {
@@ -514,8 +514,12 @@ public class AnalysisServiceImpl implements AnalysisService {
       throw new WingsException("Missing cvConfigId or stateExecutionId to create/modify a feedback");
     }
 
-    feedbackRecordPageRequest.addFilter(CVFeedbackRecordKeys.serviceId, Operator.EQ, serviceId);
-    feedbackRecordPageRequest.addFilter(CVFeedbackRecordKeys.envId, Operator.EQ, envId);
+    if (isDemoPath) {
+      feedbackRecordPageRequest.addFilter(CVFeedbackRecordKeys.stateExecutionId, Operator.EQ, stateExecutionId);
+    } else {
+      feedbackRecordPageRequest.addFilter(CVFeedbackRecordKeys.serviceId, Operator.EQ, serviceId);
+      feedbackRecordPageRequest.addFilter(CVFeedbackRecordKeys.envId, Operator.EQ, envId);
+    }
     return dataStoreService.list(CVFeedbackRecord.class, feedbackRecordPageRequest).getResponse();
   }
 
@@ -797,7 +801,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     // Update with the feedback clusters
     if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, accountId)) {
-      List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId);
+      boolean isDemoPath = featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
+      List<CVFeedbackRecord> feedbackRecords = getFeedbacks(null, stateExecutionId, isDemoPath);
       Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
       feedbackRecords.forEach(cvFeedbackRecord -> {
         if (isNotEmpty(cvFeedbackRecord.getStateExecutionId())

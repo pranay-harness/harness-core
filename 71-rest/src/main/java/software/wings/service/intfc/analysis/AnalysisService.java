@@ -76,7 +76,7 @@ public interface AnalysisService {
       Map<String, LogMLClusterScores.LogMLScore> clusterScores, AnalysisServiceImpl.CLUSTER_TYPE cluster_type);
 
   boolean save24x7Feedback(LogMLFeedback feedback, String cvConfigId);
-  List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId);
+  List<CVFeedbackRecord> getFeedbacks(String cvConfigId, String stateExecutionId, boolean isDemoPath);
   boolean addToBaseline(String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
   boolean removeFromBaseline(
       String accountId, String cvConfigId, String stateExecutionId, CVFeedbackRecord feedbackRecord);
