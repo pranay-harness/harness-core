@@ -45,6 +45,7 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
@@ -236,7 +237,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                           .project(ArtifactKeys.artifactStreamId, true)
                                           .project(ArtifactKeys.uiDisplayName, true)
                                           .project(ArtifactKeys.metadata, true)
-                                          .order(Sort.descending(ArtifactKeys.metadata_buildNo));
+                                          .order(Sort.descending(CreatedAtAware.CREATED_AT_KEY));
       if (isNotEmpty(artifactSearchString)) {
         // NOTE: Might be inefficient for artifact streams having large number of artifacts.
         artifactQuery.or(artifactQuery.criteria(ArtifactKeys.uiDisplayName).containsIgnoreCase(artifactSearchString),
@@ -247,13 +248,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       if (totalArtifactCount == 0L) {
         continue;
       }
-      List<Artifact> artifacts = artifactQuery.asList(new FindOptions().limit(maxArtifacts));
+
+      // NOTE: Potentially expensive if there are a lot of artifact streams. But without this, sorting is incorrect
+      // because in Mongo we are not able to do alpha-numeric comparison correctly and efficiently.
+      int limit = Math.max(maxArtifacts, 200);
+      List<Artifact> artifacts = artifactQuery.asList(new FindOptions().limit(limit));
       if (isEmpty(artifacts)) {
         continue;
       }
 
       List<ArtifactSummary> artifactSummaries = artifacts.stream()
                                                     .sorted(new ArtifactComparator())
+                                                    .limit(maxArtifacts)
                                                     .map(ArtifactSummary::prepareSummaryFromArtifact)
                                                     .collect(toList());
       artifactStream.setArtifactCount(totalArtifactCount);
