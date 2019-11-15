@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.NoopStatement;
 import io.harness.exception.CategoryConfigException;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestRule;
@@ -76,18 +75,17 @@ public class OwnerRule implements TestRule {
     private String slack;
   }
 
-  @Getter
   private static final Map<String, DevInfo> active =
       ImmutableMap.<String, DevInfo>builder()
-          .put(AADITI, DevInfo.builder().email("aaditi.joag@harness.io").build())
+          .put(AADITI, DevInfo.builder().email("aaditi.joag@harness.io").slack("Aaditi Joag").build())
           .put(ADWAIT, DevInfo.builder().email("adwait.bhandare@harness.io").build())
           .put(AMAN, DevInfo.builder().email("aman.singh@harness.io").build())
           .put(ANKIT, DevInfo.builder().email("ankit.singhal@harness.io").build())
-          .put(ANSHUL, DevInfo.builder().email("anshul@harness.io").build())
-          .put(ANUBHAW, DevInfo.builder().email("anubhaw@harness.io").build())
-          .put(AVMOHAN, DevInfo.builder().email("abhijith.mohan@harness.io").build())
+          .put(ANSHUL, DevInfo.builder().email("anshul@harness.io").slack("Anshul").build())
+          .put(ANUBHAW, DevInfo.builder().email("anubhaw@harness.io").slack("anubhaw").build())
+          .put(AVMOHAN, DevInfo.builder().email("abhijith.mohan@harness.io").slack("abhijith").build())
           .put(BRETT, DevInfo.builder().email("brett@harness.io").slack("brett").build())
-          .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").build())
+          .put(DEEPAK, DevInfo.builder().email("deepak.patankar@harness.io").slack("Deepak Patankar").build())
           .put(GARVIT, DevInfo.builder().email("garvit.pahal@harness.io").build())
           .put(GEORGE, DevInfo.builder().email("george@harness.io").slack("george").build())
           .put(HANTANG, DevInfo.builder().email("hannah.tang@harness.io").build())
@@ -97,31 +95,31 @@ public class OwnerRule implements TestRule {
           .put(JUHI, DevInfo.builder().email("juhi.agrawal@harness.io").build())
           .put(KAMAL, DevInfo.builder().email("kamal.joshi@harness.io").build())
           .put(MARK, DevInfo.builder().email("mark.lu@harness.io").build())
-          .put(MEENAKSHI, DevInfo.builder().email("meenakshi.raikwar@harness.io").build())
+          .put(MEENAKSHI, DevInfo.builder().email("meenakshi.raikwar@harness.io").slack("Meenakshi Raikwar").build())
           .put(NATARAJA, DevInfo.builder().email("nataraja@harness.io").slack("Nataraja M").build())
           .put(PARNIAN, DevInfo.builder().email("parnian@harness.io").build())
-          .put(POOJA, DevInfo.builder().email("pooja@harness.io").build())
+          .put(POOJA, DevInfo.builder().email("pooja@harness.io").slack("pooja").build())
           .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").build())
           .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").build())
-          .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").build())
+          .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").slack("puneet").build())
           .put(RAGHU, DevInfo.builder().email("raghu@harness.io").slack("raghu").build())
           .put(RAMA, DevInfo.builder().email("rama@harness.io").build())
           .put(ROHIT, DevInfo.builder().email("rohit.reddy@harness.io").build())
           .put(ROHIT_KUMAR, DevInfo.builder().email("rohit.kumar@harness.io").build())
           .put(RUSHABH, DevInfo.builder().email("rushabh@harness.io").build())
-          .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").build())
+          .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("Shaswat").build())
           .put(SHUBHANSHU, DevInfo.builder().email("shubhanshu.verma@harness.io").build())
-          .put(SOWMYA, DevInfo.builder().email("sowmya.k@harness.io").build())
-          .put(SRINIVAS, DevInfo.builder().email("srinivas@harness.io").build())
+          .put(SOWMYA, DevInfo.builder().email("sowmya.k@harness.io").slack("Sowmya K").build())
+          .put(SRINIVAS, DevInfo.builder().email("srinivas@harness.io").slack("srinivas").build())
           .put(SRIRAM, DevInfo.builder().email("sriram@harness.io").build())
           .put(SUNIL, DevInfo.builder().email("sunil@harness.io").build())
           .put(UJJAWAL, DevInfo.builder().email("ujjawal.prasad@harness.io").build())
-          .put(UTKARSH, DevInfo.builder().email("utkarsh.gupta@harness.io").build())
+          .put(UTKARSH, DevInfo.builder().email("utkarsh.gupta@harness.io").slack("utkarsh").build())
           .put(VAIBHAV_SI, DevInfo.builder().email("vaibhav.si@harness.io").build())
           .put(VAIBHAV_TULSYAN, DevInfo.builder().email("vaibhav.tulsyan@harness.io").build())
           .put(VENKATESH, DevInfo.builder().email("venkatesh.kotrike@harness.io").build())
           .put(VIKAS, DevInfo.builder().email("vikas.naiyar@harness.io").build())
-          .put(YOGESH_CHAUHAN, DevInfo.builder().email("yogesh.chauhan@harness.io").build())
+          .put(YOGESH_CHAUHAN, DevInfo.builder().email("yogesh.chauhan@harness.io").slack("Yogesh").build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 
@@ -166,7 +164,7 @@ public class OwnerRule implements TestRule {
       return null;
     }
 
-    for (Entry<String, DevInfo> entry : getActive().entrySet()) {
+    for (Entry<String, DevInfo> entry : active.entrySet()) {
       if (entry.getValue().getEmail().equals(email)) {
         return entry.getKey();
       }
@@ -175,13 +173,13 @@ public class OwnerRule implements TestRule {
     return null;
   }
 
-  public static void fileOwnerAs(String email, String type) {
-    final DevInfo devInfo = getActive().get(email);
+  public static void fileOwnerAs(String developer, String type) {
+    final DevInfo devInfo = active.get(developer);
     if (devInfo == null) {
       return;
     }
 
-    String identify = devInfo.getSlack() == null ? email : "@" + devInfo.getSlack();
+    String identify = devInfo.getSlack() == null ? developer : "@" + devInfo.getSlack();
 
     try {
       final File file = new File(format("%s/owners/%s/%s", System.getProperty("java.io.tmpdir"), type, identify));
