@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.SearchDistributedLock.SearchDistributedLockKeys;
 
@@ -23,7 +24,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class PerpetualSearchLocker {
-  @Inject WingsPersistence wingsPersistence;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private ConfigurationController configurationController;
   private ScheduledExecutorService scheduledExecutorService =
       Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat("search-heartbeat-%d").build());
 
@@ -33,11 +35,11 @@ public class PerpetualSearchLocker {
                                              .equal(lockName)
                                              .field(SearchDistributedLockKeys.uuid)
                                              .equal(uuid);
-    return query.get() != null;
+    return query.get() != null && configurationController.isPrimary();
   }
 
   private boolean tryToAcquireLock(String lockName, String uuid) {
-    if (wingsPersistence.get(SearchDistributedLock.class, lockName) == null) {
+    if (wingsPersistence.get(SearchDistributedLock.class, lockName) == null && configurationController.isPrimary()) {
       Instant instant = Instant.now();
       SearchDistributedLock searchDistributedLock =
           new SearchDistributedLock(lockName, uuid, Date.from(instant), instant.toEpochMilli());
@@ -65,7 +67,7 @@ public class PerpetualSearchLocker {
     }
     logger.info("Search lock acquired");
     SearchHeartbeatMonitor searchHeartbeatMonitor =
-        new SearchHeartbeatMonitor(wingsPersistence, lockTimeoutCallback, lockName, uuid);
+        new SearchHeartbeatMonitor(wingsPersistence, lockTimeoutCallback, lockName, uuid, configurationController);
     return scheduledExecutorService.scheduleAtFixedRate(searchHeartbeatMonitor, 0, 10, TimeUnit.SECONDS);
   }
 
