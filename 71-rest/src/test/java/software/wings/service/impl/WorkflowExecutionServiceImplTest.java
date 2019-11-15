@@ -173,6 +173,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -2370,5 +2371,29 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     List<String> trimmedList = workflowExecutionService.trimExecutionArgsHosts(null);
 
     assertThat(trimmedList).isEqualTo(Collections.emptyList());
+  }
+
+  private static Random random = new Random();
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testFetchWorkflowExecutionsForResourceConstraint() {
+    List<String> ids = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      final WorkflowExecution workflowExecution =
+          WorkflowExecution.builder().uuid("_" + random.nextInt(1000)).appId(APP_ID).build();
+      ids.add(workflowExecution.getUuid());
+      wingsPersistence.save(workflowExecution);
+    }
+
+    Collections.sort(ids);
+
+    final List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.fetchWorkflowExecutionsForResourceConstraint(APP_ID, ids);
+
+    for (int i = 0; i < workflowExecutions.size(); ++i) {
+      assertThat(workflowExecutions.get(i).getUuid()).isEqualTo(ids.get(i));
+    }
   }
 }
