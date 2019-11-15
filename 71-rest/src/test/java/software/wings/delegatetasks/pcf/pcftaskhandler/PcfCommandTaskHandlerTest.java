@@ -1,10 +1,12 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -15,6 +17,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 
 import com.google.inject.Inject;
 
@@ -22,6 +26,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.filesystem.FileIo;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
@@ -29,6 +34,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -40,6 +46,8 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
+import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -60,6 +68,8 @@ import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -98,7 +108,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject PcfApplicationDetailsCommandTaskHandler pcfApplicationDetailsCommandTaskHandler;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformSetup() throws Exception {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
@@ -228,7 +238,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformDeploy_nonBlueGreen() throws Exception {
     PcfCommandRequest pcfCommandRequest =
@@ -376,7 +386,70 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testConfigureAutoscalarIfNeeded() throws Exception {
+    PcfCommandDeployRequest pcfCommandRequest = PcfCommandDeployRequest.builder()
+                                                    .downSizeCount(1)
+                                                    .totalPreviousInstanceCount(2)
+                                                    .timeoutIntervalInMin(2)
+                                                    .useAppAutoscalar(false)
+                                                    .maxCount(1)
+                                                    .updateCount(1)
+                                                    .build();
+
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .id(APP_ID)
+                                              .diskQuota(1)
+                                              .instances(0)
+                                              .memoryLimit(1)
+                                              .name(APP_NAME)
+                                              .requestedState("STOPPED")
+                                              .stack("")
+                                              .runningInstances(0)
+                                              .build();
+
+    reset(pcfDeploymentManager);
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
+
+    // Autoscalar is false
+    pcfDeployCommandTaskHandler.configureAutoscalarIfNeeded(
+        pcfCommandRequest, applicationDetail, null, executionLogCallback);
+    verify(pcfDeploymentManager, never()).performConfigureAutoscalar(any(), any());
+
+    // Autoscalar is true, but no autosaclar file
+    pcfCommandRequest.setUseAppAutoscalar(true);
+    pcfDeployCommandTaskHandler.configureAutoscalarIfNeeded(
+        pcfCommandRequest, applicationDetail, null, executionLogCallback);
+    verify(pcfDeploymentManager, never()).performConfigureAutoscalar(any(), any());
+
+    // Autoscalar is true, autoscalar file is present
+    String path = "./test" + System.currentTimeMillis();
+    FileIo.createDirectoryIfDoesNotExist(path);
+
+    pcfCommandRequest.setPcfManifestsPackage(PcfManifestsPackage.builder().autoscalarManifestYml("abc").build());
+    PcfAppAutoscalarRequestData autoscalarRequestData = PcfAppAutoscalarRequestData.builder()
+                                                            .applicationName(APP_NAME)
+                                                            .applicationGuid(APP_ID)
+                                                            .configPathVar(path)
+                                                            .build();
+
+    pcfDeployCommandTaskHandler.configureAutoscalarIfNeeded(
+        pcfCommandRequest, applicationDetail, autoscalarRequestData, executionLogCallback);
+    ArgumentCaptor<PcfAppAutoscalarRequestData> captor = ArgumentCaptor.forClass(PcfAppAutoscalarRequestData.class);
+    verify(pcfDeploymentManager, times(1)).performConfigureAutoscalar(captor.capture(), any());
+    autoscalarRequestData = captor.getValue();
+    assertThat(autoscalarRequestData.getApplicationName()).isEqualTo(APP_NAME);
+    assertThat(autoscalarRequestData.getApplicationGuid()).isEqualTo(APP_ID);
+    String filePath = autoscalarRequestData.getAutoscalarFilePath();
+
+    String content = new String(Files.readAllBytes(Paths.get(filePath)));
+    assertThat(content).isEqualTo("abc");
+    FileIo.deleteDirectoryAndItsContentIfExists(path);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformRollback() throws Exception {
     PcfCommandRequest pcfCommandRequest =
@@ -481,7 +554,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testperformDataFetch() throws Exception {
     PcfInfraMappingDataRequest pcfCommandRequest = PcfInfraMappingDataRequest.builder()
@@ -590,7 +663,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformSwapRouteExecute() throws Exception {
     PcfRouteUpdateRequestConfigData routeUpdateRequestConfigData =
@@ -655,7 +728,101 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testResizeOldApplications() throws Exception {
+    List<PcfAppSetupTimeDetails> appSetupTimeDetailsList =
+        Arrays.asList(PcfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build());
+    PcfRouteUpdateRequestConfigData routeUpdateRequestConfigData = PcfRouteUpdateRequestConfigData.builder()
+                                                                       .downsizeOldApplication(false)
+                                                                       .finalRoutes(Arrays.asList("a.b.c"))
+                                                                       .isRollback(false)
+                                                                       .isStandardBlueGreen(true)
+                                                                       .build();
+
+    PcfCommandRouteUpdateRequest pcfCommandRequest = PcfCommandRouteUpdateRequest.builder()
+                                                         .pcfCommandType(PcfCommandType.RESIZE)
+                                                         .pcfConfig(getPcfConfig())
+                                                         .accountId(ACCOUNT_ID)
+                                                         .organization(ORG)
+                                                         .space(SPACE)
+                                                         .timeoutIntervalInMin(2)
+                                                         .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
+                                                         .pcfRouteUpdateConfigData(routeUpdateRequestConfigData)
+                                                         .useAppAutoscalar(false)
+                                                         .build();
+
+    reset(pcfDeploymentManager);
+
+    // Existing applications are empty. No op expected
+    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
+        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, false, "");
+    verify(pcfDeploymentManager, never()).resizeApplication(any());
+
+    // Autoscalar is false, existing app is present
+    routeUpdateRequestConfigData.setExistingApplicationDetails(appSetupTimeDetailsList);
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .id("10")
+                                              .diskQuota(1)
+                                              .instances(1)
+                                              .memoryLimit(1)
+                                              .name("app1")
+                                              .requestedState("STOPPED")
+                                              .stack("")
+                                              .runningInstances(1)
+                                              .instanceDetails(Arrays.asList(InstanceDetail.builder()
+                                                                                 .cpu(1.0)
+                                                                                 .diskQuota((long) 1.23)
+                                                                                 .diskUsage((long) 1.23)
+                                                                                 .index("2")
+                                                                                 .memoryQuota((long) 1)
+                                                                                 .memoryUsage((long) 1)
+                                                                                 .build()))
+                                              .diskQuota(1)
+                                              .instances(1)
+                                              .memoryLimit(1)
+                                              .name("app1")
+                                              .requestedState("RUNNING")
+                                              .stack("")
+                                              .runningInstances(1)
+                                              .build();
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(any());
+    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(any());
+
+    doReturn(true).when(pcfCommandTaskHelper).disableAutoscalar(any(), any());
+    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
+        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, false, "");
+    verify(pcfDeploymentManager, times(1)).resizeApplication(any());
+    verify(pcfCommandTaskHelper, never()).disableAutoscalar(any(), any());
+
+    // Autoscalar is true, existing app present
+    pcfCommandRequest.setUseAppAutoscalar(true);
+    ArgumentCaptor<PcfAppAutoscalarRequestData> argumentCaptor =
+        ArgumentCaptor.forClass(PcfAppAutoscalarRequestData.class);
+    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
+        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, false, "");
+    verify(pcfDeploymentManager, times(2)).resizeApplication(any());
+    verify(pcfCommandTaskHelper, times(1)).disableAutoscalar(argumentCaptor.capture(), any());
+    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData = argumentCaptor.getValue();
+    assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("app1");
+    assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
+    assertThat(pcfAppAutoscalarRequestData.getTimeoutInMins()).isEqualTo(2);
+    assertThat(pcfAppAutoscalarRequestData.isExpectedEnabled()).isTrue();
+
+    routeUpdateRequestConfigData.setRollback(true);
+    doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
+    pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
+        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, true, "");
+    verify(pcfDeploymentManager, times(1)).changeAutoscalarState(argumentCaptor.capture(), any(), anyBoolean());
+    pcfAppAutoscalarRequestData = argumentCaptor.getValue();
+    assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("app1");
+    assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
+    assertThat(pcfAppAutoscalarRequestData.getTimeoutInMins()).isEqualTo(2);
+    assertThat(pcfAppAutoscalarRequestData.isExpectedEnabled()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSwapRouteExecutionNeeded() throws Exception {
     assertThat(pcfRouteUpdateCommandTaskHandler.swapRouteExecutionNeeded(null)).isFalse();
@@ -671,7 +838,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCheckIfVarsFilePresent() throws Exception {
     PcfManifestsPackage manifestsPackage = PcfManifestsPackage.builder().build();
@@ -688,7 +855,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPrepareVarsYamlFile() throws Exception {
     File f1 = mock(File.class);
