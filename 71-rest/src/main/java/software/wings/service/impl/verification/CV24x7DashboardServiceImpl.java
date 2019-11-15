@@ -344,7 +344,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
     long analysisEndMin = TimeUnit.MILLISECONDS.toMinutes(endTime);
 
     if (featureFlagService.isEnabled(FeatureName.CV_FEEDBACKS, cvConfiguration.getAccountId())) {
-      List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfigId, null);
+      List<CVFeedbackRecord> feedbackRecords = analysisService.getFeedbacks(cvConfigId, null, false);
       Map<CLUSTER_TYPE, Map<Integer, CVFeedbackRecord>> clusterTypeRecordMap = new HashMap<>();
       feedbackRecords.forEach(cvFeedbackRecord -> {
         if (isNotEmpty(cvFeedbackRecord.getCvConfigId()) && cvFeedbackRecord.getCvConfigId().equals(cvConfigId)
@@ -394,7 +394,7 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
   }
 
   private void updateFeedbacksWithJira(CVConfiguration cvConfiguration, LogMLAnalysisSummary summary) {
-    List<CVFeedbackRecord> cvFeedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null);
+    List<CVFeedbackRecord> cvFeedbackRecords = analysisService.getFeedbacks(cvConfiguration.getUuid(), null, false);
 
     if (!isEmpty(cvFeedbackRecords)) {
       Map<String, CVFeedbackRecord> feedbackIdMap = new HashMap<>();
