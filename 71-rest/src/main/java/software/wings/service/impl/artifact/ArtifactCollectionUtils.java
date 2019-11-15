@@ -622,7 +622,7 @@ public class ArtifactCollectionUtils {
    * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
    * @return the function that can used to get the key for an Artifact
    */
-  private static Function<Artifact, String> getArtifactKeyFn(
+  public static Function<Artifact, String> getArtifactKeyFn(
       String artifactStreamType, ArtifactStreamAttributes artifactStreamAttributes) {
     if (AMI.name().equals(artifactStreamType)) {
       return Artifact::getRevision;

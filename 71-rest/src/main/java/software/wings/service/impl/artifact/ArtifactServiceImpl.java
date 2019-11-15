@@ -35,6 +35,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
+import static software.wings.service.impl.artifact.ArtifactCollectionUtils.getArtifactKeyFn;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.Validator.notNullCheck;
@@ -94,6 +95,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -212,6 +214,7 @@ public class ArtifactServiceImpl implements ArtifactService {
             artifactStream.getUuid(), savedArtifact.getUuid()));
         return savedArtifact;
       }
+      updateArtifactIdentity(artifactStream, artifactStreamAttributes, artifact);
     }
 
     String key = wingsPersistence.save(artifact);
@@ -222,6 +225,14 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
     executorService.submit(() -> deleteArtifactsWithContents(ARTIFACT_RETENTION_SIZE, artifactStream));
     return savedArtifact;
+  }
+
+  private void updateArtifactIdentity(
+      ArtifactStream artifactStream, ArtifactStreamAttributes artifactStreamAttributes, Artifact artifact) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    Function<Artifact, String> keyFn = getArtifactKeyFn(artifactStreamType, artifactStreamAttributes);
+    String identity = keyFn.apply(artifact);
+    artifact.setBuildIdentity(identity);
   }
 
   private Artifact getArtifactByUniqueKey(
