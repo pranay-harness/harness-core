@@ -39,6 +39,7 @@ import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
 import migrations.all.TerraformIsTemplatizedMigration;
+import migrations.all.TimeSeriesThresholdsMigration;
 import migrations.all.UpdateAccountEncryptionClassNames;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
@@ -130,6 +131,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(73, BaseMigration.class))
         .add(Pair.of(74, InfraMappingToDefinitionMigration.class))
         .add(Pair.of(75, BaseMigration.class))
+        .add(Pair.of(76, TimeSeriesThresholdsMigration.class))
         .build();
   }
 }
