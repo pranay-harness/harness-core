@@ -22,7 +22,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
-import io.harness.exception.WingsException;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
 import io.harness.serializer.JsonUtils;
@@ -132,7 +131,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze(), true);
 
         if (isNotEmpty(invalidFields)) {
-          throw new WingsException("Invalid configuration, reason: " + invalidFields);
+          throw new VerificationOperationException(
+              ErrorCode.PROMETHEUS_CONFIGURATION_ERROR, "Invalid configuration, reason: " + invalidFields);
         }
         break;
 
@@ -141,13 +141,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         DatadogCVServiceConfiguration ddCVConfig = (DatadogCVServiceConfiguration) cvConfiguration;
         if (isEmpty(ddCVConfig.getDatadogServiceName()) && isEmpty(ddCVConfig.getDockerMetrics())
             && isEmpty(ddCVConfig.getEcsMetrics()) && isEmpty(ddCVConfig.getCustomMetrics())) {
-          throw new WingsException("No metrics found in the yaml");
+          throw new VerificationOperationException(
+              ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "No metrics found in the yaml");
         }
         if (isNotEmpty(ddCVConfig.getCustomMetrics())) {
           final Map<String, String> ddInvalidFields =
               DatadogState.validateDatadogCustomMetrics(ddCVConfig.getCustomMetrics());
           if (isNotEmpty(ddInvalidFields)) {
-            throw new WingsException("Invalid configuration, reason: " + ddInvalidFields);
+            throw new VerificationOperationException(
+                ErrorCode.DATA_DOG_CONFIGURATION_ERROR, "Invalid configuration, reason: " + ddInvalidFields);
           }
         }
 
@@ -161,7 +163,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             && isEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
             && isEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
             && isEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
-          throw new WingsException("No metric provided in Configuration");
+          throw new VerificationOperationException(ErrorCode.CLOUDWATCH_ERROR, "No metric provided in Configuration");
         }
         break;
 
@@ -205,7 +207,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               && !cvValidationService.validateStackdriverQuery(accountId, appId,
                      stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
                      stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
-            throw new WingsException(
+            throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }
         }
@@ -279,8 +281,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       }
       return configuration;
     } catch (DuplicateKeyException ex) {
-      throw new WingsException("A Service Verification with the name " + cvConfiguration.getName()
-          + " already exists. Please choose a unique name.");
+      throw new VerificationOperationException(ErrorCode.SERVICE_GUARD_CONFIGURATION_ERROR,
+          "A Service Verification with the name " + cvConfiguration.getName()
+              + " already exists. Please choose a unique name.");
     }
   }
 
@@ -320,8 +323,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     try {
       wingsPersistence.update(savedConfiguration, updateOperations);
     } catch (DuplicateKeyException ex) {
-      throw new WingsException("A Service Verification with the name " + cvConfiguration.getName()
-          + " already exists. Please choose a unique name.");
+      throw new VerificationOperationException(ErrorCode.SERVICE_GUARD_CONFIGURATION_ERROR,
+          "A Service Verification with the name " + cvConfiguration.getName()
+              + " already exists. Please choose a unique name.");
     }
     return savedConfiguration.getUuid();
   }
@@ -426,7 +430,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
               && !cvValidationService.validateStackdriverQuery(accountId, appId,
                      stackdriverCVConfiguration.getConnectorId(), stackdriverCVConfiguration.getQuery(),
                      stackdriverCVConfiguration.getHostnameField(), stackdriverCVConfiguration.getMessageField())) {
-            throw new WingsException(
+            throw new VerificationOperationException(ErrorCode.STACKDRIVER_CONFIGURATION_ERROR,
                 "Invalid Query, Please provide textPayload in query " + stackdriverCVConfiguration.getQuery());
           }
         }
@@ -475,11 +479,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
           new String[] {savedConfiguration.getAccountId(), savedConfiguration.getStateType().name(),
               String.valueOf(savedConfiguration.isEnabled24x7())});
     } catch (DuplicateKeyException ex) {
-      throw new WingsException("A Service Verification with the name " + updatedConfig.getName()
-          + " already exists. Please choose a unique name.");
+      throw new VerificationOperationException(ErrorCode.SERVICE_GUARD_CONFIGURATION_ERROR,
+          "A Service Verification with the name " + updatedConfig.getName()
+              + " already exists. Please choose a unique name.");
     }
-    updateMetricTemplate(stateType, savedConfiguration);
     CVConfiguration newConfiguration = wingsPersistence.get(CVConfiguration.class, savedConfiguration.getUuid());
+    updateMetricTemplate(stateType, newConfiguration);
     yamlPushService.pushYamlChangeSet(accountId, savedConfiguration, newConfiguration, Type.UPDATE, false,
         !savedConfiguration.getName().equals(newConfiguration.getName()));
     return savedConfiguration.getUuid();
@@ -634,8 +639,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             && isEmpty(datadogCVServiceConfiguration.getEcsMetrics())
             && isEmpty(datadogCVServiceConfiguration.getCustomMetrics())
             && isEmpty(datadogCVServiceConfiguration.getDatadogServiceName())) {
-          throw new WingsException("No metric provided in Configuration for configId " + savedConfiguration.getUuid()
-              + " and serviceId " + savedConfiguration.getServiceId());
+          throw new VerificationOperationException(ErrorCode.DATA_DOG_CONFIGURATION_ERROR,
+              "No metric provided in Configuration for configId " + savedConfiguration.getUuid() + " and serviceId "
+                  + savedConfiguration.getServiceId());
         }
         if (isNotEmpty(datadogCVServiceConfiguration.getDatadogServiceName())) {
           updateOperations.set("datadogServiceName", datadogCVServiceConfiguration.getDatadogServiceName());
@@ -665,8 +671,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             && isEmpty(cloudWatchCVServiceConfiguration.getEc2InstanceNames())
             && isEmpty(cloudWatchCVServiceConfiguration.getLambdaFunctionsMetrics())
             && isEmpty(cloudWatchCVServiceConfiguration.getEcsMetrics())) {
-          throw new WingsException("No metric provided in Configuration for configId " + savedConfiguration.getUuid()
-              + " and serviceId " + savedConfiguration.getServiceId());
+          throw new VerificationOperationException(ErrorCode.CLOUDWATCH_CONFIGURATION_ERROR,
+              "No metric provided in Configuration for configId " + savedConfiguration.getUuid() + " and serviceId "
+                  + savedConfiguration.getServiceId());
         }
         updateOperations.set("region", cloudWatchCVServiceConfiguration.getRegion());
 
@@ -830,9 +837,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       return;
     }
 
-    metricTemplate.setMetricTemplates(metricTemplates);
-
-    wingsPersistence.save(metricTemplate);
+    wingsPersistence.updateField(TimeSeriesMetricTemplates.class, metricTemplate.getUuid(),
+        TimeSeriesMetricTemplatesKeys.metricTemplates, metricTemplates);
   }
 
   private void saveMetricTemplate(

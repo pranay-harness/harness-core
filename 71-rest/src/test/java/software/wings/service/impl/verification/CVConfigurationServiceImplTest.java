@@ -32,6 +32,8 @@ import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeries;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
+import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeriesMetricTemplatesKeys;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
@@ -57,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -498,6 +501,35 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   public void testCustomLogsFeatureFlagOff() throws Exception {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
     testCreateCustomLogsConfig();
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  public void testUpdateConfiguration_UpdateMetrics() throws Exception {
+    StackDriverMetricCVConfiguration stackDriverConfig = createStackDriverConfig(accountId);
+    stackDriverConfig.setUuid(generateUuid());
+    CVConfiguration savedConfig = cvConfigurationService.saveToDatabase(stackDriverConfig, true);
+
+    String updatedMetricName = "UpdatedMetricName";
+    stackDriverConfig.getMetricDefinitions().get(0).setMetricName(updatedMetricName);
+    stackDriverConfig.setUuid(savedConfig.getUuid());
+    cvConfigurationService.updateConfiguration(stackDriverConfig, stackDriverConfig.getAppId());
+
+    StackDriverMetricCVConfiguration updatedConfig =
+        (StackDriverMetricCVConfiguration) wingsPersistence.get(CVConfiguration.class, savedConfig.getUuid());
+    assertThat(updatedConfig).isNotNull();
+    assertThat(updatedConfig.getMetricDefinitions().size()).isEqualTo(3);
+    assertThat(updatedConfig.getMetricDefinitions().get(0).getMetricName()).isEqualTo(updatedMetricName);
+
+    TimeSeriesMetricTemplates definition =
+        wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
+            .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, savedConfig.getUuid())
+            .get();
+
+    assertThat(definition).isNotNull();
+    assertThat(definition.getMetricTemplates().size()).isEqualTo(3);
+    assertThat(definition.getMetricTemplates().keySet())
+        .isEqualTo(new HashSet<>(Lists.newArrayList("metricName2", "metricName3", updatedMetricName)));
   }
 
   public static StackDriverMetricCVConfiguration createStackDriverConfig(String accountId) throws Exception {
