@@ -87,6 +87,7 @@ public class Artifact extends Base {
   private String accountId;
   private String artifactStreamType;
   private String uiDisplayName;
+  private String buildIdentity;
 
   /**
    * Gets buildNo.
