@@ -4,7 +4,10 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
+import static io.harness.mongo.MongoUtils.setUnset;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -13,6 +16,7 @@ import com.google.inject.Singleton;
 import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.InfrastructureMapping;
@@ -117,13 +121,29 @@ public class SetInfraDefinitionPipelines {
 
     if (modified) {
       try {
-        pipelineService.update(pipeline, true);
+        updatePipelineInMigration(pipeline);
         logger.info("--- Pipeline updated: {}, {}", pipeline.getUuid(), pipeline.getName());
         Thread.sleep(100);
       } catch (Exception e) {
         logger.error("[INFRA_MIGRATION_ERROR] Error updating pipeline " + pipeline.getUuid(), e);
       }
     }
+  }
+
+  private void updatePipelineInMigration(Pipeline pipeline) {
+    Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    notNullCheck("Pipeline not saved", savedPipeline, USER);
+
+    UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
+    setUnset(ops, "description", pipeline.getDescription());
+    setUnset(ops, "name", pipeline.getName());
+    setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
+    setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
+
+    wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
+                                .filter("appId", pipeline.getAppId())
+                                .filter(ID_KEY, pipeline.getUuid()),
+        ops);
   }
 
   private boolean migrateWorkflowVariables(

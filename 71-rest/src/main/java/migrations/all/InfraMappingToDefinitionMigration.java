@@ -97,8 +97,13 @@ public class InfraMappingToDefinitionMigration implements Migration {
   // "0LRUeE0IR8ax08KOXrMv3A","XtqjhVchTfOwuNqXiSzxdQ", "i3p84Q6oTXaN7JvCNLQJRA","UtTa95tnQqWxGByLkXlp6Q",
   // "wXdRHOtoSuK1Qdi6QWnGgA"
 
-  private final List<String> accountIds = Arrays.asList(
-      "R7OsqSbNQS69mq74kMNceQ", "oO8Ba5pbSeCfOf31v30DPQ", "hlSq1mrxReGdHtVxYSbm4A", "0-aYFXytT3SWH4g58-iIsg");
+  private final List<String> accountIds = Arrays.asList("rFFIil1ZRaO6CZ20qZYfcA", "XosQUjgkT8WPTDa-OCUoSg",
+      "0YDHg0utTFK5oV5WWV5AZQ", "MN8FCTn_Q9-DDHGIJWm-Xg", "6pitvBmtSMKNZU3gANq01Q", "hW63Ny6rQaaGsKkVjE0pJA",
+      "rlXQeIBXRv6DTvCa2PyWug", "SFByhonVQvGJX0SbY82rjA", "jKRddGK-R3GTbWHTW3GSag", "dOFBPnGPQJKbnhQHxWdH0Q",
+      "akXErGWwTaikyszHInRBKQ", "nYY7inrwTrqqa3r1a_-krg", "NVsV7gjbTZyA3CgSgXNOcg", "zIk-CcLbQK22qBHKnG8Mlg",
+      "YghLV6IAQ2egdlsHD7wGDg", "9qDftQjIRh-YeW_KKupwvA", "VdfXQeY6TBSwpS_VGq-ZBA", "i9E0HEZhRZyZvpwwow90KQ",
+      "c2LNYofSS0iieT6VDLnxCw", "petWrqbwR_aZ2wF1uCV8QA", "ZiFAIYG3RzWDfeN46bzkgA", "wyqCmqaRR9y61AQm1fAy5Q",
+      "Obq6kGyKQUC3ilY12Lrk6w", "zIk-CcLbQK22qBHKnG8Mlg", "XEAgZ-j4RvirUgGObdd8-g");
 
   public void migrate() {
     for (String accountId : accountIds) {

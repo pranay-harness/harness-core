@@ -20,7 +20,6 @@ import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.ExplodeLogMLFeedbackRecordsMigration;
 import migrations.all.FetchAndSaveAccounts;
 import migrations.all.FetchAndSaveAccounts2;
-import migrations.all.InfraMappingToDefinitionMigration;
 import migrations.all.InitInfraProvisionerCounters;
 import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
@@ -129,9 +128,11 @@ public class MigrationBackgroundList {
         .add(Pair.of(71, BaseMigration.class))
         .add(Pair.of(72, BaseMigration.class))
         .add(Pair.of(73, BaseMigration.class))
-        .add(Pair.of(74, InfraMappingToDefinitionMigration.class))
+        .add(Pair.of(74, BaseMigration.class))
         .add(Pair.of(75, BaseMigration.class))
         .add(Pair.of(76, TimeSeriesThresholdsMigration.class))
+        .add(Pair.of(77, BaseMigration.class))
+        .add(Pair.of(78, BaseMigration.class))
         .build();
   }
 }

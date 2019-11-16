@@ -971,8 +971,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.getAppId(), workflow.getServiceId(), workflow.getInfraMappingId());
     }
 
-    validateWorkflowNameForDuplicates(workflow);
-    validateWorkflowVariables(orchestrationWorkflow);
+    if (!migration) {
+      validateWorkflowNameForDuplicates(workflow);
+      validateWorkflowVariables(orchestrationWorkflow);
+    }
     return updateWorkflow(workflow, orchestrationWorkflow, true, false, false, false, migration);
   }
 
