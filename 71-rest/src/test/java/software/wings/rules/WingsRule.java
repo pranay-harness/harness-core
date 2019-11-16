@@ -38,8 +38,8 @@ import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
-import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
+import io.harness.waiter.NotifyResponseCleaner;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -365,7 +365,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
   protected void registerScheduledJobs(Injector injector) {
     log().info("Initializing scheduledJobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleaner.class), 0L, 1000L, TimeUnit.MILLISECONDS);
   }
 
   protected Logger log() {

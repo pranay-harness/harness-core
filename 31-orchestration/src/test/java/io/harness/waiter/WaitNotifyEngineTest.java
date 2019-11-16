@@ -3,9 +3,9 @@ package io.harness.waiter;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -41,7 +41,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
   @Inject private Queue<NotifyEvent> notifyEventQueue;
 
-  @Inject private Notifier notifier;
+  @Inject private NotifyResponseCleaner notifyResponseCleaner;
   @Inject private NotifyEventListener notifyEventListener;
 
   @Inject private QueueListenerController queueListenerController;
@@ -60,7 +60,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
@@ -85,7 +85,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void stressWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
@@ -96,8 +96,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.notify(uuid, data);
-
-      Concurrent.test(10, i -> { notifier.execute(); });
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -114,7 +112,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testNotifyBeforeWait() throws IOException {
     String uuid = generateUuid();
@@ -125,8 +123,6 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
-
-      notifier.execute();
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -146,7 +142,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation ids.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationIds() throws IOException {
     String uuid1 = generateUuid();
@@ -202,7 +198,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
    * Should wait for correlation id for multiple wait instances.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldWaitForCorrelationIdForMultipleWaitInstances() throws IOException {
     String uuid = generateUuid();
@@ -235,17 +231,17 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCleanZombieNotifyResponse() {
     final NotifyResponse notifyResponse = NotifyResponse.builder()
                                               .uuid(generateUuid())
-                                              .createdAt(System.currentTimeMillis() - ofMinutes(6).toMillis())
+                                              .createdAt(System.currentTimeMillis() - ofSeconds(20).toMillis())
                                               .error(false)
                                               .build();
     String notificationId = persistence.save(notifyResponse);
 
-    notifier.executeUnderLock();
+    notifyResponseCleaner.executeInternal();
 
     assertThat(persistence.get(NotifyResponse.class, notificationId)).isNull();
   }

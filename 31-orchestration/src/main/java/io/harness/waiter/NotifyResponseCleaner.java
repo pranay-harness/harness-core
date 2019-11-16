@@ -10,16 +10,17 @@ import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HKeyIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.Key;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.List;
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
  */
 @Slf4j
-public class Notifier implements Runnable {
+public class NotifyResponseCleaner implements Runnable {
   @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Queue<NotifyEvent> notifyQueue;
@@ -50,12 +51,8 @@ public class Notifier implements Runnable {
   }
 
   public void execute() {
-    try (AcquiredLock lock =
-             persistentLocker.tryToAcquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
-      if (lock == null) {
-        return;
-      }
-      executeUnderLock();
+    try {
+      executeInternal();
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
@@ -63,7 +60,7 @@ public class Notifier implements Runnable {
     }
   }
 
-  public void executeUnderLock() {
+  public void executeInternal() {
     logger.debug("Execute Notifier response processing");
 
     // Sometimes response might arrive before we schedule the wait. Do not remove responses that are very new.
@@ -71,19 +68,20 @@ public class Notifier implements Runnable {
 
     List<String> deleteResponses = new ArrayList<>();
 
-    try (HIterator<NotifyResponse> iterator =
-             new HIterator(persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                               .project(NotifyResponseKeys.uuid, true)
-                               .project(NotifyResponseKeys.createdAt, true)
-                               .fetch())) {
+    try (HKeyIterator<NotifyResponse> iterator =
+             new HKeyIterator(persistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                  .field(NotifyResponseKeys.createdAt)
+                                  .lessThan(limit)
+                                  .fetchKeys())) {
       boolean needHandling = false;
-      for (NotifyResponse notifyResponse : iterator) {
+      for (Key<NotifyResponse> key : iterator) {
+        String uuid = key.getId().toString();
         try (HIterator<WaitInstance> waitInstances =
                  new HIterator(persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                   .filter(WaitInstanceKeys.correlationIds, notifyResponse.getUuid())
+                                   .filter(WaitInstanceKeys.correlationIds, uuid)
                                    .fetch())) {
-          if (notifyResponse.getCreatedAt() < limit && !waitInstances.hasNext()) {
-            deleteResponses.add(notifyResponse.getUuid());
+          if (!waitInstances.hasNext()) {
+            deleteResponses.add(uuid);
             if (deleteResponses.size() >= 1000) {
               deleteObsoleteResponses(deleteResponses);
               deleteResponses.clear();
@@ -95,13 +93,13 @@ public class Notifier implements Runnable {
               if (waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
                 notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
               }
-            } else if (waitInstance.getWaitingOnCorrelationIds().contains(notifyResponse.getUuid())) {
+            } else if (waitInstance.getWaitingOnCorrelationIds().contains(uuid)) {
               needHandling = true;
             }
           }
         }
         if (needHandling) {
-          waitNotifyEngine.handleNotifyResponse(notifyResponse.getUuid());
+          waitNotifyEngine.handleNotifyResponse(uuid);
         }
       }
 

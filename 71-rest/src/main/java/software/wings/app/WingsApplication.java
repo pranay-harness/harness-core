@@ -84,9 +84,9 @@ import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
-import io.harness.waiter.Notifier;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEventListener;
+import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
@@ -548,7 +548,8 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void scheduleJobs(Injector injector) {
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), rand.nextInt(60), 60L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(
+            injector.getInstance(NotifyResponseCleaner.class), rand.nextInt(300), 300L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), rand.nextInt(5), 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))

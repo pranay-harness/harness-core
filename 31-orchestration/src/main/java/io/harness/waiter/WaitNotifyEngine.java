@@ -7,6 +7,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
+import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +63,36 @@ public class WaitNotifyEngine {
     }
     waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
 
-    return persistence.save(waitInstanceBuilder.build());
+    final String waitInstanceId = persistence.save(waitInstanceBuilder.build());
+
+    // We cannot combine the logic of obtaining the responses before the save, because this will create a race with
+    // storing the responses.
+
+    final List<String> keys = persistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                  .field(NotifyResponseKeys.uuid)
+                                  .in(list)
+                                  .asKeyList()
+                                  .stream()
+                                  .map(key -> (String) key.getId())
+                                  .collect(toList());
+
+    if (isNotEmpty(keys)) {
+      final Query<WaitInstance> query =
+          persistence.createQuery(WaitInstance.class, excludeAuthority).filter(WaitInstanceKeys.uuid, waitInstanceId);
+
+      final UpdateOperations<WaitInstance> operations = persistence.createUpdateOperations(WaitInstance.class)
+                                                            .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, keys);
+
+      WaitInstance waitInstance;
+      if ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
+        if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
+            && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
+          notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+        }
+      }
+    }
+
+    return waitInstanceId;
   }
 
   public <T extends ResponseData> String notify(String correlationId, T response) {
