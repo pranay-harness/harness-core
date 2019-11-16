@@ -9,6 +9,7 @@ import io.harness.exception.CategoryConfigException;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -144,6 +145,7 @@ public class OwnerRule implements TestRule {
       throw new CategoryConfigException("Owner annotation is obligatory.");
     }
 
+    Ignore ignore = description.getAnnotation(Ignore.class);
     for (String developer : owner.developers()) {
       if (!active.containsKey(developer)) {
         throw new CategoryConfigException(format("Developer %s is not active.", developer));
@@ -151,6 +153,10 @@ public class OwnerRule implements TestRule {
 
       if (owner.intermittent()) {
         fileOwnerAs(developer, "intermittent");
+      }
+
+      if (ignore != null) {
+        fileOwnerAs(developer, "ignore");
       }
     }
 

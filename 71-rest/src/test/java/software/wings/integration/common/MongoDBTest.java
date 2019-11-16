@@ -5,13 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.StressTests;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
@@ -32,10 +31,9 @@ public class MongoDBTest extends WingsBaseTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
+  @Category(StressTests.class)
   // this test was used to validate mongo setting for dirty reads
   // there is no need it to be run again and again
-  @Ignore("Bypass this test, it is not for running regularly")
   public void dirtyReads() {
     Concurrent.test(10, t -> {
       try {
