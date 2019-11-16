@@ -4,7 +4,7 @@
 
 package io.harness.serializer;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -33,7 +33,7 @@ public class XmlUtilsTest extends CategoryTest {
    * @throws IOException                  Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetXpath()
       throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {

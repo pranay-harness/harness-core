@@ -86,6 +86,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   private ConfigFile configFile, newConfigFile;
   private ServiceTemplate serviceTemplate;
 
+  @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
