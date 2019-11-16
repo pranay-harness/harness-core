@@ -6,6 +6,7 @@ import io.harness.category.element.CliFunctionalTests;
 import io.harness.category.element.E2ETests;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.category.speed.FastTests;
 import io.harness.category.speed.SlowTests;
@@ -30,8 +31,8 @@ public class CategoryTimeoutRule extends Timeout {
   }
 
   public static Class fetchCategoryElement(Category category) {
-    List<Class> classes = asList(
-        UnitTests.class, IntegrationTests.class, FunctionalTests.class, CliFunctionalTests.class, E2ETests.class);
+    List<Class> classes = asList(UnitTests.class, IntegrationTests.class, FunctionalTests.class,
+        CliFunctionalTests.class, E2ETests.class, StressTests.class);
 
     Class element = null;
     for (Class clz : classes) {
