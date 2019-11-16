@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Indexed;
 @HarnessEntity(exportable = false)
 public class ClusterRecord implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware {
   @Id String uuid;
-  @Indexed final String accountId;
+  @Indexed String accountId;
   final Cluster cluster;
   String[] perpetualTaskIds; // reference
   @SchemaIgnore long createdAt;

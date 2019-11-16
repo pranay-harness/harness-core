@@ -15,13 +15,8 @@ import java.util.List;
 @Slf4j
 @Singleton
 public class ClusterRecordServiceImpl implements ClusterRecordService {
-  private final ClusterRecordDao clusterRecordDao;
+  @Inject private ClusterRecordDao clusterRecordDao;
   @Inject @Getter private Subject<ClusterRecordObserver> subject = new Subject<>();
-
-  @Inject
-  public ClusterRecordServiceImpl(ClusterRecordDao clusterRecordDao) {
-    this.clusterRecordDao = clusterRecordDao;
-  }
 
   @Override
   public ClusterRecord upsert(ClusterRecord clusterRecord) {
@@ -43,9 +38,18 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     return upsertedClusterRecord;
   }
 
+  public ClusterRecord get(String clusterId) {
+    return clusterRecordDao.get(clusterId);
+  }
+
+  @Override
+  public List<ClusterRecord> list(String accountId, String cloudProviderId, Integer count, Integer startIndex) {
+    return clusterRecordDao.list(accountId, cloudProviderId, count, startIndex);
+  }
+
   @Override
   public List<ClusterRecord> list(String accountId, String cloudProviderId) {
-    return clusterRecordDao.list(accountId, cloudProviderId);
+    return clusterRecordDao.list(accountId, cloudProviderId, 0, 0);
   }
 
   @Override
@@ -61,7 +65,7 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   @Override
   public boolean delete(String accountId, String cloudProviderId) {
     // get the list of Clusters associated with the cloudProvider
-    List<ClusterRecord> clusterRecords = clusterRecordDao.list(accountId, cloudProviderId);
+    List<ClusterRecord> clusterRecords = list(accountId, cloudProviderId, 0, 0); // TODO: check if this works
     if (isNull(clusterRecords)) {
       logger.warn("Cloud Provider with id={} has no Clusters to be deleted.", cloudProviderId);
     } else {
