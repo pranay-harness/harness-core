@@ -13,6 +13,7 @@ import static org.joor.Reflect.on;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
+import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.TestIrregularIterableEntity.IrregularIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
@@ -25,7 +26,6 @@ import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -90,8 +90,7 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  @Ignore("Bypass this test, it is not for running regularly")
+  @Category(StressTests.class)
   public void testNextReturnsJustAdded() throws IOException {
     assertThatCode(() -> {
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {

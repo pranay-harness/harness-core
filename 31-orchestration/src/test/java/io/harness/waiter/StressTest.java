@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.StressTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
@@ -14,7 +14,6 @@ import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,9 +30,8 @@ public class StressTest extends OrchestrationTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
+  @Category(StressTests.class)
   @RealMongo
-  @Ignore("Bypass this test, it is not for running regularly")
   public void stress() throws IOException {
     persistence.ensureIndex(NotifyEvent.class);
     persistence.ensureIndex(WaitInstance.class);

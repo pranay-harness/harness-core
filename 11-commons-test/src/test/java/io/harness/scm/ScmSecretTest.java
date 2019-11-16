@@ -11,13 +11,13 @@ import com.google.inject.Inject;
 
 import com.bettercloud.vault.VaultException;
 import io.harness.CategoryTest;
+import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.resource.Project;
 import io.harness.rule.CommonsMethodRule;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -83,8 +83,7 @@ public class ScmSecretTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  @Ignore("Bypass this test, it is not for running regularly")
+  @Category(StressTests.class)
   public void rebuildSecretProperties() throws URISyntaxException, IOException {
     assertThatCode(() -> {
       if (!scmSecret.isInitialized()) {

@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
+import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
@@ -33,9 +34,8 @@ public class StressTest extends PersistenceTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
+  @Category(StressTests.class)
   @RealMongo
-  @Ignore("Bypass this test, it is not for running regularly")
   public void versionedPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndex(TestVersionedQueuableObject.class);
