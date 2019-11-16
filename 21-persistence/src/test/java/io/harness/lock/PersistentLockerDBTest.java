@@ -43,7 +43,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAcquireLockDoLock() {
     String uuid = generateUuid();
@@ -68,7 +68,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAcquireEphemeralLock() {
     String uuid = generateUuid();
@@ -97,7 +97,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAcquireLockAfterDestroy() {
     assertThatCode(() -> {
@@ -115,7 +115,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTryToAcquireEphemeralLock() {
     assertThatCode(() -> {
@@ -128,7 +128,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTryToAcquireLock() {
     String uuid = generateUuid();

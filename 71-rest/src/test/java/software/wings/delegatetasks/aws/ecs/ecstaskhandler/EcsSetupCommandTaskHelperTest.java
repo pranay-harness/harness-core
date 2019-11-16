@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
@@ -234,7 +236,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetCreateServiceRequest_Fargate() throws Exception {
     EcsSetupParams setupParams = anEcsSetupParams()
@@ -313,7 +315,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetCreateServiceRequest_EC2() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
@@ -336,7 +338,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetCreateServiceRequest_serviceSpec() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
@@ -368,7 +370,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testValidateServiceRegistries() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -406,7 +408,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetCreateServiceRequest_EC2_awsvpc() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
@@ -441,7 +443,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testIsServiceWithSamePrefix() {
     assertThat(ecsSetupCommandTaskHelper.isServiceWithSamePrefix("Beacons__Conversions__177", "Beacons__Conversions__"))
@@ -503,7 +505,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCreateTaskDefinition_ECS() throws Exception {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
@@ -555,7 +557,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateTaskDefinition_Fargate() throws Exception {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
@@ -599,7 +601,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testIsValidateSetupParamasForECS() throws Exception {
     TaskDefinition taskDefinition = new TaskDefinition().withExecutionRoleArn("executionRole");
@@ -660,7 +662,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCreateEcsContainerTaskIfNull() throws Exception {
     EcsContainerTask ecsContainerTask = ecsSetupCommandTaskHelper.createEcsContainerTaskIfNull(null);
@@ -675,7 +677,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testIsFargateTaskLauchType() throws Exception {
     EcsSetupParams setupParams = getEcsSetupParams();
@@ -687,7 +689,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetRevisionFromServiceName() throws Exception {
     assertThat(ecsSetupCommandTaskHelper.getRevisionFromServiceName("App_Service_Env__2")).isEqualTo(2);
@@ -695,7 +697,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testGetServicePrefixByRemovingNumber() throws Exception {
     assertThat(ecsSetupCommandTaskHelper.getServicePrefixByRemovingNumber("App_Service_Env__2"))
@@ -709,7 +711,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testMatchWithRegex() throws Exception {
     assertThat(ecsSetupCommandTaskHelper.matchWithRegex("App_Service_Env__2", "App_Service_Env__1")).isTrue();
@@ -718,7 +720,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testSetServiceRegistryForDNSSwap() {
     EcsSetupParams mockParams = mock(EcsSetupParams.class);
@@ -749,7 +751,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testStoreCurrentServiceNameAndCountInfo() {
     AwsConfig awsConfig = AwsConfig.builder().build();
@@ -767,7 +769,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testBackupAutoScalarConfig() {
     EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
@@ -799,7 +801,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleRollback_PrevSvcExists() {
     EcsSetupParams params = anEcsSetupParams()
@@ -836,7 +838,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleRollback_PrevSvcDoesNotExist() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -854,7 +856,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateEcsService() {
     EcsSetupParams params =
@@ -879,7 +881,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDownsizeOldOrUnhealthy() {
     EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
@@ -907,7 +909,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCleanup() {
     doReturn(newArrayList(new Service().withServiceName("foo__1").withDesiredCount(0),
@@ -923,7 +925,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetExistingServiceMetadataSnapshot() {
     EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
@@ -942,7 +944,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetTargetGroupForDefaultAction() {
     Listener listener = new Listener().withDefaultActions(new Action().withTargetGroupArn("arn").withType("forward"));
@@ -956,7 +958,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeleteExistingServicesOtherThanBlueVersion() {
     EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();

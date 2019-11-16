@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -38,7 +38,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldInformUponUpsert() {
     clusterRecordService.upsert(clusterRecord);
@@ -46,7 +46,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldNotInformUponUpdate() {
     clusterRecordService.upsert(clusterRecord);
@@ -56,7 +56,7 @@ public class ClusterRecordServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldDeleteExistingClusters() {
     clusterRecordService.upsert(clusterRecord);

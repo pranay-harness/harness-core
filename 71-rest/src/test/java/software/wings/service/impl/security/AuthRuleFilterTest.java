@@ -1,6 +1,6 @@
 package software.wings.service.impl.security;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 public class AuthRuleFilterTest extends WingsBaseTest {
   @Inject AuthRuleFilter authRuleFilter;
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testIsAccountLevelPermission() {
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.AUDIT_VIEWER, Action.READ);

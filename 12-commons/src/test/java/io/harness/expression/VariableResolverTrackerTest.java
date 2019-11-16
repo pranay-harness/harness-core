@@ -1,6 +1,6 @@
 package io.harness.expression;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class VariableResolverTrackerTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTrackVariables() {
     ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();

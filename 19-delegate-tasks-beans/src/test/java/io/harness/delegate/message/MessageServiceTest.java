@@ -6,6 +6,7 @@ import static io.harness.delegate.message.MessageServiceImpl.PRIMARY_DELIMITER;
 import static io.harness.delegate.message.MessageServiceImpl.SECONDARY_DELIMITER;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -71,7 +72,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWriteMessage() throws IOException {
     messageService.writeMessage("message-text", "p1", "p2");
@@ -87,7 +88,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldReadMessage() throws IOException {
     String line = Joiner.on(PRIMARY_DELIMITER)
@@ -106,7 +107,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendMessage() throws IOException {
     messageService.writeMessageToChannel(OTHER_MESSENGER_TYPE, otherProcessId, "message-text", "p1", "p2");
@@ -122,7 +123,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldRetrieveMessage() throws IOException {
     String line = Joiner.on(PRIMARY_DELIMITER)
@@ -141,7 +142,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCloseChannel() throws IOException {
     FileUtils.writeLines(messageFile,
@@ -169,7 +170,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldWriteData() throws IOException {
     messageService.putData(data1, "foo", "bar");
@@ -231,7 +232,7 @@ public class MessageServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCloseData() throws IOException {
     Map<String, Object> map1 = new HashMap<>();

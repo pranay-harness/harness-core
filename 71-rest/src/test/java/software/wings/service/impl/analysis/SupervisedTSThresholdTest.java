@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -20,7 +20,7 @@ public class SupervisedTSThresholdTest extends WingsBaseTest {
       SupervisedTSThreshold.builder().maxThreshold(2.1).minThreshold(-1.8).build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void getThresholdsTestInfraMetric() {
     supervisedTSThreshold.setMetricType(MetricType.INFRA);
@@ -33,7 +33,7 @@ public class SupervisedTSThresholdTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void getThresholdsTestResponseTimeMetric() {
     supervisedTSThreshold.setMetricType(MetricType.RESP_TIME);
@@ -46,7 +46,7 @@ public class SupervisedTSThresholdTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void getThresholdsTestThroughputMetric() {
     supervisedTSThreshold.setMetricType(MetricType.THROUGHPUT);

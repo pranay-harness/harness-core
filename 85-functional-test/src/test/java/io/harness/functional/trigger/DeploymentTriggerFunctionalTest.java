@@ -1,6 +1,6 @@
 package io.harness.functional.trigger;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.trigger.Action.ActionType.WORKFLOW;
 
@@ -58,7 +58,7 @@ public class DeploymentTriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(FunctionalTests.class)
   public void shouldCreateNewArtifactTriggerForWorkflow() {
     final Service service =

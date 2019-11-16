@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -52,7 +52,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sCanaryDeployTaskHandler k8sCanaryDeployTaskHandler;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams =
@@ -82,7 +82,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams =
@@ -112,7 +112,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDeploymentWorkloadsForCanary() throws Exception {
     K8sCanaryDeployTaskParameters canaryDeployTaskParams = K8sCanaryDeployTaskParameters.builder().build();

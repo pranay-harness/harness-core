@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -34,7 +34,7 @@ public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYam
       + "type: DOCKER";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String httpHelmRepoSettingName = HTTP_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
@@ -46,7 +46,7 @@ public class HttpHelmRepoConfigYamlHandlerTest extends BaseSettingValueConfigYam
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String httpHelmRepoSettingName = HTTP_HELM_CHART_SETTING_NAME + System.currentTimeMillis();

@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -53,7 +53,7 @@ public class GitConnectorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void test_creationOfGitConnectorsWithinLimitInHarnessCommunity_shouldPass() {
     String accountId = "someAccountId";
@@ -71,7 +71,7 @@ public class GitConnectorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void test_creationOfGitConnectorsAboveLimitInHarnessCommunity_shouldFail() {
     String accountId = "someAccountId";

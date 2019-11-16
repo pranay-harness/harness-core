@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -198,7 +198,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetrics() throws Exception {
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", dataCollectionService, true);
@@ -215,7 +215,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServiceGuardMetrics() throws Exception {
     // setup

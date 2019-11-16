@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -42,7 +42,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   private Class yamlClass = AzureConfig.Yaml.class;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String azureConfigName = "Azure" + System.currentTimeMillis();
@@ -54,7 +54,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String azureConfigName = "Azure" + System.currentTimeMillis();

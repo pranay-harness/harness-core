@@ -1,6 +1,6 @@
 package software.wings.service.impl.security;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.MARK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -50,7 +50,7 @@ public class KmsEncryptDecryptClientIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {

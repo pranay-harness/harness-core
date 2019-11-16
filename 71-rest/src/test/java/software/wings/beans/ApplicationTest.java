@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -26,7 +26,7 @@ public class ApplicationTest extends WingsBaseTest {
    * Test serialize deserialize.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSerializeDeserialize() {
     Application app = new Application();

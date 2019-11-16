@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.environment;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -147,7 +147,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws IOException {
     GitFileChange gitFileChange = new GitFileChange();
@@ -184,7 +184,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testFailures() throws IOException {
     // Invalid yaml path
@@ -213,7 +213,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testGetRequiredServiceTemplates() {
     int pageSize = PageRequest.DEFAULT_UNLIMITED;
@@ -233,7 +233,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCreate_VariableOverride() {
     final String encryped_yaml_ref = "safeharness:some-secret";
@@ -263,7 +263,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testUpdateDelete_variableOverride() throws Exception {
     final String encryped_yaml_ref = "safeharness:some-secret";
@@ -327,7 +327,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testDelete() {
     Environment env = getDefaultEnvironment();

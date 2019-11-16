@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -38,7 +38,7 @@ public class JiraConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandler
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String name = "JIRA" + System.currentTimeMillis();

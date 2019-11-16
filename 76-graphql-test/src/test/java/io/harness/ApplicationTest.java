@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
@@ -44,7 +44,7 @@ public class ApplicationTest extends GraphQLTest {
   @Inject ApplicationGenerator applicationGenerator;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryApplication() {
     final Seed seed = new Seed(0);
@@ -98,7 +98,7 @@ public class ApplicationTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingApplication() {
     String query = $GQL(/*
@@ -122,7 +122,7 @@ public class ApplicationTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryApplications() {
     final Seed seed = new Seed(0);

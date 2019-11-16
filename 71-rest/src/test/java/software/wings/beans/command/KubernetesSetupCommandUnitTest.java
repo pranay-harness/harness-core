@@ -1,6 +1,8 @@
 package software.wings.beans.command;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -189,7 +191,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteWithLastService() {
     ReplicationController kubernetesReplicationController =
@@ -212,7 +214,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateCustomMetricHorizontalPodAutoscalar() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -269,7 +271,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testBasicHorizontalPodAutoscalar() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -338,7 +340,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testBlueGreenValidationServiceNotAllowedWithBlueGreen() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -358,7 +360,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testBlueGreenValidationEmptyBlueGreenConfig() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -379,7 +381,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testBlueGreenValidationServiceNonePrimaryService() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -404,7 +406,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testBlueGreenValidationSmokeTest() throws Exception {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
@@ -424,7 +426,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteWithDownsize() {
     String controllerName0 = KubernetesConvention.getControllerName(

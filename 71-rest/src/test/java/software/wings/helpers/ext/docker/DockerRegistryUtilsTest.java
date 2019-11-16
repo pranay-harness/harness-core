@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.docker;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +22,7 @@ public class DockerRegistryUtilsTest extends WingsBaseTest {
   private static final String IMAGE_NAME = "IMAGE_NAME";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotGetLabelsIfEmptyTags() {
     List<Map<String, String>> labelsMap =

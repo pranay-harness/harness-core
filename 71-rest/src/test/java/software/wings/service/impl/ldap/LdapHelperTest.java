@@ -1,6 +1,8 @@
 package software.wings.service.impl.ldap;
 
+import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -105,7 +107,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void validateUserConfig() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
@@ -123,7 +125,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void validateGroupConfig() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
@@ -145,7 +147,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void populateGroupSize() throws LdapException {
     LdapEntry group = new LdapEntry("groupDN");
@@ -159,7 +161,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void populateGroupSizeWithoutExtendedMatchingFilterShouldFailAndThenSucceed() throws LdapException {
     LdapEntry group = new LdapEntry("groupDN");
@@ -175,7 +177,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void getGroupByDn() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
@@ -188,7 +190,7 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void authenticate() throws Exception {
     mockLdapSearchBuilder(searchBuilder, search);

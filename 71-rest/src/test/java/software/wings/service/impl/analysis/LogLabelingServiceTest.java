@@ -1,7 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +52,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedback() {
     // setup
@@ -69,7 +69,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedbackGetFirstNonLabeled() {
     // setup
@@ -90,7 +90,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testLabelIgnoreFeedbackGetLabelSamples() {
     // setup
@@ -134,7 +134,7 @@ public class LogLabelingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testSaveLabelIgnoreFeedback() {
     CVFeedbackRecord record =

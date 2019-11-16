@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -90,7 +90,7 @@ public class TimeSeriesRawDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testRecordPopulation() {
     Map<String, Map<String, TimeSeriesRawData>> existingRawDataMap = new HashMap<>();

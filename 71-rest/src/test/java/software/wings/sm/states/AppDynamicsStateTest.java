@@ -3,7 +3,11 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRANJAL;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
@@ -138,7 +142,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void shouldTestNonTemplatized() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
@@ -184,7 +188,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldTestNonTemplatizedBadTier() {
     ExecutionResponse executionResponse = setupNonTemplatized(true).execute(executionContext);
@@ -195,7 +199,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestAllTemplatized() throws ParseException, IOException {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -273,7 +277,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetricType() {
     String errType = AppDynamicsState.getMetricTypeForMetric(AppdynamicsConstants.ERRORS_PER_MINUTE);
@@ -291,7 +295,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsMissingFieldsCase() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -302,7 +306,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsPartialMissingFieldsCase() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -315,7 +319,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsInValidCase() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -329,7 +333,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testEmptyParam() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -340,7 +344,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testInvalidApp() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -354,7 +358,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testInvalidTier() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -368,7 +372,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testValidNonTemplatized() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -381,7 +385,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testOnlyConnectorTemplatized() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -402,7 +406,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testConnectorAndAppTemplatized() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -428,7 +432,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAllTemplatized() {
     AppDynamicsState appDynamicsState = new AppDynamicsState("dummy");
@@ -454,7 +458,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldTestTriggered() throws IOException {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()

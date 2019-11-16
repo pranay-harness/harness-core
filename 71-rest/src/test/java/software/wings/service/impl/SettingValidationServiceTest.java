@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -47,7 +49,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testElkValidate() throws IOException {
     final String url = "https://ec2-34-207-78-53.compute-1.amazonaws.com:9200/";
@@ -72,7 +74,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testHostConnectionValidationForPrivateKeyField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =
@@ -98,7 +100,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testHostConnectionValidationForUsernameField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =

@@ -1,6 +1,6 @@
 package io.harness.functional.apikeys;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -37,7 +37,7 @@ public class HarnessApiKeyFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(FunctionalTests.class)
   public void testCRUD() {
     String createdKey = generateHarnessClientApiKey(ClientType.PROMETHEUS);

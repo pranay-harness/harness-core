@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,7 +56,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesSimple() {
     List<Variable> workflowVariables = asList(aVariable().build(), aVariable().build());
@@ -70,7 +70,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesSimpleInvalid() {
     when(workflowService.readWorkflowWithoutServices(APP_ID, WORKFLOW_ID)).thenReturn(null);
@@ -89,7 +89,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesSimplePipeline() {
     List<Variable> workflowVariables = asList(aVariable().build(), aVariable().build());
@@ -103,7 +103,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesSimplePipelineInvalid() {
     when(pipelineService.readPipelineWithVariables(APP_ID, PIPELINE_ID)).thenReturn(null);
@@ -115,7 +115,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariables() {
     List<Variable> workflowVariables = asList(prepareVariable(1), prepareVariable(2));
@@ -137,7 +137,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesInvalid() {
     List<Variable> workflowVariables = asList(prepareVariable(1), prepareVariable(2));
@@ -171,7 +171,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesPipeline() {
     List<Variable> workflowVariables = asList(prepareVariable(1), prepareVariable(2));
@@ -193,7 +193,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesPipelineInvalid() {
     List<Variable> workflowVariables = asList(aVariable().name("var1").type(VariableType.ENTITY).build(),
@@ -237,21 +237,21 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesExtra() {
     validateFetchWorkflowVariablesReset(prepareWorkflowVariablesMap(3));
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesLess() {
     validateFetchWorkflowVariablesReset(prepareWorkflowVariablesMap(1));
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesEmpty() {
     validateFetchWorkflowVariablesReset(prepareWorkflowVariablesMap(0));
@@ -276,7 +276,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesChangedType() {
     Map<String, String> workflowVariablesMap = prepareWorkflowVariablesMap(4);
@@ -302,7 +302,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariablesChangedEntityType() {
     Map<String, String> workflowVariablesMap = prepareWorkflowVariablesMap(4);

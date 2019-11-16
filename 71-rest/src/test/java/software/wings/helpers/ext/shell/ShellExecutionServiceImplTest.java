@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.shell;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -19,7 +19,7 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private ShellExecutionServiceImpl shellExecutionService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testExecuteShellScript() {
     ShellExecutionRequest shellExecutionRequest = ShellExecutionRequest.builder()
@@ -34,7 +34,7 @@ public class ShellExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testExecuteScriptTimeout() {
     ShellExecutionRequest shellExecutionRequest =

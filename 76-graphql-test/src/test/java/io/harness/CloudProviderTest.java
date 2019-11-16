@@ -1,7 +1,8 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.graphql.schema.type.cloudProvider.QLAwsCloudProvider.QLCloudProviderKeys;
 
@@ -41,7 +42,7 @@ public class CloudProviderTest extends GraphQLTest {
 }*/ CloudProviderTest.class);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryCloudProvider() {
     final Seed seed = new Seed(0);
@@ -93,7 +94,7 @@ public class CloudProviderTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryCloudProviders() {
     final Seed seed = new Seed(0);

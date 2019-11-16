@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
@@ -52,7 +52,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testOnSaved() {
     handler.onSaved(infrastructureMapping);
@@ -60,7 +60,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testOnUpdated() {
     handler.onUpdated(infrastructureMapping);
@@ -68,7 +68,7 @@ public class ClusterRecordHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testOnDeleted() {
     handler.onDeleted(settingAttribute);

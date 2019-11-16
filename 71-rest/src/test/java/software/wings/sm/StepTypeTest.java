@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
@@ -17,7 +17,7 @@ import org.junit.experimental.categories.Category;
 
 public class StepTypeTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldMatchForECS() {
     StepType stepType = StepType.ECS_SERVICE_SETUP;
@@ -78,7 +78,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldMatchForSpotinst() {
     StepType stepType = StepType.SPOTINST_SETUP;
@@ -108,7 +108,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldMatchForPcf() {
     StepType stepType = StepType.PCF_SETUP;
@@ -133,7 +133,7 @@ public class StepTypeTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldMatchForOnesNotAddingTypeYet() {
     StepType stepType = AWS_AMI_SERVICE_SETUP;

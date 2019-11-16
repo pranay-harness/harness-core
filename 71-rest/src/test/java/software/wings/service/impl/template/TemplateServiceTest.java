@@ -2,6 +2,9 @@ package software.wings.service.impl.template;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -79,7 +82,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Inject private TemplateVersionService templateVersionService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSaveTemplateAtAccountLevel() {
     Template template = getSshCommandTemplate();
@@ -102,7 +105,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = ConstraintViolationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotSaveInvalidNameTemplate() {
     Template template = getSshCommandTemplate();
@@ -111,7 +114,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTemplate() {
     Template savedTemplate = saveTemplate();
@@ -155,7 +158,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTemplateByVersion() {
     Template savedTemplate = saveTemplate();
@@ -190,7 +193,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldList() {
     saveTemplate();
@@ -208,7 +211,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateSame() {
     Template template = getSshCommandTemplate();
@@ -246,7 +249,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateVariables() {
     Template template = getSshCommandTemplate();
@@ -305,7 +308,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = ConstraintViolationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotUpdateInvalidNameTemplate() {
     Template template = getSshCommandTemplate();
@@ -320,21 +323,21 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateHttpTemplate() {
     updateHttpTemplate(GLOBAL_APP_ID);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDeleteTemplate() {
     deleteTemplate(GLOBAL_APP_ID);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDeleteByFolder() {
     TemplateFolder templateFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, "Harness/Tomcat Commands");
@@ -354,7 +357,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchTemplateUri() {
     Template template = getSshCommandTemplate();
@@ -372,14 +375,14 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchTemplateUriWhenTemplateDeleted() {
     assertThat(templateService.fetchTemplateUri(TEMPLATE_ID)).isNull();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchTemplateIdfromUri() {
     Template template = getSshCommandTemplate();
@@ -394,7 +397,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldConstructCommandFromSshTemplate() {
     Template template = getSshCommandTemplate();
@@ -436,7 +439,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldConstructHttpFromHttpTemplate() {
     Template httpTemplate =
@@ -461,7 +464,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetCommandCategoriesAtAccountLevel() {
     Template template = getSshCommandTemplate();
@@ -500,7 +503,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetCommandCategoriesAtAppLevel() {
     // create 2 templates in app1, 1 in another app and 1 at account level
@@ -608,7 +611,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldFetchTemplateByKeyword() {
     Template template = getSshCommandTemplate();
@@ -619,7 +622,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldConvertYamlToTemplate() throws IOException {
     Template template = templateService.convertYamlToTemplate(POWER_SHELL_IIS_V2_INSTALL_PATH);
@@ -641,7 +644,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldSaveTemplateAtAppLevel() {
     Template template = getSshCommandTemplate(MY_START_COMMAND, APP_ID);
@@ -664,7 +667,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetAppLevelTemplate() {
     Template savedTemplate = saveTemplate(MY_START_COMMAND, APP_ID);
@@ -672,7 +675,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldListAppLevelTemplates() {
     saveTemplate(MY_START_COMMAND, APP_ID);
@@ -690,7 +693,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldAllowSameTemplateNameInAccountAndApplication() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -742,7 +745,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldFetchApplicationLevelTemplateByKeyword() {
     Template template = getSshCommandTemplate(MY_START_COMMAND, APP_ID);
@@ -755,7 +758,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateApplicationLevelHttpTemplate() {
     updateHttpTemplate(APP_ID);
@@ -810,7 +813,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDeleteApplicationLevelTemplatesByFolder() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -844,7 +847,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDeleteApplicationLevelTemplate() {
     deleteTemplate(APP_ID);
@@ -896,7 +899,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotSaveTemplateWithDuplicateVariables() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -915,7 +918,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotUpdateTemplateWithDuplicateVariables() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);

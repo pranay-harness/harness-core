@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -103,7 +105,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testRegenerateInfrastructureMappings() throws Exception {
     doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.INFRA_MAPPING_REFACTOR), any());
@@ -181,7 +183,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testGetCFTemplateParamKeys() {
     String defaultString = "default";
@@ -214,7 +216,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void shouldValidateInfrastructureProvisioner() {
     TerraformInfrastructureProvisioner terraformProvisioner = TerraformInfrastructureProvisioner.builder()
@@ -327,7 +329,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void nonProvisionerExpressionsResolutionShouldNotFailOnNonResolution() {
     String workflowVariable = "${workflowVariables.var1}";
@@ -346,7 +348,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void provisionerExpressionsResolutionShouldFailOnNonResolution() {
     String provisionerVariable = "${terraform.var1}";
@@ -362,7 +364,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetIdToServiceMapping() {
     PageRequest<Service> servicePageRequest = new PageRequest<>();
@@ -384,7 +386,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetIdToServiceMappingForEmptyServiceIds() {
     Map<String, Service> idToServiceMapping = ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
@@ -394,7 +396,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetIdToSettingAttributeMapping() {
     PageRequest<SettingAttribute> settingAttributePageRequest = new PageRequest<>();
@@ -419,7 +421,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetIdToSettingAttributeMappingForEmptySettingAttributeIds() {
     Map<String, SettingAttribute> idToSettingAttributeMapping =
@@ -430,7 +432,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldListDetails() {
     InfrastructureProvisionerServiceImpl ipService = spy(new InfrastructureProvisionerServiceImpl());
@@ -471,7 +473,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldListDetailsForEmptyInfraMappingBlueprints() {
     InfrastructureProvisionerServiceImpl ipService = spy(new InfrastructureProvisionerServiceImpl());

@@ -1,6 +1,6 @@
 package io.harness.cache;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -37,7 +37,7 @@ class Dummy implements Distributable, Nominal {
 
 public class SerialIdTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSanity() {
     final Dummy dummy = new Dummy();

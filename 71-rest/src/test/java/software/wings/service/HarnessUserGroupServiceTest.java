@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
@@ -67,7 +67,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
    *
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSaveAndRead() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
@@ -89,7 +89,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testList() {
     HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
@@ -122,7 +122,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateMembers() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
@@ -147,7 +147,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateAccounts() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
@@ -173,7 +173,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testAllowedActions() {
     HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
@@ -204,7 +204,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSupportAccountsForUser() {
     HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
@@ -248,7 +248,7 @@ public class HarnessUserGroupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testDelete() {
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()

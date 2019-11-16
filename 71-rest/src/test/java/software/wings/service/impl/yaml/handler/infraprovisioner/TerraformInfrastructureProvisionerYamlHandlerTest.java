@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -88,7 +88,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
       + "sourceRepoBranch: master";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext();

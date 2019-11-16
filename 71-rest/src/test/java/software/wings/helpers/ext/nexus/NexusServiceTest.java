@@ -4,8 +4,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -467,7 +468,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Mock private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetRepositories() {
     wireMockRule.stubFor(
@@ -498,7 +499,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     wireMockRule.stubFor(
@@ -532,7 +533,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactPathsByRepo() {
     wireMockRule.stubFor(
@@ -560,7 +561,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactPathsByRepoStartsWithUrl() {
     wireMockRule.stubFor(
@@ -588,7 +589,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetRepositoriesError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))
@@ -601,7 +602,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesNexus2xError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))
@@ -615,7 +616,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetNugetRepositoriesNexus2x() {
     Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, null, RepositoryFormat.nuget.name());
@@ -624,7 +625,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetNPMRepositoriesNexus2x() {
     Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, null, RepositoryFormat.npm.name());
@@ -633,7 +634,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetMavenRepositoriesNexus2x() {
     Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, null, RepositoryFormat.maven.name());
@@ -642,7 +643,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactPathsByRepoError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/"))
@@ -734,7 +735,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactNames() {
     wireMockRule.stubFor(
@@ -822,7 +823,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetVersions() {
     wireMockRule.stubFor(
@@ -846,7 +847,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsWithExtensionAndClassifier() {
     wireMockRule.stubFor(
@@ -870,7 +871,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDownloadArtifactMavenNexus2x() {
     setPomModelWireMock();
@@ -961,7 +962,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetLatestVersion() {
     setPomModelWireMock();
@@ -971,7 +972,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
     assertThat(nexusService.getRepositories(nexusThreeConfig, null, RepositoryFormat.docker.name()))
@@ -980,7 +981,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDockerImages() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "docker-group", RepositoryFormat.docker.name()))
@@ -989,7 +990,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldDockerTags() {
     assertThat(nexusService.getBuilds(nexusThreeConfig, null,
@@ -1025,7 +1026,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testExistsVersionWithExtensionNexus2x() {
     mockResponsesNexus2xForExistVersions();
@@ -1034,7 +1035,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = ArtifactServerException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testNoVersionsFoundWithInvalidClassifierNexus2x() {
     mockResponsesNexus2xForExistVersions();
@@ -1042,7 +1043,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testVersionExistsWithValidClassifierExtensionNexus2x() {
     mockResponsesNexus2xForExistVersions();
@@ -1070,7 +1071,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testExistsVersionWithExtensionNexus3x() {
     assertThat(
@@ -1079,14 +1080,14 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = ArtifactServerException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testNoVersionsFoundWithInvalidClassifierNexus3x() {
     nexusService.existsVersion(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, "source");
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetPackageNamesForNPMNexus3x() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "harness-npm", RepositoryFormat.npm.name()))
@@ -1095,7 +1096,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetPackageNamesForNugetNexus3x() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "nuget-group", RepositoryFormat.nuget.name()))
@@ -1105,7 +1106,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetGroupIdsForMavenNexus3x() {
     assertThat(nexusService.getGroupIdPaths(nexusThreeConfig, null, "maven-releases", RepositoryFormat.maven.name()))
@@ -1114,7 +1115,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetArtifactNamesForMavenNexus3x() {
     assertThat(nexusService.getArtifactNames(
@@ -1124,7 +1125,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForMavenNexus3x() {
     List<BuildDetails> buildDetails =
@@ -1133,7 +1134,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus3x() {
     List<BuildDetails> buildDetails =
@@ -1142,7 +1143,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus3x() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
@@ -1151,7 +1152,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetPackageNamesForNPMNexus2x() {
     assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "npmjs", RepositoryFormat.npm.name()))
@@ -1160,7 +1161,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetPackageNamesForNugetNexus2x() {
     assertThat(nexusService.getGroupIdPaths(nexusConfig, null, "MyNuGet", RepositoryFormat.nuget.name()))
@@ -1169,7 +1170,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus2x() {
     List<BuildDetails> buildDetails =
@@ -1178,7 +1179,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus2x() {
     List<BuildDetails> buildDetails =
@@ -1187,7 +1188,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldFileNotFoundDownloadArtifactNPMNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes =
@@ -1207,7 +1208,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldFileNotFoundDownloadArtifactMavenNexus3() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
@@ -1229,7 +1230,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldThrowExceptionDownloadArtifactNPMNexus2() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
@@ -1251,7 +1252,7 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldFileNotFoundDownloadArtifactNugetNexus2() {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()

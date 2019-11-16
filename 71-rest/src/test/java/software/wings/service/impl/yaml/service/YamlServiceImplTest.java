@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
@@ -41,7 +42,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void processYamlFilesAsTar() throws IOException {
     InputStream zipfile = getClass().getResourceAsStream("yaml_zip_test.zip");
@@ -57,7 +58,7 @@ public class YamlServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFilterInvalidFilePaths() throws Exception {
     List<GitFileChange> gitFileChange = new ArrayList<>();

@@ -46,6 +46,7 @@ public class OwnerRule implements TestRule {
   public static final String PARNIAN = "parnian";
   public static final String POOJA = "pooja";
   public static final String PRANJAL = "pranjal";
+  public static final String PRASHANT = "prashant";
   public static final String PRAVEEN = "praveen.sugavanam";
   public static final String PUNEET = "puneet.saraswat";
   public static final String RAGHU = "raghu";
@@ -59,6 +60,7 @@ public class OwnerRule implements TestRule {
   public static final String SRINIVAS = "srinivas";
   public static final String SRIRAM = "sriram";
   public static final String SUNIL = "sunil";
+  public static final String SATYAM = "satyam";
   public static final String UJJAWAL = "ujjawal.prasad";
   public static final String UTKARSH = "utkarsh.gupta";
   public static final String VAIBHAV_SI = "vaibhav.si";
@@ -100,6 +102,7 @@ public class OwnerRule implements TestRule {
           .put(PARNIAN, DevInfo.builder().email("parnian@harness.io").build())
           .put(POOJA, DevInfo.builder().email("pooja@harness.io").slack("pooja").build())
           .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").build())
+          .put(PRASHANT, DevInfo.builder().email("prashant@harness.io").build())
           .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").build())
           .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").slack("puneet").build())
           .put(RAGHU, DevInfo.builder().email("raghu@harness.io").slack("raghu").build())
@@ -107,6 +110,7 @@ public class OwnerRule implements TestRule {
           .put(ROHIT, DevInfo.builder().email("rohit.reddy@harness.io").build())
           .put(ROHIT_KUMAR, DevInfo.builder().email("rohit.kumar@harness.io").build())
           .put(RUSHABH, DevInfo.builder().email("rushabh@harness.io").build())
+          .put(SATYAM, DevInfo.builder().email("satyam.shanker@harness.io").build())
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("Shaswat").build())
           .put(SHUBHANSHU, DevInfo.builder().email("shubhanshu.verma@harness.io").build())
           .put(SOWMYA, DevInfo.builder().email("sowmya.k@harness.io").slack("Sowmya K").build())

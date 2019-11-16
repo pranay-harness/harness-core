@@ -1,6 +1,6 @@
 package software.wings.resources.limits;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +37,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testConfigure() throws Exception {
     StaticLimit limit = new StaticLimit(10);
@@ -55,7 +55,7 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testConfigureRateLimit() throws Exception {
     RateLimit limit = new RateLimit(10, 24, TimeUnit.HOURS);

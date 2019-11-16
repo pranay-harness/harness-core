@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +50,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
           .build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetLocalOverrideManifestFiles() {
     when(appManifestService.getOverrideManifestFilesByEnvId(any(), any()))
@@ -68,7 +68,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCreateValuesForService() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VARS_YML).build();
@@ -87,7 +87,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testUpdateValuesForService() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VARS_YML).build();
@@ -107,7 +107,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCreateValues() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VALUES_YAML_KEY).build();
@@ -125,7 +125,7 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testUpdateValues() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(VALUES_YAML_KEY).build();

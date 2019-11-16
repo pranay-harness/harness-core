@@ -1,6 +1,7 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -156,7 +157,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should create password based ssh config.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCreatePasswordBasedSshConfig() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -182,7 +183,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should create key based ssh config.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCreateKeyBasedSshConfig() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_KEY.getUuid()).build();
@@ -207,7 +208,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should create bastion host based ssh config.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCreateBastionHostBasedSshConfig() {
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
@@ -240,7 +241,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should execute exec command.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldExecuteExecCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -254,7 +255,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * Should execute copy command.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldExecuteCopyCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -282,7 +283,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -328,7 +329,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    *
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldExecuteInitCommandV2() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -359,7 +360,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -416,7 +417,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    *
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldExecuteInitCommandV2WithNestedUnits() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();

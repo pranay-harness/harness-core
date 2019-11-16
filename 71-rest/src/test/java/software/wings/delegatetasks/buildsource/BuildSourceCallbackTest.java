@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.buildsource;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -101,7 +102,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccess() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -113,7 +114,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotifyOnSuccessTriggerRefactor() {
     when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(true);
@@ -126,7 +127,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldUpdateCollectionStatus() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
@@ -140,7 +141,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotUpdateCollectionStatus() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
@@ -153,7 +154,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldHandleNullBuildSourceResponse() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_2);
@@ -167,7 +168,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotify() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -181,7 +182,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotifyOnFailedResponse() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -196,7 +197,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotifyOnErrorNotifyResponseDataResponse() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);
@@ -207,7 +208,7 @@ public class BuildSourceCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotifyWithExecutorRejectedQueueException() {
     buildSourceCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_1);

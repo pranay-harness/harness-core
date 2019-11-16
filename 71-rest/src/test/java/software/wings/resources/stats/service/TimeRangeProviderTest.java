@@ -1,6 +1,6 @@
 package software.wings.resources.stats.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -16,7 +16,7 @@ import java.util.List;
 
 public class TimeRangeProviderTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void monthlyRanges() {
     LocalDateTime from = LocalDateTime.parse("2018-10-03T10:15:30");

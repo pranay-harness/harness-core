@@ -1,6 +1,8 @@
 package software.wings.integration.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
@@ -53,7 +55,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(IntegrationTests.class)
   public void shouldSaveFileWithMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder()
@@ -71,7 +73,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(IntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithFileMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder().mimeType("text/plain").build();
@@ -85,7 +87,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(IntegrationTests.class)
   public void shouldSaveBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();
@@ -101,7 +103,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(IntegrationTests.class)
   public void shouldUpdateEntityId() throws Exception {
     final BaseFile baseFile = new BaseFile();
@@ -120,7 +122,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(IntegrationTests.class)
   public void shouldThrowExceptionWhenFileNameIsNullWithBaseFile() throws Exception {
     final BaseFile baseFile = new BaseFile();

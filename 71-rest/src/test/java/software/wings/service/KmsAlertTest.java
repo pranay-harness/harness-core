@@ -1,7 +1,8 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -89,7 +90,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAlertFiredForVault() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
@@ -117,7 +118,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAlertFiredForVaultRenewal() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
@@ -152,7 +153,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAlertFiredForKms() throws InterruptedException {
     final KmsConfig kmsConfig = getKmsConfig();
@@ -180,7 +181,7 @@ public class KmsAlertTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testNoAlertForInactiveAccount() {
     accountId =

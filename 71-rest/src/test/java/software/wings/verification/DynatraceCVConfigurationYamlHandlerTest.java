@@ -1,7 +1,7 @@
 package software.wings.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -112,7 +112,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -130,7 +130,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testToYamlMultipleServiceMethods() {
     DynaTraceCVServiceConfiguration cvServiceConfiguration =
@@ -147,7 +147,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -169,7 +169,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertEmptyServiceMethod() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -186,7 +186,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertMultipleServiceMethods() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

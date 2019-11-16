@@ -1,6 +1,6 @@
 package io.harness.ccm;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
@@ -47,7 +47,7 @@ public class CCMPerpetualTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testOnUpserted() {
     handler.onUpserted(clusterRecord);
@@ -55,7 +55,7 @@ public class CCMPerpetualTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testOnDeleting() {
     handler.onDeleting(clusterRecord);

@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -24,7 +23,7 @@ import java.util.function.Consumer;
 
 public class PcfCommandValidationTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testValidationWithNullEncryptionType() {
     Consumer consumer = mock(Consumer.class);

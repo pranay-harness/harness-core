@@ -3,7 +3,9 @@ package software.wings.sm.states.pcf;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static io.harness.pcf.model.PcfConstants.LEGACY_NAME_PCF_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -195,7 +197,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchManifestYmlString() throws Exception {
     when(featureFlagService.isEnabled(FeatureName.PCF_MANIFEST_REDESIGN, ACCOUNT_ID))
@@ -219,7 +221,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetFinalManifestFilesMap() {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
@@ -260,7 +262,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetFinalManifestFilesMapWithNullGitFetchFileResponse() {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
@@ -282,7 +284,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetFinalManifestFilesMapWithInvalidContent() {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
@@ -308,7 +310,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetDelegateTask() throws Exception {
     String waitId = UUIDGenerator.generateUuid();
@@ -346,7 +348,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetActivityBuilder() throws Exception {
     final String commandName = "C1";
@@ -396,7 +398,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testQueueDelegateTaskForRouteUpdate() {
     PcfRouteUpdateQueueRequestData requestData =
@@ -472,7 +474,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetRouteMaps() {
     PcfInfrastructureMapping infrastructureMapping = PcfInfrastructureMapping.builder().routeMaps(null).build();
@@ -520,7 +522,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testApplyVarsYmlSubstitutionIfApplicable() {
     PcfManifestsPackage pcfManifestsPackage =
@@ -536,7 +538,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchMaxCountFromManifest() {
     PcfManifestsPackage pcfManifestsPackage =
@@ -566,7 +568,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchPcfApplicationName() {
     PcfManifestsPackage pcfManifestsPackage =
@@ -598,7 +600,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetManifestFromPcfServiceSpecification() {
     String ymlContent = "yml";
@@ -618,7 +620,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testAddToPcfManifestFilesMap() {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
@@ -640,7 +642,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testUseNoRoute() {
     assertThat(pcfStateHelper.getRouteMaps(TEST_APP_MANIFEST, PcfInfrastructureMapping.builder().build())).isEmpty();
@@ -653,7 +655,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testEvaluateExpressionsInManifestTypes() {
     String v1 = "app:app1";
@@ -674,7 +676,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateManifestMap() {
     doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_MANIFEST_REDESIGN), anyString());
@@ -717,7 +719,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testIsManifestInGit() throws Exception {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();

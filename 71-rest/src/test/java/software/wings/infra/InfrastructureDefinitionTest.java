@@ -1,6 +1,6 @@
 package software.wings.infra;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.infra.InfraDefinitionTestConstants.RELEASE_NAME;
 
@@ -48,7 +48,7 @@ public class InfrastructureDefinitionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testGetInfraMapping() {
     InfrastructureMapping infrastructureMapping = infrastructureDefinition.getInfraMapping();

@@ -3,7 +3,8 @@ package software.wings.service.impl;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
@@ -41,7 +42,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Mock private AppService appService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotRunningOrPaused() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(SUCCESS).build());
@@ -52,7 +53,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNoQueueIfNotQueued() throws Exception {
     wingsPersistence.save(WorkflowExecution.builder().appId(APP_ID).workflowId(WORKFLOW_ID).status(RUNNING).build());
@@ -63,7 +64,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldQueueBuildWorkflow() throws Exception {
     WorkflowExecution queuedExecution =
@@ -78,7 +79,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldQueueWorkflow() throws Exception {
     WorkflowExecution queuedExecution = WorkflowExecution.builder()
@@ -100,7 +101,7 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldQueueWorkflowInfraRefactor() throws Exception {
     when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);

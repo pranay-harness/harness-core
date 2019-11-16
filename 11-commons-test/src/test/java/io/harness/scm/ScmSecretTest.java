@@ -1,7 +1,6 @@
 package io.harness.scm;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
@@ -37,7 +36,7 @@ public class ScmSecretTest extends CategoryTest {
   @Inject ScmSecret scmSecret;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testVault() throws VaultException {
     if (!scmSecret.isInitialized()) {
@@ -47,7 +46,7 @@ public class ScmSecretTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testDecrypt() {
     if (!scmSecret.isInitialized()) {
@@ -57,7 +56,7 @@ public class ScmSecretTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testEncoding() {
     if (!scmSecret.isInitialized()) {

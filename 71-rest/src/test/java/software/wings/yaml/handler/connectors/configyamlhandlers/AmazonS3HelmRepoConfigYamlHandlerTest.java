@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -60,7 +60,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String amazonS3HelmRepoSettingName = AMAZONS3_HELM_CHART_SETTING_NAME + System.currentTimeMillis();
@@ -72,7 +72,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends BaseSettingValueConfi
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String amazonS3HelmRepoSettingName = AMAZONS3_HELM_CHART_SETTING_NAME + System.currentTimeMillis();

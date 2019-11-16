@@ -2,7 +2,8 @@ package software.wings.service.impl.personalization;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -37,7 +38,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   @Mock private TemplateService templateService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAddFavoriteStep() {
     String accountId = generateUuid();
@@ -57,7 +58,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRemoveFavoriteStep() {
     String accountId = generateUuid();
@@ -87,7 +88,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testNormalizeRecent() {
     LinkedList<String> recent = null;
@@ -120,7 +121,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testAddRecentStep() {
     String accountId = generateUuid();
@@ -148,7 +149,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testAddFavoriteTemplate() {
     String accountId = generateUuid();
@@ -188,7 +189,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testRemoveFavoriteTemplate() {
     String accountId = generateUuid();
@@ -233,7 +234,7 @@ public class PersonalizationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testFetchFavoriteTemplates() {
     String accountId = generateUuid();

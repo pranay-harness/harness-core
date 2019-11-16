@@ -1,6 +1,7 @@
 package software.wings.sm.states.spotinst;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,7 +88,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstStateHelper spotInstStateHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testAddLoadBalancerConfigAfterExpressionEvaluation() throws Exception {
     ExecutionContext context = mock(ExecutionContext.class);
@@ -122,7 +123,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testPrepareStateExecutionData() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -194,7 +195,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGenerateSpotInstCommandRequest() {
     AwsAmiInfrastructureMapping infrastructureMapping = anAwsAmiInfrastructureMapping()
@@ -215,7 +216,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testPrepareNewElastiGroupConfigForRollback() {
     String id = "newId";
@@ -235,7 +236,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testPrepareOldElastiGroupConfigForRollback() {
     String id = "oldId";
@@ -255,7 +256,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetDelegateTask() {
     String tag = "tag";

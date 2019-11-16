@@ -3,6 +3,9 @@ package software.wings.resources;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
@@ -67,7 +70,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCreateWorkflow() {
     Workflow workflow2 = aWorkflow()
@@ -91,7 +94,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should create workflow.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCloneWorkflow() {
     Workflow workflow2 = aWorkflow()
@@ -116,7 +119,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * Should list workflows.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void shouldListWorkflow() {
     PageRequest<Workflow> pageRequest = aPageRequest().build();

@@ -3,7 +3,7 @@ package software.wings.delegatetasks.validation;
 import static com.google.common.collect.Streams.zip;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
@@ -49,7 +49,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void validate_winrm_error() throws IllegalAccessException {
     final SettingAttribute connectionSetting = new SettingAttribute();
@@ -63,7 +63,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void validate_ssh_error() throws IllegalAccessException {
     final SettingAttribute connectionSetting = new SettingAttribute();
@@ -75,7 +75,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testGetCriteria() throws IllegalAccessException {
     final SettingAttribute connectionSetting = new SettingAttribute();
@@ -90,7 +90,7 @@ public class HostValidationValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testPrepareResult() throws IllegalAccessException {
     final DelegateConnectionResult result1 =

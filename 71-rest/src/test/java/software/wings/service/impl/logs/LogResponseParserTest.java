@@ -1,6 +1,6 @@
 package software.wings.service.impl.logs;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.base.Charsets;
@@ -26,7 +26,7 @@ import java.util.Map;
 
 public class LogResponseParserTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testParseValidResponse() throws IOException {
     String textLoad =
@@ -60,7 +60,7 @@ public class LogResponseParserTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testParseValidResponseMultiple() throws IOException {
     String textLoad = Resources.toString(

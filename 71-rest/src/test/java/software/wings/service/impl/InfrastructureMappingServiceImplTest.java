@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
@@ -22,7 +22,7 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
   @Inject InfrastructureMappingServiceImpl infrastructureMappingService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void hostsListShouldReturnEmptyWhenDynamicInfra() {
     InfrastructureMapping infraMapping = PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()

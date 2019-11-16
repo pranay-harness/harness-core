@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -41,7 +41,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String dynatraceProviderName = "dynaTrace" + System.currentTimeMillis();
@@ -54,7 +54,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String dynatraceProviderName = "dynaTrace" + System.currentTimeMillis();

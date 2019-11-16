@@ -1,6 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -34,7 +34,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsEcrHelperServiceDelegateImpl awsEcrHelperServiceDelegate;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetEcrImageUrl() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
@@ -50,7 +50,7 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetAmazonEcrAuthToken() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);

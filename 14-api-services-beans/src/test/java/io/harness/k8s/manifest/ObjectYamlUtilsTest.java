@@ -9,7 +9,7 @@ import static io.harness.k8s.manifest.ObjectYamlUtils.setField;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
 import static io.harness.k8s.manifest.ObjectYamlUtils.transformField;
 import static io.harness.k8s.manifest.ObjectYamlUtils.tryReadYaml;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -30,7 +30,7 @@ import java.util.function.UnaryOperator;
 
 public class ObjectYamlUtilsTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void encodeDotTest() {
     assertThat(encodeDot("harness.io")).isEqualTo("harness[dot]io");
@@ -38,7 +38,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void tryReadYamlTest() {
     Object object = tryReadYaml("Hello: World");
@@ -51,7 +51,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void sanityGetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
@@ -68,7 +68,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void sanityGetFieldTrowsForArrayTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
@@ -84,7 +84,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void sanityGetFieldsTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
@@ -105,7 +105,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void basicYamlGetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
@@ -139,7 +139,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void arraysYamlGetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/array-sample.yaml");
@@ -169,7 +169,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void sanitySetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
@@ -194,7 +194,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void arraysYamlSetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/array-sample.yaml");
@@ -210,7 +210,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void sanityTranformFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
@@ -246,7 +246,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void arraySetFieldTest() throws Exception {
     URL url = this.getClass().getResource("/sample.yaml");
@@ -284,7 +284,7 @@ public class ObjectYamlUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void splitYamlFileSanityTest() throws Exception {
     URL url = this.getClass().getResource("/mongo.yaml");

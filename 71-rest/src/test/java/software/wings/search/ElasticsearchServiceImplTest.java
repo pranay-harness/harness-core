@@ -1,6 +1,6 @@
 package software.wings.search;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -43,7 +43,7 @@ public class ElasticsearchServiceImplTest extends WingsBaseTest {
   public void setup() throws IOException {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testGetSearchResults() throws IOException {
     String searchString = "value";

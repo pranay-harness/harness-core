@@ -1,6 +1,8 @@
 package software.wings.service.impl.workflow;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
@@ -164,7 +166,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotification() {
     NotificationRule notificationRule =
@@ -176,7 +178,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationForTemplatedNotificationGroup() {
     List<NotificationGroup> notificationGroupList = new ArrayList<>();
@@ -232,7 +234,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationPipeline() {
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
@@ -271,7 +273,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendWorkflowPhaseStatusChangeNotification() {
     NotificationRule notificationRule =
@@ -305,7 +307,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationNoArtifacts() {
     when(executionContext.getArtifacts()).thenReturn(null);
@@ -337,7 +339,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationSomeArtifacts() {
     when(executionContext.getArtifacts())
@@ -374,7 +376,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationNoServices() {
     when(executionContext.getArtifacts()).thenReturn(null);
@@ -408,7 +410,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSendWorkflowStatusChangeNotificationBuildWorkflow() {
     when(executionContext.getEnv()).thenReturn(null);

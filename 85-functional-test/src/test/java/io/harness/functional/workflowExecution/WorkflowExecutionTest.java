@@ -1,7 +1,7 @@
 package io.harness.functional.workflowExecution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -61,7 +61,7 @@ public class WorkflowExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({FunctionalTests.class})
   public void fetchExecutionsInRange() throws Exception {
     final Seed seed = new Seed(0);

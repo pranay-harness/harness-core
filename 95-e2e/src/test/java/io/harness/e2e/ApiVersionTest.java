@@ -1,6 +1,6 @@
 package io.harness.e2e;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.NATARAJA;
 
 import io.harness.category.element.E2ETests;
 import io.harness.rule.OwnerRule.Owner;
@@ -10,7 +10,7 @@ import org.junit.experimental.categories.Category;
 
 public class ApiVersionTest extends AbstractE2ETest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = NATARAJA)
   @Category(E2ETests.class)
   public void shouldApiReady() {
     Setup.portal().when().get("/version").then().statusCode(200);

@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -54,7 +54,7 @@ public class AcrValidationTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void getCriteriaTest() {
     List<String> criteria = acrValidation.getCriteria();
@@ -63,7 +63,7 @@ public class AcrValidationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void validateSuccessTest() {
     List<DelegateConnectionResult> result = acrValidation.validate();

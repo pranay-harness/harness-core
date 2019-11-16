@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,7 +38,7 @@ public class InstancesPurgeJobTest extends WingsBaseTest {
   @Inject @InjectMocks private InstancesPurgeJob job;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void shouldPurgeCorrectly() {
     generateInstances();

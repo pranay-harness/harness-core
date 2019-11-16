@@ -1,7 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -54,7 +54,7 @@ public class ArtifactSourceTemplateProcessorTest extends TemplateBaseTestHelper 
   @Inject private ArtifactSourceTemplateProcessor artifactSourceTemplateProcessor;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateArtifactStreamLinked() {
     Template template = constructCustomArtifactTemplateEntity();

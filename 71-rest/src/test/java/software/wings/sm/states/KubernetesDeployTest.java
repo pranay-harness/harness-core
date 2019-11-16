@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -272,7 +272,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecute() {
     on(context).set("sweepingOutputService", sweepingOutputService);
@@ -303,7 +303,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteAsync() {
     on(context).set("variableProcessor", variableProcessor);
@@ -322,7 +322,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteAsyncWithOldRControllerWithNoInstance() {
     on(context).set("variableProcessor", variableProcessor);

@@ -4,7 +4,8 @@ import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -28,7 +29,7 @@ import software.wings.WingsBaseTest;
 
 public class WingsExceptionMapperTest extends WingsBaseTest implements MockableTestMixin {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void sanity() throws IllegalAccessException {
     final WingsException exception = WingsException.builder().code(DEFAULT_ERROR_CODE).build();
@@ -50,7 +51,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void missingParameter() throws IllegalAccessException {
     final WingsException exception = new WingsException(INVALID_ARTIFACT_SOURCE, USER);
@@ -65,7 +66,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void overrideMessage() throws IllegalAccessException {
     final WingsException exception =
@@ -88,7 +89,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotLogHarmless() throws IllegalAccessException {
     final WingsException exception = new WingsException(DEFAULT_ERROR_CODE, USER);
@@ -106,7 +107,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest implements MockableT
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void recursiveParamTest() throws IllegalAccessException {
     assertThatCode(() -> {

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
@@ -32,7 +32,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private K8sRollingDeployTaskHandler k8sRollingDeployTaskHandler;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDryRunIsSkipped() throws Exception {
     K8sRollingDeployTaskParameters rollingDeployTaskParams =
@@ -62,7 +62,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDryRunIsNotSkipped() throws Exception {
     K8sRollingDeployTaskParameters rollingDeployTaskParams =

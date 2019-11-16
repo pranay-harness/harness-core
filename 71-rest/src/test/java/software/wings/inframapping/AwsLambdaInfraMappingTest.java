@@ -1,6 +1,6 @@
 package software.wings.inframapping;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -25,7 +25,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
@@ -42,7 +42,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testInvalidKey() {
     Map<String, Object> outputVariablesMap = new HashMap<>();
@@ -53,7 +53,7 @@ public class AwsLambdaInfraMappingTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testMandatoryFields() {
     Map<String, Object> outputVariablesMap = new HashMap<>();

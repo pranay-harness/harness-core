@@ -1,6 +1,6 @@
 package software.wings.notification;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
@@ -30,7 +30,7 @@ public class EmailNotificationListenerTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldSendEmailOnReceivingMessage() throws Exception {
     emailNotificationListener.onMessage(testEmailData);

@@ -1,6 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -47,7 +47,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsCodeDeployHelperServiceDelegateImpl awsCodeDeployHelperServiceDelegate;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListApplications() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -64,7 +64,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListDeploymentConfiguration() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -83,7 +83,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListDeploymentGroups() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -102,7 +102,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testlListDeploymentInstances() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);
@@ -123,7 +123,7 @@ public class AwsCodeDeployHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListAppRevision() {
     AmazonCodeDeployClient mockClient = mock(AmazonCodeDeployClient.class);

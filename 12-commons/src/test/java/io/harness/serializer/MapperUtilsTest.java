@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Maps;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 public class MapperUtilsTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void mapObject() throws Exception {
     Map<String, Object> map = Maps.newLinkedHashMap();
@@ -34,7 +35,7 @@ public class MapperUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void mapSomeFields() throws Exception {
     EmailState emailState = new EmailState("name1");
@@ -52,7 +53,7 @@ public class MapperUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void mapObjectOnlyNonNull() {
     EmailState emailState1 = new EmailState("name1", "toAddress1", "ccAddress1", "subject1", "body1", true);

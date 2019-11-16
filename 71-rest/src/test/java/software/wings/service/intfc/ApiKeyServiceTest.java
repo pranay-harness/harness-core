@@ -1,7 +1,8 @@
 package software.wings.service.intfc;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -58,7 +59,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testGenerate() {
     ApiKeyEntry savedApiKeyEntry = generateKey();
@@ -79,7 +80,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdate() {
     ApiKeyEntry apiKeyEntry = generateKey();
@@ -98,7 +99,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testDelete() {
     ApiKeyEntry apiKeyEntry = generateKey();
@@ -113,7 +114,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testGet() {
     ApiKeyEntry apiKeyEntry = generateKey();
@@ -124,7 +125,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testList() {
     generateKey();
@@ -134,7 +135,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testValidate() {
     ApiKeyEntry apiKeyEntry = generateKey();

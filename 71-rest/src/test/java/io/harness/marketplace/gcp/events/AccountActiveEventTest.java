@@ -1,6 +1,6 @@
 package io.harness.marketplace.gcp.events;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +15,7 @@ import java.io.IOException;
 
 public class AccountActiveEventTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void testSerialization() throws IOException {
     ObjectMapper mapper = new ObjectMapper();

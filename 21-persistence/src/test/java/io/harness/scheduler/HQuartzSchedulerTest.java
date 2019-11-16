@@ -1,6 +1,6 @@
 package io.harness.scheduler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -13,7 +13,7 @@ import org.quartz.Trigger;
 
 public class HQuartzSchedulerTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testJobCompare() {
     JobDetail nullJob = null;
@@ -21,7 +21,7 @@ public class HQuartzSchedulerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTriggerCompare() {
     Trigger nullTrigger = null;

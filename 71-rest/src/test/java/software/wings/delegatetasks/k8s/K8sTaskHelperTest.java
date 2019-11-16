@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -45,7 +46,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks private K8sTaskHelper helper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetTargetInstancesForCanary() {
     ExecutionLogCallback mockLogCallback = mock(ExecutionLogCallback.class);
@@ -55,7 +56,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetResourcesInTableFormat() {
     String expectedResourcesInTableFormat = "\n"

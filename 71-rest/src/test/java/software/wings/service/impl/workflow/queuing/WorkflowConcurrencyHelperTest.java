@@ -1,7 +1,7 @@
 package software.wings.service.impl.workflow.queuing;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
@@ -56,7 +56,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void noConcurrencyIfStrategyNotPresent() {
     Workflow workflow = constructCanaryWorkflowWithPhase();
@@ -73,7 +73,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void ensureConcurrencyForAlreadyProvisioned() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(false);
@@ -99,7 +99,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void ensureConcurrencyForDynamicallyProvisionedWithProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);
@@ -125,7 +125,7 @@ public class WorkflowConcurrencyHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void ensureConcurrencyForDynamicallyProvisionedWithNoProvisionStep() {
     when(infrastructureDefinitionService.isDynamicInfrastructure(APP_ID, INFRA_DEFINITION_ID)).thenReturn(true);

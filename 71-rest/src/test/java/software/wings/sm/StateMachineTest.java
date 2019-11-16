@@ -1,6 +1,8 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -65,7 +67,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw dup error code.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowDupErrorCode() {
     try {
@@ -90,7 +92,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw null transition.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNullTransition() {
     try {
@@ -113,7 +115,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw transition not linked.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowTransitionNotLinked() {
     try {
@@ -145,7 +147,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw transition to incorrect state.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldThrowTransitionToIncorrectState() {
     try {
@@ -182,7 +184,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw states with Dup transitions.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldThrowStatesWithDupTransitions() {
     try {
@@ -229,7 +231,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-fork state transition.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldThrowNonForkStateTransitions() {
     try {
@@ -280,7 +282,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should throw non-repeat state transition.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldThrowNonRepeatStateTransitions() {
     try {
@@ -477,7 +479,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should expand repeat state for each node that needs it.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldExpandRepeatStateForEachNodeThatNeedsIt() {
     StateMachine sm = new StateMachine();
@@ -557,7 +559,7 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldBreakRepeatTransitionsWhenNoNeeded() {
     StateMachine sm = new StateMachine();

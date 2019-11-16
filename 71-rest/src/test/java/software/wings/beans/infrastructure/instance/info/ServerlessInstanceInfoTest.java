@@ -1,6 +1,6 @@
 package software.wings.beans.infrastructure.instance.info;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,7 +16,7 @@ import java.util.Collections;
 
 public class ServerlessInstanceInfoTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testEquals() {
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo1 = getAwsLambdaInstanceInfo1();
@@ -60,7 +60,7 @@ public class ServerlessInstanceInfoTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testHashCode() {
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo1 = getAwsLambdaInstanceInfo1();

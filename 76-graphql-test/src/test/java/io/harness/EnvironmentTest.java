@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -47,7 +47,7 @@ public class EnvironmentTest extends GraphQLTest {
   @Inject EnvironmentGenerator environmentGenerator;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironment() {
     final Seed seed = new Seed(0);
@@ -102,7 +102,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingEnvironment() {
     String query = $GQL(/*
@@ -120,7 +120,7 @@ public class EnvironmentTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryEnvironments() {
     final Seed seed = new Seed(0);

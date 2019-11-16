@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -38,7 +38,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();
@@ -51,7 +51,7 @@ public class NewRelicConfigYamlHandlerTest extends BaseSettingValueConfigYamlHan
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String newRelicProviderName = "newRelic" + System.currentTimeMillis();

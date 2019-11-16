@@ -1,6 +1,6 @@
 package software.wings.service.impl.notifications;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
 import static software.wings.common.Constants.HARNESS_NAME;
@@ -37,7 +37,7 @@ public class SlackMessageDispatcherTest extends WingsBaseTest {
   @Mock private NotificationMessageResolver notificationMessageResolver;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void shouldSendSlackMessage() {
     when(notificationMessageResolver.getSlackTemplate(ENTITY_CREATE_NOTIFICATION.name())).thenReturn("some template");

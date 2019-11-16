@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
@@ -24,7 +24,7 @@ public class InstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void validateInstanceType_valid_inframappings() {
     instanceHandler.validateInstanceType(InfrastructureMappingType.DIRECT_KUBERNETES.name());
@@ -32,7 +32,7 @@ public class InstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void validateInstanceType_invalid_or_not_supported_infra() {
     instanceHandler.validateInstanceType("abc");

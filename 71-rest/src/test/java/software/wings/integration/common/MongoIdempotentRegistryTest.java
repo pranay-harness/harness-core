@@ -1,6 +1,7 @@
 package software.wings.integration.common;
 
 import static io.harness.eraro.mongo.MongoError.DUPLICATE_KEY;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
@@ -91,7 +92,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(IntegrationTests.class)
   public void testMongoRegisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
@@ -123,7 +124,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(IntegrationTests.class)
   public void testMongoUnregisterMissingAssumptions() {
     wingsPersistence.delete(Idempotent.class, id.getValue());
@@ -133,7 +134,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(IntegrationTests.class)
   public void testMongoUnregisterTentativeAssumptions() {
     Idempotent tentativeIdempotent = Idempotent.builder().uuid(id.getValue()).state(TENTATIVE).build();
@@ -145,7 +146,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(IntegrationTests.class)
   public void testMongoUnregisterSucceededAssumptions() {
     Idempotent doneIdempotent = Idempotent.builder().uuid(id.getValue()).state(SUCCEEDED).build();

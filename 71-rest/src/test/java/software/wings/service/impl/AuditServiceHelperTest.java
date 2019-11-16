@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -21,7 +21,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
   @Inject AuditServiceHelper auditServiceHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testAddEntityOperationIdentifierDataToAuditContext_Service() throws Exception {
     try (GlobalContextGuard guard = GlobalContextManager.initGlobalContextGuard(null)) {
@@ -70,7 +70,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testAddEntityOperationIdentifierDataToAuditContext_Environment() throws Exception {
     try (GlobalContextGuard guard = GlobalContextManager.initGlobalContextGuard(null)) {

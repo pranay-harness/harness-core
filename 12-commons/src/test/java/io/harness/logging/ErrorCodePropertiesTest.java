@@ -1,7 +1,7 @@
 package io.harness.logging;
 
 import static io.harness.logging.LoggingInitializer.RESPONSE_MESSAGE_FILE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class ErrorCodePropertiesTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testErrorCodesInProperties() {
     Properties messages = new Properties();

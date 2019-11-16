@@ -1,7 +1,7 @@
 package io.harness.state.inspection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,7 +21,7 @@ public class StateInspectionServiceTest extends OrchestrationTest {
   @Inject private StateInspectionService stateInspectionService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldMerge() throws IOException {
     final String uuid = generateUuid();

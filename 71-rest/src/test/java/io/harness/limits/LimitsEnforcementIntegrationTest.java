@@ -2,7 +2,7 @@ package io.harness.limits;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static io.harness.limits.ActionType.DEPLOY;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -62,7 +62,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testLimitEnforcement() {
     // configure limits
@@ -80,7 +80,7 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testRateBasedLimitEnforcement() throws Exception {
     // configure limits

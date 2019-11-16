@@ -1,7 +1,8 @@
 package io.harness.resource;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -107,7 +108,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testSaveMetricData() throws IllegalAccessException {
     when(timeSeriesAnalysisService.saveMetricData(
@@ -120,7 +121,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetricData() throws IOException {
     boolean compareCurrent = true;
@@ -145,7 +146,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testSaveMLAnalysisRecords() throws IOException {
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder().build();
@@ -162,7 +163,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetScores() throws IOException {
     when(timeSeriesAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, 0, 1))
@@ -173,7 +174,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetricTemplate() {
     when(timeSeriesAnalysisService.getMetricTemplate(

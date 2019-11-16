@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class ApplyCommandTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void smokeTest() {
     Kubectl client = Kubectl.client(null, null);
@@ -23,7 +23,7 @@ public class ApplyCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void kubectlPathTest() {
     Kubectl client = Kubectl.client("/usr/bin/kubectl", null);
@@ -42,7 +42,7 @@ public class ApplyCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void kubeconfigPathTest() {
     Kubectl client = Kubectl.client("", "config");
@@ -60,7 +60,7 @@ public class ApplyCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testDryRun() {
     Kubectl client = Kubectl.client(null, null);
@@ -74,7 +74,7 @@ public class ApplyCommandTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testRecord() {
     Kubectl client = Kubectl.client(null, null);

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -47,7 +47,7 @@ public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstSyncTaskHandler handler;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListElastigroups() throws Exception {
     doReturn(Collections.singletonList(ElastiGroup.builder().id("id").build()))
@@ -68,7 +68,7 @@ public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testgetElastigroupJson() throws Exception {
     doReturn("JSON").when(mockSpotInstHelperServiceDelegate).getElastigroupJson(anyString(), anyString(), anyString());
@@ -85,7 +85,7 @@ public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testgetElastigroupInstances() throws Exception {
     doReturn(Collections.singletonList(new Instance().withInstanceId("id-1234")))

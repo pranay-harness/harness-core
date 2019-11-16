@@ -2,7 +2,8 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -211,7 +212,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testHasAllEnvAccessOfType() {
     UsageRestrictions usageRestrictions = null;
@@ -275,7 +276,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetDefaultRestrictionsWithMultipleUserGroups() {
     try {
@@ -329,21 +330,21 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetDefaultRestrictionsWithAdminUserAndSelectedAppsAndSelectedEnvs() {
     shouldGetDefaultRestrictionsWithUserAndSelectedAppsAndSelectedEnvs(true);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetDefaultRestrictionsWithNonAdminUserAndSelectedAppsAndSelectedEnvs() {
     shouldGetDefaultRestrictionsWithUserAndSelectedAppsAndSelectedEnvs(false);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldHaveAccessWithUserHavingUpdateAccessToApp() {
     try {
@@ -453,7 +454,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldHaveAccessWithAdminUserAndNoRestrictions() {
     try {
@@ -507,7 +508,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldHaveAccessWithNonAdminUserAndNoRestrictions() {
     try {
@@ -561,7 +562,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void isEditableByNonProdSupportAndAllAppAllEnvRestrictions() {
     try {
@@ -592,7 +593,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void isEditableBySpecificAppAndAllAppAllEnvRestrictions() {
     try {
@@ -624,7 +625,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldHaveAccessWithUserHavingReadAccessToApp() {
     try {
@@ -670,7 +671,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldRemoveEnvReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -690,7 +691,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldRemoveAppReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -710,7 +711,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldRemoveAppReferencesWithNullAppEnvRestrictions() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -723,7 +724,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldPurgeDanglingReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -737,7 +738,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldReturnReferenceSummaries() {
     setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -819,7 +820,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldHaveAccessWithUserHavingNoAccessToApp() {
     try {
@@ -874,7 +875,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testCheckIfValidUsageRestrictions() {
     try {

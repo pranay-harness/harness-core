@@ -1,6 +1,6 @@
 package io.harness.batch.processing.schedule;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BatchJobScheduleTimeProviderTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testProvider() {
     Instant currentTime = Instant.now();

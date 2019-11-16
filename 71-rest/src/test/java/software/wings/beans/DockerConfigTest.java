@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,7 +26,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDefaultUserNameEmpty() {
     // Normal Config
@@ -37,7 +38,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDockerHasCredentials() {
     DockerConfig dockerConfig = DockerConfig.builder()
@@ -49,7 +50,7 @@ public class DockerConfigTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDockerHasNoCredentials() {
     DockerConfig dockerConfig = new DockerConfig();

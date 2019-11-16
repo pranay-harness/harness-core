@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -14,7 +14,7 @@ public class SkipConditionTest extends WingsBaseTest {
   private static final String EXPERSSION_STRING = "${app.name}==\"APP_NAME\"";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testInstanceForAlwaysSkip() {
     SkipCondition skipCondition = SkipCondition.getInstanceForAssertion("true");
@@ -23,7 +23,7 @@ public class SkipConditionTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testInstanceForDoNotSkip() {
     SkipCondition skipCondition = SkipCondition.getInstanceForAssertion(null);
@@ -32,7 +32,7 @@ public class SkipConditionTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testInstanceForConditionalSkip() {
     SkipCondition skipCondition = SkipCondition.getInstanceForAssertion(EXPERSSION_STRING);
@@ -41,7 +41,7 @@ public class SkipConditionTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testFetchDisableAssertionDoNotSkip() {
     SkipCondition skipCondition = SkipCondition.getInstanceForAssertion("true");
@@ -49,7 +49,7 @@ public class SkipConditionTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testFetchDisableAssertionConditionalSkip() {
     SkipCondition skipCondition = SkipCondition.getInstanceForAssertion(null);
@@ -57,7 +57,7 @@ public class SkipConditionTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testFetchDisableAssertionForAlwaysSkip() {
     SkipCondition skipCondition = SkipCondition.getInstanceForAssertion(EXPERSSION_STRING);

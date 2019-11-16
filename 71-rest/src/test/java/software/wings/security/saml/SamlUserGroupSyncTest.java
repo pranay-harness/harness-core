@@ -1,6 +1,6 @@
 package software.wings.security.saml;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
@@ -55,7 +55,7 @@ public class SamlUserGroupSyncTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSamlGroupSyncShouldPass() {
     SamlUserAuthorization samlUserAuthorization = SamlUserAuthorization.builder()

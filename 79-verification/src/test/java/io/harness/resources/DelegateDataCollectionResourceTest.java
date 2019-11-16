@@ -1,7 +1,7 @@
 package io.harness.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +32,7 @@ public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(IntegrationTests.class)
   public void testPostCVActivityLog() {
     WebTarget target =

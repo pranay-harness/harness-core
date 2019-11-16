@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -39,7 +39,7 @@ public class ConnectorTest extends GraphQLTest {
 }*/ ConnectorTest.class);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryConnector() {
     final Seed seed = new Seed(0);
@@ -61,7 +61,7 @@ public class ConnectorTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryConnectors() {
     final Seed seed = new Seed(0);

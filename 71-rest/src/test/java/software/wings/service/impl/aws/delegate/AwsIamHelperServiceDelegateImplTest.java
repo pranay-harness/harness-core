@@ -1,6 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -36,7 +36,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsIamHelperServiceDelegateImpl awsIamHelperServiceDelegate;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListIAMRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);
@@ -55,7 +55,7 @@ public class AwsIamHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListIamInstanceRoles() {
     AmazonIdentityManagementClient mockClient = mock(AmazonIdentityManagementClient.class);

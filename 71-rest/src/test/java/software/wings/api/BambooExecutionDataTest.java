@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +38,7 @@ public class BambooExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     assertThat(bambooExecutionData.getExecutionSummary())
@@ -49,7 +49,7 @@ public class BambooExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetExecutionDetails() {
     assertThat(bambooExecutionData.getExecutionDetails())

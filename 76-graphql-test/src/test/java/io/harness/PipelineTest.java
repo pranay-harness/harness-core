@@ -2,7 +2,7 @@ package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.PIPELINE;
@@ -45,7 +45,7 @@ public class PipelineTest extends GraphQLTest {
   @Inject PipelineGenerator pipelineGenerator;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryPipeline() {
     final Seed seed = new Seed(0);
@@ -96,7 +96,7 @@ public class PipelineTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingPipeline() {
     String query = $GQL(/*
@@ -114,7 +114,7 @@ public class PipelineTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryPipelines() {
     final Seed seed = new Seed(0);

@@ -1,7 +1,7 @@
 package io.harness.metrics;
 
 import static io.harness.metrics.HarnessMetricRegistry.getAbsoluteMetricName;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.codahale.metrics.MetricRegistry;
@@ -27,7 +27,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
     harnessMetricRegistry = new HarnessMetricRegistry(metricRegistry, collectorRegistry);
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testGaugeMetricRegister() {
     String metricName = "data_collection_test_metric";
@@ -37,7 +37,7 @@ public class HarnessMetricRegistryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testGaugeMetricUpdate() {
     String metricName = "data_collection_test_metric1";

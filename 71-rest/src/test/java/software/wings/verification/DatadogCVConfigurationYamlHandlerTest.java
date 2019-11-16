@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -42,7 +42,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -65,7 +65,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsert() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -91,7 +91,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertMissingMetrics() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -111,7 +111,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertIncorrectMetrics() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -133,7 +133,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertMissingAppFilterHasServiceName() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -159,7 +159,7 @@ public class DatadogCVConfigurationYamlHandlerTest extends CVConfigurationYamlHa
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() throws Exception {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

@@ -1,7 +1,8 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.graphql.schema.type.QLService.QLServiceKeys;
@@ -44,7 +45,7 @@ public class ServiceTest extends GraphQLTest {
   @Inject private HarnessTagService harnessTagService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryService() {
     final Seed seed = new Seed(0);
@@ -106,7 +107,7 @@ public class ServiceTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryServices() {
     final Seed seed = new Seed(0);

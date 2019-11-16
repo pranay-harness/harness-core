@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -148,7 +150,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCRUDAndGet_AWS_LAMBDA() throws IOException {
     doReturn(awsLambdaInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -159,7 +161,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testCRUDAndGet_AWS_ECS() throws IOException {
     doReturn(awsEcsInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -170,7 +172,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCRUDAndGet_GCP_KUBERNETES() throws IOException {
     doReturn(googleKubernetesEngineYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -180,7 +182,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
         DeploymentType.KUBERNETES, CloudProviderType.GCP);
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCRUDAndGet_AZURE_KUBERNETES() throws IOException {
     doReturn(azureKubernetesServiceYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -189,7 +191,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void TestCRUDAndGet_AZURE_SSH() throws IOException {
     doReturn(azureInstanceInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -198,7 +200,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void TestCRUDAndGet_DIRECT_KUBERNETES() throws IOException {
     doReturn(directKubernetesInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -207,7 +209,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void TestCRUDAndGet_AWS_INSTANCE() throws IOException {
     doReturn(awsInstanceInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), anyString());
@@ -218,7 +220,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void TestCRUDAndGet_AWS_CODEDEPLOY() throws IOException {
     doReturn(codeDeployInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), anyString());
@@ -227,7 +229,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void TestCRUDAndGet_PCF() throws IOException {
     doReturn(pcfInfraStructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -236,7 +238,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void TestCRUDAndGet_PhysicalInfra() throws IOException {
     doReturn(physicalInfraYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -247,7 +249,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void TestCRUDAndGet_PhysicalInfraWinrm() throws IOException {
     doReturn(physicalInfraWinrmYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
@@ -256,7 +258,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void TestCRUDAndGetAwsAMi() throws IOException {
     doReturn(awsAmiInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());

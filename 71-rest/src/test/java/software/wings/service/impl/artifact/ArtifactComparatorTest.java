@@ -1,6 +1,6 @@
 package software.wings.service.impl.artifact;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +31,7 @@ public class ArtifactComparatorTest extends CategoryTest {
                                                  .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build());
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSortArtifactDescendingOrder() {
     List<Artifact> artifacts =

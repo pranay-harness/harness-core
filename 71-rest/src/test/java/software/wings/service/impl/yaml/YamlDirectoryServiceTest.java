@@ -2,7 +2,8 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.HarnessStringUtils.join;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -161,7 +162,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   private DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testDoApplications() {
     Map<String, AppPermissionSummary> appPermissionSummaryMap = new HashMap<>();
@@ -329,7 +330,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testDoEnvironments() {
     final Application application =
@@ -397,7 +398,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testDoCloudProviders() {
     SettingAttribute awsCp =
@@ -441,7 +442,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testDoCollaborationProviders() {
     SettingAttribute jiraConnector = aSettingAttribute()
@@ -479,7 +480,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testDoVerificationProviders() {
     SettingAttribute jenkinsProvider = aSettingAttribute()
@@ -517,7 +518,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testDoArtifactServers() {
     SettingAttribute dockerConnector = aSettingAttribute()
@@ -559,7 +560,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testObtainEntityRootPath() {
     // create entities
@@ -780,7 +781,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateEnvPcfOverridesFolder() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()

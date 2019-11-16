@@ -1,7 +1,8 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -39,7 +40,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testExecuteWf() {
     AwsLambdaRequest request = AwsLambdaExecuteWfRequest.builder().build();
@@ -48,7 +49,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecuteFunction() {
     AwsLambdaRequest request = AwsLambdaExecuteFunctionRequest.builder().build();

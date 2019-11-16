@@ -1,6 +1,7 @@
 package software.wings.service.impl.elk;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @RunWith(MockitoJUnitRunner.class)
 public class ElkLogFetchRequestTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void simpleQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("*exception*");
@@ -31,7 +32,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void simpleOrQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* or error");
@@ -42,7 +43,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void simpleAndQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* and error");
@@ -53,7 +54,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void simpleAndOrQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* and error or warn");
@@ -64,7 +65,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void simpleAndOrBracketedQuery() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("((.*exception.* and error) or warn)");
@@ -75,7 +76,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void simpleAndOrBracketedQueryWithTerm() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
@@ -87,7 +88,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void invalidBracket() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
@@ -99,7 +100,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void simpleQueryUpperCase() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*exception.* OR .*error.*");
@@ -110,7 +111,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void simpleQueryCaseInsensitive() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(".*Exception.* OR .*ERROR.*");
@@ -121,7 +122,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void multimessageterms() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
@@ -133,7 +134,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void extraOpenbraces() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
@@ -142,7 +143,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void nonMessage() {
     ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("level:Error OR level:Warn");

@@ -1,6 +1,6 @@
 package software.wings.service.impl.security;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.MARK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -58,7 +58,7 @@ public class ManagerDecryptionServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testBatchDecryption() {
     List<EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails =

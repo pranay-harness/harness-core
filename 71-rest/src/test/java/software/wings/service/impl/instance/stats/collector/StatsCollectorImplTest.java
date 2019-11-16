@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -48,7 +49,7 @@ public class StatsCollectorImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void alignedWith10thMinute() {
     Instant instant = Instant.parse("2018-12-03T10:10:30.00Z");
@@ -61,7 +62,7 @@ public class StatsCollectorImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createServerlessStats() {
     doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
@@ -79,7 +80,7 @@ public class StatsCollectorImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createServerlessStats_nofeature_flag() {
     doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());
@@ -89,7 +90,7 @@ public class StatsCollectorImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createServerlessStats_no_last_snapshot() {
     doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.SERVERLESS_DASHBOARD_AWS_LAMBDA), anyString());

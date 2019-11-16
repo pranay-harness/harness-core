@@ -1,7 +1,7 @@
 package io.harness.data.validator;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static io.harness.utils.UuidUtils.base64StrToUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,7 +27,7 @@ public class UuidValidatorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testUuid() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();

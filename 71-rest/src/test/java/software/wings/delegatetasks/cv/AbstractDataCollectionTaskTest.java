@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.cv;
 
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -95,7 +96,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testDecryptionOfSettingsIfEncryptableSettingIsPresent() {
     DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo();
@@ -108,7 +109,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testDecryptionIfEncryptableSettingIsNotPresent() {
     DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo();

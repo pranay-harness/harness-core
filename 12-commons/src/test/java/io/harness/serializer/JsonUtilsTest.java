@@ -1,5 +1,7 @@
 package io.harness.serializer;
 
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,7 +52,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should get authors.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetAuthors() {
     List<String> authors = JsonUtils.jsonPath(json, "$.store.book[*].author");
@@ -62,7 +64,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should get title and cheap books.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetTitleAndCheapBooks() {
     DocumentContext ctx = JsonUtils.parseJson(json);
@@ -79,7 +81,7 @@ public class JsonUtilsTest extends CategoryTest {
    * Should return correct object in case of inheritence.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCorrectObjectInCaseOfInheritence() {
     BaseA baseA = new BaseA();
@@ -107,7 +109,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCorrectObjectInCaseOfInheritanceWithoutInterface() {
     TypeA typeA = new TypeA();
@@ -133,7 +135,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldUseClassNameWhenUsingMapperForCloning() {
     BaseA baseA = new BaseA();
@@ -213,7 +215,7 @@ public class JsonUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testCustomArtifactMapping() {
     String json =

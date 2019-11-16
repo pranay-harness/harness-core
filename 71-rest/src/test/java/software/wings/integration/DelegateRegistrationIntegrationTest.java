@@ -1,7 +1,8 @@
 package software.wings.integration;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.awaitility.Awaitility.await;
 
 import io.harness.category.element.IntegrationTests;
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void shouldWaitForADelegateToRegister() {
@@ -37,7 +38,7 @@ public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(IntegrationTests.class)
   public void shouldWaitForADelegateConnectionsToAppear() {
     await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {

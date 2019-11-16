@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -26,7 +26,7 @@ public class CachingTest extends WingsBaseTest {
    * Should cache repeated calls.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCacheRepeatedCalls() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);
@@ -39,7 +39,7 @@ public class CachingTest extends WingsBaseTest {
    * Should not cache when key is different.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotCacheWhenKeyIsDifferent() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).isEqualTo(1);

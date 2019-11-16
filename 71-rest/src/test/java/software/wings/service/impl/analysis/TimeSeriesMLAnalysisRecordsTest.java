@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -22,7 +22,7 @@ import java.nio.charset.Charset;
 @RunWith(MockitoJUnitRunner.class)
 public class TimeSeriesMLAnalysisRecordsTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testJsonParsing() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/TimeSeriesNRAnalysisRecords.json");

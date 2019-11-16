@@ -1,6 +1,6 @@
 package software.wings.service.intfc.aws;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -22,7 +22,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   @Inject private AwsAppAutoScalingHelperServiceDelegate scalingHelperServiceDelegate;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetJsonForAwsScalableTarget() throws Exception {
     String json = "{\n"
@@ -43,7 +43,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetJsonForAwsScalingPolicy() throws Exception {
     String json = "{\n"
@@ -70,7 +70,7 @@ public class AwsAppAutoScalingHelperServiceDelegateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetJsonForAwsScalingPolicies() throws Exception {
     String json = "  [ {\n"

@@ -1,6 +1,6 @@
 package software.wings.beans.artifact;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +14,7 @@ import software.wings.beans.artifact.AmiArtifactStream.Tag;
 
 public class AmiArtifactStreamTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testSourceName() {
     AmiArtifactStream artifactStream = new AmiArtifactStream();

@@ -1,6 +1,6 @@
 package software.wings.beans.marketplace.gcp;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void testCreateGCPUsageReport() {
     val gcpUsageReport = getSampleGCPUsageReport();
@@ -64,7 +64,7 @@ public class GCPUsageReportServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void testLastGCPUsageReportTime() {
     val gcpUsageReport = getSampleGCPUsageReport();

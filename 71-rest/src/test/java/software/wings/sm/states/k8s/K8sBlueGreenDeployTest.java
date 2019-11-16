@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -58,7 +58,7 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
     on(context).set("variableProcessor", variableProcessor);

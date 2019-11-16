@@ -1,6 +1,6 @@
 package io.harness.serializer.morphia;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -17,14 +17,14 @@ import software.wings.integration.dl.PageRequestTest.Dummy;
 @Slf4j
 public class LimitMorphiaRegistrarTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLimitsModule() {
     new LimitsMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLimitsSearchAndList() {
     new MorphiaModule().testAutomaticSearch(
@@ -32,7 +32,7 @@ public class LimitMorphiaRegistrarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLimitsImplementationClassesModule() {
     new LimitsMorphiaRegistrar().testImplementationClassesModule();

@@ -1,6 +1,8 @@
 package software.wings.security.authentication;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AMAN;
+import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -74,7 +76,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   @Inject @InjectMocks private AuthenticationManager authenticationManager;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void getAuthenticationMechanism() {
     User mockUser = mock(User.class);
@@ -97,7 +99,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void getLoginTypeResponse() {
     User mockUser = mock(User.class);
@@ -143,7 +145,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testGetLoginType_emailUnverified_shouldFail() throws MaxLoginAttemptExceededException {
     User mockUser = mock(User.class);
@@ -165,7 +167,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void authenticate() {
     User mockUser = spy(new User());
@@ -190,7 +192,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testCredentialDecoding() {
     User mockUser = spy(new User());
@@ -220,7 +222,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testFakeTokens() {
     try {
@@ -239,7 +241,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void extractToken() {
     try {

@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -65,7 +65,7 @@ public class ServiceHelmValuesToManifestFileMigrationTest extends WingsBaseTest 
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testMigrateHelmValuesInServices() {
     wingsPersistence.save(service);

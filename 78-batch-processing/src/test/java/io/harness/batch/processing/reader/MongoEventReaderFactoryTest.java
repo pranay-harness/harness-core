@@ -1,6 +1,6 @@
 package io.harness.batch.processing.reader;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -24,7 +24,7 @@ public class MongoEventReaderFactoryTest extends WingsBaseTest {
   private final long END_TIME = NOW.getEpochSecond();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testPublishedMessageMongoEventReader() {
     ItemReader<PublishedMessage> reader =

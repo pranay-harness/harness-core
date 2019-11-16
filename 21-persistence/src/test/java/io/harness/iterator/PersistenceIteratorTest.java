@@ -1,6 +1,6 @@
 package io.harness.iterator;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 
@@ -22,7 +22,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCreateQueryWithNoFilter() {
     final MongoPersistenceIterator<TestIterableEntity> iterator = MongoPersistenceIterator.<TestIterableEntity>builder()
@@ -42,7 +42,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCreateQueryWithSimpleFilter() {
     final MongoPersistenceIterator<TestIterableEntity> iterator =
@@ -63,7 +63,7 @@ public class PersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCreateQueryWithAndFilter() {
     final MongoPersistenceIterator<TestIterableEntity> iterator =

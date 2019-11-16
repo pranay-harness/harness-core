@@ -1,6 +1,6 @@
 package software.wings.service.impl.trigger;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -110,7 +110,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldSaveWebhookConditionTrigger() {
     DeploymentTrigger trigger =
@@ -129,7 +129,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldSaveWebhookConditionTriggerWithExpressions() {
     DeploymentTrigger trigger = TriggerServiceTestHelper.buildWebhookConditionTrigger();
@@ -156,7 +156,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldUpdateWebhookConditionTrigger() {
     DeploymentTrigger trigger =
@@ -176,7 +176,7 @@ public class WebhookConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldSaveCustomWebhookConditionTrigger() {
     DeploymentTrigger trigger = TriggerServiceTestHelper.buildWebhookConditionTrigger();

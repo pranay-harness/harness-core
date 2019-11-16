@@ -1,6 +1,8 @@
 package software.wings.sm.states.provision;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -29,7 +31,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldParseOutputs() throws IOException {
     assertThat(TerraformProvisionState.parseOutputs(null).size()).isEqualTo(0);
@@ -45,7 +47,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldUpdateProvisionerWorkspaces() {
     when(infrastructureProvisionerService.update(any())).thenReturn(null);
@@ -61,7 +63,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldHandleDefaultWorkspace() {
     assertThat(state.handleDefaultWorkspace(null) == null).isTrue();
@@ -70,7 +72,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testValidateAndFilterVariables() {
     NameValuePair prov_var_1 = NameValuePair.builder().name("access_key").valueType("TEXT").build();

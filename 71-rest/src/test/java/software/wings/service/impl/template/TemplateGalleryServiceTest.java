@@ -3,6 +3,7 @@ package software.wings.service.impl.template;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
@@ -66,7 +67,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSaveTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -84,7 +85,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -103,7 +104,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDeleteTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -116,7 +117,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateTemplateGalleryNotExists() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -143,7 +144,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -155,7 +156,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTemplateGalleryByAccount() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -167,7 +168,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTemplateGalleryByName() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -181,7 +182,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListTemplateGalleries() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
@@ -198,7 +199,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldLoadHarnessGallery() {
     templateGalleryService.loadHarnessGallery();
@@ -219,7 +220,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSaveHarnessGallery() {
     TemplateGallery harnessGallery = templateGalleryService.saveHarnessGallery();
@@ -229,7 +230,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplates() {
     templateGalleryService.loadHarnessGallery();
@@ -243,7 +244,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDeleteByAccountId() {
     templateGalleryService.loadHarnessGallery();
@@ -259,7 +260,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplatesToAccount() {
     templateGalleryService.loadHarnessGallery();
@@ -316,7 +317,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldCopyHarnessTemplateFromGalleryToAccounts() {
     templateGalleryService.loadHarnessGallery();
@@ -361,7 +362,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldCopyNewVersionFromGlobalToAllAccounts() {
     templateGalleryService.loadHarnessGallery();

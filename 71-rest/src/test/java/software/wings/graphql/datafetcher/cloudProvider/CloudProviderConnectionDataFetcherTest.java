@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -38,7 +38,7 @@ public class CloudProviderConnectionDataFetcherTest extends AbstractDataFetcherT
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testCloudProviderDataFetcher() {
     List<QLCloudProviderFilter> filters =

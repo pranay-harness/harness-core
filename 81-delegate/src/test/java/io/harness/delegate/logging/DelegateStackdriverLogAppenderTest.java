@@ -3,7 +3,7 @@ package io.harness.delegate.logging;
 import static ch.qos.logback.classic.Level.INFO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.RemoteStackdriverLogAppender.logLevelToSeverity;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.anyString;
@@ -73,7 +73,7 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldAppend() {
     String message = "my log message";
@@ -82,7 +82,7 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldSubmit() {
     String message = "my log message";

@@ -2,7 +2,7 @@ package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,7 +39,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   @Inject private BarrierService barrierService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSave() {
     final BarrierInstance.Pipeline barrierPipeline =
@@ -54,7 +54,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testObtainInstancesWithNoBarriers() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -76,7 +76,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testObtainInstancesWithSingleBarrier() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -111,7 +111,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testObtainInstances() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow1 =
@@ -188,7 +188,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testObtainInstancesWithTwoBarriersInTheSamePhaseStep() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -223,7 +223,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testObtainInstancesWithTwoBarriersInTheSameWorkflowPhase() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -260,7 +260,7 @@ public class BarrierServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testObtainInstancesWithDifferentBarriers() {
     final CanaryOrchestrationWorkflow orchestrationWorkflow =

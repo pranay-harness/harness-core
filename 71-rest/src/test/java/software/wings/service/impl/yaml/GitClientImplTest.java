@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -165,7 +166,7 @@ public class GitClientImplTest extends WingsBaseTest {
       + "-----END RSA PRIVATE KEY-----\n";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testAddToGitDiffResult() throws Exception {
     DiffEntry entry = mock(DiffEntry.class);

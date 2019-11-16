@@ -3,7 +3,13 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -137,7 +143,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldList() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
@@ -163,7 +169,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should save.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void shouldSave() {
     serviceVariableService.save(SERVICE_VARIABLE);
@@ -177,7 +183,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should throw exception for unsupported entity types.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
     ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -200,7 +206,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldGet() {
     ServiceVariable variable = ServiceVariable.builder().build();
@@ -216,7 +222,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get by template.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetByTemplate() {
     ServiceTemplate serviceTemplate =
@@ -243,7 +249,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldUpdateNone() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -265,7 +271,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should override service variable.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void shouldUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -292,7 +298,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should override service variable (Name null).
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldAllowUpdateServiceVariableWhenNameNull() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -316,7 +322,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should Allow service variable override (Saved name = current name).
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldAllowUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -347,7 +353,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should Throw exception for service variable override.
    */
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldThrowExceptionUpdateServiceVariable() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -380,7 +386,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateValueAndType() {
     ServiceVariable variable = ServiceVariable.builder()
@@ -400,7 +406,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldUpdateAllowedList() {
     List<String> allowedList = new ArrayList<>();
@@ -425,7 +431,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldDelete() {
     ServiceVariable variable = ServiceVariable.builder().entityType(EntityType.SERVICE_TEMPLATE).build();
@@ -445,7 +451,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should get for entity.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetForEntity() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
@@ -465,7 +471,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should delete by entity id.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldDeleteByEntityId() {
     AuditServiceHelper auditServiceHelper = mock(AuditServiceHelper.class);
@@ -485,7 +491,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    * Should mask encrypted fields.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldMaskEncryptedFields() {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();

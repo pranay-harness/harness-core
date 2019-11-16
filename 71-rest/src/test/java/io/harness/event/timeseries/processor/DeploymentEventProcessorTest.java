@@ -1,6 +1,6 @@
 package io.harness.event.timeseries.processor;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -44,7 +44,7 @@ public class DeploymentEventProcessorTest extends WingsBaseTest {
   @Inject @InjectMocks DeploymentEventProcessor deploymentEventProcessor;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldListExecutions() throws SQLException {
     Map<String, String> stringData = new HashMap<>();

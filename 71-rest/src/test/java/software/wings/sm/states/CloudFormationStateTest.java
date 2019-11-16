@@ -1,7 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -333,7 +334,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecute_createStackState() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
@@ -342,7 +343,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testExecute_createStackStateWithAwsTemplatized() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
@@ -386,7 +387,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testExecute_deleteStackState() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
@@ -396,7 +397,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testExecute_deleteStackStateAwsTempaltized() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());

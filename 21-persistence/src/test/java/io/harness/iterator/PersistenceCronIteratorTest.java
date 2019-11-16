@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,7 +72,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testExpandNextIterationsAllStay() {
     long now = System.currentTimeMillis();
@@ -90,7 +89,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testExpandNextIterationsAllOld() {
     long now = System.currentTimeMillis();
@@ -107,7 +106,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testExpandNextIterationsTruncatedMatch() {
     long now = System.currentTimeMillis();
@@ -124,7 +123,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testExpandNextIterationsTruncatedNoMatch() {
     long now = System.currentTimeMillis();

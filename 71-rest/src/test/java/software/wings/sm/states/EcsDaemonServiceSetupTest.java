@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -75,7 +75,7 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
   @InjectMocks private EcsDaemonServiceSetup state = new EcsDaemonServiceSetup("stateName");
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setEcsServiceName("EcsSvc");
@@ -142,7 +142,7 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

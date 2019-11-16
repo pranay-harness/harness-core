@@ -2,7 +2,10 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -51,7 +54,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldCreateNotificationGroup() {
     String accountId = generateUuid();
@@ -65,7 +68,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void listDefaultNotificationGroup() {
     String accountId = generateUuid();
@@ -90,7 +93,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void updateNotificationGroupDefaultValue() {
     String accountId = generateUuid();
@@ -120,7 +123,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListNotificationGroups() {
     String accountId = generateUuid();
@@ -141,7 +144,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountId() {
     String accountId = generateUuid();
@@ -161,7 +164,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListNotificationGroupsByAccountIdName() {
     String accountId = generateUuid();
@@ -181,7 +184,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDeleteNotificationGroup() {
     String accountId = generateUuid();
@@ -192,7 +195,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldReadNotificationGroup() {
     String accountId = generateUuid();
@@ -225,7 +228,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void TestGetUserEmailAddressFromNotificationGroups() {
     String accountId = generateUuid();

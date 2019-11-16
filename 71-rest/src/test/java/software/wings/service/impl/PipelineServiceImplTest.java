@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -70,7 +72,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void testPopulateParentFields() {
     List<Variable> workflowVariables = asList(
@@ -279,7 +281,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testValidatePipelineApprovalState() throws Exception {
     Pipeline pipeline =
@@ -315,7 +317,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testUpdateRelatedFieldsEnvironmentInfraMapping() throws Exception {
     List<Variable> workflowVariables = asList(aVariable().entityType(SERVICE).name("Service").build(),

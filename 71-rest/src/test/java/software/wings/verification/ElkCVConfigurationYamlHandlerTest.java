@@ -1,6 +1,7 @@
 package software.wings.verification;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
@@ -125,7 +126,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
@@ -159,7 +160,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testUpsert() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
@@ -188,7 +189,7 @@ public class ElkCVConfigurationYamlHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testUpsertAlreadyExisting() {
     when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);

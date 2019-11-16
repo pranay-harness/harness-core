@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -215,7 +216,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldFailWithInvalidArtifactDownloadDir() {
     downloadArtifactCommandUnit.setScriptType(ScriptType.BASH);

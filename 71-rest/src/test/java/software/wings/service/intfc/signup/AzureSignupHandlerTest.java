@@ -1,6 +1,6 @@
 package software.wings.service.intfc.signup;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -73,7 +73,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testNewUserInviteHandleShouldSucceed() {
     when(signupService.getUserInviteByEmail(EMAIL)).thenReturn(null);
@@ -86,7 +86,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testExistingUserInviteHandleShouldSucceed() {
     UserInvite existingUserInvite = createUserInvite();
@@ -102,7 +102,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testExistingCompletedUserInviteHandleShouldSucceed() {
     UserInvite existingUserInvite = createUserInvite();
@@ -122,7 +122,7 @@ public class AzureSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testCompleteInviteFlowShouldSucceed() throws UnsupportedEncodingException {
     UpdatePasswordRequest passwordRequest = null;

@@ -1,6 +1,6 @@
 package io.harness.functional.trigger;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.trigger.Action.ActionType.WORKFLOW;
 
@@ -16,7 +16,7 @@ import software.wings.beans.trigger.WorkflowAction;
 
 public class DepTriggerScheduledFunctionalTest extends AbstractTriggerFunctionalTestHelper {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(FunctionalTests.class)
   public void shouldCRUDAndExecuteScheduleTriggerForWorkflow() {
     String name = "Scheduled Trigger" + System.currentTimeMillis();

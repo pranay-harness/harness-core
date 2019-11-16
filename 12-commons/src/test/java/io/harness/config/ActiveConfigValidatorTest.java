@@ -1,6 +1,6 @@
 package io.harness.config;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -13,7 +13,7 @@ import org.junit.experimental.categories.Category;
 
 public class ActiveConfigValidatorTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testIsActive() {
     final WorkersConfiguration workersConfiguration = new WorkersConfiguration();

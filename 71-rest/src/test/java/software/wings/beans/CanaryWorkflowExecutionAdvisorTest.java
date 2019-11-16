@@ -1,6 +1,7 @@
 package software.wings.beans;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -23,14 +24,14 @@ import java.util.List;
 
 public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNulls() {
     assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(null, null, "dummy")).isNull();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNullStrategy() {
     final List<FailureStrategy> failureStrategies = asList(
@@ -45,7 +46,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNullError() {
     final List<FailureStrategy> failureStrategies =
@@ -61,7 +62,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyFindMatching() {
     final List<FailureStrategy> failureStrategies =
@@ -78,7 +79,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStepWithNull() {
     final List<FailureStrategy> failureStrategies =
@@ -89,7 +90,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStepWithNone() {
     final List<FailureStrategy> failureStrategies =
@@ -99,7 +100,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStep() {
     final List<FailureStrategy> failureStrategies =
@@ -110,7 +111,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopNonMatchingCombo() {
     final List<FailureStrategy> failureStrategies = asList(
@@ -128,7 +129,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingCombo() {
     final List<FailureStrategy> failureStrategies = asList(
@@ -150,7 +151,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldReturnTrueWhenExecutionHostsPresent() {
     CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
@@ -165,7 +166,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldReturnFalseWhenExecutionHostsNotPresent() {
     CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();

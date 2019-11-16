@@ -1,6 +1,6 @@
 package software.wings.api.pcf;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -12,7 +12,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 
 public class PcfSetupStateExecutionDataTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     String org = "org";

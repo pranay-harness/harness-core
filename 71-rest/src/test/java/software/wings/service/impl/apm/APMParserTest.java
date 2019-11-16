@@ -1,6 +1,8 @@
 package software.wings.service.impl.apm;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -32,7 +34,7 @@ import java.util.Optional;
 
 public class APMParserTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testJsonParser() throws IOException {
     String textLoad =
@@ -66,7 +68,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testJsonParserStringValue() throws IOException {
     String textLoad =
@@ -100,7 +102,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testJsonParserGraphana() throws IOException {
     String text500 =
@@ -139,7 +141,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testJsonParserGraphanaMapping2() throws IOException {
     String text500 =
@@ -178,7 +180,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testJsonParserGraphanaMappingArray() throws IOException {
     String text500 = Resources.toString(
@@ -217,7 +219,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testJsonParserInsightsResponse() throws IOException {
     String text500 =
@@ -262,7 +264,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testJsonParserArrayInsideArray() throws IOException {
     String text500 =
@@ -307,7 +309,7 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void apmVerificationstateYaml() throws IOException {
     String yaml =

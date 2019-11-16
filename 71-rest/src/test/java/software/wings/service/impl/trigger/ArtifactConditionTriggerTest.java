@@ -2,7 +2,8 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -221,7 +222,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCRUDArtifactConditionTrigger() {
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, false))
@@ -261,7 +262,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldExecuteArtifactTriggerPostArtifactCollection() {
     Artifact artifact = prepareArtifact(ARTIFACT_ID);
@@ -302,7 +303,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWithArtifactStreamId() {
     DeploymentTrigger trigger =
@@ -335,7 +336,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionWithFileNotMatchesArtifactFilter() {
     when(workflowExecutionService.triggerEnvExecution(
@@ -359,7 +360,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionWithFileRegexNotStartsWith() {
     trigger.setCondition(ArtifactCondition.builder()
@@ -403,7 +404,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTriggerExecutionPostArtifactCollectionRegexDoesNotMatch() {
     trigger.setCondition(ArtifactCondition.builder()
@@ -433,7 +434,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTriggerPostArtifactCollectionForAllArtifactsMatch() {
     trigger.setCondition(ArtifactCondition.builder()
@@ -481,7 +482,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTriggerPostArtifactCollectionOneArtifactMatchesOtherDoesNotMatch() {
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
@@ -525,7 +526,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTriggerTemplateWorkflowExecution() {
     Workflow workflow = buildWorkflow();
@@ -600,7 +601,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldThrowTriggerExceptionForInvalidSettingId() {
     trigger.setCondition(ArtifactCondition.builder()
@@ -613,7 +614,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldThrowTriggerExceptionForInvalidFilter() {
     trigger.setCondition(ArtifactCondition.builder()

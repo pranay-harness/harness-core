@@ -3,7 +3,9 @@ package software.wings.service.impl.security.auth;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -180,7 +182,7 @@ public class AuthHandlerTest extends WingsBaseTest {
           .build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldWorkForAccountAdministratorFirstTime() {
     setupForAllApp();
@@ -205,7 +207,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForAccountAdministrator() {
     setupForAllApp();
@@ -371,7 +373,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForAppAdministrator() {
     setupForAllApp();
@@ -386,7 +388,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForProdSupport() {
     setupForAllApp();
@@ -484,7 +486,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForOneEnvOnly() {
     setupForAllApp();
@@ -554,7 +556,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForMultiplePermissionsInUserGroup() {
     setupForAllApp();
@@ -627,7 +629,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForNoEnv() {
     setupForNoEnvs();
@@ -666,7 +668,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchPermissionsForBuildAndApprovalPipeline() {
     setupForNoEnvs();
@@ -707,7 +709,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testPermissionsForPipelinesInMultipleEnvsAndMultiplePermissions() {
     setupForAllApp();
@@ -813,7 +815,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetAllEntities_multiplePages() {
     // Scenario page size = 10, total = 11
@@ -850,7 +852,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetAllEntities_multiplePages_multiplesOfPageSize() {
     // Scenario page size = 10, total = 20
@@ -886,7 +888,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetAllEntities_onePage() {
     // Scenario page size = 10, total = 8
@@ -907,7 +909,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetAllEntities_noResults() {
     // Scenario page size = 10, total = 0
@@ -926,7 +928,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testBuildNonProdSupportUserGroup() {
     UserGroup userGroup = authHandler.buildNonProdSupportUserGroup(ACCOUNT_ID);
@@ -940,7 +942,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testBuildProdSupportUserGroup() {
     UserGroup userGroup = authHandler.buildProdSupportUserGroup(ACCOUNT_ID);

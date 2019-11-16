@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -35,7 +35,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private EcsSwapRoutesCommandTaskHelper taskHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testUpsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -51,7 +51,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDownsizeOlderService() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -62,7 +62,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testUpdateServiceTags() {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);

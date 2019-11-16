@@ -1,6 +1,6 @@
 package software.wings.metrics;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 
@@ -68,7 +68,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void getTimeSeriesDataRecordsFromNewRelicDataRecords() {
     DateTime now = DateTime.now();
@@ -116,7 +116,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void getNewRelicDataRecordsFromTimeSeriesDataRecords() {
     DateTime now = DateTime.now();

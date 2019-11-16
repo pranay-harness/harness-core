@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.smb;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -58,7 +59,7 @@ public class SmbServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetBuildDetails() throws IOException {
     List<String> artifactPaths = new ArrayList(Arrays.asList("a.txt"));

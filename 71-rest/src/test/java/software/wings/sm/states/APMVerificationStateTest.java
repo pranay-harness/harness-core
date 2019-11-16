@@ -1,7 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -72,7 +73,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void metricCollectionInfos() throws IOException {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -103,7 +104,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFields() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -114,7 +115,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMapping() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -127,7 +128,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingMetricValue() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -143,7 +144,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateFieldsResponseMappingHostName() {
     APMVerificationState apmVerificationState = new APMVerificationState("dummy");
@@ -161,7 +162,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testHostAndBaseline() {
     String metricName = generateUuid();
@@ -186,7 +187,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testBaselineUrlHasHost() {
     String metricName = generateUuid();
@@ -211,7 +212,7 @@ public class APMVerificationStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testInvalidMultipleBaselineUrl() {
     String metricName1 = generateUuid();

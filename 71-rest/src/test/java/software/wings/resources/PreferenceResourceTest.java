@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -61,7 +62,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test GET preference
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetPreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -84,7 +85,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test LIST preferences
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldListPreference() throws IOException {
     try (UserThreadLocal.Guard guard =
@@ -107,7 +108,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
    * Test POST preference
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCreatePreference() throws IOException {
     try (UserThreadLocal.Guard guard =

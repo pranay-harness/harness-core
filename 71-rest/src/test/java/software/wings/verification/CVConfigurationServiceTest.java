@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,7 +39,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void testSaveDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
@@ -56,7 +56,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void testUpdateGoodCase() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =
@@ -81,7 +81,7 @@ public class CVConfigurationServiceTest extends BaseIntegrationTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void testUpdateDuplicateName() {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration =

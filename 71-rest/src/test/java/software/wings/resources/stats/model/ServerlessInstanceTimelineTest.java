@@ -1,6 +1,6 @@
 package software.wings.resources.stats.model;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -26,7 +26,7 @@ public class ServerlessInstanceTimelineTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_create() {
     final ServerlessInstanceTimeline serverlessInstanceTimeline = ServerlessInstanceTimeline.create(
@@ -35,7 +35,7 @@ public class ServerlessInstanceTimelineTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_copyWithLimit() {
     final ServerlessInstanceTimeline serverlessInstanceTimeline = ServerlessInstanceTimeline.create(

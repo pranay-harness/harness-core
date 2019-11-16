@@ -1,6 +1,6 @@
 package io.harness.e2e.audittrail;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.testframework.restutils.AuditTrailUtils.getAuditTrailInfo;
 import static io.harness.testframework.restutils.AuditTrailUtils.getYamlResponse;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,7 +82,7 @@ public class AuditTrailE2ETest extends AbstractE2ETest {
 
   /* Test to check whether a audit entry is created when a new application is added*/
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DEEPAK)
   @Category(E2ETests.class)
   public void TC1_applicationCreationEntryExistTest() {
     /* We are querying for audit entry in time interval [-1min, 5 min]*/
@@ -109,7 +109,7 @@ public class AuditTrailE2ETest extends AbstractE2ETest {
 
   /* Test to check that the yaml diff when we update the application*/
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DEEPAK)
   @Category(E2ETests.class)
   public void TC2_correctYamlForApplicationUpdateTest() {
     String filterString = (new JSONObject()

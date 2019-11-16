@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,7 +66,7 @@ public class SettingResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testSaveSettingAttribute() {
     settingResource.save(APP_ID, ACCOUNT_ID, settingAttribute);
@@ -79,7 +79,7 @@ public class SettingResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testUpdateSettingAttribute() {
     settingResource.update(APP_ID, ACCOUNT_ID, settingAttribute);

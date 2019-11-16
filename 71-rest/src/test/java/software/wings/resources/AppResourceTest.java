@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -70,7 +70,7 @@ public class AppResourceTest extends CategoryTest {
    * Test find by name.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testFindByName() {
     when(appService.get(TEST_UUID, true)).thenReturn(testApp);

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -76,7 +77,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetIfStackExists() {
     String customStackName = "CUSTOM_STACK_NAME";
@@ -91,7 +92,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateStack() {
     String templateBody = "Template Body";
@@ -149,7 +150,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCreateStackGit() {
     String accessKey = "abcd";
@@ -219,7 +220,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testUpdateStack() {
     String templateBody = "Template Body";
@@ -266,7 +267,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeleteStack() {
     String accessKey = "abcd";
@@ -303,7 +304,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListStacks() {
     String accessKey = "abcd";

@@ -1,6 +1,7 @@
 package software.wings.service.cyberark;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -151,7 +152,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void validateConfig() {
     CyberArkConfig cyberArkConfig = getCyberArkConfig("invalidCertificate");
@@ -177,7 +178,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void getCyberArkConfigForAccount() {
     CyberArkConfig cyberArkConfig = getCyberArkConfig();
@@ -192,7 +193,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void saveAndEditConfig() {
     InputStream inputStream = CyberArkTest.class.getResourceAsStream("/certs/clientCert.pem");
@@ -311,7 +312,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
     String name = UUID.randomUUID().toString();
@@ -344,7 +345,7 @@ public class CyberArkTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void cyberArkSecretManager_Crud_shouldGenerate_Audit() {
     if (isGlobalKmsEnabled) {
