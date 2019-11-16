@@ -662,6 +662,9 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(state.getResizeStrategy()).isEqualTo(RESIZE_NEW_FIRST);
     assertThat(state.getTimeoutIntervalInMinutes()).isEqualTo(6);
     assertThat(state.getPcfAppName()).isEqualTo(APP_NAME);
+
+    // test for NPE
+    state.restoreStateDataAfterGitFetchIfNeeded(null);
   }
 
   @Test

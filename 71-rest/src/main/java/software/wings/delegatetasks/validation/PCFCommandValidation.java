@@ -111,7 +111,8 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
     return singletonList(getCriteria((PcfCommandRequest) getParameters()[0]));
   }
 
-  private String getCriteria(PcfCommandRequest pcfCommandRequest) {
+  @VisibleForTesting
+  String getCriteria(PcfCommandRequest pcfCommandRequest) {
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
     String criteria = new StringBuilder()
                           .append("Pcf:")
@@ -125,12 +126,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
     }
 
     if (needToCheckAppAutoscalarPluginInstall(pcfCommandRequest)) {
-      criteria = new StringBuilder(128)
-                     .append(criteria)
-                     .append('_')
-                     .append("cf_cli")
-                     .append(CF_APP_AUTOSCALAR_VALIDATION)
-                     .toString();
+      criteria = new StringBuilder(128).append(criteria).append('_').append(CF_APP_AUTOSCALAR_VALIDATION).toString();
     }
 
     return criteria;
