@@ -13,6 +13,8 @@ import com.google.inject.name.Names;
 import io.harness.OrchestrationModule;
 import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.CCMSettingServiceImpl;
+import io.harness.ccm.budget.BudgetService;
+import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
@@ -21,7 +23,7 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.govern.DependencyModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
@@ -54,6 +56,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -751,6 +754,7 @@ public class WingsModule extends DependencyModule {
     bind(LoginSettingsService.class).to(LoginSettingsServiceImpl.class);
     bind(CCMSettingService.class).to(CCMSettingServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
+    bind(BudgetService.class).to(BudgetServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
@@ -941,8 +945,8 @@ public class WingsModule extends DependencyModule {
         bind(DataStoreService.class).to(MongoDataStoreServiceImpl.class);
         break;
       default:
-        throw new WingsException(
-            "Invalid execution log data storage mode: " + configuration.getExecutionLogsStorageMode());
+        throw new InvalidArgumentsException(
+            Pair.of(configuration.getExecutionLogsStorageMode().toString(), "Invalid execution log data storage mode"));
     }
 
     // End of deployment trigger dependencies

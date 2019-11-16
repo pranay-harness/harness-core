@@ -1,5 +1,6 @@
 package io.harness.ccm;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.perpetualtask.PerpetualTaskType.K8S_WATCH;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static org.mockito.Matchers.anyString;
@@ -13,6 +14,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
 
+import io.harness.CategoryTest;
+import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -20,20 +23,25 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
+import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
-public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
+public class CCMPerpetualTaskManagerTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
 
@@ -47,11 +55,14 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
 
   private String podTaskId = "POD_WATCHER_TASK_ID";
   private String nodeTaskId = "NODE_WATCHER_TASK_ID";
+  PageResponse<ClusterRecord> response;
 
   @Mock private ClusterRecordService clusterRecordService;
   @Mock private PerpetualTaskService perpetualTaskService;
   @Mock private PerpetualTaskServiceClientRegistry clientRegistry;
+  @Mock private K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Inject @InjectMocks CCMPerpetualTaskManager manager;
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Before
   public void setUp() {
@@ -66,9 +77,11 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
     k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build();
     clusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).build();
 
-    when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(Arrays.asList(clusterRecord));
+    response = aPageResponse().withResponse(Arrays.asList(clusterRecord)).build();
+    when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(response);
     when(clusterRecordService.attachPerpetualTaskId(eq(clusterRecord), anyString())).thenReturn(clusterRecord);
     when(clusterRecordService.removePerpetualTaskId(isA(ClusterRecord.class), anyString())).thenReturn(clusterRecord);
+    when(clientRegistry.getClient(eq(PerpetualTaskType.K8S_WATCH))).thenReturn(k8sWatchPerpetualTaskServiceClient);
     when(perpetualTaskService.getPerpetualTaskType(anyString())).thenReturn(K8S_WATCH);
   }
 
@@ -95,9 +108,10 @@ public class CCMPerpetualTaskManagerTest extends WingsBaseTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldDeletePerpetualTasksForCloudProvider() {
-    manager.createPerpetualTasks(clusterRecord);
     String[] tasks = {podTaskId, nodeTaskId};
     clusterRecord.setPerpetualTaskIds(tasks);
+    when(clusterRecordService.list(eq(accountId), eq(cloudProviderId)))
+        .thenReturn(new ArrayList<>(Arrays.asList(clusterRecord)));
     manager.deletePerpetualTasks(cloudProvider);
     verify(clusterRecordService, times(2)).removePerpetualTaskId(isA(ClusterRecord.class), anyString());
   }
