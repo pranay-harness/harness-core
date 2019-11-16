@@ -1,7 +1,8 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -121,7 +122,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldReturnListOfBuilds() throws IOException {
     assertThat(jenkinsBuildService.getBuilds(
@@ -138,7 +139,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFetchJobNames() throws IOException {
     when(jenkins.getJobs(anyString())).thenReturn(ImmutableList.of(new JobDetails("jobName", false)));
@@ -153,7 +154,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldFetchArtifactPaths() throws IOException {
     JobWithDetails jobWithDetails = Mockito.mock(JobWithDetails.class, RETURNS_DEEP_STUBS);
@@ -166,7 +167,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     JenkinsConfig badJenkinsConfig = JenkinsConfig.builder()
@@ -186,7 +187,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestGetJobParameters() {
     JobWithExtendedDetails jobWithDetails = Mockito.mock(JobWithExtendedDetails.class, RETURNS_DEEP_STUBS);

@@ -1,6 +1,7 @@
 package software.wings.scheduler.artifact;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -51,7 +52,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   @InjectMocks @Inject private ArtifactCollectionHandler artifactCollectionHandler;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleForNPEInAccountId() {
     PowerMockito.mockStatic(ExceptionLogger.class);
@@ -78,7 +79,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleWithValidAccountId() {
     PowerMockito.mockStatic(ExceptionLogger.class);
@@ -107,7 +108,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testRegisterIterators() {
     // setup mock

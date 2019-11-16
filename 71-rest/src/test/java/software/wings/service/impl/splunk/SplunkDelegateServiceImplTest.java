@@ -1,6 +1,6 @@
 package software.wings.service.impl.splunk;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,7 +38,7 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void initSplunkService() throws IllegalAccessException {
     SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());
@@ -49,7 +49,7 @@ public class SplunkDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = Exception.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void initSplunkServiceOnlyToken() throws IllegalAccessException {
     SplunkDelegateServiceImpl splunkDelegateService = spy(new SplunkDelegateServiceImpl());

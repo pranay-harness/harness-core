@@ -4,7 +4,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.manage.GlobalContextManager.ensureGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ManagedExecutorServiceTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testEnsureGlobalContext() {
     try (GlobalContextGuard contextGuard1 = ensureGlobalContextGuard()) {
@@ -39,7 +40,7 @@ public class ManagedExecutorServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testMdcGlobalContext() throws Exception {
     try (GlobalContextGuard globalContextGuard = initGlobalContextGuard(new GlobalContext());
@@ -56,7 +57,7 @@ public class ManagedExecutorServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSubmitRunnable() throws Exception {
     ExecutorService executor = Executors.newSingleThreadExecutor();

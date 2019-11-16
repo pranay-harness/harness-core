@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -33,7 +33,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks FeatureFlagService featureFlagService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldEnableWhenFeatureFlagNotAlreadyPresent() {
     Query query = mock(Query.class);
@@ -52,7 +52,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldEnableWhenNullAccountIds() {
     Query query = mock(Query.class);
@@ -71,7 +71,7 @@ public class FeatureFlagServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldEnableWhenSomeAccountsPresent() {
     Query query = mock(Query.class);

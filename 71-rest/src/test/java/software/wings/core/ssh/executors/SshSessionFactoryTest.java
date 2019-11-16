@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -13,7 +13,7 @@ import java.io.File;
 
 public class SshSessionFactoryTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void getKeyPath() {
     SshSessionConfig config = SshSessionConfig.Builder.aSshSessionConfig().build();

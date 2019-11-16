@@ -1,6 +1,6 @@
 package io.harness.jobs;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -96,7 +96,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testBugsnagNonNN() {
     analysisContext.setStateType(StateType.BUG_SNAG);
@@ -111,7 +111,7 @@ public class LogAnalysisGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testNonBugsnagNN() {
     analysisContext.setStateType(StateType.APP_DYNAMICS);

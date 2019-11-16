@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,7 +102,7 @@ public class UserResourceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldListUsers() {
     when(USER_SERVICE.list(any(PageRequest.class), anyBoolean()))

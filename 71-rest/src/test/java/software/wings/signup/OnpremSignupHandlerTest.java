@@ -1,6 +1,6 @@
 package software.wings.signup;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -67,7 +67,7 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testNewUserInviteHandleShouldSucceed() {
     when(signupService.getUserInviteByEmail(EMAIL)).thenReturn(null);
@@ -78,7 +78,7 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testNewUserInviteCompleteShouldFail() {
     try {

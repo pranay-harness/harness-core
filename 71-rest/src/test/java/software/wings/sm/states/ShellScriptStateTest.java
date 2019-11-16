@@ -4,7 +4,6 @@ import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.delegate.task.shell.ScriptType.BASH;
 import static io.harness.rule.OwnerRule.AADITI;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,7 +131,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseOnShellScriptSuccessAndSaveSweepingOutput() {
     when(executionContext.getStateExecutionData())
@@ -160,7 +159,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseOnShellScriptFailureAndNotSaveSweepingOutput() {
     when(executionContext.getStateExecutionData())
@@ -182,7 +181,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldFailShellScriptStateOnErrorResponse() {
     ExecutionResponse executionResponse = shellScriptState.handleAsyncResponse(executionContext,
@@ -192,7 +191,7 @@ public class ShellScriptStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetPatternsForRequiredContextElementType() {
     shellScriptState.setScriptString("echo \"Hello world\"");

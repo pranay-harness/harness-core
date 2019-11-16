@@ -5,7 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -338,7 +338,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecute() {
     doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any());
@@ -398,7 +398,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteForFetchFiles() {
     on(context).set("serviceTemplateService", serviceTemplateService);
@@ -421,7 +421,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForGitTask() {
     GitCommandExecutionResponse gitCommandExecutionResponse =
@@ -457,7 +457,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForGitTaskInErrorCase() {
     GitCommandExecutionResponse gitCommandExecutionResponse =
@@ -476,7 +476,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetCommandUnitList() throws Exception {
     List<CommandUnit> commandUnits = pcfSetupState.getCommandUnitList(true);
@@ -495,7 +495,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateCurrentRunningCount() {
     assertThat(pcfSetupState.generateCurrentRunningCount(
@@ -514,7 +514,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetCurrentRunningCountForSetupRequest() throws Exception {
     PcfSetupState setupState = new PcfSetupState("PCF", PCF_SETUP_COMMAND);
@@ -531,7 +531,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateAppNamePrefix() {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_LEGACY).build();
@@ -557,7 +557,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testShouldUseOriginalRoute() {
     PcfSetupState state = new PcfSetupState("");
@@ -587,7 +587,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchMaxCount() {
     pcfSetupState.setUseCurrentRunningCount(false);
@@ -607,7 +607,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchTempRoutes() {
     PcfSetupState state = new PcfSetupState("");
@@ -627,7 +627,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testRestoreStateDataAfterGitFetchIfNeeded() {
     PcfSetupState state = new PcfSetupState("");

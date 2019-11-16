@@ -1,6 +1,6 @@
 package io.harness.observer;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -23,21 +23,21 @@ public class SubjectTest extends CategoryTest {
   }
 
   @Test(expected = NullPointerException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testRegisterNPE() {
     subject.register(null);
   }
 
   @Test(expected = NullPointerException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testUnregisterNPE() {
     subject.unregister(null);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testRegisterUnregister() {
     subject.register(OBSERVER_KEY);
@@ -53,7 +53,7 @@ public class SubjectTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFireApproveFromAllWithArg() {
     subject.register(OBSERVER_KEY);

@@ -1,6 +1,6 @@
 package io.harness.data.validator;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -21,7 +21,7 @@ public class TrimmedTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTrimmed() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();

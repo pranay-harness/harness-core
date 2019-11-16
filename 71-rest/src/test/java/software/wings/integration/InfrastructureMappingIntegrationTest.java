@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -90,7 +89,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(IntegrationTests.class)
   public void shouldSelectServiceInstances() {
     SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(

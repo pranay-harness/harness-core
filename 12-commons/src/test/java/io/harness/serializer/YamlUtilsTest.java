@@ -1,6 +1,6 @@
 package io.harness.serializer;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.base.Charsets;
@@ -33,7 +33,7 @@ public class YamlUtilsTest extends CategoryTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReadCatalogs() throws IOException {
     URL url = this.getClass().getResource("/sample-catalogs.yml");

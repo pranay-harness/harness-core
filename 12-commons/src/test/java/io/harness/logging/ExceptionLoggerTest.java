@@ -5,7 +5,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -27,7 +27,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCollectResponseMessages() {
     final WingsException exception =
@@ -36,7 +36,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testExcludeReportTarget() {
     final WingsException exception =
@@ -52,7 +52,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCalculateErrorMessage() {
     WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
@@ -67,7 +67,7 @@ public class ExceptionLoggerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCalculateErrorMessageForChain() {
     WingsException innerException = new WingsException(DEFAULT_ERROR_CODE);

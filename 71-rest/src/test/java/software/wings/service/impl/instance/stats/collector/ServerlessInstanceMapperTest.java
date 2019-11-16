@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -26,7 +26,7 @@ public class ServerlessInstanceMapperTest extends CategoryTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_map() {
     final ServerlessInstanceMapper serverlessInstanceMapper = new ServerlessInstanceMapper(Instant.now(), "accountid");

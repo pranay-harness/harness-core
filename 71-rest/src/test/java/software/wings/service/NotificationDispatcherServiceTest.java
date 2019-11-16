@@ -1,6 +1,7 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -61,7 +62,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<NotificationBatch> updateOperations;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldTriggerNotificationGroupDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
@@ -99,7 +100,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void shouldTriggerUserGroupDispatcher() {
     String accountId = "some-account-id";

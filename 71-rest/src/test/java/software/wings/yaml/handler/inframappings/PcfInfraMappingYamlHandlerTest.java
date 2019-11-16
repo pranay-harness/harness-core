@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -138,7 +138,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =
@@ -171,7 +171,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<PcfInfrastructureMapping.Yaml> changeContext =

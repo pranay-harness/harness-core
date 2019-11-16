@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -45,7 +45,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldUpsertK8sCluster() {
     ClusterRecord actualClusterRecord1 = clusterRecordDao.upsertCluster(k8sClusterRecord);
@@ -58,7 +58,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetCluster() {
     ClusterRecord actualClusterRecord1 = clusterRecordDao.get(k8sClusterRecord);
@@ -66,7 +66,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldListClusters() {
     ClusterRecord upsertedClusterRecord1 = clusterRecordDao.upsertCluster(k8sClusterRecord);
@@ -75,7 +75,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldDeleteExistingCluster() {
     ClusterRecord upsertedCluster = clusterRecordDao.upsertCluster(k8sClusterRecord);
@@ -86,7 +86,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldUpsertEcsCluster() {
     ClusterRecord actualClusterRecord = clusterRecordDao.upsertCluster(ecsClusterRecord);
@@ -95,7 +95,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldInsertAndRemoveTask() {
     String taskId = "TASK_ID";
@@ -108,7 +108,7 @@ public class ClusterRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldFailToDeleteNonExistingCluster() {
     Boolean pass1 = clusterRecordDao.delete(k8sClusterRecord);

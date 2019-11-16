@@ -1,7 +1,6 @@
 package software.wings.resources.graphql;
 
 import static io.harness.rule.OwnerRule.MARK;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
@@ -67,7 +66,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testAccountLevelRateLimiter() {
     String accountId = UUIDGenerator.generateUuid();
@@ -125,7 +124,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testMixedCustDashExternalRateLimiterCallsForSameAccount() {
     boolean overExternalRateLimit = false;

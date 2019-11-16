@@ -1,7 +1,10 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -73,7 +76,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListNamespaces() {
     List<String> namespaces = cloudWatchService.listNamespaces(SETTING_ID, "us-east-1");
@@ -81,7 +84,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListMetrics() {
     List<String> namespaces = cloudWatchService.listMetrics(SETTING_ID, "us-east-1", NAMESPACE);
@@ -89,7 +92,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListDimensions() {
     List<String> namespaces = cloudWatchService.listDimensions(SETTING_ID, "us-east-1", NAMESPACE, METRIC_NAME);
@@ -97,7 +100,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testFetchMetricsAllMetrics() {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics = CloudWatchServiceImpl.fetchMetrics();
@@ -109,7 +112,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFetchSpecificMetrics() {
     CloudWatchCVServiceConfiguration cvServiceConfiguration = CloudWatchCVServiceConfiguration.builder().build();
@@ -132,7 +135,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFetchSpecificMetricsNone() {
     CloudWatchCVServiceConfiguration cvServiceConfiguration = CloudWatchCVServiceConfiguration.builder().build();
@@ -147,7 +150,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSetStatisticsAndUnit() {
     List<CloudWatchMetric> cloudWatchMetrics = Lists.newArrayList(CloudWatchMetric.builder()
@@ -166,7 +169,7 @@ public class CloudWatchServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFetchCloudWatchLambdaMetricType() {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudwatchMetrics = CloudWatchServiceImpl.fetchMetrics();

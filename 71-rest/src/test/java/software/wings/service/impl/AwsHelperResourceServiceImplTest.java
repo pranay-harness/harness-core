@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -23,7 +23,7 @@ public class AwsHelperResourceServiceImplTest extends WingsBaseTest {
   @Inject private AwsHelperResourceService awsHelperResourceService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetRegions() {
     List<NameValuePair> regions = awsHelperResourceService.getAwsRegions();

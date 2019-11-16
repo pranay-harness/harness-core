@@ -3,7 +3,9 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -153,7 +155,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testAnalysisType() {
     nrState.setComparisonStrategy("COMPARE_WITH_CURRENT");
@@ -161,7 +163,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetAnalysisTypePredictive() {
     nrState.setComparisonStrategy("PREDICTIVE");
@@ -169,7 +171,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateGroup() {
     // setup
@@ -195,7 +197,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_TULSYAN)
   @Category(UnitTests.class)
   public void testMetricsCorrespondingToMetricNames() {
     /*
@@ -247,7 +249,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_TULSYAN)
   @Category(UnitTests.class)
   public void metricNames() {
     List<NewRelicState.Metric> actualMetrics = newRelicService.getListOfMetrics();
@@ -263,7 +265,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_TULSYAN)
   @Category(UnitTests.class)
   public void metricDefinitions() {
     Map<String, TimeSeriesMetricDefinition> expectedMetricDefinitions = new HashMap<>();
@@ -288,7 +290,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetricType() {
     String errType = NewRelicState.getMetricTypeForMetric(NewRelicMetricValueDefinition.ERROR);
@@ -306,7 +308,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldTestTriggered() throws IOException, IllegalAccessException {
     NewRelicConfig newRelicConfig = NewRelicConfig.builder()

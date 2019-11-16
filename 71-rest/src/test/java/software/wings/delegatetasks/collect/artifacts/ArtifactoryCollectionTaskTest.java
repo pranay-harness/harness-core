@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -63,7 +63,7 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
           "delid1", collectionTask, notifyResponseData -> {}, () -> true);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldCollectNoMavenStyleFiles() {
     ListNotifyResponseData res = ListNotifyResponseData.Builder.aListNotifyResponseData().build();

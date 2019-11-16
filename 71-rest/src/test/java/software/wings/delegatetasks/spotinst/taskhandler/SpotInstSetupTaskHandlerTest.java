@@ -3,7 +3,8 @@ package software.wings.delegatetasks.spotinst.taskhandler;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_AT;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_UPDATED_AT;
@@ -209,7 +210,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
       + "\"thirdPartiesIntegration\":{}}}";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateFinalJson() {
     SpotInstSetupTaskParameters parameters =
@@ -239,7 +240,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecuteTaskInternalForBlueGreen() throws Exception {
     String loadBalancerArn = "LOAD_BALANCER_ARN";
@@ -325,7 +326,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecuteTaskInternalForCanary() throws Exception {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
@@ -368,7 +369,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testRemoveUnsupportedFieldsForCreatingNewGroup() throws Exception {
     Map<String, Object> map = newHashMap();
@@ -384,7 +385,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testAllInstancesHealthyScaleDown() throws Exception {
     doReturn(singletonList(ElastiGroupInstanceHealth.builder().healthStatus("HEALTHY").build()))
@@ -400,7 +401,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testAllInstancesHealthyScaleUp() throws Exception {
     doReturn(emptyList())
@@ -416,7 +417,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetTimeOut() throws Exception {
     assertThat(spotInstSetupTaskHandler.getTimeOut(0)).isEqualTo(defaultSteadyStateTimeout);
@@ -424,7 +425,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetAllEc2InstancesOfElastiGroup() throws Exception {
     doReturn(emptyList())
@@ -444,7 +445,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateAndFinishEmptyExecutionLog() throws Exception {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);

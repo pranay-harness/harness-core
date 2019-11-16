@@ -3,7 +3,9 @@ package software.wings.delegatetasks;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -89,7 +91,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
@@ -115,7 +117,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
@@ -139,7 +141,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldFailWhenBuildUnstable() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
@@ -162,7 +164,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailWhenNoJobFound() throws Exception {
     when(build.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
@@ -180,7 +182,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldPassWhenBuildUnstableAndUnstableSuccessSet() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
@@ -204,7 +206,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldInjectEnvVarsWhenInjectEnvVarsSet() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
@@ -236,7 +238,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFailWhenGetEnvVarsThrows() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);

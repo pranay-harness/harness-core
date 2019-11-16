@@ -1,7 +1,7 @@
 package software.wings.sm.rollback;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -81,7 +81,7 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
                                                          .build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldGenerateForRollbackExecution() {
     Workflow workflow = constructBasicWorkflowWithRollbackForAMI();
@@ -101,7 +101,7 @@ public class RollbackStateMachineGeneratorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldNotGenerateForRollback() {
     Workflow workflow = constructBasicWorkflowWithRollbackForAMI();

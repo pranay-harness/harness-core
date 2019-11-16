@@ -1,6 +1,6 @@
 package software.wings.service.impl.trigger;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -138,7 +138,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
     doNothing().when(scheduleTriggerHandler).wakeup();
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldSaveScheduledConditionTrigger() {
     DeploymentTrigger trigger = deploymentTriggerService.save(scheduledConditionTrigger, false);
@@ -151,7 +151,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldUpdateScheduledConditionTrigger() {
     scheduledConditionTrigger = deploymentTriggerService.save(scheduledConditionTrigger, false);
@@ -169,7 +169,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldThrowCronParseException() {
     scheduledConditionTrigger.setCondition(
@@ -179,7 +179,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldThrowCronParseExceptionOnNullCronExpression() {
     scheduledConditionTrigger.setCondition(
@@ -189,7 +189,7 @@ public class ScheduleConditionTriggerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldThrowCronParseExceptionOnEmptyCronExpression() {
     scheduledConditionTrigger.setCondition(

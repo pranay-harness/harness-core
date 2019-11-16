@@ -4,6 +4,9 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -231,7 +234,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void saveSecret() throws IllegalAccessException {
     String secretName = generateUuid();
@@ -243,7 +246,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void saveAndUpdateSecret() throws IllegalAccessException {
     UsageRestrictions usageRestrictions =
@@ -349,7 +352,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void saveSecretUsingLocalMode() throws IllegalAccessException {
     if (encryptionType != EncryptionType.LOCAL) {
@@ -633,7 +636,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void multipleVariableReference() {
     String secretName = generateUuid();
@@ -742,7 +745,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void deleteSecret() {
     String secretName = generateUuid();
@@ -833,7 +836,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void listSecrets() {
     int numOfSecrets = 3;
@@ -913,7 +916,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void listSecretsWithSummary() throws IOException, IllegalAccessException {
     int numOfSecrets = 3;
@@ -995,7 +998,7 @@ public class SecretTextTest extends WingsBaseTest {
     }
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void secretTextUsage() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
@@ -1429,7 +1432,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void updateLocalToKms() {
     if (encryptionType != EncryptionType.LOCAL) {
@@ -2020,7 +2023,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void serviceVariableSyncSearchTags() {
     String secretName = generateUuid();
@@ -2100,7 +2103,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void filterSecretSearchTags() {
     int numOfServiceVariables = 6;

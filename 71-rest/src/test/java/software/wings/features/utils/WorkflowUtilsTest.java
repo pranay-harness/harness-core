@@ -1,7 +1,7 @@
 package software.wings.features.utils;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -26,7 +26,7 @@ import java.util.List;
 
 public class WorkflowUtilsTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testGetWorkflowUsages() {
     Workflow jiraWorkflow =

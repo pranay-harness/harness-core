@@ -1,5 +1,7 @@
 package io.harness.security;
 
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,7 +56,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testEncryptDecryptCharsWithCustomKey() {
     String testInput = "test";
@@ -69,7 +71,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldFailWithIncorrectKeyLength() {
     thrown.expect(WingsException.class);
@@ -81,7 +83,7 @@ public class SimpleEncryptionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldHaveJCEEnabled() {
     try {

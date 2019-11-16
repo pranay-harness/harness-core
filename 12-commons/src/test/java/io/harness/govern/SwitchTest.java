@@ -1,6 +1,6 @@
 package io.harness.govern;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.matches;
@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 
 public class SwitchTest extends CategoryTest implements MockableTestMixin {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void unhandled() throws IllegalAccessException {
     Logger mockLogger = mock(Logger.class);

@@ -1,6 +1,6 @@
 package io.harness.artifact;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -35,7 +35,7 @@ public class ArtifactTest extends GraphQLTest {
   @Inject ArtifactStreamManager artifactStreamManager;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryArtifact() {
     final Seed seed = new Seed(0);

@@ -2,7 +2,8 @@ package software.wings.integration;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRANJAL;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -134,7 +135,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetEc2Metrics() throws Exception {
@@ -146,7 +147,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetLoadBalancersTest() throws Exception {
@@ -158,7 +159,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
@@ -176,7 +177,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   public void testGetLambdaFunctionNamesPermissionsNotAvailable() throws Exception {
     WebTarget target = client.target(API_BASE + "/cloudwatch/get-lambda-functions?accountId=" + accountId
@@ -186,7 +187,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetECSClusternNames() throws Exception {
@@ -201,7 +202,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetEC2InstancesNames() throws Exception {

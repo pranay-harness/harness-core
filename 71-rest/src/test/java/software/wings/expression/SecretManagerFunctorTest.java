@@ -1,6 +1,6 @@
 package software.wings.expression;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -40,7 +40,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   private static final String WORKFLOW_EXECUTION_ID = "WORKFLOW_EXECUTION_ID";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDecryptLocalEncryptedServiceVariables() {
     final String secretName = "MySecretName";
@@ -114,7 +114,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDecryptKMSEncryptedServiceVariables() {
     final String secretName = "MySecretName";
@@ -152,7 +152,7 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
   }
 
   @Test(expected = FunctorException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldRejectInternalFunctor() {
     final String secretName = "MySecretName";

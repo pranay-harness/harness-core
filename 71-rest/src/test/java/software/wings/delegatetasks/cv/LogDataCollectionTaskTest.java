@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.cv;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -54,7 +54,7 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
         .thenReturn(true);
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testSavingHeartbeatsForAllHosts() throws DataCollectionException, IOException {
     LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();
@@ -75,7 +75,7 @@ public class LogDataCollectionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testIfFetchCalledForEachHostParallelly() throws DataCollectionException, IOException {
     LogDataCollectionInfoV2 logDataCollectionInfo = createLogDataCollectionInfo();

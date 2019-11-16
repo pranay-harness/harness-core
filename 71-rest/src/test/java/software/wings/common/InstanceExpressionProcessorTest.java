@@ -1,8 +1,9 @@
 package software.wings.common;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -207,7 +208,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return instances from param.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
@@ -258,7 +259,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return common instances from param.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
@@ -312,7 +313,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return common instances from param 2.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCommonInstancesFromParam2() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());
@@ -364,7 +365,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should fetch context element.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldRenderExpressionFromInstanceElement() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -505,7 +506,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * Should return from partition.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnInstancesFromPartition() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().name("App1").build());

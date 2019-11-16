@@ -1,6 +1,6 @@
 package io.harness.notifications.conditions;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
@@ -23,7 +23,7 @@ import java.util.List;
 
 public class CVFilterMatcherTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMatch() {
     List<String> appIds = Lists.newArrayList("app1", "app2");

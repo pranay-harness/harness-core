@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -56,7 +57,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are active
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecuteInternal_noAlert() {
     saveDelegate("host1", 2, true);
@@ -69,7 +70,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * All delegates are down
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecuteInternal_noDelegateAlert() {
     saveDelegate("host1", 12, false);
@@ -89,7 +90,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
    * Some of the delegates are down
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecuteInternal_delegatesDownAlert() {
     saveDelegate("host1", 2, true);
@@ -117,7 +118,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testSMTPAlert() {
     when(mainConfiguration.getSmtpConfig()).thenReturn(null);

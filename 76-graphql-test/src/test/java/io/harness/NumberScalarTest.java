@@ -1,6 +1,6 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 
 import graphql.schema.CoercingParseLiteralException;
 import io.harness.category.element.UnitTests;
@@ -17,7 +17,7 @@ public class NumberScalarTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testParseLiteralWithInvalidInput() {
     String invalidInput = "invalid";
@@ -27,7 +27,7 @@ public class NumberScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testParseLiteralWithValidInput() {
     String validInput = "2";
@@ -60,7 +60,7 @@ public class NumberScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testParseValueWithValidInput() {
     String validInput = "2";

@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +86,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @InjectMocks private AwsAmiServiceSetup state = new AwsAmiServiceSetup("stateName");
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecute() {
     String asgName = "foo";
@@ -165,7 +165,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -190,7 +190,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testValidateFields() {
     AwsAmiServiceSetup localState = new AwsAmiServiceSetup("stateName2");

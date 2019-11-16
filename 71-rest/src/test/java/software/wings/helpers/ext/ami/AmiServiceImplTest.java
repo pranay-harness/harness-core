@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.ami;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 public class AmiServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testGetFiltersWithNullEmptyValues() {
     AmiServiceImpl service = new AmiServiceImpl();
@@ -55,7 +56,7 @@ public class AmiServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetchAMIBuilds() {
     AmiServiceImpl amiServiceImpl = new AmiServiceImpl();
@@ -91,7 +92,7 @@ public class AmiServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testGetFiltersWithTags() {
     AmiServiceImpl service = new AmiServiceImpl();
@@ -114,7 +115,7 @@ public class AmiServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testGetFiltersWithFilterMap() {
     AmiServiceImpl service = new AmiServiceImpl();

@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -110,21 +110,21 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void validateInstanceType_valid_infraMapping() {
     awsLambdaInstanceHandler.validateInstanceType(InfrastructureMappingType.AWS_AWS_LAMBDA.name());
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void validateInstanceType_valid_invalid_infraMapping() {
     awsLambdaInstanceHandler.validateInstanceType(InfrastructureMappingType.AWS_AMI.name());
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getInstanceType_valid() {
     assertThat(awsLambdaInstanceHandler.getInstanceType(InfrastructureMappingType.AWS_AWS_LAMBDA.name()))
@@ -132,14 +132,14 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getInstanceType_invalid_infra() {
     awsLambdaInstanceHandler.getInstanceType(InfrastructureMappingType.AWS_AMI.name());
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void generateDeploymentKey() {
     DeploymentKey deploymentKey = awsLambdaInstanceHandler.generateDeploymentKey(
@@ -151,7 +151,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void setDeploymentKey() {
     DeploymentSummary deploymentSummary = DeploymentSummary.builder().build();
@@ -161,7 +161,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void setDeploymentKey_error() {
     DeploymentSummary deploymentSummary = DeploymentSummary.builder().build();
@@ -170,7 +170,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void fetchInvocationCountFromCloudWatch() {
     AwsCloudWatchHelperServiceDelegate mock = mock(AwsCloudWatchHelperServiceDelegate.class);
@@ -182,7 +182,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void secondsBetweenDates() {
     Instant to = Instant.now();
@@ -194,7 +194,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void nearestMultipleOf60() {
     assertThat(awsLambdaInstanceHandler.smallestMultipleOf60GreaterEqualThan(100)).isEqualTo(120);
@@ -204,7 +204,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getStartDate() {
     Instant now = Instant.now();
@@ -215,7 +215,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getStepExecutionSummary() {
     PhaseStepExecutionSummary phaseStepExecutionSummary = new PhaseStepExecutionSummary();
@@ -236,7 +236,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void prepareInvocationCountList() {
     InvocationCount invocationCount = InvocationCount.builder().build();
@@ -251,7 +251,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
     assertThat(invocationCounts).isEqualTo(Arrays.asList(invocationCount, invocationCount));
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getInvocationCountForKey() {
     Date starDate = new Date();
@@ -292,7 +292,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getInvocationCountForKey_error() {
     doThrow(new RuntimeException("error"))
@@ -304,7 +304,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testSyncInstances() {
     doNothing()
@@ -322,7 +322,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getActiveServerlessInstances() {
     doReturn(aPageResponse()
@@ -338,7 +338,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getInfraMapping() {
     AwsLambdaInfraStructureMapping lambdaInfraStructureMappingOriginal =
@@ -348,7 +348,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
         .isEqualTo(lambdaInfraStructureMappingOriginal);
   }
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getInfraMapping_invalid() {
     doReturn(new AwsAmiInfrastructureMapping()).when(infraMappingService).get(anyString(), anyString());
@@ -356,7 +356,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void cloudProviderSetting() {
     SettingAttribute settingAttribute = new SettingAttribute();
@@ -368,7 +368,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void cloudProviderSetting_invalid() {
     doReturn(null).when(settingsService).get(anyString());
@@ -377,7 +377,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getEncryptedDataDetails() {
     doReturn(Collections.emptyList())
@@ -388,7 +388,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void syncInstancesInternal_instance_sync_flow() {
     setInfraMapping();
@@ -420,7 +420,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void syncInstancesInternal_new_deployment() {
     setInfraMapping();
@@ -468,7 +468,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void deleteInstances() {
     doReturn(true).when(serverlessInstanceService).delete(anyListOf(String.class));
@@ -486,7 +486,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
         ServerlessInstance.builder().uuid("uid1").build(), ServerlessInstance.builder().uuid("uid2").build());
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void handleNewDeploymentInternal() {
     doNothing()
@@ -503,7 +503,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void handleNewDeploymentSummary() {
     doReturn(AwsLambdaInstanceInfo.builder().build())
@@ -524,7 +524,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test(expected = None.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void handleNewDeploymentSummary_error() {
     doThrow(new RuntimeException("error"))
@@ -537,7 +537,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void buildInstanceForNewDeployment() {
     doReturn(ServerlessInstance.builder())
@@ -554,7 +554,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void populateWithArtifactDetails() {
     Artifact artifact = new Artifact();
@@ -568,7 +568,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void syncInDBInstance_with_updates() {
     AwsLambdaInstanceInfo awsLambdaInstanceInfo = setLambdaInstanceInfo();
@@ -586,7 +586,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void syncInDBInstance_with_noupdate() {
     AwsLambdaInstanceInfo awsLambdaInstanceInfo = setLambdaInstanceInfo();
@@ -604,7 +604,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void syncInDBInstance_function_deleted() {
     doReturn(null)
@@ -628,7 +628,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_buildServerlessInstance() {
     setAppService();
@@ -641,7 +641,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getDeploymentInfo() {
     CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
@@ -660,7 +660,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
     assertThat(deploymentInfo.isPresent()).isTrue();
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createLambdaInstanceInfo() {
     AwsLambdaDetails awsLambdaDetails = AwsLambdaDetails.builder().tags(ImmutableMap.of("key", "value")).build();
@@ -670,7 +670,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getLambdaInstanceInfo() {
     AwsLambdaDetails awsLambdaDetails =
@@ -693,7 +693,7 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void handle_handleNewDeployment() {
     doNothing()

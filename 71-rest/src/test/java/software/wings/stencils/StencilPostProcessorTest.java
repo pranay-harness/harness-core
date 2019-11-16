@@ -1,6 +1,8 @@
 package software.wings.stencils;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
@@ -62,7 +64,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldExpandStencilOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -88,7 +90,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -104,7 +106,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
@@ -119,7 +121,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSetDefaultValueForTheAccessorMethod() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(

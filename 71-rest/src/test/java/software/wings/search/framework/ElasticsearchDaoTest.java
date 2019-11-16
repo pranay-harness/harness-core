@@ -1,6 +1,6 @@
 package software.wings.search.framework;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -33,7 +33,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchDao elasticsearchDao;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void upsertDocumentTest() throws IOException {
     String entityType = "entityType";
@@ -65,7 +65,7 @@ public class ElasticsearchDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void deleteDocumentTest() throws IOException {
     String entityType = "entityType";

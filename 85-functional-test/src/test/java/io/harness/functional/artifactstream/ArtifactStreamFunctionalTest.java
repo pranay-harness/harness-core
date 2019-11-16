@@ -1,6 +1,6 @@
 package io.harness.functional.artifactstream;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.template.artifactsource.CustomRepositoryMapping.AttributeMapping.builder;
@@ -54,7 +54,7 @@ public class ArtifactStreamFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   public void shouldCRUDCustomArtifactStreamWithCustomMapping() {
     Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);

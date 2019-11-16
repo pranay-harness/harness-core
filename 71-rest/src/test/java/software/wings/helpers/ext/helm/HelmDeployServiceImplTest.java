@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,7 +94,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDeployInstall() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
@@ -109,7 +110,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDeployUpgrade() throws InterruptedException, TimeoutException, IOException, ExecutionException {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);

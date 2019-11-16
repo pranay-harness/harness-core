@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,7 +71,7 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   @InjectMocks private EcsBGUpdateRoute53DNSWeightState state = new EcsBGUpdateRoute53DNSWeightState("stateName");
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldService(true);
@@ -147,7 +147,7 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

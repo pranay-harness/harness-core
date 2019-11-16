@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.pcf;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -37,7 +36,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @InjectMocks @Inject PcfDeploymentManagerImpl deploymentManager;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetOrganizations() throws Exception {
     OrganizationSummary summary1 = OrganizationSummary.builder().id("1").name("org1").build();
@@ -50,7 +49,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void getAppPrefixByRemovingNumber() {
     assertThat(StringUtils.EMPTY).isEqualTo(deploymentManager.getAppPrefixByRemovingNumber(null));
@@ -58,7 +57,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void getMatchesPrefix() {
     ApplicationSummary applicationSummary = ApplicationSummary.builder()

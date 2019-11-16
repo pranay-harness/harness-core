@@ -1,6 +1,8 @@
 package software.wings.security.authentication;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -71,7 +73,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testSamlBasedValidationAssertionFails() throws IOException {
     try {
@@ -92,7 +94,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testSamlBasedValidationValidAssertionForOkta() throws IOException, SamlException {
     User user = new User();
@@ -120,7 +122,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testSamlBasedValidationValidAssertionForGoogle() throws IOException, SamlException {
     User user = new User();
@@ -169,7 +171,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testAzureSaml() throws IOException, SamlException {
     User user = new User();
@@ -219,7 +221,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSamlAuthenticationAndGroupExtractionForOktaShouldSucceed() throws IOException, SamlException {
     User user = new User();
@@ -249,7 +251,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testValidateUser() {
     User user = new User();
@@ -288,7 +290,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
    * @throws SamlException
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testAuthenticationWithSamlNotEnabled() throws IOException, SamlException {
     User user = new User();

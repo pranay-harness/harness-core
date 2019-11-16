@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -15,7 +15,7 @@ import java.util.Set;
 
 public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testYamlClass() {
     Reflections reflections = new Reflections("software.wings");

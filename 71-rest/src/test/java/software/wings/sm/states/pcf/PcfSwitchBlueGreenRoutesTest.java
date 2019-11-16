@@ -1,6 +1,6 @@
 package software.wings.sm.states.pcf;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -14,7 +14,7 @@ import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 public class PcfSwitchBlueGreenRoutesTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetNewApplicationName() {
     PcfSwitchBlueGreenRoutes pcfSwitchBlueGreenRoutes = new PcfSwitchBlueGreenRoutes("");

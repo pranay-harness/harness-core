@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -57,7 +57,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldNotCallGetInfraMappingWhenAlreadyAvailable() {
     when(executionContext.fetchInfraMappingId()).thenReturn("INFRA_MAPPING_ID");
@@ -68,7 +68,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldCreateInfraMappingWhenNonProvisioner() {
     doReturn(null).when(executionContext).fetchInfraMappingId();
@@ -95,7 +95,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldNotCreateInfraMappingWhenProvisionerOutputsNotAvailable() {
     doReturn(null).when(executionContext).fetchInfraMappingId();
@@ -118,7 +118,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldCreateInfraMappingWhenProvisionerOutputsAvailable() {
     doReturn(null).when(executionContext).fetchInfraMappingId();
@@ -148,7 +148,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldNotCreateInfraMappingForBuildWorkflow() {
     doReturn(null).when(executionContext).fetchInfraMappingId();

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -33,7 +34,7 @@ public class ConstraintTest extends CategoryTest {
   ConsumerId consumer4 = new ConsumerId("consumer4");
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCreateConstraint() throws UnableToSaveConstraintException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
@@ -43,7 +44,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLoadConstraint() throws UnableToSaveConstraintException, UnableToLoadConstraintException {
     ConstraintRegistry registry = new InprocConstraintRegistry();

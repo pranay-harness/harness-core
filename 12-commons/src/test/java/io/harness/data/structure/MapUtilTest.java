@@ -1,6 +1,6 @@
 package io.harness.data.structure;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class MapUtilTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldPutIfNotEmpty() {
     Map<String, String> input = new HashMap<>();
@@ -23,7 +23,7 @@ public class MapUtilTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotPutIfEmpty() {
     Map<String, String> input = new HashMap<>();

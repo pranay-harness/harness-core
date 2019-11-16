@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.s3;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -57,7 +57,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetBuckets() {
     when(awsHelperService.listS3Buckets(awsConfig, null)).thenReturn(Lists.newArrayList(new Bucket("bucket1")));
@@ -66,7 +66,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     ListObjectsV2Result listObjectsV2Result = new ListObjectsV2Result();
@@ -82,7 +82,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldDownloadArtifacts() throws IOException, URISyntaxException {
     File file = new File("test.txt");
@@ -127,7 +127,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetArtifactBuildDetails() throws IOException, URISyntaxException {
     ListObjectsV2Result listObjectsV2Result = new ListObjectsV2Result();
@@ -152,7 +152,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetArtifactsBuildDetails() throws IOException, URISyntaxException {
     ListObjectsV2Result listObjectsV2Result = new ListObjectsV2Result();

@@ -2,7 +2,7 @@ package io.harness.data.structure;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,7 +28,7 @@ public class EmptyPredicateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({FastUnitTests.class})
   public void testNull() {
     Custom custom = null;
@@ -93,7 +93,7 @@ public class EmptyPredicateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({FastUnitTests.class})
   public void testEmpty() {
     Custom custom = Custom.builder().empty(true).build();
@@ -158,7 +158,7 @@ public class EmptyPredicateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({FastUnitTests.class})
   public void testNotEmpty() {
     Custom custom = Custom.builder().empty(false).build();

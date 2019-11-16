@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
@@ -71,7 +71,7 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void getTargetModulesTest() {
     List<String> targetModules = terraformFetchTargetsTask.getTargetModules(parsedContentWithModulesAndResources);
@@ -84,7 +84,7 @@ public class TerraformFetchTargetsTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void getTargetResourcesTest() {
     List<String> targetResources = terraformFetchTargetsTask.getTargetResources(parsedContentWithModulesAndResources);

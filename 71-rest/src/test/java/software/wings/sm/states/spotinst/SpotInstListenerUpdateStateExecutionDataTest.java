@@ -1,6 +1,6 @@
 package software.wings.sm.states.spotinst;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class SpotInstListenerUpdateStateExecutionDataTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testStateData() {
     String oldId = "oldId";

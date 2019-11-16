@@ -1,6 +1,9 @@
 package software.wings.sm;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -102,7 +105,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
    * Should get app.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void shouldGetApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -127,7 +130,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchRequiredApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -141,7 +144,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldThrowOnFetchRequiredApp() {
     WorkflowStandardParams std = new WorkflowStandardParams();
@@ -150,7 +153,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchRequiredEnv() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -166,7 +169,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldThrowOnFetchRequiredEnv() {
     WorkflowStandardParams std = new WorkflowStandardParams();
@@ -183,7 +186,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetArtifactForService() {
     when(artifactService.get(ARTIFACT_ID))
@@ -203,7 +206,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetNullArtifact() {
     when(artifactService.get(ARTIFACT_ID)).thenReturn(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
@@ -220,7 +223,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactWithSourceProperties() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
@@ -267,7 +270,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetAccountDefaults() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

@@ -3,7 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -113,7 +113,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should list hosts.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();
@@ -135,7 +135,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should get host.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetHost() {
     Host host = hostBuilder.build();
@@ -152,7 +152,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should update host.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldUpdateHost() {
     Host host = hostBuilder.withUuid(HOST_ID).build();
@@ -167,7 +167,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should delete host.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDeleteHost() {
     Host host = hostBuilder.withAppId(APP_ID).withUuid(HOST_ID).build();
@@ -182,7 +182,7 @@ public class HostServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     hostService.pruneDescendingEntities(APP_ID, HOST_ID);
@@ -195,7 +195,7 @@ public class HostServiceTest extends WingsBaseTest {
    * Should get hosts by host ids.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetHostsByHostIds() {
     when(hostQuery.asList()).thenReturn(asList(hostBuilder.withUuid(HOST_ID).build()));

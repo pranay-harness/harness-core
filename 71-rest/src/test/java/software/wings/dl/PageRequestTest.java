@@ -3,7 +3,7 @@ package software.wings.dl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.ELEMENT_MATCH;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,7 +21,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 
 public class PageRequestTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testElemMatchPageRequest() {
     MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
@@ -40,7 +40,7 @@ public class PageRequestTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testMissingIndexPageRequest() {
     MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();

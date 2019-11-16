@@ -1,7 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
@@ -100,7 +100,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCreateK8sActivity() {
     List<CommandUnit> commandUnits = new ArrayList<>();
@@ -120,7 +120,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDoManifestsUseArtifact() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder()

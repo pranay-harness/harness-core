@@ -1,6 +1,6 @@
 package io.harness.delegate.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -51,7 +51,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotApplyFunctorIfNoSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();
@@ -69,7 +69,7 @@ public class DelegateServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldApplyFunctorForSecrets() {
     final String delegateTaskId = UUIDGenerator.generateUuid();

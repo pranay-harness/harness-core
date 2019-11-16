@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.category.element.UnitTests;
@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class EcsInfrastructureMappingTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     EcsInfrastructureMapping infrastructureMapping = new EcsInfrastructureMapping();

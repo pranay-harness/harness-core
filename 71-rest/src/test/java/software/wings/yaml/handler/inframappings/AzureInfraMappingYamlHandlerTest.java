@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -140,7 +141,7 @@ public class AzureInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<AzureInfrastructureMapping.Yaml> changeContext =

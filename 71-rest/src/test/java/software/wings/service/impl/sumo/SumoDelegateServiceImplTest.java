@@ -1,6 +1,7 @@
 package software.wings.service.impl.sumo;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -47,7 +48,7 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void testValidateConfigBadUrl() throws IOException, IllegalAccessException {
     when(sumoConfig.getSumoUrl()).thenReturn("htt//localhost:9000/");
@@ -63,7 +64,7 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = SumoClientException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testSumoException() throws IOException {
     doThrow(new SumoServerException("https://localhost:9000/", "{\"message\": \"This is broken\"}"))

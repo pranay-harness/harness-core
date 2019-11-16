@@ -1,6 +1,7 @@
 package software.wings.integration;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -144,7 +145,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(IntegrationTests.class)
   public void getRecords() throws Exception {
     saveExecutions();
@@ -184,7 +185,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void getAllCVDeploymentRecords() {
     // Setup
@@ -226,7 +227,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void getAllDeploymentRecords() {
     // Setup
@@ -268,7 +269,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void getAllDeploymentRecordsWFWithoutServiceIds() {
     // Setup
@@ -315,7 +316,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void getAllCVRecordsHarnessAccount() {
     saveExecutions();
@@ -346,7 +347,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void getAllCVRecordsNonHarnessAccount() {
     saveExecutions();

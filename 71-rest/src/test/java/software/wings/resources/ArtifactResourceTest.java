@@ -1,6 +1,8 @@
 package software.wings.resources;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -126,7 +128,7 @@ public class ArtifactResourceTest extends CategoryTest {
    * Should create new artifact.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldCreateNewArtifact() {
     Artifact artifact = anArtifact()
@@ -158,7 +160,7 @@ public class ArtifactResourceTest extends CategoryTest {
    * Should update artifact.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldUpdateArtifact() {
     Artifact artifact = anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build();
@@ -176,7 +178,7 @@ public class ArtifactResourceTest extends CategoryTest {
    * Should get artifact.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldGetArtifact() {
     RestResponse<Artifact> restResponse = RESOURCES.client()
@@ -193,7 +195,7 @@ public class ArtifactResourceTest extends CategoryTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDownloadArtifact() throws IOException {
     Response restResponse = RESOURCES.client()
@@ -215,7 +217,7 @@ public class ArtifactResourceTest extends CategoryTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListArtifact() {
     RESOURCES.client()
@@ -229,7 +231,7 @@ public class ArtifactResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListArtifactWithServiceId() {
     RESOURCES.client()
@@ -247,7 +249,7 @@ public class ArtifactResourceTest extends CategoryTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDeleteArtifact() throws IOException {
     Response response = RESOURCES.client().target("/artifacts/" + ARTIFACT_ID + "?appId=" + APP_ID).request().delete();

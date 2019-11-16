@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -56,7 +56,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteForNamespaceFromKubeConfig() throws Exception {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
@@ -76,7 +76,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteForNamespaceFromWorkload() throws Exception {
     String namespace = "namespace";

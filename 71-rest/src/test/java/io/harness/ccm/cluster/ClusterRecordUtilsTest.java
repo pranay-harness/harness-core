@@ -1,6 +1,6 @@
 package io.harness.ccm.cluster;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 
@@ -18,7 +18,7 @@ public class ClusterRecordUtilsTest extends CategoryTest {
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testFrom() {
     DirectKubernetesInfrastructureMapping k8sInfraMapping = DirectKubernetesInfrastructureMapping.builder()

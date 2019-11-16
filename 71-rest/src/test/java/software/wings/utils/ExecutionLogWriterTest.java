@@ -1,7 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -29,7 +29,7 @@ public class ExecutionLogWriterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void smokeTest() {
     ExecutionLogWriter testWriter = ExecutionLogWriter.builder()

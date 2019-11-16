@@ -1,6 +1,7 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -57,7 +58,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     when(bambooService.getBuilds(bambooConfig, null, BUILD_JOB_NAME, ARTIFACT_RETENTION_SIZE))
@@ -69,7 +70,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(bambooService.getPlanKeys(bambooConfig, null))
@@ -80,7 +81,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, null, bambooConfig, null);
@@ -88,7 +89,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuild() {
     when(bambooService.getLastSuccessfulBuild(bambooConfig, null, BUILD_JOB_NAME))
@@ -99,7 +100,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     BambooConfig bambooConfig =

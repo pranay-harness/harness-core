@@ -2,7 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -81,7 +82,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
                                                      .build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void ensureResourceConstraintForInfrastructureThrottlingWhenExists() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraint.class));
@@ -97,7 +98,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void ensureResourceConstraintForInfrastructureThrottlingWhenDoNotExists() {
     doReturn(query).when(wingsPersistence).createQuery(eq(ResourceConstraint.class));
@@ -135,7 +136,7 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
 
   // TODO: YOGESH use fake mongo in all tests
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testGetAllCurrentlyAcquiredPermits() {
     final int permits = 3;

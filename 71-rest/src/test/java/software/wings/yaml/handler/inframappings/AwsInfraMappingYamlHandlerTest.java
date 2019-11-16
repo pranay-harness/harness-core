@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -100,14 +100,14 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet1() throws HarnessException, IOException {
     testCRUDAndGet(validYamlContent1);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet2() throws HarnessException, IOException {
     testCRUDAndGet(validYamlContent2);

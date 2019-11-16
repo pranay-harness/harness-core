@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.docker;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -11,7 +11,7 @@ import software.wings.WingsBaseTest;
 
 public class DockerServiceTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldParseLink() {
     String link =

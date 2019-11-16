@@ -1,6 +1,6 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -13,21 +13,21 @@ import org.junit.experimental.categories.Category;
 
 public class ApiServiceMorphiaClassesTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testApiServiceClassesModule() {
     new ApiServiceMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testApiServiceSearchAndList() {
     new MorphiaModule().testAutomaticSearch(ImmutableSet.<Class>builder().build());
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testApiServiceImplementationClassesModule() {
     new ApiServiceMorphiaRegistrar().testImplementationClassesModule();

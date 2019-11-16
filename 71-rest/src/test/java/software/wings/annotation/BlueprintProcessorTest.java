@@ -1,6 +1,6 @@
 package software.wings.annotation;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class BlueprintProcessorTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testValidateKeys() {
     AwsLambdaInfraStructureMapping awsLambdaInfraStructureMapping = new AwsLambdaInfraStructureMapping();

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -71,7 +71,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_executeTaskInternal() throws PivotalClientApiException {
     doNothing().when(pcfClient).runPcfPluginScript(
@@ -113,7 +113,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_handleError() {
     final PcfCommandExecutionResponse commandExecutionResponse = pcfRunPluginCommandTaskHandler.handleError(

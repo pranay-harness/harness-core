@@ -1,7 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
@@ -25,7 +25,7 @@ public class TriggerExecutionServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private TriggerExecutionService triggerExecutionService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchLastSuccessTriggerExecution() {
     String webhookToken = generateUuid();

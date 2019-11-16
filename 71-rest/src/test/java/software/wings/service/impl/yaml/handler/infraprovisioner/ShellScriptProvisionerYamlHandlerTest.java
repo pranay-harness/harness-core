@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -80,7 +81,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testToYaml() {
     ShellScriptInfrastructureProvisioner provisioner = prepareProvisioner();
@@ -90,7 +91,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCreationFromYaml() {
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -109,7 +110,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testGetSavedProvisioner() {
     ShellScriptInfrastructureProvisioner saved = ShellScriptInfrastructureProvisioner.builder().build();
@@ -119,7 +120,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testUpdationFromYaml() {
     ShellScriptInfrastructureProvisioner saved =

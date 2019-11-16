@@ -1,6 +1,6 @@
 package software.wings.search.framework;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -25,7 +25,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchSyncJob elasticsearchSyncJob;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testElasticsearchSyncTask() {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);
@@ -53,7 +53,7 @@ public class ElasticsearchSyncJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testErroredElasticsearchSyncTask() {
     ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = mock(ElasticsearchBulkSyncTask.class);

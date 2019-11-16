@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +20,7 @@ public class ExternalApiRateLimitingServiceTest extends WingsBaseTest {
   @Inject private ExternalApiRateLimitingService service;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testAllowedRequests() {
     String key = "abcd";

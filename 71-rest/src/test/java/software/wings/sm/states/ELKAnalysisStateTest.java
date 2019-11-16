@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -96,7 +96,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     ElkAnalysisState elkAnalysisState = new ElkAnalysisState("ElkAnalysisState");
@@ -104,7 +104,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void noTestNodes() {
     ElkAnalysisState spyState = spy(elkAnalysisState);
@@ -127,7 +127,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void noControlNodesCompareWithCurrent() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
@@ -154,7 +154,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void compareWithCurrentSameTestAndControlNodes() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
@@ -183,7 +183,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
     assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);

@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static junit.framework.TestCase.fail;
 
 import io.harness.CategoryTest;
@@ -18,7 +18,7 @@ import java.util.List;
 
 public class ConnectorControllerTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testConnectorImplementations() {
     SettingAttribute attribute = new SettingAttribute();

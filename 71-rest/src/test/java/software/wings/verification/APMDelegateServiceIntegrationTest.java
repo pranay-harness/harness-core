@@ -1,7 +1,6 @@
 package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.PRAVEEN;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.IntegrationTests;
@@ -39,7 +38,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void testValidateConnectorHappyCase() {
     options.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
@@ -74,7 +73,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void testValidateConnectorHappyCaseDatadogConfig() {
     DatadogConfig ddConfig =
@@ -93,7 +92,7 @@ public class APMDelegateServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(IntegrationTests.class)
   public void testValidateConnectorHappyCasePost() {
     APMValidateCollectorConfig config =

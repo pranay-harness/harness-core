@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -407,7 +406,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseWithNoResponse() {
     ExecutionResponse executionResponse = commandState.handleAsyncResponse(context, new HashMap<>());
@@ -416,7 +415,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailCommandStateOnErrorResponse() {
     ExecutionResponse executionResponse = commandState.handleAsyncResponse(
@@ -426,7 +425,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleCommandException() {
     when(context.getStateExecutionData())
@@ -574,7 +573,7 @@ public class CommandStateTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void executeFailWhenNoArtifactStreamOrSettingAttribute() throws Exception {
     Artifact artifact =
@@ -682,7 +681,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldRenderCommandString() {
     CommandState commandState = new CommandState("test");
@@ -706,7 +705,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldRenderTailFilesPatterns() {
     CommandState commandState = new CommandState("test");
@@ -731,7 +730,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldRenderCommandStringWithVariables() {
     CommandState commandState = new CommandState("test");
@@ -756,7 +755,7 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldRenderReferencedCommandStringWithVariables() {
     CommandState commandState = new CommandState("test");

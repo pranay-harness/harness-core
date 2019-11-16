@@ -5,7 +5,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,7 +39,7 @@ public class RepeatStateTest extends CategoryTest {
    * Should execute serial.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldExecuteSerial() {
     String stateName = "test";
@@ -71,7 +71,7 @@ public class RepeatStateTest extends CategoryTest {
    * Should execute parallel.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldExecuteParallel() {
     List<ContextElement> repeatElements = getTestRepeatElements();

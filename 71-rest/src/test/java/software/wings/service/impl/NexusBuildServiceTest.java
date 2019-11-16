@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -65,7 +65,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
           .build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(nexusService.getRepositories(nexusConfig, null))
@@ -75,7 +75,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetJobs() {
     when(nexusService.getRepositories(nexusConfig, null))
@@ -86,7 +86,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(Lists.newArrayList("/fakepath"));
@@ -95,7 +95,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     when(nexusService.getVersions(nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME, null, null))
@@ -107,7 +107,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateInvalidUrl() {
     NexusConfig nexusConfig = NexusConfig.builder()

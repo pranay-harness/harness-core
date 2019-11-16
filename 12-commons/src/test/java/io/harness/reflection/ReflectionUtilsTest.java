@@ -1,6 +1,7 @@
 package io.harness.reflection;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -95,7 +96,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void getFieldByNameTest() {
     assertThat(ReflectionUtils.getFieldByName(Field.class, "dummy")).isNull();
@@ -107,7 +108,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void getAllDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getAllDeclaredAndInheritedFields(Field.class)
@@ -118,7 +119,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void getDeclaredAndInheritedFields() {
     assertThat(ReflectionUtils.getDeclaredAndInheritedFields(Field.class, f -> f.getName().endsWith("Field")))
@@ -126,7 +127,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void updateField() {
     Field dummy = new Field();
@@ -137,7 +138,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void updateListField() {
     Field dummy = new Field();
@@ -151,7 +152,7 @@ public class ReflectionUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testGetAccessorMethods() {
     final List<String> accessorMethods = ReflectionUtils.getAccessorMethods(Accessors.class)

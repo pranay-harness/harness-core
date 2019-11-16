@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
@@ -36,7 +36,7 @@ public class SSOSettingServiceImplTest extends WingsBaseTest {
   private String message = "errorMessage";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void testRaiseSyncFailureAlert() {
     doAnswer(i -> CompletableFuture.completedFuture("0")).when(alertService).openAlert(any(), any(), any(), any());

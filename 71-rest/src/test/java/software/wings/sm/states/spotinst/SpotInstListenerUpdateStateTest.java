@@ -1,7 +1,7 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -65,7 +65,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   @InjectMocks SpotInstListenerUpdateState state = new SpotInstListenerUpdateState("stateName");
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecute() {
     state.setDownsizeOldElastiGroup(true);
@@ -138,7 +138,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

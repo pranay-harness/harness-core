@@ -1,6 +1,6 @@
 package io.harness.functional;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import io.harness.category.element.FunctionalTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -10,7 +10,7 @@ import org.junit.experimental.categories.Category;
 
 public class ApiVersionTest extends AbstractFunctionalTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(FunctionalTests.class)
   public void shouldApiReady() {
     Setup.portal().when().get("/version").then().statusCode(200);

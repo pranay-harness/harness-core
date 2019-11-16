@@ -6,7 +6,9 @@ package software.wings.service;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -154,7 +156,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should save application.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldSaveApplication() {
     Application app = anApplication().name("AppA").accountId(ACCOUNT_ID).description("Description1").build();
@@ -184,7 +186,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotSaveApplicationWithEmptySpaces() {
     Application app = anApplication().name("    ").accountId(ACCOUNT_ID).description("Description1").build();
@@ -203,7 +205,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListApplication() {
     Application application = anApplication().build();
@@ -216,7 +218,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListApplicationWithDetails() {
     Application application = anApplication().build();
@@ -232,7 +234,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should get application.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetApplicationWithDetails() {
     PageResponse<Notification> notificationPageResponse = new PageResponse<>();
@@ -244,7 +246,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetApplicationWithDefaults() {
     when(wingsPersistence.get(Application.class, APP_ID))
@@ -275,7 +277,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldReturnTrueForExistingApplicationInExistApi() {
     when(query.getKey()).thenReturn(new Key<>(Application.class, "applications", APP_ID));
@@ -284,7 +286,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForNonExistentApplicationGet() {
     assertThatThrownBy(() -> appService.get("NON_EXISTENT_APP_ID"))
@@ -293,7 +295,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotThrowExceptionForNonExistentApplicationDelete() {
     assertThatCode(() -> {
@@ -307,7 +309,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should update.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldUpdateApplication() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
@@ -330,7 +332,7 @@ public class AppServiceTest extends WingsBaseTest {
    * Should delete.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldDeleteApplication() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
@@ -351,7 +353,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjects() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);
@@ -372,7 +374,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPruneDescendingObjectSomeFailed() {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(null);

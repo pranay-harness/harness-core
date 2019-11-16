@@ -1,6 +1,6 @@
 package io.harness.limits.checker;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsume() {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;
@@ -74,7 +74,7 @@ public class MongoStaticLimitCheckerIntegrationTest extends BaseIntegrationTest 
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testCheckAndConsumeConcurrent() throws ExecutionException, InterruptedException {
     String key = NAMESPACE + "-" + RandomStringUtils.randomAlphanumeric(5) + ":" + ActionType.DEPLOY;

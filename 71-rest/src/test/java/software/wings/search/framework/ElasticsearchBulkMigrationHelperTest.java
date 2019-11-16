@@ -1,6 +1,6 @@
 package software.wings.search.framework;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -38,7 +38,7 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private ElasticsearchBulkMigrationHelper elasticsearchBulkMigrationHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testSearchEntityBulkMigration() throws IOException {
     Account account = new Account();

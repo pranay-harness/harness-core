@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -92,7 +92,7 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteWithLastService() {
     com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();

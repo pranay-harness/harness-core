@@ -9,6 +9,7 @@ import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -120,7 +121,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw unknown host exception for invalid host.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowUnknownHostExceptionForInvalidHost() {
     executor = new ScriptSshExecutor(fileService, logService, configBuilder.but().withHost("INVALID_HOST").build());
@@ -133,7 +134,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw unknown host exception for invalid port.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowUnknownHostExceptionForInvalidPort() {
     executor = new ScriptSshExecutor(fileService, logService, configBuilder.but().withPort(3333).build());
@@ -146,7 +147,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for invalid credential.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForInvalidCredential() {
@@ -176,7 +177,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should return failure for failed command execution.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldReturnFailureForFailedCommandExecution() {
@@ -189,7 +190,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for connection timeout.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectionTimeout() {
@@ -217,7 +218,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for connect timeout.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectTimeout() {
     executor = new ScriptSshExecutor(fileService, logService,

@@ -2,8 +2,9 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
@@ -80,7 +81,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetMetricTemplateAppDynamics() {
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
@@ -91,7 +92,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetMetricTemplateNewRelic() {
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
@@ -100,7 +101,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetMetricTemplateDynaTrace() {
     Map<String, TimeSeriesMetricDefinition> actualDefinitions =
@@ -109,7 +110,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetMetricTemplatePrometheus() {
     List<TimeSeries> timeSeriesToAnalyze = new ArrayList<>();
@@ -147,7 +148,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetMetricTemplateDatadog() {
     Map<String, String> dockerMetrics = new HashMap<>();
@@ -186,7 +187,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetMetricsCloudWatch() {
     List<CloudWatchMetric> cloudWatchMetrics = new ArrayList<>();
@@ -236,14 +237,14 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testInvalidCvConfig() {
     cvConfigurationService.resetBaseline(generateUuid(), generateUuid(), new LogsCVConfiguration());
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNullCvConfig() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(false);
@@ -252,7 +253,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testUpdateWithNoBaselineSet() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
@@ -266,7 +267,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateStackDriverMetrics() throws Exception {
     StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
@@ -284,7 +285,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateStackDriverMetricsWithInvalidFields() throws Exception {
     StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
@@ -298,7 +299,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testResetWithBaselineSet() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
@@ -319,7 +320,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpdateStackDriverMetrics() throws Exception {
     testCreateStackDriverMetrics();
@@ -342,7 +343,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpdateStackDriverMetricsWithInvalidFields() throws Exception {
     testCreateStackDriverMetrics();
@@ -357,7 +358,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testResetBaselineWithData() {
     final LogsCVConfiguration logsCVConfig = createLogsCVConfig(true);
@@ -396,7 +397,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testStackDriverFeatureFlagOff() throws Exception {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);
@@ -404,7 +405,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateDefinitionsForMetricStackdriver() throws Exception {
     StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
@@ -415,7 +416,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateDefinitionsForMetricStackdriverInvalidSetup() throws Exception {
     StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
@@ -428,7 +429,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testValidateDefinitionsForMetricStackdriverNoFilterJson() throws Exception {
     StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
@@ -439,7 +440,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetMetricTypeForMetricStackdriver() throws Exception {
     StackDriverMetricCVConfiguration configuration = createStackDriverConfig(accountId);
@@ -448,7 +449,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateCustomLogsConfig() throws Exception {
     CustomLogCVServiceConfiguration configuration = createCustomLogsConfig(accountId);
@@ -464,7 +465,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = VerificationOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateCustomLogsConfigNoTimeData() throws Exception {
     CustomLogCVServiceConfiguration configuration = createCustomLogsConfig(accountId);
@@ -475,7 +476,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpdateCustomLogConfig() throws Exception {
     testCreateCustomLogsConfig();
@@ -497,7 +498,7 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCustomLogsFeatureFlagOff() throws Exception {
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(false);

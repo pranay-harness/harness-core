@@ -1,6 +1,8 @@
 package io.harness.queue;
 
+import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ZERO;
@@ -46,7 +48,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotGetMessageOnceAcquired() {
     queue.send(new TestVersionedQueuableObject(1));
@@ -58,7 +60,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnMessageInTimeOrder() {
     TestVersionedQueuableObject messageOne = new TestVersionedQueuableObject(1);
@@ -75,7 +77,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
     Date start = new Date();
@@ -86,7 +88,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetMessageWhenAvailableWithinWaitPeriod() {
     Date start = new Date();
@@ -99,7 +101,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
     TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
@@ -114,7 +116,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldObtainStuckMessageWhenEarliestGetHasExpired() {
     queue.send(new TestVersionedQueuableObject(1));
@@ -126,14 +128,14 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenTryToUpdateHeartbeatForNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateHeartbeat(null));
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotUpdateHeartbeatOfAlreadyExpiredMessage() {
     queue.send(new TestVersionedQueuableObject(1));
@@ -147,7 +149,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotUpdateHeartbeatOfMessageWhichIsNotRunning() {
     TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
@@ -162,7 +164,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldUpdateHeartbeatOfMessageWhileRunning() {
     queue.setHeartbeat(ofSeconds(10));
@@ -186,7 +188,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnCountOfObjectsInTheQueue() {
     assertThat(queue.count(Filter.RUNNING)).isEqualTo(0);
@@ -207,7 +209,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldAckMessage() {
     queue.send(new TestVersionedQueuableObject(0));
@@ -233,7 +235,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldRequeueMessage() {
     TestVersionedQueuableObject message = new TestVersionedQueuableObject(0);
@@ -258,7 +260,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(QueuableKeys.id, 0, null));
@@ -295,7 +297,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
@@ -318,7 +320,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldFilterWithVersion() {
     Queue<TestVersionedQueuableObject> versionQueue;
@@ -332,7 +334,7 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldNotFilterWithVersion() {
     Queue<TestVersionedQueuableObject> versionQueue;

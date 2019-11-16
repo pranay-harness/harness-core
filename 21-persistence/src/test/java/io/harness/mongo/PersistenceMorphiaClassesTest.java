@@ -1,6 +1,6 @@
 package io.harness.mongo;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -22,14 +22,14 @@ import org.junit.experimental.categories.Category;
 
 public class PersistenceMorphiaClassesTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testPersistenceModule() {
     new PersistenceMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testPersistenceSearchAndList() {
     new MorphiaModule().testAutomaticSearch(ImmutableSet.<Class>builder()
@@ -45,7 +45,7 @@ public class PersistenceMorphiaClassesTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testPersistencImplementationClassesModule() {
     new PersistenceMorphiaRegistrar().testImplementationClassesModule();

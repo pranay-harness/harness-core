@@ -1,7 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -64,7 +64,7 @@ public class ConnectionTest extends GraphQLTest {
 }*/ CloudProviderTest.class);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testConnectionPaging() {
     final Seed seed = new Seed(0);
@@ -194,7 +194,7 @@ public class ConnectionTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testPagingArguments() {
     final Seed seed = new Seed(0);

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -98,7 +99,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void uploadSamlConfiguration() throws IOException, SamlException {
     Account account = new Account();
@@ -132,7 +133,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void setAuthenticationMechanism() {
     Account account = new Account();
@@ -201,7 +202,7 @@ public class SSOServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void searchGroupsByName() {
     EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);

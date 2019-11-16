@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.doNothing;
@@ -60,7 +60,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void selfPruneTheJobWhenSucceed() throws Exception {
     when(wingsPersistence.get(Artifact.class, ENTITY_ID)).thenReturn(null);
@@ -77,7 +77,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void selfPruneTheJobIfServiceStillThereFirstTime() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
@@ -93,7 +93,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void selfPruneTheJobIfServiceStillThere() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(anAppContainer().build());
@@ -109,7 +109,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void UnhandledClass() throws Exception {
     when(wingsPersistence.get(Base.class, ENTITY_ID)).thenReturn(null);
@@ -128,7 +128,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void WrongClass() throws Exception {
     JobExecutionContext context = mock(JobExecutionContext.class);
@@ -141,7 +141,7 @@ public class PruneFileJobTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void retryIfServiceThrew() throws Exception {
     when(wingsPersistence.get(AppContainer.class, ENTITY_ID)).thenReturn(null);

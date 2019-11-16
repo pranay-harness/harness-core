@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -54,7 +55,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionFailure() throws Exception {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
@@ -73,7 +74,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCallbackForGitConnectionSuccess() throws Exception {
     ResponseData notifyResponseData =
@@ -98,7 +99,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotifyOnErrorCase() {
     ResponseData notifyResponseData = ErrorNotifyResponseData.builder().build();
@@ -114,7 +115,7 @@ public class GitCommandCallbackTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNotifyWithUnhandledGitCommandType() {
     ResponseData notifyResponseData = GitCommandExecutionResponse.builder()

@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit;
 
 public class SnapshotTimeProviderTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void testProvider() {
     Instant lastTs = Instant.now().minus(21, ChronoUnit.MINUTES);

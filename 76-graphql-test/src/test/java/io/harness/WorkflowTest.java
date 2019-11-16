@@ -3,7 +3,7 @@ package io.harness;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.WorkflowGenerator.Workflows.BASIC_SIMPLE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -56,7 +56,7 @@ public class WorkflowTest extends GraphQLTest {
   @Inject private HarnessTagService harnessTagService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryWorkflow() {
     final Seed seed = new Seed(0);
@@ -110,7 +110,7 @@ public class WorkflowTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryMissingPipeline() {
     String query = $GQL(/*
@@ -127,7 +127,7 @@ public class WorkflowTest extends GraphQLTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category({GraphQLTests.class, UnitTests.class})
   public void testQueryWorkflows() {
     final Seed seed = new Seed(0);

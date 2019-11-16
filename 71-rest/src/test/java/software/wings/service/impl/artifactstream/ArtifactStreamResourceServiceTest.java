@@ -1,6 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -63,7 +63,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should create artifact stream.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCreateArtifactStream() {
     assertThat(artifactStreamService.create(artifactStream)).isNotNull();
@@ -73,7 +73,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should list all artifact streams.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldListAllArtifactStreams() {
     List<ArtifactStream> artifactStreams = Lists.newArrayList();
@@ -87,7 +87,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    * Should delete artifact stream.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDeleteArtifactStream() {
     ArtifactStream dbArtifactStream = artifactStreamService.create(artifactStream);

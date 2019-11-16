@@ -4,10 +4,14 @@ import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.threading.Poller.pollFor;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -428,7 +432,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldTriggerPipelineWithDeploymentMetaDataFFOn() {
     Service service = addService("svc1");
@@ -580,7 +584,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void shouldTriggerWorkflow() throws InterruptedException {
     String appId = app.getUuid();
@@ -641,7 +645,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
@@ -722,14 +726,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldTriggerWorkflowFailForExpiredTrialLicense() throws InterruptedException {
     shouldTriggerWorkflowFailForExpiredLicense(AccountType.TRIAL);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldTriggerWorkflowFailForExpiredPaidLicense() throws InterruptedException {
     shouldTriggerWorkflowFailForExpiredLicense(AccountType.PAID);
@@ -769,14 +773,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldTriggerPipelineFailForExpiredTrialLicense() throws InterruptedException {
     shouldTriggerPipelineFailForExpiredLicense(AccountType.TRIAL);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldTriggerPipelineFailForExpiredPaidLicense() throws InterruptedException {
     shouldTriggerPipelineFailForExpiredLicense(AccountType.PAID);
@@ -875,7 +879,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void shouldListWorkflow() throws InterruptedException {
     String appId = app.getUuid();
@@ -896,7 +900,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldPauseAndResumeState() throws InterruptedException {
     Graph graph = getAbortedGraph();
@@ -1120,7 +1124,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * Should throw invalid argument for invalid workflow id.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForInvalidWorkflowId() {
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -1149,7 +1153,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO: fix this. It seems there is production issues
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldAbortState() throws InterruptedException {
     Graph graph = getAbortedGraph();
@@ -1242,7 +1246,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldAbortAllStates() {
     Service service1 = addService("svc1");
@@ -1658,7 +1662,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerCanaryWorkflow() throws InterruptedException {
     Service service = addService("svc1");
@@ -1976,7 +1980,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldObtainNoLastGoodDeployedArtifacts() {
     String appId = app.getUuid();
@@ -2001,7 +2005,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDeploymentMetdata() {
     String appId = app.getUuid();
@@ -2057,7 +2061,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testShouldNotQueueDeployment() {
     when(featureFlagService.isEnabled(eq(INFRA_MAPPING_REFACTOR), any())).thenReturn(true, true, true, true);
@@ -2112,7 +2116,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldPopulateArtifactsAndServices() {
     String serviceId1 = SERVICE_ID + "_1";
@@ -2156,7 +2160,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldPopulateArtifactsAndServicesNoArtifactIds() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -2170,7 +2174,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotPopulateArtifactsAndServicesWithInvalidArtifacts() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -2184,7 +2188,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldPopulateArtifactsAndServicesWithArtifactStreamRefactorBasic() {
     // This is just to test that populateArtifacts function is called for feature-flag on.
@@ -2201,7 +2205,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldFetchConcurrentExecutions() {
     int count = 0;
@@ -2237,7 +2241,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testExtractInfrastructureDetails() {
     Service service = addService("Service");
@@ -2268,7 +2272,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void executionHostsShouldNotBeSetForPipelines() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -2282,7 +2286,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void executionHostsShouldNotBeSetForTriggers() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -2298,7 +2302,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void executionHostsShouldNotBeSetForNonSshDeploymentType() {
     List<String> hosts = Arrays.asList("host1", "host2");
@@ -2315,7 +2319,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void executionHostsShouldNotBeSetForMultiServicesInSingleWorkflow() {
     List<String> hosts = Arrays.asList("host1", "host2");
@@ -2330,7 +2334,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void emptyExecutionHostsShouldPassValidation() {
     ExecutionArgs executionArgs = spy(new ExecutionArgs());
@@ -2341,7 +2345,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldTrimNonEmptyList() {
     WorkflowExecutionServiceImpl workflowExecutionService =
@@ -2352,7 +2356,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void trimShouldReturnEmptyForEmptyList() {
     WorkflowExecutionServiceImpl workflowExecutionService =
@@ -2363,7 +2367,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void trimShouldReturnEmptyForNullList() {
     WorkflowExecutionServiceImpl workflowExecutionService =

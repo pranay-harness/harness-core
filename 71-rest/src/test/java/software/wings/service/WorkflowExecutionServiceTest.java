@@ -3,6 +3,11 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -212,7 +217,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw workflowType is null
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowWorkflowNull() {
     try {
@@ -229,7 +234,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw orchestrationId is null for an orchestrated execution.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNullOrchestrationId() {
     try {
@@ -248,7 +253,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw invalid orchestration
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowInvalidOrchestration() {
     try {
@@ -268,7 +273,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
    * Should throw Associated state machine not found
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNoStateMachine() {
     try {
@@ -287,7 +292,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowExecution() {
     when(query.order(Sort.descending(anyString()))).thenReturn(query);
@@ -298,7 +303,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testRejectWithUserGroup() {
     String approvalId = generateUuid();
@@ -320,7 +325,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testApproveWithUserGroup() {
     String approvalId = generateUuid();
@@ -342,7 +347,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testRejectWithUserGroupException() {
     String approvalId = generateUuid();
@@ -364,7 +369,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testApproveWithUserGroupException() {
     String approvalId = generateUuid();
@@ -386,7 +391,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForPipeline() {
     String approvalId = generateUuid();
@@ -417,7 +422,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataWithEmptyStateExecution() {
     String approvalId = generateUuid();
@@ -457,7 +462,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForPipelineWithException() {
     String approvalId = generateUuid();
@@ -477,7 +482,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForPipelineWithNoApprovalDataException() {
     String approvalId = generateUuid();
@@ -499,7 +504,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForWorkflow() {
     String approvalId = generateUuid();
@@ -531,7 +536,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForWorkflowWithNoApprovalDataException() {
     String approvalId = generateUuid();
@@ -554,13 +559,13 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadata() {
     validateFetchDeploymentMetadata(false, false);
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testInstancesDeployedFromExecution() {
     WorkflowExecution workflowExecution = createNewWorkflowExecution();
@@ -569,21 +574,21 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadataFFOn() {
     validateFetchDeploymentMetadata(false, true);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadataPipeline() {
     validateFetchDeploymentMetadata(true, false);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadataPipelineFFOn() {
     validateFetchDeploymentMetadata(true, true);
@@ -626,7 +631,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFetchWorkflowVariables() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -637,7 +642,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testInstancesDeployedFromPipelineExecution() {
     WorkflowExecution workflowExecution = createNewWorkflowExecution();

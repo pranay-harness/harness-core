@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.artifactory;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
@@ -60,7 +62,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetMavenRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
@@ -70,7 +72,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetIvyRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
@@ -80,7 +82,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesWithArtifactType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, ArtifactType.DOCKER);
@@ -90,7 +92,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null);
@@ -100,7 +102,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetRepositoriesForMavenWithPackageType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, "maven");
@@ -111,7 +113,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetRpmRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RPM);
@@ -120,7 +122,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerImages() {
     List<String> repositories = artifactoryService.getRepoPaths(artifactoryConfig, null, "docker");
@@ -129,7 +131,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetDockerTags() {
     List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig, null,
@@ -147,7 +149,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetRpmFilePaths() {
     List<BuildDetails> builds =
@@ -157,7 +159,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoWithAnyWildcardMatch() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
@@ -169,7 +171,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoForAtLeastOneWildcardPattern() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
@@ -181,7 +183,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
@@ -193,7 +195,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter1() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
@@ -203,7 +205,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldDownloadRpmArtifacts() {
     ListNotifyResponseData listNotifyResponseData =
@@ -215,7 +217,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPath() {
     assertThat(artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "todolist*", "generic"))
@@ -223,7 +225,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathAnonymous() {
     assertThat(artifactoryService.validateArtifactPath(
@@ -232,7 +234,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathPasswordEmpty() {
     ArtifactoryConfig artifactoryConfigNoPassword =
@@ -241,14 +243,14 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathEmpty() {
     artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "", "generic");
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathMaven() {
     artifactoryService.validateArtifactPath(
@@ -256,7 +258,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDownloadRpmArtifact() {
     Pair<String, InputStream> pair = artifactoryService.downloadArtifact(artifactoryConfig, null, "harness-rpm",
@@ -266,7 +268,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetFileSize() {
     Map<String, String> metadata = new HashMap<>();
@@ -276,14 +278,14 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestArtifactoryRunning() {
     assertThat(artifactoryService.isRunning(artifactoryConfig, null)).isTrue();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetRepositoriesWithRepositoryType() {
     Map<String, String> repositories =
@@ -294,7 +296,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetMavenRepositoriesWithRepositoryType() {
     Map<String, String> repositories =
@@ -305,7 +307,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetAnyRepositoriesWithRepositoryType() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.any);
@@ -315,7 +317,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetFilePathsWithWildCardForAnonymousUser() {
     List<BuildDetails> builds =
@@ -327,7 +329,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetFilePathsForAnonymousUser() {
     List<BuildDetails> builds =

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static junit.framework.TestCase.fail;
 
 import com.google.inject.Inject;
@@ -21,7 +21,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   @Inject private DataCollectionExecutorService executorService;
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void executeParallelWithException() throws IOException {
     List<Callable<Boolean>> callables = new ArrayList<>();
@@ -31,7 +31,7 @@ public class DataCollectionExecutorServiceTest extends APMStateVerificationTestB
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void executeParallel() throws WingsException {
     List<Callable<Boolean>> callables = new ArrayList<>();

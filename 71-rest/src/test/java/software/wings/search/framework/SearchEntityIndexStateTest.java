@@ -1,6 +1,6 @@
 package software.wings.search.framework;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -17,7 +17,7 @@ public class SearchEntityIndexStateTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldBulkSyncTest() {
     SearchEntityIndexState searchEntityIndexState =

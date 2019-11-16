@@ -1,6 +1,6 @@
 package software.wings.service.impl.marketplace.gcp;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -59,7 +59,7 @@ public class GCPMarketPlaceServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void testGCPUsageReport() {
     val currentTime = Instant.now();

@@ -2,7 +2,7 @@ package software.wings.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
@@ -77,7 +77,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test()
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNoWorkflowExecution() {
     String workflowExecutionId = UUID.randomUUID().toString();
@@ -92,7 +92,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNoPipelineExecutionsForPipeline() {
     WorkflowExecution workflowExecution =
@@ -108,7 +108,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNoWorkflowExecutionsForPipeline() {
     WorkflowExecution workflowExecution =
@@ -126,7 +126,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testNoVerificationSteps() {
     WorkflowExecution workflowExecution =
@@ -149,7 +149,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForPipeline() {
     int numOfWorkflowExecutions = 10;
@@ -284,7 +284,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMarkBaselinesUpdateForPipeline() {
     int numOfWorkflowExecutions = 10;
@@ -431,7 +431,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForWorkflow() {
     int numOfWorkflowExecutions = 10;
@@ -515,7 +515,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMarkAndCreateBaselinesForPipelineAndWorkflow() {
     int numOfWorkflowExecutions = 10;
@@ -646,7 +646,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetBaselineDetails() throws IllegalAccessException {
     StateMachineExecutor stateMachineExecutor = Mockito.mock(StateMachineExecutor.class);

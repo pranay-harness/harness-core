@@ -1,7 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static javax.ws.rs.client.Entity.entity;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,7 +76,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   public void testGetBugsnagApplications() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
@@ -95,7 +95,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   public void testGetBugsnagOrganizations() {
     WebTarget target = client.target(API_BASE + "/bugsnag"
@@ -113,7 +113,7 @@ public class BugsnagResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(IntegrationTests.class)
   public void testGetLogRecords() {
     BugsnagSetupTestData testNodedata = getBugsnagSampledata();

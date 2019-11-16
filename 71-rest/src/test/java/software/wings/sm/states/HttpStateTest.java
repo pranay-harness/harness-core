@@ -4,7 +4,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -162,7 +163,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetPatternsForRequiredContextElementType() {
     List<String> patternsForRequiredContextElementType =
@@ -174,7 +175,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTemplatedHttpPatternsForRequiredContextElementType() {
     HttpState.Builder jsonHttpStateBuilder =
@@ -199,7 +200,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate JSON response.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateJsonResponse() {
     wireMockRule.stubFor(
@@ -248,7 +249,7 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateJsonResponseWithVariables() {
     wireMockRule.stubFor(
@@ -309,7 +310,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -344,7 +345,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponseWithVariables() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -380,7 +381,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and evaluate response.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldExecuteAndEvaluateResponseWithInstance() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -428,7 +429,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should execute and get summary/details.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetExecutionDataSummaryDetails() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -457,7 +458,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on socket timeout.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailOnSocketTimeout() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -492,7 +493,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on empty response.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailOnEmptyResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -522,7 +523,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on malformed response.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailOnMalformedResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -551,7 +552,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on random data.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailOnRandomData() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
@@ -580,7 +581,7 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on connect timeout.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailOnConnectTimeout() {
     context.pushContextElement(aHostElement().hostName("www.google.com").build());

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -21,7 +21,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   @Inject private HelmCommandHelper helmCommandHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYaml() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
@@ -39,7 +39,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlNull() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("harness:\n"
@@ -54,7 +54,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlInvalid() throws Exception {
     try {
@@ -70,7 +70,7 @@ public class HelmCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateHelmDeployChartSpecFromYamlMultiple() throws Exception {
     Optional<HarnessHelmDeployConfig> optional = helmCommandHelper.generateHelmDeployChartSpecFromYaml("name: ABC\n"

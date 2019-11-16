@@ -1,6 +1,7 @@
 package software.wings.utils;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ElkLogFetchRequestTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testJsonFormat() {
     Set<String> hosts = new HashSet<>();
@@ -81,7 +82,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testJsonFormatWithIndices() {
     Set<String> hosts = new HashSet<>();
@@ -139,7 +140,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testParse() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
@@ -152,7 +153,7 @@ public class ElkLogFetchRequestTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testJsonParsing() {
     String jsonString =

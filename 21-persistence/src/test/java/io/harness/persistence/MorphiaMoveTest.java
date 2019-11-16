@@ -1,6 +1,7 @@
 package io.harness.persistence;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,7 +54,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReadOldClass() {
     TestHolderEntity entity =
@@ -70,7 +71,7 @@ public class MorphiaMoveTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReadFutureClass() {
     persistence.save(MorphiaMove.builder()

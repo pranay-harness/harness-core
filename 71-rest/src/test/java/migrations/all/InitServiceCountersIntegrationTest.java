@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANKIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -25,7 +25,7 @@ public class InitServiceCountersIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long serviceCount = wingsPersistence.createQuery(Service.class).count();

@@ -5,7 +5,7 @@
 package software.wings.expression;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +40,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private SweepingOutputService sweepingOutputService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSubstituteHostUrl() {
     Host host = new Host();
@@ -53,7 +53,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSubstitutePartially() {
     Host host = new Host();
@@ -68,7 +68,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldEvaluateEc2Instance() {
     Instance ec2 = new Instance();
@@ -97,7 +97,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldRenderSweepingOutputFunctor() {
     String appId = generateUuid();
@@ -136,7 +136,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldRenderSweepingOutputValue() {
     String appId = generateUuid();
@@ -178,7 +178,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldRenderSweepingOutputValueByValue() {
     String appId = generateUuid();

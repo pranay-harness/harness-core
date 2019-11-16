@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.context.ContextElementType.INSTANCE;
 import static io.harness.context.ContextElementType.STANDARD;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -80,7 +80,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @InjectMocks private EcsSteadyStateCheck check = new EcsSteadyStateCheck("stateName");
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecute() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -129,7 +129,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -12,7 +12,7 @@ import software.wings.beans.CloudFormationInfrastructureProvisioner.CloudFormati
 
 public class CloudFormationInfrastructureProvisionerTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCloudFormationProvisioner() {
     CloudFormationInfrastructureProvisionerBuilder builder = CloudFormationInfrastructureProvisioner.builder();

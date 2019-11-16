@@ -1,6 +1,7 @@
 package software.wings.events;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -103,7 +104,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSendFirstWorkflowEvent() {
     UserThreadLocal.set(user);
@@ -119,7 +120,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSendFirstCV247Event() {
     UserThreadLocal.set(user);
@@ -150,7 +151,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSendRBACEventForFirstUserGroup() {
     UserThreadLocal.set(user);
@@ -177,7 +178,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSendRBACEventForFirstUser() {
     UserThreadLocal.set(user);
@@ -204,7 +205,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSendWhitelistEvent() {
     UserThreadLocal.set(user);
@@ -231,7 +232,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSend2FASetupEvent() {
     UserThreadLocal.set(user);
@@ -244,7 +245,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSendUserInviteEvent() {
     UserThreadLocal.set(user);
@@ -257,7 +258,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSendInstalledDelegateEvent() {
     UserThreadLocal.set(user);
@@ -283,7 +284,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testConfirmUserRegistrationEvent() {
     UserThreadLocal.set(user);
@@ -297,7 +298,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFirstDeploymentEvent() {
     UserThreadLocal.set(user);
@@ -326,7 +327,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testFirstRollbackEvent() {
     UserThreadLocal.set(user);
@@ -366,7 +367,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testFirstVerifiedEvent() {
     UserThreadLocal.set(user);

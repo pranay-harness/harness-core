@@ -1,8 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SRINIVAS;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -130,7 +131,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailOnNoArtifactStream() {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(null);
@@ -141,7 +142,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldExecuteWithDelayQueue() {
     when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(jenkinsArtifactStream)).thenReturn(null);
@@ -152,7 +153,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponse() {
     artifactCollectionState.handleAsyncResponse(executionContext,
@@ -162,7 +163,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldArtifactCollectionEvaluateBuildNo() {
     artifactCollectionState.setBuildNo("${regex.extract('...', ${workflow.variables.sourceCommitHash})}");
@@ -189,7 +190,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = artifactCollectionState.getTimeoutMillis();
@@ -197,7 +198,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     artifactCollectionState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
@@ -206,7 +207,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldHandleAbort() {
     executionContext.getStateExecutionInstance().setStateExecutionMap(

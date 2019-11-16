@@ -1,6 +1,6 @@
 package software.wings.search.framework;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
@@ -36,7 +36,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   @Inject @InjectMocks ElasticsearchIndexManager elasticsearchIndexManager;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void createIndexTest() throws IOException {
     String indexName = "indexName";
@@ -59,7 +59,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void deleteIndexTest() throws IOException {
     String indexName = "indexName";
@@ -95,7 +95,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void removeIndexFromAlias() throws IOException {
     String indexName = "indexName";
@@ -124,7 +124,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void attachIndexToAlias() throws IOException {
     String indexName = "indexName";
@@ -149,7 +149,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getIndexName() {
     String indexName = "indexName";
@@ -165,7 +165,7 @@ public class ElasticsearchIndexManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getAliasName() {
     String type = "type";

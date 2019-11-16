@@ -1,7 +1,9 @@
 package software.wings.service.impl.template;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -63,7 +65,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   @Inject private TemplateService templateService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldLoadDefaultHttpTemplates() {
     templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -74,7 +76,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSaveHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -97,7 +99,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateHttpTemplate() {
     TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
@@ -141,7 +143,7 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotUpdateEntitiesIfNotLinked() {
     Template savedTemplate = createHttpTemplate();
@@ -227,14 +229,14 @@ public class HttpTemplateProcessorTest extends TemplateBaseTestHelper {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesLinked() {
     updateLinkedEntities(GLOBAL_APP_ID);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldUpdateEntitiesWhenLinkedAppTemplateUpdated() {
     updateLinkedEntities(APP_ID);

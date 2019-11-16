@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -79,7 +79,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
@@ -91,7 +91,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingTrendWhenQueryThrowsException() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
@@ -108,7 +108,7 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testFetchMethodInBillingTimeSeriesDataFetcher() {
     String[] appIdFilterValues = new String[] {APP1_ID_ACCOUNT1};

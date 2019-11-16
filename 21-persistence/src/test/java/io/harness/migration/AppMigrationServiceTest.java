@@ -2,7 +2,7 @@ package io.harness.migration;
 
 import static io.harness.migration.MigrationJobInstance.Status.BASELINE;
 import static io.harness.migration.MigrationJobInstance.Status.PENDING;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -20,7 +20,7 @@ public class AppMigrationServiceTest extends PersistenceTest {
   @Inject HPersistence persistence;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testInitBaseline() {
     serviceAppMixin.updateStoreMigrationJobInstances(HPersistence.DEFAULT_STORE);
@@ -31,7 +31,7 @@ public class AppMigrationServiceTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testUpdateStoreMigrationJobInstances() {
     final MigrationJobInstance dummyInstance = MigrationJobInstance.builder().build();

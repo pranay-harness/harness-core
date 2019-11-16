@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
@@ -42,7 +42,7 @@ public class InfrastructureProvisionerResourceTest extends WingsBaseTest {
       ResourceTestRule.builder().addResource(infrastructureProvisionerResource).build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testGet() {
     InfrastructureProvisioner expectedProvisioner =

@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -25,7 +25,7 @@ public class JenkinsExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     assertThat(jenkinsExecutionData.getExecutionSummary())
@@ -36,7 +36,7 @@ public class JenkinsExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetExecutionDetails() {
     assertThat(jenkinsExecutionData.getExecutionDetails())

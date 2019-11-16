@@ -1,6 +1,6 @@
 package software.wings.expression;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -12,7 +12,7 @@ import org.junit.experimental.categories.Category;
 
 public class RegexFunctorTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testExtract() {
     final RegexFunctor regexFunctor = new RegexFunctor();

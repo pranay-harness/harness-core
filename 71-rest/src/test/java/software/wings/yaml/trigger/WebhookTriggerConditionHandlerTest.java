@@ -1,6 +1,6 @@
 package software.wings.yaml.trigger;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.trigger.PrAction.CLOSED;
@@ -18,7 +18,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   @Inject private WebhookTriggerConditionHandler webhookTriggerConditionHandler = new WebhookTriggerConditionHandler();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void toYaml() {
     WebHookTriggerCondition webHookTriggerCondition =
@@ -32,7 +32,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void upsertFromYaml() {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()
@@ -48,7 +48,7 @@ public class WebhookTriggerConditionHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void upsertFromYamlForBitBucket() {
     WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()

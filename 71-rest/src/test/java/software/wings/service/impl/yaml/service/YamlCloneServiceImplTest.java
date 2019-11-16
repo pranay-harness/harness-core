@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -107,7 +107,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testTraverseDirectory() throws Exception {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
@@ -148,7 +148,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCloneEntityUsingYaml_Workflow() throws Exception {
     doReturn(null).when(workflowService).readWorkflowByName(anyString(), anyString());
@@ -160,7 +160,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCloneEntityUsingYaml_Pipeline() throws Exception {
     doReturn(null).when(pipelineService).getPipelineByName(anyString(), anyString());
@@ -172,7 +172,7 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCloneEntityUsingYaml_Provisioner() throws Exception {
     doReturn(null).when(provisionerService).getByName(anyString(), anyString());

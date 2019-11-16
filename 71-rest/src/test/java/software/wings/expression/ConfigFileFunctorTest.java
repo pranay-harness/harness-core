@@ -1,6 +1,6 @@
 package software.wings.expression;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -41,7 +41,7 @@ public class ConfigFileFunctorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void canReadFileWithinLimit() {
     ConfigFile configFile = new ConfigFile();
@@ -55,7 +55,7 @@ public class ConfigFileFunctorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void readLargeFileThrowsException() {
     ConfigFile configFile = new ConfigFile();

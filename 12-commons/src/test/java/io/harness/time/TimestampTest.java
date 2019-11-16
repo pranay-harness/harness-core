@@ -1,6 +1,6 @@
 package io.harness.time;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -13,7 +13,7 @@ import org.junit.experimental.categories.Category;
 @Slf4j
 public class TimestampTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCurrentMinuteBoundary() {
     final long currentMinuteBoundary = Timestamp.currentMinuteBoundary();
@@ -21,7 +21,7 @@ public class TimestampTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testMinuteBoundary() {
     assertThat(Timestamp.minuteBoundary(1524335288123L)).isEqualTo(1524335280000L);

@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.DelegateTask;
@@ -25,7 +25,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
       delegateTaskResponse -> {}, () -> true);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void getTargetsArgsTest() {
     assertThat(terraformProvisionTask.getTargetArgs(null)).isEqualTo("");
@@ -37,7 +37,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testParseOutput() {
     String workspaceCommandOutput = "* w1\n  w2\n w3";

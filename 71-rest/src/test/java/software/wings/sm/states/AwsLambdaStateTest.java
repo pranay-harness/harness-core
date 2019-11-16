@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -49,7 +49,7 @@ public class AwsLambdaStateTest extends CategoryTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testExecute_fail() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);

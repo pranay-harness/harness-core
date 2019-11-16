@@ -1,6 +1,6 @@
 package software.wings.collect;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.waiter.ListNotifyResponseData.Builder.aListNotifyResponseData;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
@@ -78,7 +78,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));

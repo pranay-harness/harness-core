@@ -1,8 +1,8 @@
 package software.wings.integration.appdynamics;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PARNIAN;
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -89,7 +89,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void testGetAllApplications() throws Exception {
@@ -109,7 +109,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void testGetAllTiers() throws Exception {
@@ -184,7 +184,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PARNIAN)
   @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void testGetDependentTiers() throws IOException {

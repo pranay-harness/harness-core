@@ -1,5 +1,7 @@
 package software.wings;
 
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -91,7 +93,7 @@ public class MiscellaneousTest extends CategoryTest {
    * Should validate test governance rules.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldValidateTestGovernanceRules() {
     Validator validator = ValidatorBuilder.create().with(new TestClassMustBeProperlyNamedRule()).build();
@@ -100,7 +102,7 @@ public class MiscellaneousTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testParseApisVersion() {
     ServiceSecretKey.ServiceApiVersion latestVersion =

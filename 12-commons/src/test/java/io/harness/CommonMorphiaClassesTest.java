@@ -1,6 +1,6 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -10,14 +10,14 @@ import org.junit.experimental.categories.Category;
 
 public class CommonMorphiaClassesTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCommonClassesModule() {
     new CommonMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCommonImplementationClassesModule() {
     new CommonMorphiaRegistrar().testImplementationClassesModule();

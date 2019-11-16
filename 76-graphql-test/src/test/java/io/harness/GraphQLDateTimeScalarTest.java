@@ -1,6 +1,7 @@
 package io.harness;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.graphql.scalar.GraphQLDateTimeScalar.INVALID_INPUT_INSTANCE_TYPE;
 
@@ -20,7 +21,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testParseLiteralWithInvalidInput() {
     Integer invalidInput = 1;
@@ -30,7 +31,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testParseLiteral() {
     long currentTimeInMillis = System.currentTimeMillis();
@@ -41,7 +42,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testSerializeWithInvalidInput() {
     Integer invalidInput = 1;
@@ -51,7 +52,7 @@ public class GraphQLDateTimeScalarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testSerialize() {
     long currentTimeInMillis = System.currentTimeMillis();

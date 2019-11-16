@@ -1,6 +1,7 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -97,7 +98,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
    *
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testSaveAndRead() {
     Whitelist whitelist =
@@ -118,7 +119,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testList() {
     Whitelist whitelist1 = Whitelist.builder().accountId(accountId).description(description).filter(cidrFilter).build();
@@ -136,7 +137,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testIsValidIpAddress() {
     createWhitelists();
@@ -167,7 +168,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testIsValidIpAddressTrueIfFeatureIsUnavailable() {
     createWhitelists();
@@ -226,7 +227,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testInputValidation() {
     // Negative cases
@@ -306,7 +307,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateAndRead() {
     Whitelist whitelist =
@@ -327,7 +328,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdateWithInvalidInputs() {
     Whitelist whitelist =
@@ -385,7 +386,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testDelete() {
     Whitelist whitelist =

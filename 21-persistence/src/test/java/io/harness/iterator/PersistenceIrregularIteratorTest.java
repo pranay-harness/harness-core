@@ -5,7 +5,6 @@ import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -71,14 +70,14 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testPumpWithEmptyCollection() {
     assertThatCode(() -> { iterator.process(PUMP); }).doesNotThrowAnyException();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLoopWithEmptyCollection() throws IOException {
     assertThatCode(() -> {

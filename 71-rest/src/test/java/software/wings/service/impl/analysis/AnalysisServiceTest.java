@@ -1,7 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -65,7 +65,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateJira() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -108,7 +108,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateJiraMissingTaskParams() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -136,7 +136,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateJiraMissingJiraConfigId() {
     CVCollaborationProviderParameters cvJiraParameters = CVCollaborationProviderParameters.builder().build();
@@ -156,7 +156,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void changePriorityAfterJira() {
     testCreateJira();
@@ -178,7 +178,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = IllegalStateException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFeedbackWithEmptyLogMessage() {
     CVFeedbackRecord feedbackRecord = CVFeedbackRecord.builder()

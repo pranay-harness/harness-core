@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -86,7 +88,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecute() {
     ExecutionResponse executionResponse = jenkinsState.execute(executionContext);
@@ -99,7 +101,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsStartTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -119,7 +121,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleAsyncResponseJenkinsPollTask() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
@@ -174,7 +176,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = jenkinsState.getTimeoutMillis();
@@ -182,7 +184,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetSetTimeout() {
     jenkinsState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
@@ -191,7 +193,7 @@ public class JenkinsStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldHandleAbort() {
     when(executionContext.getStateExecutionData())

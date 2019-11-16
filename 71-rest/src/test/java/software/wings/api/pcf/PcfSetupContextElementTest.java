@@ -8,7 +8,7 @@ import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_ROUTES;
 import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_GUID;
 import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_NAME;
 import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_ROUTES;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class PcfSetupContextElementTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void shouldGetExecutionSummary() {
     String guid = "1234_0";

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -53,7 +54,7 @@ public class ResourceConstraintStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void alreadyAcquiredPermits() {
     when(resourceConstraintService.getAllCurrentlyAcquiredPermits(
@@ -74,14 +75,14 @@ public class ResourceConstraintStateTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void alreadyAcquiredPermits_error() {
     state.alreadyAcquiredPermits(HoldingScope.PIPELINE.name(), executionContext);
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testExecute_error() {
     doReturn("accountid").when(applicationService).getAccountIdByAppId(anyString());
@@ -98,7 +99,7 @@ public class ResourceConstraintStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void testExecutionResponseBuilder() {
     final ResourceConstraint resourceConstraint = ResourceConstraint.builder().build();

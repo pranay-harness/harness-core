@@ -1,6 +1,7 @@
 package software.wings.resources;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -35,7 +36,7 @@ public class HealthResourceTest extends CategoryTest {
           .build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetMongoUri() throws Exception {
     when(configuration.getMongoConnectionFactory())
@@ -57,7 +58,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldGetElasticsearchUri() throws Exception {
     String elasticsearchUri = "http://localhost:9200";
@@ -75,7 +76,7 @@ public class HealthResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldGetIsSearchEnabled() {
     when(configuration.isSearchEnabled()).thenReturn(true);

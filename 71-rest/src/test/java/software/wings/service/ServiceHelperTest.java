@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -17,7 +17,7 @@ public class ServiceHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private ServiceHelper serviceHelper;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testAddPlaceholderTexts() {
     PcfServiceSpecification pcfServiceSpecification =

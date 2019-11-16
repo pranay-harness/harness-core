@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -126,7 +126,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetTagsForCvConfig() throws Exception {
     String cvConfigId = createDDCVConfig();
@@ -142,7 +142,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetTagsForCvConfigNoTags() throws Exception {
     String cvConfigId = createNRConfig();
@@ -208,7 +208,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetAnalysisSummary() throws Exception {
     String cvConfigId = generateUuid();
@@ -238,7 +238,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFeedbackSummary() {
     String cvConfigId = generateUuid();
@@ -299,7 +299,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetAnalysisSummaryFeedbackData() throws Exception {
     String cvConfigId = generateUuid();
@@ -340,7 +340,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetAnalysisSummaryAcrossFFBorder() throws Exception {
     String cvConfigId = generateUuid();
@@ -380,7 +380,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
     wingsPersistence.save(sumoCOnfig);
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCurrentWindowLogsHappyCase() {
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -401,7 +401,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCurrentWindowLogsNoPreviousAnalysis() {
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -413,7 +413,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCurrentWindowLogsMoreThan2HoursSinceLast() {
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -436,7 +436,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCurrentWindowLogsWithinBaselineWindow() {
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -455,7 +455,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCurrentWindowTimeSeriesHappyCase() {
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -472,7 +472,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCurrentWindowTimeSeriesNoPreviousAnalysis() {
     String cvConfigId = createNRConfig();
@@ -482,7 +482,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetCurrentWindowTimeSeriesMoreThan2HoursSinceLastAnalysis() {
     long currentTime = TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
@@ -500,7 +500,7 @@ public class CV24x7DashboardServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetHeatmapForEnabledConfigsOnly() {
     String id1 = generateUuid(), id2 = generateUuid();

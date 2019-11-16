@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -109,7 +109,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetExperimentalMetricAnalysisSummary_WithoutMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))
@@ -123,7 +123,7 @@ public class ExperimentalAnalysisServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetExperimentalMetricAnalysisSummary_WithMismatchData() {
     when(experimentalMetricAnalysisRecordService.getLastAnalysisRecord(anyString(), anyString()))

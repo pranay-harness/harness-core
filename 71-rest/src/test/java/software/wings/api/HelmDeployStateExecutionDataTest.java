@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HelmDeployStateExecutionData.MAX_ERROR_MSG_LENGTH;
 
@@ -19,7 +19,7 @@ public class HelmDeployStateExecutionDataTest extends CategoryTest {
       HelmDeployStateExecutionData.builder().chartName("Chart_Name").build();
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetExecutionSummaryForMaxErrorMessageLength() {
     // Generate an errorMessage that is greater than HelmDeployStateExecutionData.MAX_ERROR_MSG_LENGTH
@@ -39,7 +39,7 @@ public class HelmDeployStateExecutionDataTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetExecutionSummaryForErrorMessageLength() {
     helmDeployStateExecutionData.setErrorMsg(errorMessage);

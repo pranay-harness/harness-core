@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.MARK;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,7 +33,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(IntegrationTests.class)
   public void test_crudSecret_shouldSucceed() {
     // 1. Create a new secret text
@@ -63,7 +63,7 @@ public class SecretManagerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(IntegrationTests.class)
   public void test_crudEncryptedFile_shouldSucceed() throws Exception {
     // 1. Create a new encrypted file.

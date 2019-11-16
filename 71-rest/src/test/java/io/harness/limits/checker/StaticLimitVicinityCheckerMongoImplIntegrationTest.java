@@ -1,6 +1,6 @@
 package io.harness.limits.checker;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -29,7 +29,7 @@ public class StaticLimitVicinityCheckerMongoImplIntegrationTest extends BaseInte
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testCrossed() {
     String key = "some-key-" + NAMESPACE + ":" + ActionType.DEPLOY;

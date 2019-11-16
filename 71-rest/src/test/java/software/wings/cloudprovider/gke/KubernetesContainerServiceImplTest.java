@@ -129,7 +129,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCreateBackendController() {}
 
@@ -151,7 +151,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldCreateFrontendService() {}
 
@@ -188,7 +188,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetControllerPodCount() {
     when(scalableReplicationController.get())

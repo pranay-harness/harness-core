@@ -1,6 +1,6 @@
 package software.wings.search.framework.changestreams;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.notNull;
@@ -45,7 +45,7 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testChangeTrackingTask() throws InterruptedException, ExecutionException {
     ChangeStreamSubscriber changeStreamSubscriber = mock(ChangeStreamSubscriber.class);

@@ -3,6 +3,10 @@ package software.wings.helpers.ext.jenkins;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,7 +63,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetJobFromJenkins() throws IOException {
     assertThat(jenkins.getJob("scheduler")).isNotNull();
@@ -72,7 +76,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetJobsFromJenkins() throws IOException {
     wireMockRule.stubFor(
@@ -95,7 +99,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetJobsFromJenkinsForDifferentHost() throws IOException {
     wireMockRule.stubFor(
@@ -133,7 +137,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldReturnArtifactsByBuildNumber() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
@@ -149,7 +153,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
@@ -164,7 +168,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldReturnNullArtifactIfJobIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
@@ -179,7 +183,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldReturnNullArtifactIfBuildIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
@@ -194,7 +198,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException        Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldReturnNullArtifactWhenArtifactPathDoesnotMatch() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "57", "build/libs/dummy-*.jar");
@@ -207,7 +211,7 @@ public class JenkinsTest extends CategoryTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForGitJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler", 5);
@@ -221,7 +225,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void shouldGetLastSuccessfulBuildForGitJob() throws IOException {
     BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler");
@@ -231,7 +235,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void shouldGetNullLastSuccessfulBuildForNonExistingGitJob() throws IOException {
     BuildDetails buildDetails = jenkins.getLastSuccessfulBuildForJob("scheduler1");
@@ -239,7 +243,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetLastNBuildDetailsForSvnJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler-svn", 5);
@@ -250,7 +254,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerJobWithParameters() throws IOException {
     QueueReference queueItem = jenkins.trigger("todolist_war", ImmutableMap.of("Test", "Test"));
@@ -258,7 +262,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchBuildFromQueueItem() throws IOException {
     Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"));
@@ -266,7 +270,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerJobWithoutParameters() throws IOException {
     QueueReference queueItem = jenkins.trigger("todolist_war", Collections.emptyMap());
@@ -274,7 +278,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testJobNormalizedNames() throws Exception {
     JenkinsImpl jenkins = new JenkinsImpl("http://localhost:8080");
@@ -284,7 +288,7 @@ public class JenkinsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestGetJobParameters() {
     JobWithDetails jobWithDetails = jenkins.getJob("todolist_promot");

@@ -1,6 +1,6 @@
 package io.harness.batch.processing.dao.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -28,7 +28,7 @@ public class BatchJobScheduledDataDaoImplTest extends WingsBaseTest {
   private final Instant PREV_START_INSTANT = NOW.minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testFetchLastBatchJobScheduledData() {
     boolean createFirstEntry =

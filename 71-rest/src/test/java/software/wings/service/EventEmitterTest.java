@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -81,7 +82,7 @@ public class EventEmitterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetAccountIdToBroadcast() throws Exception {
     when(appService.get(APP_ID)).thenReturn(anApplication().accountId("ACCOUNT_ID").appId(APP_ID).build());

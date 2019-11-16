@@ -1,6 +1,8 @@
 package software.wings.beans;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,7 +32,7 @@ import java.util.Map;
 
 public class AwsInfrastructureMappingTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testInfrastructureMapping() {
     Map<String, Object> map = new HashMap<>();
@@ -56,7 +58,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testASGNameAndLBName() {
     Map<String, Object> map = new HashMap<>();
@@ -75,7 +77,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testChangeOfFilterType() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping().build();
@@ -91,7 +93,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testEcs() {
     Map<String, Object> map = new HashMap<>();
@@ -110,7 +112,7 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testApplyProvisionerVariables() {
     AwsInfrastructureMapping infrastructureMapping = Builder.anAwsInfrastructureMapping().build();

@@ -1,6 +1,6 @@
 package io.harness.data.parser;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -13,7 +13,7 @@ import java.util.List;
 
 public class CsvParserTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testCsvParseCommaSeparatedString() {
     {

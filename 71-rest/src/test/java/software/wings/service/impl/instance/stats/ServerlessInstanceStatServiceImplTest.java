@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.stats;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -66,7 +66,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_save() {
     setup_wingspersistence();
@@ -81,7 +81,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getLastSnapshotTime() {
     final Mocks mocks = setup_wingspersistence();
@@ -93,7 +93,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getFirstSnapshotTime() {
     final Mocks mocks = setup_wingspersistence();
@@ -105,7 +105,7 @@ public class ServerlessInstanceStatServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_aggregate() {
     final Mocks mocks = setup_AggregationPipeline();

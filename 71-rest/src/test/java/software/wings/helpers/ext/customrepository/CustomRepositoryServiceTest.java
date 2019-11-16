@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.customrepository;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -36,7 +37,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   private static final String ARTIFACT_RESULT_PATH = "ARTIFACT_RESULT_PATH";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetBuildDetails() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"
@@ -81,7 +82,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetBuildsWithCustomMapping() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"
@@ -121,7 +122,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetBuildsWithInvalidCustomMappingWithoutArtifactRoot() {
     Map<String, String> attributeMapping = new HashMap<>();
@@ -137,7 +138,7 @@ public class CustomRepositoryServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetBuildsWithInvalidCustomMappingWithoutBuildNo() {
     Map<String, String> attributeMapping = new HashMap<>();

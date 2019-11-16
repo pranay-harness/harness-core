@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
@@ -16,7 +16,7 @@ public class GitUtilsDelegateTest extends WingsBaseTest {
   @Inject private GitUtilsDelegate gitUtilsDelegate;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testGetRequestDataFromFile() {
     String nonExistentPath = "/thisPathDoesNotExistOnDelegate/nonExistentFile.yaml";

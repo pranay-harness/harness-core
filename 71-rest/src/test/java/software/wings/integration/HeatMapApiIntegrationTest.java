@@ -1,7 +1,8 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
@@ -363,7 +364,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitPrometheus() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
@@ -383,7 +384,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitNewRelic() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
@@ -402,7 +403,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitAPM() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
@@ -420,7 +421,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitAppD() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
@@ -439,7 +440,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitDatadog() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
@@ -458,7 +459,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitDynaTrace_withMetricNameFilter() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
@@ -475,7 +476,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.get(0).getMetricTimeSeries().last().getMetricName()).isEqualTo("averageResponseTime");
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitDynaTrace() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()
@@ -494,7 +495,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void testTimeSeriesUnitCloudWatch() {
     TimeSeriesFilter filter = TimeSeriesFilter.builder()

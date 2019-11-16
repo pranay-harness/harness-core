@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -36,7 +36,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
   private Class yamlClass = KubernetesClusterConfig.Yaml.class;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String kubernetesClusterConfigName = "KubernetesCluster-" + System.currentTimeMillis();

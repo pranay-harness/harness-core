@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static migrations.all.UnregisteredUserNameMigration.NOT_REGISTERED;
 
 import com.google.inject.Inject;
@@ -34,7 +34,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testMigrationOfAllUnregisteredUsers() {
     long initialCount = 10;
@@ -47,7 +47,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testNoMigrationOfRegisteredUsers() {
     long initialCount = 10;
@@ -60,7 +60,7 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testMigrationOfSomeRegisteredUsers() {
     long initialCount = 10;

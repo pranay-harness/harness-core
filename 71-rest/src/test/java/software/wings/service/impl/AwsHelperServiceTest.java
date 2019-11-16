@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
@@ -46,7 +48,7 @@ import java.util.Set;
 
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetInstanceId() {
     AwsHelperService awsHelperService = new AwsHelperService();
@@ -57,7 +59,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldUpdateStack() {
     String accessKey = "abcd";
@@ -76,7 +78,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldDeleteStack() {
     String accessKey = "abcd";
@@ -95,7 +97,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldDescribeStack() {
     String accessKey = "qwer";
@@ -119,7 +121,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldGetAllEvents() {
     String accessKey = "qwer";
@@ -145,7 +147,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldCreateStack() {
     String accessKey = "abcd";
@@ -164,7 +166,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void shouldListStacks() {
     String accessKey = "qwer";
@@ -188,7 +190,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testDescribeAutoScalingGroupActivities() {
     Activity incompleteActivity = new Activity()

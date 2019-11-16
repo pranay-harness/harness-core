@@ -1,7 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.anyListOf;
@@ -55,7 +55,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getMetricStatistics() {
     doReturn(null).when(mockEncryptionService).decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class));
@@ -82,7 +82,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void getMetricStatistics_error() {
     doReturn(null).when(mockEncryptionService).decrypt(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class));

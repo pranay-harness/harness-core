@@ -2,7 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -101,7 +102,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testDefaultComparsionStrategy() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
@@ -109,7 +110,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void compareTestAndControl() {
     DynatraceState dynatraceState = new DynatraceState("DynatraceState");
@@ -123,7 +124,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testTriggerCollection() throws ParseException {
     assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);

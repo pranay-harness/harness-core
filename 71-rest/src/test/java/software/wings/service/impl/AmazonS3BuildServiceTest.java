@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.AADITI;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -65,7 +65,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
     List<BuildDetails> buildDetails = Lists.newArrayList(
@@ -137,7 +137,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
     when(amazonS3Service.getBuckets(awsConfig, null))
@@ -147,7 +147,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
     when(amazonS3Service.getArtifactPaths(any(), any(), any())).thenReturn(Lists.newArrayList("path1"));

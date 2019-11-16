@@ -1,6 +1,6 @@
 package io.harness.k8s.kubectl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class VersionCommandTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void smokeTest() {
     Kubectl client = Kubectl.client(null, null);

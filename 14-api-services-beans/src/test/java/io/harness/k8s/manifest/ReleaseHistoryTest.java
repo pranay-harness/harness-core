@@ -1,7 +1,7 @@
 package io.harness.k8s.manifest;
 
 import static io.harness.k8s.model.ReleaseHistory.createFromData;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -20,7 +20,7 @@ import org.junit.experimental.categories.Category;
 
 public class ReleaseHistoryTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void smokeTest() throws Exception {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -34,7 +34,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void noReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -55,7 +55,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void createReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -87,7 +87,7 @@ public class ReleaseHistoryTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void getLastSuccessfulReleaseTest() {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();

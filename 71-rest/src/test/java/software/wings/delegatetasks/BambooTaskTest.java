@@ -2,7 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -70,7 +70,7 @@ public class BambooTaskTest extends CategoryTest {
         .thenReturn(Status.builder().finished(true).build());
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(bambooService.getBuildResult(bambooConfig, null, planKey))

@@ -5,6 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.PARNIAN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SRIRAM;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.service.LearningEngineAnalysisServiceImpl.BACKOFF_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -210,7 +216,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void saveLogDataWithNoState() throws Exception {
     boolean status = analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, null, stateExecutionId,
@@ -221,7 +227,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void saveLogDataWithInvalidState() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -237,7 +243,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void saveLogDataNoHeartbeat() throws Exception {
     final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -541,7 +547,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void shouldSaveLogCollectionMinuteMinusOne() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
@@ -574,7 +580,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PARNIAN)
   @Category(UnitTests.class)
   public void shouldNotSaveEmptyControlAndTestEvents() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
@@ -606,7 +612,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisSummaryUnknownClusters() throws Exception {
     int numOfUnknownClusters = 2 + r.nextInt(10);
@@ -654,7 +660,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisSummaryCompression() throws Exception {
     ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(1 + r.nextInt(10)).values());
@@ -710,7 +716,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAnalysisSummaryTestClusters() throws Exception {
     int numOfTestClusters = 1 + r.nextInt(10);
@@ -772,7 +778,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testAnalysisSummaryControlClusters() throws Exception {
     int numOfControlClusters = 1 + r.nextInt(10);
@@ -834,7 +840,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void getCollectionMinuteForL1NoRecords() throws Exception {
     assertThat(analysisService.getCollectionMinuteForLevel(UUID.randomUUID().toString(), appId, stateExecutionId,
@@ -843,7 +849,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void getCollectionMinuteForL1PartialRecords() throws Exception {
     String query = UUID.randomUUID().toString();
@@ -881,7 +887,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void getCollectionMinuteForL1AllRecords() throws Exception {
     String query = UUID.randomUUID().toString();
@@ -952,7 +958,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void getLogDataRecordForL0() throws Exception {
     String query = UUID.randomUUID().toString();
@@ -1050,7 +1056,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void loadPythonResponse() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
@@ -1067,7 +1073,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void checkClusterScores() throws IOException {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
@@ -1091,7 +1097,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void testUserFeedback() throws Exception {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
@@ -1133,7 +1139,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void logQueryTrim() {
     ElkAnalysisState elkAnalysisState = new ElkAnalysisState("some name");
@@ -1142,7 +1148,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRIRAM)
   @Category(UnitTests.class)
   public void formatDate() {
     ZonedDateTime zdt = ZonedDateTime.parse("2018-05-10T16:35:27.044Z");
@@ -1162,7 +1168,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testReadLogMLRecordFromDB() throws Exception {
     ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(1 + r.nextInt(10)).values());
@@ -1200,7 +1206,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testCleanup() {
     wingsPersistence.delete(wingsPersistence.createQuery(AnalysisContext.class)
@@ -1288,7 +1294,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCompressionLogMlAnalysisRecord() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
@@ -1349,7 +1355,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCompressionLogMlAnalysisRecordOnDemand() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
@@ -1479,7 +1485,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetAnalysisForBaseline() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
@@ -1512,7 +1518,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSaveDuplicate() throws IOException {
     File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
@@ -1541,7 +1547,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testServiceGuardBackoffCountNewTask() {
     // Setup with sample failed task
@@ -1556,7 +1562,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testServiceGuardBackoffCount() {
     // Setup with sample failed task
@@ -1570,7 +1576,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testServiceGuardMaxBackoffCount() {
     // Setup with sample failed task
@@ -1600,7 +1606,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysis() {
     String cvConfigId = generateUuid();
@@ -1632,7 +1638,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetEndTimeForLogAnalysisForCVTasksEnabled() throws IOException {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
@@ -1650,7 +1656,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetEndTimeForLogAnalysisForCVTasksDisabled() throws IOException {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
@@ -1668,7 +1674,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testCreateFeedbackAnalysisNoLEAnalysis() {
     String cvConfigId = generateUuid();
@@ -1694,7 +1700,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSaveClusteredLogDataNoCvConfig() {
     assertThat(analysisService.saveClusteredLogData(appId, generateUuid(), ClusterLevel.L1, 0, generateUuid(), null))
@@ -1702,7 +1708,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSaveClusteredLogDataL0ToL1() {
     createLogsCVConfig(true);
@@ -1790,7 +1796,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testSaveClusteredLogDataL1ToL2() {
     createLogsCVConfig(true);
@@ -1867,7 +1873,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLogDataServiceGuard() {
     createLogsCVConfig(true);
@@ -1917,7 +1923,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulWorkflowExecutionIdWithLogs() {
     int numOfWorkflowExecutions = 20;
@@ -1948,7 +1954,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetMaxCVCollectionMinute() {
     String cvConfigId = generateUuid();
@@ -1960,7 +1966,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLogRecordMinute() {
     String cvConfigId = generateUuid();
@@ -1974,7 +1980,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastCVAnalysisMinute() {
     createLogsCVConfig(true);
@@ -1997,7 +2003,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastWorkflowAnalysisMinute() {
     assertThat(analysisService.getLastWorkflowAnalysisMinute(
@@ -2020,7 +2026,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastLogDataCollectedMinute() {
     String query = generateUuid();
@@ -2036,7 +2042,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testIsAnalysisPresent() {
     assertThat(analysisService.isAnalysisPresent(stateExecutionId, appId)).isFalse();
@@ -2046,14 +2052,14 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastExecutionNodesNoExecution() {
     analysisService.getLastExecutionNodes(appId, workflowId);
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastExecutionNodesNoSummary() {
     final WorkflowExecution workflowExecution =
@@ -2068,7 +2074,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastExecutionNodes() {
     final WorkflowExecution workflowExecution =
@@ -2093,7 +2099,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testCreateAndSaveSummary() {
     String query = generateUuid();

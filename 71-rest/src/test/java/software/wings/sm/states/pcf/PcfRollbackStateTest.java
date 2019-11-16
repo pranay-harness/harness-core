@@ -1,6 +1,6 @@
 package software.wings.sm.states.pcf;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -92,7 +92,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testExecute() throws Exception {
     on(context).set("variableProcessor", variableProcessor);

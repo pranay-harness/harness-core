@@ -1,6 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -114,7 +117,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGenerateDemoActivityLogs_whenStateIsSuccessful() {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
@@ -127,7 +130,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGenerateDemoActivityLogs_whenStateFailed() {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
@@ -141,7 +144,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGenerateDemoThirdPartyApiCallLogs_whenStateIsSuccessful() throws IllegalAccessException {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
@@ -174,7 +177,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGenerateDemoThirdPartyApiCallLogs_whenStateFailed() throws IllegalAccessException {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
@@ -212,7 +215,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreateCVTasksPerMinute() throws IllegalAccessException {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
@@ -239,7 +242,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCreateCVTasksForTaskDuration() throws IllegalAccessException {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
@@ -261,7 +264,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testGetLastExecutionNodes() throws IllegalAccessException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
@@ -334,7 +337,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetLastExecutionNodesWithPhase() throws IllegalAccessException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
@@ -435,7 +438,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testGetCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException, IllegalAccessException {
     List<InstanceElement> instanceElements = new ArrayList<>();

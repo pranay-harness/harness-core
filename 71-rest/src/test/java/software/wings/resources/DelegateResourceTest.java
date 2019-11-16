@@ -1,8 +1,11 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -106,7 +109,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldListDelegates() {
     PageResponse<Delegate> pageResponse = new PageResponse<>();
@@ -126,7 +129,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldGetDelegateStatus() {
     when(DELEGATE_SERVICE.getDelegateStatus(any()))
@@ -140,7 +143,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldRegisterDelegate() {
     when(DELEGATE_SERVICE.register(any(Delegate.class)))
@@ -163,7 +166,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldAddDelegate() {
     Delegate delegate = Delegate.builder().build();
@@ -185,7 +188,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldUpdateDelegate() {
     Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
@@ -209,7 +212,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void shouldUpdateDelegateDescription() {
     final String newDesc = "newDescription";
@@ -230,7 +233,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDelete() {
     Response restResponse =
@@ -240,7 +243,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGet() {
     Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
@@ -256,7 +259,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void shouldGetDownloadUrl() {
     when(httpServletRequest.getRequestURI()).thenReturn("/delegates/downloadUrl");
@@ -277,7 +280,7 @@ public class DelegateResourceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void shouldDownloadDelegate() throws Exception {
     File file = File.createTempFile("test", ".txt");

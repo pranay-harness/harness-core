@@ -1,7 +1,7 @@
 package software.wings.search.entities.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -140,7 +140,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testAuditRelatedChange() {
     boolean isSuccessful = serviceChangeHandler.handleChange(deleteAuditHeaderChangeEvent);
@@ -161,7 +161,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testServiceInsertChange() {
     Service service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
@@ -173,7 +173,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testServiceDeleteChange() {
     Service service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
@@ -185,7 +185,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testServiceUpdateChange() {
     Service service = ServiceEntityTestUtils.createService(accountId, appId, serviceId, SERVICE_NAME);
@@ -197,7 +197,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testPipelineUpdateChange() {
     ChangeEvent serviceUpdateChangeEvent =
@@ -222,7 +222,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testPipelineDeleteChange() {
     ChangeEvent serviceDeleteChangeEvent =
@@ -242,7 +242,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testApplicationUpdateChange() {
     ChangeEvent applicationUpdateChangeEvent =
@@ -257,7 +257,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testWorkflowUpdateChange() {
     ChangeEvent workflowUpdateChangeEvent =
@@ -283,7 +283,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testWorkflowInsertChange() {
     ChangeEvent workflowInsertChangeEvent =
@@ -298,7 +298,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testWorkflowDeleteChange() {
     ChangeEvent workflowDeleteChangeEvent =
@@ -318,7 +318,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testWorkflowExecutionInsertChange() {
     ChangeEvent workflowExecutionInsertChangeEvent =
@@ -336,7 +336,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testWorkflowExecutionUpdateChange() {
     ChangeEvent workflowExecutionUpdateChangeEvent =
@@ -351,7 +351,7 @@ public class ServiceChangeHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testWorkflowExecutionChange() {
     ChangeEvent workflowExecutionDeleteChangeEvent =

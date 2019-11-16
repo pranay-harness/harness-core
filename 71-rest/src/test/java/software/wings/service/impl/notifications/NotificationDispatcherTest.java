@@ -1,6 +1,6 @@
 package software.wings.service.impl.notifications;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
@@ -52,7 +52,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   @Mock private SlackMessageDispatcher slackDispatcher;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void testNotificationGroupBasedDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
@@ -89,7 +89,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void testUserGroupBasedDispatcher() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");

@@ -1,7 +1,7 @@
 package io.harness.event.grpc;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Any;
@@ -17,7 +17,7 @@ import org.junit.experimental.categories.Category;
 
 public class PublishedMessageTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testPostLoad() {
     EcsTaskLifecycle ecsTaskLifecycle =

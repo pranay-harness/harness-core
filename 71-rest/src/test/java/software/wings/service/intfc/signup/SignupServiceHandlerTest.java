@@ -1,6 +1,6 @@
 package software.wings.service.intfc.signup;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -24,7 +24,7 @@ public class SignupServiceHandlerTest extends WingsBaseTest {
   @Inject @InjectMocks SignupService signupService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testValidateTokenShouldSucceed() throws URISyntaxException {
     when(azureMarketplaceIntegrationService.validate(Mockito.anyString())).thenReturn(true);
@@ -33,7 +33,7 @@ public class SignupServiceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void testValidateTokenShouldFail() throws URISyntaxException {
     when(azureMarketplaceIntegrationService.validate(Mockito.anyString())).thenReturn(true);

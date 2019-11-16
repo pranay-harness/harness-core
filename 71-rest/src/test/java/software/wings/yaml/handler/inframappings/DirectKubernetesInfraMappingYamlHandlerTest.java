@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -137,7 +137,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
@@ -172,7 +172,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =

@@ -1,6 +1,8 @@
 package software.wings.collect;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,7 +76,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldSendJenkinsTask() {
     SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
@@ -103,7 +105,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldSendBambooTask() {
     SettingAttribute SETTING_ATTRIBUTE =
@@ -145,7 +147,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
     artifactCollectEventListener.onMessage(aCollectEvent()

@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -110,7 +111,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   private String SERVICE2;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testQueries() {
     QLDeploymentFilter arrayIdFilter =
@@ -240,7 +241,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testSingleDataPoint() {
     try {
@@ -317,7 +318,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testAggregateData() {
     try {
@@ -352,7 +353,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testStackedData() {
     try {
@@ -430,7 +431,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testTimeSeriesData() {
     try {
@@ -478,14 +479,14 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testStackedTimeSeriesDataForCount() {
     testStackedTimeSeriesData(QLDeploymentAggregationFunction.builder().count(QLCountAggregateOperation.SUM).build());
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testStackedTimeSeriesDataForInstancesDeployed() {
     testStackedTimeSeriesData(
@@ -557,7 +558,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void assertGroupByTag() {
     assertThat(dataFetcher.getGroupByEntityFromTag(

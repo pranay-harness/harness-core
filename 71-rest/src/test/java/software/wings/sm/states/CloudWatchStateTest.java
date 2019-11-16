@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRANJAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class CloudWatchStateTest extends WingsBaseTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsInvalidCase() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -35,7 +35,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseLambdaProvided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -51,7 +51,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseECSProvided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -67,7 +67,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseLoadBalancerProvided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");
@@ -88,7 +88,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testValidateFieldsValidCaseEC2Provided() {
     CloudWatchState cloudWatchState = new CloudWatchState("dummy");

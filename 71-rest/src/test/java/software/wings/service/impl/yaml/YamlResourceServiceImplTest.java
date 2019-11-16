@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
@@ -35,7 +35,7 @@ public class YamlResourceServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject YamlResourceServiceImpl yamlResourceService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetManifestFileYamlTypeFromAppManifest() {
     ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).build();

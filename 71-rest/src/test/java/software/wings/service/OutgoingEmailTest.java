@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import freemarker.template.Configuration;
@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class OutgoingEmailTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testEmailTemplates() throws Exception {
     Configuration cfg = new Configuration(VERSION_2_3_23);

@@ -1,6 +1,6 @@
 package io.harness.filesystem;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.BRETT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.base.Charsets;
@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
 
 public class EncodingTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void testDefaultEncoding() {
     assertThat(Charset.defaultCharset()).isEqualTo(Charsets.UTF_8);

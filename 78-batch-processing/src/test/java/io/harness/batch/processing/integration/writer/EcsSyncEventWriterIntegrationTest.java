@@ -2,7 +2,7 @@ package io.harness.batch.processing.integration.writer;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Timestamp;
@@ -91,7 +91,7 @@ public class EcsSyncEventWriterIntegrationTest extends CategoryTest implements E
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void shouldStopEc2Instance() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =

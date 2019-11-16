@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
@@ -21,7 +21,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
   @Inject WorkflowExecutionServiceImpl workflowExecutionService;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(IntegrationTests.class)
   public void shouldGetStateExecutionInstancesForPhases() {
     StateExecutionInstance stateExecutionInstance1 = null, stateExecutionInstance2 = null,
@@ -47,7 +47,7 @@ public class WorkflowExecutionServiceImplIntegrationTest extends BaseIntegration
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(IntegrationTests.class)
   public void shouldReturnEmptyWhenStateExecutionInstancesForPhasesNotExists() {
     List<StateExecutionInstance> stateExecutionInstancesForPhases =

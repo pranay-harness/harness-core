@@ -1,6 +1,7 @@
 package software.wings.security.authentication;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -57,7 +58,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testInvalidArgument() {
     try {
@@ -84,7 +85,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testBasicTokenValidationNoUserFound() {
     try {
@@ -97,7 +98,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testBasicTokenValidationEmailNotVerified() {
     try {
@@ -111,7 +112,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testBasicTokenValidationInvalidCredentials() throws MaxLoginAttemptExceededException {
     try {
@@ -132,7 +133,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(UnitTests.class)
   public void testFailedAttemptLimitExceeded() throws MaxLoginAttemptExceededException {
     try {
@@ -156,7 +157,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testBasicTokenValidationValidCredentials() {
     User mockUser = new User();

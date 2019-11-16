@@ -1,6 +1,6 @@
 package software.wings.beans.infrastructure.instance.stats;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.JATIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 
@@ -55,7 +55,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testSave() {
     val stats = sampleSnapshot();
@@ -75,7 +75,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testAggregateOverPeriod() {
     val from = Instant.now();
@@ -113,7 +113,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testPercentile() {
     val from = Instant.now();
@@ -155,7 +155,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = JATIN)
   @Category(IntegrationTests.class)
   public void testGetLastSnapshotTime() {
     val before = Instant.now();

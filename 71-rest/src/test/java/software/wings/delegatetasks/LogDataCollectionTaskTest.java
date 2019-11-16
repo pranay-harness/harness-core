@@ -1,6 +1,6 @@
 package software.wings.delegatetasks;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -99,7 +99,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFetchElkLogs() throws IOException, IllegalAccessException {
     // setup
@@ -142,7 +142,7 @@ public class LogDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testFetchElkLogsRetry() throws IOException, IllegalAccessException {
     // setup

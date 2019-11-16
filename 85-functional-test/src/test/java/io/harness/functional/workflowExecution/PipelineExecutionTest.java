@@ -3,7 +3,7 @@ package io.harness.functional.workflowExecution;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.event.model.EventConstants.WORKFLOW_NAME;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -162,7 +162,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HARSH)
   @Category(FunctionalTests.class)
   public void shouldExecutePipeline() {
     Workflow workflow = constructCanaryOrchestrationWorkflow();

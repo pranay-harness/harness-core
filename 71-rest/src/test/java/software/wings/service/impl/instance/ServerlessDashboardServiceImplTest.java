@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -92,7 +92,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStats() {
     // setup_getInstanceQueryAtTime();
@@ -118,7 +118,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStats_1() {
     // setup_getInstanceQueryAtTime();
@@ -134,7 +134,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStats_error() {
     final Mocks mocks = setup_AggregationPipeline();
@@ -151,7 +151,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStats_error1() {
     doThrow(new RuntimeException("error"))
@@ -177,7 +177,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStatsByService() {
     setup_getInstanceQueryAtTime();
@@ -200,7 +200,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStatsByService_error() {
     doThrow(NoResultFoundException.newBuilder().message("").build())
@@ -214,7 +214,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getAppInstanceSummaryStatsByService_error1() {
     doThrow(new RuntimeException("error"))
@@ -228,7 +228,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getServiceInstances() {
     setup_getInstanceQueryAtTime();
@@ -246,7 +246,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_constructInstanceStatsForService() {
     ServiceAggregationInfo serviceAggregationInfo = new ServiceAggregationInfo();
@@ -273,7 +273,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getInstanceStatsByEnvironment() {
     EnvInfo envInfo = getEnvInfo();
@@ -292,7 +292,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getInstanceSummaryStatsByService() {
     ServiceInstanceCount serviceInstanceCount = new ServiceInstanceCount();
@@ -307,7 +307,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getInstanceQuery() {
     setup_AggregationPipeline();
@@ -332,7 +332,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getDeletedAppIds() {
     setup_getDeletedAppIds();
@@ -357,7 +357,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getCreatedTimeOfInstanceAtTimestamp() {
     final Mocks mocks = setup_getDeletedAppIds();
@@ -371,7 +371,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getInstancesForAccount() {
     final Mocks mocks = setup_AggregationPipeline();
@@ -385,7 +385,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getEntitySummaryStats() {
     final Mocks mocks = setup_AggregationPipeline();
@@ -407,7 +407,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getInstanceQueryAtTime() {
     Mocks mocks = setup_AggregationPipeline();
@@ -423,7 +423,7 @@ public class ServerlessDashboardServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getDeletedAppIds_1() {
     setup_getDeletedAppIds();

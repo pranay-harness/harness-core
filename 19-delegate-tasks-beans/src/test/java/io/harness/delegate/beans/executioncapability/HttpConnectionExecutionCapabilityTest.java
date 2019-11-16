@@ -1,6 +1,6 @@
 package io.harness.delegate.beans.executioncapability;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -41,7 +41,7 @@ public class HttpConnectionExecutionCapabilityTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void fetchCapabilityBasis() {
     String capabilityBasis = httpConnectionExecutionCapability.fetchCapabilityBasis();

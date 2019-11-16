@@ -1,6 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -66,7 +66,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   @Spy @InjectMocks private AwsAsgHelperServiceDelegateImpl awsAsgHelperServiceDelegate;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListAutoScalingGroupNames() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -87,7 +87,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testListAutoScalingGroupInstances() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -111,7 +111,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetAutoScalingGroup() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -129,7 +129,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetLaunchConfiguration() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -147,7 +147,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeleteLaunchConfig() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -159,7 +159,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateLaunchConfiguration() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -173,7 +173,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateAutoScalingGroup() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -188,7 +188,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeleteAutoScalingGroups() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -209,7 +209,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetDesiredCapacitiesOfAsgs() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -231,7 +231,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testSetAutoScalingGroupLimits() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -248,7 +248,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testSetMinInstancesForAsg() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -266,7 +266,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testSetAutoScalingGroupCapacityAndWaitForInstancesReadyState() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -288,7 +288,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testAllInstanceInReadyState() {
     doReturn(singletonList(new Instance().withState(new InstanceState().withName("warming"))))
@@ -307,7 +307,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testRegisterAsgWithClassicLBs() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -322,7 +322,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testRegisterAsgWithTargetGroups() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -337,7 +337,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeRegisterAsgWithTargetGroups() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -352,7 +352,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDeRegisterAsgWithClassicLBs() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -367,7 +367,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetCurrentlyRunningInstanceCount() {
     doReturn(asList(new AutoScalingGroup()
@@ -400,7 +400,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testGetScalingPolicyJSONs() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -419,7 +419,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testClearAllScalingPoliciesForAsg() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
@@ -437,7 +437,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testAttachScalingPoliciesToAsg() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);

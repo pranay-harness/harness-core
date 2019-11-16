@@ -1,6 +1,6 @@
 package software.wings.integration.verification;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -42,7 +42,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(IntegrationTests.class)
   public void testGetActivityLogsByStateExecutionId() {
     long now = System.currentTimeMillis();
@@ -68,7 +68,7 @@ public class CVActivityLogIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(IntegrationTests.class)
   public void testGetCVActivityLog() {
     long now = System.currentTimeMillis();

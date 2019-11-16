@@ -1,6 +1,7 @@
 package software.wings.common;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
@@ -51,7 +52,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should get decorated notification message.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGetDecoratedNotificationMessage() {
     String decoratedNotificationMessage = NotificationMessageResolver.getDecoratedNotificationMessage(
@@ -64,7 +65,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
    * Should fail on in complete map.
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldFailOnInCompleteMap() {
     assertThatExceptionOfType(WingsException.class)
@@ -77,7 +78,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetPlaceholderValues() {
     String ApprovalUrl =

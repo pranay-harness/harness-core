@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -86,7 +86,7 @@ public class KubernetesSwapServiceSelectorsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     KubernetesSwapServiceSelectorsResponse kubernetesSwapServiceSelectorsResponse =
@@ -101,7 +101,7 @@ public class KubernetesSwapServiceSelectorsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
     on(kubernetesSwapServiceSelectors).set("service1", "service1");

@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -55,7 +55,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   ExecutionContext context;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetServiceForNonTemplatized() {
     Service serviceForNonTemplatized = Service.builder().name(SERVICE_NAME_FOR_NON_TEMPLATIZED).build();
@@ -68,7 +68,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetServiceForTemplatized() {
     TemplateExpression serviceTemplateExpression =
@@ -84,7 +84,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldNotGetServiceForBuildWorkflow() {
     Service service = phaseSubWorkflowHelperService.getService(null, null, APP_ID, context);
@@ -93,7 +93,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetInfraDefinitionForNonTemplatized() {
     InfrastructureDefinition infrastructureDefinition =
@@ -108,7 +108,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldGetInfraDefinitionForTemplatized() {
     TemplateExpression infraDefTemplateExpression = TemplateExpression.builder()
@@ -128,7 +128,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldNotGetInfraDefinitionForBuildWorkflow() {
     InfrastructureDefinition infraDefinition =
@@ -138,7 +138,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldValidateEnvInfraRelationship() {
     Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID).build();
@@ -168,7 +168,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldValidateServiceInfraMappingRelationship() {
     TemplateExpression serviceTemplateExpresion = TemplateExpression.builder().build(),
@@ -200,7 +200,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldValidateScopedService() {
     Service service = Service.builder().uuid(SERVICE_ID).build();
@@ -223,7 +223,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void serviceInfraTemplatizationValidationShouldNotFailForFeatureFlagOn() {
     TemplateExpression serviceTemplateExpression = TemplateExpression.builder().build();
@@ -234,7 +234,7 @@ public class PhaseSubWorkflowHelperTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void serviceInfraTemplatizationValidationShouldFailForFeatureFlagOff() {
     TemplateExpression serviceTemplateExpression = TemplateExpression.builder().build();

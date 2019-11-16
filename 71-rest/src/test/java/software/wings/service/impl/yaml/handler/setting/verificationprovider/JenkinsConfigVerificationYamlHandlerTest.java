@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -43,7 +44,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   public void setUp() throws HarnessException, IOException {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
@@ -56,7 +57,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFailures() throws HarnessException, IOException {
     String jenkinsProviderName = "Jenkins" + System.currentTimeMillis();
@@ -67,7 +68,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testToBeanForNullValues() {
     ChangeContext<VerificationYaml> changeContext =

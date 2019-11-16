@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -179,7 +179,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_syncJob() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
@@ -258,7 +258,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_NewDeployment() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
@@ -346,7 +346,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   // 3 existing instances
   // expected 1 delete 2 update
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSyncInstances_NewDeployment_Rollback() throws Exception {
     doReturn(Optional.of(DeploymentSummary.builder()

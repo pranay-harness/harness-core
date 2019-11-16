@@ -1,6 +1,6 @@
 package io.harness.threading;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class ConcurrentTest extends CategoryTest {
   @Test(expected = CyclicBarrierException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testExceptionPropagation() {
     Concurrent.test(1, i -> { throw new CyclicBarrierException(null); });

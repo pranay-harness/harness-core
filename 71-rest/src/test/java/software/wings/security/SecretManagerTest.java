@@ -1,6 +1,6 @@
 package software.wings.security;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANUBHAW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -24,7 +24,7 @@ public class SecretManagerTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldGenerateToken() {
     String token =
@@ -33,7 +33,7 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldVerifyToken() {
     String jwtToken =
@@ -44,7 +44,7 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenNoTokenFoundOnValidation() {
     assertThatExceptionOfType(WingsException.class)
@@ -52,7 +52,7 @@ public class SecretManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenResourceDoesntMatchOnValiation() {
     String token = secretManager.generateJWTToken(null, JWT_CATEGORY.EXTERNAL_SERVICE_SECRET);

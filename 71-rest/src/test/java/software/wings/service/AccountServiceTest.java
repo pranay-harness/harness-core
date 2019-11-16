@@ -1,7 +1,17 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -118,7 +128,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldSaveAccount() {
     Account account = accountService.save(anAccount()
@@ -165,7 +175,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldUpdateTechStacks() {
     Account account = getAccount();
@@ -194,7 +204,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldUpdateTechStacksWithNullTechStack() {
     Account account = getAccount();
@@ -213,7 +223,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testGetAccountType() {
     LicenseInfo licenseInfo = getLicenseInfo();
@@ -230,7 +240,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void testRegisterNewUser_invalidAccountName_shouldFail() {
     Account account = anAccount()
@@ -244,7 +254,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldFailSavingAccountWithoutLicense() {
     thrown.expect(WingsException.class);
@@ -254,7 +264,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDeleteAccount() {
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
@@ -266,7 +276,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_TULSYAN)
   @Category(UnitTests.class)
   public void shouldUpdateCompanyName() {
     Account account = wingsPersistence.saveAndGet(Account.class,
@@ -281,7 +291,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAccountByCompanyName() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
@@ -289,7 +299,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetAccountByAccountName() {
     Account account = wingsPersistence.saveAndGet(
@@ -298,7 +308,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAccount() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
@@ -306,7 +316,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldGetDelegateConfiguration() {
     String accountId =
@@ -323,7 +333,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldGetDelegateConfigurationFromGlobalAccount() {
     wingsPersistence.save(anAccount()
@@ -343,7 +353,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldListAllAccounts() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
@@ -358,7 +368,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetAccountWithDefaults() {
     Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
@@ -389,7 +399,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServicesForAccountBreadcrumb() {
     // setup
@@ -407,7 +417,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServicesForAccount() {
     // setup
@@ -426,7 +436,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServicesForAccountDisabledCVConfig() {
     // setup
@@ -458,7 +468,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServicesForAccountSpecificService() {
     // setup
@@ -478,7 +488,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetServicesForAccountLastOffset() {
     // setup
@@ -573,7 +583,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_TULSYAN)
   @Category(UnitTests.class)
   public void test_updateWhitelistedDomains_shouldTrimStringsAndIgnoreWhiteSpace() {
     Account account = accountService.save(anAccount()
@@ -590,7 +600,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void test_updateAccountName() {
     String companyName = "CompanyName 1";
@@ -609,7 +619,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAccountIteration() throws IllegalAccessException {
     final Account account = anAccount().withCompanyName(generateUuid()).build();
@@ -661,7 +671,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testUpdateCloudCostEnabled() {
     Account account = accountService.save(anAccount()

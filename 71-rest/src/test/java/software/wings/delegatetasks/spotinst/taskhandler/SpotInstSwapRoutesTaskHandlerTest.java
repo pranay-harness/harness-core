@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
@@ -50,7 +50,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   @Spy @Inject @InjectMocks SpotInstSwapRoutesTaskHandler spotInstSwapRoutesTaskHandler;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecuteDeploy() throws Exception {
     String oldId = "oldId";
@@ -81,7 +81,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testExecuteRollback() throws Exception {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);

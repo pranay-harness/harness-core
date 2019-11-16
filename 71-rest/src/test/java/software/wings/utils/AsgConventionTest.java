@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class AsgConventionTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetRevisionFromTag() {
     int revision = AsgConvention.getRevisionFromTag("aaa__123");
@@ -31,7 +31,7 @@ public class AsgConventionTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetAsgNamePrefix() {
     String asgNamePrefix = AsgConvention.getAsgNamePrefix("appName", "serviceName", "envName");

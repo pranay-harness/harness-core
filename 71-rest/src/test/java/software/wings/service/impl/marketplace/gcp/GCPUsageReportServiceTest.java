@@ -1,6 +1,6 @@
 package software.wings.service.impl.marketplace.gcp;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -30,7 +30,7 @@ public class GCPUsageReportServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {}
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void createGCPUsageReport() {
     Instant startInstance = Instant.now().truncatedTo(ChronoUnit.HOURS);

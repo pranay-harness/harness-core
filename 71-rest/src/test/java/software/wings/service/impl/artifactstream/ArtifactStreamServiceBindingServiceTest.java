@@ -1,6 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -51,7 +51,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldCreate() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -74,7 +74,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldDelete() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -93,7 +93,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldListArtifactStreams() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -110,7 +110,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStream() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, APP_ID);
@@ -138,7 +138,7 @@ public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldPruneByArtifactStreamAtConnectorLevel() {
     ArtifactStream artifactStream1 = getArtifactStream(ARTIFACT_STREAM_ID_1, GLOBAL_APP_ID);

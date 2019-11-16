@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -71,7 +71,7 @@ public class K8sScaleTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForFailure() {
     when(k8sStateHelper.getActivityId(context)).thenReturn(ACTIVITY_ID);

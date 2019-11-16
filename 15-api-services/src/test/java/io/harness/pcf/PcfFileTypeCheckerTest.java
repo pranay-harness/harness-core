@@ -2,7 +2,7 @@ package io.harness.pcf;
 
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -69,7 +69,7 @@ public class PcfFileTypeCheckerTest extends CategoryTest {
       + "    max: 12";
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCategory() {
     PcfFileTypeChecker pcfFileTypeChecker = new PcfFileTypeChecker();

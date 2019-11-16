@@ -2,7 +2,8 @@ package io.harness.k8s.kubectl;
 
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PUNEET;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -13,7 +14,7 @@ import org.junit.experimental.categories.Category;
 
 public class UtilsTest extends CategoryTest {
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void latestRevisionTest() {
     String rolloutHistory = "deployments \"demo1-nginx-deployment\"\n"
@@ -35,7 +36,7 @@ public class UtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void encloseWithQuotesIfNeededTest() {
     assertThat(encloseWithQuotesIfNeeded("kubectl")).isEqualTo("kubectl");

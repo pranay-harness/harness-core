@@ -1,6 +1,6 @@
 package software.wings.integration.service;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -66,7 +66,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(IntegrationTests.class)
   public void testListNamesByProvisionerId() {
     InfrastructureDefinition id1 = InfrastructureDefinition.builder()
@@ -91,7 +91,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(IntegrationTests.class)
   public void testListNamesByConnectionAttr() {
     final String connectionAttr1 = "private-key-1";
@@ -125,7 +125,7 @@ public class InfrastructureDefinitionServiceIntegrationTest extends BaseIntegrat
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(IntegrationTests.class)
   public void testListNamesByComputeProviderId() {
     InfrastructureDefinitionBuilder infrastructureDefinitionBuilder =

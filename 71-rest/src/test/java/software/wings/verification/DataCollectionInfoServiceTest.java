@@ -1,6 +1,6 @@
 package software.wings.verification;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
@@ -46,7 +46,7 @@ public class DataCollectionInfoServiceTest extends WingsBaseTest {
     FieldUtils.writeField(dataCollectionInfoService, "secretManager", secretManager, true);
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testSplunkDataCollectionInfoCreation() {
     SplunkCVConfiguration splunkCVConfiguration = createSplunkCVConfig();
@@ -68,7 +68,7 @@ public class DataCollectionInfoServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testNewRelicDataCollectionInfoCreation() {
     NewRelicCVServiceConfiguration newRelicCVConfig = createNewRelicCVConfig();

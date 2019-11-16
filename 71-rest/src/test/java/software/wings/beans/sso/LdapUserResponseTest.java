@@ -1,6 +1,6 @@
 package software.wings.beans.sso;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -20,7 +20,7 @@ public class LdapUserResponseTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AMAN)
   @Category(UnitTests.class)
   public void getEmailGetterTest() {
     assertThat(ldapUserResponse.getEmail()).isEqualTo(capitalLettersEmail.toLowerCase());

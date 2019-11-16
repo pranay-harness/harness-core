@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.external.comm.handlers;
 
 import static io.harness.rule.OwnerRule.RAGHU;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -38,7 +38,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   @Inject MainConfiguration mainConfiguration;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(IntegrationTests.class)
   public void testHandle() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);
@@ -49,7 +49,7 @@ public class EmailHandlerIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RUSHABH)
   @Category(IntegrationTests.class)
   public void testErrorResponse() {
     EmailRequest emailRequest = Mockito.mock(EmailRequest.class);

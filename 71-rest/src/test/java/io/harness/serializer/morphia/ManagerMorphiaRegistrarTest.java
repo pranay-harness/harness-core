@@ -1,7 +1,7 @@
 package io.harness.serializer.morphia;
 
 import static io.harness.mongo.HObjectFactory.checkRegisteredClasses;
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableSet;
@@ -44,14 +44,14 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Inject HObjectFactory objectFactory;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testManagerClassesModule() {
     new ManagerMorphiaRegistrar().testClassesModule();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testManagerSearchAndList() {
     new MorphiaModule().testAutomaticSearch(
@@ -59,14 +59,14 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testManagerImplementationClassesModule() {
     new ManagerMorphiaRegistrar().testImplementationClassesModule();
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testManagerImplementationClasses() {
     Map<String, Class> classes = new HashedMap(objectFactory.getMorphiaInterfaceImplementers());

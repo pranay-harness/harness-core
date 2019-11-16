@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -95,7 +95,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock DelegateProxyFactory delegateProxyFactory;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetJobsWithAppIdForBamboo() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -118,7 +118,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetProjectWithAppAndSettingIdForGCS() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -132,7 +132,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetProjectWithInvalidSettingAttribute() {
     when(settingsService.get(SETTING_ID)).thenReturn(null);
@@ -140,7 +140,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetProjectWithSettingIdForGCS() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -155,7 +155,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetProjectWithInvalidSettingId() {
     when(settingsService.get(SETTING_ID)).thenReturn(null);
@@ -163,7 +163,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetBucketsWithAppAndSettingIdForGCS() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -184,7 +184,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetBucketsWithSettingIdForGCS() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -206,7 +206,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testFetchNexusPackageNamesWithAppForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -227,7 +227,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testFetchNexusPackageNamesForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -247,7 +247,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetSmbPathsWithAppAndSettingIdForSmb() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -264,7 +264,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetSmbPathsWithSettingIdForSmb() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -282,7 +282,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetSftpPathsWithSettingIdForSftp() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -301,7 +301,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetSftpPathsWithAppIdSettingIdForSftp() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -320,7 +320,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetGroupIdsWithRepositoryFormatForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -340,7 +340,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetGroupIdsWithSettingIdForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -360,7 +360,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetPlansForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -382,7 +382,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetPlansWithRepositoryFormatForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -405,7 +405,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetPlansWithRepositoryTypeForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -428,7 +428,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetPlansWithAppIdAndSettingIdForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -450,7 +450,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetPlansWithAppIdAndSettingIdRepoTypeForNexus() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -474,7 +474,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetArtifactPathsWithAppIdForAmazonS3() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -493,7 +493,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetArtifactPathsWithAppIdForNexus2Maven() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -512,7 +512,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulBuildForAmazonS3AtConnector() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -533,7 +533,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulBuildWithAppIdForAmazonS3() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -556,7 +556,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulBuildForJenkins() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -590,7 +590,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulBuildWithAppIdForJenkins() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -626,7 +626,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetLastSuccessfulBuildForBamboo() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -659,14 +659,14 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testCollectArtifactWithoutBuildDetailsShouldFail() {
     buildSourceService.collectArtifact(APP_ID, ARTIFACT_STREAM_ID, null);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetJobsForBambooAtConnector() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -689,7 +689,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetArtifactPathsForAmazonS3AtConnector() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -708,7 +708,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetArtifactPathsForNexus2MavenAtConnector() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -727,7 +727,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetJobWithAppIdForJenkins() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -753,7 +753,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetGroupIds() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -773,7 +773,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetGroupIdsWithRepositoryFormat() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -794,7 +794,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void getBuildsWithInvalidSettingAttribute() {
     BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
@@ -808,7 +808,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetBuilds() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -856,7 +856,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testValidateNexusArtifactSource() {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
@@ -872,7 +872,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testValidateCustomArtifactSource() {
     List<CustomRepositoryMapping.AttributeMapping> attributeMapping = new ArrayList<>();

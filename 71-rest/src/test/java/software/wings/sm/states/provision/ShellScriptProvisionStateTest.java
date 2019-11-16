@@ -1,6 +1,6 @@
 package software.wings.sm.states.provision;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -21,7 +21,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
       new ShellScriptProvisionState(InfrastructureProvisionerType.SHELL_SCRIPT.name());
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testParseOutput() {
     assertThat(state.parseOutput(null)).isEqualTo(Collections.emptyMap());

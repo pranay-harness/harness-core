@@ -1,6 +1,6 @@
 package io.harness.persistence;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.GEORGE;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +36,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsTargetInterval() {
     MongoPersistenceIterator iterator =
@@ -45,7 +45,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsMaximumDelayForCheck() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
@@ -56,7 +56,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsZero() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
@@ -69,7 +69,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsNextIteration() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
@@ -83,7 +83,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationLimitedAsNextIteration() {
     MongoPersistenceIterator iterator =
@@ -96,7 +96,7 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationLimitedAsMaximumDelayForCheck() {
     MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()

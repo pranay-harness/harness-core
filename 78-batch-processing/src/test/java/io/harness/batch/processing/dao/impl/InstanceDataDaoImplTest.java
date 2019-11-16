@@ -1,6 +1,6 @@
 package io.harness.batch.processing.dao.impl;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -48,7 +48,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   private final Instant END_INSTANT = NOW.plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnInstanceDataWithName() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
@@ -58,7 +58,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnActiveInstance() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
@@ -68,7 +68,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnEmptyClusterActiveInstance() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
@@ -78,7 +78,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnClusterActiveInstance() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
@@ -89,7 +89,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldUpsertInstanceInfo() {
     InstanceData instanceData = instanceDataDao.upsert(instanceInfo());
@@ -104,7 +104,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldUpsertInstanceStartStopEvent() {
     instanceDataDao.upsert(instanceInfo());
@@ -118,7 +118,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldReturnNullWhenUpsertInstanceEvent() {
     InstanceData instanceData = instanceDataDao.upsert(instanceEvent(START_INSTANT, EventType.START));
@@ -126,7 +126,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldUpdateInstanceState() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
