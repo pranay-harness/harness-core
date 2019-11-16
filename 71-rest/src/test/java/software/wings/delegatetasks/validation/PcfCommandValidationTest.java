@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -11,6 +12,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
@@ -51,5 +53,31 @@ public class PcfCommandValidationTest extends CategoryTest {
 
     request = PcfInstanceSyncRequest.builder().build();
     assertThat(pcfCommandValidation.needToCheckAppAutoscalarPluginInstall(request)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testNeedToCheckAppAutoscalarPluginInstall() {
+    Consumer consumer = mock(Consumer.class);
+    PCFCommandValidation pcfCommandValidation =
+        new PCFCommandValidation("", DelegateTask.builder().data(TaskData.builder().build()).build(), consumer);
+
+    PcfConfig pcfConfig = PcfConfig.builder().endpointUrl("url").username("user").build();
+    PcfCommandRequest request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).build();
+    String criteria = pcfCommandValidation.getCriteria(request);
+    assertThat(criteria).isEqualTo("Pcf:url/user");
+
+    request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).useCLIForPcfAppCreation(true).build();
+    criteria = pcfCommandValidation.getCriteria(request);
+    assertThat(criteria).isEqualTo("Pcf:url/user_cf_cli");
+
+    request = PcfCommandSetupRequest.builder()
+                  .pcfConfig(pcfConfig)
+                  .useCLIForPcfAppCreation(true)
+                  .useAppAutoscalar(true)
+                  .build();
+    criteria = pcfCommandValidation.getCriteria(request);
+    assertThat(criteria).isEqualTo("Pcf:url/user_cf_cli_cf_appautoscalar");
   }
 }

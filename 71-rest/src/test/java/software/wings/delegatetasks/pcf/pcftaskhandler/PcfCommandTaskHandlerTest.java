@@ -12,6 +12,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -68,6 +69,7 @@ import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -551,6 +553,40 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                 pcfInstanceElement.getApplicationId() + ":" + pcfInstanceElement.getInstanceIndex()));
     assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:0")).isTrue();
     assertThat(pcfInstanceElements.contains("Guid:a_s_e__4:1")).isTrue();
+
+    // Test Exception flow
+    doThrow(new IOException("")).when(pcfCommandTaskHelper).generateWorkingDirectoryForDeployment(anyString());
+    pcfCommandExecutionResponse =
+        pcfRollbackCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback);
+    assertThat(pcfCommandExecutionResponse.getErrorMessage()).isEqualTo("IOException: ");
+    assertThat(pcfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testEnableAutoscalarIfNeeded() throws Exception {
+    reset(pcfDeploymentManager);
+
+    PcfServiceData pcfServiceData = PcfServiceData.builder().name(APP_NAME).id(APP_ID).build();
+    List<PcfServiceData> upsizeList = Arrays.asList(pcfServiceData);
+
+    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+        PcfAppAutoscalarRequestData.builder().configPathVar("path").build();
+    doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
+
+    pcfRollbackCommandTaskHandler.enableAutoscalarIfNeeded(
+        emptyList(), pcfAppAutoscalarRequestData, executionLogCallback);
+    verify(pcfDeploymentManager, never()).changeAutoscalarState(any(), any(), anyBoolean());
+
+    pcfRollbackCommandTaskHandler.enableAutoscalarIfNeeded(
+        upsizeList, pcfAppAutoscalarRequestData, executionLogCallback);
+    verify(pcfDeploymentManager, never()).changeAutoscalarState(any(), any(), anyBoolean());
+
+    pcfServiceData.setDisableAutoscalarPerformed(true);
+    pcfRollbackCommandTaskHandler.enableAutoscalarIfNeeded(
+        upsizeList, pcfAppAutoscalarRequestData, executionLogCallback);
+    verify(pcfDeploymentManager, times(1)).changeAutoscalarState(any(), any(), anyBoolean());
   }
 
   @Test
@@ -852,6 +888,51 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     String str = null;
     manifestsPackage.setVariableYmls(Arrays.asList(str));
     assertThat(pcfSetupCommandTaskHandler.checkIfVarsFilePresent(setupRequest)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testDownsizeApplicationToZero() throws Exception {
+    reset(pcfDeploymentManager);
+    ApplicationSummary applicationSummary = ApplicationSummary.builder()
+                                                .name("a_s_e__1")
+                                                .diskQuota(1)
+                                                .requestedState(RUNNING)
+                                                .id("10")
+                                                .instances(0)
+                                                .memoryLimit(1)
+                                                .runningInstances(0)
+                                                .build();
+
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .id("10")
+                                              .diskQuota(1)
+                                              .instances(0)
+                                              .memoryLimit(1)
+                                              .name("a_s_e__1")
+                                              .requestedState("STOPPED")
+                                              .stack("")
+                                              .runningInstances(0)
+                                              .build();
+    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(any());
+
+    PcfCommandSetupRequest pcfCommandSetupRequest = PcfCommandSetupRequest.builder().useAppAutoscalar(true).build();
+
+    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+        PcfAppAutoscalarRequestData.builder().configPathVar("path").build();
+
+    doReturn(true).when(pcfCommandTaskHelper).disableAutoscalar(any(), any());
+    ArgumentCaptor<PcfAppAutoscalarRequestData> argumentCaptor =
+        ArgumentCaptor.forClass(PcfAppAutoscalarRequestData.class);
+    pcfSetupCommandTaskHandler.downsizeApplicationToZero(applicationSummary, PcfRequestConfig.builder().build(),
+        pcfCommandSetupRequest, pcfAppAutoscalarRequestData, executionLogCallback);
+
+    verify(pcfCommandTaskHelper, times(1)).disableAutoscalar(argumentCaptor.capture(), any());
+    pcfAppAutoscalarRequestData = argumentCaptor.getValue();
+    assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
+    assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("a_s_e__1");
+    assertThat(pcfAppAutoscalarRequestData.isExpectedEnabled()).isTrue();
   }
 
   @Test

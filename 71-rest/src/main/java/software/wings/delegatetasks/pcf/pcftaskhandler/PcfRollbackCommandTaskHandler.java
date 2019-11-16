@@ -6,6 +6,7 @@ import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.UUIDGenerator;
@@ -154,9 +155,9 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .build();
   }
 
-  private void enableAutoscalarIfNeeded(List<PcfServiceData> upsizeList,
-      PcfAppAutoscalarRequestData autoscalarRequestData, ExecutionLogCallback logCallback)
-      throws PivotalClientApiException {
+  @VisibleForTesting
+  void enableAutoscalarIfNeeded(List<PcfServiceData> upsizeList, PcfAppAutoscalarRequestData autoscalarRequestData,
+      ExecutionLogCallback logCallback) throws PivotalClientApiException {
     for (PcfServiceData pcfServiceData : upsizeList) {
       if (!pcfServiceData.isDisableAutoscalarPerformed()) {
         continue;
