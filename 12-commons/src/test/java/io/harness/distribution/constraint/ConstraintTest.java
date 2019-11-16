@@ -5,7 +5,6 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -61,7 +60,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRegisterConsumer()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
@@ -78,7 +77,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRegisterConsumerFIFO() throws UnableToSaveConstraintException, InvalidPermitsException,
                                                 UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
@@ -91,7 +90,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRegisterConsumerASAP() throws UnableToSaveConstraintException, InvalidPermitsException,
                                                 UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
@@ -105,7 +104,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRegisterConsumerUnblocked()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -132,7 +131,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRegisterConsumerFinished()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -153,7 +152,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRunnableConsumersASAP()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -174,7 +173,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testUnits() throws UnableToSaveConstraintException, InvalidPermitsException,
                                  UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
@@ -186,7 +185,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testRunnableConsumersFIFO()
       throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
@@ -207,7 +206,7 @@ public class ConstraintTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSimulation() throws UnableToSaveConstraintException, InvalidPermitsException,
                                       UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {

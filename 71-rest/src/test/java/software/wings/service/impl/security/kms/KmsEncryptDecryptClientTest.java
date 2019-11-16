@@ -1,6 +1,6 @@
 package software.wings.service.impl.security.kms;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.RAMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -49,7 +49,7 @@ public class KmsEncryptDecryptClientTest extends WingsBaseTest {
   private KmsConfig kmsConfig;
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void testDecryptionFallbackToDelegate()

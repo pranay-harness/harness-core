@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.cv;
 
 import static io.harness.rule.OwnerRule.KAMAL;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -82,7 +81,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     AbstractDataCollectionTask.RETRY_SLEEP_DURATION = Duration.ofMillis(1); // to run retry based test faster.
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCallToInitAndCollectAndSaveDataWithCorrectParams()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -119,7 +118,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCorrectTaskResultIfNoFailure()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
@@ -135,7 +134,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCorrectTaskResultIfLessThenRetryCountFailures()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -155,7 +154,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testStatusFailureInCaseOfExceptionOnInitWithRetryCount()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -175,7 +174,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testStatusFailureInCaseOfExceptionOnCollectAndSaveWithRetryCount()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -195,7 +194,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testActivityLogOnTaskFailure()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -210,7 +209,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testActivityLogOnTaskSuccess()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -223,7 +222,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     verify(logger, times(1)).info(eq("Finished data collection with status: SUCCESS"));
   }
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void executeRequestAndGenerateCorrectThirdPartyAPILogs()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -262,7 +261,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void executeRequestWithRetryIfException() throws InvocationTargetException, NoSuchMethodException,
                                                           InstantiationException, IllegalAccessException, IOException {
@@ -305,7 +304,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testExecuteRequestRetrySuccessOnRateLimitExceeded()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
@@ -334,7 +333,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testExecuteRequestRetryFailureAfterMaxRetriesOnRateLimitExceeded()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,

@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -127,7 +126,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepo()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
@@ -150,7 +149,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testAddYamlValuesFromGitRepoWithVariableYamlFiles()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
@@ -175,7 +174,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   @Test(expected = WingsException.class)
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testAddValuesYamlFromGitRepoWithException()
       throws InterruptedException, TimeoutException, IOException, ExecutionException {
