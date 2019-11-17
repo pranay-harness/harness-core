@@ -65,7 +65,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   public void handle(ArtifactStream artifactStream) {
     try (AutoLogContext ignore2 = new ArtifactStreamLogContext(
              artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
-      logger.info("Received the artifact collection for ArtifactStreamId {}", artifactStream.getUuid());
+      logger.info("Received the artifact collection for ArtifactStream");
     }
     executeInternal(artifactStream);
   }
@@ -73,9 +73,8 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   private void executeInternal(ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
     if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
-      logger.warn(
-          "ASYNC_ARTIFACT_CRON: Artifact collection disabled for artifactStream:[id:{}, type:{}] due to too many failures [{}]",
-          artifactStreamId, artifactStream.getArtifactStreamType(), artifactStream.getFailedCronAttempts());
+      logger.warn("ASYNC_ARTIFACT_CRON: Artifact collection disabled for artifactStream: due to too many failures [{}]",
+          artifactStream.getFailedCronAttempts());
       return;
     }
 
@@ -90,23 +89,21 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
                                                         .leaseDuration(leaseDuration)
                                                         .build());
       if (isNotEmpty(permitId)) {
-        logger.info("Permit [{}] acquired for artifactStream [id: {}, failedCount: {}] for [{}] minutes", permitId,
-            artifactStream.getUuid(), artifactStream.getFailedCronAttempts(),
-            TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
+        logger.info("Permit [{}] acquired for artifactStream [failedCount: {}] for [{}] minutes", permitId,
+            artifactStream.getFailedCronAttempts(), TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
         artifactCollectionServiceAsync.collectNewArtifactsAsync(artifactStream, permitId);
       } else {
-        logger.info("Permit already exists for artifactStreamId[{}]", artifactStreamId);
+        logger.info("Permit already exists for artifactStream");
       }
     } catch (WingsException exception) {
-      logger.warn(
-          "Failed to collect artifacts for artifact stream {}. Reason {}", artifactStreamId, exception.getMessage());
+      logger.warn("Failed to collect artifacts for artifact stream. Reason {}", exception.getMessage());
       if (artifactStream.getAccountId() != null) {
         exception.addContext(Account.class, artifactStream.getAccountId());
       }
       exception.addContext(ArtifactStream.class, artifactStreamId);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
-      logger.warn("Failed to collect artifacts for artifactStream {}. Reason {}", artifactStreamId, e.getMessage());
+      logger.warn("Failed to collect artifacts for artifactStream. Reason {}", e.getMessage());
     }
   }
 }

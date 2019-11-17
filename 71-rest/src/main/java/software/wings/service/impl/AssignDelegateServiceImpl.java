@@ -262,7 +262,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         }
       }
     } catch (Exception e) {
-      logger.error(format("Error checking for whitelisted delegates for task %s", task.getUuid()), e);
+      logger.error("Error checking for whitelisted delegates", e);
     }
     return delegateIds;
   }

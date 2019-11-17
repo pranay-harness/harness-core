@@ -58,7 +58,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
 
   @Override
   public void handle(ArtifactStream artifactStream) {
-    logger.info("Received the artifact cleanup for ArtifactStreamId {}", artifactStream.getUuid());
+    logger.info("Received the artifact cleanup for ArtifactStream");
     executeInternal(artifactStream);
   }
 
@@ -66,19 +66,18 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
     String artifactStreamId = artifactStream.getUuid();
     try {
       if (artifactStream.getFailedCronAttempts() > PermitServiceImpl.MAX_FAILED_ATTEMPTS) {
-        logger.info("Not running cleanup as artifact collection disabled disabled for artifactStream:[id:{}, type:{}]",
-            artifactStreamId, artifactStream.getArtifactStreamType());
+        logger.info("Not running cleanup as artifact collection disabled disabled [type:{}]",
+            artifactStream.getArtifactStreamType());
         return;
       }
       artifactCleanupServiceAsync.cleanupArtifactsAsync(artifactStream);
     } catch (WingsException exception) {
-      logger.warn(
-          "Failed to cleanup artifacts for artifact stream {}. Reason {}", artifactStreamId, exception.getMessage());
+      logger.warn("Failed to cleanup artifacts for artifact stream. Reason {}", exception.getMessage());
       exception.addContext(Account.class, artifactStream.getAccountId());
       exception.addContext(ArtifactStream.class, artifactStreamId);
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
-      logger.warn("Failed to cleanup artifacts for artifactStream {}. Reason {}", artifactStreamId, e.getMessage());
+      logger.warn("Failed to cleanup artifacts for artifactStream. Reason {}", e.getMessage());
     }
   }
 }

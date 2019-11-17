@@ -1743,10 +1743,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     } else {
       delegates = "no delegates";
     }
-    return String.format("No eligible delegates could perform the required capabilities for this %s task: [ %s ]\n"
+    return String.format("No eligible delegates could perform the required capabilities for this task: [ %s ]\n"
             + "  -  The capabilities were tested by the following delegates: [ %s ]\n"
             + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.",
-        delegateTask.getData().getTaskType(), capabilities, delegates);
+        capabilities, delegates);
   }
 
   private void setValidationStarted(String delegateId, DelegateTask delegateTask) {

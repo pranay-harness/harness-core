@@ -147,7 +147,7 @@ public class LicenseServiceImpl implements LicenseService {
             accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
       }
     } catch (Exception e) {
-      logger.warn("Failed to check license info for account id {}", account.getUuid(), e);
+      logger.warn("Failed to check license info", e);
     }
   }
 

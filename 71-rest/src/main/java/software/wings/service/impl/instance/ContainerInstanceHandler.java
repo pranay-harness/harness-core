@@ -126,8 +126,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
     loadContainerSvcNameInstanceMap(appId, infraMappingId, containerMetadataInstanceMap);
 
-    logger.info("Found {} containerSvcNames for app {} and infraMapping {} ",
-        containerMetadataInstanceMap != null ? containerMetadataInstanceMap.size() : 0, appId, infraMappingId);
+    logger.info("Found {} containerSvcNames for app {} and infraMapping",
+        containerMetadataInstanceMap != null ? containerMetadataInstanceMap.size() : 0, appId);
 
     if (containerMetadataInstanceMap == null) {
       return;
@@ -143,27 +143,27 @@ public class ContainerInstanceHandler extends InstanceHandler {
                                                  .collect(toList());
 
         if (containerMetadata.getType() == ContainerMetadataType.K8S) {
-          logger.info("Found {} instances in DB for app {} , infraMapping {} and releaseName {}", instancesInDB.size(),
-              appId, infraMappingId, containerMetadata.getReleaseName());
+          logger.info("Found {} instances in DB for app {} and releaseName {}", instancesInDB.size(), appId,
+              containerMetadata.getReleaseName());
 
           syncK8sInstances(
               containerInfraMapping, containerMetadata, instancesInDB, deploymentSummaryMap.get(containerMetadata));
         } else {
-          logger.info("Found {} instances in DB for app {} , infraMapping {} and containerServiceName {}",
-              instancesInDB.size(), appId, infraMappingId, containerMetadata.getContainerServiceName());
+          logger.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
+              containerMetadata.getContainerServiceName());
 
           // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
           // ECS it is taskDefinition)
           ContainerSyncResponse instanceSyncResponse =
               containerSync.getInstances(containerInfraMapping, singletonList(containerMetadata));
-          Validator.notNullCheck("InstanceSyncResponse is null for containerSvcName: "
-                  + containerMetadata.getContainerServiceName() + " for infraMappingId: " + infraMappingId,
+          Validator.notNullCheck(
+              "InstanceSyncResponse is null for containerSvcName: " + containerMetadata.getContainerServiceName(),
               instanceSyncResponse);
 
           List<ContainerInfo> latestContainerInfoList =
               Optional.ofNullable(instanceSyncResponse.getContainerInfoList()).orElse(emptyList());
-          logger.info("Found {} instances from remote server for app {} , infraMapping {} and containerSvcName {}",
-              latestContainerInfoList.size(), appId, infraMappingId, containerMetadata.getContainerServiceName());
+          logger.info("Found {} instances from remote server for app {} and containerSvcName {}",
+              latestContainerInfoList.size(), appId, containerMetadata.getContainerServiceName());
 
           // Key - containerId(taskId in ECS / podId+namespace in Kubernetes), Value - ContainerInfo
           Map<String, ContainerInfo> latestContainerInfoMap = new HashMap<>();
@@ -206,10 +206,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
           logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
 
           logger.info(
-              "Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {}, InfraMappingId: {} and AppId: {}, "
+              "Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {} and AppId: {}, "
                   + "No of instances in DB: {}, No of Running instances: {}, "
                   + "No of instances to be Added: {}, No of instances to be deleted: {}",
-              containerMetadata.getContainerServiceName(), containerMetadata.getNamespace(), infraMappingId, appId,
+              containerMetadata.getContainerServiceName(), containerMetadata.getNamespace(), appId,
               instancesInDB.size(), latestContainerInfoMap.keySet().size(), instancesToBeAdded.size(),
               instanceIdsToBeDeleted.size());
           if (isNotEmpty(instanceIdsToBeDeleted)) {
@@ -222,7 +222,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
             if (!deploymentSummaryMap.containsKey(containerMetadata) && isNotEmpty(instancesInDB)) {
               Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
               if (!instanceWithExecutionInfoOptional.isPresent()) {
-                logger.warn("Couldn't find an instance from a previous deployment for inframapping {}", infraMappingId);
+                logger.warn("Couldn't find an instance from a previous deployment");
                 continue;
               }
 
@@ -278,10 +278,10 @@ public class ContainerInstanceHandler extends InstanceHandler {
     Set<String> instanceIdsToBeDeleted =
         instancesToBeDeleted.stream().map(instancePodName -> dbPodMap.get(instancePodName).getUuid()).collect(toSet());
 
-    logger.info(format(
-        "[InstanceSync for infra %s namespace %s release %s] Got %d running Pods. InstancesToBeAdded:%d InstancesToBeDeleted:%d",
-        containerInfraMapping.getUuid(), containerMetadata.getNamespace(), containerMetadata.getReleaseName(),
-        currentPods.size(), instancesToBeAdded.size(), instanceIdsToBeDeleted.size()));
+    logger.info(
+        "[InstanceSync for namespace {} release {}] Got {} running Pods. InstancesToBeAdded:{} InstancesToBeDeleted:{}",
+        containerMetadata.getNamespace(), containerMetadata.getReleaseName(), currentPods.size(),
+        instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
@@ -376,10 +376,9 @@ public class ContainerInstanceHandler extends InstanceHandler {
     return deploymentSummaryMap;
   }
   private void loadContainerSvcNameInstanceMap(
-      String appId, String infraMappingId, Multimap<ContainerMetadata, Instance> instanceMap) throws WingsException {
+      String appId, String infraMappingId, Multimap<ContainerMetadata, Instance> instanceMap) {
     List<Instance> instanceListInDBForInfraMapping = getInstances(appId, infraMappingId);
-    logger.info("Found {} instances for app {} and infraMapping {} ", instanceListInDBForInfraMapping.size(), appId,
-        infraMappingId);
+    logger.info("Found {} instances for app {}", instanceListInDBForInfraMapping.size(), appId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
       if (instanceInfo instanceof ContainerInfo) {

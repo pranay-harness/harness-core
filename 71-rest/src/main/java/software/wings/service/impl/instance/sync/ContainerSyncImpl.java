@@ -130,13 +130,12 @@ public class ContainerSyncImpl implements ContainerSync {
       ContainerInfrastructureMapping containerInfraMapping, List<ContainerMetadata> containerMetadataList) {
     List<ContainerInfo> result = Lists.newArrayList();
 
-    logger.info("getInstances() call for app {} , infraMapping {}", containerInfraMapping.getAppId(),
-        containerInfraMapping.getUuid());
+    logger.info("getInstances() call for app {}", containerInfraMapping.getAppId());
 
     for (ContainerMetadata containerMetadata : containerMetadataList) {
       try {
-        logger.info("getInstances() call for app {} , infraMapping {} and containerSvcName {}",
-            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerMetadata);
+        logger.info("getInstances() call for app {} and containerSvcName {}", containerInfraMapping.getAppId(),
+            containerMetadata);
 
         ContainerServiceParams containerServiceParams = getContainerServiceParams(
             containerInfraMapping, containerMetadata.getContainerServiceName(), containerMetadata.getNamespace());
@@ -162,14 +161,10 @@ public class ContainerSyncImpl implements ContainerSync {
           throw e;
         }
       } catch (Exception ex) {
-        logger.warn(
-            "Error while getting instances for container for appId {} and infraMappingId {} and containerSvcName {}",
-            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerMetadata, ex);
         throw new WingsException(ErrorCode.GENERAL_ERROR, ex)
             .addParam("message",
                 "Error while getting instances for container for appId " + containerInfraMapping.getAppId()
-                    + " and infraMappingId " + containerInfraMapping.getUuid() + " and containerSvcName "
-                    + containerMetadata);
+                    + " and containerSvcName " + containerMetadata);
       }
     }
     return ContainerSyncResponse.builder().containerInfoList(result).build();

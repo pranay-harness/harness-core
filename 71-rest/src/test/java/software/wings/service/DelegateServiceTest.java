@@ -1157,7 +1157,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     String expectedMessage =
-        "No eligible delegates could perform the required capabilities for this HTTP task: [ https://www.google.com ]\n"
+        "No eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
         + "  -  The capabilities were tested by the following delegates: [ DELEGATE_ID ]\n"
         + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.";
     RemoteMethodReturnValueData notifyResponse =

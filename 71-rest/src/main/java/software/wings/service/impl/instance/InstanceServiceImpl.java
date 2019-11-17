@@ -337,8 +337,7 @@ public class InstanceServiceImpl implements InstanceService {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
     if (syncStatus != null) {
       if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
-        logger.info("Deleting the instances for inframapping {} since sync has been failing for more than a week",
-            infraMappingId);
+        logger.info("Deleting the instances since sync has been failing for more than a week");
         wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());
         pruneByInfrastructureMapping(appId, infraMappingId);
         return;

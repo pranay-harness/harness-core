@@ -738,8 +738,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       timeSeriesMlAnalysisGroupInfo.setGroupName(groupName);
       toSave.put(groupName, timeSeriesMlAnalysisGroupInfo);
     });
-    logger.info("Creating groups for stateExecutionId {}, appId {}, stateType {}, groups {}", stateExecutionId, appId,
-        stateType, toSave);
+    logger.info("Creating groups for appId {}, stateType {}, groups {}", appId, stateType, toSave);
     wingsPersistence.save(TimeSeriesMetricGroup.builder()
                               .appId(appId)
                               .stateType(stateType)

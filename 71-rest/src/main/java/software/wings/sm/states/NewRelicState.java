@@ -301,11 +301,11 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   protected void createAndSaveMetricGroups(ExecutionContext context, Map<String, String> hostsToCollect) {
     Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
     Set<String> hostGroups = new HashSet<>(hostsToCollect.values());
-    getLogger().info("for state {} saving host groups are {}", context.getStateExecutionInstanceId(), hostGroups);
+    getLogger().info("saving host groups are {}", hostGroups);
     hostGroups.forEach(hostGroup
         -> metricGroups.put(hostGroup,
             TimeSeriesMlAnalysisGroupInfo.builder().groupName(hostGroup).mlAnalysisType(getAnalysisType()).build()));
-    getLogger().info("for state {} saving metric groups {}", context.getStateExecutionInstanceId(), metricGroups);
+    getLogger().info("saving metric groups {}", metricGroups);
     metricAnalysisService.saveMetricGroups(
         context.getAppId(), StateType.valueOf(getStateType()), context.getStateExecutionInstanceId(), metricGroups);
   }

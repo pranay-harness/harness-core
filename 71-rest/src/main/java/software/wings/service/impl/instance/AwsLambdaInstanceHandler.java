@@ -150,9 +150,9 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
 
     final Collection<ServerlessInstance> activeInstancesInDB =
         emptyIfNull(getActiveServerlessInstances(appId, infraMappingId));
-    logger.info("Total no of instances found in DB for InfraMappingId: {} and AppId: {}, "
-            + "No of instances in DB: {}, No of new instances to add: {}  ",
-        infraMappingId, appId, activeInstancesInDB.size(), newDeploymentSummaries.size());
+    logger.info("Total no of instances found in DB for AppId: {}, "
+            + "No of instances in DB: {}, No of new instances to add: {}",
+        appId, activeInstancesInDB.size(), newDeploymentSummaries.size());
 
     if (isNotEmpty(newDeploymentSummaries)) {
       handleNewDeploymentInternal(
