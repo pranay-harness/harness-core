@@ -1755,6 +1755,10 @@
                                 <name>listener</name>
                                 <value>io.harness.ExtendsCategoryEnforcer</value>
                             </property>
+                            <property>
+                                <name>listener</name>
+                                <value>io.harness.OwnerTestListener</value>
+                            </property>
                         </properties>
                     </configuration>
                 </plugin>
