@@ -296,7 +296,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_findPathFromScript() {
-    String script = "echo '${path.root}/abc/test any text sfkjsdfk \n /wrong/path \\${path.root}/xyz.json some text' ";
+    String script =
+        "echo '${service.manifest}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ";
     final List<String> pathFromScript = pcfPluginState.findPathFromScript(script);
     assertThat(pathFromScript.size()).isEqualTo(2);
     assertThat(pathFromScript).contains("/abc/test", "/xyz.json");
@@ -318,7 +319,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
 
     pcfPluginState.setScriptString(
-        "echo '${path.root}/abc/test any text sfkjsdfk \n /wrong/path \\${path.root}/xyz.json some text' ");
+        "echo '${service.manifest}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ");
     final ExecutionResponse executionResponse = pcfPluginState.execute(context);
     assertThat(executionResponse.isAsync()).isTrue();
     final PcfPluginStateExecutionData stateExecutionData =
@@ -340,7 +341,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
         .thenReturn(GitFetchFilesTaskParams.builder().build());
     pcfPluginState.setScriptString(
-        "echo '${path.root}/abc/test any text sfkjsdfk \n /wrong/path \\${path.root}/xyz.json some text' ");
+        "echo '${service.manifest}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ");
     final ExecutionResponse executionResponse = pcfPluginState.execute(context);
     assertThat(executionResponse.isAsync()).isTrue();
     final PcfPluginStateExecutionData stateExecutionData =

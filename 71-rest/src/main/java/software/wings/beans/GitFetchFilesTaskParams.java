@@ -19,4 +19,5 @@ public class GitFetchFilesTaskParams implements TaskParameters {
   private Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap;
   private final ContainerServiceParams containerServiceParams;
   private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
+  private String executionLogName;
 }

@@ -102,7 +102,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
         .space(SPACE)
         .accountId(ACCOUNT_ID)
         .timeoutIntervalInMin(5)
-        .renderedScriptString("cf create-service ${path.root}/manifest.yml")
+        .renderedScriptString("cf create-service ${service.manifest}/manifest.yml")
         .encryptedDataDetails(null)
         .fileDataList(ImmutableList.of(FileData.builder()
                                            .filePath("manifest.yml")

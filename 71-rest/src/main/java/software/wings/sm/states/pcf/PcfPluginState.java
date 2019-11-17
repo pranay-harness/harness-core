@@ -100,7 +100,7 @@ public class PcfPluginState extends State {
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
 
-  public static final String PCF_PLUGIN_COMMAND = "PCF Plugin";
+  public static final String PCF_PLUGIN_COMMAND = "Execute CF Command";
   public static final String FILE_START_REGEX = PcfConstants.FILE_START_REGEX;
   public static final String FILE_END_REGEX = "(\\s|,|;|'|\"|:|$)";
 
