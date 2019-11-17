@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.logging.AutoLogRemoveContext;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
@@ -87,7 +88,9 @@ public class WaitNotifyEngine {
       if ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
         if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
             && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
-          notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+          try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
+            notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+          }
         }
       }
     }
@@ -133,7 +136,9 @@ public class WaitNotifyEngine {
     WaitInstance waitInstance;
     while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
-        notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+        try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
+          notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+        }
       }
     }
   }
