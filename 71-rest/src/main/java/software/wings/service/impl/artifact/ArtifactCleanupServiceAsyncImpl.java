@@ -41,8 +41,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
 
   @Override
   public void cleanupArtifactsAsync(ArtifactStream artifactStream) {
-    logger.info("Cleaning build details for artifact stream id {} type {} and source name {} ",
-        artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+    logger.info("Cleaning build details for artifact stream type {} and source name {} ",
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
@@ -57,8 +57,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
     if (DOCKER.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)) {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
-        logger.warn("Artifact Server {} was deleted of artifactStreamId {}", artifactStream.getSettingId(),
-            artifactStream.getUuid());
+        logger.warn("Artifact Server {} was deleted", artifactStream.getSettingId());
         // TODO:: mark inactive maybe
         return;
       }

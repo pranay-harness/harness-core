@@ -1098,7 +1098,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String accountId = appService.getAccountIdByAppId(appId);
     boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId);
 
-    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+    logger.info("Execution Triggered. Type: {}", executionArgs.getWorkflowType());
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -1845,7 +1845,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     String accountId = this.appService.getAccountIdByAppId(appId);
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+      logger.info("Execution Triggered. Type: {}", executionArgs.getWorkflowType());
     }
 
     checkDeploymentRateLimit(accountId, appId);
@@ -2517,12 +2517,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     workflowExecution.setBreakdown(breakdown);
     workflowExecution.setTotal(total);
-    logger.info("Got the breakdown workflowExecution: {}, status: {}, breakdown: {}", workflowExecution.getUuid(),
-        workflowExecution.getStatus(), breakdown);
+    logger.info("Got the breakdown status: {}, breakdown: {}", workflowExecution.getStatus(), breakdown);
 
     if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
-      logger.info("Set the breakdown of the completed workflowExecution: {}, status: {}, breakdown: {}",
-          workflowExecution.getUuid(), workflowExecution.getStatus(), breakdown);
+      logger.info(
+          "Set the breakdown of the completed status: {}, breakdown: {}", workflowExecution.getStatus(), breakdown);
 
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                            .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
@@ -2534,9 +2533,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         updateOps.set("breakdown", breakdown).set("total", total);
         UpdateResults updated = wingsPersistence.update(query, updateOps);
         logger.info("Updated : {} row", updated.getWriteResult().getN());
-      } catch (java.lang.Exception e) {
-        logger.error(
-            "Error occurred while updating workflow execution {} with breakdown summary", workflowExecution, e);
+      } catch (Exception e) {
+        logger.error("Error occurred while updating with breakdown summary", e);
       }
     }
   }

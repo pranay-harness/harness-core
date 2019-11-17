@@ -59,7 +59,7 @@ public class UsageMetricsEventPublisher {
 
   public DeploymentTimeSeriesEvent constructDeploymentTimeSeriesEvent(
       String accountId, WorkflowExecution workflowExecution) {
-    logger.info("Reporting execution for executionId:" + workflowExecution.getUuid());
+    logger.info("Reporting execution");
     Map<String, String> stringData = new HashMap<>();
     Map<String, List<String>> listData = new HashMap<>();
     Map<String, Long> longData = new HashMap<>();

@@ -253,8 +253,7 @@ public class ArtifactCollectionUtils {
   }
 
   private ImageDetails getDockerImageDetailsInternal(ArtifactStream artifactStream, String workflowExecutionId) {
-    logger.info(format("Entering getDockerImageDetailsInternal: artifactStreamName %s, workflowExecutionId: %s",
-        artifactStream.getName(), workflowExecutionId));
+    logger.info("Entering getDockerImageDetailsInternal: artifactStreamName {}", artifactStream.getName());
 
     try {
       ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
@@ -379,8 +378,7 @@ public class ArtifactCollectionUtils {
       }
       return imageDetailsBuilder.build();
     } finally {
-      logger.info(format("Exiting getDockerImageDetailsInternal: artifactStreamName %s, workflowExecutionId: %s",
-          artifactStream.getName(), workflowExecutionId));
+      logger.info("Exiting getDockerImageDetailsInternal: artifactStreamName {}", artifactStream.getName());
     }
   }
 

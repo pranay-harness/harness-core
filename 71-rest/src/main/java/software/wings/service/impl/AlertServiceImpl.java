@@ -313,7 +313,7 @@ public class AlertServiceImpl implements AlertService {
             .set(AlertKeys.validUntil, expiration));
 
     if (updateResults.getUpdatedCount() > 0) {
-      logger.info("Alert closed after {} : {}", getDurationString(alert.getCreatedAt(), now), alert);
+      logger.info("Alert closed after {} : {}", getDurationString(alert.getCreatedAt(), now), alert.getUuid());
       alert.setStatus(Closed);
       alert.setClosedAt(now);
       alert.setValidUntil(expiration);

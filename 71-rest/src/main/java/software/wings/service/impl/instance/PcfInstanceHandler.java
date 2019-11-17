@@ -149,11 +149,11 @@ public class PcfInstanceHandler extends InstanceHandler {
           });
           logger.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
 
-          logger.info("Total no of instances found in DB for InfraMappingId: {} and AppId: {}, "
+          logger.info("Total no of instances found in DB for AppId: {}, "
                   + "No of instances in DB: {}, No of Running instances: {}, "
                   + "No of instances to be Added: {}, No of instances to be deleted: {}",
-              infraMappingId, appId, instancesInDB.size(), latestPcfInstanceInfoMap.keySet().size(),
-              instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
+              appId, instancesInDB.size(), latestPcfInstanceInfoMap.keySet().size(), instancesToBeAdded.size(),
+              instanceIdsToBeDeleted.size());
           if (isNotEmpty(instanceIdsToBeDeleted)) {
             instanceService.delete(instanceIdsToBeDeleted);
           }
@@ -165,8 +165,7 @@ public class PcfInstanceHandler extends InstanceHandler {
                 && isNotEmpty(instancesInDB)) {
               Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
               if (!instanceWithExecutionInfoOptional.isPresent()) {
-                logger.warn("Couldn't find an instance from a previous deployment for inframapping {}",
-                    infrastructureMapping.getUuid());
+                logger.warn("Couldn't find an instance from a previous deployment for infra mapping");
                 return;
               }
               DeploymentSummary deploymentSummaryFromPrevious =

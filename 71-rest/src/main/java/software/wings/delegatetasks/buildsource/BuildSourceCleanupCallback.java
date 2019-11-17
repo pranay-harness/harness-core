@@ -111,8 +111,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
         handleResponseForSuccess(notifyResponseData, artifactStream);
       } else {
-        logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
-            ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
+        logger.info("Request failed :[{}]", ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
       }
     } else {
       notifyError(response);
@@ -123,8 +122,7 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   public void notifyError(Map<String, ResponseData> response) {
     ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
-          ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      logger.info("Request failed :[{}]", ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {
       logger.error("Unexpected  notify response:[{}] during artifact collection for artifactStreamId {} ", response,
           artifactStreamId);

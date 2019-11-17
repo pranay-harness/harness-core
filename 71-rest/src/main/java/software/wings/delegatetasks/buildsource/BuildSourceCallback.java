@@ -183,9 +183,7 @@ public class BuildSourceCallback implements NotifyCallback {
         if (SUCCESS.equals(((BuildSourceExecutionResponse) notifyResponseData).getCommandExecutionStatus())) {
           handleResponseForSuccess(notifyResponseData, artifactStream);
         } else {
-          logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
-              ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
-          //        permitService.releasePermit(permitId, true);
+          logger.info("Request failed :[{}]", ((BuildSourceExecutionResponse) notifyResponseData).getErrorMessage());
           updatePermit(artifactStream, true);
         }
       } else {
@@ -200,8 +198,7 @@ public class BuildSourceCallback implements NotifyCallback {
       artifactStreamService.updateFailedCronAttempts(
           artifactStream.getAccountId(), artifactStream.getUuid(), failedCronAttempts);
       logger.warn(
-          "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds for artifactStream[{}], totalFailedAttempt:[{}]",
-          artifactStreamId, failedCronAttempts);
+          "ASYNC_ARTIFACT_COLLECTION: failed to fetch/process builds totalFailedAttempt:[{}]", failedCronAttempts);
       if (PermitServiceImpl.shouldSendAlert(failedCronAttempts)) {
         String appId = artifactStream.fetchAppId();
         if (!GLOBAL_APP_ID.equals(appId)) {
@@ -237,11 +234,9 @@ public class BuildSourceCallback implements NotifyCallback {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      logger.info("Request for artifactStreamId:[{}] failed :[{}]", artifactStreamId,
-          ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      logger.info("Request failed :[{}]", ((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
     } else {
-      logger.error("Unexpected  notify response:[{}] during artifact collection for artifactStreamId {} ", response,
-          artifactStreamId);
+      logger.error("Unexpected  notify response:[{}] during artifact collection", response);
     }
     updatePermit(artifactStream, true);
   }

@@ -54,8 +54,8 @@ public class AzureInstanceHandler extends InstanceHandler {
 
     loadInstanceMapBasedOnType(appId, infraMappingId, azureInstanceIdInstanceMap);
 
-    logger.info("Found {} azure instances for app {} and infraMapping {} ",
-        azureInstanceIdInstanceMap != null ? azureInstanceIdInstanceMap.size() : 0, appId, infraMappingId);
+    logger.info("Found {} azure instances for app {}",
+        azureInstanceIdInstanceMap != null ? azureInstanceIdInstanceMap.size() : 0, appId);
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();

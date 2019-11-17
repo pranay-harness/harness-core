@@ -11,7 +11,8 @@ public class EntityLogContext extends AutoLogContext {
   public EntityLogContext(PersistentEntity entity, OverrideBehavior behavior) {
     super(NullSafeImmutableMap.<String, String>builder()
               .put("class", entity.getClass().getName())
-              .putIfNotNull("uuid", entity instanceof UuidAccess ? ((UuidAccess) entity).getUuid() : null)
+              .putIfNotNull(entity.getClass().getSimpleName() + "Id",
+                  entity instanceof UuidAccess ? ((UuidAccess) entity).getUuid() : null)
               .putIfNotNull(AccountLogContext.ID,
                   entity instanceof AccountAccess ? ((AccountAccess) entity).getAccountId() : null)
               .build(),

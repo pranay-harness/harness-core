@@ -297,10 +297,8 @@ public class AwsInstanceHandler extends InstanceHandler {
   private void deleteRunningEc2InstancesFromMap(Map<String, Instance> ec2InstanceIdInstanceMap,
       List<com.amazonaws.services.ec2.model.Instance> activeInstanceList) {
     Instance ec2instance = ec2InstanceIdInstanceMap.values().iterator().next();
-    logger.info(
-        "Total no of Ec2 instances found in DB for InfraMappingId: {} and AppId: {}: {}, No of Running instances found in aws:{}",
-        ec2instance.getInfraMappingId(), ec2instance.getAppId(), ec2InstanceIdInstanceMap.size(),
-        activeInstanceList.size());
+    logger.info("Total no of Ec2 instances found in DB for AppId: {}: {}, No of Running instances found in aws:{}",
+        ec2instance.getAppId(), ec2InstanceIdInstanceMap.size(), activeInstanceList.size());
     ec2InstanceIdInstanceMap.keySet().removeAll(
         activeInstanceList.stream().map(com.amazonaws.services.ec2.model.Instance::getInstanceId).collect(toSet()));
 

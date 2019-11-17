@@ -59,7 +59,7 @@ public class DelegateRequestRateLimiter {
       } else if (isNotEmpty(accountId)) {
         boolean rateLimitReached = getAccountRateLimiter(accountId).overLimitWhenIncremented(delegateId);
         if (rateLimitReached) {
-          logger.info("Delegate Acquire Task limit reached for delegate {}", delegateId);
+          logger.info("Delegate Acquire Task limit reached");
           return true;
         }
       }

@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
-import static java.lang.String.format;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -481,8 +480,7 @@ public class InstanceHelper {
     String workflowExecutionId = deploymentSummaries.iterator().next().getWorkflowExecutionId();
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
-      logger.info("Handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
-          workflowExecutionId, infraMappingId, appId);
+      logger.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
 
       InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
       Validator.notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
@@ -492,11 +490,9 @@ public class InstanceHelper {
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         instanceHandler.handleNewDeployment(deploymentSummaries, isRollback);
-        logger.info("Handled deployment event for executionId [{}], infraMappingId [{}] successfully",
-            workflowExecutionId, infraMappingId);
+        logger.info("Handled deployment event for infraMappingId [{}] successfully", infraMappingId);
       } else {
-        logger.info(
-            "Skipping deployment event for executionId [{}], infraMappingId [{}]", workflowExecutionId, infraMappingId);
+        logger.info("Skipping deployment event for infraMappingId [{}]", infraMappingId);
       }
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
@@ -610,23 +606,23 @@ public class InstanceHelper {
     try (AcquiredLock lock =
              persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
       if (lock == null) {
-        logger.warn("Couldn't acquire infra lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+        logger.warn("Couldn't acquire infra lock for infraMapping of appId [{}]", appId);
         return;
       }
 
       try {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
         if (instanceHandler == null) {
-          logger.warn("Instance handler null for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
+          logger.warn("Instance handler null for infraMapping of appId [{}]", appId);
           return;
         }
-        logger.info("Instance sync started for infraMapping [{}]", infraMappingId);
+        logger.info("Instance sync started for infraMapping");
         instanceHandler.syncInstances(appId, infraMappingId);
         instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
             infraMapping.getDisplayName(), System.currentTimeMillis());
-        logger.info("Instance sync completed for infraMapping [{}]", infraMappingId);
+        logger.info("Instance sync completed for infraMapping");
       } catch (Exception ex) {
-        logger.warn(format("Instance sync failed for infraMappingId [%s]", infraMappingId), ex);
+        logger.warn("Instance sync failed for infraMapping", ex);
         String errorMsg;
         if (ex instanceof WingsException) {
           errorMsg = ex.getMessage();
