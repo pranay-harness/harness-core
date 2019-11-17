@@ -45,12 +45,14 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.sm.StateType;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+
 /**
  * Created by sgurubelli on 8/7/17.
  */
@@ -135,6 +137,7 @@ public abstract class ExpressionBuilder {
   protected static final String INFRA_PCF_ORG = "infra.pcf.organization";
   protected static final String INFRA_PCF_SPACE = "infra.pcf.space";
   protected static final String INFRA_PCF_CLOUDPROVIDER_NAME = "infra.pcf.cloudProvider.name";
+  protected static final String PCF_PLUGIN_SERVICE_MANIFEST = "service.manifest";
 
   protected static final String APPROVEDBY_NAME = "approvedBy.name";
   protected static final String APPROVEDBY_EMAIL = "approvedBy.email";
@@ -239,13 +242,16 @@ public abstract class ExpressionBuilder {
       case KUBERNETES_DEPLOY:
         noop();
         break;
+      case PCF_PLUGIN:
+        expressions.addAll(getPcfWorkflowExpressions());
+        expressions.add(PCF_PLUGIN_SERVICE_MANIFEST);
+        break;
       case PCF_SETUP:
       case PCF_RESIZE:
       case PCF_ROLLBACK:
       case PCF_MAP_ROUTE:
       case PCF_UNMAP_ROUTE:
-        expressions.addAll(
-            asList(INFRA_PCF_ORG, INFRA_PCF_SPACE, INFRA_PCF_CLOUDPROVIDER_NAME, PCF_APP_NAME, PCF_OLD_APP_NAME));
+        expressions.addAll(getPcfWorkflowExpressions());
         break;
       case HELM_DEPLOY:
       case HELM_ROLLBACK:
@@ -269,6 +275,10 @@ public abstract class ExpressionBuilder {
     }
 
     return expressions;
+  }
+
+  private static Collection<String> getPcfWorkflowExpressions() {
+    return asList(INFRA_PCF_ORG, INFRA_PCF_SPACE, INFRA_PCF_CLOUDPROVIDER_NAME, PCF_APP_NAME, PCF_OLD_APP_NAME);
   }
 
   protected Set<String> getServiceVariables(String appId, List<String> entityIds) {

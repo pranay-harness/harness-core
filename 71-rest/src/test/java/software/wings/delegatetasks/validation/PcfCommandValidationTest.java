@@ -79,4 +79,23 @@ public class PcfCommandValidationTest extends CategoryTest {
     criteria = pcfCommandValidation.getCriteria(request);
     assertThat(criteria).isEqualTo("Pcf:url/user_cf_cli_cf_appautoscalar");
   }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testPcfCliValidationRequired() {
+    Consumer consumer = mock(Consumer.class);
+    PCFCommandValidation pcfCommandValidation =
+        new PCFCommandValidation("", DelegateTask.builder().data(TaskData.builder().build()).build(), consumer);
+
+    PcfConfig pcfConfig = PcfConfig.builder().endpointUrl("url").username("user").build();
+    PcfCommandSetupRequest request = PcfCommandSetupRequest.builder().pcfConfig(pcfConfig).build();
+    assertThat(pcfCommandValidation.pcfCliValidationRequired(request)).isFalse();
+
+    request.setUseAppAutoscalar(true);
+    assertThat(pcfCommandValidation.pcfCliValidationRequired(request)).isTrue();
+
+    request.setUseCLIForPcfAppCreation(true);
+    assertThat(pcfCommandValidation.pcfCliValidationRequired(request)).isTrue();
+  }
 }

@@ -1,9 +1,14 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
+import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.Log.LogColor.White;
+import static software.wings.beans.Log.LogWeight.Bold;
+import static software.wings.beans.Log.color;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -241,6 +246,14 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
         pcfClient.checkIfAppHasAutoscalarAttached(appAutoscalarRequestData, executionLogCallback);
     if (autoscalarAttached) {
       pcfClient.performConfigureAutoscalar(appAutoscalarRequestData, executionLogCallback);
+    } else {
+      executionLogCallback.saveExecutionLog(
+          color(new StringBuilder(128)
+                    .append("# No Autoscaling service Instance was associated with Application: ")
+                    .append(appAutoscalarRequestData.getApplicationName())
+                    .append(", Configure autoscalar can not be performed")
+                    .toString(),
+              White, Bold));
     }
   }
 
@@ -251,9 +264,21 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     appAutoscalarRequestData.setExpectedEnabled(!enable);
     boolean autoscalarAttachedWithExpectedStatus =
         pcfClient.checkIfAppHasAutoscalarWithExpectedState(appAutoscalarRequestData, executionLogCallback);
+
     if (autoscalarAttachedWithExpectedStatus) {
+      executionLogCallback.saveExecutionLog(color(new StringBuilder(128)
+                                                      .append("# Performing Operation: ")
+                                                      .append(enable ? ENABLE_AUTOSCALING : DISABLE_AUTOSCALING)
+                                                      .append(" For Application: ")
+                                                      .append(appAutoscalarRequestData.getApplicationName())
+                                                      .toString(),
+          White, Bold));
       pcfClient.changeAutoscalarState(appAutoscalarRequestData, executionLogCallback, enable);
       return true;
+    } else {
+      executionLogCallback.saveExecutionLog(
+          color("# No Need to update Autoscalar for Application: " + appAutoscalarRequestData.getApplicationName(),
+              White, Bold));
     }
 
     return false;

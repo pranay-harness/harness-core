@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -68,8 +69,10 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     logger.info(format("Running GitFetchFilesTask for account %s, app %s, activityId %s", taskParams.getAccountId(),
         taskParams.getAppId(), taskParams.getActivityId()));
 
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
-        delegateLogService, taskParams.getAccountId(), taskParams.getAppId(), taskParams.getActivityId(), FetchFiles);
+    String executionLogName = isEmpty(taskParams.getExecutionLogName()) ? FetchFiles : taskParams.getExecutionLogName();
+
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService, taskParams.getAccountId(),
+        taskParams.getAppId(), taskParams.getActivityId(), executionLogName);
 
     AppManifestKind appManifestKind = taskParams.getAppManifestKind();
     Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();

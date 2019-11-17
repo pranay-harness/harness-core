@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
+import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
@@ -584,6 +585,7 @@ public class PcfStateHelper {
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setFinalState(true);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.PCF_OVERRIDE);
+    fetchFilesTaskParams.setExecutionLogName(FetchFiles);
 
     String waitId = generateUuid();
     return DelegateTask.builder()
