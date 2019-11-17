@@ -2,6 +2,7 @@ package io.harness.mongo;
 
 import com.mongodb.DBObject;
 import io.harness.exception.UnexpectedException;
+import io.harness.logging.AutoLogRemoveContext;
 import io.harness.mongo.MorphiaMove.MorphiaMoveKeys;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar.NotFoundClass;
@@ -69,13 +70,16 @@ public class HObjectFactory extends DefaultCreator {
     if (datastore == null) {
       return null;
     }
-    final MorphiaMove morphiaMove = datastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, name).get();
-    if (morphiaMove != null) {
-      for (String source : morphiaMove.getSources()) {
-        try {
-          return Class.forName(source, true, getClassLoaderForClass());
-        } catch (ClassNotFoundException ignore) {
-          // do nothing
+    try (AutoLogRemoveContext ignore1 = new AutoLogRemoveContext(CollectionLogContext.ID)) {
+      final MorphiaMove morphiaMove =
+          datastore.createQuery(MorphiaMove.class).filter(MorphiaMoveKeys.target, name).get();
+      if (morphiaMove != null) {
+        for (String source : morphiaMove.getSources()) {
+          try {
+            return Class.forName(source, true, getClassLoaderForClass());
+          } catch (ClassNotFoundException ignore2) {
+            // do nothing
+          }
         }
       }
     }
