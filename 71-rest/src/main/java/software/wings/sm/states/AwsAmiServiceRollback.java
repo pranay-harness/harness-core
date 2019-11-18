@@ -151,7 +151,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
 
   @Override
   @SchemaIgnore
-  public int getInstanceCount() {
+  public String getInstanceCount() {
     return super.getInstanceCount();
   }
 

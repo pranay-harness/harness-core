@@ -13,6 +13,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -51,6 +52,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceSetupElement;
@@ -129,8 +132,15 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecute() {
     state.setInstanceUnitType(PERCENTAGE);
-    state.setInstanceCount(100);
+    state.setInstanceCount("100");
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    when(mockContext.renderExpression(anyString())).thenAnswer(new Answer<String>() {
+      @Override
+      public String answer(InvocationOnMock invocation) throws Throwable {
+        Object[] args = invocation.getArguments();
+        return (String) args[0];
+      }
+    });
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
     String asg1 = "foo__1";
