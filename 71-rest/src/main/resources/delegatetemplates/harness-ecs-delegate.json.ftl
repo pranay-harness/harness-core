@@ -46,6 +46,14 @@
           "name": "MANAGER_HOST_AND_PORT",
           "value": "${managerHostAndPort}"
         },
+        {
+          "name": "MANAGER_TARGET",
+          "value": "${managerTarget}"
+        },
+        {
+          "name": "MANAGER_AUTHORITY",
+          "value": "${managerAuthority}"
+        },
 <#if CCM_EVENT_COLLECTION??>
         {
           "name": "PUBLISH_TARGET",
@@ -58,14 +66,6 @@
         {
           "name": "QUEUE_FILE_PATH",
           "value": "${queueFilePath}"
-        },
-        {
-          "name": "MANAGER_TARGET",
-          "value": "${managerTarget}"
-        },
-        {
-          "name": "MANAGER_AUTHORITY",
-          "value": "${managerAuthority}"
         },
         {
           "name": "ENABLE_PERPETUAL_TASKS",

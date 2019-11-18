@@ -16,6 +16,8 @@ import com.google.inject.name.Names;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.message.MessageService;
+import io.harness.event.client.impl.tailer.TailerModule;
+import io.harness.event.client.impl.tailer.TailerModule.Config;
 import io.harness.managerclient.ManagerClientModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
@@ -117,6 +119,15 @@ public class WatcherApplication {
         configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
 
     modules.addAll(new WatcherModule().cumulativeDependencies());
+    if (configuration.getQueueFilePath() != null) {
+      modules.add(new TailerModule(Config.builder()
+                                       .accountId(configuration.getAccountId())
+                                       .accountSecret(configuration.getAccountSecret())
+                                       .queueFilePath(configuration.getQueueFilePath())
+                                       .publishAuthority(configuration.getPublishAuthority())
+                                       .publishTarget(configuration.getPublishTarget())
+                                       .build()));
+    }
 
     Injector injector = Guice.createInjector(modules);
 

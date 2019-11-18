@@ -6,8 +6,9 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import io.harness.event.client.EventPublisher;
-import io.harness.event.client.PublisherModule;
-import io.harness.event.client.PublisherModule.Config;
+import io.harness.event.client.impl.appender.AppenderModule;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
+import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.grpc.server.Connector;
 import io.harness.module.TestMongoModule;
@@ -48,13 +49,14 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
     morphia.getMapper().getOptions().setObjectFactory(new HObjectFactory());
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoInfo.getClient(), databaseName());
     datastore.setQueryFactory(new QueryFactory());
-    return ImmutableList.of(new PublisherModule(Config.builder()
-                                                    .publishTarget("localhost:" + PORT)
-                                                    .publishAuthority("localhost")
-                                                    .queueFilePath(QUEUE_FILE_PATH)
-                                                    .accountId(DEFAULT_ACCOUNT_ID)
-                                                    .accountSecret(DEFAULT_ACCOUNT_SECRET)
-                                                    .build()),
+    return ImmutableList.of(new AppenderModule(AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build()),
+        new TailerModule(TailerModule.Config.builder()
+                             .accountId(DEFAULT_ACCOUNT_ID)
+                             .accountSecret(DEFAULT_ACCOUNT_SECRET)
+                             .queueFilePath(QUEUE_FILE_PATH)
+                             .publishTarget("localhost:" + PORT)
+                             .publishAuthority("localhost")
+                             .build()),
         new EventServiceModule(
             EventServiceConfig.builder().connector(new Connector(PORT, true, "cert.pem", "key.pem")).build()),
         new TestMongoModule(datastore, null));
@@ -79,10 +81,12 @@ public class EventServiceTestRule implements MethodRule, MongoRuleMixin, Injecto
   public void initialize(Injector injector, List<Module> modules) {
     injector.getInstance(ServiceManager.class).startAsync().awaitHealthy();
     injector.getInstance(HPersistence.class).registerUserProvider(new ThreadLocalUserProvider());
+    injector.getInstance(ChronicleEventTailer.class).startAsync().awaitRunning();
   }
 
   @Override
   public void destroy(Injector injector, List<Module> modules) throws Exception {
+    injector.getInstance(ChronicleEventTailer.class).stopAsync().awaitTerminated();
     injector.getInstance(EventPublisher.class).shutdown();
     injector.getInstance(ServiceManager.class).stopAsync().awaitStopped();
   }

@@ -76,8 +76,8 @@ import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
+import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.managerclient.ManagerClient;
 import io.harness.managerclient.SafeHttpCall;
@@ -121,6 +121,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * Created by brett on 10/26/17
@@ -155,6 +156,8 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject private MessageService messageService;
   @Inject private ManagerClient managerClient;
 
+  @Nullable @Inject(optional = true) private ChronicleEventTailer chronicleEventTailer;
+
   private final Object waiter = new Object();
   private final AtomicBoolean working = new AtomicBoolean(false);
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
@@ -180,7 +183,9 @@ public class WatcherServiceImpl implements WatcherService {
         logger.info(message != null ? "[New] Got go-ahead. Proceeding"
                                     : "[New] Timed out waiting for go-ahead. Proceeding anyway");
       }
-
+      if (chronicleEventTailer != null) {
+        chronicleEventTailer.startAsync().awaitRunning();
+      }
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
 
       logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
@@ -569,7 +574,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       logger.warn("Unable to fetch delegate version information", e);
     }
-    throw new WingsException(ErrorCode.GENERAL_ERROR, "Couldn't get delegate versions.");
+    throw new GeneralException("Couldn't get delegate versions.");
   }
 
   private int getMinorVersion(String delegateVersion) {
@@ -876,6 +881,9 @@ public class WatcherServiceImpl implements WatcherService {
           if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
             logger.info(
                 "[Old] Retrieved watcher-started message from new watcher {}. Sending go-ahead", newWatcherProcess);
+            if (chronicleEventTailer != null) {
+              chronicleEventTailer.stopAsync().awaitTerminated();
+            }
             messageService.writeMessageToChannel(WATCHER, newWatcherProcess, WATCHER_GO_AHEAD);
             logger.info("[Old] Watcher upgraded. Stopping");
             removeWatcherVersionFromCapsule(version, newVersion);

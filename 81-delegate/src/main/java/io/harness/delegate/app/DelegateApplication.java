@@ -28,7 +28,8 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
 import io.harness.event.client.EventPublisher;
-import io.harness.event.client.PublisherModule;
+import io.harness.event.client.impl.appender.AppenderModule;
+import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.grpc.ManagerGrpcClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
@@ -130,6 +131,8 @@ public class DelegateApplication {
     modules.add(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
                                                 .target(configuration.getManagerTarget())
                                                 .authority(configuration.getManagerAuthority())
+                                                .accountId(configuration.getAccountId())
+                                                .accountSecret(configuration.getAccountSecret())
                                                 .build()));
     if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
@@ -138,13 +141,7 @@ public class DelegateApplication {
       modules.add(new PerpetualTaskWorkerModule());
     }
     modules.add(new KubernetesClientFactoryModule());
-    modules.add(new PublisherModule(PublisherModule.Config.builder()
-                                        .accountId(configuration.getAccountId())
-                                        .accountSecret(configuration.getAccountSecret())
-                                        .publishTarget(configuration.getPublishTarget())
-                                        .publishAuthority(configuration.getPublishAuthority())
-                                        .queueFilePath(configuration.getQueueFilePath())
-                                        .build()));
+    modules.add(new AppenderModule(Config.builder().queueFilePath(configuration.getQueueFilePath()).build()));
     modules.addAll(new DelegateModule().cumulativeDependencies());
 
     Injector injector = Guice.createInjector(modules);

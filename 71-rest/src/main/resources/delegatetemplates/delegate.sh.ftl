@@ -153,12 +153,6 @@ if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
   echo "managerAuthority  : ${managerAuthority}" >> config-delegate.yml
 fi
 <#if CCM_EVENT_COLLECTION??>
-if ! `grep publishTarget config-delegate.yml > /dev/null`; then
-  echo "publishTarget : ${publishTarget}" >> config-delegate.yml
-fi
-if ! `grep publishAuthority config-delegate.yml > /dev/null`; then
-  echo "publishAuthority : ${publishAuthority}" >> config-delegate.yml
-fi
 if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
   echo "queueFilePath : ${queueFilePath}" >> config-delegate.yml
 fi

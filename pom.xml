@@ -881,7 +881,7 @@
             <dependency>
                 <groupId>net.openhft</groupId>
                 <artifactId>chronicle-queue</artifactId>
-                <version>5.17.16</version>
+                <version>5.17.26</version>
             </dependency>
             <dependency>
                 <groupId>net.rcarz</groupId>

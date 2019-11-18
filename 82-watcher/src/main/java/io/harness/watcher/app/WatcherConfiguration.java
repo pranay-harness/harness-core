@@ -14,4 +14,7 @@ public class WatcherConfiguration {
   private String upgradeCheckLocation;
   private long upgradeCheckIntervalSeconds;
   private String delegateCheckLocation;
+  private String queueFilePath;
+  private String publishTarget;
+  private String publishAuthority;
 }

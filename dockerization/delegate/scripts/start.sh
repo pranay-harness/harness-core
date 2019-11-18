@@ -156,6 +156,15 @@ fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: _delegateStorageUrl_/_delegateCheckLocation_" >> config-watcher.yml
 fi
+if ! `grep publishTarget config-watcher.yml > /dev/null`; then
+  echo "publishTarget: _publishTarget_" >> config-watcher.yml
+fi
+if ! `grep publishAuthority config-watcher.yml > /dev/null`; then
+  echo "publishAuthority: _publishAuthority_" >> config-watcher.yml
+fi
+if ! `grep queueFilePath config-watcher.yml > /dev/null`; then
+  echo "queueFilePath: _queueFilePath_" >> config-watcher.yml
+fi
 
 if [ ! -e config-delegate.yml ]; then
   echo "accountId: _accountId_" > config-delegate.yml
@@ -192,12 +201,6 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   else
       echo "pollForTasks: _pollForTasks_" >> config-delegate.yml
   fi
-fi
-if ! `grep publishTarget config-delegate.yml > /dev/null`; then
-  echo "publishTarget : _publishTarget_" >> config-delegate.yml
-fi
-if ! `grep publishAuthority config-delegate.yml > /dev/null`; then
-  echo "publishAuthority : _publishAuthority_" >> config-delegate.yml
 fi
 if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
   echo "queueFilePath : _queueFilePath_" >> config-delegate.yml

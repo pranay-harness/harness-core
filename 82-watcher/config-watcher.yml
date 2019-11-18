@@ -4,3 +4,6 @@ managerUrl: https://localhost:9090/api/
 doUpgrade: false
 upgradeCheckLocation: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 upgradeCheckIntervalSeconds: 60
+publishTarget: localhost:9890
+publishAuthority: localhost
+queueFilePath: ../eventQueue
