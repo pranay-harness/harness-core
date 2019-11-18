@@ -54,6 +54,7 @@ public class OwnerRule implements TestRule {
   public static final String RAMA = "rama";
   public static final String ROHIT = "rohit.reddy";
   public static final String ROHIT_KUMAR = "rohit.kumar";
+  public static final String ROHITKARELIA = "rohit.karelia";
   public static final String RUSHABH = "rushabh";
   public static final String SHASWAT = "shaswat.deep";
   public static final String SHUBHANSHU = "shubhanshu.verma";
@@ -110,6 +111,7 @@ public class OwnerRule implements TestRule {
           .put(RAMA, DevInfo.builder().email("rama@harness.io").slack("U69BLRG72").build())
           .put(ROHIT, DevInfo.builder().email("rohit.reddy@harness.io").slack("UKLSUUCAC").build())
           .put(ROHIT_KUMAR, DevInfo.builder().email("rohit.kumar@harness.io").slack("UL92UJN4S").build())
+          .put(ROHITKARELIA, DevInfo.builder().email("rohit.karelia@harness.io").slack("UP48HU3T9").build())
           .put(RUSHABH, DevInfo.builder().email("rushabh@harness.io").slack("U8M736D36").build())
           .put(SATYAM, DevInfo.builder().email("satyam.shanker@harness.io").slack("U9Z3R0GL8").build())
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
