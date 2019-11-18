@@ -28,7 +28,6 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
@@ -45,7 +44,6 @@ import java.util.function.Supplier;
 public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HostValidationService hostValidationService;
   @Inject private Mailer mailer;
-  @Inject private SlackNotificationService slackNotificationService;
 
   public ConnectivityValidationTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
