@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -17,7 +18,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
+import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
@@ -42,7 +45,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.QueryImpl;
+import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
@@ -64,6 +69,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
@@ -88,6 +94,7 @@ public class SecretManagerTest extends CategoryTest {
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private LocalEncryptionService localEncryptionService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private KmsService kmsService;
   @Mock private KmsEncryptDecryptClient kmsEncryptDecryptClient;
   @Inject @InjectMocks private SecretManagerImpl secretManager;
 
@@ -421,5 +428,27 @@ public class SecretManagerTest extends CategoryTest {
     } catch (Exception e) {
       fail(e.getMessage());
     }
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testValidateGlobalSecretManager() {
+    QueryImpl<Account> query = mock(QueryImpl.class);
+    MorphiaIterator<Account, Account> result = mock(MorphiaIterator.class);
+    when(wingsPersistence.createQuery(eq(Account.class), any())).thenReturn(query);
+    when(query.fetch()).thenReturn(result);
+
+    QueryImpl<SecretManagerConfig> secretManagerQuery = mock(QueryImpl.class);
+    FieldEnd fieldEnd = mock(FieldEnd.class);
+    KmsConfig kmsConfig = mock(KmsConfig.class);
+    when(wingsPersistence.createQuery(SecretManagerConfig.class)).thenReturn(secretManagerQuery);
+    when(secretManagerQuery.field(ACCOUNT_ID_KEY)).thenReturn(fieldEnd);
+    when(fieldEnd.equal(GLOBAL_ACCOUNT_ID)).thenReturn(secretManagerQuery);
+    when(secretManagerQuery.get()).thenReturn(kmsConfig);
+
+    secretManager.checkAndAlertForInvalidManagers();
+    when(kmsService.encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig))).thenReturn(null);
+    verify(kmsService, times(1)).encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig));
   }
 }

@@ -15,6 +15,9 @@ public interface SecretManagerConfigService {
 
   List<SecretManagerConfig> listSecretManagers(String accountId, boolean maskSecret);
 
+  List<SecretManagerConfig> listSecretManagers(
+      String accountId, boolean maskSecret, boolean includeGlobalSecretManager);
+
   List<SecretManagerConfig> listSecretManagersByType(
       String accountId, EncryptionType encryptionType, boolean maskSecret);
 

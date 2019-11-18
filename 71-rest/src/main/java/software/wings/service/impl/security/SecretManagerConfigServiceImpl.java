@@ -149,18 +149,24 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public List<SecretManagerConfig> listSecretManagers(String accountId, boolean maskSecret) {
+    return listSecretManagers(accountId, maskSecret, true);
+  }
+
+  @Override
+  public List<SecretManagerConfig> listSecretManagers(
+      String accountId, boolean maskSecret, boolean includeGlobalSecretManager) {
     // encryptionType null means all secret manager types.
-    return listSecretManagersInternal(accountId, null, maskSecret);
+    return listSecretManagersInternal(accountId, null, maskSecret, includeGlobalSecretManager);
   }
 
   @Override
   public List<SecretManagerConfig> listSecretManagersByType(
       String accountId, EncryptionType encryptionType, boolean maskSecret) {
-    return listSecretManagersInternal(accountId, encryptionType, maskSecret);
+    return listSecretManagersInternal(accountId, encryptionType, maskSecret, true);
   }
 
   private List<SecretManagerConfig> listSecretManagersInternal(
-      String accountId, EncryptionType encryptionType, boolean maskSecret) {
+      String accountId, EncryptionType encryptionType, boolean maskSecret, boolean includeGlobalSecretManager) {
     List<SecretManagerConfig> rv = new ArrayList<>();
 
     if (isLocalEncryptionEnabled(accountId)) {
@@ -176,6 +182,10 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       boolean defaultSet = false;
       SecretManagerConfig globalSecretManager = null;
       for (SecretManagerConfig secretManagerConfig : secretManagerConfigList) {
+        if (secretManagerConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID) && !includeGlobalSecretManager) {
+          continue;
+        }
+
         if (encryptionType == null || secretManagerConfig.getEncryptionType() == encryptionType) {
           rv.add(secretManagerConfig);
 
