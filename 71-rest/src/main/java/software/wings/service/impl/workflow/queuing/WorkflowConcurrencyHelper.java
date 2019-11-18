@@ -114,7 +114,7 @@ public class WorkflowConcurrencyHelper {
     return phaseStep -> phaseStep.getPhaseStepType().equals(PhaseStepType.PROVISION_INFRASTRUCTURE);
   }
 
-  private GraphNode getResourceConstraintStep(String appId, ConcurrencyStrategy concurrencyStrategy) {
+  public GraphNode getResourceConstraintStep(String appId, ConcurrencyStrategy concurrencyStrategy) {
     String accountId = appService.getAccountIdByAppId(appId);
     ResourceConstraint resourceConstraint =
         resourceConstraintService.ensureResourceConstraintForConcurrency(accountId, QUEUING_RC_NAME);
