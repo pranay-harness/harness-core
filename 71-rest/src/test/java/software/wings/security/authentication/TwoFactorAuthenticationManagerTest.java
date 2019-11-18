@@ -71,6 +71,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     try {
       TwoFactorAuthHandler handler = twoFactorAuthenticationManager.getTwoFactorAuthHandler(TOTP);
       User user = spy(new User());
+      when(user.getDefaultAccountId()).thenReturn("kmpySmUISimoRrJL6NL73w");
+      when(user.getUuid()).thenReturn("kmpySmUISimoRrJL6NL73w");
       when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
       String totpSecretKey = TimeBasedOneTimePasswordUtil.generateBase32Secret();
       user.setTotpSecretKey(totpSecretKey);

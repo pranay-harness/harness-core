@@ -32,6 +32,7 @@ import static io.harness.event.model.EventType.TRIAL_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -48,11 +49,13 @@ import io.harness.event.model.EventType;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.AutoLogContext;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.logcontext.UserLogContext;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
@@ -319,30 +322,32 @@ public class SegmentHandler implements EventHandler {
 
   public void reportTrackEvent(Account account, String event, User user, Map<String, String> properties,
       Map<String, Boolean> integrations) throws URISyntaxException {
-    String userId = user.getUuid();
-    String identity = user.getSegmentIdentity();
-    logger.info("Reporting track for event {} with lead {}", event, userId);
-    if (isEmpty(identity) || !identity.equals(userId)) {
-      identity = reportIdentity(account, user, true);
-      if (isEmpty(identity)) {
-        logger.error("Invalid identity id reported for user {}", userId);
-        return;
+    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+      String userId = user.getUuid();
+      String identity = user.getSegmentIdentity();
+      logger.info("Reporting track for event {} with lead {}", event, userId);
+      if (isEmpty(identity) || !identity.equals(userId)) {
+        identity = reportIdentity(account, user, true);
+        if (isEmpty(identity)) {
+          logger.error("Invalid identity id reported for user {}", userId);
+          return;
+        }
+
+        // Getting the latest copy since we had a sleep of 10 seconds.
+        user = userService.getUserFromCacheOrDB(userId);
       }
 
-      // Getting the latest copy since we had a sleep of 10 seconds.
-      user = userService.getUserFromCacheOrDB(userId);
-    }
+      if (properties == null) {
+        properties = new HashMap<>();
+        properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
+      }
 
-    if (properties == null) {
-      properties = new HashMap<>();
-      properties.put("original_timestamp", String.valueOf(System.currentTimeMillis()));
+      boolean reported = segmentHelper.reportTrackEvent(identity, event, properties, integrations);
+      if (reported) {
+        updateUserEvents(user, event);
+      }
+      logger.info("Reported track for event {} with lead {}", event, userId);
     }
-
-    boolean reported = segmentHelper.reportTrackEvent(identity, event, properties, integrations);
-    if (reported) {
-      updateUserEvents(user, event);
-    }
-    logger.info("Reported track for event {} with lead {}", event, userId);
   }
 
   public void reportTrackEvent(Account account, String event, String userId, Map<String, String> properties,

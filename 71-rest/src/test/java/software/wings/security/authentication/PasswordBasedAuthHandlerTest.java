@@ -103,6 +103,8 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   public void testBasicTokenValidationEmailNotVerified() {
     try {
       User user = new User();
+      user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+      user.setUuid("kmpySmUISimoRrJL6NL73w");
       doReturn(user).when(authHandler).getUser(anyString());
       authHandler.authenticate("admin@harness.io", "admin");
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -121,6 +123,8 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
       User mockUser = mock(User.class);
       when(mockUser.isEmailVerified()).thenReturn(true);
       when(mockUser.getUserLockoutInfo()).thenReturn(new UserLockoutInfo());
+      when(mockUser.getDefaultAccountId()).thenReturn("kmpySmUISimoRrJL6NL73w");
+      when(mockUser.getUuid()).thenReturn("kmpySmUISimoRrJL6NL73w");
       doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());
       doReturn(mockUser).when(authHandler).getUser(anyString());
       when(mockUser.getPasswordHash()).thenReturn("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
@@ -142,6 +146,8 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
           .check(Mockito.any(User.class));
 
       User mockUser = mock(User.class);
+      when(mockUser.getDefaultAccountId()).thenReturn("kmpySmUISimoRrJL6NL73w");
+      when(mockUser.getUuid()).thenReturn("kmpySmUISimoRrJL6NL73w");
       when(mockUser.isEmailVerified()).thenReturn(true);
       when(mockUser.getUserLockoutInfo()).thenReturn(new UserLockoutInfo());
       doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());

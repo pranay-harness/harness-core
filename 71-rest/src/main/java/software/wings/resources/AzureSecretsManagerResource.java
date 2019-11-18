@@ -1,9 +1,14 @@
 package software.wings.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -24,19 +29,26 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@Slf4j
 public class AzureSecretsManagerResource {
   @Inject AzureSecretsManagerServiceImpl azureSecretsManagerService;
 
   @POST
   public RestResponse<String> saveAzureSecretsManagerConfig(
       @QueryParam("accountId") final String accountId, @Valid AzureVaultConfig azureVaultConfig) {
-    return new RestResponse<>(azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, azureVaultConfig));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Adding Azure Secret Manager for accountId: {}", accountId);
+      return new RestResponse<>(azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, azureVaultConfig));
+    }
   }
 
   @DELETE
   public RestResponse<Boolean> deleteAzureVaultConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String secretsManagerConfigId) {
-    return new RestResponse<>(azureSecretsManagerService.deleteConfig(accountId, secretsManagerConfigId));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Deleting Azure Secret Manager for accountId: {}", accountId);
+      return new RestResponse<>(azureSecretsManagerService.deleteConfig(accountId, secretsManagerConfigId));
+    }
   }
 
   @POST

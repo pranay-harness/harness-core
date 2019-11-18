@@ -1,11 +1,16 @@
 package software.wings.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.VaultConfig;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -29,6 +34,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@Slf4j
 public class VaultResource {
   @Inject private VaultService vaultService;
 
@@ -37,7 +43,10 @@ public class VaultResource {
   @ExceptionMetered
   public RestResponse<String> saveVaultConfig(
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
-    return new RestResponse<>(vaultService.saveVaultConfig(accountId, vaultConfig));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Adding vault config for accountId: {}", accountId);
+      return new RestResponse<>(vaultService.saveVaultConfig(accountId, vaultConfig));
+    }
   }
 
   @DELETE
@@ -45,7 +54,10 @@ public class VaultResource {
   @ExceptionMetered
   public RestResponse<Boolean> deleteVaultConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("vaultConfigId") final String vaultConfigId) {
-    return new RestResponse<>(vaultService.deleteVaultConfig(accountId, vaultConfigId));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Deleting vault config for accountId: {}", accountId);
+      return new RestResponse<>(vaultService.deleteVaultConfig(accountId, vaultConfigId));
+    }
   }
 
   @POST

@@ -1,11 +1,16 @@
 package software.wings.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.CyberArkConfig;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -27,6 +32,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@Slf4j
 public class CyberArkResource {
   @Inject private CyberArkService cyberArkService;
 
@@ -35,7 +41,10 @@ public class CyberArkResource {
   @ExceptionMetered
   public RestResponse<String> saveCyberArkConfig(
       @QueryParam("accountId") final String accountId, CyberArkConfig cyberArkConfig) {
-    return new RestResponse<>(cyberArkService.saveConfig(accountId, cyberArkConfig));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Adding CyberArk Secret Manager for accountId: {}", accountId);
+      return new RestResponse<>(cyberArkService.saveConfig(accountId, cyberArkConfig));
+    }
   }
 
   @DELETE
@@ -43,6 +52,9 @@ public class CyberArkResource {
   @ExceptionMetered
   public RestResponse<Boolean> deleteCyberArkConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String configId) {
-    return new RestResponse<>(cyberArkService.deleteConfig(accountId, configId));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Deleting CyberArk Secret Manager for accountId: {}", accountId);
+      return new RestResponse<>(cyberArkService.deleteConfig(accountId, configId));
+    }
   }
 }

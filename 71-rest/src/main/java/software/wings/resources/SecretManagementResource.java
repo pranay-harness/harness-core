@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import com.google.common.collect.Sets;
@@ -12,11 +13,14 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.UuidAware;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
@@ -59,6 +63,7 @@ import javax.ws.rs.core.MediaType;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(ResourceType.SETTING)
+@Slf4j
 public class SecretManagementResource {
   @Inject private SecretManager secretManager;
   @Inject private UsageRestrictionsService usageRestrictionsService;
@@ -133,8 +138,11 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue(),
-        secretText.getPath(), secretText.getUsageRestrictions()));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Adding secret for accountId: {}", accountId);
+      return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue(),
+          secretText.getPath(), secretText.getUsageRestrictions()));
+    }
   }
 
   @POST
@@ -163,7 +171,10 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<Boolean> deleteSecret(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
-    return new RestResponse<>(secretManager.deleteSecret(accountId, uuId));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Deleting secret for accountId: {}", accountId);
+      return new RestResponse<>(secretManager.deleteSecret(accountId, uuId));
+    }
   }
 
   @POST

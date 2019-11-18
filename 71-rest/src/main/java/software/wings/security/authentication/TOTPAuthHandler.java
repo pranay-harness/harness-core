@@ -1,6 +1,7 @@
 package software.wings.security.authentication;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -10,9 +11,12 @@ import com.google.inject.Singleton;
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTimeUtils;
 import software.wings.beans.User;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.logcontext.UserLogContext;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserService;
 
@@ -24,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@Slf4j
 public class TOTPAuthHandler implements TwoFactorAuthHandler {
   @Inject private UserService userService;
   @Inject private AuthenticationUtils authenticationUtils;
@@ -31,7 +36,8 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
 
   @Override
   public User authenticate(User user, String... credentials) {
-    try {
+    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+      logger.info("Authenticating via Two Factor Authenication for accountId: {}", user.getDefaultAccountId());
       String passcode = credentials[0];
       String totpSecret = user.getTotpSecretKey();
       if (isBlank(totpSecret)) {

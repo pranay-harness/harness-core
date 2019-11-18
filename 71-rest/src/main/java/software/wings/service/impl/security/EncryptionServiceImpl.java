@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
 
 import com.google.common.base.Preconditions;
@@ -13,6 +14,8 @@ import com.google.inject.name.Named;
 
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -51,37 +54,40 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   @Override
   public EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (isEmpty(encryptedDataDetails)) {
+    try (AutoLogContext ignore = new AccountLogContext(object.getAccountId(), OVERRIDE_ERROR)) {
+      logger.info("Decrypting a secret");
+      if (isEmpty(encryptedDataDetails)) {
+        return object;
+      }
+
+      for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+        try {
+          char[] decryptedValue;
+
+          Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
+          if (f == null) {
+            logger.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
+            continue;
+          }
+          Preconditions.checkNotNull(f, "could not find " + encryptedDataDetail.getFieldName() + " in " + object);
+          f.setAccessible(true);
+
+          decryptedValue = getDecryptedValue(encryptedDataDetail);
+          f.set(object, decryptedValue);
+          Field encryptedRefField = getEncryptedRefField(f, object);
+          encryptedRefField.setAccessible(true);
+          encryptedRefField.set(object, null);
+        } catch (DelegateRetryableException | SecretManagementDelegateException e) {
+          throw e;
+        } catch (Exception e) {
+          // Log the root cause exception of failed decryption attempts.
+          logger.error("Failed to decrypt encrypted settings.", e);
+          throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), USER);
+        }
+      }
+      object.setDecrypted(true);
       return object;
     }
-
-    for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
-      try {
-        char[] decryptedValue;
-
-        Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());
-        if (f == null) {
-          logger.warn("Could not find field {} in class {}", encryptedDataDetail.getFieldName(), object.getClass());
-          continue;
-        }
-        Preconditions.checkNotNull(f, "could not find " + encryptedDataDetail.getFieldName() + " in " + object);
-        f.setAccessible(true);
-
-        decryptedValue = getDecryptedValue(encryptedDataDetail);
-        f.set(object, decryptedValue);
-        Field encryptedRefField = getEncryptedRefField(f, object);
-        encryptedRefField.setAccessible(true);
-        encryptedRefField.set(object, null);
-      } catch (DelegateRetryableException | SecretManagementDelegateException e) {
-        throw e;
-      } catch (Exception e) {
-        // Log the root cause exception of failed decryption attempts.
-        logger.error("Failed to decrypt encrypted settings.", e);
-        throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR, ExceptionUtils.getMessage(e), USER);
-      }
-    }
-    object.setDecrypted(true);
-    return object;
   }
 
   @Override

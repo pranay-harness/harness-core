@@ -1,11 +1,16 @@
 package software.wings.resources;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KmsConfig;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -29,6 +34,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
+@Slf4j
 public class KmsResource {
   @Inject private KmsService kmsService;
   @Inject private AccountPermissionUtils accountPermissionUtils;
@@ -39,11 +45,14 @@ public class KmsResource {
   @ExceptionMetered
   public RestResponse<String> saveGlobalKmsConfig(
       @QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
-    RestResponse<String> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to save global KMS");
-    if (response == null) {
-      response = new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Adding Global KMS Secret Manager for accountId: {}", accountId);
+      RestResponse<String> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to save global KMS");
+      if (response == null) {
+        response = new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
+      }
+      return response;
     }
-    return response;
   }
 
   @POST
@@ -51,7 +60,10 @@ public class KmsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> saveKmsConfig(@QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
-    return new RestResponse<>(kmsService.saveKmsConfig(accountId, kmsConfig));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Adding KMS Secret Manager for accountId: {}", accountId);
+      return new RestResponse<>(kmsService.saveKmsConfig(accountId, kmsConfig));
+    }
   }
 
   @GET
@@ -61,7 +73,10 @@ public class KmsResource {
   // TODO: Delete this method once UI switched to use the new endpoint below.
   public RestResponse<Boolean> deleteKmsConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("kmsConfigId") final String kmsConfigId) {
-    return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
+    logger.info("Deleting KMS Secret Manager for accountId: {}", accountId);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
+    }
   }
 
   @DELETE
@@ -69,6 +84,8 @@ public class KmsResource {
   @ExceptionMetered
   public RestResponse<Boolean> deleteKmsConfig2(
       @QueryParam("accountId") final String accountId, @QueryParam("kmsConfigId") final String kmsConfigId) {
-    return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
+    }
   }
 }

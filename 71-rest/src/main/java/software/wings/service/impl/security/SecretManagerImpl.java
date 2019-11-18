@@ -16,6 +16,7 @@ import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
@@ -60,6 +61,8 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
@@ -210,109 +213,112 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
       EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
-    String toEncrypt = secret == null ? null : String.valueOf(secret);
-    // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
-    if (encryptedData == null) {
-      encryptedData = EncryptedData.builder()
-                          .name(secretName)
-                          .path(path)
-                          .accountId(accountId)
-                          .type(settingType)
-                          .enabled(true)
-                          .parentIds(new HashSet<>())
-                          .build();
-    }
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Encrypting a secret for accountId: {}", accountId);
+      String toEncrypt = secret == null ? null : String.valueOf(secret);
+      // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
+      if (encryptedData == null) {
+        encryptedData = EncryptedData.builder()
+                            .name(secretName)
+                            .path(path)
+                            .accountId(accountId)
+                            .type(settingType)
+                            .enabled(true)
+                            .parentIds(new HashSet<>())
+                            .build();
+      }
 
-    String kmsId = encryptedData.getKmsId();
-    EncryptionType encryptionType = encryptedData.getEncryptionType();
-    EncryptionType accountEncryptionType = getEncryptionType(accountId);
-    if (encryptionType == null
-        || (encryptionType != accountEncryptionType && encryptionType == LOCAL
-               && accountEncryptionType != EncryptionType.CYBERARK)) {
-      // PL-3160: 1. For new secrets, it always use account level encryption type to encrypt and save
-      // 2. For existing secrets with LOCAL encryption, always use account level default secret manager to save if
-      // default is not CYBERARK
-      // 3. Else use the secrets' currently associated secret manager for update.
-      encryptionType = accountEncryptionType;
-      kmsId = null;
-    }
-    encryptedData.setEncryptionType(encryptionType);
+      String kmsId = encryptedData.getKmsId();
+      EncryptionType encryptionType = encryptedData.getEncryptionType();
+      EncryptionType accountEncryptionType = getEncryptionType(accountId);
+      if (encryptionType == null
+          || (encryptionType != accountEncryptionType && encryptionType == LOCAL
+                 && accountEncryptionType != EncryptionType.CYBERARK)) {
+        // PL-3160: 1. For new secrets, it always use account level encryption type to encrypt and save
+        // 2. For existing secrets with LOCAL encryption, always use account level default secret manager to save if
+        // default is not CYBERARK
+        // 3. Else use the secrets' currently associated secret manager for update.
+        encryptionType = accountEncryptionType;
+        kmsId = null;
+      }
+      encryptedData.setEncryptionType(encryptionType);
 
-    EncryptedData rv;
-    switch (encryptionType) {
-      case LOCAL:
-        LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
-        rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
-        rv.setType(settingType);
-        break;
-
-      case KMS:
-        final KmsConfig kmsConfig = (KmsConfig) getSecretManager(accountId, kmsId, KMS);
-        rv = kmsService.encrypt(secret, accountId, kmsConfig);
-        rv.setKmsId(kmsConfig.getUuid());
-        break;
-
-      case VAULT:
-        final VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, kmsId, VAULT);
-        encryptedData.setKmsId(vaultConfig.getUuid());
-        rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
-        rv.setKmsId(vaultConfig.getUuid());
-        break;
-
-      case AWS_SECRETS_MANAGER:
-        final AwsSecretsManagerConfig secretsManagerConfig =
-            (AwsSecretsManagerConfig) getSecretManager(accountId, kmsId, AWS_SECRETS_MANAGER);
-        encryptedData.setKmsId(secretsManagerConfig.getUuid());
-        rv = secretsManagerService.encrypt(
-            secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
-        rv.setKmsId(secretsManagerConfig.getUuid());
-        break;
-
-      case AZURE_VAULT:
-        final AzureVaultConfig azureConfig = (AzureVaultConfig) getSecretManager(accountId, kmsId, AZURE_VAULT);
-        encryptedData.setKmsId(azureConfig.getUuid());
-        rv = azureVaultService.encrypt(secretName, toEncrypt, accountId, settingType, azureConfig, encryptedData);
-        rv.setKmsId(azureConfig.getUuid());
-        break;
-
-      case CYBERARK:
-        final CyberArkConfig cyberArkConfig = (CyberArkConfig) getSecretManager(accountId, kmsId, CYBERARK);
-        encryptedData.setKmsId(cyberArkConfig.getUuid());
-        if (isNotEmpty(encryptedData.getPath())) {
-          // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is valid.
-          // If the  CyberArk reference is not valid, an exception will be throw.
-          cyberArkService.decrypt(encryptedData, accountId, cyberArkConfig);
-        } else {
-          KmsConfig fallbackKmsConfig = kmsService.getGlobalKmsConfig();
-          if (fallbackKmsConfig != null) {
-            logger.info(
-                "CyberArk doesn't support creating new secret. This new secret text will be created in the global KMS SecretStore instead");
-            rv = kmsService.encrypt(secret, accountId, fallbackKmsConfig);
-            rv.setEncryptionType(KMS);
-            rv.setKmsId(fallbackKmsConfig.getUuid());
-          } else {
-            logger.info(
-                "CyberArk doesn't support creating new secret. This new secret text will be created in the local Harness SecretStore instead");
-            localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
-            rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
-            rv.setEncryptionType(LOCAL);
-          }
-          rv.setName(secretName);
+      EncryptedData rv;
+      switch (encryptionType) {
+        case LOCAL:
+          LocalEncryptionConfig localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+          rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
           rv.setType(settingType);
-          rv.setUsageRestrictions(usageRestrictions);
-          return rv;
-        }
-        rv = encryptedData;
-        break;
+          break;
 
-      default:
-        throw new IllegalStateException("Invalid type:  " + encryptionType);
+        case KMS:
+          final KmsConfig kmsConfig = (KmsConfig) getSecretManager(accountId, kmsId, KMS);
+          rv = kmsService.encrypt(secret, accountId, kmsConfig);
+          rv.setKmsId(kmsConfig.getUuid());
+          break;
+
+        case VAULT:
+          final VaultConfig vaultConfig = (VaultConfig) getSecretManager(accountId, kmsId, VAULT);
+          encryptedData.setKmsId(vaultConfig.getUuid());
+          rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
+          rv.setKmsId(vaultConfig.getUuid());
+          break;
+
+        case AWS_SECRETS_MANAGER:
+          final AwsSecretsManagerConfig secretsManagerConfig =
+              (AwsSecretsManagerConfig) getSecretManager(accountId, kmsId, AWS_SECRETS_MANAGER);
+          encryptedData.setKmsId(secretsManagerConfig.getUuid());
+          rv = secretsManagerService.encrypt(
+              secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
+          rv.setKmsId(secretsManagerConfig.getUuid());
+          break;
+
+        case AZURE_VAULT:
+          final AzureVaultConfig azureConfig = (AzureVaultConfig) getSecretManager(accountId, kmsId, AZURE_VAULT);
+          encryptedData.setKmsId(azureConfig.getUuid());
+          rv = azureVaultService.encrypt(secretName, toEncrypt, accountId, settingType, azureConfig, encryptedData);
+          rv.setKmsId(azureConfig.getUuid());
+          break;
+
+        case CYBERARK:
+          final CyberArkConfig cyberArkConfig = (CyberArkConfig) getSecretManager(accountId, kmsId, CYBERARK);
+          encryptedData.setKmsId(cyberArkConfig.getUuid());
+          if (isNotEmpty(encryptedData.getPath())) {
+            // CyberArk encrypt need to use decrypt of the secret reference as a way of validating the reference is
+            // valid. If the  CyberArk reference is not valid, an exception will be throw.
+            cyberArkService.decrypt(encryptedData, accountId, cyberArkConfig);
+          } else {
+            KmsConfig fallbackKmsConfig = kmsService.getGlobalKmsConfig();
+            if (fallbackKmsConfig != null) {
+              logger.info(
+                  "CyberArk doesn't support creating new secret. This new secret text will be created in the global KMS SecretStore instead");
+              rv = kmsService.encrypt(secret, accountId, fallbackKmsConfig);
+              rv.setEncryptionType(KMS);
+              rv.setKmsId(fallbackKmsConfig.getUuid());
+            } else {
+              logger.info(
+                  "CyberArk doesn't support creating new secret. This new secret text will be created in the local Harness SecretStore instead");
+              localEncryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
+              rv = localEncryptionService.encrypt(secret, accountId, localEncryptionConfig);
+              rv.setEncryptionType(LOCAL);
+            }
+            rv.setName(secretName);
+            rv.setType(settingType);
+            rv.setUsageRestrictions(usageRestrictions);
+            return rv;
+          }
+          rv = encryptedData;
+          break;
+
+        default:
+          throw new IllegalStateException("Invalid type:  " + encryptionType);
+      }
+      rv.setName(secretName);
+      rv.setEncryptionType(encryptionType);
+      rv.setType(settingType);
+      rv.setUsageRestrictions(usageRestrictions);
+      return rv;
     }
-    rv.setName(secretName);
-    rv.setEncryptionType(encryptionType);
-    rv.setType(settingType);
-    rv.setUsageRestrictions(usageRestrictions);
-    return rv;
   }
 
   @Override
@@ -326,11 +332,14 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
-    EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(), null,
-        null, UUID.randomUUID().toString(), usageRestrictions);
-    String recordId = wingsPersistence.save(encryptedData);
-    generateAuditForEncryptedRecord(accountId, null, recordId);
-    return recordId;
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Encrypting a secret for accountId: {}", accountId);
+      EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
+          null, null, UUID.randomUUID().toString(), usageRestrictions);
+      String recordId = wingsPersistence.save(encryptedData);
+      generateAuditForEncryptedRecord(accountId, null, recordId);
+      return recordId;
+    }
   }
 
   public Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId) {

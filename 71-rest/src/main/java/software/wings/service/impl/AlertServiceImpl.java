@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -38,6 +39,7 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -55,6 +57,7 @@ import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
+import software.wings.logcontext.AlertLogContext;
 import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -137,46 +140,48 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    Alert alert = findExistingAlert(accountId, appId, alertType, alertData).orElse(null);
-    if (alert == null) {
-      injector.injectMembers(alertData);
-      alert = Alert.builder()
-                  .appId(appId)
-                  .accountId(accountId)
-                  .type(alertType)
-                  .status(Pending)
-                  .alertData(alertData)
-                  .title(alertData.buildTitle())
-                  .resolutionTitle(alertData.buildResolutionTitle())
-                  .category(alertType.getCategory())
-                  .severity(alertType.getSeverity())
-                  .triggerCount(0)
-                  .build();
-      wingsPersistence.save(alert);
-      logger.info("Alert created: {}", alert);
-    }
-    AlertStatus status = alert.getTriggerCount() >= alertType.getPendingCount() ? Open : Pending;
-    boolean alertOpened = false;
-    UpdateOperations<Alert> updateOperations =
-        wingsPersistence.createUpdateOperations(Alert.class).inc(AlertKeys.triggerCount);
-    if (status == Open && alert.getStatus() == Pending) {
-      updateOperations.set(AlertKeys.status, Open);
-      alertOpened = true;
-    }
-    wingsPersistence.update(alert, updateOperations);
-
-    alert.setTriggerCount(alert.getTriggerCount() + 1);
-    alert.setStatus(status);
-    if (alertOpened) {
-      logger.info("Alert opened: {}", alert);
-
-      if (notificationStatusService.get(accountId).isEnabled()) {
-        publishEvent(alert);
-      } else {
-        logger.info("No alert event will be published. accountId={}", accountId);
+    try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
+      Alert alert = findExistingAlert(accountId, appId, alertType, alertData).orElse(null);
+      if (alert == null) {
+        injector.injectMembers(alertData);
+        alert = Alert.builder()
+                    .appId(appId)
+                    .accountId(accountId)
+                    .type(alertType)
+                    .status(Pending)
+                    .alertData(alertData)
+                    .title(alertData.buildTitle())
+                    .resolutionTitle(alertData.buildResolutionTitle())
+                    .category(alertType.getCategory())
+                    .severity(alertType.getSeverity())
+                    .triggerCount(0)
+                    .build();
+        wingsPersistence.save(alert);
+        logger.info("Alert created: {}", alert);
       }
-    } else if (status == Pending) {
-      logger.info("Alert pending: {}", alert);
+      AlertStatus status = alert.getTriggerCount() >= alertType.getPendingCount() ? Open : Pending;
+      boolean alertOpened = false;
+      UpdateOperations<Alert> updateOperations =
+          wingsPersistence.createUpdateOperations(Alert.class).inc(AlertKeys.triggerCount);
+      if (status == Open && alert.getStatus() == Pending) {
+        updateOperations.set(AlertKeys.status, Open);
+        alertOpened = true;
+      }
+      wingsPersistence.update(alert, updateOperations);
+
+      alert.setTriggerCount(alert.getTriggerCount() + 1);
+      alert.setStatus(status);
+      if (alertOpened) {
+        logger.info("Alert opened: {}", alert);
+
+        if (notificationStatusService.get(accountId).isEnabled()) {
+          publishEvent(alert);
+        } else {
+          logger.info("No alert event will be published. accountId={}", accountId);
+        }
+      } else if (status == Pending) {
+        logger.info("Alert pending: {}", alert);
+      }
     }
   }
 
@@ -245,28 +250,33 @@ public class AlertServiceImpl implements AlertService {
     }
   }
 
-  @Override
   public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
-    for (Alert alert : alertQuery) {
-      injector.injectMembers(alert.getAlertData());
-      if (alertData.matches(alert.getAlertData())) {
-        return Optional.of(alert);
+    try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
+      logger.info("Finding existing alerts for accountId: {} of type:{}", accountId, alertType);
+      Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
+      for (Alert alert : alertQuery) {
+        injector.injectMembers(alert.getAlertData());
+        if (alertData.matches(alert.getAlertData())) {
+          return Optional.of(alert);
+        }
       }
     }
     return Optional.empty();
   }
 
   private List<Alert> findAllExistingAlerts(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
-    List<Alert> alerts = new ArrayList<>();
-    for (Alert alert : alertQuery) {
-      injector.injectMembers(alert.getAlertData());
-      if (alertData.matches(alert.getAlertData())) {
-        alerts.add(alert);
+    try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
+      logger.info("Finding all existing alerts for accountId: {} of type:{}", accountId, alertType);
+      Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
+      List<Alert> alerts = new ArrayList<>();
+      for (Alert alert : alertQuery) {
+        injector.injectMembers(alert.getAlertData());
+        if (alertData.matches(alert.getAlertData())) {
+          alerts.add(alert);
+        }
       }
+      return alerts;
     }
-    return alerts;
   }
 
   private Query<Alert> getAlertsQuery(String accountId, String appId, AlertType alertType, AlertData alertData) {

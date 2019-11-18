@@ -301,6 +301,8 @@ public class AuthServiceTest extends WingsBaseTest {
                         .withEmail("admin@harness.io")
                         .withAccounts(Arrays.asList(mockAccount))
                         .build();
+    mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
     when(userCache.get(USER_ID)).thenReturn(mockUser);
     User user = authService.generateBearerTokenForUser(mockUser);
     assertThat(user.getToken().length()).isGreaterThan(32);
@@ -334,6 +336,8 @@ public class AuthServiceTest extends WingsBaseTest {
                         .withEmail("admin@harness.io")
                         .withAccounts(Arrays.asList(mockAccount))
                         .build();
+    mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
     when(userCache.get(USER_ID)).thenReturn(mockUser);
     User user = authService.generateBearerTokenForUser(mockUser);
     AuthToken authToken = new AuthToken(ACCOUNT_ID, USER_ID, 8640000L);

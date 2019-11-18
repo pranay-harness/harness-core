@@ -1,5 +1,7 @@
 package software.wings.service.impl.compliance;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -9,6 +11,8 @@ import com.segment.analytics.messages.TrackMessage.Builder;
 import io.harness.beans.EmbeddedUser;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.mongodb.morphia.query.Query;
@@ -42,12 +46,15 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   @Override
   public GovernanceConfig get(String accountId) {
-    GovernanceConfig governanceConfig =
-        wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId).get();
-    if (governanceConfig == null) {
-      return getDefaultGovernanceConfig(accountId);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Getting Deployment Freeze window for account: {}", accountId);
+      GovernanceConfig governanceConfig =
+          wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId).get();
+      if (governanceConfig == null) {
+        return getDefaultGovernanceConfig(accountId);
+      }
+      return governanceConfig;
     }
-    return governanceConfig;
   }
 
   private GovernanceConfig getDefaultGovernanceConfig(String accountId) {
@@ -57,34 +64,37 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Override
   @RestrictedApi(GovernanceFeature.class)
   public GovernanceConfig upsert(String accountId, @Nonnull GovernanceConfig governanceConfig) {
-    GovernanceConfig oldSetting = get(accountId);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Updating Deployment Freeze window for account: {}", accountId);
+      GovernanceConfig oldSetting = get(accountId);
 
-    Query<GovernanceConfig> query =
-        wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId);
+      Query<GovernanceConfig> query =
+          wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId);
 
-    UpdateOperations<GovernanceConfig> updateOperations =
-        wingsPersistence.createUpdateOperations(GovernanceConfig.class)
-            .set(GovernanceConfigKeys.deploymentFreeze, governanceConfig.isDeploymentFreeze())
-            .set(GovernanceConfigKeys.timeRangeBasedFreezeConfigs, governanceConfig.getTimeRangeBasedFreezeConfigs());
+      UpdateOperations<GovernanceConfig> updateOperations =
+          wingsPersistence.createUpdateOperations(GovernanceConfig.class)
+              .set(GovernanceConfigKeys.deploymentFreeze, governanceConfig.isDeploymentFreeze())
+              .set(GovernanceConfigKeys.timeRangeBasedFreezeConfigs, governanceConfig.getTimeRangeBasedFreezeConfigs());
 
-    User user = UserThreadLocal.get();
-    if (null != user) {
-      EmbeddedUser embeddedUser = new EmbeddedUser(user.getUuid(), user.getName(), user.getEmail());
-      updateOperations.set(GovernanceConfigKeys.lastUpdatedBy, embeddedUser);
-    } else {
-      logger.error("ThreadLocal User is null when trying to update governance config. accountId={}", accountId);
+      User user = UserThreadLocal.get();
+      if (null != user) {
+        EmbeddedUser embeddedUser = new EmbeddedUser(user.getUuid(), user.getName(), user.getEmail());
+        updateOperations.set(GovernanceConfigKeys.lastUpdatedBy, embeddedUser);
+      } else {
+        logger.error("ThreadLocal User is null when trying to update governance config. accountId={}", accountId);
+      }
+
+      GovernanceConfig updatedVal =
+          wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldSetting, updatedVal, Type.UPDATE);
+
+      if (!ListUtils.isEqualList(
+              oldSetting.getTimeRangeBasedFreezeConfigs(), governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+        publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
+      }
+
+      return updatedVal;
     }
-
-    GovernanceConfig updatedVal =
-        wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
-    auditServiceHelper.reportForAuditingUsingAccountId(accountId, oldSetting, updatedVal, Type.UPDATE);
-
-    if (!ListUtils.isEqualList(
-            oldSetting.getTimeRangeBasedFreezeConfigs(), governanceConfig.getTimeRangeBasedFreezeConfigs())) {
-      publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
-    }
-
-    return updatedVal;
   }
 
   private void publishToSegment(String accountId, User user, EventType eventType) {
@@ -110,11 +120,14 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    Query<GovernanceConfig> query =
-        wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId);
-    GovernanceConfig config = query.get();
-    if (wingsPersistence.delete(query)) {
-      auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, config);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Deleting Deployment Freeze window(s) for account: {}", accountId);
+      Query<GovernanceConfig> query =
+          wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId);
+      GovernanceConfig config = query.get();
+      if (wingsPersistence.delete(query)) {
+        auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, config);
+      }
     }
   }
 }

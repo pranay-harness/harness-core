@@ -7,7 +7,7 @@ import java.util.List;
 public interface PipelineGovernanceService {
   PipelineGovernanceConfig get(String uuid);
 
-  boolean delete(String uuid);
+  boolean delete(String accountId, String uuid);
 
   List<PipelineGovernanceConfig> list(String accountId);
 

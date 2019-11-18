@@ -5,13 +5,16 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.security.encryption.EncryptedDataDetail;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
@@ -19,12 +22,14 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
+import software.wings.logcontext.UserLogContext;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 
 @Singleton
+@Slf4j
 public class LdapBasedAuthHandler implements AuthHandler {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AuthenticationUtils authenticationUtils;
@@ -54,29 +59,32 @@ public class LdapBasedAuthHandler implements AuthHandler {
     }
 
     Account account = authenticationUtils.getDefaultAccount(user);
-    if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
-      domainWhitelistCheckerService.throwDomainWhitelistFilterException();
-    }
-    LdapSettings settings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
-    EncryptedDataDetail settingsEncryptedDataDetail = settings.getEncryptedDataDetails(secretManager);
-    String encryptedPassword = secretManager.encrypt(settings.getAccountId(), password, null);
-    EncryptedDataDetail passwordEncryptedDataDetail =
-        secretManager.encryptedDataDetails(settings.getAccountId(), "password", encryptedPassword).get();
-    try {
-      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                            .accountId(settings.getAccountId())
-                                            .appId(GLOBAL_APP_ID)
-                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                            .build();
-      LdapResponse authenticationResponse =
-          delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
-              .authenticate(settings, settingsEncryptedDataDetail, username, passwordEncryptedDataDetail);
-      if (authenticationResponse.getStatus().equals(Status.SUCCESS)) {
-        return new AuthenticationResponse(user);
+    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+      logger.info("Authenticating via LDAP for accountId: {}", user.getDefaultAccountId());
+      if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
+        domainWhitelistCheckerService.throwDomainWhitelistFilterException();
       }
-      throw new WingsException(INVALID_CREDENTIAL, USER);
-    } finally {
-      secretManager.deleteSecretUsingUuid(passwordEncryptedDataDetail.getEncryptedData().getUuid());
+      LdapSettings settings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
+      EncryptedDataDetail settingsEncryptedDataDetail = settings.getEncryptedDataDetails(secretManager);
+      String encryptedPassword = secretManager.encrypt(settings.getAccountId(), password, null);
+      EncryptedDataDetail passwordEncryptedDataDetail =
+          secretManager.encryptedDataDetails(settings.getAccountId(), "password", encryptedPassword).get();
+      try {
+        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                              .accountId(settings.getAccountId())
+                                              .appId(GLOBAL_APP_ID)
+                                              .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                              .build();
+        LdapResponse authenticationResponse =
+            delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
+                .authenticate(settings, settingsEncryptedDataDetail, username, passwordEncryptedDataDetail);
+        if (authenticationResponse.getStatus().equals(Status.SUCCESS)) {
+          return new AuthenticationResponse(user);
+        }
+        throw new WingsException(INVALID_CREDENTIAL, USER);
+      } finally {
+        secretManager.deleteSecretUsingUuid(passwordEncryptedDataDetail.getEncryptedData().getUuid());
+      }
     }
   }
 

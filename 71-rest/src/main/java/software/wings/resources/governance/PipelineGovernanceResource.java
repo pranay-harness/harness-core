@@ -72,7 +72,7 @@ public class PipelineGovernanceResource {
   @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<Boolean> update(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("uuid") String uuid) {
-    return new RestResponse<>(pipelineGovernanceService.delete(uuid));
+    return new RestResponse<>(pipelineGovernanceService.delete(accountId, uuid));
   }
 
   @GET

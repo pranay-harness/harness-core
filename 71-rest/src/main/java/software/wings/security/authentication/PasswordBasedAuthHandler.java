@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.PASSWORD_EXPIRED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_LOCKED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 
 import com.google.inject.Inject;
@@ -14,15 +15,19 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.logcontext.UserLogContext;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 @Singleton
+@Slf4j
 public class PasswordBasedAuthHandler implements AuthHandler {
   private UserService userService;
   private LoginSettingsService loginSettingsService;
@@ -58,45 +63,49 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     String password = credentials[1];
 
     User user = getUser(userName);
-
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
-    if (!user.isEmailVerified()) {
-      throw new WingsException(EMAIL_NOT_VERIFIED, USER);
-    }
-
-    if (!domainWhitelistCheckerService.isDomainWhitelisted(user)) {
-      domainWhitelistCheckerService.throwDomainWhitelistFilterException();
-    }
-
-    if (isPasswordHash) {
-      if (password.equals(user.getPasswordHash())) {
-        return getAuthenticationResponse(user);
-      } else {
-        updateFailedLoginAttemptCount(user);
+    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+      logger.info("Authenticating via Username Password for accountId: {}", user.getDefaultAccountId());
+      if (!user.isEmailVerified()) {
+        throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }
-    } else {
-      boolean validCredentials = checkpw(password, user.getPasswordHash());
-      if (validCredentials) {
-        return getAuthenticationResponse(user);
-      } else {
-        updateFailedLoginAttemptCount(user);
 
-        try {
-          failedLoginAttemptCountChecker.check(user);
-        } catch (MaxLoginAttemptExceededException e) {
-          throw new WingsException(ErrorCode.MAX_FAILED_ATTEMPT_COUNT_EXCEEDED, "Too many incorrect login attempts");
+      if (!domainWhitelistCheckerService.isDomainWhitelisted(user)) {
+        domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+      }
+
+      if (isPasswordHash) {
+        if (password.equals(user.getPasswordHash())) {
+          return getAuthenticationResponse(user);
+        } else {
+          updateFailedLoginAttemptCount(user);
+        }
+      } else {
+        boolean validCredentials = checkpw(password, user.getPasswordHash());
+        if (validCredentials) {
+          return getAuthenticationResponse(user);
+        } else {
+          updateFailedLoginAttemptCount(user);
+
+          try {
+            failedLoginAttemptCountChecker.check(user);
+          } catch (MaxLoginAttemptExceededException e) {
+            throw new WingsException(ErrorCode.MAX_FAILED_ATTEMPT_COUNT_EXCEEDED, "Too many incorrect login attempts");
+          }
         }
       }
+      throw new WingsException(INVALID_CREDENTIAL, USER);
     }
-    throw new WingsException(INVALID_CREDENTIAL, USER);
   }
 
   private void updateFailedLoginAttemptCount(User user) {
-    int newCountOfFailedLoginAttempts = user.getUserLockoutInfo().getNumberOfFailedLoginAttempts() + 1;
-    loginSettingsService.updateUserLockoutInfo(
-        user, accountService.get(user.getDefaultAccountId()), newCountOfFailedLoginAttempts);
+    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+      int newCountOfFailedLoginAttempts = user.getUserLockoutInfo().getNumberOfFailedLoginAttempts() + 1;
+      loginSettingsService.updateUserLockoutInfo(
+          user, accountService.get(user.getDefaultAccountId()), newCountOfFailedLoginAttempts);
+    }
   }
 
   private AuthenticationResponse getAuthenticationResponse(User user) {
@@ -109,8 +118,12 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   private void checkPasswordExpiry(User user) {
     // throwing password expiration status only in case of password is correct. Other-wise invalidCredential exception
     // should be thrown.
-    if (user.isPasswordExpired()) {
-      throw new WingsException(PASSWORD_EXPIRED, USER);
+    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+      if (user.isPasswordExpired()) {
+        throw new
+
+            WingsException(PASSWORD_EXPIRED, USER);
+      }
     }
   }
 
