@@ -1,6 +1,8 @@
 package software.wings.security.authentication.oauth;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -8,6 +10,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.logcontext.UserLogContext;
 import software.wings.security.authentication.AuthHandler;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationResponse;
@@ -81,20 +85,24 @@ public class OauthBasedAuthHandler implements AuthHandler {
     User user = null;
     try {
       user = authenticationUtils.getUserOrReturnNullIfUserDoesNotExists(userInfo.getEmail());
-
-      // if the email doesn't exists in harness system, sign him up.
-      if (null == user) {
-        return OauthAuthenticationResponse.builder()
-            .oauthUserInfo(userInfo)
-            .userFoundInDB(false)
-            .oauthClient(oauthProvider)
-            .build();
-      } else {
-        if (!domainWhitelistCheckerService.isDomainWhitelisted(user)) {
-          domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+      String accountId = user != null ? user.getDefaultAccountId() : GLOBAL_ACCOUNT_ID;
+      String uuid = user != null ? user.getUuid() : "";
+      try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
+        logger.info("Authenticating via OAuth for accountId: {}", accountId);
+        // if the email doesn't exists in harness system, sign him up.
+        if (null == user) {
+          return OauthAuthenticationResponse.builder()
+              .oauthUserInfo(userInfo)
+              .userFoundInDB(false)
+              .oauthClient(oauthProvider)
+              .build();
+        } else {
+          if (!domainWhitelistCheckerService.isDomainWhitelisted(user)) {
+            domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+          }
+          verifyAuthMechanismOfUser(user, oauthProvider);
+          return new AuthenticationResponse(user);
         }
-        verifyAuthMechanismOfUser(user, oauthProvider);
-        return new AuthenticationResponse(user);
       }
     } catch (Exception ex) {
       logger.error(String.format("Failed to login via OauthBasedAuthHandler, email was %s", userInfo.getEmail()), ex);

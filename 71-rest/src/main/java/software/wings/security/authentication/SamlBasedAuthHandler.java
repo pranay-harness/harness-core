@@ -1,5 +1,7 @@
 package software.wings.security.authentication;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -8,6 +10,7 @@ import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -19,6 +22,7 @@ import org.opensaml.xml.schema.impl.XSAnyImpl;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.logcontext.UserLogContext;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlClientService.HostType;
 import software.wings.security.saml.SamlUserGroupSync;
@@ -51,25 +55,28 @@ public class SamlBasedAuthHandler implements AuthHandler {
       String samlResponseString = credentials[1];
 
       User user = decodeResponseAndReturnUser(idpUrl, samlResponseString);
-      Account account = authenticationUtils.getDefaultAccount(user);
-      if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
-        domainWhitelistCheckerService.throwDomainWhitelistFilterException();
-      }
-      SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
+      try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+        logger.info("Authenticating via SAML for accountId: {}", user.getDefaultAccountId());
+        Account account = authenticationUtils.getDefaultAccount(user);
+        if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
+          domainWhitelistCheckerService.throwDomainWhitelistFilterException();
+        }
+        SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
-      // Occurs when SAML settings are being tested before being enabled
-      if (account.getAuthenticationMechanism() != AuthenticationMechanism.SAML) {
-        logger.info("SAML test login successful for user: [{}]", user.getEmail());
-        throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
-      }
+        // Occurs when SAML settings are being tested before being enabled
+        if (account.getAuthenticationMechanism() != AuthenticationMechanism.SAML) {
+          logger.info("SAML test login successful for user: [{}]", user.getEmail());
+          throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
+        }
 
-      if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {
-        List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString);
-        SamlUserAuthorization samlUserAuthorization =
-            SamlUserAuthorization.builder().email(user.getEmail()).userGroups(userGroups).build();
-        samlUserGroupSync.syncUserGroup(samlUserAuthorization, account.getUuid(), samlSettings.getUuid());
+        if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {
+          List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString);
+          SamlUserAuthorization samlUserAuthorization =
+              SamlUserAuthorization.builder().email(user.getEmail()).userGroups(userGroups).build();
+          samlUserGroupSync.syncUserGroup(samlUserAuthorization, account.getUuid(), samlSettings.getUuid());
+        }
+        return new AuthenticationResponse(user);
       }
-      return new AuthenticationResponse(user);
     } catch (URISyntaxException e) {
       throw new WingsException("Saml Authentication Failed", e);
     }

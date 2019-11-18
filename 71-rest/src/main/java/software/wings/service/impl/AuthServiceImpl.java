@@ -12,6 +12,7 @@ import static io.harness.eraro.ErrorCode.TOKEN_ALREADY_REFRESHED_ONCE;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -53,6 +54,7 @@ import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +81,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
+import software.wings.logcontext.UserLogContext;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -891,47 +894,50 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public User generateBearerTokenForUser(User user) {
-    AuthToken authToken =
-        new AuthToken(user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
-    authToken.setJwtToken(generateJWTSecret(authToken));
-    persistence.save(authToken);
-    boolean isFirstLogin = user.getLastLogin() == 0L;
-    user.setLastLogin(System.currentTimeMillis());
-    userService.update(user);
+    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+      logger.info("Generating bearer token for user : {}", user.getDefaultAccountId());
+      AuthToken authToken = new AuthToken(
+          user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
+      authToken.setJwtToken(generateJWTSecret(authToken));
+      persistence.save(authToken);
+      boolean isFirstLogin = user.getLastLogin() == 0L;
+      user.setLastLogin(System.currentTimeMillis());
+      userService.update(user);
 
-    userService.evictUserFromCache(user.getUuid());
-    user.setToken(authToken.getJwtToken());
+      userService.evictUserFromCache(user.getUuid());
+      user.setToken(authToken.getJwtToken());
 
-    user.setFirstLogin(isFirstLogin);
-    if (!user.getEmail().endsWith(Keys.HARNESS_EMAIL)) {
-      executorService.submit(() -> {
-        String accountId = user.getLastAccountId();
-        if (isEmpty(accountId)) {
-          logger.warn("last accountId is null for User {}", user.getUuid());
-          return;
-        }
+      user.setFirstLogin(isFirstLogin);
+      if (!user.getEmail().endsWith(Keys.HARNESS_EMAIL)) {
+        executorService.submit(() -> {
+          String accountId = user.getLastAccountId();
+          if (isEmpty(accountId)) {
+            logger.warn("last accountId is null for User {}", user.getUuid());
+            return;
+          }
 
-        Account account = dbCache.get(Account.class, accountId);
-        if (account == null) {
-          logger.warn("last account is null for User {}", user.getUuid());
-          return;
-        }
-        try {
-          Map<String, String> properties = new HashMap<>();
-          properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
+          Account account = dbCache.get(Account.class, accountId);
+          if (account == null) {
+            logger.warn("last account is null for User {}", user.getUuid());
+            return;
+          }
+          try {
+            Map<String, String> properties = new HashMap<>();
+            properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
 
-          Map<String, Boolean> integrations = new HashMap<>();
-          integrations.put(SegmentHandler.Keys.NATERO, true);
-          integrations.put(SegmentHandler.Keys.SALESFORCE, false);
+            Map<String, Boolean> integrations = new HashMap<>();
+            integrations.put(SegmentHandler.Keys.NATERO, true);
+            integrations.put(SegmentHandler.Keys.SALESFORCE, false);
 
-          segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
-        } catch (Exception e) {
-          logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
-        }
-      });
+            segmentHandler.reportTrackEvent(account, Keys.LOGIN_EVENT, user, properties, integrations);
+          } catch (Exception e) {
+            logger.error("Exception while reporting track event for User {} login", user.getUuid(), e);
+          }
+        });
+      }
+
+      return user;
     }
-
-    return user;
   }
 
   private String generateJWTSecret(AuthToken authToken) {

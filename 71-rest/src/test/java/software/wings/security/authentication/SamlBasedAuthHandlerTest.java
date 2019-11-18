@@ -98,6 +98,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSamlBasedValidationValidAssertionForOkta() throws IOException, SamlException {
     User user = new User();
+    user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    user.setUuid("kmpySmUISimoRrJL6NL73w");
     Account account = new Account();
     account.setUuid("AC1");
     user.setAccounts(Arrays.asList(account));
@@ -126,10 +128,12 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSamlBasedValidationValidAssertionForGoogle() throws IOException, SamlException {
     User user = new User();
+
     Account account = new Account();
     account.setUuid("TestGoogleAuthAccount1");
     user.setAccounts(Arrays.asList(account));
-
+    user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    user.setUuid("kmpySmUISimoRrJL6NL73w");
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
     account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
@@ -175,6 +179,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAzureSaml() throws IOException, SamlException {
     User user = new User();
+    user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    user.setUuid("kmpySmUISimoRrJL6NL73w");
     Account account = new Account();
     account.setUuid("TestAzureAccount1");
     user.setAccounts(Arrays.asList(account));
@@ -225,6 +231,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSamlAuthenticationAndGroupExtractionForOktaShouldSucceed() throws IOException, SamlException {
     User user = new User();
+    user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    user.setUuid("kmpySmUISimoRrJL6NL73w");
     Account account = new Account();
     account.setUuid("AC1");
     user.setAccounts(Arrays.asList(account));
@@ -294,6 +302,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAuthenticationWithSamlNotEnabled() throws IOException, SamlException {
     User user = new User();
+    user.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
+    user.setUuid("kmpySmUISimoRrJL6NL73w");
     Account account = new Account();
     account.setUuid("AC1");
     user.setAccounts(Arrays.asList(account));

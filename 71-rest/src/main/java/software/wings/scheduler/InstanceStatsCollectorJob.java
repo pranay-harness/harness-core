@@ -1,10 +1,14 @@
 package software.wings.scheduler;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
 import io.harness.lock.AcquiredLock;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
@@ -79,13 +83,16 @@ public class InstanceStatsCollectorJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    executorService.submit(() -> {
-      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
-      Objects.requireNonNull(accountId, "Account Id must be passed in job context");
-      createStats(accountId);
-      double ninety_five_percentile_usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
-      instanceLimitHandler.handle(accountId, ninety_five_percentile_usage);
-    });
+    String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Running instance stats collector job for accountId: {}", accountId);
+      executorService.submit(() -> {
+        Objects.requireNonNull(accountId, "Account Id must be passed in job context");
+        createStats(accountId);
+        double ninety_five_percentile_usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
+        instanceLimitHandler.handle(accountId, ninety_five_percentile_usage);
+      });
+    }
   }
 
   @VisibleForTesting

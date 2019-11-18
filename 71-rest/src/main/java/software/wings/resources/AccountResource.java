@@ -98,6 +98,7 @@ public class AccountResource {
   public RestResponse<Boolean> disableAccount(
       @QueryParam("accountId") String accountId, @QueryParam("migratedTo") String migratedToClusterUrl) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Disabling account with accountId: {}", accountId);
       RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to disable account");
       if (response == null) {
         response = new RestResponse<>(accountService.disableAccount(accountId, urlDecode(migratedToClusterUrl)));
@@ -112,6 +113,7 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Boolean> enableAccount(@QueryParam("accountId") String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Enabling account with accountId: {}", accountId);
       RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to enable account");
       if (response == null) {
         response = new RestResponse<>(accountService.enableAccount(accountId));
@@ -193,6 +195,7 @@ public class AccountResource {
   public RestResponse<Boolean> updateAccountLicense(
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull LicenseUpdateInfo licenseUpdateInfo) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Updating license for account with accountId: {}", accountId);
       String fromAccountType = accountService.getAccountType(accountId).orElse(AccountType.PAID);
       String toAccountType = licenseUpdateInfo.getLicenseInfo().getAccountType();
 
@@ -242,7 +245,10 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Boolean> updateAccountLicense(
       @PathParam("accountId") @NotEmpty String accountId, @NotNull LicenseInfo licenseInfo) {
-    return updateAccountLicense(accountId, LicenseUpdateInfo.builder().licenseInfo(licenseInfo).build());
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Updating license for account with accountId: {}", accountId);
+      return updateAccountLicense(accountId, LicenseUpdateInfo.builder().licenseInfo(licenseInfo).build());
+    }
   }
 
   @PUT
@@ -314,6 +320,7 @@ public class AccountResource {
   @ExceptionMetered
   public RestResponse<Boolean> deleteAccount(@PathParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Deleting account with accountId: {}", accountId);
       RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to delete account");
       if (response == null) {
         response = new RestResponse<>(accountService.delete(accountId));

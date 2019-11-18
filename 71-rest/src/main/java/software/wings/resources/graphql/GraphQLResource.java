@@ -1,6 +1,7 @@
 package software.wings.resources.graphql;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
 import com.google.common.collect.Maps;
@@ -12,6 +13,8 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
+import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import io.swagger.annotations.Api;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -81,9 +84,12 @@ public class GraphQLResource {
   @ExternalFacingApiAuth
   public Map<String, Object> execute(
       @HeaderParam(API_KEY_HEADER) String apiKey, @QueryParam("accountId") String accountId, String query) {
-    GraphQLQuery graphQLQuery = new GraphQLQuery();
-    graphQLQuery.setQuery(query);
-    return executeExternal(accountId, apiKey, graphQLQuery);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Executing graphql query with apiKey: {} for accountId", apiKey, accountId);
+      GraphQLQuery graphQLQuery = new GraphQLQuery();
+      graphQLQuery.setQuery(query);
+      return executeExternal(accountId, apiKey, graphQLQuery);
+    }
   }
 
   /**
@@ -99,7 +105,10 @@ public class GraphQLResource {
   @ExternalFacingApiAuth
   public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey,
       @QueryParam("accountId") String accountId, GraphQLQuery graphQLQuery) {
-    return executeExternal(accountId, apiKey, graphQLQuery);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      logger.info("Executing graphql query with apiKey: {} for accountId", apiKey, accountId);
+      return executeExternal(accountId, apiKey, graphQLQuery);
+    }
   }
 
   @Path("int")

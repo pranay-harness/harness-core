@@ -70,7 +70,7 @@ public class PipelineGovernanceFeature extends AbstractPremiumFeature implements
     List<PipelineGovernanceConfig> pipelineGovernanceStandards = pipelineGovernanceService.list(accountId);
 
     for (PipelineGovernanceConfig governanceConfig : pipelineGovernanceStandards) {
-      pipelineGovernanceService.delete(governanceConfig.getUuid());
+      pipelineGovernanceService.delete(accountId, governanceConfig.getUuid());
     }
 
     return isUsageCompliantWithRestrictions(accountId, targetAccountType);

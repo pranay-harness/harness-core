@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
@@ -15,6 +16,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -39,6 +41,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.features.LdapFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.ldap.LdapConstants;
+import software.wings.logcontext.LdapGroupSyncJobLogContext;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
@@ -277,7 +280,9 @@ public class LdapGroupSyncJob implements Job {
       return;
     }
 
-    try {
+    try (AutoLogContext ignore = new LdapGroupSyncJobLogContext(accountId, ssoId, OVERRIDE_ERROR)) {
+      ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
+
       logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
 
       LdapTestResponse ldapTestResponse = ssoService.validateLdapConnectionSettings(ldapSettings, accountId);
