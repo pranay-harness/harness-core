@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import com.google.protobuf.Any;
 
+import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -60,11 +61,18 @@ public class ChronicleEventAppenderTest extends CategoryTest {
           .with(new ProviderModule() {
             @Provides
             @Singleton
-            EventPublisherBlockingStub eventPublisherBlockingStub() {
-              return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName(SERVER_NAME).build());
+            ManagedChannel channel() {
+              return InProcessChannelBuilder.forName(SERVER_NAME).build();
+            }
+
+            @Provides
+            @Singleton
+            EventPublisherBlockingStub eventPublisherBlockingStub(ManagedChannel channel) {
+              return EventPublisherGrpc.newBlockingStub(channel);
             }
           }));
   @Inject private EventPublisher eventPublisher;
+  @Inject private ManagedChannel channel;
   private Server server;
   private FakeService fakeService;
 
@@ -87,6 +95,7 @@ public class ChronicleEventAppenderTest extends CategoryTest {
     eventTailer.stopAsync().awaitTerminated();
     server.shutdown();
     server.awaitTermination();
+    channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS);
     FileUtils.cleanDirectory(new File(QUEUE_FILE_PATH));
     FileUtils.deleteDirectory(new File(QUEUE_FILE_PATH));
   }
@@ -109,7 +118,7 @@ public class ChronicleEventAppenderTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AVMOHAN, intermittent = true)
+  @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testNoMessageLossWithErrorProneServer() throws Exception {
     fakeService.setErrorProne(true);
