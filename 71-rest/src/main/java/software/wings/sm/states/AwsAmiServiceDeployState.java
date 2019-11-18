@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
@@ -101,7 +102,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AwsAmiServiceDeployState extends State {
-  @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
+  @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
@@ -221,12 +222,13 @@ public class AwsAmiServiceDeployState extends State {
         secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     Integer totalExpectedCount;
+    int instanceCountLocal = Integer.parseInt(context.renderExpression(getInstanceCount()));
     if (getInstanceUnitType() == PERCENTAGE) {
-      int percent = Math.min(getInstanceCount(), 100);
+      int percent = Math.min(instanceCountLocal, 100);
       int instanceCount1 = (int) Math.round((percent * serviceSetupElement.getDesiredInstances()) / 100.0);
       totalExpectedCount = Math.max(instanceCount1, 1);
     } else {
-      totalExpectedCount = getInstanceCount();
+      totalExpectedCount = instanceCountLocal;
     }
 
     List<String> oldAsgNames = serviceSetupElement.getOldAsgNames();
@@ -280,7 +282,7 @@ public class AwsAmiServiceDeployState extends State {
     }
 
     awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(), serviceSetupElement,
-        getInstanceCount(), getInstanceUnitType(), newInstanceData, oldInstanceData);
+        instanceCountLocal, getInstanceUnitType(), newInstanceData, oldInstanceData);
     boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
 
     createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
@@ -559,7 +561,7 @@ public class AwsAmiServiceDeployState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (!isRollback() && getInstanceCount() == 0) {
+    if (!isRollback() && isEmpty(getInstanceCount())) {
       invalidFields.put("instanceCount", "Instance count must be greater than 0");
     }
     if (getCommandName() == null) {
@@ -571,56 +573,26 @@ public class AwsAmiServiceDeployState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  /**
-   * Gets instance count.
-   *
-   * @return the instance count
-   */
-  public int getInstanceCount() {
+  public String getInstanceCount() {
     return instanceCount;
   }
 
-  /**
-   * Sets instance count.
-   *
-   * @param instanceCount the instance count
-   */
-  public void setInstanceCount(int instanceCount) {
+  public void setInstanceCount(String instanceCount) {
     this.instanceCount = instanceCount;
   }
 
-  /**
-   * Gets instance unit type.
-   *
-   * @return the instance unit type
-   */
   public InstanceUnitType getInstanceUnitType() {
     return instanceUnitType;
   }
 
-  /**
-   * Sets instance unit type.
-   *
-   * @param instanceUnitType the instance unit type
-   */
   public void setInstanceUnitType(InstanceUnitType instanceUnitType) {
     this.instanceUnitType = instanceUnitType;
   }
 
-  /**
-   * Gets command name.
-   *
-   * @return the command name
-   */
   public String getCommandName() {
     return commandName;
   }
 
-  /**
-   * Sets command name.
-   *
-   * @param commandName the command name
-   */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
   }
