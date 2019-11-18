@@ -7,18 +7,6 @@ import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
-import static io.harness.eraro.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
-import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
-import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
-import static io.harness.eraro.ErrorCode.INVALID_MARKETPLACE_TOKEN;
-import static io.harness.eraro.ErrorCode.MARKETPLACE_TOKEN_NOT_FOUND;
-import static io.harness.eraro.ErrorCode.ROLE_DOES_NOT_EXIST;
-import static io.harness.eraro.ErrorCode.USER_ALREADY_REGISTERED;
-import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
-import static io.harness.eraro.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
-import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
@@ -77,7 +65,13 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
 import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
+import io.harness.exception.HintException;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -91,6 +85,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
@@ -204,6 +199,11 @@ public class UserServiceImpl implements UserService {
   public static final String TRIAL_EMAIL_VERIFICATION_TEMPLATE_NAME = "invite_trial";
   public static final String JOIN_EXISTING_TEAM_TEMPLATE_NAME = "join_existing_team";
   public static final int REGISTRATION_SPAM_THRESHOLD = 3;
+  public static final String EXC_MSG_RESET_PASS_LINK_NOT_GEN = "Reset password link could not be generated";
+  public static final String EXC_MSG_USER_DOESNT_EXIST = "User does not exist";
+  public static final String EXC_MSG_USER_INVITE_INVALID =
+      "User was not invited to access account or the invitation is obsolete";
+  public static final String EXC_USER_ALREADY_REGISTERED = "User is already registered";
 
   /**
    * The Executor service.
@@ -627,7 +627,7 @@ public class UserServiceImpl implements UserService {
     final String emailAddress = email.trim();
     User existingUser = getUserByEmail(emailAddress);
     if (existingUser != null && existingUser.isEmailVerified()) {
-      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+      throw new UserRegistrationException("User Already Registered", ErrorCode.USER_ALREADY_REGISTERED, USER);
     }
   }
 
@@ -635,7 +635,7 @@ public class UserServiceImpl implements UserService {
   public boolean resendVerificationEmail(String email) {
     User existingUser = getUserByEmail(email);
     if (existingUser == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new UserRegistrationException(EXC_MSG_USER_DOESNT_EXIST, ErrorCode.USER_DOES_NOT_EXIST, USER);
     }
 
     sendVerificationEmail(existingUser);
@@ -648,7 +648,7 @@ public class UserServiceImpl implements UserService {
     User existingUser = userService.getUserByEmail(email);
     if (existingUser == null) {
       logger.info("Resending invitation email failed. User: {} does not exist.", email);
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new UserRegistrationException(EXC_MSG_USER_DOESNT_EXIST, ErrorCode.USER_DOES_NOT_EXIST, USER);
     }
     userService.deleteInvites(accountId, email);
     UserInvite newInvite =
@@ -667,7 +667,7 @@ public class UserServiceImpl implements UserService {
                                                    .get();
 
     if (verificationToken == null) {
-      throw new WingsException(EMAIL_VERIFICATION_TOKEN_NOT_FOUND);
+      throw new GeneralException("Email verification token is not found");
     }
     wingsPersistence.updateFields(User.class, verificationToken.getUserId(), ImmutableMap.of("emailVerified", true));
     wingsPersistence.delete(EmailVerificationToken.class, verificationToken.getUuid());
@@ -987,7 +987,7 @@ public class UserServiceImpl implements UserService {
       ssoSettings = ssoSettingService.getOauthSettingsByAccountId(account.getUuid());
     } else {
       logger.warn("New authentication mechanism detected. Needs to handle the added role email template flow.");
-      throw new WingsException("New authentication mechanism detected.");
+      throw new GeneralException("New authentication mechanism detected.");
     }
     model.put("ssoUrl", getDomainName(ssoSettings.getUrl()));
     return model;
@@ -1040,7 +1040,7 @@ public class UserServiceImpl implements UserService {
   public UserInvite completeInvite(UserInvite userInvite) {
     UserInvite existingInvite = getInvite(userInvite.getAccountId(), userInvite.getUuid());
     if (existingInvite == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+      throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     }
     if (existingInvite.isCompleted()) {
       return existingInvite;
@@ -1054,7 +1054,7 @@ public class UserServiceImpl implements UserService {
 
     User existingUser = getUserByEmail(existingInvite.getEmail());
     if (existingUser == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+      throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     } else {
       Map<String, Object> map = new HashMap<>();
       map.put("name", userInvite.getName().trim());
@@ -1081,7 +1081,7 @@ public class UserServiceImpl implements UserService {
   public User completeTrialSignupAndSignIn(String userInviteId) {
     UserInvite userInvite = getInvite(userInviteId);
     if (userInvite == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+      throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     }
     return completeTrialSignupAndSignIn(userInvite);
   }
@@ -1122,7 +1122,7 @@ public class UserServiceImpl implements UserService {
   public User completeMarketPlaceSignup(User user, UserInvite userInvite, MarketPlaceType marketPlaceType) {
     userInvite = marketPlaceSignup(user, userInvite, marketPlaceType);
     if (null == userInvite.getPassword()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Password needs to be specified to login");
+      throw new InvalidArgumentsException(Pair.of("args", "Password needs to be specified to login"));
     }
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
@@ -1132,7 +1132,7 @@ public class UserServiceImpl implements UserService {
 
     UserInvite existingInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
     if (existingInvite == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+      throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     } else if (existingInvite.isCompleted()) {
       logger.error("Unexpected state: Existing invite is already completed. ID={}, userInvite: {} existingInvite: {}",
           userInvite.getUuid(), userInvite, existingInvite);
@@ -1145,11 +1145,12 @@ public class UserServiceImpl implements UserService {
     String email = user.getEmail();
     User existingUser = getUserByEmail(email);
     if (existingUser != null) {
-      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
     }
 
     if (userInvite.getMarketPlaceToken() == null) {
-      throw new WingsException(MARKETPLACE_TOKEN_NOT_FOUND);
+      throw new GeneralException(
+          String.format("Marketplace token not found for userInviteID:[{%s}]", userInvite.getUuid()));
     }
 
     String userInviteID;
@@ -1160,16 +1161,16 @@ public class UserServiceImpl implements UserService {
       userInviteID = claims.get(MarketPlaceConstants.USERINVITE_ID_CLAIM_KEY).asString();
       marketPlaceID = claims.get(MarketPlaceConstants.MARKETPLACE_ID_CLAIM_KEY).asString();
       if (!userInviteID.equals(userInvite.getUuid())) {
-        throw new WingsException(String.format(
+        throw new GeneralException(String.format(
             "UserInviteID in claim:[{%s}] does not match the userInviteID:[{%s}]", userInviteID, userInvite.getUuid()));
       }
     } catch (Exception e) {
-      throw new WingsException(INVALID_MARKETPLACE_TOKEN, e);
+      throw new HintException("Invalid Marketplace token: " + e.getMessage());
     }
     MarketPlace marketPlace = wingsPersistence.get(MarketPlace.class, marketPlaceID);
 
     if (marketPlace == null) {
-      throw new WingsException(String.format("No MarketPlace found with marketPlaceID=[{%s}]", marketPlaceID));
+      throw new GeneralException(String.format("No MarketPlace found with marketPlaceID=[{%s}]", marketPlaceID));
     }
 
     LicenseInfo licenseInfo = LicenseInfo.builder()
@@ -1245,7 +1246,7 @@ public class UserServiceImpl implements UserService {
 
     UserInvite existingInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
     if (existingInvite == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+      throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     } else if (existingInvite.isCompleted()) {
       return existingInvite;
     }
@@ -1253,7 +1254,7 @@ public class UserServiceImpl implements UserService {
     String email = existingInvite.getEmail();
     User existingUser = getUserByEmail(email);
     if (existingUser != null) {
-      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
     }
 
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
@@ -1374,7 +1375,7 @@ public class UserServiceImpl implements UserService {
   private void throwExceptionIfUserIsAlreadyRegistered(final String email) {
     User existingUser = getUserByEmail(email);
     if (existingUser != null) {
-      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
     }
   }
 
@@ -1448,7 +1449,7 @@ public class UserServiceImpl implements UserService {
                          .sign(algorithm);
       sendResetPasswordEmail(user, token);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
+      throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
     }
     return true;
   }
@@ -1468,9 +1469,9 @@ public class UserServiceImpl implements UserService {
       String email = decode.getClaim("email").asString();
       resetUserPassword(email, password, decode.getIssuedAt().getTime());
     } catch (UnsupportedEncodingException exception) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Invalid reset password link");
+      throw new GeneralException("Invalid reset password link");
     } catch (JWTVerificationException exception) {
-      throw new WingsException(EXPIRED_TOKEN, USER);
+      throw new UnauthorizedException("Token has expired", USER);
     }
     return true;
   }
@@ -1486,7 +1487,7 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       throw new InvalidRequestException("Email doesn't exist");
     } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
-      throw new WingsException(EXPIRED_TOKEN, USER);
+      throw new UnauthorizedException("Token has expired", USER);
     }
     loginSettingsService.verifyPasswordStrength(accountService.get(user.getDefaultAccountId()), password);
     String hashed = hashpw(new String(password), BCrypt.gensalt());
@@ -1513,7 +1514,7 @@ public class UserServiceImpl implements UserService {
     // Check if admin has 2FA enabled
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
     }
     return user.isTwoFactorAuthenticationEnabled();
   }
@@ -1534,8 +1535,7 @@ public class UserServiceImpl implements UserService {
         }
       }
     } catch (Exception ex) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Exception occurred while enforcing Two factor authentication for users");
+      throw new GeneralException("Exception occurred while enforcing Two factor authentication for users");
     }
 
     return true;
@@ -1698,12 +1698,13 @@ public class UserServiceImpl implements UserService {
   @Override
   public User unlockUser(String email, String accountId) {
     User user = getUserByEmail(email);
+    Preconditions.checkNotNull(user, "User cannot be null");
     Preconditions.checkNotNull(user.getDefaultAccountId(), "Default account can't be null for any user");
     if (!user.getDefaultAccountId().equals(accountId)) {
       logger.error(String.format("Unlocking user: [%s] in account: [%s] failed because of insufficient permission",
                        email, accountId),
           USER);
-      throw new WingsException(USER_NOT_AUTHORIZED, USER);
+      throw new UnauthorizedException("User not authorized", USER);
     }
     UpdateOperations<User> operations = wingsPersistence.createUpdateOperations(User.class);
     setUnset(operations, UserKeys.userLocked, false);
@@ -1863,7 +1864,7 @@ public class UserServiceImpl implements UserService {
   public User get(String userId) {
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST, USER);
+      throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
     }
 
     loadSupportAccounts(user);
@@ -1896,7 +1897,7 @@ public class UserServiceImpl implements UserService {
   public User get(String accountId, String userId) {
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
     }
 
     loadSupportAccounts(user);
@@ -1907,6 +1908,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getUserFromCacheOrDB(String userId) {
     Cache<String, User> userCache = cacheManager.getUserCache();
+    Preconditions.checkNotNull(userCache, "User cache can't be null");
     User user;
     try {
       user = userCache.get(userId);
@@ -1969,7 +1971,7 @@ public class UserServiceImpl implements UserService {
     if (account == null) {
       String message = "Account [" + accountId + "] does not exist";
       logger.warn(message);
-      throw new WingsException(ACCOUNT_DOES_NOT_EXIST);
+      throw new GeneralException(message);
     }
     User user = get(userId);
 
@@ -2072,7 +2074,7 @@ public class UserServiceImpl implements UserService {
   private Role ensureRolePresent(String roleId) {
     Role role = roleService.get(roleId);
     if (role == null) {
-      throw new WingsException(ROLE_DOES_NOT_EXIST);
+      throw new GeneralException("Roles does not exist");
     }
     return role;
   }
@@ -2080,7 +2082,7 @@ public class UserServiceImpl implements UserService {
   private void ensureUserExists(String userId) {
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
     }
   }
 
@@ -2156,7 +2158,7 @@ public class UserServiceImpl implements UserService {
           .withClaim("email", userId)
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
+      throw new GeneralException("JWTToken could not be generated");
     }
   }
 
@@ -2173,10 +2175,9 @@ public class UserServiceImpl implements UserService {
       verifier.verify(jwtToken);
       return getUserByEmail(JWT.decode(jwtToken).getClaim("email").asString());
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken validation failed");
+      throw new GeneralException("JWTToken validation failed");
     } catch (JWTDecodeException | SignatureVerificationException e) {
-      throw new WingsException(INVALID_CREDENTIAL, USER)
-          .addParam("message", "Invalid JWTToken received, failed to decode the token");
+      throw new InvalidCredentialsException("Invalid JWTToken received, failed to decode the token", USER);
     }
   }
 
@@ -2333,7 +2334,7 @@ public class UserServiceImpl implements UserService {
   public boolean enableUser(String accountId, String userId, boolean enabled) {
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST, USER);
+      throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
     } else if (!isUserAssignedToAccount(user, accountId)) {
       throw new InvalidRequestException("User is not assigned to account", USER);
     }
@@ -2360,7 +2361,7 @@ public class UserServiceImpl implements UserService {
       String token = signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, 1);
       sendPasswordExpirationWarningMail(user, token, passExpirationDays);
     } catch (JWTCreationException | UnsupportedEncodingException exception) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
+      throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
     }
   }
 
@@ -2413,7 +2414,7 @@ public class UserServiceImpl implements UserService {
       String token = signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, 1);
       sendPasswordExpirationMail(user, token);
     } catch (JWTCreationException | UnsupportedEncodingException exception) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
+      throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
     }
   }
 

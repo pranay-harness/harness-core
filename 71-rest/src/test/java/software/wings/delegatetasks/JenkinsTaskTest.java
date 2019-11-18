@@ -5,6 +5,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +26,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.http.client.HttpResponseException;
@@ -266,6 +268,36 @@ public class JenkinsTaskTest extends WingsBaseTest {
     response = jenkinsTask.run(params);
     assertThat(response.getErrorMessage()).isNotBlank();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldFailWhenTriggerJobAPIFails() throws Exception {
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+
+    // Jenkins Start Task
+    when(jenkins.trigger(jobName, Collections.emptyMap())).thenThrow(new GeneralException("Exception"));
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(response.getErrorMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldFailWhenTriggerJobAPIFailsWithUnknownException() throws Exception {
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+
+    // Jenkins Start Task
+    when(jenkins.trigger(jobName, Collections.emptyMap())).then(invocationOnMock -> { throw new Exception(); });
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(response.getErrorMessage()).isNotEmpty();
   }
 
   // Helper functions

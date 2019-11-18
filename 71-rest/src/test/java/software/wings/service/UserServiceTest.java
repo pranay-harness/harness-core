@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -80,8 +79,11 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.model.EventType;
+import io.harness.exception.GeneralException;
+import io.harness.exception.HintException;
+import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.OwnerRule.Owner;
@@ -272,9 +274,9 @@ public class UserServiceTest extends WingsBaseTest {
     try {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
-    } catch (WingsException e) {
-      log().info("Expected error " + e.getCode());
-      assertThat(e.getCode()).isEqualTo(ErrorCode.USER_INVITATION_DOES_NOT_EXIST);
+    } catch (Exception e) {
+      log().info("Expected error " + e.getMessage());
+      assertThat(e).isInstanceOf(UnauthorizedException.class);
     }
 
     when(wingsPersistence.get(UserInvite.class, USER_INVITE_ID)).thenReturn(testInvite);
@@ -284,7 +286,7 @@ public class UserServiceTest extends WingsBaseTest {
       fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
-      assertThat(e.getCode()).isEqualTo(ErrorCode.USER_ALREADY_REGISTERED);
+      assertThat(e).isInstanceOf(UserRegistrationException.class);
     }
 
     when(userService.getUserByEmail(USER_EMAIL)).thenReturn(null);
@@ -293,7 +295,7 @@ public class UserServiceTest extends WingsBaseTest {
       fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
-      assertThat(e.getCode()).isEqualTo(ErrorCode.MARKETPLACE_TOKEN_NOT_FOUND);
+      assertThat(e).isInstanceOf(GeneralException.class);
     }
 
     testInvite.setMarketPlaceToken("fakeToken");
@@ -303,7 +305,7 @@ public class UserServiceTest extends WingsBaseTest {
       fail("");
     } catch (WingsException e) {
       log().info("Expected error " + e.getCode());
-      assertThat(e.getCode()).isEqualTo(ErrorCode.INVALID_MARKETPLACE_TOKEN);
+      assertThat(e).isInstanceOf(HintException.class);
     }
 
     testInvite.setMarketPlaceToken(token);
@@ -604,8 +606,8 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionIfUserDoesNotExist() {
     assertThatThrownBy(() -> userService.get("INVALID_USER_ID"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(USER_DOES_NOT_EXIST.name());
+        .isInstanceOf(UnauthorizedException.class)
+        .hasMessage("User does not exist");
   }
 
   /**

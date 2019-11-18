@@ -1,11 +1,10 @@
 package software.wings.service.impl;
 
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidArgumentsException;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
@@ -74,7 +73,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute cloudProviderSetting) {
     if (cloudProviderSetting == null || !(cloudProviderSetting.getValue() instanceof AzureConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "No cloud provider exist or not of type Azure");
+      throw new InvalidArgumentsException(Pair.of("args", "No cloud provider exist or not of type Azure"));
     }
 
     return (AzureConfig) cloudProviderSetting.getValue();

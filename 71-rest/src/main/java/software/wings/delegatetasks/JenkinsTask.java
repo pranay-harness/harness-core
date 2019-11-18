@@ -22,6 +22,10 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidCredentialsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +78,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
     encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails());
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
+    String msg = "Error occurred while starting Jenkins task\n";
 
     switch (jenkinsTaskParams.getSubTaskType()) {
       case START_TASK:
@@ -102,18 +107,24 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                     RUNNING));
           } else {
             executionStatus = ExecutionStatus.FAILED;
-            jenkinsExecutionResponse.setErrorMessage("Error occurred while starting Jenkins task");
+            jenkinsExecutionResponse.setErrorMessage(msg);
           }
 
           Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
           jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
         } catch (WingsException e) {
+          logService.save(getAccountId(),
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                  LogLevel.ERROR, msg + e.toString(), FAILURE));
           ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         } catch (Exception e) {
-          logger.error("Error occurred while starting Jenkins task", e);
+          logService.save(getAccountId(),
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                  LogLevel.ERROR, msg + e.toString(), FAILURE));
+          logger.error(msg, e);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(ExceptionUtils.getMessage(e));
         }
@@ -213,14 +224,15 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
       default:
         jenkinsExecutionResponse.setExecutionStatus(ExecutionStatus.ERROR);
-        throw new WingsException("Unhandled case for Jenkins Sub task, neither start nor poll sub task.");
+        throw new InvalidRequestException("Unhandled case for Jenkins Sub task, neither start nor poll sub task.");
     }
 
     jenkinsExecutionResponse.setExecutionStatus(executionStatus);
     return jenkinsExecutionResponse;
   }
 
-  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String unitName) {
+  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String unitName)
+      throws IOException {
     BuildWithDetails jenkinsBuildWithDetails = null;
     AtomicInteger consoleLogsSent = new AtomicInteger();
     do {
@@ -232,8 +244,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       } catch (IOException e) {
         if (e instanceof HttpResponseException) {
           if (((HttpResponseException) e).getStatusCode() == 404) {
-            throw new WingsException("Job [" + jenkinsBuild.getUrl()
-                + "] not found. Job might have been deleted from Jenkins Server between polling intervals");
+            throw new HttpResponseException(((HttpResponseException) e).getStatusCode(),
+                "Job [" + jenkinsBuild.getUrl()
+                    + "] not found. Job might have been deleted from Jenkins Server between polling intervals");
           }
         }
         logger.error("Error occurred while waiting for Job {} to finish execution. Reasonn {}. Retrying.",
@@ -306,11 +319,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         logger.error("Error occurred while waiting for Job to start execution.", e);
         if (e instanceof HttpResponseException) {
           if (((HttpResponseException) e).getStatusCode() == 401) {
-            throw new WingsException("Invalid Jenkins credentials");
+            throw new InvalidCredentialsException("Invalid Jenkins credentials", WingsException.USER);
           } else if (((HttpResponseException) e).getStatusCode() == 403) {
-            throw new WingsException("User not authorized to access jenkins");
+            throw new UnauthorizedException("User not authorized to access jenkins", WingsException.USER);
           }
-          throw new WingsException(e.getMessage());
+          throw new GeneralException(e.getMessage());
         }
       }
     } while (jenkinsBuild == null);
