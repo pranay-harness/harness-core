@@ -37,15 +37,11 @@ public class DelegateConfiguration {
 
   private String helmPath;
 
-  private String publishTarget;
-
-  private String publishAuthority;
-
-  private String queueFilePath;
-
   private boolean enablePerpetualTasks;
 
   private String managerTarget;
 
   private String managerAuthority;
+
+  private String queueFilePath;
 }

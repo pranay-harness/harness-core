@@ -1,12 +1,12 @@
-package io.harness.event.client;
+package io.harness.event.client.impl.appender;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.awaitility.Awaitility.await;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -23,15 +23,17 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
 import io.harness.event.PublishMessage;
-import io.harness.event.client.PublisherModule.Config;
+import io.harness.event.client.EventPublisher;
+import io.harness.event.client.FakeService;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
+import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
+import io.harness.govern.ProviderModule;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
-import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 import org.apache.commons.io.FileUtils;
-import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,34 +47,26 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class EventPublisherTest extends CategoryTest {
-  private static final String QUEUE_FILE_PATH = FileUtils.getTempDirectoryPath() + "/" + UUID.randomUUID().toString();
-  private static final String SERVER_NAME = InProcessServerBuilder.generateName();
+public class ChronicleEventAppenderTest extends CategoryTest {
+  private final String QUEUE_FILE_PATH = "../eventQueue"
+      + "/" + UUID.randomUUID().toString();
+  private final String SERVER_NAME = InProcessServerBuilder.generateName();
   private final AtomicInteger messagesPublished = new AtomicInteger();
 
-  private Injector injector = Guice.createInjector(Modules
-                                                       .override(new PublisherModule(Config.builder()
-                                                                                         .publishTarget("NOT_USED")
-                                                                                         .publishAuthority("NOT_USED")
-                                                                                         .queueFilePath(QUEUE_FILE_PATH)
-                                                                                         .build()))
-                                                       .with(new AbstractModule() {
-                                                         @Override
-                                                         protected void configure() {}
-
-                                                         @Provides
-                                                         @Singleton
-                                                         EventPublisherBlockingStub eventPublisherBlockingStub() {
-                                                           return EventPublisherGrpc.newBlockingStub(
-                                                               InProcessChannelBuilder.forName(SERVER_NAME).build());
-                                                         }
-                                                       }));
-  @Inject private EventPublisherBlockingStub blockingStub;
-  @Inject private RollingChronicleQueue chronicleQueue;
-  @Inject private FileDeletionManager fileDeletionManager;
+  private Injector injector = Guice.createInjector(
+      Modules
+          .override(new AppenderModule(AppenderModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build()),
+              new TailerModule(TailerModule.Config.builder().queueFilePath(QUEUE_FILE_PATH).build()))
+          .with(new ProviderModule() {
+            @Provides
+            @Singleton
+            EventPublisherBlockingStub eventPublisherBlockingStub() {
+              return EventPublisherGrpc.newBlockingStub(InProcessChannelBuilder.forName(SERVER_NAME).build());
+            }
+          }));
+  @Inject private EventPublisher eventPublisher;
   private Server server;
   private FakeService fakeService;
-  private EventPublisher eventPublisher;
 
   @Before
   public void setUp() throws Exception {
@@ -80,19 +74,21 @@ public class EventPublisherTest extends CategoryTest {
     FileUtils.forceMkdir(directory);
     FileUtils.cleanDirectory(directory);
     injector.injectMembers(this);
-    messagesPublished.set(0);
     fakeService = new FakeService();
-    eventPublisher = new EventPublisherChronicleImpl(blockingStub, chronicleQueue, fileDeletionManager);
     server = InProcessServerBuilder.forName(SERVER_NAME).addService(fakeService).build();
     server.start();
+    injector.getInstance(ChronicleEventTailer.class).startAsync().awaitRunning();
   }
 
   @After
   public void tearDown() throws Exception {
-    FileUtils.cleanDirectory(new File(QUEUE_FILE_PATH));
     eventPublisher.shutdown();
+    final ChronicleEventTailer eventTailer = injector.getInstance(ChronicleEventTailer.class);
+    eventTailer.stopAsync().awaitTerminated();
     server.shutdown();
     server.awaitTermination();
+    FileUtils.cleanDirectory(new File(QUEUE_FILE_PATH));
+    FileUtils.deleteDirectory(new File(QUEUE_FILE_PATH));
   }
 
   @Test
@@ -140,7 +136,7 @@ public class EventPublisherTest extends CategoryTest {
       }
     });
     latch.await();
-    Awaitility.await()
+    await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(100, TimeUnit.MILLISECONDS)
         // >= because "at-least"-once delivery semantics - i.e. duplicate delivery is allowed.
@@ -153,37 +149,33 @@ public class EventPublisherTest extends CategoryTest {
   public void testMessageReceived() {
     fakeService.setRecordMessages(true);
     Instant instant = Instant.now().minus(3, ChronoUnit.MINUTES);
-    PublishMessage publishMessage =
-        PublishMessage.newBuilder()
-            .setPayload(Any.pack(ecsLifecycleEvent("instance-123", instant, EVENT_TYPE_STOP)))
-            .build();
-    eventPublisher.publish(publishMessage);
-
-    Awaitility.await()
+    Lifecycle message = ecsLifecycleEvent("instance-123", instant, EVENT_TYPE_STOP);
+    eventPublisher.publishMessage(message, HTimestamps.fromInstant(Instant.now()));
+    await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(100, TimeUnit.MILLISECONDS)
-        .until(() -> assertThat(fakeService.getReceivedMessages()).contains(publishMessage));
+        .until(()
+                   -> assertThat(fakeService.getReceivedMessages().stream().map(PublishMessage::getPayload))
+                          .contains(Any.pack(message)));
   }
 
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void testMessageReceivedIfServerCallFails() {
+  public void testMessageReceivedEvenIfServerCallFails() {
     fakeService.setRecordMessages(true);
     fakeService.failNext();
 
     Instant instant = Instant.now().minus(13, ChronoUnit.MINUTES);
-    PublishMessage publishMessage =
-        PublishMessage.newBuilder()
-            .setPayload(Any.pack(ecsLifecycleEvent("instance-456", instant, EVENT_TYPE_START)))
-            .build();
+    Lifecycle message = ecsLifecycleEvent("instance-456", instant, EVENT_TYPE_START);
+    eventPublisher.publishMessage(message, HTimestamps.fromInstant(Instant.now()));
 
-    eventPublisher.publish(publishMessage);
-
-    Awaitility.await()
+    await()
         .atMost(10, TimeUnit.SECONDS)
         .pollInterval(100, TimeUnit.MILLISECONDS)
-        .until(() -> assertThat(fakeService.getReceivedMessages()).contains(publishMessage));
+        .until(()
+                   -> assertThat(fakeService.getReceivedMessages().stream().map(PublishMessage::getPayload))
+                          .contains(Any.pack(message)));
   }
 
   private Lifecycle ecsLifecycleEvent(String instanceId, Instant eventTime, EventType eventType) {

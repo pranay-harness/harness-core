@@ -4,6 +4,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
@@ -11,6 +12,8 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.auth.DelegateAuthCallCredentials;
+import io.harness.security.TokenGenerator;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import lombok.Builder;
@@ -30,6 +33,12 @@ public class ManagerGrpcClientModule extends ProviderModule {
     this.config = config;
   }
 
+  @Provides
+  @Singleton
+  CallCredentials callCredentials() {
+    return new DelegateAuthCallCredentials(
+        new TokenGenerator(config.accountId, config.accountSecret), config.accountId, true);
+  }
   @Named("manager-channel")
   @Singleton
   @Provides
@@ -77,5 +86,7 @@ public class ManagerGrpcClientModule extends ProviderModule {
   public static class Config {
     String target;
     String authority;
+    String accountId;
+    String accountSecret;
   }
 }

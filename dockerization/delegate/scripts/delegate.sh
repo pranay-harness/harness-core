@@ -125,12 +125,6 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
       echo "pollForTasks: _pollForTasks_" >> config-delegate.yml
   fi
 fi
-if ! `grep publishTarget config-delegate.yml > /dev/null`; then
-  echo "publishTarget : _publishTarget_" >> config-delegate.yml
-fi
-if ! `grep publishAuthority config-delegate.yml > /dev/null`; then
-  echo "publishAuthority : _publishAuthority_" >> config-delegate.yml
-fi
 if ! `grep queueFilePath config-delegate.yml > /dev/null`; then
   echo "queueFilePath : _queueFilePath_" >> config-delegate.yml
 fi

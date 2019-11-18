@@ -168,6 +168,17 @@ fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: ${delegateStorageUrl}/${delegateCheckLocation}" >> config-watcher.yml
 fi
+<#if CCM_EVENT_COLLECTION??>
+if ! `grep publishTarget config-watcher.yml > /dev/null`; then
+  echo "publishTarget: ${publishTarget}" >> config-watcher.yml
+fi
+if ! `grep publishAuthority config-watcher.yml > /dev/null`; then
+  echo "publishAuthority: ${publishAuthority}" >> config-watcher.yml
+fi
+if ! `grep queueFilePath config-watcher.yml > /dev/null`; then
+  echo "queueFilePath: ${queueFilePath}" >> config-watcher.yml
+fi
+</#if>
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

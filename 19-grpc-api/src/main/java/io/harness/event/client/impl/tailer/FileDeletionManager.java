@@ -1,4 +1,4 @@
-package io.harness.event.client;
+package io.harness.event.client.impl.tailer;
 
 import static net.openhft.chronicle.queue.impl.single.SingleChronicleQueue.SUFFIX;
 
@@ -11,6 +11,7 @@ import net.openhft.chronicle.queue.impl.RollingResourcesCache;
 import net.openhft.chronicle.queue.impl.StoreFileListener;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,8 +60,10 @@ class FileDeletionManager implements StoreFileListener {
                                 .collect(Collectors.toList());
     logger.info("Deleting files {}", olderFiles);
     for (File file : olderFiles) {
-      if (!file.delete()) {
-        logger.error("Failed to delete {}", file.getPath());
+      try {
+        Files.deleteIfExists(file.toPath());
+      } catch (Exception e) {
+        logger.error("Failed to delete {}", file.toPath(), e);
       }
     }
   }

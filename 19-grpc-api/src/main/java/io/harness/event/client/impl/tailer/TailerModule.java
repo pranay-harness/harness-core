@@ -1,6 +1,5 @@
-package io.harness.event.client;
+package io.harness.event.client.impl.tailer;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -13,46 +12,26 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
-import io.harness.event.PublishMessage;
+import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.security.TokenGenerator;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.RollCycles;
 import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
 
-@Slf4j
-public class PublisherModule extends AbstractModule {
+public class TailerModule extends ProviderModule {
   private final Config config;
 
-  public PublisherModule(Config config) {
+  public TailerModule(Config config) {
     this.config = config;
-  }
-
-  @Singleton
-  static class NoopEventPublisher extends EventPublisher {
-    @Override
-    protected void publish(PublishMessage publishMessage) {
-      // No-op
-    }
-  }
-
-  @Override
-  protected void configure() {
-    if (config.publishTarget == null) {
-      // EventPublisher optional for delegate start-up
-      logger.info("EventPublisher configuration not present. Injecting Noop publisher");
-      bind(EventPublisher.class).to(NoopEventPublisher.class);
-    } else {
-      bind(EventPublisher.class).to(EventPublisherChronicleImpl.class);
-    }
   }
 
   @Provides
   @Singleton
+  @Named("tailer")
   RollingChronicleQueue chronicleQueue(FileDeletionManager fileDeletionManager) {
     return ChronicleQueue.singleBuilder(config.queueFilePath)
         .rollCycle(RollCycles.MINUTELY)
