@@ -1126,6 +1126,7 @@ public class SecretManagerImpl implements SecretManager {
         }
       }
     }
+    validateGlobalSecretManager();
   }
 
   @Override
@@ -2347,7 +2348,8 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private void validateSecretManagerConfigs(String accountId) {
-    List<SecretManagerConfig> encryptionConfigs = secretManagerConfigService.listSecretManagers(accountId, false);
+    List<SecretManagerConfig> encryptionConfigs =
+        secretManagerConfigService.listSecretManagers(accountId, false, false);
     for (EncryptionConfig encryptionConfig : encryptionConfigs) {
       KmsSetupAlert kmsSetupAlert =
           KmsSetupAlert.builder()
@@ -2383,6 +2385,19 @@ public class SecretManagerImpl implements SecretManager {
         logger.info("Could not validate secret manager {} of type {} for account {}", encryptionConfig.getUuid(),
             encryptionConfig.getEncryptionType(), accountId, e);
         alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
+      }
+    }
+  }
+
+  private void validateGlobalSecretManager() {
+    SecretManagerConfig secretManagerConfig =
+        wingsPersistence.createQuery(SecretManagerConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
+    if (secretManagerConfig != null) {
+      try {
+        kmsService.encrypt(
+            UUID.randomUUID().toString().toCharArray(), GLOBAL_ACCOUNT_ID, (KmsConfig) secretManagerConfig);
+      } catch (Exception e) {
+        logger.error("Could not validate global secret manager with id {}", secretManagerConfig.getUuid(), e);
       }
     }
   }

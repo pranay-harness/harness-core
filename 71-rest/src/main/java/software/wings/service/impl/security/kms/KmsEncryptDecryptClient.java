@@ -62,7 +62,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Singleton
 @Slf4j
 public class KmsEncryptDecryptClient {
-  private static final int DEFAULT_KMS_TIMEOUT = 20; // in seconds
+  private static final int DEFAULT_KMS_TIMEOUT = 30; // in seconds
   private TimeLimiter timeLimiter;
 
   // Caffeine cache is a high performance java cache just like Guava Cache. Below is the benchmark result
