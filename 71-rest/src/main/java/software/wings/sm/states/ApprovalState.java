@@ -47,11 +47,14 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.ApprovalStateExecutionData.ApprovalStateExecutionDataKeys;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.WorkflowElement;
 import software.wings.api.jira.JiraExecutionData;
@@ -64,6 +67,7 @@ import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.Pipeline;
@@ -95,6 +99,7 @@ import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.sm.ExecutionContext;
@@ -113,6 +118,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -120,7 +126,10 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 @Slf4j
+@FieldNameConstants(innerTypeName = "ApprovalStateKeys")
 public class ApprovalState extends State implements SweepingOutputStateMixin {
+  public static final String APPROVAL_STATUS_KEY = "approvalStatus";
+
   @Getter @Setter private String groupName;
   @Getter @Setter private List<String> userGroups = new ArrayList<>();
   @Getter @Setter private boolean disable;
@@ -141,6 +150,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private SecretManager secretManager;
   @Inject private PipelineService pipelineService;
   @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject private UserGroupService userGroupService;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -154,7 +164,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Getter @Setter ApprovalStateParams approvalStateParams;
   @Getter @Setter ApprovalStateType approvalStateType = USER_GROUP;
 
-  @Getter private SweepingOutputInstance.Scope sweepingOutputScope = Scope.PIPELINE;
+  @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope = Scope.PIPELINE;
   @Getter @Setter private String sweepingOutputName;
 
   @Getter @Setter List<NameValuePair> variables;
@@ -231,18 +241,39 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         return executeShellScriptApproval(context, app.getAccountId(), app.getUuid(), approvalId,
             approvalStateParams.getShellScriptApprovalParams(), executionData);
       default:
-        throw new WingsException(
+        throw new InvalidRequestException(
             "Invalid ApprovalStateType, it should be one of ServiceNow, Jira, HarnessUi or Custom Shell script");
     }
   }
 
   @Override
   public void parseProperties(Map<String, Object> properties) {
+    prepareVariables(properties);
     boolean isDisabled = properties.get(EnvStateKeys.disable) != null && (boolean) properties.get(EnvStateKeys.disable);
     if (isDisabled && properties.get(EnvStateKeys.disableAssertion) == null) {
       properties.put(EnvStateKeys.disableAssertion, "true");
     }
     super.parseProperties(properties);
+  }
+
+  /*
+  1) Remove duplicate variable names
+  2) Replace null by empty String
+   */
+  private void prepareVariables(Map<String, Object> properties) {
+    List<Map<String, String>> variableMapList = (List<Map<String, String>>) properties.get(ApprovalStateKeys.variables);
+    Set<String> duplicateTracker = new HashSet<>();
+    if (variableMapList != null) {
+      Iterator<Map<String, String>> iterator = variableMapList.iterator();
+      while (iterator.hasNext()) {
+        Map<String, String> variableMap = iterator.next();
+        String variableName = variableMap.get(NameValuePairKeys.name);
+        if (!duplicateTracker.add(variableName)) {
+          iterator.remove();
+        }
+        variableMap.putIfAbsent(NameValuePairKeys.value, StringUtils.EMPTY);
+      }
+    }
   }
 
   @VisibleForTesting
@@ -663,15 +694,9 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     workflowNotificationHelper.sendApprovalNotification(
         app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues, context, approvalStateType);
 
-    if (isNotEmpty(variables)) {
-      Map<String, Object> output = new HashMap<>();
-      for (NameValuePair expression : variables) {
-        output.put(expression.getName(),
-            context.renderExpression(
-                expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
-      }
-      handleSweepingOutput(sweepingOutputService, context, output);
-    }
+    executionData.setVariables(approvalNotifyResponse.getVariables());
+
+    fillSweepingOutput(context, executionData, approvalNotifyResponse);
 
     switch (approvalStateType) {
       case JIRA:
@@ -684,8 +709,72 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       case SHELL_SCRIPT:
         return handleAsyncShellScript(context, executionData, approvalNotifyResponse);
       default:
-        throw new WingsException("Invalid ApprovalStateType");
+        throw new InvalidRequestException("Invalid ApprovalStateType");
     }
+  }
+
+  void fillSweepingOutput(ExecutionContext context, ApprovalStateExecutionData executionData,
+      ApprovalStateExecutionData approvalNotifyResponse) {
+    Map<String, Object> output = new HashMap<>();
+    Map<String, Object> variableMap = new HashMap<>();
+    if (isNotEmpty(variables)) {
+      for (NameValuePair expression : variables) {
+        variableMap.put(expression.getName(),
+            context.renderExpression(
+                expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
+        // We would want to deprecate use of directly accessing variables, once that is done,
+        // this block of code can be removed
+        output.put(expression.getName(),
+            context.renderExpression(
+                expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
+      }
+    }
+    output.put(ApprovalStateExecutionDataKeys.variables, variableMap);
+    output.put(ApprovalStateExecutionDataKeys.approvedBy, executionData.getApprovedBy());
+    output.put(ApprovalStateExecutionDataKeys.approvedOn, executionData.getApprovedOn());
+    output.put(ApprovalStateExecutionDataKeys.comments, executionData.getComments());
+    output.put(ApprovalStateExecutionDataKeys.timeoutMillis, executionData.getTimeoutMillis());
+    output.put(ApprovalStateExecutionDataKeys.approvalStateType, executionData.getApprovalStateType());
+    output.put(APPROVAL_STATUS_KEY,
+        approvalNotifyResponse != null ? StringUtils.capitalize(String.valueOf(approvalNotifyResponse.getStatus()))
+                                       : null);
+
+    // User Group Approval
+    if (isNotEmpty(executionData.getUserGroups())) {
+      output.put(ApprovalStateExecutionDataKeys.userGroups,
+          userGroupService.fetchUserGroupNamesFromIds(executionData.getUserGroups()));
+    }
+
+    // Jira Approval
+    output.put(ApprovalStateExecutionDataKeys.issueUrl, executionData.getIssueUrl());
+    output.put(ApprovalStateExecutionDataKeys.issueKey, executionData.getIssueKey());
+    output.put(ApprovalStateExecutionDataKeys.currentStatus, executionData.getCurrentStatus());
+    output.put(ApprovalStateExecutionDataKeys.approvalField, executionData.getApprovalField());
+    output.put(ApprovalStateExecutionDataKeys.approvalValue, executionData.getApprovalValue());
+    output.put(ApprovalStateExecutionDataKeys.rejectionField, executionData.getRejectionField());
+    output.put(ApprovalStateExecutionDataKeys.rejectionValue, executionData.getRejectionValue());
+
+    // ServiceNow Approval
+    output.put(ApprovalStateExecutionDataKeys.ticketUrl, executionData.getTicketUrl());
+    output.put(ApprovalStateExecutionDataKeys.ticketType, executionData.getTicketType());
+
+    // Slack Approval
+    output.put(ApprovalStateExecutionDataKeys.approvalFromSlack, executionData.isApprovalFromSlack());
+
+    handleSweepingOutput(sweepingOutputService, context, output);
+  }
+
+  void fillSweepingOutput(ExecutionContext context, ApprovalStateExecutionData executionData) {
+    Map<String, Object> output = new HashMap<>();
+    if (isNotEmpty(variables)) {
+      for (NameValuePair expression : variables) {
+        output.put(expression.getName(),
+            context.renderExpression(
+                expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
+      }
+    }
+    output.put(ApprovalStateExecutionDataKeys.approvedBy, executionData.getApprovedBy());
+    handleSweepingOutput(sweepingOutputService, context, output);
   }
 
   private ExecutionResponse handleAsyncShellScript(ExecutionContext context, ApprovalStateExecutionData executionData,
@@ -827,7 +916,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         handleAbortScriptApproval(context);
         return;
       default:
-        throw new WingsException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
+        throw new InvalidRequestException("Invalid ApprovalStateType : neither JIRA nor USER_GROUP");
     }
   }
 

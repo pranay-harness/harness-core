@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.BaseYaml;
 
@@ -21,6 +22,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "NameValuePairKeys")
 public class NameValuePair {
   @NotEmpty @Trimmed private String name;
   /*
