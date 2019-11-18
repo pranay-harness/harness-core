@@ -10,10 +10,12 @@ import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -47,10 +49,12 @@ import com.google.common.collect.ImmutableMap;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,10 +65,13 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.api.ApprovalStateExecutionData.ApprovalStateExecutionDataKeys;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -82,11 +89,14 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 
@@ -98,6 +108,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 11/3/16.
@@ -117,6 +128,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private WorkflowExecution workflowExecution;
   @Mock private SecretManager secretManager;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
@@ -461,9 +473,24 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testParseProperties() {
     final Map<String, Object> properties = new HashMap<>();
+    Map<String, String> var_1 = new HashMap<>();
+    Map<String, String> var_2 = new HashMap<>();
+    Map<String, String> var_3 = new HashMap<>();
+    var_1.put(NameValuePairKeys.name, "var_1");
+    var_2.put(NameValuePairKeys.name, "var_2");
+    var_2.put(NameValuePairKeys.value, "val_2");
+    var_3.put(NameValuePairKeys.name, "var_1"); // duplicate name
+    var_3.put(NameValuePairKeys.value, "val_3");
+    properties.put(ApprovalStateKeys.variables, new ArrayList<>(asList(var_1, var_2, var_3)));
     properties.put(EnvStateKeys.disable, true);
     approvalState.parseProperties(properties);
     assertThat(properties.get(EnvStateKeys.disableAssertion)).isEqualTo("true");
+    assertThat(approvalState.getVariables()).isNotNull().hasSize(2);
+    assertThat(approvalState.getVariables().stream().filter(val -> val.getValue() == null).collect(Collectors.toList()))
+        .isEmpty();
+
+    assertThat(approvalState.getVariables().stream().map(NameValuePair::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("var_1", "var_2");
   }
 
   @Test
@@ -479,5 +506,37 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     approvalState.setPipelineVariables(executionContextMock);
     assertThat(workflowStandardParams.getWorkflowElement().getVariables().get("key")).isEqualTo("value");
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testFillSweepingOutput() {
+    when(context.renderExpression(anyString(), any(StateExecutionContext.class)))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+
+    when(context.prepareSweepingOutputBuilder(any())).thenReturn(SweepingOutputInstance.builder());
+    approvalState.setSweepingOutputName("test");
+    approvalState.setVariables(asList(NameValuePair.builder().name("test").value("test").valueType("TEXT").build()));
+    ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvedBy(EmbeddedUser.builder().name(USER_NAME).build()).build();
+    approvalState.fillSweepingOutput(context, executionData, null);
+
+    verify(sweepingOutputService, times(1)).save(captor.capture());
+
+    SweepingOutputInstance sweepingOutput = captor.getValue();
+    Map<String, Object> data = (Map<String, Object>) KryoUtils.asInflatedObject(sweepingOutput.getOutput());
+
+    final List<String> keys = data.keySet().stream().collect(Collectors.toList());
+    assertThat(keys).isNotNull().containsExactlyInAnyOrder(ApprovalState.APPROVAL_STATUS_KEY,
+        ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.variables,
+        ApprovalStateExecutionDataKeys.comments, ApprovalStateExecutionDataKeys.issueKey, "test",
+        ApprovalStateExecutionDataKeys.currentStatus, ApprovalStateExecutionDataKeys.approvalValue,
+        ApprovalStateExecutionDataKeys.rejectionField, ApprovalStateExecutionDataKeys.approvedBy,
+        ApprovalStateExecutionDataKeys.ticketType, ApprovalStateExecutionDataKeys.approvalStateType,
+        ApprovalStateExecutionDataKeys.approvedOn, ApprovalStateExecutionDataKeys.issueUrl,
+        ApprovalStateExecutionDataKeys.approvalFromSlack, ApprovalStateExecutionDataKeys.timeoutMillis,
+        ApprovalStateExecutionDataKeys.approvalField, ApprovalStateExecutionDataKeys.rejectionValue);
   }
 }

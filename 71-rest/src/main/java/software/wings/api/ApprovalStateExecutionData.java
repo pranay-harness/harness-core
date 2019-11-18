@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
@@ -28,6 +29,7 @@ import java.util.Map;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@FieldNameConstants(innerTypeName = "ApprovalStateExecutionDataKeys")
 public class ApprovalStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   public static final String USER_GROUP_NAMES = "userGroupNames";
   public static final String USER_GROUPS_DISPLAY_NAME = "Approval User Groups";
@@ -104,6 +106,16 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
       putNotNull(executionDetails, "ticketUrl",
           ExecutionDataValue.builder().displayName(ticketType.getDisplayName() + " URL").value(ticketUrl).build());
     }
+
+    if (userGroupService != null) {
+      userGroupList = userGroupService.fetchUserGroupNamesFromIds(userGroups);
+    }
+
+    if (isNotEmpty(userGroupList)) {
+      putNotNull(executionDetails, USER_GROUP_NAMES,
+          ExecutionDataValue.builder().displayName(USER_GROUPS_DISPLAY_NAME).value(userGroupList).build());
+    }
+
     if (timeoutMillis != null) {
       Integer timeoutMins = timeoutMillis / (60 * 1000);
       putNotNull(executionDetails, "timeoutMins",
@@ -146,23 +158,18 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
 
     putNotNull(executionDetails, "approvedOn",
         ExecutionDataValue.builder().displayName("Approved On").value(approvedOn).build());
-    putNotNull(
-        executionDetails, "comments", ExecutionDataValue.builder().displayName("Comments").value(comments).build());
+    putNotNull(executionDetails, ApprovalStateExecutionDataKeys.variables,
+        ExecutionDataValue.builder().displayName(ApprovalStateExecutionDataKeys.variables).value(variables).build());
+    if (isNotEmpty(comments)) {
+      executionDetails.put("comments", ExecutionDataValue.builder().displayName("Comments").value(comments).build());
+    }
+
     return executionDetails;
   }
 
   private void populateApprovalStateAuthorizationData(Map<String, ExecutionDataValue> executionDetails) {
     if (workflowExecutionService != null) {
       isAuthorized = workflowExecutionService.verifyAuthorizedToAcceptOrReject(userGroups, asList(appId), workflowId);
-    }
-
-    if (userGroupService != null) {
-      userGroupList = userGroupService.fetchUserGroupNamesFromIds(userGroups);
-    }
-
-    if (isNotEmpty(userGroupList)) {
-      putNotNull(executionDetails, USER_GROUP_NAMES,
-          ExecutionDataValue.builder().displayName(USER_GROUPS_DISPLAY_NAME).value(userGroupList).build());
     }
 
     if (isAuthorized) {

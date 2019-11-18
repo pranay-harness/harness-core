@@ -27,7 +27,6 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
-import io.harness.serializer.MapperUtils;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -333,7 +332,7 @@ public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware
       // populate properties
       if (node.getProperties() != null) {
         try {
-          MapperUtils.mapObject(node.getProperties(), state);
+          state.parseProperties(node.getProperties());
         } catch (Exception e) {
           logger.error(
               format("Error mapping properties for state: [%s] of type: [%s]", state.getName(), state.getStateType()),
