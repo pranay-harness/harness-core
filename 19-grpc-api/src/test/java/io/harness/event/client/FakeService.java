@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FakeService extends EventPublisherGrpc.EventPublisherImplBase {
-  private static final int FAIL_PERCENT = 30;
+  private static final int FAIL_PERCENT = 10;
   private final AtomicInteger messageCounter = new AtomicInteger();
   private final List<PublishMessage> receivedMessages = Collections.synchronizedList(new ArrayList<>());
   private final AtomicBoolean failNext = new AtomicBoolean(false);
