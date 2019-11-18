@@ -9,6 +9,7 @@ import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.PcfDummyCommandUnit.Pcfplugin;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -103,6 +104,7 @@ public class PcfPluginState extends State {
   public static final String PCF_PLUGIN_COMMAND = "Execute CF Command";
   public static final String FILE_START_REGEX = PcfConstants.FILE_START_REGEX;
   public static final String FILE_END_REGEX = "(\\s|,|;|'|\"|:|$)";
+  private static final Splitter lineSplitter = Splitter.onPattern("\\r?\\n").trimResults().omitEmptyStrings();
 
   public static final Pattern PATH_REGEX_PATTERN = Pattern.compile(FILE_START_REGEX + ".*?" + FILE_END_REGEX);
 
@@ -132,7 +134,7 @@ public class PcfPluginState extends State {
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
     // render script
-    final String renderedScript = renderedScript(scriptString, context);
+    final String renderedScript = renderedScript(removeCommentedLineFromScript(scriptString), context);
     // find out the paths from the script
     final List<String> pathsFromScript = findPathFromScript(renderedScript);
     boolean serviceManifestRemote = false;
@@ -153,6 +155,14 @@ public class PcfPluginState extends State {
     } else {
       return executePcfPluginTask(context, activity.getUuid(), serviceManifest, pathsFromScript, renderedScript);
     }
+  }
+
+  private String removeCommentedLineFromScript(String scriptString) {
+    return lineSplitter.splitToList(scriptString)
+        .stream()
+        .filter(line -> !line.isEmpty())
+        .filter(line -> line.charAt(0) != '#')
+        .collect(Collectors.joining("\n"));
   }
 
   private String renderedScript(String scriptString, ExecutionContext context) {
