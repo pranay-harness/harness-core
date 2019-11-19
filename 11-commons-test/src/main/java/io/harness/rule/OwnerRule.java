@@ -186,6 +186,8 @@ public class OwnerRule implements TestRule {
   }
 
   public static void fileOwnerAs(String developer, String type) {
+    logger.info("Developer {} is found to be owner of {} test", developer, type);
+
     final DevInfo devInfo = active.get(developer);
     if (devInfo == null) {
       return;
