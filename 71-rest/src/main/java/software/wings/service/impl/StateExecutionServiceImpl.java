@@ -227,4 +227,37 @@ public class StateExecutionServiceImpl implements StateExecutionService {
 
     return workflowExecutionService.obtainStateMachine(workflowExecution);
   }
+
+  @Override
+  public StateExecutionInstance fetchPreviousPhaseStateExecutionInstance(
+      String appId, String executionUuid, String currentStateExecutionId) {
+    StateExecutionInstance stateExecutionInstance =
+        getStateExecutionInstance(appId, executionUuid, currentStateExecutionId);
+
+    if (stateExecutionInstance == null) {
+      return null;
+    }
+
+    if (stateExecutionInstance.getStateType().equals(PHASE.name())) {
+      StateExecutionInstance previousPhaseStateExecutionInstance =
+          getStateExecutionInstance(appId, executionUuid, stateExecutionInstance.getPrevInstanceId());
+      if (previousPhaseStateExecutionInstance != null
+          && previousPhaseStateExecutionInstance.getStateType().equals(PHASE.name())) {
+        return previousPhaseStateExecutionInstance;
+      }
+    } else {
+      return fetchPreviousPhaseStateExecutionInstance(
+          appId, executionUuid, stateExecutionInstance.getParentInstanceId());
+    }
+    return null;
+  }
+
+  @Override
+  public StateExecutionInstance getStateExecutionInstance(String appId, String executionUuid, String instanceId) {
+    return wingsPersistence.createQuery(StateExecutionInstance.class)
+        .filter(StateExecutionInstanceKeys.appId, appId)
+        .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+        .filter(StateExecutionInstanceKeys.uuid, instanceId)
+        .get();
+  }
 }

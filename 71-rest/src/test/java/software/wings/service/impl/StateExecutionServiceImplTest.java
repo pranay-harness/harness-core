@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
@@ -9,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -29,6 +32,7 @@ import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.Builder;
+import software.wings.sm.StateType;
 
 import java.util.Collections;
 import java.util.List;
@@ -123,5 +127,58 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
         stateExecutionService.getHostExclusionList(stateExecutionInstance, phaseElement, null);
 
     assertThat(hostExclusionList).isEqualTo(serviceInstanceList);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void fetchPreviousPhaseStateExecutionInstance() {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    String uuid3 = generateUuid();
+    String uuid4 = generateUuid();
+    StateExecutionInstance.Builder instance =
+        Builder.aStateExecutionInstance().appId(APP_ID).executionUuid(WORKFLOW_EXECUTION_ID);
+
+    StateExecutionInstance executionInstance1 = instance.uuid(uuid1)
+                                                    .displayName("App Resize")
+                                                    .stateName("App Resize")
+                                                    .stateType(StateType.PCF_RESIZE.name())
+                                                    .parentInstanceId(uuid2)
+                                                    .build();
+    StateExecutionInstance executionInstance2 = instance.uuid(uuid2)
+                                                    .displayName("Deploy")
+                                                    .stateName("Deploy")
+                                                    .stateType(StateType.PHASE_STEP.name())
+                                                    .parentInstanceId(uuid3)
+                                                    .build();
+
+    StateExecutionInstance executionInstance3 = instance.uuid(uuid3)
+                                                    .displayName("Phase 2")
+                                                    .stateName("Phase 2")
+                                                    .stateType(StateType.PHASE.name())
+                                                    .prevInstanceId(uuid4)
+                                                    .build();
+
+    StateExecutionInstance executionInstance4 =
+        instance.uuid(uuid4).displayName("Phase 1").stateName("Phase 1").stateType(StateType.PHASE.name()).build();
+
+    doReturn(executionInstance1)
+        .when(stateExecutionService)
+        .getStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid1);
+    doReturn(executionInstance2)
+        .when(stateExecutionService)
+        .getStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid2);
+    doReturn(executionInstance3)
+        .when(stateExecutionService)
+        .getStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid3);
+    doReturn(executionInstance4)
+        .when(stateExecutionService)
+        .getStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid4);
+    StateExecutionInstance previousInstance =
+        stateExecutionService.fetchPreviousPhaseStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid1);
+    assertThat(previousInstance).isNotNull();
+    assertThat(previousInstance.getUuid()).isEqualTo(uuid4);
+    assertThat(previousInstance.getStateName()).isEqualTo("Phase 1");
   }
 }
