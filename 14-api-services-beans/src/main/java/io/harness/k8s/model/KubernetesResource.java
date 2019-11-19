@@ -1,12 +1,10 @@
 package io.harness.k8s.model;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
 import static io.harness.k8s.manifest.ObjectYamlUtils.readYaml;
-import static io.harness.k8s.manifest.VersionUtils.compareVersion;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -37,11 +35,9 @@ import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
-import io.harness.k8s.manifest.ResourceUtils;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.io.IOUtils;
@@ -53,21 +49,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.validation.ConstraintViolationException;
 
 @Data
 @Builder
 public class KubernetesResource {
-  // Ex: "v1.11.0+d4cacc0"
-  private static final Pattern K8S_GIT_VERSION_FORMAT_REGEX = Pattern.compile(
-      "^v(?<Version>(?<MajorVersion>\\d+).(?<MinorVersion>\\d+).(?<PatchVersion>\\d+))\\+(?<GitCommit>.+)$");
-
   private KubernetesResourceId resourceId;
   private Object value;
   private String spec;
-  static KubernetesClient k8sClient = new DefaultKubernetesClient().inAnyNamespace();
+  private static KubernetesClient k8sClient = new DefaultKubernetesClient().inAnyNamespace();
 
   private static final String dotMatch = "\\.";
 
@@ -239,8 +229,7 @@ public class KubernetesResource {
     podTemplateSpec.getMetadata().setLabels(podLabels);
 
     try {
-      this.spec = ResourceUtils.toYamlNotEmpty(resource);
-      // this.spec = KubernetesHelper.toYaml(resource);
+      this.spec = KubernetesHelper.toYaml(resource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -453,40 +442,5 @@ public class KubernetesResource {
   public boolean isManaged() {
     String isManaged = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.managed));
     return StringUtils.equalsIgnoreCase(isManaged, "true");
-  }
-
-  /* Issue https://github.com/kubernetes/kubernetes/pull/66165 was fixed in 1.11.2.
-  The issue didn't allow update to stateful set which has empty/null fields in its spec. */
-  public String getSpec() {
-    if (!"StatefulSet".equals(resourceId.getKind())) {
-      return spec;
-    }
-
-    VersionInfo kubernetesVersion = k8sClient.getVersion();
-    if (acceptNonNormalizedSpecOfStatefulSet(kubernetesVersion)) {
-      return spec;
-    }
-
-    try {
-      return ResourceUtils.toYamlNotEmpty(getResource());
-    } catch (IOException e) {
-      // Return original spec
-      return spec;
-    }
-  }
-
-  private HasMetadata getResource() {
-    return k8sClient.load(IOUtils.toInputStream(spec, UTF_8)).get().get(0);
-  }
-
-  private static boolean acceptNonNormalizedSpecOfStatefulSet(VersionInfo kubernetesVersion) {
-    if (kubernetesVersion == null || isEmpty(kubernetesVersion.getGitVersion())) {
-      return true;
-    }
-
-    String gitVersion = kubernetesVersion.getGitVersion();
-    Matcher matcher = K8S_GIT_VERSION_FORMAT_REGEX.matcher(gitVersion);
-
-    return !matcher.matches() || compareVersion(matcher.group("Version"), "1.11.2") >= 0;
   }
 }
