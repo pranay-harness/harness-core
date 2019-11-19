@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 @JsonTypeName("CANARY")
 @Slf4j
@@ -961,6 +962,13 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
           }
         }
       }
+    }
+    return false;
+  }
+
+  public boolean isLastPhase(@NotNull String phaseName) {
+    if (isNotEmpty(workflowPhases)) {
+      return workflowPhases.get(workflowPhases.size() - 1).getName().equals(phaseName);
     }
     return false;
   }
