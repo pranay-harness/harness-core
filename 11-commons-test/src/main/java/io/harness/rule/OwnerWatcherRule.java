@@ -18,14 +18,14 @@ public class OwnerWatcherRule extends TestWatcher {
     fileTest(description, "skipped");
   }
 
-  private void fileTest(Description description, String failed) {
+  private void fileTest(Description description, String type) {
     final Owner owner = description.getAnnotation(Owner.class);
     if (owner == null) {
       return;
     }
 
     for (String developer : owner.developers()) {
-      OwnerRule.fileOwnerAs(developer, failed);
+      OwnerRule.fileOwnerAs(developer, type);
     }
   }
 }
