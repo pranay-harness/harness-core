@@ -1,25 +1,17 @@
 package io.harness.k8s.model;
 
-import static io.harness.k8s.manifest.ManifestHelper.processYaml;
-import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
-import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.rule.OwnerRule.Owner;
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -35,7 +27,7 @@ public class KubernetesResourceTest extends CategoryTest {
   public void setAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    KubernetesResource resource = processYaml(fileContents).get(0);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
 
     assertThat(resource.getField("random")).isEqualTo(null);
     assertThat(resource.getField("random.random")).isEqualTo(null);
@@ -66,7 +58,7 @@ public class KubernetesResourceTest extends CategoryTest {
   public void arrayFieldsSetAndGetTest() throws Exception {
     URL url = this.getClass().getResource("/two-containers.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    KubernetesResource resource = processYaml(fileContents).get(0);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
 
     String containerName = (String) resource.getField("spec.containers[0].name");
     assertThat(containerName).isEqualTo("nginx-container");
@@ -91,7 +83,7 @@ public class KubernetesResourceTest extends CategoryTest {
   public void addAnnotationTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    KubernetesResource resource = processYaml(fileContents).get(0);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
 
     resource.addAnnotations(ImmutableMap.of("key1", "value1", "key2", "value2"));
 
@@ -108,7 +100,7 @@ public class KubernetesResourceTest extends CategoryTest {
   public void addLabelsTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    KubernetesResource resource = processYaml(fileContents).get(0);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
 
     resource.addLabels(ImmutableMap.of("key1", "value1", "key2", "value2"));
 
@@ -126,7 +118,7 @@ public class KubernetesResourceTest extends CategoryTest {
   public void nameUpdateTests() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    KubernetesResource resource = processYaml(fileContents).get(0);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
     UnaryOperator<Object> appendRevision = t -> t + "-1";
 
     String oldName = (String) resource.getField("metadata.name");
@@ -142,7 +134,7 @@ public class KubernetesResourceTest extends CategoryTest {
   public void testAddLabelsInPodSpecNullPodTemplateSpec() throws Exception {
     URL url = this.getClass().getResource("/null-pod-template.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    KubernetesResource resource = processYaml(fileContents).get(0);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
     resource = resource.addLabelsInPodSpec(ImmutableMap.of("k", "v"));
     assertThat(resource).isNotNull();
   }
@@ -153,44 +145,8 @@ public class KubernetesResourceTest extends CategoryTest {
   public void testTransformConfigMapAndSecretRef() throws Exception {
     URL url = this.getClass().getResource("/spec-in-template-null.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);
-    KubernetesResource resource = processYaml(fileContents).get(0);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
     resource = resource.transformConfigMapAndSecretRef(UnaryOperator.identity(), UnaryOperator.identity());
     assertThat(resource).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = ANKIT)
-  @Category(UnitTests.class)
-  public void testGetSpecForStatefulSet() throws Exception {
-    URL url1 = this.getClass().getResource("/denormalized-stateful-set-spec.yaml");
-    String denormalizedSpec = IOUtils.toString(url1, Charsets.UTF_8);
-
-    URL url2 = this.getClass().getResource("/normalized-stateful-set-spec.yaml");
-    String normalizedSpec = IOUtils.toString(url2, Charsets.UTF_8);
-
-    VersionInfo versionInfo = mock(VersionInfo.class);
-    KubernetesResource.k8sClient = spy(new DefaultKubernetesClient().inAnyNamespace());
-
-    when(versionInfo.getGitVersion()).thenReturn("v1.11.0+d4cacc0");
-    when(KubernetesResource.k8sClient.getVersion()).thenReturn(versionInfo);
-
-    KubernetesResource denormalizedResource = processYaml(denormalizedSpec).get(0);
-    assertEquals(normalizedSpec, denormalizedResource.getSpec());
-
-    when(versionInfo.getGitVersion()).thenReturn("v1.13.0+d0");
-
-    denormalizedResource = processYaml(denormalizedSpec).get(0);
-    assertEquals(denormalizedSpec, denormalizedResource.getSpec());
-  }
-
-  @Test
-  @Owner(developers = ANKIT)
-  @Category(UnitTests.class)
-  public void testGetSpecForNonStatefulSet() throws Exception {
-    URL url1 = this.getClass().getResource("/deploy.yaml");
-    String spec = IOUtils.toString(url1, Charsets.UTF_8);
-
-    KubernetesResource denormalizedResource = processYaml(spec).get(0);
-    assertEquals(spec.trim(), denormalizedResource.getSpec().trim());
   }
 }

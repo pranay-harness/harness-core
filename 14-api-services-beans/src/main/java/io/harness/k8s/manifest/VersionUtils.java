@@ -16,7 +16,6 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -96,18 +95,5 @@ public class VersionUtils {
         resource.transformConfigMapAndSecretRef(updateConfigMapReference, updateSecretReference);
       }
     }
-  }
-
-  public static int compareVersion(String v1, String v2) {
-    int[] v1Components = Arrays.stream(v1.split("\\.")).mapToInt(Integer::valueOf).toArray();
-    int[] v2Components = Arrays.stream(v2.split("\\.")).mapToInt(Integer::valueOf).toArray();
-
-    for (int i = 0; i < Math.min(v1.length(), v2.length()); i++) {
-      if (v1Components[i] != v2Components[i]) {
-        return Integer.compare(v1Components[i], v2Components[i]);
-      }
-    }
-
-    return Integer.compare(v1.length(), v2.length());
   }
 }
