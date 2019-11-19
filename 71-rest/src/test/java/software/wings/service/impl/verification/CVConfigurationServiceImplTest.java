@@ -15,13 +15,16 @@ import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.fabric8.utils.Lists;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +49,8 @@ import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
 import software.wings.sm.states.CustomLogVerificationState.Method;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapping;
 import software.wings.sm.states.CustomLogVerificationState.ResponseType;
+import software.wings.sm.states.DatadogState;
+import software.wings.sm.states.DatadogState.Metric;
 import software.wings.sm.states.StackDriverState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
@@ -57,6 +62,7 @@ import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -570,6 +576,15 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     return configuration;
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCreateDDCustomConfigWithDots() throws Exception {
+    DatadogCVServiceConfiguration configuration = createDatadogCVConfiguration(true, true);
+    cvConfigurationService.saveConfiguration(
+        configuration.getAccountId(), configuration.getAppId(), StateType.DATA_DOG, configuration);
+  }
+
   public static CustomLogCVServiceConfiguration createCustomLogsConfig(String accountId) throws Exception {
     CustomLogCVServiceConfiguration configuration =
         CustomLogCVServiceConfiguration.builder()
@@ -613,5 +628,44 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     logsCVConfiguration.setQuery(generateUuid());
     logsCVConfiguration.setStateType(StateType.SUMO);
     return logsCVConfiguration;
+  }
+
+  private DatadogCVServiceConfiguration createDatadogCVConfiguration(boolean enabled24x7, boolean withDot)
+      throws Exception {
+    YamlUtils yamlUtils = new YamlUtils();
+    URL url = DatadogState.class.getResource("/apm/datadog_metrics.yml");
+    String yaml = Resources.toString(url, Charsets.UTF_8);
+    Map<String, List<Metric>> metricsMap = yamlUtils.read(yaml, new TypeReference<Map<String, List<Metric>>>() {});
+
+    StringBuilder dockerMetrics = new StringBuilder();
+    metricsMap.get("Docker").forEach(metric -> dockerMetrics.append(metric.getMetricName()).append(","));
+    dockerMetrics.deleteCharAt(dockerMetrics.lastIndexOf(","));
+
+    StringBuilder ecsMetrics = new StringBuilder();
+    metricsMap.get("ECS").forEach(metric -> ecsMetrics.append(metric.getMetricName()).append(","));
+    ecsMetrics.deleteCharAt(ecsMetrics.lastIndexOf(","));
+
+    DatadogCVServiceConfiguration configuration =
+        DatadogCVServiceConfiguration.builder()
+            .dockerMetrics(Collections.singletonMap(generateUuid(), dockerMetrics.toString()))
+            .ecsMetrics(Collections.singletonMap(generateUuid(), ecsMetrics.toString()))
+            .customMetrics(Collections.singletonMap(generateUuid(),
+                Sets.newHashSet(Metric.builder()
+                                    .displayName(withDot ? "metric1.name" : "metric1")
+                                    .mlMetricType(MetricType.THROUGHPUT.name())
+                                    .build(),
+                    Metric.builder()
+                        .displayName(withDot ? "metric2.name" : "metric2")
+                        .mlMetricType(MetricType.ERROR.name())
+                        .build())))
+            .build();
+    configuration.setAccountId(accountId);
+    configuration.setStateType(StateType.DATA_DOG);
+    configuration.setEnvId(generateUuid());
+    configuration.setName("DD-Config");
+    configuration.setConnectorId(generateUuid());
+    configuration.setServiceId(generateUuid());
+    configuration.setEnabled24x7(enabled24x7);
+    return configuration;
   }
 }

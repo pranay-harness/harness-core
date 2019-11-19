@@ -200,6 +200,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
                                                   .filter(LearningEngineAnalysisTaskKeys.version, serviceApiVersion)
                                                   .field(LearningEngineAnalysisTaskKeys.retry)
                                                   .lessThanOrEq(LearningEngineAnalysisTask.RETRIES);
+
     if (is24x7Task.isPresent()) {
       query.filter(LearningEngineAnalysisTaskKeys.is24x7Task, is24x7Task.get());
     }
@@ -216,6 +217,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         query.and(query.criteria(LearningEngineAnalysisTaskKeys.executionStatus).equal(ExecutionStatus.RUNNING),
             query.criteria(LearningEngineAnalysisTask.LAST_UPDATED_AT_KEY)
                 .lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
+    query = query.order(LearningEngineAnalysisTaskKeys.analysis_minute);
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set(LearningEngineAnalysisTaskKeys.executionStatus, ExecutionStatus.RUNNING)

@@ -10,6 +10,7 @@ import static software.wings.common.VerificationConstants.DD_K8s_HOST_NAME;
 import static software.wings.metrics.MetricType.ERROR;
 import static software.wings.metrics.MetricType.RESP_TIME;
 import static software.wings.metrics.MetricType.THROUGHPUT;
+import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
@@ -485,7 +486,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   public static Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics) {
     Map<String, TimeSeriesMetricDefinition> metricTypeMap = new HashMap<>();
     for (Metric metric : metrics) {
-      metricTypeMap.put(metric.getDisplayName(),
+      metricTypeMap.put(replaceDotWithUnicode(metric.getDisplayName()),
           TimeSeriesMetricDefinition.builder()
               .metricName(metric.getDisplayName())
               .metricType(MetricType.valueOf(metric.getMlMetricType()))
