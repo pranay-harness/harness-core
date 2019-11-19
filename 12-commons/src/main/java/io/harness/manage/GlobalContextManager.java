@@ -20,20 +20,30 @@ public class GlobalContextManager {
   private static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal<>();
 
   public static class GlobalContextGuard implements AutoCloseable {
-    private boolean unset;
+    private boolean noop;
+    private GlobalContext original;
     AutoLogContext autoLogContext;
 
     protected GlobalContextGuard(GlobalContext globalContext) {
-      if (unset = globalContext != null) {
+      original = contextThreadLocal.get();
+      noop = globalContext == original;
+      if (!noop && globalContext != null) {
         autoLogContext = set(globalContext);
       }
     }
 
     @Override
     public void close() {
-      if (unset) {
-        unset();
+      if (noop) {
+        return;
       }
+
+      if (original == null) {
+        unset();
+      } else {
+        contextThreadLocal.set(original);
+      }
+
       if (autoLogContext != null) {
         autoLogContext.close();
       }
