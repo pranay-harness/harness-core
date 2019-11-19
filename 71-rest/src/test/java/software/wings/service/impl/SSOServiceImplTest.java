@@ -1,7 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
 import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
 import static software.wings.security.authentication.AuthenticationMechanism.SAML;
@@ -11,13 +15,19 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.OauthProviderType;
+import software.wings.security.authentication.SSOConfig;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
@@ -29,7 +39,8 @@ import software.wings.service.intfc.SSOSettingService;
 public class SSOServiceImplTest extends WingsBaseTest {
   private static final String APP_ID = "app_id";
 
-  @Inject private SSOService ssoService;
+  @Mock private AuthHandler authHandler;
+  @InjectMocks @Inject private SSOService ssoService;
   @Inject private AccountService accountService;
   @Inject private SSOSettingService ssoSettingService;
 
@@ -119,6 +130,33 @@ public class SSOServiceImplTest extends WingsBaseTest {
     assertThat(account.getAuthenticationMechanism()).isEqualTo(LDAP);
     assertThat(account.isOauthEnabled()).isFalse();
     accountService.delete(account.getUuid());
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testAccessManagement() {
+    Account account = Account.Builder.anAccount()
+                          .withUuid("Account 3")
+                          .withOauthEnabled(false)
+                          .withAccountName("Account 3")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withAppId(APP_ID)
+                          .withCompanyName("Account 3")
+                          .withAuthenticationMechanism(USER_PASSWORD)
+                          .build();
+    accountService.save(account);
+    doNothing().when(authHandler).authorizeAccountPermission(anyList());
+    SSOConfig accountAccessManagementSettings = ssoService.getAccountAccessManagementSettings(account.getUuid());
+    assertThat(accountAccessManagementSettings).isNotNull();
+
+    doThrow(new InvalidRequestException("INVALID")).when(authHandler).authorizeAccountPermission(anyList());
+    try {
+      ssoService.getAccountAccessManagementSettings(account.getUuid());
+      assertThat(1 == 2).isTrue();
+    } catch (InvalidRequestException ex) {
+      assertThat(ex.getCode()).isEqualTo(ErrorCode.USER_NOT_AUTHORIZED);
+    }
   }
 
   @Test

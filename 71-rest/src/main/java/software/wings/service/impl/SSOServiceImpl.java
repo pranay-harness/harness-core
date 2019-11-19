@@ -189,16 +189,16 @@ public class SSOServiceImpl implements SSOService {
         new PermissionAttribute(PermissionType.USER_PERMISSION_READ, Action.READ);
     PermissionAttribute accountManagementPermission =
         new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ);
-    boolean isAuthorized = handleExceptionInAuthorization(asList(userReadPermissionAttribute))
-        || handleExceptionInAuthorization(asList(accountManagementPermission));
+    boolean isAuthorized =
+        handleExceptionInAuthorization(asList(userReadPermissionAttribute, accountManagementPermission));
     if (!isAuthorized) {
-      throw new WingsException(USER_NOT_AUTHORIZED, WingsException.USER);
+      throw new InvalidRequestException("User not Authorized", USER_NOT_AUTHORIZED, WingsException.USER);
     }
   }
 
   private boolean handleExceptionInAuthorization(List<PermissionAttribute> userPermissionList) {
     try {
-      authHandler.authorize(userPermissionList, null, null);
+      authHandler.authorizeAccountPermission(userPermissionList);
       return true;
     } catch (Exception ex) {
       return false;
