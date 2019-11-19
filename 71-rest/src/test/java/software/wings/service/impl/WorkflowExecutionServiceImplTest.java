@@ -2384,9 +2384,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchWorkflowExecutionsForResourceConstraint() {
     List<String> ids = new ArrayList<>();
-    for (int i = 0; i < 10; ++i) {
-      final WorkflowExecution workflowExecution =
-          WorkflowExecution.builder().uuid("_" + random.nextInt(1000)).appId(APP_ID).build();
+    for (int i = 0; i < ids.size(); ++i) {
+      String uuid = "_" + random.nextInt(1000);
+      if (ids.contains(uuid)) {
+        continue;
+      }
+      final WorkflowExecution workflowExecution = WorkflowExecution.builder().uuid(uuid).appId(APP_ID).build();
       ids.add(workflowExecution.getUuid());
       wingsPersistence.save(workflowExecution);
     }
@@ -2396,8 +2399,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     final List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.fetchWorkflowExecutionsForResourceConstraint(APP_ID, ids);
 
-    for (int i = 0; i < workflowExecutions.size(); ++i) {
-      assertThat(workflowExecutions.get(i).getUuid()).isEqualTo(ids.get(i));
-    }
+    List<String> wIds = workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(toList());
+    assertThat(wIds).isEqualTo(ids);
   }
 }
