@@ -2,6 +2,7 @@ package software.wings.rules;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
+import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -26,7 +27,10 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
+import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ServersModule;
+import io.harness.manage.GlobalContextManager;
+import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
@@ -99,15 +103,18 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
     Statement wingsStatement = new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        List<Annotation> annotations = Lists.newArrayList(asList(frameworkMethod.getAnnotations()));
-        annotations.addAll(asList(target.getClass().getAnnotations()));
-        before(annotations, isIntegrationTest(target),
-            target.getClass().getSimpleName() + "." + frameworkMethod.getName());
-        injector.injectMembers(target);
-        try {
-          statement.evaluate();
-        } finally {
-          after(annotations);
+        try (GlobalContextGuard ignore = GlobalContextManager.ensureGlobalContextGuard()) {
+          upsertGlobalContextRecord(AuditGlobalContextData.builder().auditId("testing").build());
+          List<Annotation> annotations = Lists.newArrayList(asList(frameworkMethod.getAnnotations()));
+          annotations.addAll(asList(target.getClass().getAnnotations()));
+          before(annotations, isIntegrationTest(target),
+              target.getClass().getSimpleName() + "." + frameworkMethod.getName());
+          injector.injectMembers(target);
+          try {
+            statement.evaluate();
+          } finally {
+            after(annotations);
+          }
         }
       }
     };

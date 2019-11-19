@@ -1,5 +1,7 @@
 package io.harness.threading;
 
+import io.harness.logging.AutoLogRemoveAllContext;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
@@ -11,7 +13,9 @@ public class CurrentThreadExecutor extends AbstractExecutorService {
 
   @Override
   public void execute(Runnable command) {
-    command.run();
+    try (AutoLogRemoveAllContext ignore = new AutoLogRemoveAllContext()) {
+      command.run();
+    }
   }
 
   @Override
