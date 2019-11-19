@@ -67,7 +67,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = DEEPAK, intermittent = true)
+  @Owner(developers = DEEPAK)
   @Category(FunctionalTests.class)
   public void runAzureCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createAzureCloudProvider, booleanMatcher, true);
