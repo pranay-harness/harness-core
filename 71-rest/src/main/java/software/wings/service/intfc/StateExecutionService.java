@@ -33,4 +33,9 @@ public interface StateExecutionService {
   StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName);
 
   StateMachine obtainStateMachine(StateExecutionInstance stateExecutionInstance);
+
+  StateExecutionInstance fetchPreviousPhaseStateExecutionInstance(
+      String appId, String executionUuid, String currentStateExecutionId);
+
+  StateExecutionInstance getStateExecutionInstance(String appId, String executionUuid, String currentStateExecutionId);
 }

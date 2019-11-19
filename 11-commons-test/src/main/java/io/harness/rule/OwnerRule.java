@@ -104,7 +104,7 @@ public class OwnerRule implements TestRule {
           .put(PARNIAN, DevInfo.builder().email("parnian@harness.io").slack("U89A5MLQK").build())
           .put(POOJA, DevInfo.builder().email("pooja@harness.io").slack("UDDA9L0D6").build())
           .put(PRANJAL, DevInfo.builder().email("pranjal@harness.io").slack("UBV049Q5B").build())
-          .put(PRASHANT, DevInfo.builder().email("prashant@harness.io").slack("UJLBB7ULT").build())
+          .put(PRASHANT, DevInfo.builder().email("prashant.pal@harness.io").slack("UJLBB7ULT").build())
           .put(PRAVEEN, DevInfo.builder().email("praveen.sugavanam@harness.io").slack("UJLBB7ULT").build())
           .put(PUNEET, DevInfo.builder().email("puneet.saraswat@harness.io").slack("U8PMB1XKM").build())
           .put(RAGHU, DevInfo.builder().email("raghu@harness.io").slack("U4Z2PG2TD").build())
