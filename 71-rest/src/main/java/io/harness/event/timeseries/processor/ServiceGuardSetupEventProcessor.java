@@ -49,8 +49,8 @@ public class ServiceGuardSetupEventProcessor {
              PreparedStatement insertPreparedStatement = connection.prepareStatement(insertSQLStatement)) {
           insertPreparedStatement.setString(1, accountId);
           insertPreparedStatement.setString(2, verificationProviderType);
-          insertPreparedStatement.setInt(3, Integer.valueOf(numOfConfigsString));
-          insertPreparedStatement.setInt(4, Integer.valueOf(numOfAlertsString));
+          insertPreparedStatement.setInt(3, Integer.parseInt(numOfConfigsString));
+          insertPreparedStatement.setInt(4, Integer.parseInt(numOfAlertsString));
           insertPreparedStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
           insertPreparedStatement.execute();
           successfulInsert = true;

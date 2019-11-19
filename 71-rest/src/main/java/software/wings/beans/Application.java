@@ -7,6 +7,7 @@ import com.google.common.base.MoreObjects;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.AccountAccess;
+import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -48,6 +49,12 @@ import java.util.Set;
                , @Field(ApplicationKeys.name) }))
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+  public static final String LOG_KEY_FOR_ID = LogKeyUtils.calculateLogKeyForId(Application.class);
+
+  @Override
+  public String logKeyForId() {
+    return LOG_KEY_FOR_ID;
+  }
 
   @NotEmpty private String name;
   private String description;

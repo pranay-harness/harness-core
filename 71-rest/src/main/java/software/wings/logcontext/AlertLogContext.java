@@ -1,16 +1,20 @@
 package software.wings.logcontext;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-
-import com.google.common.collect.ImmutableMap;
-
+import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.logging.AutoLogContext;
+import io.harness.persistence.AccountLogContext;
 import software.wings.beans.alert.AlertType;
+import software.wings.service.impl.AppLogContext;
 
 public class AlertLogContext extends AutoLogContext {
+  public static final String ALERT_TYPE = "alertType";
+
   public AlertLogContext(String accountId, AlertType alertType, String appId, OverrideBehavior behavior) {
-    super(ImmutableMap.of("accountId", accountId, "alertType", alertType.toString(), "appId",
-              appId == null ? GLOBAL_APP_ID : appId),
+    super(NullSafeImmutableMap.<String, String>builder()
+              .put(AccountLogContext.ID, accountId)
+              .putIfNotNull(ALERT_TYPE, alertType.toString())
+              .putIfNotNull(AppLogContext.ID, appId)
+              .build(),
         behavior);
   }
 }
