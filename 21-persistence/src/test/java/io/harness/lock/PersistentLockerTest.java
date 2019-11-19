@@ -3,6 +3,7 @@ package io.harness.lock;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.inOrder;
@@ -21,7 +22,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
@@ -153,8 +153,8 @@ public class PersistentLockerTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("TODO: enable when we can have timeout logic")
   public void testAcquireTimeout() throws InterruptedException {
+    assumeThat("We can have timeout logic").isEqualTo("true");
     Duration timeout = ofMillis(1);
 
     DistributedLockOptions options = new DistributedLockOptions();

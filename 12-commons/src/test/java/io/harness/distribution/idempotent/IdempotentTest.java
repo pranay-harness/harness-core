@@ -23,7 +23,6 @@ import io.harness.rule.Repeat;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
 import lombok.Value;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -95,7 +94,6 @@ public class IdempotentTest extends CategoryTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testIdempotentAfterTtl() {
     final IdempotentRegistry<BooleanIdempotentResult> idempotentRegistry = new InprocIdempotentRegistry<>();
     try (IdempotentLock<BooleanIdempotentResult> idempotent =
