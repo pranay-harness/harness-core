@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 import com.google.inject.Inject;
 
@@ -22,7 +23,6 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -143,8 +143,8 @@ public class PersistentLockerDBTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("The underlining code does not respect lock after timeout. Enable this test when this issue is fixed.")
   public void testAcquireAfterTimeout() throws InterruptedException {
+    assumeThat("The underlining code respects lock after timeout.").isEqualTo("true");
     class AnotherLock implements Runnable {
       public boolean locked;
       public boolean tested;

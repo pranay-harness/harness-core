@@ -23,7 +23,6 @@ import io.harness.queue.Queue.Filter;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -276,7 +275,6 @@ public class MongoQueueTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSendMessage() {
     TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
 
