@@ -363,10 +363,14 @@ public class Account extends Base implements PersistentRegularIterable {
 
     else if (AccountKeys.usageMetricsTaskIteration.equals(fieldName)) {
       this.usageMetricsTaskIteration = nextIteration;
-    } else if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
+      return;
+    }
+
+    else if (AccountKeys.licenseExpiryCheckIteration.equals(fieldName)) {
       this.licenseExpiryCheckIteration = nextIteration;
       return;
     }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 

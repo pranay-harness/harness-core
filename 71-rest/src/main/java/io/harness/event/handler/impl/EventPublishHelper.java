@@ -698,6 +698,18 @@ public class EventPublishHelper {
     return false;
   }
 
+  public void publishServiceGuardSetupEvent(
+      String accountId, String verificationProviderType, long configs, long alerts) {
+    executorService.submit(() -> {
+      Map<String, String> properties = new HashMap<>();
+      properties.put("accountId", accountId);
+      properties.put("verificationProviderType", verificationProviderType);
+      properties.put("configs", String.valueOf(configs));
+      properties.put("alerts", String.valueOf(alerts));
+      publishEvent(EventType.SERVICE_GUARD_SETUP, properties);
+    });
+  }
+
   public void handleDeploymentCompleted(WorkflowExecution workflowExecution) {
     if (workflowExecution == null) {
       return;

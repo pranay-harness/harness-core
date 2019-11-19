@@ -49,6 +49,7 @@ public class UsageMetricsHandler implements Handler<Account> {
                                  || account.getLicenseInfo().getAccountType().equals(AccountType.PAID)))))
         && (!account.getUuid().equals(GLOBAL_ACCOUNT_ID))) {
       usageMetricsService.createVerificationUsageEvents(account);
+      usageMetricsService.createSetupEventsForTimescaleDB(account);
     }
   }
 }

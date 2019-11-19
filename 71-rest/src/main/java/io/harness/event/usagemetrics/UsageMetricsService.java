@@ -16,6 +16,7 @@ import com.hazelcast.util.Preconditions;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.metrics.HarnessMetricRegistry;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
@@ -54,6 +55,35 @@ public class UsageMetricsService {
   @Inject private AccountService accountService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
+  @Inject private EventPublishHelper eventPublishHelper;
+
+  public void createSetupEventsForTimescaleDB(Account account) {
+    List<CVConfiguration> cvConfigurationList = cvConfigurationService.listConfigurations(account.getUuid());
+
+    List<CVConfiguration> logConfigs =
+        cvConfigurationList.stream()
+            .filter(config
+                -> config.isEnabled24x7()
+                    && VerificationConstants.getLogAnalysisStates().contains(config.getStateType()))
+            .collect(Collectors.toList());
+
+    List<CVConfiguration> metricConfigs =
+        cvConfigurationList.stream()
+            .filter(config
+                -> config.isEnabled24x7()
+                    && VerificationConstants.getMetricAnalysisStates().contains(config.getStateType()))
+            .collect(Collectors.toList());
+
+    if (isNotEmpty(logConfigs)) {
+      long alertsSetup = logConfigs.stream().filter(CVConfiguration::isAlertEnabled).count();
+      eventPublishHelper.publishServiceGuardSetupEvent(account.getUuid(), "LOGS", logConfigs.size(), alertsSetup);
+    }
+
+    if (isNotEmpty(metricConfigs)) {
+      long alertsSetup = metricConfigs.stream().filter(CVConfiguration::isAlertEnabled).count();
+      eventPublishHelper.publishServiceGuardSetupEvent(account.getUuid(), "METRICS", metricConfigs.size(), alertsSetup);
+    }
+  }
 
   public void createVerificationUsageEvents(Account account) {
     List<StateType> stateTypes = VerificationConstants.getAnalysisStates();

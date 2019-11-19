@@ -33,6 +33,7 @@ public enum EventType {
 
   DEPLOYMENT_VERIFIED,
   JOIN_ACCOUNT_REQUEST,
+  SERVICE_GUARD_SETUP,
 
   /**
    * Runtime entites
