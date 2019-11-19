@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -9,7 +10,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.WingsException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -117,14 +120,30 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     this.isAdvancedQuery = advancedQuery;
   }
 
+  private String getServerConfigId(ExecutionContext context) {
+    String finalServerConfigId = analysisServerConfigId;
+    if (isNotEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        finalServerConfigId = templateExpressionProcessor.resolveTemplateExpression(context, configIdExpression);
+      }
+    }
+    return finalServerConfigId;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    String envId = workflowStandardParams == null || workflowStandardParams.getEnv() == null
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
+    String finalServerConfigId = getServerConfigId(context);
+    final SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
     if (settingAttribute == null) {
-      throw new WingsException("No splunk setting with id: " + analysisServerConfigId + " found");
+      throw new VerificationOperationException(
+          ErrorCode.SPLUNK_CONFIGURATION_ERROR, "No splunk setting with id: " + finalServerConfigId + " found");
     }
 
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
@@ -190,9 +209,12 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   public DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
     // TODO: see if this can be moved to base class.
     // TODO: some common part needs to be refactored
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    String finalServerConfigId = getServerConfigId(context);
+    final SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = workflowStandardParams == null || workflowStandardParams.getEnv() == null
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     return SplunkDataCollectionInfoV2.builder()
         .splunkConfig(splunkConfig)

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 import io.harness.beans.DelegateTask;
@@ -38,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -90,6 +93,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     setupCommonFields(splunkState);
     FieldUtils.writeField(splunkState, "appService", appService, true);
     FieldUtils.writeField(splunkState, "accountService", accountService, true);
+    FieldUtils.writeField(splunkState, "templateExpressionProcessor", templateExpressionProcessor, true);
   }
 
   @Test
@@ -217,6 +221,124 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     when(workflowStandardParams.getEnv())
         .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    ExecutionResponse response = spyState.execute(executionContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    assertThat(response.getErrorMessage())
+        .isEqualTo(
+            "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run.");
+
+    List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).asList();
+    assertThat(tasks).hasSize(1);
+    DelegateTask task = tasks.get(0);
+    assertThat(task.getData().getTaskType()).isEqualTo(TaskType.SPLUNK_COLLECT_LOG_DATA.name());
+    verify(activityLogger).info(contains("Triggered data collection"), anyLong(), anyLong());
+    final SplunkDataCollectionInfo expectedCollectionInfo =
+        SplunkDataCollectionInfo.builder()
+            .splunkConfig(splunkConfig)
+            .accountId(accountId)
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .serviceId(serviceId)
+            .query(splunkState.getQuery())
+            .startMinute(0)
+            .startMinute(0)
+            .collectionTime(Integer.parseInt(splunkState.getTimeDuration()))
+            .hosts(Collections.singleton("test"))
+            .encryptedDataDetails(Collections.emptyList())
+            .build();
+    final SplunkDataCollectionInfo actualCollectionInfo = (SplunkDataCollectionInfo) task.getData().getParameters()[0];
+    expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
+    assertThat(actualCollectionInfo).isEqualTo(expectedCollectionInfo);
+    assertThat(task.getAccountId()).isEqualTo(accountId);
+    assertThat(task.getStatus()).isEqualTo(Status.QUEUED);
+    assertThat(task.getAppId()).isEqualTo(appId);
+    Map<Long,
+        LinkedHashMap<String,
+            LinkedHashMap<String,
+                LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
+        cvExecutionMetaData =
+            continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
+    assertThat(cvExecutionMetaData).isNotNull();
+    ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 =
+        cvExecutionMetaData.get(1519171200000L)
+            .get("dummy artifact")
+            .get("dummy env/dummy workflow")
+            .values()
+            .iterator()
+            .next()
+            .get("BASIC")
+            .get(0);
+    assertThat(accountId).isEqualTo(continuousVerificationExecutionMetaData1.getAccountId());
+    assertThat("dummy artifact").isEqualTo(continuousVerificationExecutionMetaData1.getArtifactName());
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+
+    VerificationStateAnalysisExecutionData logAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder().build();
+    VerificationDataAnalysisResponse logAnalysisResponse =
+        VerificationDataAnalysisResponse.builder().stateExecutionData(logAnalysisExecutionData).build();
+    logAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
+    Map<String, ResponseData> responseMap = new HashMap<>();
+    responseMap.put("somekey", logAnalysisResponse);
+    splunkState.handleAsyncResponse(executionContext, responseMap);
+    cvExecutionMetaData =
+        continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L, user);
+    continuousVerificationExecutionMetaData1 = cvExecutionMetaData.get(1519171200000L)
+                                                   .get("dummy artifact")
+                                                   .get("dummy env/dummy workflow")
+                                                   .values()
+                                                   .iterator()
+                                                   .next()
+                                                   .get("BASIC")
+                                                   .get(0);
+    assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testTriggerCollectionWithWorkflowVariables() throws ParseException {
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
+    SplunkConfig splunkConfig = SplunkConfig.builder()
+                                    .accountId(accountId)
+                                    .splunkUrl("splunk-url")
+                                    .username("splunk-user")
+                                    .password("splunk-pwd".toCharArray())
+                                    .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("splunk-config")
+                                            .withValue(splunkConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    splunkState.setAnalysisServerConfigId("${Splunk_Server}");
+    Logger activityLogger = mock(Logger.class);
+    when(cvActivityLogService.getLoggerByStateExecutionId(anyString())).thenReturn(activityLogger);
+    SplunkV2State spyState = spy(splunkState);
+    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getCanaryNewHostNames(executionContext);
+    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
+        .when(spyState)
+        .getLastExecutionNodes(executionContext);
+    doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
+    doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
+    when(workflowStandardParams.getEnv())
+        .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    doReturn(Collections.singletonList(TemplateExpression.builder()
+                                           .fieldName("analysisServerConfigId")
+                                           .expression("${Splunk_Server}")
+                                           .metadata(ImmutableMap.of("entityType", "SPLUNK_CONFIGID"))
+                                           .build()))
+        .when(spyState)
+        .getTemplateExpressions();
+
+    when(executionContext.renderExpression("${workflow.variables.Splunk_Server}"))
+        .thenReturn(settingAttribute.getUuid());
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
