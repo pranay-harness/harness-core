@@ -3,12 +3,25 @@ package software.wings.beans;
 import io.harness.beans.EmbeddedUser;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.utils.IndexType;
+import software.wings.beans.EntityVersion.EntityVersionKeys;
 
 /**
  * Created by rishi on 10/13/16.
  */
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "EntityVersionKeys")
+@Indexes(@Index(options = @IndexOptions(name = "app_type_uuid_createdAt"),
+    fields =
+    {
+      @Field(value = EntityVersionKeys.appId)
+      , @Field(value = EntityVersionKeys.entityType), @Field(value = EntityVersionKeys.entityUuid),
+          @Field(value = EntityVersionKeys.createdAt, type = IndexType.DESC)
+    }))
 public class EntityVersion extends Base {
   public static final Integer INITIAL_VERSION = 1;
 
@@ -228,5 +241,13 @@ public class EntityVersion extends Base {
       entityVersion.setLastUpdatedAt(lastUpdatedAt);
       return entityVersion;
     }
+  }
+
+  public static final class EntityVersionKeys {
+    private EntityVersionKeys() {}
+    // Temporary
+    public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
+    public static final String uuid = "uuid";
   }
 }
