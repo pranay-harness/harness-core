@@ -42,12 +42,6 @@ import java.util.List;
 @Singleton
 @Slf4j
 public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
-  /**
-   * This method performs Rollback operation
-   * @param pcfCommandRequest
-   * @param encryptedDataDetails
-   * @return
-   */
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (!(pcfCommandRequest instanceof PcfCommandRollbackRequest)) {
