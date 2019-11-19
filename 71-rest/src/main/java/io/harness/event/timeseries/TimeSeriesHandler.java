@@ -3,6 +3,7 @@ package io.harness.event.timeseries;
 import static io.harness.event.model.EventType.DEPLOYMENT_EVENT;
 import static io.harness.event.model.EventType.DEPLOYMENT_VERIFIED;
 import static io.harness.event.model.EventType.INSTANCE_EVENT;
+import static io.harness.event.model.EventType.SERVICE_GUARD_SETUP;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -13,6 +14,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
 import io.harness.event.timeseries.processor.InstanceEventProcessor;
+import io.harness.event.timeseries.processor.ServiceGuardSetupEventProcessor;
 import io.harness.event.timeseries.processor.VerificationEventProcessor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
@@ -21,9 +23,10 @@ import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 @Singleton
 @Slf4j
 public class TimeSeriesHandler implements EventHandler {
-  @Inject DeploymentEventProcessor deploymentEventProcessor;
-  @Inject InstanceEventProcessor instanceEventProcessor;
-  @Inject VerificationEventProcessor verificationEventProcessor;
+  @Inject private DeploymentEventProcessor deploymentEventProcessor;
+  @Inject private InstanceEventProcessor instanceEventProcessor;
+  @Inject private VerificationEventProcessor verificationEventProcessor;
+  @Inject private ServiceGuardSetupEventProcessor serviceGuardSetupEventProcessor;
 
   @Inject
   public TimeSeriesHandler(EventListener eventListener) {
@@ -31,7 +34,8 @@ public class TimeSeriesHandler implements EventHandler {
   }
 
   private void registerForEvents(EventListener eventListener) {
-    eventListener.registerEventHandler(this, Sets.newHashSet(DEPLOYMENT_EVENT, INSTANCE_EVENT, DEPLOYMENT_VERIFIED));
+    eventListener.registerEventHandler(
+        this, Sets.newHashSet(DEPLOYMENT_EVENT, INSTANCE_EVENT, DEPLOYMENT_VERIFIED, SERVICE_GUARD_SETUP));
   }
 
   @Override
@@ -45,6 +49,9 @@ public class TimeSeriesHandler implements EventHandler {
         break;
       case DEPLOYMENT_VERIFIED:
         verificationEventProcessor.processEvent(event.getEventData().getProperties());
+        break;
+      case SERVICE_GUARD_SETUP:
+        serviceGuardSetupEventProcessor.processEvent(event.getEventData().getProperties());
         break;
       default:
         logger.error("Invalid event typ e, dropping event : [{}]", event);

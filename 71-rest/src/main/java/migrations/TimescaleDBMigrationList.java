@@ -13,6 +13,7 @@ import migrations.timescaledb.DeploymentAdditionalColumns;
 import migrations.timescaledb.InitSchemaMigration;
 import migrations.timescaledb.InitVerificationSchemaMigration;
 import migrations.timescaledb.RenameInstanceMigration;
+import migrations.timescaledb.UpdateServiceGuardSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(9, AddingToCVDeploymentMetrics.class))
         .add(Pair.of(10, AddSchemaForServiceGuardStats.class))
         .add(Pair.of(11, AddInstancesDeployedToDeployment.class))
+        .add(Pair.of(12, UpdateServiceGuardSchema.class))
         .build();
   }
 }

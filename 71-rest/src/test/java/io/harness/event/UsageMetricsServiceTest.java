@@ -17,6 +17,7 @@ import static software.wings.common.VerificationConstants.CV_META_DATA;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.event.model.EventType;
 import io.harness.event.model.GenericEvent;
 import io.harness.event.usagemetrics.UsageMetricsService;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -115,7 +116,9 @@ public class UsageMetricsServiceTest extends WingsBaseTest {
     assertThat(taskCaptorValue.getValue().intValue()).isEqualTo(1);
 
     List<GenericEvent> events = wingsPersistence.createQuery(GenericEvent.class, excludeAuthority).asList();
-    assertThat(events).isEmpty();
+    assertThat(events).isNotEmpty();
+    assertThat(events.size()).isEqualTo(1);
+    assertThat(events.get(0).getEvent().getEventType()).isEqualByComparingTo(EventType.SERVICE_GUARD_SETUP);
   }
 
   @Test
