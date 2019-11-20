@@ -1,5 +1,9 @@
 package software.wings.beans.yaml;
 
+import com.google.common.collect.Lists;
+
+import java.util.List;
+
 /**
  * @author rktummala on 10/17/17
  */
@@ -102,4 +106,6 @@ public interface YamlConstants {
 
   String TAGS = "Tags";
   String TAGS_YAML = "Tags.yaml";
+
+  List<String> ALLOWED_BOOLEAN_VALUES = Lists.newArrayList("true", "false");
 }
