@@ -13,7 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -178,7 +177,7 @@ public class EnvStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetTimeout() {
     Integer timeoutMillis = envState.getTimeoutMillis();
-    assertThat(timeoutMillis).isEqualTo(ENV_STATE_TIMEOUT_MILLIS);
+    assertThat(timeoutMillis).isEqualTo(EnvState.ENV_STATE_TIMEOUT_MILLIS);
   }
 
   @Test

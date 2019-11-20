@@ -87,12 +87,7 @@ public interface Constants {
   /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
    */
-  long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5 * 60 * 1000; // 5 minutes
-
-  /**
-   * The constant for Default Env State timeout
-   */
-  Integer ENV_STATE_TIMEOUT_MILLIS = 12 * 60 * 60 * 1000; // 12 hours
+  long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5L * 60L * 1000L; // 5 minutes
 
   String PROVISION_CLOUD_FORMATION = "CloudFormation Create Stack";
   String DE_PROVISION_CLOUD_FORMATION = "CloudFormation Delete Stack";
