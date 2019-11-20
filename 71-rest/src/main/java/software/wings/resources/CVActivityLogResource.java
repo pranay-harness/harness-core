@@ -7,10 +7,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.common.VerificationConstants;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.CVActivityLog;
 
@@ -27,8 +25,6 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SERVICE)
 public class CVActivityLogResource {
   @Inject private CVActivityLogService cvActivityLogService;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject WorkflowService workflowService;
 
   @GET
   @Timed
@@ -37,6 +33,12 @@ public class CVActivityLogResource {
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("cvConfigId") @Valid final String cvConfigId, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime) {
-    return new RestResponse<>(cvActivityLogService.getActivityLogs(stateExecutionId, cvConfigId, startTime, endTime));
+    List<CVActivityLog> cvActivityLogs;
+    if (stateExecutionId != null) {
+      cvActivityLogs = cvActivityLogService.findByStateExecutionId(stateExecutionId);
+    } else {
+      cvActivityLogs = cvActivityLogService.findByCVConfigId(cvConfigId, startTime, endTime);
+    }
+    return new RestResponse<>(cvActivityLogs);
   }
 }
