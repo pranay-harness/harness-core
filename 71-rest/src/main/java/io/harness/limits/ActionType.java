@@ -17,7 +17,8 @@ public enum ActionType {
   GRAPHQL_CALL(Collections.singletonList(LimitType.RATE_LIMIT)),
   GRAPHQL_CUSTOM_DASH_CALL(Collections.singletonList(LimitType.RATE_LIMIT)),
   DEPLOY(Collections.singletonList(LimitType.RATE_LIMIT)),
-  DELEGATE_ACQUIRE_TASK(Collections.singletonList(LimitType.RATE_LIMIT));
+  DELEGATE_ACQUIRE_TASK(Collections.singletonList(LimitType.RATE_LIMIT)),
+  LOGIN_REQUEST_TASK(Collections.singletonList(LimitType.RATE_LIMIT));
 
   @Getter private List<LimitType> allowedLimitTypes;
 
