@@ -3302,6 +3302,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public ExecutionStatus getExecutionStatus(String appId, String stateExecutionId) {
+    return workflowExecutionService.getStateExecutionData(appId, stateExecutionId).getStatus();
+  }
+
+  @Override
   public WorkflowExecution getWorkflowExecutionForStateExecutionId(final String appId, final String stateExecutionId) {
     StateExecutionInstance stateExecutionData = workflowExecutionService.getStateExecutionData(appId, stateExecutionId);
     return workflowExecutionService.getWorkflowExecutionForVerificationService(
