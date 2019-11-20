@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -21,14 +20,12 @@ import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.rule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.assertj.core.data.Offset;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,11 +40,12 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
-import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
-import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -60,7 +58,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
@@ -84,7 +81,6 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
 
   @Test
   @Owner(developers = SOWMYA)
-  @Repeat(times = 5, successes = 1)
   @Category(IntegrationTests.class)
   public void fetch() {
     APMVerificationConfig config = new APMVerificationConfig();
@@ -134,8 +130,7 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA, intermittent = true)
-  @Repeat(times = 5, successes = 1)
+  @Owner(developers = SOWMYA)
   @Category(IntegrationTests.class)
   public void txnDatadog() throws InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
@@ -288,40 +283,17 @@ public class DataDogIntegrationTest extends VerificationBaseIntegrationTest {
             Optional.of(jobExecutionContext))
         .run();
 
-    // TODO I know....
     Thread.sleep(10000);
-    Set<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
-        metricDataAnalysisService.getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
-    assertThat(metricAnalysisRecords).hasSize(1);
+    List<LearningEngineAnalysisTask> analysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
+            .asList();
+    assertThat(analysisTasks).hasSize(1);
 
-    NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisRecords.iterator().next();
+    LearningEngineAnalysisTask task = analysisTasks.iterator().next();
 
-    assertThat(metricsAnalysis.getRiskLevel()).isEqualTo(RiskLevel.LOW);
-    assertThat(metricsAnalysis.isShowTimeSeries()).isTrue();
-    assertThat(metricsAnalysis.getMessage()).isEqualTo("No problems found");
-    assertThat(metricsAnalysis.getMetricAnalyses()).hasSize(1);
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricName()).isEqualTo("Dummy txn1");
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues()).hasSize(2);
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getTag()).isEqualTo("Servlet");
-    assertThat(metricsAnalysis.getAnalysisMinute()).isEqualTo(0);
-
-    final Offset<Double> offset = offset(0.001);
-
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getName()).isEqualTo("Hits");
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getRiskLevel())
-        .isEqualTo(RiskLevel.LOW);
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getTestValue())
-        .isCloseTo(20.0, offset);
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(0).getControlValue())
-        .isCloseTo(20.0, offset);
-
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getName())
-        .isEqualTo("Request Duration");
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getRiskLevel())
-        .isEqualTo(RiskLevel.LOW);
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getTestValue())
-        .isCloseTo(2.0, offset);
-    assertThat(metricsAnalysis.getMetricAnalyses().get(0).getMetricValues().get(1).getControlValue())
-        .isCloseTo(2.0, offset);
+    assertThat(task).isNotNull();
+    assertThat(task.getStateType()).isEqualByComparingTo(StateType.DATA_DOG);
+    assertThat(task.getMl_analysis_type()).isEqualByComparingTo(MLAnalysisType.TIME_SERIES);
   }
 }
