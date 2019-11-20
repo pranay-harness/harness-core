@@ -1,5 +1,9 @@
 package software.wings.verification;
 
+import static java.lang.Boolean.parseBoolean;
+
+import com.google.common.base.Preconditions;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
@@ -16,6 +20,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
@@ -83,5 +88,12 @@ public class CVConfiguration extends Base implements NameAccess {
     private double alertThreshold;
     private Date snoozeStartTime;
     private Date snoozeEndTime;
+
+    public void setEnabled24x7(Object value) {
+      String enabled24x7 = String.valueOf(value).toLowerCase();
+      Preconditions.checkArgument(YamlConstants.ALLOWED_BOOLEAN_VALUES.contains(enabled24x7),
+          "Allowed values for enabled24x7 are: " + YamlConstants.ALLOWED_BOOLEAN_VALUES);
+      this.enabled24x7 = parseBoolean(enabled24x7);
+    }
   }
 }
