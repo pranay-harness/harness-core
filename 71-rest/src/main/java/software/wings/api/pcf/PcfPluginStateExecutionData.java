@@ -39,6 +39,7 @@ public class PcfPluginStateExecutionData extends StateExecutionData implements D
   private String renderedScriptString;
   private Integer timeoutIntervalInMinutes;
   private List<String> tagList;
+  private String repoRoot;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

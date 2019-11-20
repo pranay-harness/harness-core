@@ -138,6 +138,7 @@ public abstract class ExpressionBuilder {
   protected static final String INFRA_PCF_SPACE = "infra.pcf.space";
   protected static final String INFRA_PCF_CLOUDPROVIDER_NAME = "infra.pcf.cloudProvider.name";
   protected static final String PCF_PLUGIN_SERVICE_MANIFEST = "service.manifest";
+  protected static final String PCF_PLUGIN_SERVICE_MANIFEST_REPO_ROOT = "service.manifest.repoRoot";
 
   protected static final String APPROVEDBY_NAME = "approvedBy.name";
   protected static final String APPROVEDBY_EMAIL = "approvedBy.email";
@@ -245,6 +246,7 @@ public abstract class ExpressionBuilder {
       case PCF_PLUGIN:
         expressions.addAll(getPcfWorkflowExpressions());
         expressions.add(PCF_PLUGIN_SERVICE_MANIFEST);
+        expressions.add(PCF_PLUGIN_SERVICE_MANIFEST_REPO_ROOT);
         break;
       case PCF_SETUP:
       case PCF_RESIZE:

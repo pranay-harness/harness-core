@@ -16,6 +16,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -297,8 +298,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void test_findPathFromScript() {
     String script =
-        "echo '${service.manifest}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ";
-    final List<String> pathFromScript = pcfPluginState.findPathFromScript(script);
+        "echo '${service.manifest.repoRoot}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest.repoRoot}/xyz.json some text' ";
+    final List<String> pathFromScript = pcfPluginState.findPathFromScript(script, "/");
     assertThat(pathFromScript.size()).isEqualTo(2);
     assertThat(pathFromScript).contains("/abc/test", "/xyz.json");
   }
@@ -314,16 +315,22 @@ public class PcfPluginStateTest extends WingsBaseTest {
     when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
         .thenReturn(GitFetchFilesTaskParams.builder().build());
     final ApplicationManifest applicationManifest =
-        ApplicationManifest.builder().storeType(Remote).gitFileConfig(GitFileConfig.builder().build()).build();
+        ApplicationManifest.builder()
+            .storeType(Remote)
+            .gitFileConfig(GitFileConfig.builder().filePath("app/sample_application").build())
+            .build();
     when(applicationManifestUtils.getApplicationManifestForService(context)).thenReturn(applicationManifest);
     on(context).set("serviceTemplateService", serviceTemplateService);
 
     pcfPluginState.setScriptString(
-        "echo '${service.manifest}/abc/test any text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ");
+        "echo '${service.manifest.repoRoot}/abc/test any ${service.manifest}/manifest.yml text sfkjsdfk \n /wrong/path \\${service.manifest}/xyz.json some text' ");
     final ExecutionResponse executionResponse = pcfPluginState.execute(context);
     assertThat(executionResponse.isAsync()).isTrue();
     final PcfPluginStateExecutionData stateExecutionData =
         (PcfPluginStateExecutionData) (executionResponse.getStateExecutionData());
+
+    assertThat(stateExecutionData.getRepoRoot()).isEqualTo("/app/sample_application");
+    assertThat(stateExecutionData.getFilePathsInScript()).contains("/app/sample_application/manifest.yml");
     assertThat(stateExecutionData.getFilePathsInScript()).isNotEmpty();
     assertThat(stateExecutionData.getRenderedScriptString()).isNotEmpty();
     verify(delegateService, times(1)).queueTask(delegateTask);
@@ -366,6 +373,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
     ((PcfPluginStateExecutionData) context.getStateExecutionData()).setTaskType(TaskType.GIT_FETCH_FILES_TASK);
     ((PcfPluginStateExecutionData) context.getStateExecutionData())
         .setAppManifestMap(Collections.singletonMap(K8sValuesLocation.Service, applicationManifest));
+    ((PcfPluginStateExecutionData) context.getStateExecutionData()).setRepoRoot("/");
+
     pcfPluginState.handleAsyncInternal(context, response);
 
     verify(activityService, times(0)).updateStatus("activityId", APP_ID, FAILED);
@@ -376,7 +385,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
     assertThat(pcfSetupStateExecutionData.getFetchFilesResult()).isEqualTo(gitFetchFilesFromMultipleRepoResult);
 
     verify(pcfPluginState, times(1))
-        .executePcfPluginTask(any(), any(), any(ApplicationManifest.class), anyListOf(String.class), anyString());
+        .executePcfPluginTask(
+            any(), any(), any(ApplicationManifest.class), anyListOf(String.class), anyString(), eq("/"));
   }
 
   @Test

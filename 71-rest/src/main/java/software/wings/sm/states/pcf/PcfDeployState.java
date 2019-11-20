@@ -210,9 +210,7 @@ public class PcfDeployState extends State {
   }
 
   protected Integer getUpsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
-    Integer count = pcfSetupContextElement.isUseCurrentRunningInstanceCount()
-        ? pcfSetupContextElement.getCurrentRunningInstanceCount()
-        : pcfSetupContextElement.getMaxInstanceCount();
+    Integer count = pcfSetupContextElement.getDesiredActualFinalCount();
     return getInstanceCountToBeUpdated(count, instanceCount, instanceUnitType, true);
   }
 
@@ -221,9 +219,7 @@ public class PcfDeployState extends State {
     Integer downsizeUpdateCount = downsizeInstanceCount == null ? instanceCount : downsizeInstanceCount;
     downsizeInstanceUnitType = downsizeInstanceUnitType == null ? instanceUnitType : downsizeInstanceUnitType;
 
-    Integer instanceCount = pcfSetupContextElement.isUseCurrentRunningInstanceCount()
-        ? pcfSetupContextElement.getCurrentRunningInstanceCount()
-        : pcfSetupContextElement.getMaxInstanceCount();
+    Integer instanceCount = pcfSetupContextElement.getDesiredActualFinalCount();
 
     downsizeUpdateCount =
         getInstanceCountToBeUpdated(instanceCount, downsizeUpdateCount, downsizeInstanceUnitType, false);

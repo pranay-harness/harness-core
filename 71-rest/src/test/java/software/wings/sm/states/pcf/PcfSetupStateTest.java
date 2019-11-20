@@ -127,7 +127,6 @@ import software.wings.service.ServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -190,7 +189,6 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
-  @Mock private ApplicationManifestService applicationManifestService;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
@@ -478,7 +476,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testGetCommandUnitList() throws Exception {
+  public void testGetCommandUnitList() {
     List<CommandUnit> commandUnits = pcfSetupState.getCommandUnitList(true);
     assertThat(commandUnits).isNotNull();
     assertThat(commandUnits.size()).isEqualTo(2);
@@ -498,25 +496,48 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateCurrentRunningCount() {
+    pcfSetupState.setMaxInstances(2);
     assertThat(pcfSetupState.generateCurrentRunningCount(
                    PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(3).build()))
         .isEqualTo(3);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(
                    PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(0).build()))
-        .isEqualTo(2);
+        .isEqualTo(0);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(
                    PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build()))
-        .isEqualTo(2);
+        .isEqualTo(0);
 
-    assertThat(pcfSetupState.generateCurrentRunningCount(null)).isEqualTo(2);
+    assertThat(pcfSetupState.generateCurrentRunningCount(null)).isEqualTo(0);
   }
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testGetCurrentRunningCountForSetupRequest() throws Exception {
+  public void testGetActualDesiredCount() {
+    PcfSetupCommandResponse pcfSetupCommandResponse =
+        PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build();
+
+    PcfSetupStateExecutionData stateExecutionData =
+        PcfSetupStateExecutionData.builder().useCurrentRunningInstanceCount(true).maxInstanceCount(2).build();
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+
+    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(0);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+
+    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(3);
+
+    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
+    stateExecutionData.setUseCurrentRunningInstanceCount(false);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetCurrentRunningCountForSetupRequest() {
     PcfSetupState setupState = new PcfSetupState("PCF", PCF_SETUP_COMMAND);
     assertThat(setupState.getCurrentRunningCountForSetupRequest()).isNull();
 
@@ -590,19 +611,13 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFetchMaxCount() {
-    pcfSetupState.setUseCurrentRunningCount(false);
+    pcfSetupState.setMaxInstances(0);
+    assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(0);
+
     pcfSetupState.setMaxInstances(3);
     assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(3);
 
-    pcfSetupState.setUseCurrentRunningCount(true);
-    pcfSetupState.setMaxInstances(3);
-    pcfSetupState.setCurrentRunningCount(2);
-    assertThat(pcfSetupState.fetchMaxCount(false, null)).isEqualTo(0);
-
     doReturn(2).when(pcfStateHelper).fetchMaxCountFromManifest(any(), any());
-    assertThat(pcfSetupState.fetchMaxCount(true, null)).isEqualTo(0);
-
-    pcfSetupState.setUseCurrentRunningCount(false);
     assertThat(pcfSetupState.fetchMaxCount(true, null)).isEqualTo(2);
   }
 

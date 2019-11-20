@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -80,7 +81,7 @@ public class PcfRollbackState extends PcfDeployState {
         .instanceData(instanceData)
         .appId(application.getUuid())
         .accountId(application.getAccountId())
-        .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+        .timeoutIntervalInMin(firstNonNull(pcfSetupContextElement.getTimeoutIntervalInMinutes(), Integer.valueOf(5)))
         .appsToBeDownSized(pcfSetupContextElement.getAppDetailsToBeDownsized())
         .newApplicationDetails(pcfSetupContextElement.getNewPcfApplicationDetails())
         .isStandardBlueGreenWorkflow(pcfSetupContextElement.isStandardBlueGreenWorkflow())

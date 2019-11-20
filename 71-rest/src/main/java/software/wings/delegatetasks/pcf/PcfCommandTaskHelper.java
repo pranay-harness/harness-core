@@ -189,6 +189,7 @@ public class PcfCommandTaskHelper {
       }
 
       downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
+
       pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
@@ -513,14 +514,13 @@ public class PcfCommandTaskHelper {
     pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, routes);
   }
 
-  public void unmapExistingRouteMaps(String applicationName, PcfRequestConfig pcfRequestConfig,
+  public void unmapExistingRouteMaps(ApplicationDetail applicationDetail, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
     executionLogCallback.saveExecutionLog(color("\n# Unmapping routes", White, Bold));
-    executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
+    executionLogCallback.saveExecutionLog(APPLICATION + applicationDetail.getName());
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(applicationDetail.getUrls()));
     // map
-    pcfRequestConfig.setApplicationName(applicationName);
+    pcfRequestConfig.setApplicationName(applicationDetail.getName());
     pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, applicationDetail.getUrls());
   }
 

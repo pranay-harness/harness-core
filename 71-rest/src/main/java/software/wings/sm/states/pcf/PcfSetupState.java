@@ -349,14 +349,9 @@ public class PcfSetupState extends State {
   @VisibleForTesting
   Integer fetchMaxCount(boolean manifestRefactorFlagEnabled, PcfManifestsPackage pcfManifestsPackage) {
     Integer maxCount;
-    if (useCurrentRunningCount) {
-      maxCount = 0;
-    } else {
-      maxInstances = maxInstances == null || maxInstances.intValue() < 0 ? Integer.valueOf(2) : maxInstances;
-      maxCount = manifestRefactorFlagEnabled
-          ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage, maxInstances)
-          : maxInstances;
-    }
+    maxInstances = maxInstances == null || maxInstances.intValue() < 0 ? Integer.valueOf(2) : maxInstances;
+    maxCount = manifestRefactorFlagEnabled ? pcfStateHelper.fetchMaxCountFromManifest(pcfManifestsPackage, maxInstances)
+                                           : maxInstances;
 
     return maxCount;
   }
@@ -496,7 +491,7 @@ public class PcfSetupState extends State {
             .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
             .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
             .currentRunningInstanceCount(generateCurrentRunningCount(pcfSetupCommandResponse))
-            .desiredActualFinalCount(stateExecutionData.getDesireActualFinalCount())
+            .desiredActualFinalCount(getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse))
             .resizeStrategy(stateExecutionData.getResizeStrategy())
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
@@ -528,14 +523,30 @@ public class PcfSetupState extends State {
   }
 
   @VisibleForTesting
+  Integer getActualDesiredCount(
+      PcfSetupStateExecutionData stateExecutionData, PcfSetupCommandResponse pcfSetupCommandResponse) {
+    Integer actualDesiredCount = stateExecutionData.getMaxInstanceCount();
+
+    // When currentRunningCount = 0, use instance count from manifest
+    if (stateExecutionData.isUseCurrentRunningInstanceCount()) {
+      Integer currentRunningCount = generateCurrentRunningCount(pcfSetupCommandResponse);
+      if (currentRunningCount.intValue() > 0) {
+        actualDesiredCount = currentRunningCount;
+      }
+    }
+
+    return actualDesiredCount;
+  }
+
+  @VisibleForTesting
   Integer generateCurrentRunningCount(PcfSetupCommandResponse pcfSetupCommandResponse) {
     if (pcfSetupCommandResponse == null) {
-      return Integer.valueOf(2);
+      return Integer.valueOf(0);
     }
 
     Integer currentRunningCountFetched = pcfSetupCommandResponse.getInstanceCountForMostRecentVersion();
     if (currentRunningCountFetched == null || currentRunningCountFetched.intValue() <= 0) {
-      return Integer.valueOf(2);
+      return Integer.valueOf(0);
     }
 
     return currentRunningCountFetched;

@@ -2,6 +2,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
@@ -102,7 +103,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       if (ResizeStrategy.DOWNSIZE_OLD_FIRST.equals(pcfCommandDeployRequest.getResizeStrategy())) {
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
-
+        unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
         performUpsize(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated, pcfRequestConfig, details,
             pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
       } else {
@@ -111,6 +112,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
 
         pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
+        unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
       }
       // generate response to be sent back to Manager
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
@@ -179,6 +181,21 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       appAutoscalarRequestData.setTimeoutInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin());
       appAutoscalarRequestData.setAutoscalarFilePath(filePath);
       pcfDeploymentManager.performConfigureAutoscalar(appAutoscalarRequestData, executionLogCallback);
+    }
+  }
+
+  private void unmapRoutesIfAppDownsizedToZero(PcfCommandDeployRequest pcfCommandDeployRequest,
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    if (pcfCommandDeployRequest.isStandardBlueGreen() || pcfCommandDeployRequest.getDownsizeAppDetail() == null
+        || isBlank(pcfCommandDeployRequest.getDownsizeAppDetail().getApplicationName())) {
+      return;
+    }
+
+    pcfRequestConfig.setApplicationName(pcfCommandDeployRequest.getDownsizeAppDetail().getApplicationName());
+    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+
+    if (applicationDetail.getInstances() == 0) {
+      pcfCommandTaskHelper.unmapExistingRouteMaps(applicationDetail, pcfRequestConfig, executionLogCallback);
     }
   }
 }

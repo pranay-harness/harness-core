@@ -2,6 +2,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
@@ -9,6 +10,7 @@ import static software.wings.beans.Log.color;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.cloudfoundry.operations.applications.ApplicationDetail;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
@@ -29,6 +32,7 @@ import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.utils.Misc;
@@ -106,12 +110,13 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       // During rollback, always upsize old ones
       pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
           pcfRequestConfig, upsizeList, pcfInstanceElements);
-
+      restoreRoutesForOldApplication(commandRollbackRequest, pcfRequestConfig, executionLogCallback);
       // Enable autoscalar for older app, if it was disabled during deploy
       enableAutoscalarIfNeeded(upsizeList, autoscalarRequestData, executionLogCallback);
 
       pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfServiceDataUpdated, pcfRequestConfig,
           downSizeList, commandRollbackRequest, autoscalarRequestData);
+      unmapRoutesFromNewAppAfterDownsize(executionLogCallback, commandRollbackRequest, pcfRequestConfig);
 
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
@@ -161,6 +166,54 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       autoscalarRequestData.setApplicationGuid(pcfServiceData.getId());
       autoscalarRequestData.setExpectedEnabled(false);
       pcfDeploymentManager.changeAutoscalarState(autoscalarRequestData, logCallback, true);
+    }
+  }
+
+  /**
+   * This is for non BG deployment.
+   * Older app will be mapped to routes it was originally mapped to.
+   * In deploy state, once older app is downsized to 0, we remove routeMaps,
+   * this step will restore them.
+   */
+  private void restoreRoutesForOldApplication(PcfCommandRollbackRequest commandRollbackRequest,
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    if (commandRollbackRequest.isStandardBlueGreenWorkflow()
+        || EmptyPredicate.isEmpty(commandRollbackRequest.getAppsToBeDownSized())) {
+      return;
+    }
+
+    PcfAppSetupTimeDetails pcfAppSetupTimeDetails = commandRollbackRequest.getAppsToBeDownSized().get(0);
+
+    if (pcfAppSetupTimeDetails != null) {
+      pcfRequestConfig.setApplicationName(pcfAppSetupTimeDetails.getApplicationName());
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+
+      if (EmptyPredicate.isEmpty(pcfAppSetupTimeDetails.getUrls())) {
+        return;
+      }
+
+      if (EmptyPredicate.isEmpty(applicationDetail.getUrls())
+          || !pcfAppSetupTimeDetails.getUrls().containsAll(applicationDetail.getUrls())) {
+        pcfCommandTaskHelper.mapRouteMaps(pcfAppSetupTimeDetails.getApplicationName(), pcfAppSetupTimeDetails.getUrls(),
+            pcfRequestConfig, executionLogCallback);
+      }
+    }
+  }
+
+  private void unmapRoutesFromNewAppAfterDownsize(ExecutionLogCallback executionLogCallback,
+      PcfCommandRollbackRequest commandRollbackRequest, PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
+    if (commandRollbackRequest.isStandardBlueGreenWorkflow()
+        || commandRollbackRequest.getNewApplicationDetails() == null
+        || isBlank(commandRollbackRequest.getNewApplicationDetails().getApplicationName())) {
+      return;
+    }
+
+    pcfRequestConfig.setApplicationName(commandRollbackRequest.getNewApplicationDetails().getApplicationName());
+    ApplicationDetail appDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+
+    if (appDetail.getInstances() == 0) {
+      pcfCommandTaskHelper.unmapExistingRouteMaps(appDetail, pcfRequestConfig, executionLogCallback);
     }
   }
 }
