@@ -519,7 +519,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   private ExecutionEventAdvice phaseSubWorkflowOnDemandRollbackAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
-    if (orchestrationWorkflow.isLastPhase(phaseSubWorkflow.getName())) {
+    if (orchestrationWorkflow.checkLastPhase(phaseSubWorkflow.getName())) {
       return phaseSubWorkflowAdviceForOthers(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
     }
     return null;
