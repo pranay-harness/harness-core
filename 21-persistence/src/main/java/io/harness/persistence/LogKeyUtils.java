@@ -19,6 +19,7 @@ public class LogKeyUtils {
     });
   }
 
+  @SuppressWarnings("squid:S1872")
   public static String calculateLogKeyForId(Class cls) {
     if (!(UuidAccess.class.isAssignableFrom(cls))) {
       return "";
