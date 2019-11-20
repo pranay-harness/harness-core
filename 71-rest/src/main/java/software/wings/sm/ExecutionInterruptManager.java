@@ -147,7 +147,7 @@ public class ExecutionInterruptManager {
       waitNotifyEngine.notify(pauseAll.getUuid(), ExecutionStatusData.builder().executionStatus(SUCCESS).build());
     }
 
-    executionInterrupt = wingsPersistence.saveAndGet(ExecutionInterrupt.class, executionInterrupt);
+    wingsPersistence.save(executionInterrupt);
     stateMachineExecutor.handleInterrupt(executionInterrupt);
 
     sendNotificationIfRequired(executionInterrupt);
