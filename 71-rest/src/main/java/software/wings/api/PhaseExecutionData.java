@@ -1,9 +1,9 @@
 package software.wings.api;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.sm.ContextElement;
-import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.states.ElementStateExecutionData;
 
 import java.util.ArrayList;
@@ -14,7 +14,9 @@ import java.util.Map;
 /**
  * Created by rishi on 1/19/17.
  */
-public class PhaseExecutionData extends ElementStateExecutionData {
+public class PhaseExecutionData extends ElementStateExecutionData implements SweepingOutput {
+  public static final String SWEEPING_OUTPUT_NAME = "phaseExecutionData";
+
   private String serviceId;
   private String serviceName;
   private String computeProviderId;
@@ -27,8 +29,6 @@ public class PhaseExecutionData extends ElementStateExecutionData {
   private String clusterName;
   private String containerServiceName;
   private List<String> instanceIds;
-
-  private PhaseExecutionSummary phaseExecutionSummary;
 
   public String getServiceId() {
     return serviceId;
@@ -76,14 +76,6 @@ public class PhaseExecutionData extends ElementStateExecutionData {
 
   public void setInstanceIds(List<String> instanceIds) {
     this.instanceIds = instanceIds;
-  }
-
-  public PhaseExecutionSummary getPhaseExecutionSummary() {
-    return phaseExecutionSummary;
-  }
-
-  public void setPhaseExecutionSummary(PhaseExecutionSummary phaseExecutionSummary) {
-    this.phaseExecutionSummary = phaseExecutionSummary;
   }
 
   public String getServiceName() {
@@ -187,7 +179,6 @@ public class PhaseExecutionData extends ElementStateExecutionData {
     private List<String> instanceIds;
     private String errorMsg;
     private Integer waitInterval;
-    private PhaseExecutionSummary phaseExecutionSummary;
     private ContextElement element;
 
     private PhaseExecutionDataBuilder() {}
@@ -296,11 +287,6 @@ public class PhaseExecutionData extends ElementStateExecutionData {
       return this;
     }
 
-    public PhaseExecutionDataBuilder withPhaseExecutionSummary(PhaseExecutionSummary phaseExecutionSummary) {
-      this.phaseExecutionSummary = phaseExecutionSummary;
-      return this;
-    }
-
     public PhaseExecutionDataBuilder withElement(ContextElement element) {
       this.element = element;
       return this;
@@ -327,7 +313,6 @@ public class PhaseExecutionData extends ElementStateExecutionData {
       phaseExecutionData.setInstanceIds(instanceIds);
       phaseExecutionData.setErrorMsg(errorMsg);
       phaseExecutionData.setWaitInterval(waitInterval);
-      phaseExecutionData.setPhaseExecutionSummary(phaseExecutionSummary);
       phaseExecutionData.setElement(element);
       phaseExecutionData.setInfraDefinitionId(infraDefinitionId);
       return phaseExecutionData;

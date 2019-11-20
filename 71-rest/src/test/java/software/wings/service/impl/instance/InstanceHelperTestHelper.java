@@ -141,122 +141,40 @@ public class InstanceHelperTestHelper {
     return instanceStatusSummaries;
   }
 
-  public PhaseExecutionData initExecutionSummary(InfrastructureMappingType infrastructureMappingType,
-      String phaseStepExecutionSummaryString, long endTime, String deploymentType) {
+  public PhaseExecutionData initExecutionSummary(
+      InfrastructureMappingType infrastructureMappingType, long endTime, String deploymentType) {
     List<InstanceStatusSummary> instanceStatusSummaries = null;
-    List<StepExecutionSummary> stepExecutionSummaries = null;
 
     if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)) {
-      stepExecutionSummaries =
-          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-              StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
-
       instanceStatusSummaries = getInstanceStatusSummariesForPDC();
-
     } else if (InfrastructureMappingType.AWS_SSH.equals(infrastructureMappingType)) {
-      stepExecutionSummaries =
-          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-              StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
-
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     } else if (InfrastructureMappingType.AWS_AMI.equals(infrastructureMappingType)) {
-      stepExecutionSummaries =
-          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-              AmiStepExecutionSummary.builder()
-                  .instanceCount(1)
-                  .instanceUnitType(InstanceUnitType.COUNT)
-                  .newInstanceData(
-                      asList(ContainerServiceData.builder().desiredCount(1).name("asgNew").previousCount(1).build()))
-                  .oldInstanceData(
-                      asList(ContainerServiceData.builder().desiredCount(1).name("asgOld").previousCount(1).build()))
-                  .build());
-
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.equals(infrastructureMappingType)) {
-      CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
-      commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
-      commandStepExecutionSummary.setCodeDeployParams(
-          CodeDeployParams.builder()
-              .applicationName(InstanceHelperTest.CODE_DEPLOY_APP_NAME)
-              .deploymentGroupName(InstanceHelperTest.CODE_DEPLOY_GROUP_NAME)
-              .key(InstanceHelperTest.CODE_DEPLOY_key)
-              .build());
-
-      stepExecutionSummaries =
-          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-              commandStepExecutionSummary);
-
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     } else if (InfrastructureMappingType.AWS_ECS.equals(infrastructureMappingType)) {
-      CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
-      commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
-      commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
-      commandStepExecutionSummary.setNewInstanceData(
-          asList(ContainerServiceData.builder().desiredCount(1).name("ecsNew").previousCount(1).build()));
-      commandStepExecutionSummary.setOldInstanceData(
-          asList(ContainerServiceData.builder().desiredCount(1).name("ecsOld").previousCount(1).build()));
-
-      stepExecutionSummaries =
-          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-              commandStepExecutionSummary);
-
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     }
 
-    return initExecutionSummary(
-        instanceStatusSummaries, stepExecutionSummaries, phaseStepExecutionSummaryString, endTime, deploymentType);
+    return initExecutionSummary(instanceStatusSummaries, endTime, deploymentType);
   }
 
-  public PhaseExecutionData initKubernetesExecutionSummary(InfrastructureMappingType infrastructureMappingType,
-      String phaseStepExecutionSummaryString, long endTime, String deploymentType, boolean helm) {
+  public PhaseExecutionData initKubernetesExecutionSummary(
+      InfrastructureMappingType infrastructureMappingType, long endTime, String deploymentType, boolean helm) {
     List<InstanceStatusSummary> instanceStatusSummaries = null;
-    List<StepExecutionSummary> stepExecutionSummaries = null;
-
     if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
-      if (helm) {
-        HelmSetupExecutionSummary helmSetupExecutionSummary =
-            new HelmSetupExecutionSummary("version1", 1, 0, 0, "default", null);
-
-        stepExecutionSummaries =
-            asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-                helmSetupExecutionSummary);
-
-      } else {
-        CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
-        commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
-        commandStepExecutionSummary.setNewInstanceData(ImmutableList.of(
-            ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
-        commandStepExecutionSummary.setOldInstanceData(ImmutableList.of(
-            ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
-
-        stepExecutionSummaries =
-            asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-                commandStepExecutionSummary);
-      }
-
       instanceStatusSummaries = getInstanceStatusSummariesForGCP();
     }
-
-    return initExecutionSummary(
-        instanceStatusSummaries, stepExecutionSummaries, phaseStepExecutionSummaryString, endTime, deploymentType);
+    return initExecutionSummary(instanceStatusSummaries, endTime, deploymentType);
   }
 
-  private PhaseExecutionData initExecutionSummary(List<InstanceStatusSummary> instanceStatusSummaries,
-      List<StepExecutionSummary> stepExecutionSummaries, String phaseStepExecutionSummaryString, long endTime,
-      String deploymentType) {
+  private PhaseExecutionData initExecutionSummary(
+      List<InstanceStatusSummary> instanceStatusSummaries, long endTime, String deploymentType) {
     ElementExecutionSummary summary = ElementExecutionSummaryBuilder.anElementExecutionSummary()
                                           .withInstanceStatusSummaries(instanceStatusSummaries)
                                           .withStatus(ExecutionStatus.SUCCESS)
                                           .build();
-
-    // - This mocking will be used to test getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
-    PhaseStepExecutionSummary phaseStepExecutionSummary = new PhaseStepExecutionSummary();
-    phaseStepExecutionSummary.setStepExecutionSummaryList(stepExecutionSummaries);
-
-    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
-    phaseExecutionSummary.setPhaseStepExecutionSummaryMap(
-        Collections.singletonMap(phaseStepExecutionSummaryString, phaseStepExecutionSummary));
-    // ---------------------------------------
 
     return PhaseExecutionDataBuilder.aPhaseExecutionData()
         .withServiceId(InstanceHelperTest.SERVICE_ID)
@@ -266,7 +184,6 @@ public class InstanceHelperTestHelper {
         .withComputeProviderName("computeProviderName")
         .withInfraMappingId(InstanceHelperTest.INFRA_MAP_ID)
         .withEndTs(endTime)
-        .withPhaseExecutionSummary(phaseExecutionSummary)
         .withDeploymentType(deploymentType)
         .build();
   }
@@ -333,5 +250,103 @@ public class InstanceHelperTestHelper {
             .lastUpdatedAt(0)
             .instanceInfo(instanceInfo2)
             .build());
+  }
+
+  public PhaseExecutionSummary initPhaseExecutionSummary(
+      InfrastructureMappingType infrastructureMappingType, String phaseStepExecutionSummaryString) {
+    List<StepExecutionSummary> stepExecutionSummaries = null;
+
+    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)) {
+      stepExecutionSummaries =
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+              StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
+
+    } else if (InfrastructureMappingType.AWS_SSH.equals(infrastructureMappingType)) {
+      stepExecutionSummaries =
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+              StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
+
+    } else if (InfrastructureMappingType.AWS_AMI.equals(infrastructureMappingType)) {
+      stepExecutionSummaries =
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+              AmiStepExecutionSummary.builder()
+                  .instanceCount(1)
+                  .instanceUnitType(InstanceUnitType.COUNT)
+                  .newInstanceData(
+                      asList(ContainerServiceData.builder().desiredCount(1).name("asgNew").previousCount(1).build()))
+                  .oldInstanceData(
+                      asList(ContainerServiceData.builder().desiredCount(1).name("asgOld").previousCount(1).build()))
+                  .build());
+
+    } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.equals(infrastructureMappingType)) {
+      CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
+      commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
+      commandStepExecutionSummary.setCodeDeployParams(
+          CodeDeployParams.builder()
+              .applicationName(InstanceHelperTest.CODE_DEPLOY_APP_NAME)
+              .deploymentGroupName(InstanceHelperTest.CODE_DEPLOY_GROUP_NAME)
+              .key(InstanceHelperTest.CODE_DEPLOY_key)
+              .build());
+
+      stepExecutionSummaries =
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+              commandStepExecutionSummary);
+
+    } else if (InfrastructureMappingType.AWS_ECS.equals(infrastructureMappingType)) {
+      CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
+      commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
+      commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
+      commandStepExecutionSummary.setNewInstanceData(
+          asList(ContainerServiceData.builder().desiredCount(1).name("ecsNew").previousCount(1).build()));
+      commandStepExecutionSummary.setOldInstanceData(
+          asList(ContainerServiceData.builder().desiredCount(1).name("ecsOld").previousCount(1).build()));
+
+      stepExecutionSummaries =
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+              commandStepExecutionSummary);
+    }
+
+    return initPhaseExecutionSummary(stepExecutionSummaries, phaseStepExecutionSummaryString);
+  }
+
+  private PhaseExecutionSummary initPhaseExecutionSummary(
+      List<StepExecutionSummary> stepExecutionSummaries, String phaseStepExecutionSummaryString) {
+    PhaseStepExecutionSummary phaseStepExecutionSummary = new PhaseStepExecutionSummary();
+    phaseStepExecutionSummary.setStepExecutionSummaryList(stepExecutionSummaries);
+
+    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
+    phaseExecutionSummary.setPhaseStepExecutionSummaryMap(
+        Collections.singletonMap(phaseStepExecutionSummaryString, phaseStepExecutionSummary));
+    return phaseExecutionSummary;
+  }
+
+  public PhaseExecutionSummary initKubernetesPhaseExecutionSummary(
+      InfrastructureMappingType infrastructureMappingType, String phaseStepExecutionSummaryString, boolean helm) {
+    List<StepExecutionSummary> stepExecutionSummaries = null;
+
+    if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
+      if (helm) {
+        HelmSetupExecutionSummary helmSetupExecutionSummary =
+            new HelmSetupExecutionSummary("version1", 1, 0, 0, "default", null);
+
+        stepExecutionSummaries =
+            asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+                helmSetupExecutionSummary);
+
+      } else {
+        CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
+        commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
+        commandStepExecutionSummary.setNewInstanceData(ImmutableList.of(
+            ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
+        commandStepExecutionSummary.setOldInstanceData(ImmutableList.of(
+            ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
+
+        stepExecutionSummaries =
+            asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+                commandStepExecutionSummary);
+      }
+    }
+
+    return initPhaseExecutionSummary(stepExecutionSummaries, phaseStepExecutionSummaryString);
   }
 }
