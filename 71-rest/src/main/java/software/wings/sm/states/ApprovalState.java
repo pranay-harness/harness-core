@@ -764,19 +764,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     handleSweepingOutput(sweepingOutputService, context, output);
   }
 
-  void fillSweepingOutput(ExecutionContext context, ApprovalStateExecutionData executionData) {
-    Map<String, Object> output = new HashMap<>();
-    if (isNotEmpty(variables)) {
-      for (NameValuePair expression : variables) {
-        output.put(expression.getName(),
-            context.renderExpression(
-                expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
-      }
-    }
-    output.put(ApprovalStateExecutionDataKeys.approvedBy, executionData.getApprovedBy());
-    handleSweepingOutput(sweepingOutputService, context, output);
-  }
-
   private ExecutionResponse handleAsyncShellScript(ExecutionContext context, ApprovalStateExecutionData executionData,
       ApprovalStateExecutionData approvalNotifyResponse) {
     String errorMessage;
