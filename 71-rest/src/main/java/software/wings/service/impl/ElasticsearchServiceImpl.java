@@ -114,18 +114,15 @@ public class ElasticsearchServiceImpl implements SearchService {
             pipelineSearchResults.add(pipelineSearchResult);
             break;
           case DEPLOYMENT:
-            if (result.get(DeploymentViewKeys.workflowInPipeline) != null
-                && result.get(DeploymentViewKeys.workflowInPipeline).equals(false)) {
-              DeploymentView deploymentView = mapper.convertValue(result, DeploymentView.class);
-              DeploymentSearchResult deploymentSearchResult =
-                  new DeploymentSearchResult(deploymentView, hit.getScore());
-              deploymentSearchResults.add(deploymentSearchResult);
-            }
+            DeploymentView deploymentView = mapper.convertValue(result, DeploymentView.class);
+            DeploymentSearchResult deploymentSearchResult = new DeploymentSearchResult(deploymentView, hit.getScore());
+            deploymentSearchResults.add(deploymentSearchResult);
             break;
           default:
         }
       }
     }
+
     searchResult.put(ApplicationSearchEntity.TYPE, applicationSearchResults);
     searchResult.put(ServiceSearchEntity.TYPE, serviceSearchResults);
     searchResult.put(EnvironmentSearchEntity.TYPE, environmentSearchResults);
@@ -137,23 +134,32 @@ public class ElasticsearchServiceImpl implements SearchService {
     return new SearchResults(searchResult);
   }
 
-  private List<SearchHits> search(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
+  private MultiSearchRequest getSearchRequest(@NotBlank String searchString, @NotBlank String accountId) {
     MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
     Iterator<SearchEntity<?>> iterator = searchEntities.iterator();
 
     while (iterator.hasNext()) {
-      String indexName = elasticsearchIndexManager.getAliasName(iterator.next().getType());
+      SearchEntity searchEntity = iterator.next();
+      String indexName = elasticsearchIndexManager.getAliasName(searchEntity.getType());
       SearchRequest searchRequest = new SearchRequest(indexName);
-      BoolQueryBuilder boolQueryBuilder = createQuery(searchString, accountId);
+      BoolQueryBuilder boolQueryBuilder;
+      if (!searchEntity.getType().equals(DeploymentSearchEntity.TYPE)) {
+        boolQueryBuilder = createQuery(searchString, accountId);
+      } else {
+        boolQueryBuilder = createDeploymentQuery(searchString, accountId);
+      }
       SearchSourceBuilder searchSourceBuilder =
           new SearchSourceBuilder().query(boolQueryBuilder).size(MAX_RESULTS_PER_ENTITY);
       searchRequest.source(searchSourceBuilder);
       searchRequest.indicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN);
       multiSearchRequest.add(searchRequest);
     }
+    return multiSearchRequest;
+  }
 
-    MultiSearchResponse multiSearchResponse = elasticsearchClient.multiSearch(multiSearchRequest);
-
+  private List<SearchHits> search(@NotBlank String searchString, @NotBlank String accountId) throws IOException {
+    MultiSearchResponse multiSearchResponse =
+        elasticsearchClient.multiSearch(getSearchRequest(searchString, accountId));
     List<SearchHits> searchHits = new ArrayList<>();
     long totalHits = 0;
     for (MultiSearchResponse.Item item : multiSearchResponse.getResponses()) {
@@ -178,9 +184,13 @@ public class ElasticsearchServiceImpl implements SearchService {
             .add(QueryBuilders.matchPhrasePrefixQuery(EntityBaseViewKeys.description, searchString)
                      .slop(SLOP_DISTANCE_VALUE))
             .tieBreaker(0.0f);
-
     boolQueryBuilder.must(queryBuilder).filter(QueryBuilders.termQuery(EntityBaseViewKeys.accountId, accountId));
     return boolQueryBuilder;
+  }
+
+  private static BoolQueryBuilder createDeploymentQuery(@NotBlank String searchString, @NotBlank String accountId) {
+    return createQuery(searchString, accountId)
+        .filter(QueryBuilders.termQuery(DeploymentViewKeys.workflowInPipeline, false));
   }
 
   private static int getLastIndexWithSameDeploymentName(List<SearchResult> searchResults, int startIndex) {
