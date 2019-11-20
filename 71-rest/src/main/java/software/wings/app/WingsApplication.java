@@ -137,6 +137,7 @@ import software.wings.search.framework.ElasticsearchSyncService;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
+import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
@@ -669,6 +670,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerAuthFilters(MainConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
       environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
+      environment.jersey().register(injector.getInstance(LoginRateLimitFilter.class));
       environment.jersey().register(injector.getInstance(AuthRuleFilter.class));
       environment.jersey().register(injector.getInstance(AuthResponseFilter.class));
       environment.jersey().register(injector.getInstance(AuthenticationFilter.class));
