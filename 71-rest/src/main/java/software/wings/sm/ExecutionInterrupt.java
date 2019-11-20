@@ -1,15 +1,21 @@
-/**
- *
- */
-
 package software.wings.sm;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
+import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
-import software.wings.beans.Base;
+import software.wings.beans.entityinterface.ApplicationAccess;
 
 import java.util.Map;
 import java.util.Objects;
@@ -17,13 +23,21 @@ import javax.validation.constraints.NotNull;
 
 /**
  * The type Workflow execution event.
- *
- * @author Rishi
  */
+@Data
 @Entity(value = "executionInterrupts", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ExecutionInterruptKeys")
-public class ExecutionInterrupt extends Base {
+public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                           UpdatedByAware, ApplicationAccess {
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @Indexed @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @Indexed private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
+
   @NotNull private ExecutionInterruptType executionInterruptType;
 
   // If true, means this interruption is no longer in effect
@@ -32,10 +46,6 @@ public class ExecutionInterrupt extends Base {
   @NotNull @Indexed private String executionUuid;
   @Indexed private String stateExecutionInstanceId;
 
-  public static class ExecutionInterruptKeys {
-    // Temporary
-    public static final String appId = "appId";
-  }
   private Map<String, Object> properties;
 
   public boolean isSeized() {
