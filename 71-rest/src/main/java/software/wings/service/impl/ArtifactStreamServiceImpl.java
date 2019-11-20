@@ -249,17 +249,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         continue;
       }
 
-      // NOTE: Potentially expensive if there are a lot of artifact streams. But without this, sorting is incorrect
-      // because in Mongo we are not able to do alpha-numeric comparison correctly and efficiently.
-      int limit = Math.max(maxArtifacts, 200);
-      List<Artifact> artifacts = artifactQuery.asList(new FindOptions().limit(limit));
+      List<Artifact> artifacts = artifactQuery.asList(new FindOptions().limit(maxArtifacts));
       if (isEmpty(artifacts)) {
         continue;
       }
 
       List<ArtifactSummary> artifactSummaries = artifacts.stream()
                                                     .sorted(new ArtifactComparator())
-                                                    .limit(maxArtifacts)
                                                     .map(ArtifactSummary::prepareSummaryFromArtifact)
                                                     .collect(toList());
       artifactStream.setArtifactCount(totalArtifactCount);
