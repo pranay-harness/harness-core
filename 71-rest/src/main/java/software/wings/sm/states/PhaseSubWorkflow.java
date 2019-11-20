@@ -5,11 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -38,14 +40,12 @@ import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.TemplateExpressionProcessor;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.PhaseSubWorkflowHelperService;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -57,6 +57,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
+import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -80,8 +81,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     super(name, StateType.PHASE.name());
   }
 
-  @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
-
   private String uuid;
   private String serviceId;
   private String infraMappingId;
@@ -90,27 +89,20 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   // Only for rollback phase steps
   @SchemaIgnore private String phaseNameForRollback;
 
-  @Inject @Transient private transient ServiceResourceService serviceResourceService;
-
-  @Inject @Transient private transient InfrastructureDefinitionService infrastructureDefinitionService;
-
-  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-
-  @Inject @Transient private transient TemplateExpressionProcessor templateExpressionProcessor;
-
-  @Inject @Transient private transient ArtifactService artifactService;
-
-  @Inject @Transient private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
-
-  @Inject @Transient private transient SweepingOutputService sweepingOutputService;
-
-  @Inject @Transient private transient FeatureFlagService featureFlagService;
-  @Inject @Transient private transient PhaseSubWorkflowHelperService phaseSubWorkflowHelperService;
+  @Inject @Transient private WorkflowExecutionService workflowExecutionService;
+  @Inject @Transient private ServiceResourceService serviceResourceService;
+  @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private ArtifactService artifactService;
+  @Inject @Transient private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject @Transient private SweepingOutputService sweepingOutputService;
+  @Inject @Transient private FeatureFlagService featureFlagService;
+  @Inject @Transient private PhaseSubWorkflowHelperService phaseSubWorkflowHelperService;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
+    notNullCheck("App Cannot be null", app, USER);
 
     TemplateExpression serviceTemplateExpression = null, infraDefinitionTemplateExpression = null,
                        infraMappingTemplateExpression = null;
@@ -151,6 +143,17 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     ExecutionResponseBuilder executionResponseBuilder = getSpawningExecutionResponse(
         context, workflowStandardParams, service, infrastructureMapping, infrastructureDefinition);
 
+    PhaseExecutionData phaseExecutionData =
+        obtainPhaseExecutionData(context, service, infrastructureDefinition, infrastructureMapping);
+
+    // TODO => Saving PhaseExecutionData to SweepingOutput but still publishing to context. Must move this later
+
+    executionResponseBuilder.stateExecutionData(phaseExecutionData);
+    return executionResponseBuilder.build();
+  }
+
+  private PhaseExecutionData obtainPhaseExecutionData(ExecutionContext context, Service service,
+      InfrastructureDefinition infrastructureDefinition, InfrastructureMapping infrastructureMapping) {
     PhaseExecutionDataBuilder phaseExecutionDataBuilder = aPhaseExecutionData();
     if (infrastructureMapping != null) {
       DeploymentType deploymentType =
@@ -189,9 +192,13 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         }
       }
     }
-
-    executionResponseBuilder.stateExecutionData(phaseExecutionData);
-    return executionResponseBuilder.build();
+    StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .value(phaseExecutionData)
+            .build());
+    return phaseExecutionData;
   }
 
   private ExecutionResponseBuilder getSpawningExecutionResponse(ExecutionContext context,
@@ -596,6 +603,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
+    StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     super.handleStatusSummary(workflowExecutionService, context, response, executionResponseBuilder);
     response.values().forEach(notifyResponseData -> {
       if (notifyResponseData instanceof ElementNotifyResponseData) {
@@ -607,10 +615,15 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         }
       }
     });
-    PhaseExecutionData phaseExecutionData = (PhaseExecutionData) context.getStateExecutionData();
-    phaseExecutionData.setPhaseExecutionSummary(workflowExecutionService.getPhaseExecutionSummary(
-        context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
-    executionResponseBuilder.stateExecutionData(phaseExecutionData);
+    PhaseExecutionSummary phaseExecutionSummary = workflowExecutionService.getPhaseExecutionSummary(
+        context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId());
+
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .value(phaseExecutionSummary)
+            .build());
+    executionResponseBuilder.stateExecutionData(context.getStateExecutionData());
     return executionResponseBuilder.build();
   }
 

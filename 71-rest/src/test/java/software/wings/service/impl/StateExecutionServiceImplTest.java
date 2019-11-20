@@ -28,6 +28,7 @@ import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.beans.ServiceInstance;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StateExecutionInstance;
@@ -42,6 +43,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
 
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
+  @Mock private SweepingOutputService sweepingOutputService;
 
   private StateExecutionServiceImpl stateExecutionService = spy(new StateExecutionServiceImpl());
 
@@ -49,6 +51,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   public void setUp() throws Exception {
     Reflect.on(stateExecutionService).set("featureFlagService", featureFlagService);
     Reflect.on(stateExecutionService).set("appService", appService);
+    Reflect.on(stateExecutionService).set("sweepingOutputService", sweepingOutputService);
   }
 
   @Test
@@ -62,17 +65,24 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     selectNodeStepExecutionSummary.setExcludeSelectedHostsFromFuturePhases(true);
     selectNodeStepExecutionSummary.setServiceInstanceList(serviceInstanceList);
     PhaseStepExecutionSummary phaseStepExecutionSummary = new PhaseStepExecutionSummary();
+
     phaseStepExecutionSummary.setStepExecutionSummaryList(Collections.singletonList(selectNodeStepExecutionSummary));
     PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
     phaseExecutionSummary.setPhaseStepExecutionSummaryMap(Collections.singletonMap(RANDOM, phaseStepExecutionSummary));
-    PhaseExecutionData phaseExecutionData = PhaseExecutionDataBuilder.aPhaseExecutionData()
-                                                .withInfraDefinitionId(INFRA_DEFINITION_ID)
-                                                .withPhaseExecutionSummary(phaseExecutionSummary)
-                                                .build();
-    StateExecutionInstance stateExecutionInstance = Builder.aStateExecutionInstance().appId(APP_ID).build();
-    doReturn(Collections.singletonList(phaseExecutionData))
+    doReturn(phaseExecutionSummary).when(stateExecutionService).getPhaseExecutionSummarySweepingOutput(any());
+    PhaseExecutionData phaseExecutionData =
+        PhaseExecutionDataBuilder.aPhaseExecutionData().withInfraDefinitionId(INFRA_DEFINITION_ID).build();
+    doReturn(phaseExecutionData).when(stateExecutionService).getPhaseExecutionDataSweepingOutput(any());
+    StateExecutionInstance stateExecutionInstance =
+        Builder.aStateExecutionInstance().displayName("Phase 2").appId(APP_ID).build();
+    StateExecutionInstance previousStateExecutionInstance = Builder.aStateExecutionInstance()
+                                                                .appId(APP_ID)
+                                                                .displayName("Phase 1")
+                                                                .addStateExecutionData("Phase 1", phaseExecutionData)
+                                                                .build();
+    doReturn(Collections.singletonList(previousStateExecutionInstance))
         .when(stateExecutionService)
-        .fetchPhaseExecutionData(any(), any(), any(), any());
+        .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
     doReturn(true).when(featureFlagService).isEnabled(any(), any());
 
@@ -88,7 +98,9 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
   public void shouldReturnEmptyWhenNoPreviousPhases() {
     PhaseElement phaseElement = PhaseElement.builder().infraDefinitionId(INFRA_DEFINITION_ID).build();
     StateExecutionInstance stateExecutionInstance = Builder.aStateExecutionInstance().appId(APP_ID).build();
-    doReturn(Collections.emptyList()).when(stateExecutionService).fetchPhaseExecutionData(any(), any(), any(), any());
+    doReturn(Collections.emptyList())
+        .when(stateExecutionService)
+        .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
     doReturn(true).when(featureFlagService).isEnabled(any(), any());
 
@@ -112,14 +124,19 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     phaseStepExecutionSummary.setStepExecutionSummaryList(Collections.singletonList(selectNodeStepExecutionSummary));
     PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
     phaseExecutionSummary.setPhaseStepExecutionSummaryMap(Collections.singletonMap(RANDOM, phaseStepExecutionSummary));
-    PhaseExecutionData phaseExecutionData = PhaseExecutionDataBuilder.aPhaseExecutionData()
-                                                .withInfraMappingId(INFRA_MAPPING_ID)
-                                                .withPhaseExecutionSummary(phaseExecutionSummary)
-                                                .build();
-    StateExecutionInstance stateExecutionInstance = Builder.aStateExecutionInstance().appId(APP_ID).build();
-    doReturn(Collections.singletonList(phaseExecutionData))
+    doReturn(phaseExecutionSummary).when(stateExecutionService).getPhaseExecutionSummarySweepingOutput(any());
+    PhaseExecutionData phaseExecutionData =
+        PhaseExecutionDataBuilder.aPhaseExecutionData().withInfraMappingId(INFRA_MAPPING_ID).build();
+    StateExecutionInstance stateExecutionInstance =
+        Builder.aStateExecutionInstance().displayName("Phase 2").appId(APP_ID).build();
+    StateExecutionInstance previousStateExecutionInstance = Builder.aStateExecutionInstance()
+                                                                .appId(APP_ID)
+                                                                .displayName("Phase 1")
+                                                                .addStateExecutionData("Phase 1", phaseExecutionData)
+                                                                .build();
+    doReturn(Collections.singletonList(previousStateExecutionInstance))
         .when(stateExecutionService)
-        .fetchPhaseExecutionData(any(), any(), any(), any());
+        .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
     doReturn(false).when(featureFlagService).isEnabled(any(), any());
 
@@ -180,5 +197,41 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     assertThat(previousInstance).isNotNull();
     assertThat(previousInstance.getUuid()).isEqualTo(uuid4);
     assertThat(previousInstance.getStateName()).isEqualTo("Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldFetchPhaseExecutionSummary() {
+    String workflowExecutionId = generateUuid();
+    String stateExecutionId = generateUuid();
+    String phaseExecutionId = generateUuid();
+    String phaseName = "name";
+    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
+    PhaseElement phaseElement =
+        PhaseElement.builder().uuid(phaseExecutionId).phaseName(phaseName).infraMappingId(INFRA_MAPPING_ID).build();
+    StateExecutionInstance stateExecutionInstance = Builder.aStateExecutionInstance()
+                                                        .uuid(stateExecutionId)
+                                                        .displayName(phaseName)
+                                                        .appId(APP_ID)
+                                                        .executionUuid(workflowExecutionId)
+                                                        .addContextElement(phaseElement)
+                                                        .build();
+
+    String phaseExecutionIdSweepingOutput = workflowExecutionId + phaseExecutionId + phaseName;
+
+    doReturn(phaseExecutionSummary)
+        .when(sweepingOutputService)
+        .findSweepingOutput(SweepingOutputServiceImpl.SweepingOutputInquiry.builder()
+                                .appId(APP_ID)
+                                .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + phaseName)
+                                .workflowExecutionId(workflowExecutionId)
+                                .phaseExecutionId(phaseExecutionIdSweepingOutput)
+                                .stateExecutionId(stateExecutionId)
+                                .build());
+
+    PhaseExecutionSummary savedPhaseExecutionSummary =
+        stateExecutionService.fetchPhaseExecutionSummarySweepingOutput(stateExecutionInstance);
+    assertThat(savedPhaseExecutionSummary).isEqualTo(phaseExecutionSummary);
   }
 }

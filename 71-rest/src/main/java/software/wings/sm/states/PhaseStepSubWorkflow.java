@@ -68,6 +68,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ElementNotifyResponseData;
@@ -101,6 +102,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Transient @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
   @Transient @Inject private transient InfrastructureProvisionerService infrastructureProvisionerService;
   @Transient @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Transient @Inject private transient SweepingOutputService sweepingOutputService;
 
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
@@ -209,13 +211,18 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       PhaseStepType phaseStepType, PhaseElement phaseElement, ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
 
-    PhaseExecutionData stateExecutionData = (PhaseExecutionData) stateExecutionService.phaseStateExecutionData(
-        context.getAppId(), context.getWorkflowExecutionId(), phaseElement.getPhaseNameForRollback());
+    PhaseExecutionData stateExecutionData = (PhaseExecutionData) sweepingOutputService.findSweepingOutput(
+        context.prepareSweepingOutputInquiryBuilder()
+            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback())
+            .build());
 
     if (stateExecutionData == null) {
       return null;
     }
-    PhaseExecutionSummary phaseExecutionSummary = stateExecutionData.getPhaseExecutionSummary();
+    PhaseExecutionSummary phaseExecutionSummary = (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
+        context.prepareSweepingOutputInquiryBuilder()
+            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback())
+            .build());
     if (phaseExecutionSummary == null || phaseExecutionSummary.getPhaseStepExecutionSummaryMap() == null
         || phaseExecutionSummary.getPhaseStepExecutionSummaryMap().get(phaseStepNameForRollback) == null) {
       return null;

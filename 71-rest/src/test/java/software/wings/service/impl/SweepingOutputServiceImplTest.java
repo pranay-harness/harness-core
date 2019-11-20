@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -119,5 +120,35 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
                                        .workflowExecutionId(sweepingOutputInstance.getWorkflowExecutionIds().get(0))
                                        .build());
     assertThat(savedSweepingOutputInstance1).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testFindSweepingOutput() {
+    SweepingOutput sweepingOutput = sweepingOutputService.findSweepingOutput(
+        SweepingOutputInquiry.builder()
+            .name(SWEEPING_OUTPUT_NAME)
+            .appId(sweepingOutputInstance.getAppId())
+            .phaseExecutionId(sweepingOutputInstance.getPipelineExecutionId())
+            .workflowExecutionId(sweepingOutputInstance.getWorkflowExecutionIds().get(0))
+            .build());
+    assertThat(sweepingOutput).isNotNull();
+    assertThat(sweepingOutput).isInstanceOf(SweepingOutputData.class);
+    assertThat(((SweepingOutputData) sweepingOutput).getText()).isEqualTo(SWEEPING_OUTPUT_CONTENT);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testFindSweepingOutputForNull() {
+    SweepingOutput sweepingOutput = sweepingOutputService.findSweepingOutput(
+        SweepingOutputInquiry.builder()
+            .name("Some Name")
+            .appId(sweepingOutputInstance.getAppId())
+            .phaseExecutionId(sweepingOutputInstance.getPipelineExecutionId())
+            .workflowExecutionId(sweepingOutputInstance.getWorkflowExecutionIds().get(0))
+            .build());
+    assertThat(sweepingOutput).isNull();
   }
 }

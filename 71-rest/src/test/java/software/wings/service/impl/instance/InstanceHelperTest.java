@@ -85,6 +85,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseStepSubWorkflow;
@@ -135,6 +136,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
   private PhaseExecutionData phaseExecutionData;
+  private PhaseExecutionSummary phaseExecutionSummary;
   private PhaseStepExecutionData phaseStepExecutionData;
   private long endsAtTime;
   private String PRIVATE_DNS_1 = "ip-171-31-14-5.us-west-2.compute.internal";
@@ -227,8 +229,10 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testExtractInstanceOrContainerInfoBaseOnType_PDS() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH, WorkflowServiceHelper.DEPLOY_SERVICE, endsAtTime, "");
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+        InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH, endsAtTime, "");
+    phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
+        InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType("PHYSICAL_DATA_CENTER_SSH")
@@ -274,8 +278,10 @@ public class InstanceHelperTest extends WingsBaseTest {
     endsAtTime = System.currentTimeMillis();
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE, endsAtTime, DeploymentType.SSH.name());
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+        InfrastructureMappingType.AWS_SSH, endsAtTime, DeploymentType.SSH.name());
+    phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
+        InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_SSH.getName())
@@ -316,8 +322,10 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AWS_SSH_CodeDeployInfraMapping() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE, endsAtTime, DeploymentType.SSH.name());
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+        InfrastructureMappingType.AWS_SSH, endsAtTime, DeploymentType.SSH.name());
+    phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
+        InfrastructureMappingType.AWS_SSH, WorkflowServiceHelper.DEPLOY_SERVICE);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_SSH.getName())
@@ -358,8 +366,10 @@ public class InstanceHelperTest extends WingsBaseTest {
   public void testExtractInstanceOrContainerInfoBaseOnType_For_AMI() {
     endsAtTime = System.currentTimeMillis();
     phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
-        InfrastructureMappingType.AWS_AMI, WorkflowServiceHelper.DEPLOY_SERVICE, endsAtTime, DeploymentType.AMI.name());
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+        InfrastructureMappingType.AWS_AMI, endsAtTime, DeploymentType.AMI.name());
+    phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
+        InfrastructureMappingType.AWS_AMI, WorkflowServiceHelper.DEPLOY_SERVICE);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_AMI.getName())
@@ -407,9 +417,9 @@ public class InstanceHelperTest extends WingsBaseTest {
         .isTrue();
   }
 
-  private PhaseStepExecutionData getPhaseStepExecutionData(PhaseExecutionData phaseExecutionData) {
+  private PhaseStepExecutionData getPhaseStepExecutionData(PhaseExecutionSummary phaseExecutionSummary) {
     Collection<PhaseStepExecutionSummary> phaseStepExecutionSummaries =
-        phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap().values();
+        phaseExecutionSummary.getPhaseStepExecutionSummaryMap().values();
     Optional<PhaseStepExecutionSummary> phaseStepExecutionSummary = phaseStepExecutionSummaries.stream().findFirst();
     PhaseStepExecutionDataBuilder phaseStepExecutionDataBuilder =
         PhaseStepExecutionDataBuilder.aPhaseStepExecutionData();
@@ -424,12 +434,12 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_CodeDeploy() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_AWS_CODEDEPLOY,
-        WorkflowServiceHelper.DEPLOY_SERVICE, endsAtTime, DeploymentType.AWS_CODEDEPLOY.getDisplayName());
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
+        InfrastructureMappingType.AWS_AWS_CODEDEPLOY, endsAtTime, DeploymentType.AWS_CODEDEPLOY.getDisplayName());
 
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
-
-    phaseStepExecutionData.getPhaseStepExecutionSummary();
+    phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
+        InfrastructureMappingType.AWS_AWS_CODEDEPLOY, WorkflowServiceHelper.DEPLOY_SERVICE);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
 
     doReturn(CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
@@ -480,9 +490,11 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_ECS() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(InfrastructureMappingType.AWS_ECS,
-        WorkflowServiceHelper.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.ECS.getDisplayName());
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+    phaseExecutionData = instaceHelperTestHelper.initExecutionSummary(
+        InfrastructureMappingType.AWS_ECS, endsAtTime, DeploymentType.ECS.getDisplayName());
+    phaseExecutionSummary = instaceHelperTestHelper.initPhaseExecutionSummary(
+        InfrastructureMappingType.AWS_ECS, WorkflowServiceHelper.DEPLOY_CONTAINERS);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_ECS.getName())
@@ -544,10 +556,11 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData =
-        instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
-            WorkflowServiceHelper.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), false);
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+    phaseExecutionData = instaceHelperTestHelper.initKubernetesExecutionSummary(
+        InfrastructureMappingType.GCP_KUBERNETES, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), false);
+    phaseExecutionSummary = instaceHelperTestHelper.initKubernetesPhaseExecutionSummary(
+        InfrastructureMappingType.GCP_KUBERNETES, WorkflowServiceHelper.DEPLOY_CONTAINERS, false);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
@@ -613,10 +626,11 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData =
-        instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
-            WorkflowServiceHelper.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), true);
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+    phaseExecutionData = instaceHelperTestHelper.initKubernetesExecutionSummary(
+        InfrastructureMappingType.GCP_KUBERNETES, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), true);
+    phaseExecutionSummary = instaceHelperTestHelper.initKubernetesPhaseExecutionSummary(
+        InfrastructureMappingType.GCP_KUBERNETES, WorkflowServiceHelper.DEPLOY_CONTAINERS, true);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
@@ -678,10 +692,11 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExtractInstanceOrContainerInfoBaseOnType_For_Helm_Kubernetes_rollback() {
     endsAtTime = System.currentTimeMillis();
-    phaseExecutionData =
-        instaceHelperTestHelper.initKubernetesExecutionSummary(InfrastructureMappingType.GCP_KUBERNETES,
-            WorkflowServiceHelper.DEPLOY_CONTAINERS, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), true);
-    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionData);
+    phaseExecutionData = instaceHelperTestHelper.initKubernetesExecutionSummary(
+        InfrastructureMappingType.GCP_KUBERNETES, endsAtTime, DeploymentType.KUBERNETES.getDisplayName(), true);
+    phaseExecutionSummary = instaceHelperTestHelper.initKubernetesPhaseExecutionSummary(
+        InfrastructureMappingType.GCP_KUBERNETES, WorkflowServiceHelper.DEPLOY_CONTAINERS, true);
+    phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())

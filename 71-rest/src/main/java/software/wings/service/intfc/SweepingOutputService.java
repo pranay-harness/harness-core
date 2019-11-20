@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import lombok.Builder;
 import lombok.Value;
@@ -23,6 +24,8 @@ public interface SweepingOutputService {
   }
 
   SweepingOutputInstance find(SweepingOutputInquiry inquiry);
+
+  SweepingOutput findSweepingOutput(SweepingOutputInquiry inquiry);
 
   void copyOutputsForAnotherWorkflowExecution(
       String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId);

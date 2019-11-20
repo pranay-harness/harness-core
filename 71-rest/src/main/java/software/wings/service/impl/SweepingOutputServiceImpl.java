@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
@@ -59,6 +60,15 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
         wingsPersistence.createUpdateOperations(SweepingOutputInstance.class);
     ops.addToSet(SweepingOutputKeys.workflowExecutionIds, toWorkflowExecutionId);
     wingsPersistence.update(query, ops);
+  }
+
+  @Override
+  public SweepingOutput findSweepingOutput(SweepingOutputInquiry inquiry) {
+    SweepingOutputInstance sweepingOutputInstance = find(inquiry);
+    if (sweepingOutputInstance == null) {
+      return null;
+    }
+    return sweepingOutputInstance.getValue();
   }
 
   public SweepingOutputInstance find(SweepingOutputInquiry sweepingOutputInquiry) {

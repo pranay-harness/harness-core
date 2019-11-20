@@ -3,13 +3,16 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.sm.StateType.PHASE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
+import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.query.Sort;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
@@ -21,6 +24,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -35,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -44,6 +49,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   public Map<String, StateExecutionInstance> executionStatesMap(String appId, String executionUuid) {
     Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
@@ -125,6 +131,31 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     return executionDataList;
   }
 
+  @VisibleForTesting
+  List<StateExecutionInstance> fetchPreviousPhasesStateExecutionInstances(
+      String appId, String executionUuid, String phaseName, CurrentPhase currentPhase) {
+    List<StateExecutionInstance> instanceList = new ArrayList<>();
+    try (HIterator<StateExecutionInstance> stateExecutionInstances =
+             new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
+                                 .filter(StateExecutionInstanceKeys.appId, appId)
+                                 .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                                 .filter(StateExecutionInstanceKeys.stateType, StateType.PHASE.name())
+                                 .order(Sort.ascending(StateExecutionInstanceKeys.createdAt))
+                                 .fetch())) {
+      for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+        if (CurrentPhase.EXCLUDE.equals(currentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+          return instanceList;
+        }
+        instanceList.add(stateExecutionInstance);
+        if (CurrentPhase.INCLUDE.equals(currentPhase) && stateExecutionInstance.getDisplayName().equals(phaseName)) {
+          return instanceList;
+        }
+      }
+    }
+
+    return instanceList;
+  }
+
   @Override
   public void updateStateExecutionData(String appId, String stateExecutionId, StateExecutionData stateExecutionData) {
     StateExecutionInstance stateExecutionInstance =
@@ -152,37 +183,31 @@ public class StateExecutionServiceImpl implements StateExecutionService {
       StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement, String infraMappingId) {
     List<ServiceInstance> hostExclusionList = new ArrayList<>();
 
-    List<StateExecutionData> previousPhaseExecutionsData =
-        fetchPhaseExecutionData(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
-            phaseElement == null ? null : phaseElement.getPhaseName(), CurrentPhase.EXCLUDE);
+    List<StateExecutionInstance> instanceList = fetchPreviousPhasesStateExecutionInstances(
+        stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(),
+        phaseElement == null ? null : phaseElement.getPhaseName(), CurrentPhase.EXCLUDE);
 
-    if (isEmpty(previousPhaseExecutionsData)) {
+    if (isEmpty(instanceList)) {
       return hostExclusionList;
     }
 
     processPreviousPhaseExecutionsData(
-        stateExecutionInstance, phaseElement, infraMappingId, hostExclusionList, previousPhaseExecutionsData);
+        stateExecutionInstance, phaseElement, infraMappingId, hostExclusionList, instanceList);
     return hostExclusionList;
   }
 
   private void processPreviousPhaseExecutionsData(StateExecutionInstance stateExecutionInstance,
       PhaseElement phaseElement, String infraMappingId, List<ServiceInstance> hostExclusionList,
-      List<StateExecutionData> previousPhaseExecutionsData) {
-    for (StateExecutionData stateExecutionData : previousPhaseExecutionsData) {
-      PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
+      List<StateExecutionInstance> previousStateExecutionInstances) {
+    for (StateExecutionInstance previousStateExecutionInstance : previousStateExecutionInstances) {
+      PhaseExecutionData phaseExecutionData = getPhaseExecutionDataSweepingOutput(previousStateExecutionInstance);
 
-      if (featureFlagService.isEnabled(
-              FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(stateExecutionInstance.getAppId()))) {
-        if (phaseElement != null && phaseElement.getInfraDefinitionId() != null
-            && !phaseElement.getInfraDefinitionId().equals(phaseExecutionData.getInfraDefinitionId())) {
-          continue;
-        }
-      } else {
-        if (infraMappingId != null && !phaseExecutionData.getInfraMappingId().equals(infraMappingId)) {
-          continue;
-        }
+      if (doesNotNeedProcessing(stateExecutionInstance, phaseElement, infraMappingId, phaseExecutionData)) {
+        continue;
       }
-      PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
+
+      PhaseExecutionSummary phaseExecutionSummary =
+          getPhaseExecutionSummarySweepingOutput(previousStateExecutionInstance);
       if (phaseExecutionSummary == null || phaseExecutionSummary.getPhaseStepExecutionSummaryMap() == null) {
         continue;
       }
@@ -205,6 +230,73 @@ public class StateExecutionServiceImpl implements StateExecutionService {
           }
         }
       }
+    }
+  }
+
+  @Override
+  public PhaseExecutionSummary fetchPhaseExecutionSummarySweepingOutput(
+      @NotNull StateExecutionInstance stateExecutionInstance) {
+    return getPhaseExecutionSummarySweepingOutput(stateExecutionInstance);
+  }
+
+  @VisibleForTesting
+  PhaseExecutionSummary getPhaseExecutionSummarySweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance) {
+    return (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
+        SweepingOutputService.SweepingOutputInquiry.builder()
+            .appId(stateExecutionInstance.getAppId())
+            .name(PhaseExecutionSummary.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
+            .stateExecutionId(stateExecutionInstance.getUuid())
+            .phaseExecutionId(getPhaseExecutionId(stateExecutionInstance))
+            .build());
+  }
+
+  @VisibleForTesting
+  PhaseExecutionData getPhaseExecutionDataSweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance) {
+    return (PhaseExecutionData) sweepingOutputService.findSweepingOutput(
+        SweepingOutputService.SweepingOutputInquiry.builder()
+            .appId(stateExecutionInstance.getAppId())
+            .name(PhaseExecutionData.SWEEPING_OUTPUT_NAME + stateExecutionInstance.getDisplayName())
+            .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
+            .stateExecutionId(stateExecutionInstance.getUuid())
+            .phaseExecutionId(getPhaseExecutionId(stateExecutionInstance))
+            .build());
+  }
+
+  @Nullable
+  private String getPhaseExecutionId(@NotNull StateExecutionInstance stateExecutionInstance) {
+    PhaseElement phaseElement = fetchPhaseElement(stateExecutionInstance);
+    return phaseElement == null
+        ? null
+        : stateExecutionInstance.getExecutionUuid() + phaseElement.getUuid() + phaseElement.getPhaseName();
+  }
+
+  @Nullable
+  private PhaseElement fetchPhaseElement(@NotNull StateExecutionInstance stateExecutionInstance) {
+    PhaseElement phaseElement = (PhaseElement) stateExecutionInstance.getContextElements()
+                                    .stream()
+                                    .filter(ce
+                                        -> ContextElementType.PARAM.equals(ce.getElementType())
+                                            && PhaseElement.PHASE_PARAM.equals(ce.getName()))
+                                    .findFirst()
+                                    .orElse(null);
+    if (phaseElement == null) {
+      return null;
+    }
+    return phaseElement;
+  }
+
+  private boolean doesNotNeedProcessing(StateExecutionInstance stateExecutionInstance, PhaseElement phaseElement,
+      String infraMappingId, PhaseExecutionData phaseExecutionData) {
+    if (stateExecutionInstance.getDisplayName().equals(phaseElement == null ? null : phaseElement.getPhaseName())) {
+      return true;
+    }
+    if (featureFlagService.isEnabled(
+            FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(stateExecutionInstance.getAppId()))) {
+      return phaseElement != null && phaseElement.getInfraDefinitionId() != null
+          && !phaseElement.getInfraDefinitionId().equals(phaseExecutionData.getInfraDefinitionId());
+    } else {
+      return infraMappingId != null && !phaseExecutionData.getInfraMappingId().equals(infraMappingId);
     }
   }
 
