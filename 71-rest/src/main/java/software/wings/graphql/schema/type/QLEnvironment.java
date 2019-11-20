@@ -17,4 +17,5 @@ public class QLEnvironment implements QLObject {
   private QLEnvironmentType type;
   private Long createdAt;
   private QLUser createdBy;
+  private String appId;
 }

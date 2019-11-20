@@ -18,4 +18,5 @@ public class QLWorkflowExecution implements QLExecution {
   private QLExecutionStatus status;
   private QLCause cause;
   private String notes;
+  private String appId;
 }

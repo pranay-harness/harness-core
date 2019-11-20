@@ -22,6 +22,7 @@ public class PipelineExecutionController {
                                  .build();
 
     builder.id(workflowExecution.getUuid())
+        .appId(workflowExecution.getAppId())
         .createdAt(workflowExecution.getCreatedAt())
         .startedAt(workflowExecution.getStartTs())
         .endedAt(workflowExecution.getEndTs())
