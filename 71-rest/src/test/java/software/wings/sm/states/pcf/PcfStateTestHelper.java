@@ -85,6 +85,7 @@ public class PcfStateTestHelper {
                 .uuid(serviceElement.getUuid())
                 .name(PCF_SERVICE_NAME)
                 .maxInstanceCount(10)
+                .desiredActualFinalCount(10)
                 .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
                 .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
                                               .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")

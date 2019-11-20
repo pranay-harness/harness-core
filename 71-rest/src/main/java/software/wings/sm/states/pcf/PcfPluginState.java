@@ -1,8 +1,10 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
@@ -44,6 +46,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -102,11 +105,15 @@ public class PcfPluginState extends State {
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
 
   public static final String PCF_PLUGIN_COMMAND = "Execute CF Command";
-  public static final String FILE_START_REGEX = PcfConstants.FILE_START_REGEX;
+  public static final String FILE_START_REPO_ROOT_REGEX = PcfConstants.FILE_START_REPO_ROOT_REGEX;
+  public static final String FILE_START_SERVICE_MANIFEST_REGEX = PcfConstants.FILE_START_SERVICE_MANIFEST_REGEX;
   public static final String FILE_END_REGEX = "(\\s|,|;|'|\"|:|$)";
   private static final Splitter lineSplitter = Splitter.onPattern("\\r?\\n").trimResults().omitEmptyStrings();
 
-  public static final Pattern PATH_REGEX_PATTERN = Pattern.compile(FILE_START_REGEX + ".*?" + FILE_END_REGEX);
+  public static final Pattern PATH_REGEX_REPO_ROOT_PATTERN =
+      Pattern.compile(FILE_START_REPO_ROOT_REGEX + ".*?" + FILE_END_REGEX);
+  public static final Pattern FILE_START_SERVICE_MANIFEST_PATTERN =
+      Pattern.compile(FILE_START_SERVICE_MANIFEST_REGEX + ".*?" + FILE_END_REGEX);
 
   @Getter @Setter @Attributes(title = "API Timeout Interval (Minutes)") private Integer timeoutIntervalInMinutes = 5;
 
@@ -114,6 +121,7 @@ public class PcfPluginState extends State {
 
   @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
   public static final String START_SLASH_ALL_MATCH = "\\A/+";
+  public static final String END_SLASH_ALL_MATCH = "/+\\Z";
 
   public PcfPluginState(String name) {
     super(name, StateType.PCF_PLUGIN.name());
@@ -136,25 +144,28 @@ public class PcfPluginState extends State {
     // render script
     final String renderedScript = renderedScript(removeCommentedLineFromScript(scriptString), context);
     // find out the paths from the script
-    final List<String> pathsFromScript = findPathFromScript(renderedScript);
-    boolean serviceManifestRemote = false;
-    ApplicationManifest serviceManifest = null;
+    final ApplicationManifest serviceManifest = applicationManifestUtils.getApplicationManifestForService(context);
+    final boolean serviceManifestRemote = isServiceManifestRemote(serviceManifest);
 
-    if (!pathsFromScript.isEmpty()) {
-      // paths found
-      // see if the manifests are remote or local
-      serviceManifest = applicationManifestUtils.getApplicationManifestForService(context);
-
-      serviceManifestRemote = isServiceManifestRemote(serviceManifest);
-    }
     final Activity activity = createActivity(context, serviceManifestRemote);
-
+    String repoRoot = "/";
     if (serviceManifestRemote) {
-      //  fire task to fetch remote files
-      return executeGitTask(context, serviceManifest, activity.getUuid(), pathsFromScript, renderedScript);
-    } else {
-      return executePcfPluginTask(context, activity.getUuid(), serviceManifest, pathsFromScript, renderedScript);
+      repoRoot = getRepoRoot(serviceManifest);
     }
+    final List<String> pathsFromScript = findPathFromScript(renderedScript, repoRoot);
+
+    if (!pathsFromScript.isEmpty() && serviceManifestRemote) {
+      //  fire task to fetch remote files
+      return executeGitTask(context, serviceManifest, activity.getUuid(), pathsFromScript, renderedScript, repoRoot);
+    } else {
+      return executePcfPluginTask(
+          context, activity.getUuid(), serviceManifest, pathsFromScript, renderedScript, repoRoot);
+    }
+  }
+
+  private String getRepoRoot(ApplicationManifest serviceManifest) {
+    final GitFileConfig gitFileConfig = serviceManifest.getGitFileConfig();
+    return "/" + toRelativePath(defaultIfEmpty(gitFileConfig.getFilePath(), "/").trim());
   }
 
   private String removeCommentedLineFromScript(String scriptString) {
@@ -170,14 +181,38 @@ public class PcfPluginState extends State {
   }
 
   @VisibleForTesting
-  List<String> findPathFromScript(String rendredScript) {
-    final Matcher matcher = PATH_REGEX_PATTERN.matcher(rendredScript);
+  List<String> findPathFromScript(String rendredScript, String repoRoot) {
+    final List<String> finalPathLists = new ArrayList<>();
+    final List<String> repoRootPrefixPathList =
+        findPathFromScript(rendredScript, PATH_REGEX_REPO_ROOT_PATTERN, FILE_START_REPO_ROOT_REGEX, FILE_END_REGEX);
+    List<String> serviceManifestPrefixPathList = findPathFromScript(
+        rendredScript, FILE_START_SERVICE_MANIFEST_PATTERN, FILE_START_SERVICE_MANIFEST_REGEX, FILE_END_REGEX);
+
+    if (!(isEmpty(repoRoot) || "/".equals(repoRoot))) {
+      serviceManifestPrefixPathList = serviceManifestPrefixPathList.stream()
+                                          .map(path -> repoRoot + path)
+                                          .map(this ::removeTrailingSlash)
+                                          .collect(Collectors.toList());
+    }
+
+    finalPathLists.addAll(repoRootPrefixPathList);
+    finalPathLists.addAll(serviceManifestPrefixPathList);
+    return finalPathLists;
+  }
+
+  private String removeTrailingSlash(String s) {
+    return s.replaceFirst(END_SLASH_ALL_MATCH, "");
+  }
+
+  private List<String> findPathFromScript(
+      String renderedScript, Pattern matchPattern, String prefixRegex, String fileEndRegex) {
+    final Matcher matcher = matchPattern.matcher(renderedScript);
     List<String> filePathList = new ArrayList<>();
     while (matcher.find()) {
-      final String filePath = rendredScript.substring(matcher.start(), matcher.end())
+      final String filePath = renderedScript.substring(matcher.start(), matcher.end())
                                   .trim()
-                                  .replaceFirst(FILE_START_REGEX, "")
-                                  .replaceFirst(FILE_END_REGEX, "");
+                                  .replaceFirst(prefixRegex, "")
+                                  .replaceFirst(fileEndRegex, "");
       filePathList.add(filePath);
     }
     return filePathList.stream().map(this ::canonacalizePath).distinct().collect(Collectors.toList());
@@ -192,7 +227,7 @@ public class PcfPluginState extends State {
   }
 
   private ExecutionResponse executeGitTask(ExecutionContext context, ApplicationManifest serviceManifest,
-      String activityId, List<String> pathsFromScript, String renderedScriptString) {
+      String activityId, List<String> pathsFromScript, String renderedScriptString, String repoRoot) {
     final Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         prepareManifestForGitFetchTask(serviceManifest, pathsFromScript);
     final DelegateTask gitFetchFileTask =
@@ -211,6 +246,7 @@ public class PcfPluginState extends State {
                                 .renderedScriptString(renderedScriptString)
                                 .timeoutIntervalInMinutes(resolveTimeoutIntervalInMinutes(null))
                                 .tagList(getTags())
+                                .repoRoot(repoRoot)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();
@@ -254,7 +290,7 @@ public class PcfPluginState extends State {
   }
   @VisibleForTesting
   ExecutionResponse executePcfPluginTask(ExecutionContext context, String activityId,
-      ApplicationManifest serviceManifest, List<String> pathsFromScript, String renderedScriptString) {
+      ApplicationManifest serviceManifest, List<String> pathsFromScript, String renderedScriptString, String repoRoot) {
     PhaseElement phaseElement = getPhaseElement(context);
     WorkflowStandardParams workflowStandardParams = getWorkflowStandardParams(context);
     Application app = requireNonNull(appService.get(context.getAppId()), "App cannot be null");
@@ -291,6 +327,7 @@ public class PcfPluginState extends State {
             .filePathsInScript(resolveFilePathsInScript(pathsFromScript, pcfPluginStateExecutionData))
             .fileDataList(fileDataList)
             .encryptedDataDetails(encryptedDataDetails)
+            .repoRoot(repoRoot)
             .build();
 
     PcfPluginStateExecutionData stateExecutionData = PcfPluginStateExecutionData.builder()
@@ -303,6 +340,7 @@ public class PcfPluginState extends State {
                                                          .pcfCommandRequest(commandRequest)
                                                          .commandName(PCF_PLUGIN_COMMAND)
                                                          .taskType(PCF_COMMAND_TASK)
+                                                         .repoRoot(repoRoot)
                                                          .build();
 
     String waitId = generateUuid();
@@ -541,7 +579,8 @@ public class PcfPluginState extends State {
 
     return executePcfPluginTask(context, activityId,
         pcfPluginStateExecutionData.getAppManifestMap().get(K8sValuesLocation.Service),
-        pcfPluginStateExecutionData.getFilePathsInScript(), pcfPluginStateExecutionData.getRenderedScriptString());
+        pcfPluginStateExecutionData.getFilePathsInScript(), pcfPluginStateExecutionData.getRenderedScriptString(),
+        pcfPluginStateExecutionData.getRepoRoot());
   }
 
   private String getActivityId(ExecutionContext context) {

@@ -24,6 +24,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -75,8 +76,8 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
         saveFilesInWorkingDirectory(pluginCommandRequest.getFileDataList(), workingDirCanonicalPath);
       }
       //  insert working directory in script path
-      final String finalScriptString =
-          prepareFinalScript(pluginCommandRequest.getRenderedScriptString(), workingDirCanonicalPath);
+      final String finalScriptString = prepareFinalScript(pluginCommandRequest.getRenderedScriptString(),
+          workingDirCanonicalPath, StringUtils.defaultIfEmpty(pluginCommandRequest.getRepoRoot(), "/"));
 
       // log all the files being saved and files being resolved in the script
 
@@ -132,9 +133,14 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
     return canonicalPath;
   }
 
-  private String prepareFinalScript(String renderedScriptString, String workingDirCanonicalPathStr) {
+  private String prepareFinalScript(String renderedScriptString, String workingDirCanonicalPathStr, String repoRoot) {
     // replace the path identifier with actual working directory path
-    return renderedScriptString.replaceAll(PcfPluginState.FILE_START_REGEX, workingDirCanonicalPathStr);
+    String finalScript =
+        renderedScriptString.replaceAll(PcfPluginState.FILE_START_REPO_ROOT_REGEX, workingDirCanonicalPathStr);
+    final String dirPathWithRepoRoot = workingDirCanonicalPathStr + ("/".equals(repoRoot) ? "" : repoRoot);
+    finalScript = finalScript.replaceAll(PcfPluginState.FILE_START_SERVICE_MANIFEST_REGEX, dirPathWithRepoRoot);
+
+    return finalScript;
   }
 
   @VisibleForTesting

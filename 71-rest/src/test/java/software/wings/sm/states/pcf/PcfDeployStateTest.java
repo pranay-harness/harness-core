@@ -239,8 +239,11 @@ public class PcfDeployStateTest extends WingsBaseTest {
     // PERCENT
     pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
     pcfDeployState.setDownsizeInstanceCount(40);
-    PcfSetupContextElement pcfSetupContextElement =
-        PcfSetupContextElement.builder().useCurrentRunningInstanceCount(false).maxInstanceCount(10).build();
+    PcfSetupContextElement pcfSetupContextElement = PcfSetupContextElement.builder()
+                                                        .useCurrentRunningInstanceCount(false)
+                                                        .maxInstanceCount(10)
+                                                        .desiredActualFinalCount(10)
+                                                        .build();
 
     Integer answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
     assertThat(answer.intValue()).isEqualTo(6);

@@ -66,7 +66,8 @@ public interface PcfConstants {
   String PCF_CONFIG_FILE_EXTENSION = ".yml";
   String PCF_ROUTE_PATH_SEPARATOR = "/";
 
-  String FILE_START_REGEX = "\\$\\{service\\.manifest}";
+  String FILE_START_SERVICE_MANIFEST_REGEX = "\\$\\{service\\.manifest}";
+  String FILE_START_REPO_ROOT_REGEX = "\\$\\{service\\.manifest\\.repoRoot}";
 
   String PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE = "instance_limits";
   String PCF_AUTOSCALAR_MANIFEST_RULES_ELE = "rules";
