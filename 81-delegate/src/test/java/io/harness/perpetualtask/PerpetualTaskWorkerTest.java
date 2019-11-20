@@ -1,74 +1,110 @@
 package io.harness.perpetualtask;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.util.Durations;
 
 import io.harness.CategoryTest;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
+import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
+import io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import software.wings.beans.KubernetesClusterConfig;
 
-@RunWith(JUnit4.class)
+import java.util.Map;
+
 @Slf4j
 public class PerpetualTaskWorkerTest extends CategoryTest {
-  private PerpetualTaskWorker worker;
+  String accountId = "ACCOUNT_ID";
+  String cloudProviderId = "CLOUD_PROVIDER_ID";
+  String k8sResourceKind = "Pod";
+
+  String taskIdString1 = "TASK_ID_1";
+  PerpetualTaskId taskId1 = PerpetualTaskId.newBuilder().setId(taskIdString1).build();
+  String taskIdString2 = "TASK_ID_2";
+  PerpetualTaskId taskId2 = PerpetualTaskId.newBuilder().setId(taskIdString2).build();
+
+  KubernetesClusterConfig kubernetesClusterConfig;
+  PerpetualTaskParams params;
+  PerpetualTaskContext context;
+
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+  @Mock private PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
+  @Mock private Map<String, PerpetualTaskExecutor> factoryMap;
+  @Mock private TimeLimiter timeLimiter;
+  @InjectMocks private PerpetualTaskWorker worker;
 
   @Before
-  public void setUp() throws Exception {
-    // TODO: test the map of factory
-    Injector injector = Guice.createInjector(new PerpetualTaskWorkerModule(), new KubernetesClientFactoryModule());
-    worker = injector.getInstance(PerpetualTaskWorker.class);
+  public void setUp() {
+    kubernetesClusterConfig = KubernetesClusterConfig.builder().accountId(accountId).build();
+    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(kubernetesClusterConfig));
+    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
+                                                .setCloudProviderId(cloudProviderId)
+                                                .setK8SClusterConfig(bytes)
+                                                .setK8SResourceKind(k8sResourceKind)
+                                                .build();
+
+    params = PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder().setInterval(Durations.fromSeconds(1)).build();
+    context = PerpetualTaskContext.newBuilder().setTaskParams(params).setTaskSchedule(schedule).build();
+
+    when(perpetualTaskServiceGrpcClient.getTaskContext(isA(PerpetualTaskId.class))).thenReturn(context);
   }
 
   @Test
   @Owner(developers = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("This test currently depends on access to the gRPC port for Perpetual Task Service.")
-  public void testUpdateTaskIds() {
+  @Category(UnitTests.class)
+  public void testUpdateAssignedTaskIds() {
     worker.updateAssignedTaskIds();
-    logger.info(worker.getAssignedTaskIds().toString());
+    verify(perpetualTaskServiceGrpcClient).listTaskIds(anyString());
   }
 
   @Test
   @Owner(developers = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("This test currently depends on access to the gRPC port for Perpetual Task Service.")
-  public void testGetTaskContext() {
-    worker.updateAssignedTaskIds();
-    PerpetualTaskId taskId = worker.getAssignedTaskIds().iterator().next();
-    //    PerpetualTaskContext context = worker.getTaskContext(taskId);
-    //    logger.info(context.toString());
+  @Category(UnitTests.class)
+  public void testStartTask() {
+    worker.startTask(taskId1);
+    worker.startTask(taskId2);
+    assertThat(worker.getRunningTaskMap()).hasSize(2);
   }
 
   @Test
   @Owner(developers = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("This test currently depends on access to a local perpetual task server.")
-  public void testStartTask() throws Exception {
-    // TODO: verify this test
-    worker.updateAssignedTaskIds();
-    PerpetualTaskId taskId = worker.getAssignedTaskIds().iterator().next();
-    worker.startTask(taskId);
-    Thread.sleep(30000);
+  @Category(UnitTests.class)
+  public void testStartAssignedTasks() {
+    worker.startTask(taskId1);
+    worker.startTask(taskId2);
+    worker.startAssignedTasks();
+    verify(perpetualTaskServiceGrpcClient, times(2)).getTaskContext(isA(PerpetualTaskId.class));
   }
 
   @Test
   @Owner(developers = HANTANG)
-  @Category(IntegrationTests.class)
-  @Ignore("This test currently depends on access to a local perpetual task server.")
-  public void testStartAllTasks() throws Exception {
-    // TODO: change this outdated test
-    // List<PerpetualTaskId> taskIdList = worker.updateAssignedTaskIds();
-    // worker.startAllTasks(taskIdList);
-    // Thread.sleep(8000);
+  @Category(UnitTests.class)
+  public void testStopTask() {
+    worker.startTask(taskId1);
+    assertThat(worker.getRunningTaskMap()).hasSize(1);
+    worker.stopTask(taskId1);
+    assertThat(worker.getRunningTaskMap()).hasSize(0);
   }
 }
