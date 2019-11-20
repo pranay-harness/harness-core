@@ -2399,14 +2399,12 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   private void validateGlobalSecretManager() {
-    SecretManagerConfig secretManagerConfig =
-        wingsPersistence.createQuery(SecretManagerConfig.class).field(ACCOUNT_ID_KEY).equal(GLOBAL_ACCOUNT_ID).get();
-    if (secretManagerConfig != null) {
+    KmsConfig kmsConfig = kmsService.getGlobalKmsConfig();
+    if (kmsConfig != null) {
       try {
-        kmsService.encrypt(
-            UUID.randomUUID().toString().toCharArray(), GLOBAL_ACCOUNT_ID, (KmsConfig) secretManagerConfig);
+        kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), GLOBAL_ACCOUNT_ID, kmsConfig);
       } catch (Exception e) {
-        logger.error("Could not validate global secret manager with id {}", secretManagerConfig.getUuid(), e);
+        logger.error("Could not validate global secret manager with id {}", kmsConfig.getUuid(), e);
       }
     }
   }

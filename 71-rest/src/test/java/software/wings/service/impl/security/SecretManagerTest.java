@@ -20,7 +20,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
-import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
@@ -439,14 +438,8 @@ public class SecretManagerTest extends CategoryTest {
     when(wingsPersistence.createQuery(eq(Account.class), any())).thenReturn(query);
     when(query.fetch()).thenReturn(result);
 
-    QueryImpl<SecretManagerConfig> secretManagerQuery = mock(QueryImpl.class);
-    FieldEnd fieldEnd = mock(FieldEnd.class);
     KmsConfig kmsConfig = mock(KmsConfig.class);
-    when(wingsPersistence.createQuery(SecretManagerConfig.class)).thenReturn(secretManagerQuery);
-    when(secretManagerQuery.field(ACCOUNT_ID_KEY)).thenReturn(fieldEnd);
-    when(fieldEnd.equal(GLOBAL_ACCOUNT_ID)).thenReturn(secretManagerQuery);
-    when(secretManagerQuery.get()).thenReturn(kmsConfig);
-
+    when(kmsService.getGlobalKmsConfig()).thenReturn(kmsConfig);
     secretManager.checkAndAlertForInvalidManagers();
     when(kmsService.encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig))).thenReturn(null);
     verify(kmsService, times(1)).encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig));
