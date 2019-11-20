@@ -223,6 +223,24 @@ function setUpMongoDB(){
 
 }
 
+function printSpaceWarning() {
+    percent=$(df -P . | awk 'NR > 1 {print $5+0}')
+    if [[ "$((percent))" -gt 90 ]]; then
+        echo "WARNING: More than 90 percent of disk space used. Clean up some space to avoid interruptions."
+    fi
+}
+
+function checkSpaceMoreThan() {
+    available=$(df -P . | awk 'NR > 1 {print $4+0}')
+    expected=$1
+
+    if [[ "$(($available))" -gt expected ]]; then
+        echo 0
+    else
+        echo -1
+    fi
+}
+
 function seedMongoDB(){
     echo "################################Seeding MongoDB with data ################################"
 
@@ -250,7 +268,7 @@ function populateEnvironmentVariablesFromMongo(){
 
 
 function setUpProxy(){
-    echo "################################Setting up proxy ################################"
+    echo "################################ Setting up proxy ################################"
 
     docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy:$PROXY_VERSION
     sleep 5
@@ -261,7 +279,7 @@ function setUpProxy(){
 }
 
 function setupManager(){
-    echo "################################Setting up Manager ################################"
+    echo "################################ Setting up Manager ################################"
 
     ALLOWED_ORIGINS=$LOAD_BALANCER_URL
     DELEGATE_METADATA_URL=$LOAD_BALANCER_URL/storage/wingsdelegates/delegateprod.txt
@@ -308,7 +326,7 @@ function setupManager(){
 }
 
 function setUpVerificationService(){
-   echo "################################Setting up Verification Service ################################"
+   echo "################################ Setting up Verification Service ################################"
    verificationServiceVersion=$(getProperty "version.properties" "VERIFICATION_SERVICE_VERSION")
    env=$(getProperty "version.properties" "ENV")
    docker run -d --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -p $verificationport:$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service:$verificationServiceVersion
@@ -319,8 +337,68 @@ function setUpVerificationService(){
 
 }
 
+
+
+function backupMongo(){
+   echo "################################ Taking Database Dump ################################"
+
+   printSpaceWarning
+   spaceAvailableOkay=$(checkSpaceMoreThan 5242880) # more than 5 Gigs
+   if [[ "${spaceAvailableOkay}" -eq 0 ]]; then
+      echo "[BACKUP] ✓ Enough space to backup"
+   else
+      df -Ph .
+      echo "[BACKUP] ✘ Not enough space to backup. Skipping backup."
+      return 1;
+   fi
+
+
+   mongoContainerId=$(docker ps -q -f name=mongoContainer)
+
+   if [[ "${mongoContainerId}" == "" ]]; then
+        echo "[BACKUP] No running mongo container to backup."
+   else
+        CONTAINER_MONGODUMP_PATH="/data/db/backup"
+
+        docker exec mongoContainer bash -c "mongodump --host localhost --port $mongodb_port --username $mongodbUserName --password $mongodbPassword -o $CONTAINER_MONGODUMP_PATH --quiet"
+
+        if [[ $? -eq 0 ]]; then
+            echo "[BACKUP] ✓ Backup Successful"
+            ts=$(date +'%Y-%m-%d-%Hh-%Mm-%Ss')
+            backupPath="$HOME/mongodump-backups/$ts"
+            mkdir -p "$backupPath"
+
+            echo "[BACKUP] Copying Backup to HOME directory. Source: ${runtime_dir}/mongo/data/db/backup . Destination: $backupPath";
+            # ${runtime_dir}/mongo/data/db is mounted on to container
+            cp -r ${runtime_dir}/mongo/data/db/backup "$backupPath"
+        else
+            echo "[BACKUP] ✘ Failed"
+            exit 1
+        fi
+
+
+        if [[ "$(which realpath)" == "" || "$(which tac)" == "" ]]; then
+            echo "[BACKUP] Could not clean up old backups in $HOME/mongodump-backups directory. Delete them manually."
+        else
+            echo "[BACKUP] Cleaning up old backups."
+
+            # tac reverses the output
+            # tail +3 selects lines _after_ first 2 lines, so we want to keep 2 most recent backups
+            dirToDelete=$(ls -ltr "$HOME/mongodump-backups/" | grep -v "total" | awk '{print $NF}' | tac | tail -n +3 | head -1)
+            while [[ ${dirToDelete} != "" ]]
+            do
+                echo "  Removing: $HOME/mongodump-backups/${dirToDelete}"
+                rm -rf "$HOME/mongodump-backups/${dirToDelete}/"
+                dirToDelete=$(ls -ltr "$HOME/mongodump-backups/" | grep -v "total" | awk '{print $NF}' | tac | tail -n +3 | head -1)
+            done
+
+        fi
+   fi
+
+}
+
 function setupUI(){
-   echo "################################Setting up UI ################################"
+   echo "################################ Setting up UI ################################"
    ui_version=$(getProperty "version.properties" "UI_VERSION")
    UI_PORT=$(getProperty "config_template/ui/ui.properties" "ui_port")
    docker run -d --name harness_ui -p $UI_PORT:80 --rm -e API_URL="$LOAD_BALANCER_URL" -e HARNESS_ENABLE_EXTERNAL_SCRIPTS_PLACEHOLDER=false harness/ui:$ui_version
@@ -332,7 +410,7 @@ function setupUI(){
 }
 
 function setUpLearningEngine(){
-   echo "################################Setting up Learning Engine ################################"
+   echo "################################ Setting up Learning Engine ################################"
    learningEngineVersion=$(getProperty "version.properties" "LEARNING_ENGINE_VERSION")
    https_port=$(getProperty "config_template/learning_engine/learning_engine.properties" "https_port")
    docker run -d --rm --name learningEngine -e learning_env=on_prem -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret harness/learning-engine-onprem:$learningEngineVersion
@@ -345,7 +423,7 @@ function setUpLearningEngine(){
 }
 
 function setupDelegateJars(){
-   echo "################################Setting up Delegate Jars ################################"
+   echo "################################ Setting up Delegate Jars ################################"
 
     DELEGATE_VERSION=$(getProperty "version.properties" "DELEGATE_VERSION")
     WATCHER_VERSION=$(getProperty "version.properties" "WATCHER_VERSION")
@@ -373,7 +451,7 @@ function setupDelegateJars(){
 
 
 function setupClientUtils(){
-   echo "################################Setting up Client Utils ################################"
+   echo "################################ Setting up Client Utils ################################"
 
    echo "Copying kubectl go-template helm and chartmuseum"
 
@@ -422,12 +500,15 @@ function startUp(){
     else
         echo "Not seeding Mongo, existing installation found "
     fi
+
     setUpMongoDB
     setUpProxy
     setupManager
 
     if [[ ${newinstallation} == "true" ]];then
         populateEnvironmentVariablesFromMongo
+    else
+        backupMongo
     fi
 
     setUpVerificationService
