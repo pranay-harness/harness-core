@@ -32,6 +32,8 @@ import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_M
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.phaseNamePattern;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
+import static software.wings.sm.rollback.RollbackStateMachineGenerator.STAGING_PHASE_NAME;
+import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPACE;
 
 import com.google.common.base.Joiner;
 
@@ -966,9 +968,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return false;
   }
 
-  public boolean isLastPhase(@NotNull String phaseName) {
+  public boolean checkLastPhase(@NotNull String phaseName) {
     if (isNotEmpty(workflowPhases)) {
-      return workflowPhases.get(workflowPhases.size() - 1).getName().equals(phaseName);
+      return phaseName.equals(
+          STAGING_PHASE_NAME + WHITE_SPACE + workflowPhases.get(workflowPhases.size() - 1).getName());
     }
     return false;
   }
