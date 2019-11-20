@@ -18,7 +18,6 @@ import io.harness.rule.OwnerRule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -558,28 +557,6 @@ public class LearningEngineAnalysisServiceImplTest extends VerificationBaseTest 
 
     assertThat(savedTask).isNotNull();
     assertThat(savedTask.getExecutionStatus()).isEqualByComparingTo(ExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  @Ignore("TODO: Remove ignore with fix in LE-2934")
-  public void testMarkStatus() {
-    analysisTask.setMl_analysis_type(MLAnalysisType.LOG_ML);
-    analysisTask.setExecutionStatus(ExecutionStatus.RUNNING);
-    analysisTask.setCluster_level(ClusterLevel.HF.getLevel());
-
-    wingsPersistence.save(analysisTask);
-
-    learningEngineService.markStatus(workflowExecutionId, stateExecutionId, 0, ExecutionStatus.FAILED);
-
-    LearningEngineAnalysisTask savedTask =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .filter(LearningEngineAnalysisTaskKeys.state_execution_id, stateExecutionId)
-            .get();
-
-    assertThat(savedTask).isNotNull();
-    assertThat(savedTask.getExecutionStatus()).isEqualByComparingTo(ExecutionStatus.FAILED);
   }
 
   @Test

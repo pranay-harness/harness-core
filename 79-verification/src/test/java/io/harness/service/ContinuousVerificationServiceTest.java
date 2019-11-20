@@ -51,7 +51,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -65,6 +64,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.alerts.AlertCategory;
@@ -178,6 +178,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
   @Before
   public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     accountId = generateUuid();
     appId = generateUuid();
     envId = generateUuid();
@@ -485,7 +486,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA, intermittent = true)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
@@ -551,7 +552,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @OwnerRule.Owner(developers = SOWMYA, intermittent = true)
+  @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
