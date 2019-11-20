@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -198,8 +197,6 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId);
 
   boolean isStateValid(String appId, String stateExecutionId);
-
-  ExecutionStatus getExecutionStatus(String appId, String stateExecutionId);
 
   WorkflowExecution getWorkflowExecutionForStateExecutionId(String appId, String stateExecutionId);
 

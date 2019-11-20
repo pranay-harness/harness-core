@@ -3,22 +3,20 @@ package software.wings.service.impl.verification;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.service.impl.analysis.AnalysisContext;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.beans.FeatureName;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.verification.CVActivityLog;
 import software.wings.verification.CVActivityLog.CVActivityLogKeys;
@@ -36,16 +34,18 @@ import java.util.stream.IntStream;
 
 public class CVActivityLogServiceTest extends WingsBaseTest {
   @Inject CVActivityLogService cvActivityLogService;
+  @Mock FeatureFlagService featureFlagService;
   private String stateExecutionId;
   @Before
-  public void setupTests() {
+  public void setupTests() throws IllegalAccessException {
+    FieldUtils.writeField(cvActivityLogService, "featureFlagService", featureFlagService, true);
+    when(featureFlagService.isGlobalEnabled(FeatureName.CV_ACTIVITY_LOG)).thenReturn(true);
     stateExecutionId = generateUuid();
   }
   @Test
-
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testSavingLog() {
+  public void testSavingLogIfFeatureFlagEnabled() {
     String cvConfigId = generateUuid();
     long now = System.currentTimeMillis();
 
@@ -93,6 +93,20 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
         wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
     assertThat(cvActivityLog.getAnsiLog()).isEqualTo("activity log from test");
   }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSavingLogIfFeatureFlagDisabled() {
+    String cvConfigId = generateUuid();
+    when(featureFlagService.isGlobalEnabled(FeatureName.CV_ACTIVITY_LOG)).thenReturn(false);
+    long now = System.currentTimeMillis();
+
+    cvActivityLogService.getLoggerByCVConfigId(cvConfigId, TimeUnit.MILLISECONDS.toMinutes(now))
+        .info("activity log from test");
+    CVActivityLog cvActivityLog =
+        wingsPersistence.createQuery(CVActivityLog.class).filter(CVActivityLogKeys.cvConfigId, cvConfigId).get();
+    assertThat(cvActivityLog).isNull();
+  }
 
   @Test
   @Owner(developers = KAMAL)
@@ -124,7 +138,6 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
   }
 
   @Test
-
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testFindByStateExecutionId() {
@@ -174,80 +187,6 @@ public class CVActivityLogServiceTest extends WingsBaseTest {
     List<CVActivityLog> savedActivityLogs = cvActivityLogService.findByStateExecutionId(stateExecutionId);
     assertThat(cvActivityLogs).isEqualTo(savedActivityLogs);
   }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetActivityLogs_whenNoAnalysisContextAvailable() {
-    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(stateExecutionId, null, 0, 0);
-    assertThat(result).hasSize(1);
-    CVActivityLog placeholder = result.get(0);
-    assertThat(placeholder.getDataCollectionMinute()).isEqualTo(0);
-    assertThat(placeholder.getLog()).isEqualTo("Execution logs are not available for old executions");
-    assertThat(placeholder.getStateExecutionId()).isEqualTo(stateExecutionId);
-    assertThat(placeholder.getLogLevel()).isEqualTo(LogLevel.INFO);
-    assertThat(placeholder.getTimestampParams()).isEmpty();
-    assertThat(placeholder.getAnsiLog()).isEqualTo("Execution logs are not available for old executions");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetActivityLogs_whenNoActivityLogsAndStateIsInFinalState() throws IllegalAccessException {
-    WorkflowService workflowService = mock(WorkflowService.class);
-    FieldUtils.writeField(cvActivityLogService, "workflowService", workflowService, true);
-    String appId = generateUuid();
-    AnalysisContext analysisContext =
-        AnalysisContext.builder().stateExecutionId(stateExecutionId).appId(appId).accountId(generateUuid()).build();
-    wingsPersistence.save(analysisContext);
-    when(workflowService.getExecutionStatus(eq(appId), eq(stateExecutionId))).thenReturn(ExecutionStatus.FAILED);
-    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(stateExecutionId, null, 0, 0);
-    assertThat(result).hasSize(1);
-    CVActivityLog placeholder = result.get(0);
-    assertThat(placeholder.getDataCollectionMinute()).isEqualTo(0);
-    assertThat(placeholder.getLog()).isEqualTo("Execution logs are not available for old executions");
-    assertThat(placeholder.getStateExecutionId()).isEqualTo(stateExecutionId);
-    assertThat(placeholder.getLogLevel()).isEqualTo(LogLevel.INFO);
-    assertThat(placeholder.getTimestampParams()).isEmpty();
-    assertThat(placeholder.getAnsiLog()).isEqualTo("Execution logs are not available for old executions");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetActivityLogs_whenNoActivityLogsAndStateIsNotInFinalState() throws IllegalAccessException {
-    WorkflowService workflowService = mock(WorkflowService.class);
-    FieldUtils.writeField(cvActivityLogService, "workflowService", workflowService, true);
-    String appId = generateUuid();
-    AnalysisContext analysisContext =
-        AnalysisContext.builder().stateExecutionId(stateExecutionId).appId(appId).accountId(generateUuid()).build();
-    wingsPersistence.save(analysisContext);
-    when(workflowService.getExecutionStatus(eq(appId), eq(stateExecutionId))).thenReturn(ExecutionStatus.RUNNING);
-    List<CVActivityLog> result = cvActivityLogService.getActivityLogs(stateExecutionId, null, 0, 0);
-    assertThat(result).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testGetActivityLogs_withFindByCVConfigId() {
-    String cvConfigId = generateUuid();
-    long nowMilli = System.currentTimeMillis();
-    String logLine = "test log message: " + generateUuid();
-    long nowMinute = TimeUnit.MILLISECONDS.toMinutes(nowMilli);
-    createLog(cvConfigId, nowMinute, logLine);
-    createLog(cvConfigId, nowMinute + 1, "log line");
-    assertThat(cvActivityLogService.findByCVConfigId(
-                   cvConfigId, TimeUnit.MINUTES.toMillis(nowMinute), TimeUnit.MINUTES.toMillis(nowMinute - 1)))
-        .isEqualTo(Collections.emptyList());
-    List<CVActivityLog> activityLogs = cvActivityLogService.getActivityLogs(null, cvConfigId, nowMilli, nowMilli);
-    assertThat(activityLogs).hasSize(1);
-    assertThat(activityLogs.get(0).getCvConfigId()).isEqualTo(cvConfigId);
-    assertThat(activityLogs.get(0).getStateExecutionId()).isNull();
-    assertThat(activityLogs.get(0).getDataCollectionMinute()).isEqualTo(nowMinute);
-    assertThat(activityLogs.get(0).getLog()).isEqualTo(logLine);
-  }
-
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
