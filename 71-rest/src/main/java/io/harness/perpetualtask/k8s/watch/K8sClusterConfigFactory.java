@@ -27,10 +27,6 @@ public class K8sClusterConfigFactory {
     return K8sClusterConfig.builder()
         .cloudProvider(settingAttribute.getValue())
         .cloudProviderEncryptionDetails(encryptionDetails)
-        //.azureKubernetesCluster(azureKubernetesCluster)
-        //.gcpKubernetesCluster(gcpKubernetesCluster)
-        //.clusterName(clusterName)
-        //.namespace("default")
         .build();
   }
 }

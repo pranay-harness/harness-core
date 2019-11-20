@@ -37,17 +37,26 @@ public class PerpetualTaskRecord
   long timeoutMillis;
   String delegateId;
   long lastHeartbeat;
-  @Indexed Long nextIteration;
+
+  @Indexed Long assignerIteration;
+
   long createdAt;
   long lastUpdatedAt;
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
+    if (PerpetualTaskRecordKeys.assignerIteration.equals(fieldName)) {
+      return this.assignerIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {
-    this.nextIteration = nextIteration;
+    if (PerpetualTaskRecordKeys.assignerIteration.equals(fieldName)) {
+      this.assignerIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 }

@@ -34,7 +34,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord> 
         PerpetualTaskRecordHandler.class,
         MongoPersistenceIterator.<PerpetualTaskRecord>builder()
             .clazz(PerpetualTaskRecord.class)
-            .fieldName(PerpetualTaskRecordKeys.nextIteration)
+            .fieldName(PerpetualTaskRecordKeys.assignerIteration)
             .targetInterval(ofSeconds(5))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
