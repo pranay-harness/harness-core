@@ -35,6 +35,8 @@ type Environment {
   type: EnvironmentType
   createdAt: DateTime
   createdBy: User
+  application: Application
+    @dataFetcher(name: application, useBatch: false, contextFieldArgsMap: "{ \"applicationId\": \"appId\"}")
 }
 
 type EnvironmentConnection {

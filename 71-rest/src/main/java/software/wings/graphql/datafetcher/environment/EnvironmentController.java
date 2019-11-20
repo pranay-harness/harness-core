@@ -29,6 +29,7 @@ public class EnvironmentController {
         .description(environment.getDescription())
         .type(convertEnvironmentType(environment.getEnvironmentType()))
         .createdAt(environment.getCreatedAt())
-        .createdBy(UserController.populateUser(environment.getCreatedBy()));
+        .createdBy(UserController.populateUser(environment.getCreatedBy()))
+        .appId(environment.getAppId());
   }
 }

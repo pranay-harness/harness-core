@@ -37,10 +37,8 @@ public class ApplicationBatchDataFetcher
     final String applicationId;
     if (StringUtils.isNotBlank(qlQuery.getApplicationId())) {
       applicationId = qlQuery.getApplicationId();
-    } else if (qlQuery.getExecutionId() != null) {
-      applicationId = workflowExecutionService.getApplicationIdByExecutionId(qlQuery.getExecutionId());
     } else {
-      throw new InvalidRequestException("ApplicationId or ExecutionId not present in query", WingsException.USER);
+      throw new InvalidRequestException("ApplicationId not present in query", WingsException.USER);
     }
     return dataLoader.load(applicationId);
   }
