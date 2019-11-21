@@ -68,9 +68,6 @@ public class ChangeTracker {
   private void connectToMongoDatabase() {
     MongoClientURI uri = mongoClientUri();
     mongoClient = new MongoClient(uri);
-    logger.info("Read preference for mongo client {}", mongoClient.getReadPreference());
-    logger.info("Connection details for mongo client {}", mongoClient.getAddress());
-    logger.info("Connection details for mongo client {}", mongoClient.getAllAddress());
     if (readPreference.getClass() == ReadPreference.secondaryPreferred().getClass()) {
       clientSession = null;
     } else {
@@ -80,7 +77,6 @@ public class ChangeTracker {
     logger.info(String.format("Database is %s", databaseName));
     mongoDatabase =
         mongoClient.getDatabase(databaseName).withReadConcern(ReadConcern.MAJORITY).withReadPreference(readPreference);
-    logger.info("Read preference for mongo database {}", mongoDatabase.getReadPreference());
   }
 
   private void createChangeStreamTasks(Set<ChangeTrackingInfo<?>> changeTrackingInfos, CountDownLatch latch) {
@@ -158,6 +154,9 @@ public class ChangeTracker {
     }
     if (mongoClient != null) {
       mongoClient.close();
+    }
+    if (clientSession != null) {
+      clientSession.close();
     }
   }
 }

@@ -58,17 +58,22 @@ class ChangeTrackingTask implements Runnable {
         clientSession == null ? collection.watch() : collection.watch(clientSession);
     changeStreamIterable =
         changeStreamIterable.fullDocument(FullDocument.UPDATE_LOOKUP).maxAwaitTime(1, TimeUnit.MINUTES);
-    MongoCursor<ChangeStreamDocument<DBObject>> mongoCursor;
-    if (resumeToken == null) {
-      logger.info("Opening changeStream without resumeToken");
-      mongoCursor = changeStreamIterable.iterator();
-    } else {
-      logger.info("Opening changeStream with resumeToken");
-      mongoCursor = changeStreamIterable.resumeAfter(resumeToken).iterator();
+    MongoCursor<ChangeStreamDocument<DBObject>> mongoCursor = null;
+    try {
+      if (resumeToken == null) {
+        logger.info("Opening changeStream without resumeToken");
+        mongoCursor = changeStreamIterable.iterator();
+      } else {
+        logger.info("Opening changeStream with resumeToken");
+        mongoCursor = changeStreamIterable.resumeAfter(resumeToken).iterator();
+      }
+      logger.info("Connection details for mongo cursor {}", mongoCursor.getServerCursor());
+      mongoCursor.forEachRemaining(changeStreamDocumentConsumer);
+    } finally {
+      if (mongoCursor != null) {
+        mongoCursor.close();
+      }
     }
-    logger.info("Connection details for mongo cursor {}", mongoCursor.getServerAddress());
-    logger.info("Connection details for mongo cursor {}", mongoCursor.getServerCursor());
-    mongoCursor.forEachRemaining(changeStreamDocumentConsumer);
   }
 
   public void run() {
