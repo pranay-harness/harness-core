@@ -74,6 +74,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -97,7 +98,7 @@ public class PcfClientImpl implements PcfClient {
   public CloudFoundryOperationsWrapper getCloudFoundryOperationsWrapper(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
     try {
-      ConnectionContext connectionContext = getConnectionContext(pcfRequestConfig.getEndpointUrl());
+      ConnectionContext connectionContext = getConnectionContext(pcfRequestConfig);
       CloudFoundryOperations cloudFoundryOperations =
           DefaultCloudFoundryOperations.builder()
               .cloudFoundryClient(getCloudFoundryClient(pcfRequestConfig, connectionContext))
@@ -1409,9 +1410,15 @@ public class PcfClientImpl implements PcfClient {
     }
   }
 
-  private ConnectionContext getConnectionContext(String endPointUrl) throws PivotalClientApiException {
+  @VisibleForTesting
+  ConnectionContext getConnectionContext(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      return DefaultConnectionContext.builder().apiHost(endPointUrl).skipSslValidation(false).build();
+      long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 5 : pcfRequestConfig.getTimeOutIntervalInMins();
+      return DefaultConnectionContext.builder()
+          .apiHost(pcfRequestConfig.getEndpointUrl())
+          .skipSslValidation(false)
+          .connectTimeout(Duration.ofMinutes(timeout))
+          .build();
     } catch (Exception t) {
       throw new PivotalClientApiException(ExceptionUtils.getMessage(t));
     }
