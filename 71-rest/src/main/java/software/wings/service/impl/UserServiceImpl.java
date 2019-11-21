@@ -1908,9 +1908,11 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getUserFromCacheOrDB(String userId) {
     Cache<String, User> userCache = cacheManager.getUserCache();
-    Preconditions.checkNotNull(userCache, "User cache can't be null");
-    User user;
+    User user = null;
     try {
+      if (userCache == null) {
+        return get(userId);
+      }
       user = userCache.get(userId);
 
       if (user == null) {
@@ -1921,9 +1923,11 @@ public class UserServiceImpl implements UserService {
       return user;
     } catch (Exception ex) {
       // If there was any exception, remove that entry from cache
-      userCache.remove(userId);
-      user = get(userId);
-      userCache.put(user.getUuid(), user);
+      if (userCache != null) {
+        userCache.remove(userId);
+        user = get(userId);
+        userCache.put(user.getUuid(), user);
+      }
     }
 
     return user;

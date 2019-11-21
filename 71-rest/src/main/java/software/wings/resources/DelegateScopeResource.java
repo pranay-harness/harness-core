@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
@@ -16,7 +17,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.DelegateScope;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.DelegateScopeService;
 
@@ -75,7 +75,7 @@ public class DelegateScopeResource {
     return new RestResponse<>();
   }
 
-  @DelegateAuth
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @PUT
   @Path("{delegateScopeId}")
   @Timed

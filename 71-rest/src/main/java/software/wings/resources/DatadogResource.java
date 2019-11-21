@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -7,7 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.security.PermissionAttribute;
-import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -42,7 +44,7 @@ public class DatadogResource {
   @POST
   @Path("/node-data")
   @Timed
-  @DelegateAuth
+  @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,

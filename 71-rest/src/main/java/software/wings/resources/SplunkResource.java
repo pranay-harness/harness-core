@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -8,7 +10,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
@@ -44,7 +46,7 @@ public class SplunkResource implements LogAnalysisResource {
   @POST
   @Path(LogAnalysisResource.TEST_NODE_DATA)
   @Timed
-  @DelegateAuth
+  @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(
       @QueryParam("accountId") String accountId, @Valid SplunkSetupTestNodeData setupTestNodeData) {

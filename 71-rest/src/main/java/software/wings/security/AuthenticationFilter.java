@@ -20,7 +20,6 @@ import com.google.inject.Singleton;
 import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
-import io.harness.exception.WingsException;
 import io.harness.manage.GlobalContextManager;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
@@ -90,11 +89,21 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    if (delegateAPI()) {
+      validateDelegateRequest(containerRequestContext);
+      return;
+    }
+
+    if (learningEngineServiceAPI()) {
+      validateLearningEngineRequest(containerRequestContext);
+      return; // do nothing
+    }
 
     if (isScimAPI()) {
       return;
     }
+
+    String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
     if (isExternalFacingApiRequest(containerRequestContext)) {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
@@ -125,7 +134,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     if (authorization == null) {
-      throw new WingsException(INVALID_TOKEN, USER);
+      throw new InvalidRequestException(INVALID_TOKEN.name(), INVALID_TOKEN, USER);
     }
 
     GlobalContextManager.set(new GlobalContext());
@@ -143,7 +152,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         UserThreadLocal.set(user);
         return;
       } else {
-        throw new WingsException(USER_DOES_NOT_EXIST, USER);
+        throw new InvalidRequestException(USER_DOES_NOT_EXIST.name(), USER_DOES_NOT_EXIST, USER);
       }
     }
 
@@ -157,21 +166,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    if (isDelegateRequest(containerRequestContext)) {
-      validateDelegateRequest(containerRequestContext);
-      return;
-    }
-
-    if (isLearningEngineServiceRequest(containerRequestContext)) {
-      validateLearningEngineRequest(containerRequestContext);
-      return; // do nothing
-    }
-
     if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
       return;
     }
 
-    throw new WingsException(INVALID_CREDENTIAL, USER);
+    throw new InvalidRequestException(INVALID_CREDENTIAL.name(), INVALID_CREDENTIAL, USER);
   }
 
   protected boolean isScimAPI() {
@@ -214,7 +213,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       user.setToken(tokenString);
       return user;
     }
-    throw new WingsException(INVALID_TOKEN, USER);
+    throw new InvalidRequestException(INVALID_TOKEN.name(), INVALID_TOKEN, USER);
   }
 
   private void updateUserInAuditRecord(User user) {
@@ -222,8 +221,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   protected void validateLearningEngineRequest(ContainerRequestContext containerRequestContext) {
-    authService.validateLearningEngineServiceToken(
-        substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine "));
+    String header = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+
+    if (isEmpty(header)) {
+      throw new IllegalStateException("Invalid verification header");
+    }
+
+    authService.validateLearningEngineServiceToken(substringAfter(header, "LearningEngine "));
   }
 
   protected void validateDelegateRequest(ContainerRequestContext containerRequestContext) {
@@ -232,7 +236,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     String header = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (header.contains("Delegate")) {
+    if (header != null && header.contains("Delegate")) {
       authService.validateDelegateToken(
           accountId, substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
     } else {
@@ -274,18 +278,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected String extractToken(ContainerRequestContext requestContext, String prefix) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
+      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_ADMIN);
     }
     return authorizationHeader.substring(prefix.length()).trim();
-  }
-
-  private boolean isDelegateRequest(ContainerRequestContext requestContext) {
-    return delegateAPI() && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate ");
-  }
-
-  private boolean isLearningEngineServiceRequest(ContainerRequestContext requestContext) {
-    return learningEngineServiceAPI()
-        && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine ");
   }
 
   private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {

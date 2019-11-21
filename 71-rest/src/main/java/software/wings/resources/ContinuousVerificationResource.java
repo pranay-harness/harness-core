@@ -4,6 +4,7 @@ import static software.wings.common.VerificationConstants.COLLECT_CV_DATA;
 import static software.wings.common.VerificationConstants.CREATE_CV_TASK_24X7_PATH_PREFIX;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 
 import com.google.inject.Inject;
@@ -16,7 +17,6 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.common.VerificationConstants;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.CVCertifiedDetailsForWorkflowState;
@@ -63,7 +63,7 @@ public class ContinuousVerificationResource {
   @POST
   @Path("/node-data")
   @Timed
-  @DelegateAuth
+  @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
