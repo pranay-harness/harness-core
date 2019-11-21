@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
 
@@ -27,7 +28,13 @@ import java.util.Date;
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
   @Getter @Setter @Id private String id;
-  @Getter @Setter private Date earliestGet = new Date();
+
+  @Getter
+  @Setter
+  // Old earliestGet is an indication of event that is abandoned. No need to keep it around.
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 24 * 60 * 60))
+  private Date earliestGet = new Date();
+
   @Getter @Setter private int retries;
   @Getter @Setter private String version;
   @Getter @Setter private GlobalContext globalContext;
