@@ -683,8 +683,11 @@ public class TimeSeriesAnalysisServiceTest extends VerificationBaseTest {
     analysisRecord.setAnomalies(anomMap);
     analysisRecord.setTag("testTag");
 
-    LearningEngineAnalysisTask task =
-        LearningEngineAnalysisTask.builder().executionStatus(ExecutionStatus.RUNNING).cluster_level(2).build();
+    LearningEngineAnalysisTask task = LearningEngineAnalysisTask.builder()
+                                          .state_execution_id(generateUuid())
+                                          .executionStatus(ExecutionStatus.RUNNING)
+                                          .cluster_level(2)
+                                          .build();
     task.setUuid("taskID1");
     wingsPersistence.save(task);
 

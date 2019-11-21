@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -234,6 +235,7 @@ import com.google.inject.name.Named;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -345,6 +347,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
@@ -512,6 +515,19 @@ public class WorkflowServiceTest extends WingsBaseTest {
     String smId = sm.getUuid();
     sm = wingsPersistence.get(StateMachine.class, smId);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void shouldReturnCorrectExecutionStatus() {
+    String stateExecutionId = generateUuid();
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().status(ExecutionStatus.QUEUED).build();
+    when(workflowExecutionService.getStateExecutionData(eq(APP_ID), eq(stateExecutionId)))
+        .thenReturn(stateExecutionInstance);
+    ExecutionStatus executionStatus = workflowService.getExecutionStatus(APP_ID, stateExecutionId);
+    assertThat(executionStatus).isEqualTo(ExecutionStatus.QUEUED);
   }
 
   /**
