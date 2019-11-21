@@ -282,6 +282,7 @@ import software.wings.service.impl.aws.manager.AwsElbHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
+import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
@@ -476,6 +477,7 @@ import software.wings.service.intfc.aws.manager.AwsElbHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
@@ -736,6 +738,7 @@ public class WingsModule extends DependencyModule {
     bind(HarnessApiKeyService.class).to(HarnessApiKeyServiceImpl.class);
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceUnsupported.class);
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
+    bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
 
     bind(KmsEncryptDecryptClient.class);
     bind(GraphQLRateLimiter.class);

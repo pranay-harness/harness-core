@@ -173,6 +173,7 @@ import software.wings.service.impl.aws.delegate.AwsElbHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsIamHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsRoute53HelperServiceDelegateImpl;
+import software.wings.service.impl.aws.delegate.AwsS3HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsServiceDiscoveryHelperServiceDelegateImpl;
 import software.wings.service.impl.bugsnag.BugsnagDelegateService;
 import software.wings.service.impl.bugsnag.BugsnagDelegateServiceImpl;
@@ -228,6 +229,7 @@ import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsIamHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
@@ -422,6 +424,7 @@ public class DelegateModule extends DependencyModule {
     bind(ServiceNowDelegateService.class).to(ServiceNowDelegateServiceImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
+    bind(AwsS3HelperServiceDelegate.class).to(AwsS3HelperServiceDelegateImpl.class);
 
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 
