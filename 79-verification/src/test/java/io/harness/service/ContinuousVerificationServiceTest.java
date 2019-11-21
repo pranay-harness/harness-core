@@ -204,6 +204,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                         .build();
     elkConfig = ElkConfig.builder().elkUrl(generateUuid()).build();
 
+    long currentTime = System.currentTimeMillis();
+
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
     logsCVConfiguration.setName(generateUuid());
     logsCVConfiguration.setAccountId(accountId);
@@ -215,8 +217,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     logsCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     logsCVConfiguration.setStateType(StateType.SUMO);
     logsCVConfiguration.setBaselineStartMinute(
-        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TimeUnit.HOURS.toMinutes(1));
-    logsCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()));
+        TimeUnit.MILLISECONDS.toMinutes(currentTime) - TimeUnit.HOURS.toMinutes(1));
+    logsCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(currentTime));
 
     cvConfigId = wingsPersistence.save(logsCVConfiguration);
 
@@ -231,8 +233,8 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     datadogCVConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
     datadogCVConfiguration.setStateType(StateType.DATA_DOG_LOG);
     datadogCVConfiguration.setBaselineStartMinute(
-        TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TimeUnit.HOURS.toMinutes(1));
-    datadogCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()));
+        TimeUnit.MILLISECONDS.toMinutes(currentTime) - TimeUnit.HOURS.toMinutes(1));
+    datadogCVConfiguration.setBaselineEndMinute(TimeUnit.MILLISECONDS.toMinutes(currentTime));
 
     datadogCvConfigId = wingsPersistence.save(datadogCVConfiguration);
 
@@ -518,7 +520,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     // save some log and trigger again
-    long numOfMinutesSaved = 45;
+    long numOfMinutesSaved = 30;
     for (long i = logsCVConfiguration.getBaselineStartMinute();
          i <= logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved; i++) {
       LogDataRecord logDataRecord = new LogDataRecord();
@@ -583,7 +585,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
 
     // save some log and trigger again
-    long numOfMinutesSaved = 45;
+    long numOfMinutesSaved = 30;
     for (long i = logsCVConfiguration.getBaselineStartMinute();
          i <= logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved; i++) {
       LogDataRecord logDataRecord = new LogDataRecord();
@@ -613,6 +615,54 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getEndTime())
         .isEqualTo(TimeUnit.MINUTES.toMillis(
             logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES + numOfMinutesSaved));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testDatadogLogsCollectionEndTimeGreaterThanCurrentTime() throws IOException {
+    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
+    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+        .thenReturn(managerFeatureFlagCall);
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertThat(delegateTasks).hasSize(2);
+    DelegateTask delegateTask = delegateTasks.get(1);
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(delegateTask.getAppId()).isEqualTo(appId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
+    CustomLogDataCollectionInfo customLogDataCollectionInfo =
+        (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
+    assertThat(customLogDataCollectionInfo.getCvConfigId()).isEqualTo(datadogCvConfigId);
+    assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
+
+    LogsCVConfiguration logsCVConfiguration =
+        (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, datadogCvConfigId);
+    assertThat(customLogDataCollectionInfo.getStartTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(logsCVConfiguration.getBaselineStartMinute()));
+    assertThat(customLogDataCollectionInfo.getEndTime())
+        .isEqualTo(TimeUnit.MINUTES.toMillis(
+            logsCVConfiguration.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1));
+
+    // save some log and trigger again
+    long numOfMinutesSaved = 70;
+    for (long i = logsCVConfiguration.getBaselineStartMinute();
+         i <= logsCVConfiguration.getBaselineStartMinute() + numOfMinutesSaved; i++) {
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setAppId(appId);
+      logDataRecord.setCvConfigId(datadogCvConfigId);
+      logDataRecord.setLogCollectionMinute((int) i);
+      logDataRecord.setClusterLevel(ClusterLevel.H0);
+      wingsPersistence.save(logDataRecord);
+    }
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertThat(delegateTasks).hasSize(3);
   }
 
   @Test
