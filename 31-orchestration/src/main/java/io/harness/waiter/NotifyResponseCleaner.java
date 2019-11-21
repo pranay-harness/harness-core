@@ -69,17 +69,17 @@ public class NotifyResponseCleaner implements Runnable {
     List<String> deleteResponses = new ArrayList<>();
 
     try (HKeyIterator<NotifyResponse> iterator =
-             new HKeyIterator(persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                                  .field(NotifyResponseKeys.createdAt)
-                                  .lessThan(limit)
-                                  .fetchKeys())) {
+             new HKeyIterator<>(persistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                    .field(NotifyResponseKeys.createdAt)
+                                    .lessThan(limit)
+                                    .fetchKeys())) {
       boolean needHandling = false;
       for (Key<NotifyResponse> key : iterator) {
         String uuid = key.getId().toString();
         try (HIterator<WaitInstance> waitInstances =
-                 new HIterator(persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                   .filter(WaitInstanceKeys.correlationIds, uuid)
-                                   .fetch())) {
+                 new HIterator<>(persistence.createQuery(WaitInstance.class, excludeAuthority)
+                                     .filter(WaitInstanceKeys.correlationIds, uuid)
+                                     .fetch())) {
           if (!waitInstances.hasNext()) {
             deleteResponses.add(uuid);
             if (deleteResponses.size() >= 1000) {

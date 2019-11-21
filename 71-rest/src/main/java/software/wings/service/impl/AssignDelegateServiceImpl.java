@@ -30,6 +30,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.DelegateScope;
+import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskGroup;
@@ -164,8 +165,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     boolean match = true;
 
     if (isNotEmpty(scope.getEnvironmentTypes())) {
-      match = isNotBlank(appId) && isNotBlank(envId)
-          && scope.getEnvironmentTypes().contains(environmentService.get(appId, envId, false).getEnvironmentType());
+      if (isNotBlank(appId) && isNotBlank(envId)) {
+        Environment environment = environmentService.get(appId, envId, false);
+        if (environment == null) {
+          logger.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+        }
+        match = environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType());
+      }
     }
     if (match && isNotEmpty(scope.getTaskTypes())) {
       match = scope.getTaskTypes().contains(taskGroup);
