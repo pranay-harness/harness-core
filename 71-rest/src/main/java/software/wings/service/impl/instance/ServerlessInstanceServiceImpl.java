@@ -3,6 +3,8 @@ package software.wings.service.impl.instance;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.Validator.notNullCheck;
+import static io.harness.validation.Validator.nullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -20,7 +22,6 @@ import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.ServerlessInstanceService;
-import software.wings.utils.Validator;
 
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +46,7 @@ public class ServerlessInstanceServiceImpl implements ServerlessInstanceService 
     }
 
     ServerlessInstance currentInstance = get(instance.getUuid());
-    Validator.nullCheck("ServerlessInstance", currentInstance);
+    nullCheck("ServerlessInstance", currentInstance);
 
     String key = wingsPersistence.save(instance);
     ServerlessInstance updatedInstance =
@@ -103,7 +104,7 @@ public class ServerlessInstanceServiceImpl implements ServerlessInstanceService 
           .build();
     }
 
-    Validator.notNullCheck("Uid is missing for the instance", instance.getUuid());
+    notNullCheck("Uid is missing for the instance", instance.getUuid());
 
     final String uid = wingsPersistence.save(instance);
     return wingsPersistence.getWithAppId(ServerlessInstance.class, instance.getAppId(), uid);

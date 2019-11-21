@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -51,7 +52,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.utils.Validator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -320,7 +320,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void update(ConfigFile inputConfigFile, BoundedInputStream uploadedInputStream) {
     ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
-    Validator.notNullCheck("Configuration File", savedConfigFile);
+    notNullCheck("Configuration File", savedConfigFile);
 
     if (savedConfigFile.getEntityType().equals(SERVICE)
         && !savedConfigFile.getRelativeFilePath().equals(inputConfigFile.getRelativeFilePath())) {

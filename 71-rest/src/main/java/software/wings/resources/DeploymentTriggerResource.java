@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -18,7 +19,6 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.trigger.TriggerAuthHandler;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
-import software.wings.utils.Validator;
 
 import java.util.Map;
 import javax.ws.rs.BeanParam;
@@ -118,7 +118,7 @@ public class DeploymentTriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse<DeploymentTrigger> save(@QueryParam("appId") String appId, DeploymentTrigger trigger) {
-    Validator.notNullCheck("trigger", trigger);
+    notNullCheck("trigger", trigger);
     trigger.setAppId(appId);
     if (trigger.getUuid() != null) {
       DeploymentTrigger existingTrigger = deploymentTriggerService.getWithoutRead(appId, trigger.getUuid());

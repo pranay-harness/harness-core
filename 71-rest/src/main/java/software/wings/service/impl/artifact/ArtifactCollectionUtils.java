@@ -4,6 +4,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -88,7 +89,6 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
-import software.wings.utils.Validator;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -407,7 +407,7 @@ public class ArtifactCollectionUtils {
   }
 
   public ArtifactStreamAttributes renderCustomArtifactScriptString(CustomArtifactStream customArtifactStream) {
-    Validator.notNullCheck("Account does not exist", customArtifactStream.getAccountId(), USER);
+    notNullCheck("Account does not exist", customArtifactStream.getAccountId(), USER);
 
     Map<String, Object> context = new HashMap<>();
     context.put("secrets",
@@ -431,12 +431,12 @@ public class ArtifactCollectionUtils {
         context.putAll(templateVariableMap);
       }
     }
-    Validator.notNullCheck("Fetch Version script is missing", versionScript, USER);
+    notNullCheck("Fetch Version script is missing", versionScript, USER);
 
     ArtifactStreamAttributes artifactStreamAttributes = customArtifactStream.fetchArtifactStreamAttributes();
 
     String scriptString = versionScript.getScriptString();
-    Validator.notNullCheck("Script string can not be empty", scriptString, USER);
+    notNullCheck("Script string can not be empty", scriptString, USER);
     artifactStreamAttributes.setCustomArtifactStreamScript(evaluator.substitute(scriptString, context));
     artifactStreamAttributes.setAccountId(customArtifactStream.getAccountId());
     artifactStreamAttributes.setCustomScriptTimeout(evaluator.substitute(versionScript.getTimeout(), context));

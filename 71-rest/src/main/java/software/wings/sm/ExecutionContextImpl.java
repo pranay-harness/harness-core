@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -17,7 +18,6 @@ import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;

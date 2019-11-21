@@ -2,6 +2,7 @@ package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_DEFAULT_NAMESPACE;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -21,7 +22,6 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.KubernetesConvention;
-import software.wings.utils.Validator;
 
 @Singleton
 @Slf4j
@@ -61,7 +61,7 @@ public class SampleDataProviderService {
       Account account, SettingAttribute kubernetesClusterConfig, SettingAttribute dockerConnector) {
     // Create App
     Application kubernetesApp = applicationSampleDataProvider.createKubernetesApp(account.getUuid());
-    Validator.notNullCheck("Kubernetes App not saved", kubernetesApp);
+    notNullCheck("Kubernetes App not saved", kubernetesApp);
 
     // Create Service
     Service kubeService = serviceSampleDataProvider.createKubeService(kubernetesApp.getUuid());
@@ -135,7 +135,7 @@ public class SampleDataProviderService {
   private void createK8sV2SampleApp(
       Account account, SettingAttribute kubernetesClusterConfig, SettingAttribute dockerConnector, String appName) {
     Application kubernetesApp = applicationSampleDataProvider.createApp(account.getUuid(), appName, appName);
-    Validator.notNullCheck("Kubernetes App not saved", kubernetesApp);
+    notNullCheck("Kubernetes App not saved", kubernetesApp);
 
     Service kubeService = serviceSampleDataProvider.createK8sV2Service(kubernetesApp.getUuid());
 

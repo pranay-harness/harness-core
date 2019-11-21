@@ -2,6 +2,7 @@ package software.wings.sm.states.collaboration;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.JIRA;
@@ -41,7 +42,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
-import software.wings.utils.Validator;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -192,7 +192,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
 
   private JiraConfig getJiraConfig(String jiraConnectorId) {
     SettingAttribute jiraSettingAttribute = wingsPersistence.get(SettingAttribute.class, jiraConnectorId);
-    Validator.notNullCheck("jiraSettingAttribute", jiraSettingAttribute);
+    notNullCheck("jiraSettingAttribute", jiraSettingAttribute);
 
     if (!(jiraSettingAttribute.getValue() instanceof JiraConfig)) {
       throw new InvalidRequestException("Type of Setting Attribute Value is not JiraConfig");

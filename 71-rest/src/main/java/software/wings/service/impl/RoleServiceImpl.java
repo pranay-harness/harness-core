@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.utils.Validator.notNullCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

@@ -1,9 +1,9 @@
 package software.wings.service.impl.workflow.creation;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

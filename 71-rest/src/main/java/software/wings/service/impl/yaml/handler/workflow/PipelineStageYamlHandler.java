@@ -3,11 +3,11 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.PipelineStage.Yaml;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

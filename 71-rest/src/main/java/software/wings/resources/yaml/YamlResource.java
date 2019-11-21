@@ -1,10 +1,10 @@
 package software.wings.resources.yaml;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.validation.Validator.notNullCheck;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;

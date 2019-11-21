@@ -19,6 +19,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
+import io.harness.validation.PersistenceValidator;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Event;
@@ -36,7 +37,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -128,10 +128,10 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public NotificationGroup createNotificationGroup(NotificationGroup notificationGroup) {
     checkIfChangeInDefaultNotificationGroup(notificationGroup);
-    NotificationGroup savedNotificationGroup =
-        Validator.duplicateCheck(()
-                                     -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),
-            "name", notificationGroup.getName());
+    NotificationGroup savedNotificationGroup = PersistenceValidator.duplicateCheck(
+        ()
+            -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),
+        "name", notificationGroup.getName());
 
     yamlPushService.pushYamlChangeSet(notificationGroup.getAccountId(), null, savedNotificationGroup, Event.Type.CREATE,
         notificationGroup.isSyncFromGit(), false);

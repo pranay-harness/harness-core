@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -46,7 +47,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -140,7 +140,7 @@ public class ContainerDeploymentManagerHelper {
     } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
       region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
     }
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute", settingAttribute);
 
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
@@ -187,7 +187,7 @@ public class ContainerDeploymentManagerHelper {
         clusterName = azureKubernetesCluster.getName();
       }
     }
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute", settingAttribute);
 
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);

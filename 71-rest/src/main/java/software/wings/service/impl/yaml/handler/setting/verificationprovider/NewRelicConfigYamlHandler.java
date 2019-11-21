@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
-import static software.wings.utils.Validator.notNullCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 

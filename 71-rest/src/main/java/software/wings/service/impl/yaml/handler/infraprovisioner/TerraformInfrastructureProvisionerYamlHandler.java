@@ -2,9 +2,9 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

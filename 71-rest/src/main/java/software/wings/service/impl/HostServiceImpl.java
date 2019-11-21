@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.validation.Validator.notNullCheck;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
 
 import com.google.common.collect.Maps;
@@ -35,7 +36,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -100,7 +100,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   private void syncInstancesInternal(String appId, String infraMappingId,
       List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws WingsException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
     if (!(infrastructureMapping instanceof CodeDeployInfrastructureMapping)) {
       String msg = "Incompatible infra mapping type. Expecting code deploy type. Found:"
           + infrastructureMapping.getInfraMappingType();

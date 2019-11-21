@@ -7,6 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.SecretString.SECRET_MASK;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -17,8 +19,6 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
-import static software.wings.utils.Validator.duplicateCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -62,7 +62,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -543,9 +542,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   }
 
   private void checkUserPermissions(ServiceVariable serviceVariable) throws WingsException {
-    Validator.notNullCheck("Service variable null", serviceVariable, WingsException.USER);
+    notNullCheck("Service variable null", serviceVariable, WingsException.USER);
 
-    Validator.notNullCheck("Unknown entity type for service variable " + serviceVariable.getName(),
+    notNullCheck("Unknown entity type for service variable " + serviceVariable.getName(),
         serviceVariable.getEntityType(), WingsException.USER);
 
     List<PermissionAttribute> permissionAttributeList;

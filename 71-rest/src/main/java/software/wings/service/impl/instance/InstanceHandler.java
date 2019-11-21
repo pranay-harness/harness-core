@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -40,7 +41,6 @@ import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.PipelineSummary;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,13 +116,13 @@ public abstract class InstanceHandler {
       DeploymentKey deploymentKey) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
-    Validator.notNullCheck("Application", application);
+    notNullCheck("Application", application);
     EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
-    Validator.notNullCheck("triggeredBy", triggeredBy);
+    notNullCheck("triggeredBy", triggeredBy);
     String infraMappingType = infrastructureMapping.getInfraMappingType();
 
     String workflowName = instanceUtil.getWorkflowName(workflowExecution.normalizedName());
-    Validator.notNullCheck("WorkflowName", workflowName);
+    notNullCheck("WorkflowName", workflowName);
 
     validateInstanceType(infraMappingType);
 
@@ -160,7 +160,7 @@ public abstract class InstanceHandler {
 
   protected void validateInstanceType(String infraMappingType) {
     InstanceType instanceType = instanceUtil.getInstanceType(infraMappingType);
-    Validator.notNullCheck("InstanceType", instanceType);
+    notNullCheck("InstanceType", instanceType);
   }
 
   protected abstract void setDeploymentKey(DeploymentSummary deploymentSummary, DeploymentKey deploymentKey);
@@ -252,11 +252,11 @@ public abstract class InstanceHandler {
   protected InstanceBuilder buildInstanceBase(String instanceUuid, InfrastructureMapping infraMapping) {
     String appId = infraMapping.getAppId();
     Application application = appService.get(appId);
-    Validator.notNullCheck("Application is null for the given appId: " + appId, application);
+    notNullCheck("Application is null for the given appId: " + appId, application);
     Environment environment = environmentService.get(appId, infraMapping.getEnvId(), false);
-    Validator.notNullCheck("Environment is null for the given id: " + infraMapping.getEnvId(), environment);
+    notNullCheck("Environment is null for the given id: " + infraMapping.getEnvId(), environment);
     Service service = serviceResourceService.getWithDetails(appId, infraMapping.getServiceId());
-    Validator.notNullCheck("Service is null for the given id: " + infraMapping.getServiceId(), service);
+    notNullCheck("Service is null for the given id: " + infraMapping.getServiceId(), service);
     String infraMappingType = infraMapping.getInfraMappingType();
 
     if (instanceUuid == null) {

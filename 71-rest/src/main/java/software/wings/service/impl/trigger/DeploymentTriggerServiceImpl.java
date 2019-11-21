@@ -2,12 +2,12 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.trigger.Condition.Type.NEW_ARTIFACT;
 import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.Condition.Type.SCHEDULED;
 import static software.wings.beans.trigger.Condition.Type.WEBHOOK;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,6 +16,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
@@ -44,7 +45,6 @@ import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +82,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
       validateTrigger(trigger, null);
     }
     setConditionTypeInTrigger(trigger);
-    String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
+    String uuid = PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     actionsAfterTriggerSave(trigger);
     return getWithoutRead(trigger.getAppId(), uuid);
   }
@@ -105,7 +105,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     validateTrigger(trigger, existingTrigger);
     setConditionTypeInTrigger(trigger);
-    String uuid = Validator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
+    String uuid = PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(trigger), "name", trigger.getName());
     actionsAfterTriggerUpdate(existingTrigger, trigger);
     return get(trigger.getAppId(), uuid, false);
   }

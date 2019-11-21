@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -58,7 +59,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -296,8 +296,8 @@ public class TriggerServiceHelper {
   }
 
   public static void notNullCheckWorkflow(Workflow workflow) {
-    Validator.notNullCheck("Workflow was deleted", workflow, USER);
-    Validator.notNullCheck("Orchestration workflow was deleted", workflow.getOrchestrationWorkflow(), USER);
+    notNullCheck("Workflow was deleted", workflow, USER);
+    notNullCheck("Orchestration workflow was deleted", workflow.getOrchestrationWorkflow(), USER);
   }
 
   public static void addParameter(List<String> parameters, List<Variable> variables, boolean includeEntityType) {

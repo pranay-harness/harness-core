@@ -2,13 +2,13 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

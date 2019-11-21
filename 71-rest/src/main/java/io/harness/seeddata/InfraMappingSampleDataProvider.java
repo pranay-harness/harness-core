@@ -1,6 +1,7 @@
 package io.harness.seeddata;
 
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_INFRA_NAME;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.Validator;
 
 @Singleton
 public class InfraMappingSampleDataProvider {
@@ -24,7 +24,7 @@ public class InfraMappingSampleDataProvider {
   public InfrastructureMapping createKubeServiceInfraStructure(
       String accountId, String appId, String envId, String serviceId, String cloudProviderId, String namespace) {
     ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceId, envId);
-    Validator.notNullCheck("Service template does not exist", serviceTemplate);
+    notNullCheck("Service template does not exist", serviceTemplate);
 
     DirectKubernetesInfrastructureMapping directKubeInfra =
         aDirectKubernetesInfrastructureMapping()

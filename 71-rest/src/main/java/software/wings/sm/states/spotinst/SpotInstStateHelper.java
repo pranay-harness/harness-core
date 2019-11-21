@@ -9,10 +9,10 @@ import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.GROUP_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
 import static io.harness.spotinst.model.SpotInstConstants.SETUP_COMMAND_UNIT;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;

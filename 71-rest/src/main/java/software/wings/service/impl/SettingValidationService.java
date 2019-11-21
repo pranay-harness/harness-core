@@ -6,11 +6,11 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

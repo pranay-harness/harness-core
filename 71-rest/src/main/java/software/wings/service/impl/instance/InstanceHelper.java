@@ -4,11 +4,11 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -75,7 +75,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.utils.Utils;
-import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -253,7 +252,7 @@ public class InstanceHelper {
       InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, InfrastructureMapping infraMapping) {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
-    Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
+    notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
 
     InstanceBuilder builder =
         buildInstanceBase(workflowExecution, artifact, phaseExecutionData, phaseStepExecutionData, infraMapping);
@@ -304,7 +303,7 @@ public class InstanceHelper {
       }
     } else {
       Host hostInfo = hostService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), hostUuid);
-      Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
+      notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), hostInfo);
       setInstanceInfoAndKey(builder, hostInfo, infraMapping.getInfraMappingType(), infraMapping.getUuid());
     }
     return builder.build();
@@ -347,9 +346,9 @@ public class InstanceHelper {
       InfrastructureMapping infrastructureMapping) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
-    Validator.notNullCheck("Application", application);
+    notNullCheck("Application", application);
     EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
-    Validator.notNullCheck("triggeredBy", triggeredBy);
+    notNullCheck("triggeredBy", triggeredBy);
 
     InstanceBuilder builder =
         Instance.builder()
@@ -385,7 +384,7 @@ public class InstanceHelper {
     }
 
     String workflowName = instanceUtil.getWorkflowName(workflowExecution.normalizedName());
-    Validator.notNullCheck("WorkflowName", workflowName);
+    notNullCheck("WorkflowName", workflowName);
     builder.lastWorkflowExecutionName(workflowName);
 
     instanceUtil.setInstanceType(builder, infrastructureMapping.getInfraMappingType());
@@ -483,7 +482,7 @@ public class InstanceHelper {
       logger.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
 
       InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
-      Validator.notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
+      notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
 
       InfrastructureMappingType infrastructureMappingType =
           Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());

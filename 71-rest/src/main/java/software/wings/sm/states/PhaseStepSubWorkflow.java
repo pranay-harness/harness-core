@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -83,7 +84,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -169,7 +169,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       String infraDefinitionId = phaseElement.getInfraDefinitionId();
       String appId = context.getAppId();
       InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
-      Validator.notNullCheck(String.format("Infrastructure Definition not found with id : [%s]", infraDefinitionId),
+      notNullCheck(String.format("Infrastructure Definition not found with id : [%s]", infraDefinitionId),
           infrastructureDefinition);
 
       if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {

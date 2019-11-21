@@ -8,6 +8,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeValidate;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
+import static io.harness.validation.Validator.equalCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -38,9 +41,6 @@ import static software.wings.service.intfc.security.SecretManager.ENCRYPTED_FIEL
 import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
 import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
-import static software.wings.utils.Validator.duplicateCheck;
-import static software.wings.utils.Validator.equalCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

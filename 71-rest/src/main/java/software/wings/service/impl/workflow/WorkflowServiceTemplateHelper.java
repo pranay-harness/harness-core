@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -33,7 +34,6 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,7 +103,7 @@ public class WorkflowServiceTemplateHelper {
       for (GraphNode step : phaseStep.getSteps()) {
         if (step.getTemplateUuid() != null) {
           Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
-          Validator.notNullCheck("Template does not exist", template, USER);
+          notNullCheck("Template does not exist", template, USER);
           GraphNode templateStep =
               (GraphNode) templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW);
           List<String> templateProperties = templateService.fetchTemplateProperties(template);
@@ -145,7 +145,7 @@ public class WorkflowServiceTemplateHelper {
         }
         if (versionChanged || oldTemplateStep == null) {
           Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
-          Validator.notNullCheck("Template does not exist", template, USER);
+          notNullCheck("Template does not exist", template, USER);
           GraphNode templateStep =
               (GraphNode) templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW);
           step.setTemplateVariables(

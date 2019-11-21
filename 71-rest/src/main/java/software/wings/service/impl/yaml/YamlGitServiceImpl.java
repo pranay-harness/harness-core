@@ -11,6 +11,7 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -29,7 +30,6 @@ import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
-import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 

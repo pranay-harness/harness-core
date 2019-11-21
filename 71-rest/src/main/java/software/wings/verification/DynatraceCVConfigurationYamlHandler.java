@@ -3,7 +3,7 @@ package software.wings.verification;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.Validator.notNullCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;

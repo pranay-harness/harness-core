@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.Maps;
@@ -26,7 +27,6 @@ import software.wings.beans.infrastructure.instance.info.HostInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class AzureInstanceHandler extends InstanceHandler {
   @Override
   public void syncInstances(String appId, String infraMappingId) throws WingsException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
     if (!(infrastructureMapping instanceof AzureInfrastructureMapping)) {
       String msg = "Incompatible infra mapping type. Expecting AZURE_INFRA type. Found:"

@@ -15,6 +15,7 @@ import static io.harness.event.model.EventConstants.ENVIRONMENT_ID;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_NAME;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -27,7 +28,6 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.security.SecretManager.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackApprovalMessage;
 import static software.wings.sm.states.ApprovalState.ApprovalStateType.USER_GROUP;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

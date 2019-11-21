@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
@@ -38,7 +39,6 @@ import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,7 +74,7 @@ public class PcfInstanceHandler extends InstanceHandler {
       boolean rollback) throws WingsException {
     logger.info("# Performing PCF Instance sync");
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
     if (!(infrastructureMapping instanceof PcfInfrastructureMapping)) {
       String msg =
@@ -114,7 +114,7 @@ public class PcfInstanceHandler extends InstanceHandler {
         }
 
         if (!failedToRetrieveData) {
-          Validator.notNullCheck("latestpcfInstanceInfoList", latestpcfInstanceInfoList);
+          notNullCheck("latestpcfInstanceInfoList", latestpcfInstanceInfoList);
           logger.info("Received Instance details for Instance count: " + latestpcfInstanceInfoList.size());
 
           Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap = latestpcfInstanceInfoList.stream().collect(

@@ -12,6 +12,8 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -40,8 +42,6 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_VALUE_YAML;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
-import static software.wings.utils.Validator.duplicateCheck;
-import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.collect.ArrayListMultimap;

@@ -15,6 +15,7 @@ import static io.harness.pcf.model.PcfConstants.NO_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTE_PLACEHOLDER_TOKEN_DEPRECATED;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -24,7 +25,6 @@ import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

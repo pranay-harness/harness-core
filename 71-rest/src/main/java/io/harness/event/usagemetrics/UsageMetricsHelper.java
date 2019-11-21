@@ -2,6 +2,7 @@ package io.harness.event.usagemetrics;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
@@ -28,7 +29,6 @@ import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.Workflow;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
-import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 
@@ -49,7 +49,7 @@ public class UsageMetricsHelper {
                                   .project(ApplicationKeys.name, true)
                                   .filter(Application.ID_KEY, appId)
                                   .get();
-    Validator.notNullCheck("Application does not exist", application, USER);
+    notNullCheck("Application does not exist", application, USER);
     return application;
   }
 
@@ -59,7 +59,7 @@ public class UsageMetricsHelper {
                           .filter(ServiceKeys.appId, appId)
                           .filter(Service.ID_KEY, serviceId)
                           .get();
-    Validator.notNullCheck("Service does not exist", service, USER);
+    notNullCheck("Service does not exist", service, USER);
     return service.getName();
   }
 
@@ -69,7 +69,7 @@ public class UsageMetricsHelper {
                                   .filter(EnvironmentKeys.appId, appId)
                                   .filter(Environment.ID_KEY, environmentId)
                                   .get();
-    Validator.notNullCheck("Environment does not exist", environment, USER);
+    notNullCheck("Environment does not exist", environment, USER);
     return environment.getName();
   }
 
@@ -102,7 +102,7 @@ public class UsageMetricsHelper {
                                           .project(CVConfigurationKeys.serviceId, true)
                                           .filter(CVConfiguration.ID_KEY, cvConfigId)
                                           .get();
-    Validator.notNullCheck("CV Config does not exist", cvConfiguration, USER);
+    notNullCheck("CV Config does not exist", cvConfiguration, USER);
     return cvConfiguration;
   }
 

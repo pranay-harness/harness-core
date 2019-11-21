@@ -1,5 +1,6 @@
 package software.wings.yaml.trigger;
 
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
@@ -17,7 +18,6 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -81,7 +81,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     } else if (webhookSource.equals("BITBUCKET")) {
       return WebhookSource.BITBUCKET;
     } else {
-      Validator.notNullCheck("webhook source is invalid or not supported", webhookSource);
+      notNullCheck("webhook source is invalid or not supported", webhookSource);
     }
 
     return null;
@@ -95,7 +95,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
         || webhookSource.equals(WebhookSource.BITBUCKET)) {
       return webhookSource.name();
     } else {
-      Validator.notNullCheck("webhook source is invalid or not supported", webhookSource);
+      notNullCheck("webhook source is invalid or not supported", webhookSource);
     }
 
     return null;

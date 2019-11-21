@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,7 +22,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
-import software.wings.utils.Validator;
 import software.wings.yaml.trigger.ActionYaml;
 import software.wings.yaml.trigger.ConditionYaml;
 import software.wings.yaml.trigger.DeploymentTriggerYaml;
@@ -157,7 +156,7 @@ public class DeploymentTriggerYamlHandler extends BaseYamlHandler<DeploymentTrig
   @Override
   public DeploymentTrigger get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId);
+    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId);
     return yamlHelper.getDeploymentTrigger(appId, yamlFilePath);
   }
 }

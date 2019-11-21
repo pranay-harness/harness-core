@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static io.harness.validation.Validator.notNullCheck;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -15,7 +17,7 @@ public class GitUtilsManager {
   @Inject private SettingsService settingsService;
   public GitConfig getGitConfig(String sourceRepoSettingId) {
     SettingAttribute gitSettingAttribute = settingsService.get(sourceRepoSettingId);
-    Validator.notNullCheck("Git connector not found", gitSettingAttribute);
+    notNullCheck("Git connector not found", gitSettingAttribute);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
       throw new InvalidRequestException("Invalid Git Repo");
     }

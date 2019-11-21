@@ -4,7 +4,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.Validator.notNullCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,7 +33,6 @@ import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
-import software.wings.utils.Validator;
 
 import java.nio.charset.Charset;
 import java.time.Duration;
@@ -499,7 +498,7 @@ public class LicenseServiceImpl implements LicenseService {
   public boolean isAccountExpired(String accountId) {
     // TODO when we have distributed cache, account should be cached and referred.
     Account account = dbCache.get(Account.class, accountId);
-    Validator.notNullCheck("Invalid account with id: " + accountId, account);
+    notNullCheck("Invalid account with id: " + accountId, account);
 
     LicenseInfo licenseInfo = account.getLicenseInfo();
 

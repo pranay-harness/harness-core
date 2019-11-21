@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -14,7 +15,6 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_TASK;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;

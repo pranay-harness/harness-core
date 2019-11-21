@@ -2,10 +2,10 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateVersion;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

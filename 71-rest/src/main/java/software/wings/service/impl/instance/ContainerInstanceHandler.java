@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -73,7 +74,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.states.k8s.K8sStateHelper;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -104,7 +104,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
   private ContainerInfrastructureMapping getContainerInfraMapping(String appId, String inframappingId)
       throws WingsException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, inframappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + inframappingId, infrastructureMapping);
+    notNullCheck("Infra mapping is null for id:" + inframappingId, infrastructureMapping);
 
     if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)) {
       String msg = "Incompatible infra mapping type. Expecting container type. Found:"
@@ -156,7 +156,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
           // ECS it is taskDefinition)
           ContainerSyncResponse instanceSyncResponse =
               containerSync.getInstances(containerInfraMapping, singletonList(containerMetadata));
-          Validator.notNullCheck(
+          notNullCheck(
               "InstanceSyncResponse is null for containerSvcName: " + containerMetadata.getContainerServiceName(),
               instanceSyncResponse);
 

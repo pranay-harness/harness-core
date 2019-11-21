@@ -21,6 +21,8 @@ import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.Validator.notEmptyCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -71,8 +73,6 @@ import static software.wings.sm.StateType.values;
 import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
-import static software.wings.utils.Validator.notEmptyCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -228,7 +228,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.stencils.WorkflowStepType;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -3220,7 +3219,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public GraphNode readGraphNode(String appId, String workflowId, String nodeId) {
     Workflow workflow = wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
-    Validator.notNullCheck("Workflow was deleted", workflow, WingsException.USER);
+    notNullCheck("Workflow was deleted", workflow, WingsException.USER);
 
     loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion(), false);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
@@ -3315,7 +3314,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                             .filter(APP_ID_KEY, appId)
                             .filter(Pipeline.ID_KEY, workflowId)
                             .get();
-    Validator.notNullCheck("Workflow does not exist", workflow, USER);
+    notNullCheck("Workflow does not exist", workflow, USER);
     return workflow.getName();
   }
 

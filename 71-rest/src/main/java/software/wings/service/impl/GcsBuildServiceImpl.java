@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.utils.Validator.equalCheck;
+import static io.harness.validation.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

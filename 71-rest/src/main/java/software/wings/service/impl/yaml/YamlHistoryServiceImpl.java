@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -9,7 +10,6 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlHistoryService;
-import software.wings.utils.Validator;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.YamlVersion.Type;
@@ -34,7 +34,7 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
    */
   @Override
   public YamlVersion save(YamlVersion yv) {
-    Validator.notNullCheck("accountId", yv.getAccountId());
+    notNullCheck("accountId", yv.getAccountId());
 
     //------- handle inEffectStart and End --------
     long currentTimeMs = System.currentTimeMillis();

@@ -6,6 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
+import static io.harness.validation.Validator.unEqualCheck;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -31,6 +33,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -62,7 +65,6 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.pagerduty.PagerDutyService;
-import software.wings.utils.Validator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -106,7 +108,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup save(UserGroup userGroup) {
-    Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
+    notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
     checkUserGroupsCountWithinLimit(userGroup.getAccountId());
 
     if (null == userGroup.getNotificationSettings()) {
@@ -115,10 +117,10 @@ public class UserGroupServiceImpl implements UserGroupService {
       userGroup.setNotificationSettings(notificationSettings);
     }
 
-    UserGroup savedUserGroup = Validator.duplicateCheck(
+    UserGroup savedUserGroup = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
     Account account = accountService.get(userGroup.getAccountId());
-    Validator.notNullCheck("account", account);
+    notNullCheck("account", account);
     loadUsers(savedUserGroup, account);
     evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
@@ -136,9 +138,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public PageResponse<UserGroup> list(String accountId, PageRequest<UserGroup> req, boolean loadUsers) {
-    Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);
+    notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);
     Account account = accountService.get(accountId);
-    Validator.notNullCheck("account", account, USER);
+    notNullCheck("account", account, USER);
     req.addFilter(UserGroup.ACCOUNT_ID_KEY, Operator.EQ, accountId);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
     List<UserGroup> userGroupList = res.getResponse();
@@ -276,7 +278,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updateOverview(UserGroup userGroup) {
-    Validator.notNullCheck("name", userGroup.getName());
+    notNullCheck("name", userGroup.getName());
     UserGroup userGroupFromDB = get(userGroup.getAccountId(), userGroup.getUuid());
     if (UserGroupUtils.isAdminUserGroup(userGroupFromDB)) {
       throw new WingsException(
@@ -415,8 +417,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private UserGroup update(UserGroup userGroup, UpdateOperations<UserGroup> operations) {
-    Validator.notNullCheck("uuid", userGroup.getUuid());
-    Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
+    notNullCheck("uuid", userGroup.getUuid());
+    notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
                                  .filter(ID_KEY, userGroup.getUuid())
                                  .filter(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
@@ -427,7 +429,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public boolean delete(String accountId, String userGroupId, boolean forceDelete) {
     UserGroup userGroup = get(accountId, userGroupId, false);
-    Validator.notNullCheck("userGroup", userGroup);
+    notNullCheck("userGroup", userGroup);
     if (!forceDelete && UserGroupUtils.isAdminUserGroup(userGroup)) {
       return false;
     }
@@ -458,8 +460,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup cloneUserGroup(
       final String accountId, final String uuid, final String newName, final String newDescription) {
     UserGroup existingGroup = get(accountId, uuid, true);
-    Validator.notNullCheck("userGroup", existingGroup);
-    Validator.unEqualCheck(existingGroup.getName(), newName);
+    notNullCheck("userGroup", existingGroup);
+    unEqualCheck(existingGroup.getName(), newName);
     UserGroup newClonedGroup = existingGroup.cloneWithNewName(newName, newDescription);
     return save(newClonedGroup);
   }

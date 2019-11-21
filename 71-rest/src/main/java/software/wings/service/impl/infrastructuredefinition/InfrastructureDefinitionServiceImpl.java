@@ -10,6 +10,8 @@ import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MA
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_NAME;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
+import static io.harness.validation.Validator.notEmptyCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -37,7 +39,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.Utils.safe;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -159,7 +160,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
-import software.wings.utils.Validator;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -345,12 +345,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     validateCloudProviderAndDeploymentType(infraDefinition.getCloudProviderType(), infraDefinition.getDeploymentType());
     if (infraDefinition.getDeploymentType() == DeploymentType.SSH
         && infraDefinition.getInfrastructure() instanceof SshBasedInfrastructure) {
-      Validator.notEmptyCheck("Connection Attributes can't be empty",
+      notEmptyCheck("Connection Attributes can't be empty",
           ((SshBasedInfrastructure) infraDefinition.getInfrastructure()).getHostConnectionAttrs());
     }
     if (infraDefinition.getDeploymentType() == DeploymentType.WINRM
         && infraDefinition.getInfrastructure() instanceof WinRmBasedInfrastructure) {
-      Validator.notEmptyCheck("Connection Attributes can't be empty",
+      notEmptyCheck("Connection Attributes can't be empty",
           ((WinRmBasedInfrastructure) infraDefinition.getInfrastructure()).getWinRmConnectionAttributes());
     }
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
@@ -540,7 +540,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   public void delete(String appId, String infraDefinitionId) {
     String accountId = appService.getAccountIdByAppId(appId);
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
-    Validator.notNullCheck("Infrastructure definition", infrastructureDefinition);
+    notNullCheck("Infrastructure definition", infrastructureDefinition);
 
     ensureSafeToDelete(appId, infrastructureDefinition);
 

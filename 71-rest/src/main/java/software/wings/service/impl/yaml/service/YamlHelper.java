@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -12,7 +13,6 @@ import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER_OVERRIDE;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

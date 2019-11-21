@@ -2,8 +2,8 @@ package software.wings.service.impl.yaml.gitdiff;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 

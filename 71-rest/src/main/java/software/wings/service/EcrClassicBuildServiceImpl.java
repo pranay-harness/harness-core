@@ -1,8 +1,8 @@
 package software.wings.service;
 
 import static io.harness.network.Http.connectableHttpUrl;
+import static io.harness.validation.Validator.equalCheck;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.utils.Validator.equalCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -1,8 +1,9 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
+import static io.harness.validation.Validator.nullCheck;
 import static java.lang.String.format;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,7 +19,6 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.utils.Validator;
 
 import java.util.concurrent.ExecutorService;
 import javax.validation.executable.ValidateOnExecution;
@@ -139,7 +139,7 @@ public class YamlPushServiceImpl implements YamlPushService {
   }
 
   private <T> void validateCreate(T oldEntity, T newEntity) {
-    Validator.nullCheck("oldEntity", oldEntity);
+    nullCheck("oldEntity", oldEntity);
     notNullCheck("newEntity", newEntity);
   }
 
@@ -150,7 +150,7 @@ public class YamlPushServiceImpl implements YamlPushService {
 
   private <T> void validateDelete(T oldEntity, T newEntity) {
     notNullCheck("oldEntity", oldEntity);
-    Validator.nullCheck("newEntity", newEntity);
+    nullCheck("newEntity", newEntity);
   }
 
   private <T> void pushYamlChangeSetOnCreate(String accountId, T entity) {

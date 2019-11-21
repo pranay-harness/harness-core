@@ -29,6 +29,7 @@ import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
+import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -64,7 +65,6 @@ import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -263,7 +263,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate save(ServiceTemplate serviceTemplate) {
-    return Validator.duplicateCheck(
+    return PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate), "name", serviceTemplate.getName());
   }
 

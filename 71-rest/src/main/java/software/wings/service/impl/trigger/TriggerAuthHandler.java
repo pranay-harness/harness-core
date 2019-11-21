@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -27,7 +28,6 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -63,7 +63,7 @@ public class TriggerAuthHandler {
           break;
         }
         Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), pipeLineId, true);
-        Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
+        notNullCheck("Pipeline does not exist", pipeline, USER);
         envParamaterized = pipeline.isEnvParameterized();
         variables = pipeline.getPipelineVariables();
         if (pipelineAction.getTriggerArgs() != null) {
@@ -84,8 +84,8 @@ public class TriggerAuthHandler {
           break;
         }
         Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), workflowId);
-        Validator.notNullCheck("Workflow does not exist", workflow, USER);
-        Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+        notNullCheck("Workflow does not exist", workflow, USER);
+        notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
         envParamaterized = workflow.checkEnvironmentTemplatized();
         variables = workflow.getOrchestrationWorkflow().getUserVariables();
         if (workflowAction.getTriggerArgs() != null) {

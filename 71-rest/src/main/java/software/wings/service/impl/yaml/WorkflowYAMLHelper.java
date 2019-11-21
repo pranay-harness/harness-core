@@ -2,8 +2,8 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

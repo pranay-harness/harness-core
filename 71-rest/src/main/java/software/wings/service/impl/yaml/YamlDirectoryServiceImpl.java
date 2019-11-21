@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -130,7 +131,6 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
-import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.directory.AccountLevelYamlNode;
@@ -1965,7 +1965,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     AppManifestSource appManifestSource = applicationManifestService.getAppManifestType(applicationManifest);
     switch (appManifestSource) {
       case ENV_SERVICE:
-        Validator.notNullCheck("Environment not found", environment);
+        notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
             .append(isPcfOverrideAppManifest(applicationManifest) ? PCF_OVERRIDES_FOLDER : VALUES_FOLDER)
@@ -1976,14 +1976,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             .toString();
 
       case ENV:
-        Validator.notNullCheck("Environment not found", environment);
+        notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
             .append(isPcfOverrideAppManifest(applicationManifest) ? PCF_OVERRIDES_FOLDER : VALUES_FOLDER)
             .toString();
 
       case SERVICE:
-        Validator.notNullCheck("Service not found", service);
+        notNullCheck("Service not found", service);
         boolean valuesYaml = AppManifestKind.VALUES.equals(applicationManifest.getKind());
 
         StringBuilder builder = new StringBuilder(getRootPathByService(service, getRootPathByApp(application)))
@@ -2072,7 +2072,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public String getRootPathByInfraMapping(InfrastructureMapping infraMapping) {
     Environment environment = environmentService.get(infraMapping.getAppId(), infraMapping.getEnvId(), false);
-    Validator.notNullCheck("Environment is null", environment);
+    notNullCheck("Environment is null", environment);
     return getRootPathByEnvironment(environment) + PATH_DELIMITER + INFRA_MAPPING_FOLDER;
   }
 
@@ -2080,14 +2080,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   public String getRootPathByInfraDefinition(InfrastructureDefinition infrastructureDefinition) {
     Environment environment =
         environmentService.get(infrastructureDefinition.getAppId(), infrastructureDefinition.getEnvId(), false);
-    Validator.notNullCheck("Environment is null", environment);
+    notNullCheck("Environment is null", environment);
     return getRootPathByEnvironment(environment) + PATH_DELIMITER + INFRA_DEFINITION_FOLDER;
   }
 
   @Override
   public String getRootPathByCVConfiguration(CVConfiguration cvConfiguration) {
     Environment environment = environmentService.get(cvConfiguration.getAppId(), cvConfiguration.getEnvId(), false);
-    Validator.notNullCheck("Environment is null", environment);
+    notNullCheck("Environment is null", environment);
     return getRootPathByEnvironment(environment) + PATH_DELIMITER + CV_CONFIG_FOLDER;
   }
 

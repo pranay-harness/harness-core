@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -46,7 +47,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -100,7 +100,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();
-    Validator.notNullCheck("Environment does not exist", env, USER);
+    notNullCheck("Environment does not exist", env, USER);
 
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());

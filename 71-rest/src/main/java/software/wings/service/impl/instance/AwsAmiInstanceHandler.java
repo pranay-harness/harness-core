@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -32,7 +33,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploym
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +59,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     Map<String, DeploymentSummary> asgNamesDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
 
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
     if (!(infrastructureMapping instanceof AwsAmiInfrastructureMapping)) {
       final String msg =
           "Incompatible infra mapping type. Expecting ami type. Found:" + infrastructureMapping.getInfraMappingType();

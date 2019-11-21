@@ -4,6 +4,7 @@ import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -73,7 +74,6 @@ import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDeleg
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.instance.ServerlessInstanceService;
 import software.wings.sm.PhaseStepExecutionSummary;
-import software.wings.utils.Validator;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -102,7 +102,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
   @Override
   protected void validateInstanceType(String infraMappingType) {
     ServerlessInstanceType instanceType = getInstanceType(infraMappingType);
-    Validator.notNullCheck("InstanceType", instanceType);
+    notNullCheck("InstanceType", instanceType);
   }
 
   @VisibleForTesting
@@ -115,7 +115,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
   }
   AwsLambdaInfraStructureMapping getInfraMapping(String infraMappingId, String appId) {
     final InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
     if (!(infrastructureMapping instanceof AwsLambdaInfraStructureMapping)) {
       throw new GeneralException("Incompatible infra mapping type. Expecting AWS Lambda type. Found:"
@@ -129,8 +129,7 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
     final SettingAttribute cloudProviderSetting =
         settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
-    Validator.notNullCheck(
-        "Cloud Provider Settings is null for id:" + infrastructureMapping.getComputeProviderSettingId(),
+    notNullCheck("Cloud Provider Settings is null for id:" + infrastructureMapping.getComputeProviderSettingId(),
         cloudProviderSetting);
 
     return cloudProviderSetting;
@@ -377,11 +376,11 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
       InfrastructureMapping infraMapping, DeploymentSummary deploymentSummary) {
     final String appId = infraMapping.getAppId();
     Application application = appService.get(appId);
-    Validator.notNullCheck("Application is null for the given appId: " + appId, application);
+    notNullCheck("Application is null for the given appId: " + appId, application);
     Environment environment = environmentService.get(appId, infraMapping.getEnvId(), false);
-    Validator.notNullCheck("Environment is null for the given id: " + infraMapping.getEnvId(), environment);
+    notNullCheck("Environment is null for the given id: " + infraMapping.getEnvId(), environment);
     Service service = serviceResourceService.getWithDetails(appId, infraMapping.getServiceId());
-    Validator.notNullCheck("Service is null for the given id: " + infraMapping.getServiceId(), service);
+    notNullCheck("Service is null for the given id: " + infraMapping.getServiceId(), service);
     String infraMappingType = infraMapping.getInfraMappingType();
 
     ServerlessInstanceBuilder builder = ServerlessInstance.builder()

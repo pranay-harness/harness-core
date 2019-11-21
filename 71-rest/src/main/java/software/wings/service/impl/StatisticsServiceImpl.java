@@ -5,6 +5,7 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.time.EpochUtils.PST_ZONE_ID;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
@@ -28,7 +29,6 @@ import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -67,7 +67,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     deploymentStats.getStatsMap().put(
         NON_PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.NON_PROD)));
 
-    Validator.notNullCheck("Non Production Deployment stats", deploymentStats.getStatsMap().get(NON_PROD));
+    notNullCheck("Non Production Deployment stats", deploymentStats.getStatsMap().get(NON_PROD));
     deploymentStats.getStatsMap().put(
         ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
 
