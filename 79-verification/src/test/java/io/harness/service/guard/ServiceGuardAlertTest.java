@@ -82,7 +82,8 @@ public class ServiceGuardAlertTest extends VerificationBaseIntegrationTest {
         entity(logsCVConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     String savedObjectUuid = restResponse.getResource();
 
-    final String taskId = wingsPersistence.save(LearningEngineAnalysisTask.builder().cluster_level(1).build());
+    final String taskId = wingsPersistence.save(
+        LearningEngineAnalysisTask.builder().cvConfigId(savedObjectUuid).cluster_level(1).build());
     url = VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
         + LogAnalysisResource.ANALYSIS_SAVE_24X7_ANALYSIS_RECORDS_URL + "?cvConfigId=" + savedObjectUuid
         + "&appId=" + appId + "&analysisMinute=100"
