@@ -577,6 +577,10 @@ import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesRequest;
 import software.wings.service.impl.aws.model.AwsRoute53ListHostedZonesResponse;
 import software.wings.service.impl.aws.model.AwsRoute53Request;
 import software.wings.service.impl.aws.model.AwsRoute53Request.AwsRoute53RequestType;
+import software.wings.service.impl.aws.model.AwsS3ListBucketNamesRequest;
+import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
+import software.wings.service.impl.aws.model.AwsS3Request;
+import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
@@ -1404,5 +1408,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PcfRunPluginCommandRequest.class, 7263);
     kryo.register(PcfPluginExecutionSummary.class, 7264);
     kryo.register(PcfPluginStateExecutionData.class, 7265);
+    kryo.register(AwsS3Request.class, 7266);
+    kryo.register(AwsS3RequestType.class, 7267);
+    kryo.register(AwsS3ListBucketNamesRequest.class, 7268);
+    kryo.register(AwsS3ListBucketNamesResponse.class, 7269);
   }
 }

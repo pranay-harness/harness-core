@@ -12,7 +12,6 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.ResourceType;
-import com.amazonaws.services.s3.model.Bucket;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -24,6 +23,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
+import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -47,7 +46,7 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
-  @Inject private AwsHelperService awsHelperService;
+  @Inject private AwsS3HelperServiceManager s3HelperServiceManager;
 
   @Deprecated
   public Map<String, String> getRegions() {
@@ -115,8 +114,6 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(awsConfig, null, null);
 
-    List<Bucket> buckets = awsHelperService.listS3Buckets(awsConfig, encryptionDetails);
-
-    return buckets.stream().map(Bucket::getName).collect(Collectors.toList());
+    return s3HelperServiceManager.listBucketNames(awsConfig, encryptionDetails);
   }
 }

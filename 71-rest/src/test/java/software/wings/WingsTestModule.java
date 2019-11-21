@@ -62,6 +62,7 @@ import software.wings.service.impl.aws.delegate.AwsCFHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEc2HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsEcsHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsElbHelperServiceDelegateImpl;
+import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.security.EncryptionServiceImpl;
@@ -84,6 +85,7 @@ import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
+import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -136,6 +138,7 @@ public class WingsTestModule extends AbstractModule {
     bind(GitClientImpl.class);
     bind(PcfDeploymentManagerImpl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
+    bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))
