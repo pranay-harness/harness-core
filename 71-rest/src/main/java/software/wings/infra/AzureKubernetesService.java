@@ -24,7 +24,7 @@ public class AzureKubernetesService
     implements KubernetesInfrastructure, InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
-  @Expression private String namespace;
+  @IncludeFieldMap @Expression private String namespace;
   @Expression private String releaseName;
   private String subscriptionId;
   private String resourceGroup;
