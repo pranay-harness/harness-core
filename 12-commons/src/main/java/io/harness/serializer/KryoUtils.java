@@ -131,4 +131,8 @@ public class KryoUtils {
   public static Object asObject(String base64) {
     return asObject(Base64.decodeBase64(base64));
   }
+
+  public static boolean isRegistered(Class cls) {
+    return pool.run(kryo -> kryo.getClassResolver().getRegistration(cls) != null);
+  }
 }
