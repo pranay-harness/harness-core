@@ -335,9 +335,9 @@ public class EnvState extends State {
       EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) context.getStateExecutionData();
       if (envStateExecutionData != null && envStateExecutionData.getWorkflowExecutionId() != null) {
         ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                    .withExecutionInterruptType(ExecutionInterruptType.ABORT_ALL)
-                                                    .withExecutionUuid(envStateExecutionData.getWorkflowExecutionId())
-                                                    .withAppId(context.getAppId())
+                                                    .executionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                    .executionUuid(envStateExecutionData.getWorkflowExecutionId())
+                                                    .appId(context.getAppId())
                                                     .build();
         executionService.triggerExecutionInterrupt(executionInterrupt);
       }

@@ -102,10 +102,10 @@ public class WorkflowExecutionMonitorJob implements Job {
 
             logger.info("Expired StateExecutionInstance found: {}", stateExecutionInstance.getUuid());
             ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                        .withExecutionInterruptType(MARK_EXPIRED)
-                                                        .withAppId(stateExecutionInstance.getAppId())
-                                                        .withExecutionUuid(stateExecutionInstance.getExecutionUuid())
-                                                        .withStateExecutionInstanceId(stateExecutionInstance.getUuid())
+                                                        .executionInterruptType(MARK_EXPIRED)
+                                                        .appId(stateExecutionInstance.getAppId())
+                                                        .executionUuid(stateExecutionInstance.getExecutionUuid())
+                                                        .stateExecutionInstanceId(stateExecutionInstance.getUuid())
                                                         .build();
 
             executionInterruptManager.registerExecutionInterrupt(executionInterrupt);

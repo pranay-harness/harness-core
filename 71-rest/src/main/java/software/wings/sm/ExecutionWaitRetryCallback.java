@@ -42,10 +42,10 @@ public class ExecutionWaitRetryCallback implements NotifyCallback {
   @Override
   public void notify(Map<String, ResponseData> response) {
     executionInterruptManager.registerExecutionInterrupt(anExecutionInterrupt()
-                                                             .withAppId(appId)
-                                                             .withExecutionUuid(executionUuid)
-                                                             .withStateExecutionInstanceId(stateExecutionInstanceId)
-                                                             .withExecutionInterruptType(RETRY)
+                                                             .appId(appId)
+                                                             .executionUuid(executionUuid)
+                                                             .stateExecutionInstanceId(stateExecutionInstanceId)
+                                                             .executionInterruptType(RETRY)
                                                              .build());
   }
 
