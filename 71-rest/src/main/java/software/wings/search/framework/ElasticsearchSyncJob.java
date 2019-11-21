@@ -26,14 +26,15 @@ public class ElasticsearchSyncJob implements Runnable {
   @Inject private Provider<ElasticsearchBulkSyncTask> elasticsearchBulkSyncTaskProvider;
   @Inject private Provider<ElasticsearchRealtimeSyncTask> elasticsearchRealtimeSyncTaskProvider;
   @Inject private Provider<PerpetualSearchLocker> perpetualSearchLockerProvider;
+  private PerpetualSearchLocker perpetualSearchLocker;
   private ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask;
   private ScheduledExecutorService scheduledExecutorService;
   private ScheduledFuture searchLock;
 
   public void run() {
     try {
-      PerpetualSearchLocker perpetualSearchLocker = perpetualSearchLockerProvider.get();
       ElasticsearchBulkSyncTask elasticsearchBulkSyncTask = elasticsearchBulkSyncTaskProvider.get();
+      perpetualSearchLocker = perpetualSearchLockerProvider.get();
       scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
       elasticsearchRealtimeSyncTask = elasticsearchRealtimeSyncTaskProvider.get();
       String uuid = UUID.randomUUID().toString();
@@ -65,8 +66,9 @@ public class ElasticsearchSyncJob implements Runnable {
     if (searchLock != null) {
       searchLock.cancel(true);
     }
-    scheduledExecutorService.shutdownNow();
     logger.info("Stopping realtime synchronization");
     elasticsearchRealtimeSyncTask.stop();
+    scheduledExecutorService.shutdownNow();
+    perpetualSearchLocker.shutdown();
   }
 }

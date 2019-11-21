@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -25,7 +24,6 @@ public class ChangeTrackerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  @Ignore("Intermittent: will fix this test.")
   public void changeStreamTrackerTest() {
     Set<ChangeTrackingInfo<?>> changeTrackingInfos = new HashSet<>();
     ChangeTrackingInfo<?> changeTrackingInfo =

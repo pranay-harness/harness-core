@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class PerpetualSearchLocker {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigurationController configurationController;
-  private ScheduledExecutorService scheduledExecutorService =
-      Executors.newScheduledThreadPool(2, new ThreadFactoryBuilder().setNameFormat("search-heartbeat-%d").build());
+  private ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+      new ThreadFactoryBuilder().setNameFormat("search-heartbeat-%d").build());
 
   private boolean isLockAcquired(String lockName, String uuid) {
     Query<SearchDistributedLock> query = wingsPersistence.createQuery(SearchDistributedLock.class)
@@ -69,6 +69,12 @@ public class PerpetualSearchLocker {
     SearchHeartbeatMonitor searchHeartbeatMonitor =
         new SearchHeartbeatMonitor(wingsPersistence, lockTimeoutCallback, lockName, uuid, configurationController);
     return scheduledExecutorService.scheduleAtFixedRate(searchHeartbeatMonitor, 0, 10, TimeUnit.SECONDS);
+  }
+
+  public void shutdown() {
+    if (scheduledExecutorService != null) {
+      scheduledExecutorService.shutdownNow();
+    }
   }
 
   @FunctionalInterface
