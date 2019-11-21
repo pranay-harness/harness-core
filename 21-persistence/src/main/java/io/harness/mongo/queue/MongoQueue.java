@@ -168,9 +168,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(payload);
     payload.setGlobalContext(obtainGlobalContext());
     payload.setVersion(filterWithVersion ? versionInfoManager.getVersionInfo().getVersion() : null);
-
-    final AdvancedDatastore datastore = persistence.getDatastore(klass);
-    HPersistence.retry(() -> datastore.save(payload));
+    persistence.insertIgnoringDuplicateKeys(payload);
   }
 
   @Override

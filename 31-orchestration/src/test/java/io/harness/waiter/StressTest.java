@@ -27,6 +27,7 @@ import java.util.Random;
 public class StressTest extends OrchestrationTest {
   @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private NotifyResponseCleaner notifyResponseCleaner;
 
   @Test
   @Owner(developers = GEORGE)
@@ -45,7 +46,7 @@ public class StressTest extends OrchestrationTest {
         List<String> vector = new ArrayList<>();
 
         long time = 0;
-        while (i < 10000) {
+        while (i < 100000) {
           final int ids = random.nextInt(5) + 1;
           if (i / 100 != (i + ids) / 100) {
             final long waits = persistence.createQuery(WaitInstance.class).count();
@@ -76,6 +77,7 @@ public class StressTest extends OrchestrationTest {
       });
 
       while (true) {
+        notifyResponseCleaner.execute();
         final long waits = persistence.createQuery(WaitInstance.class).count();
         long notifyQueues = persistence.createQuery(NotifyEvent.class).count();
         logger.info("waits: {}, events: {}", waits, notifyQueues);
