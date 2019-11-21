@@ -43,6 +43,8 @@ import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.organizations.Organizations;
 import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.operations.routes.Routes;
+import org.cloudfoundry.reactor.ConnectionContext;
+import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.Test.None;
@@ -63,6 +65,7 @@ import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -924,5 +927,26 @@ public class PivotalClientTest extends WingsBaseTest {
     doReturn(true).when(pcfClient).doLogin(any(PcfRequestConfig.class), any(ExecutionLogCallback.class), anyString());
     doReturn(new ProcessResult(0, null)).when(pcfClient).runProcessExecutor(any(ProcessExecutor.class));
     pcfClient.runPcfPluginScript(requestData, logCallback);
+  }
+
+  @Test(expected = None.class)
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void test_getConnectionContext() throws Exception {
+    PcfRequestConfig pcfRequestConfig =
+        PcfRequestConfig.builder().endpointUrl("test").timeOutIntervalInMins(10).build();
+
+    ConnectionContext connectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
+    assertThat(connectionContext instanceof DefaultConnectionContext).isTrue();
+    Optional<Duration> connectTimeout = ((DefaultConnectionContext) connectionContext).getConnectTimeout();
+    assertThat(connectTimeout.isPresent()).isTrue();
+    assertThat(connectTimeout.get().getSeconds()).isEqualTo(600);
+
+    pcfRequestConfig.setTimeOutIntervalInMins(0);
+    connectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
+    assertThat(connectionContext instanceof DefaultConnectionContext).isTrue();
+    connectTimeout = ((DefaultConnectionContext) connectionContext).getConnectTimeout();
+    assertThat(connectTimeout.isPresent()).isTrue();
+    assertThat(connectTimeout.get().getSeconds()).isEqualTo(300);
   }
 }
