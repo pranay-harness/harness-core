@@ -71,6 +71,7 @@ class ChangeTrackingTask implements Runnable {
       mongoCursor.forEachRemaining(changeStreamDocumentConsumer);
     } finally {
       if (mongoCursor != null) {
+        logger.info("Closing mongo cursor");
         mongoCursor.close();
       }
     }
