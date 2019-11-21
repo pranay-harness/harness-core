@@ -140,62 +140,62 @@ public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedA
       return new ExecutionInterruptBuilder();
     }
 
-    public ExecutionInterruptBuilder withExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
+    public ExecutionInterruptBuilder executionInterruptType(ExecutionInterruptType executionInterruptType) {
       this.executionInterruptType = executionInterruptType;
       return this;
     }
 
-    public ExecutionInterruptBuilder withSeized(boolean seized) {
+    public ExecutionInterruptBuilder seized(boolean seized) {
       this.seized = seized;
       return this;
     }
 
-    public ExecutionInterruptBuilder withEnvId(String envId) {
+    public ExecutionInterruptBuilder envId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    public ExecutionInterruptBuilder withExecutionUuid(String executionUuid) {
+    public ExecutionInterruptBuilder executionUuid(String executionUuid) {
       this.executionUuid = executionUuid;
       return this;
     }
 
-    public ExecutionInterruptBuilder withStateExecutionInstanceId(String stateExecutionInstanceId) {
+    public ExecutionInterruptBuilder stateExecutionInstanceId(String stateExecutionInstanceId) {
       this.stateExecutionInstanceId = stateExecutionInstanceId;
       return this;
     }
 
-    public ExecutionInterruptBuilder withProperties(Map<String, Object> properties) {
+    public ExecutionInterruptBuilder properties(Map<String, Object> properties) {
       this.properties = properties;
       return this;
     }
 
-    public ExecutionInterruptBuilder withUuid(String uuid) {
+    public ExecutionInterruptBuilder uuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public ExecutionInterruptBuilder withAppId(String appId) {
+    public ExecutionInterruptBuilder appId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public ExecutionInterruptBuilder withCreatedBy(EmbeddedUser createdBy) {
+    public ExecutionInterruptBuilder createdBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public ExecutionInterruptBuilder withCreatedAt(long createdAt) {
+    public ExecutionInterruptBuilder createdAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public ExecutionInterruptBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public ExecutionInterruptBuilder lastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public ExecutionInterruptBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public ExecutionInterruptBuilder lastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }

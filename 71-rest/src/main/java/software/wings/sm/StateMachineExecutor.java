@@ -663,10 +663,10 @@ public class StateMachineExecutor implements StateInspectionListener {
         } else {
           executionInterruptManager.registerExecutionInterrupt(
               anExecutionInterrupt()
-                  .withAppId(stateExecutionInstance.getAppId())
-                  .withExecutionUuid(stateExecutionInstance.getExecutionUuid())
-                  .withStateExecutionInstanceId(stateExecutionInstance.getUuid())
-                  .withExecutionInterruptType(RETRY)
+                  .appId(stateExecutionInstance.getAppId())
+                  .executionUuid(stateExecutionInstance.getExecutionUuid())
+                  .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                  .executionInterruptType(RETRY)
                   .build());
         }
         break;

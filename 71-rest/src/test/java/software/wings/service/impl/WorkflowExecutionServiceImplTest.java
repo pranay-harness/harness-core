@@ -939,11 +939,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     ExecutionInterrupt executionInterrupt =
         anExecutionInterrupt()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withExecutionUuid(executionId)
-            .withStateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
-            .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+            .appId(app.getUuid())
+            .envId(env.getUuid())
+            .executionUuid(executionId)
+            .stateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
+            .executionInterruptType(ExecutionInterruptType.RESUME)
             .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));
@@ -1012,10 +1012,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     });
 
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                .withAppId(app.getUuid())
-                                                .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
-                                                .withExecutionUuid(executionId)
-                                                .withEnvId(env.getUuid())
+                                                .appId(app.getUuid())
+                                                .executionInterruptType(ExecutionInterruptType.PAUSE_ALL)
+                                                .executionUuid(executionId)
+                                                .envId(env.getUuid())
                                                 .build();
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
@@ -1052,10 +1052,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .allMatch(n -> "WAIT".equals(n.getType()) && "PAUSED".equals(n.getStatus()));
 
     executionInterrupt = anExecutionInterrupt()
-                             .withAppId(app.getUuid())
-                             .withExecutionInterruptType(ExecutionInterruptType.RESUME_ALL)
-                             .withExecutionUuid(executionId)
-                             .withEnvId(env.getUuid())
+                             .appId(app.getUuid())
+                             .executionInterruptType(ExecutionInterruptType.RESUME_ALL)
+                             .executionUuid(executionId)
+                             .envId(env.getUuid())
                              .build();
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
@@ -1118,10 +1118,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForInvalidWorkflowId() {
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                .withAppId(app.getUuid())
-                                                .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
-                                                .withEnvId(env.getUuid())
-                                                .withExecutionUuid(generateUuid())
+                                                .appId(app.getUuid())
+                                                .executionInterruptType(ExecutionInterruptType.PAUSE)
+                                                .envId(env.getUuid())
+                                                .executionUuid(generateUuid())
                                                 .build();
     try {
       executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
@@ -1186,11 +1186,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     ExecutionInterrupt executionInterrupt =
         anExecutionInterrupt()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withExecutionUuid(executionId)
-            .withStateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
-            .withExecutionInterruptType(ExecutionInterruptType.ABORT)
+            .appId(app.getUuid())
+            .envId(env.getUuid())
+            .executionUuid(executionId)
+            .stateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
+            .executionInterruptType(ExecutionInterruptType.ABORT)
             .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));
@@ -1273,10 +1273,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     });
 
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                .withAppId(app.getUuid())
-                                                .withExecutionInterruptType(ExecutionInterruptType.ABORT_ALL)
-                                                .withExecutionUuid(executionId)
-                                                .withEnvId(env.getUuid())
+                                                .appId(app.getUuid())
+                                                .executionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                .executionUuid(executionId)
+                                                .envId(env.getUuid())
                                                 .build();
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
@@ -1389,11 +1389,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     GraphNode installNode = installNodes.get(0);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                .withAppId(app.getUuid())
-                                                .withEnvId(env.getUuid())
-                                                .withExecutionUuid(executionId)
-                                                .withStateExecutionInstanceId(installNode.getId())
-                                                .withExecutionInterruptType(ExecutionInterruptType.MARK_SUCCESS)
+                                                .appId(app.getUuid())
+                                                .envId(env.getUuid())
+                                                .executionUuid(executionId)
+                                                .stateExecutionInstanceId(installNode.getId())
+                                                .executionInterruptType(ExecutionInterruptType.MARK_SUCCESS)
                                                 .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
 
@@ -1416,11 +1416,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .collect(toList())
                       .get(0);
     executionInterrupt = anExecutionInterrupt()
-                             .withAppId(app.getUuid())
-                             .withEnvId(env.getUuid())
-                             .withExecutionUuid(executionId)
-                             .withStateExecutionInstanceId(installNode.getId())
-                             .withExecutionInterruptType(ExecutionInterruptType.IGNORE)
+                             .appId(app.getUuid())
+                             .envId(env.getUuid())
+                             .executionUuid(executionId)
+                             .stateExecutionInstanceId(installNode.getId())
+                             .executionInterruptType(ExecutionInterruptType.IGNORE)
                              .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));
@@ -1553,11 +1553,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     GraphNode installNode = installNodes.get(0);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
-                                                .withAppId(app.getUuid())
-                                                .withEnvId(env.getUuid())
-                                                .withExecutionUuid(executionId)
-                                                .withStateExecutionInstanceId(installNode.getId())
-                                                .withExecutionInterruptType(ExecutionInterruptType.RETRY)
+                                                .appId(app.getUuid())
+                                                .envId(env.getUuid())
+                                                .executionUuid(executionId)
+                                                .stateExecutionInstanceId(installNode.getId())
+                                                .executionInterruptType(ExecutionInterruptType.RETRY)
                                                 .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
 
@@ -1577,11 +1577,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     installNode = installNodes.get(0);
     executionInterrupt = anExecutionInterrupt()
-                             .withAppId(app.getUuid())
-                             .withEnvId(env.getUuid())
-                             .withExecutionUuid(executionId)
-                             .withStateExecutionInstanceId(installNode.getId())
-                             .withExecutionInterruptType(ExecutionInterruptType.MARK_SUCCESS)
+                             .appId(app.getUuid())
+                             .envId(env.getUuid())
+                             .executionUuid(executionId)
+                             .stateExecutionInstanceId(installNode.getId())
+                             .executionInterruptType(ExecutionInterruptType.MARK_SUCCESS)
                              .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));

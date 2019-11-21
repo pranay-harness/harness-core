@@ -348,12 +348,11 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       case ABORT_WORKFLOW_EXECUTION: {
-        ExecutionInterrupt executionInterrupt =
-            anExecutionInterrupt()
-                .withExecutionInterruptType(ExecutionInterruptType.ABORT_ALL)
-                .withExecutionUuid(executionEvent.getContext().getWorkflowExecutionId())
-                .withAppId(executionEvent.getContext().getAppId())
-                .build();
+        ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                    .executionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                    .executionUuid(executionEvent.getContext().getWorkflowExecutionId())
+                                                    .appId(executionEvent.getContext().getAppId())
+                                                    .build();
         workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
