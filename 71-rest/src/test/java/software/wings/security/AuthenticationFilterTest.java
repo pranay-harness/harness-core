@@ -104,6 +104,9 @@ public class AuthenticationFilterTest extends CategoryTest {
     try {
       doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
       doReturn(false).when(authenticationFilter).externalFacingAPI();
+      doReturn(false).when(authenticationFilter).delegateAPI();
+      doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
+
       //      doReturn(false).when(authenticationFilter).thirdPartyApi();
       authenticationFilter.filter(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -183,6 +186,8 @@ public class AuthenticationFilterTest extends CategoryTest {
     String apiKey = "ApiKey";
     when(context.getHeaderString(API_KEY_HEADER)).thenReturn(apiKey);
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
+    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
     doReturn(true).when(authenticationFilter).externalFacingAPI();
     doReturn(false).when(rateLimitingService).rateLimitRequest(anyString());
     UriInfo uriInfo = mock(UriInfo.class);
@@ -205,6 +210,8 @@ public class AuthenticationFilterTest extends CategoryTest {
     when(context.getHeaderString(API_KEY_HEADER)).thenReturn(apiKey);
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
     doReturn(false).when(authenticationFilter).identityServiceAPI();
+    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
     doReturn(true).when(authenticationFilter).externalFacingAPI();
     doReturn(true).when(rateLimitingService).rateLimitRequest(anyString());
     UriInfo uriInfo = mock(UriInfo.class);

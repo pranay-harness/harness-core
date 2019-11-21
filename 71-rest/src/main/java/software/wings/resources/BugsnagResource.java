@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -7,7 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
 import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
@@ -68,7 +70,7 @@ public class BugsnagResource {
   @POST
   @Path(LogAnalysisResource.TEST_NODE_DATA)
   @Timed
-  @DelegateAuth
+  @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getLogRecords(
       @QueryParam("accountId") String accountId, @Valid BugsnagSetupTestData bugsnagSetupTestData) {

@@ -613,7 +613,7 @@ public class DelegateResource {
     }
   }
 
-  @DelegateAuth
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @PUT
   @Path("{delegateId}/clear-cache")
   @Timed

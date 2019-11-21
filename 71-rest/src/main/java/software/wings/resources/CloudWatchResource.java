@@ -1,13 +1,13 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -64,7 +64,7 @@ public class CloudWatchResource {
   @POST
   @Path("/node-data")
   @Timed
-  @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
+  @AuthRule(permissionType = LOGGED_IN)
   @ExceptionMetered
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @Valid CloudWatchSetupTestNodeData setupTestNodeData) {
