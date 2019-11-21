@@ -7,8 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.Validator.notNullCheck;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

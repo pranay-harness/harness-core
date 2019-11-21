@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.Validator.notNullCheck;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
 
@@ -32,7 +33,6 @@ import software.wings.features.api.PremiumFeature;
 import software.wings.features.api.RestrictedApi;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.utils.CacheManager;
-import software.wings.utils.Validator;
 
 import java.util.Arrays;
 import java.util.List;
@@ -64,10 +64,10 @@ public class WhitelistServiceImpl implements WhitelistService {
   }
 
   private void validate(Whitelist whitelist) {
-    Validator.notNullCheck("Whitelist object cannot be null", whitelist);
-    Validator.notNullCheck("AccountId cannot be null", whitelist.getAccountId());
+    notNullCheck("Whitelist object cannot be null", whitelist);
+    notNullCheck("AccountId cannot be null", whitelist.getAccountId());
     String filterCondition = whitelist.getFilter();
-    Validator.notNullCheck("Filter condition cannot be null", filterCondition);
+    notNullCheck("Filter condition cannot be null", filterCondition);
     if (filterCondition.contains("/")) {
       try {
         new SubnetUtils(filterCondition);
@@ -87,7 +87,7 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public PageResponse<Whitelist> list(String accountId, PageRequest<Whitelist> req) {
-    Validator.notNullCheck(Whitelist.ACCOUNT_ID_KEY, accountId);
+    notNullCheck(Whitelist.ACCOUNT_ID_KEY, accountId);
     req.addFilter(Whitelist.ACCOUNT_ID_KEY, EQ, accountId);
     return wingsPersistence.query(Whitelist.class, req);
   }
@@ -238,7 +238,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   @Override
   public boolean delete(String accountId, String whitelistId) {
     Whitelist whitelist = get(accountId, whitelistId);
-    Validator.notNullCheck("whitelist", whitelist);
+    notNullCheck("whitelist", whitelist);
     Query<Whitelist> whitelistQuery = wingsPersistence.createQuery(Whitelist.class)
                                           .filter(Whitelist.ACCOUNT_ID_KEY, accountId)
                                           .filter(ID_KEY, whitelistId);

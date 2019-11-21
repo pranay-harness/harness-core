@@ -6,11 +6,11 @@ import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

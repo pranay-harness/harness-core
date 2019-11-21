@@ -66,7 +66,7 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.CCMSettingService;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
@@ -402,9 +402,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                            .build())
             .build();
 
-    assertThatThrownBy(() -> settingsService.update(aSettingAttribute))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.GENERAL_ERROR.name());
+    assertThatThrownBy(() -> settingsService.update(aSettingAttribute)).isInstanceOf(GeneralException.class);
   }
 
   @Test

@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -17,7 +18,6 @@ import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 

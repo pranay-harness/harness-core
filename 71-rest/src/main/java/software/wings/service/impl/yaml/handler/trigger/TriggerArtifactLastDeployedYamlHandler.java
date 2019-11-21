@@ -1,9 +1,9 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.trigger.TriggerLastDeployedType.PIPELINE;
 import static software.wings.beans.trigger.TriggerLastDeployedType.WORKFLOW;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

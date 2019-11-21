@@ -2,11 +2,11 @@ package software.wings.service.impl.yaml;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.exception.WingsException.SRE;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -45,7 +45,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Utils;
-import software.wings.utils.Validator;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -256,7 +255,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       }
 
       Environment environment = environmentService.get(appId, finalEnvId, false);
-      Validator.notNullCheck("Environment not found for the given id:" + finalEnvId, environment);
+      notNullCheck("Environment not found for the given id:" + finalEnvId, environment);
       return (R) environment;
     } else {
       String msg = "Unsupported type " + type + " for id " + uuid;

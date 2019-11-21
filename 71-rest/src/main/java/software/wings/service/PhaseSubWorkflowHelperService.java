@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -20,7 +21,6 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
-import software.wings.utils.Validator;
 
 @Singleton
 public class PhaseSubWorkflowHelperService {
@@ -37,7 +37,7 @@ public class PhaseSubWorkflowHelperService {
       service = templateExpressionProcessor.resolveService(context, appId, serviceTemplateExpression);
     } else if (serviceId != null) {
       service = serviceResourceService.get(appId, serviceId);
-      Validator.notNullCheck("Service not found, check if it's not deleted", service);
+      notNullCheck("Service not found, check if it's not deleted", service);
     }
     return service;
   }
@@ -50,7 +50,7 @@ public class PhaseSubWorkflowHelperService {
           templateExpressionProcessor.resolveInfraDefinition(context, appId, infraDefTemplateExpression);
     } else if (infraDefinitionId != null) {
       infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
-      Validator.notNullCheck("Infra Definition not found, check if it's not deleted", infrastructureDefinition);
+      notNullCheck("Infra Definition not found, check if it's not deleted", infrastructureDefinition);
     }
     return infrastructureDefinition;
   }
@@ -62,7 +62,7 @@ public class PhaseSubWorkflowHelperService {
       infrastructureMapping = templateExpressionProcessor.resolveInfraMapping(context, appId, infraMappingExpression);
     } else if (infraMappingId != null) {
       infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-      Validator.notNullCheck("Service Infrastructure not found, check if it's not deleted", infrastructureMapping);
+      notNullCheck("Service Infrastructure not found, check if it's not deleted", infrastructureMapping);
     }
     return infrastructureMapping;
   }

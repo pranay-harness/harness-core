@@ -4,6 +4,7 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -11,7 +12,6 @@ import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -60,7 +60,6 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionData;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Optional;
@@ -246,11 +245,11 @@ public class ExecutionResource {
         workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
     if (workflowExecution.getPipelineSummary() != null) {
       String pipelineId = workflowExecution.getPipelineSummary().getPipelineId();
-      Validator.notNullCheck("Pipeline id is null for execution " + workflowExecutionId, pipelineId);
+      notNullCheck("Pipeline id is null for execution " + workflowExecutionId, pipelineId);
       authHandler.authorize(permissionAttributeList, asList(appId), pipelineId);
     } else {
       String workflowId = workflowExecution.getWorkflowId();
-      Validator.notNullCheck("Workflow id is null for execution " + workflowExecutionId, workflowId);
+      notNullCheck("Workflow id is null for execution " + workflowExecutionId, workflowId);
       authHandler.authorize(permissionAttributeList, asList(appId), workflowId);
     }
 

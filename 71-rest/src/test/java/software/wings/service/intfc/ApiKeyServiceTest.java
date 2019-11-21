@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -40,7 +41,6 @@ import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.utils.Validator;
 
 public class ApiKeyServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
@@ -109,7 +109,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
 
   private SimpleEncryption getSimpleEncryption(String accountId) {
     Account account = accountService.get(accountId);
-    Validator.notNullCheck("Account", account);
+    notNullCheck("Account", account);
     return new SimpleEncryption(account.getAccountKey().toCharArray());
   }
 

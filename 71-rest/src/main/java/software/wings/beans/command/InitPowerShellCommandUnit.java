@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static io.harness.validation.Validator.notNullCheck;
+
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -8,7 +10,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.utils.Validator;
 
 import java.util.Map;
 public class InitPowerShellCommandUnit extends AbstractCommandUnit {
@@ -45,11 +46,11 @@ public class InitPowerShellCommandUnit extends AbstractCommandUnit {
 
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
-    Validator.notNullCheck("Service Variables", context.getServiceVariables());
+    notNullCheck("Service Variables", context.getServiceVariables());
     envVariables.putAll(context.getServiceVariables());
 
     commandUnitHelper.addArtifactFileNameToEnv(envVariables, context);
-    Validator.notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
+    notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
     safeDisplayEnvVariables.putAll(context.getSafeDisplayServiceVariables());
 
     createPreparedCommands(command);

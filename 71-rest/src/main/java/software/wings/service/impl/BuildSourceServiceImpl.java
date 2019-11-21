@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -14,7 +15,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;

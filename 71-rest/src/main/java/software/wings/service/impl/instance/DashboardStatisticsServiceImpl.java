@@ -12,6 +12,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -105,7 +106,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.PipelineSummary;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -744,7 +744,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(accountId, appId, serviceId);
     List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(accountId, appId, serviceId);
     Service service = serviceResourceService.getWithDetails(appId, serviceId);
-    Validator.notNullCheck("Service not found", service, USER);
+    notNullCheck("Service not found", service, USER);
     EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
     return ServiceInstanceDashboard.builder()
         .serviceSummary(serviceSummary)
@@ -791,17 +791,17 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       long count = aggregationInfo.getCount();
 
       EntitySummary infraMappingInfo = aggregationInfo.getInfraMappingInfo();
-      Validator.notNullCheck("InfraMappingInfo", infraMappingInfo, USER);
+      notNullCheck("InfraMappingInfo", infraMappingInfo, USER);
       EntitySummary serviceInfraSummary = getEntitySummary(
           infraMappingInfo.getName(), infraMappingInfo.getId(), EntityType.INFRASTRUCTURE_MAPPING.name());
 
       EnvInfo envInfo = aggregationInfo.getEnvInfo();
-      Validator.notNullCheck("EnvInfo", envInfo, USER);
+      notNullCheck("EnvInfo", envInfo, USER);
       EntitySummary environmentSummary =
           getEntitySummary(envInfo.getName(), envInfo.getId(), EntityType.ENVIRONMENT.name());
 
       ArtifactInfo artifactInfo = aggregationInfo.getArtifactInfo();
-      Validator.notNullCheck("QLArtifact", artifactInfo, USER);
+      notNullCheck("QLArtifact", artifactInfo, USER);
       ArtifactSummary artifactSummary = getArtifactSummary(
           artifactInfo.getName(), artifactInfo.getId(), artifactInfo.getBuildNo(), artifactInfo.getSourceName());
 

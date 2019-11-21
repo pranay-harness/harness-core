@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance.sync;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -29,7 +30,6 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -75,7 +75,7 @@ public class ContainerSyncImpl implements ContainerSync {
         } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
           region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
         }
-        Validator.notNullCheck("SettingAttribute", settingAttribute);
+        notNullCheck("SettingAttribute", settingAttribute);
 
         List<EncryptedDataDetail> encryptionDetails =
             secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(),
@@ -205,7 +205,7 @@ public class ContainerSyncImpl implements ContainerSync {
     } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
       region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
     }
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute", settingAttribute);
 
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);

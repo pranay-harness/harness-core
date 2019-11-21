@@ -1,5 +1,6 @@
 package software.wings.infra;
 
+import static io.harness.validation.Validator.ensureType;
 import static java.lang.String.format;
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 
@@ -18,7 +19,6 @@ import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -78,15 +78,15 @@ public class AwsLambdaInfrastructure
     for (Map.Entry<String, Object> entry : resolvedExpressions.entrySet()) {
       switch (entry.getKey()) {
         case "region":
-          Validator.ensureType(String.class, entry.getValue(), "Region should be of String type");
+          ensureType(String.class, entry.getValue(), "Region should be of String type");
           setRegion((String) entry.getValue());
           break;
         case "role":
-          Validator.ensureType(String.class, entry.getValue(), "IAM Role should be of String type");
+          ensureType(String.class, entry.getValue(), "IAM Role should be of String type");
           setRole((String) entry.getValue());
           break;
         case "vpcId":
-          Validator.ensureType(String.class, entry.getValue(), "Vpc Id should be of String type");
+          ensureType(String.class, entry.getValue(), "Vpc Id should be of String type");
           setVpcId((String) entry.getValue());
           break;
         case "subnetIds":

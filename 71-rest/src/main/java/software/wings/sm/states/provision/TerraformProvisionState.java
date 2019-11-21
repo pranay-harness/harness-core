@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -21,7 +22,6 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;

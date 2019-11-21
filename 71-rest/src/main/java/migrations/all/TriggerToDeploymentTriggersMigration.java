@@ -6,9 +6,9 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.trigger.TriggerLastDeployedType.PIPELINE;
 import static software.wings.beans.trigger.TriggerLastDeployedType.WORKFLOW;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

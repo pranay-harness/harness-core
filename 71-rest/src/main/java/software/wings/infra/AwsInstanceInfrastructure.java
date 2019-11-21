@@ -1,11 +1,11 @@
 package software.wings.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.ensureType;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
-import static software.wings.utils.Validator.ensureType;
 
 import com.google.common.collect.ImmutableSet;
 

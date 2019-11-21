@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -105,7 +106,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.states.ManagerExecutionLogCallback;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -682,7 +682,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public List<NameValuePair> getTerraformVariables(
       String appId, String scmSettingId, String terraformDirectory, String accountId, String sourceRepoBranch) {
     SettingAttribute gitSettingAttribute = settingService.get(scmSettingId);
-    Validator.notNullCheck("Source repo provided is not Valid", gitSettingAttribute);
+    notNullCheck("Source repo provided is not Valid", gitSettingAttribute);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
       throw new InvalidRequestException("Source repo provided is not Valid");
     }

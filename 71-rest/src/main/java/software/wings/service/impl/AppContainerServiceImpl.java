@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.atteo.evo.inflector.English.plural;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
 import software.wings.utils.Misc;
-import software.wings.utils.Validator;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -105,7 +105,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer update(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
-    Validator.notNullCheck("App Stack", storedAppContainer);
+    notNullCheck("App Stack", storedAppContainer);
     if (storedAppContainer.isSystemCreated()) {
       throw new InvalidRequestException("System created Application Stack can not be updated.");
     }
@@ -121,7 +121,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer update(AppContainer appContainer) {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
-    Validator.notNullCheck("App Stack", storedAppContainer);
+    notNullCheck("App Stack", storedAppContainer);
     Map<String, Object> updatedFields = Maps.newHashMap();
     if (appContainer.getStackRootDirectory() != null) {
       updatedFields.put("stackRootDirectory", appContainer.getStackRootDirectory());

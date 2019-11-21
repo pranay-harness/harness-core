@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.validation.Validator.ensureType;
 import static java.lang.String.format;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 
@@ -17,7 +18,6 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.Blueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Utils;
-import software.wings.utils.Validator;
 
 import java.util.Map;
 import java.util.Optional;
@@ -68,7 +68,7 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
           setNamespace((String) entry.getValue());
           break;
         case "releaseName":
-          Validator.ensureType(String.class, entry.getValue(), "Release name should be of String type");
+          ensureType(String.class, entry.getValue(), "Release name should be of String type");
           setReleaseName((String) entry.getValue());
           break;
         default:

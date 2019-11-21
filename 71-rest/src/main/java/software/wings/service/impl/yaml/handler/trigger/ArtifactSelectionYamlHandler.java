@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
@@ -21,7 +22,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -121,7 +121,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
     } else if (type.equals(LAST_DEPLOYED.name())) {
       return LAST_DEPLOYED;
     } else {
-      Validator.notNullCheck("Invalid type", type);
+      notNullCheck("Invalid type", type);
       return null;
     }
   }

@@ -1,5 +1,6 @@
 package software.wings.sm.states.collaboration;
 
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.TaskType.SERVICENOW_ASYNC;
 
 import com.google.inject.Inject;
@@ -39,7 +40,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
-import software.wings.utils.Validator;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -182,7 +182,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
 
   private ServiceNowConfig getSnowConfig(String snowConnectorId) {
     SettingAttribute snowSettingAttribute = wingsPersistence.get(SettingAttribute.class, snowConnectorId);
-    Validator.notNullCheck("snowSettingAttribute", snowSettingAttribute);
+    notNullCheck("snowSettingAttribute", snowSettingAttribute);
 
     if (!(snowSettingAttribute.getValue() instanceof ServiceNowConfig)) {
       throw new InvalidRequestException("Type of Setting Attribute Value is not SnowConfig");

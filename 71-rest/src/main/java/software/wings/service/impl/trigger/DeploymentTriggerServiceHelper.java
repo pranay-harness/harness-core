@@ -7,13 +7,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.trigger.Condition.Type.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.WebhookCustomExpression.suggestExpressions;
 import static software.wings.beans.trigger.WebhookEventType.ISSUE;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookEventType.PUSH;
 import static software.wings.scheduler.ScheduledTriggerJob.PREFIX;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

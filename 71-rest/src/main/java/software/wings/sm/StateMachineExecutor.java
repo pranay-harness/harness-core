@@ -27,6 +27,7 @@ import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.threading.Morpheus.quietSleep;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -43,7 +44,6 @@ import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionInterruptType.RETRY;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

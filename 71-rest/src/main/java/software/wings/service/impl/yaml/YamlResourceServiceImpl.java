@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
@@ -13,7 +14,6 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SE
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -87,7 +87,6 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.Validator;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationYaml;
 import software.wings.yaml.BaseYaml;
@@ -135,12 +134,12 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public RestResponse<YamlPayload> getServiceCommand(@NotEmpty String appId, @NotEmpty String serviceCommandId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
 
     ServiceCommand serviceCommand = commandService.getServiceCommand(appId, serviceCommandId);
     if (serviceCommand != null) {
       Command command = commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion());
-      Validator.notNullCheck("No command with the given service command id:" + serviceCommandId, command);
+      notNullCheck("No command with the given service command id:" + serviceCommandId, command);
 
       serviceCommand.setCommand(command);
 
@@ -165,9 +164,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public RestResponse<YamlPayload> getPipeline(String appId, String pipelineId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
     Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, false);
-    Validator.notNullCheck("No pipeline with the given id:" + pipelineId, pipeline);
+    notNullCheck("No pipeline with the given id:" + pipelineId, pipeline);
     Pipeline.Yaml pipelineYaml =
         (Pipeline.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE).toYaml(pipeline, appId);
     return YamlHelper.getYamlRestResponse(
@@ -176,10 +175,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   public RestResponse<YamlPayload> getApplicationManifest(String appId, String applicationManifestId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
     ApplicationManifest applicationManifest = applicationManifestService.getById(appId, applicationManifestId);
 
-    Validator.notNullCheck("No Application Manifest with the given id:" + applicationManifestId, applicationManifest);
+    notNullCheck("No Application Manifest with the given id:" + applicationManifestId, applicationManifest);
     ApplicationManifest.Yaml yaml =
         (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
             .toYaml(applicationManifest, appId);
@@ -189,10 +188,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   public RestResponse<YamlPayload> getManifestFile(String appId, String manifestFileId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
     ManifestFile manifestFile = applicationManifestService.getManifestFileById(appId, manifestFileId);
 
-    Validator.notNullCheck("No Manifest File with the given id:" + manifestFileId, manifestFile);
+    notNullCheck("No Manifest File with the given id:" + manifestFileId, manifestFile);
     return YamlHelper.getYamlRestResponseForActualFile(manifestFile.getFileContent(), manifestFile.getFileName());
   }
 
@@ -200,7 +199,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public RestResponse<YamlPayload> getNotificationGroup(String accountId, String notificationGroupId) {
     NotificationGroup notificationGroup =
         notificationSetupService.readNotificationGroup(accountId, notificationGroupId);
-    Validator.notNullCheck("No notification group exists with the given id:" + notificationGroupId, notificationGroup);
+    notNullCheck("No notification group exists with the given id:" + notificationGroupId, notificationGroup);
 
     NotificationGroup.Yaml notificationGroupYaml =
         (NotificationGroup.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP)
@@ -263,7 +262,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public RestResponse<YamlPayload> getTrigger(String appId, String triggerId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
 
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, accountId)) {
       DeploymentTrigger deploymentTrigger = deploymentTriggerService.get(appId, triggerId, false);
@@ -296,7 +295,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public RestResponse<YamlPayload> getWorkflow(String appId, String workflowId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
     WorkflowYaml workflowYaml = (WorkflowYaml) yamlHandlerFactory
                                     .getYamlHandler(YamlType.WORKFLOW,
@@ -330,7 +329,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    */
   public RestResponse<YamlPayload> getProvisioner(String appId, String provisionerId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
     InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerService.get(appId, provisionerId);
     InfraProvisionerYaml provisionerYaml =
         (InfraProvisionerYaml) yamlHandlerFactory
@@ -343,7 +342,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   public RestResponse<YamlPayload> getCVConfiguration(String appId, String cvConfigId) {
     String accountId = appService.getAccountIdByAppId(appId);
-    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    notNullCheck("No account found for appId:" + appId, accountId);
 
     CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigId);
     CVConfigurationYaml cvConfigurationYaml =
@@ -387,7 +386,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public RestResponse<YamlPayload> getService(String appId, String serviceId) {
     Application app = appService.get(appId);
     Service service = serviceResourceService.get(appId, serviceId, true);
-    Validator.notNullCheck("Service is null for Id: " + serviceId, service);
+    notNullCheck("Service is null for Id: " + serviceId, service);
     BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.SERVICE).toYaml(service, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, service.getUuid(), app.getAccountId(), yaml, service.getName() + YAML_EXTENSION);
@@ -416,7 +415,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   public RestResponse<YamlPayload> getInfraDefinition(String appId, String infraDefinitionId) {
     String accountId = appService.getAccountIdByAppId(appId);
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
-    Validator.notNullCheck("InfraDefinition not found for appId:" + appId, infrastructureDefinition);
+    notNullCheck("InfraDefinition not found for appId:" + appId, infrastructureDefinition);
     InfrastructureDefinition.Yaml infraDefinitionYaml =
         (InfrastructureDefinition.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
             .toYaml(infrastructureDefinition, appId);
@@ -512,7 +511,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Override
   public RestResponse<YamlPayload> getSettingAttribute(String accountId, String uuid) {
     SettingAttribute settingAttribute = settingsService.get(uuid);
-    Validator.notNullCheck("SettingAttribute is not null for:" + uuid, settingAttribute);
+    notNullCheck("SettingAttribute is not null for:" + uuid, settingAttribute);
 
     SettingValueYamlHandler yamlHandler = getSettingValueYamlHandler(settingAttribute);
     BaseYaml yaml = null;

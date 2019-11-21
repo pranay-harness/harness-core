@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.PCF_CONFIG_FILE_EXTENSION;
 import static io.harness.threading.Morpheus.quietSleep;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
@@ -57,7 +58,6 @@ import static software.wings.beans.yaml.YamlType.TAG;
 import static software.wings.beans.yaml.YamlType.TRIGGER;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;

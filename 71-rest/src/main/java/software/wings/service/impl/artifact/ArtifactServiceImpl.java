@@ -10,6 +10,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -38,7 +39,6 @@ import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.impl.artifact.ArtifactCollectionUtils.getArtifactKeyFn;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.ArtifactType.DOCKER;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;

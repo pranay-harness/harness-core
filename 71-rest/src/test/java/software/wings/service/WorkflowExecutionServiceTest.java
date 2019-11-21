@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -53,7 +54,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
@@ -220,14 +221,12 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowWorkflowNull() {
-    try {
+    assertThatThrownBy(() -> {
       ExecutionArgs executionArgs = new ExecutionArgs();
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.GENERAL_ERROR.name());
-      assertThat(exception.getParams()).containsEntry("message", "workflowType");
-    }
+    })
+        .isInstanceOf(GeneralException.class);
   }
 
   /**
@@ -237,16 +236,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNullOrchestrationId() {
-    try {
+    assertThatThrownBy(() -> {
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
 
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.GENERAL_ERROR.name());
-      assertThat(exception.getParams()).containsEntry("message", "orchestrationId");
-    }
+    })
+        .isInstanceOf(GeneralException.class);
   }
 
   /*

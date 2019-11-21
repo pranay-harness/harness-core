@@ -1,6 +1,7 @@
 package software.wings.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.validation.Validator.ensureType;
 import static java.lang.String.format;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
@@ -21,7 +22,6 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
-import software.wings.utils.Validator;
 
 import java.util.Map;
 import java.util.Set;
@@ -79,15 +79,15 @@ public class GoogleKubernetesEngine
     for (Map.Entry<String, Object> entry : resolvedExpressions.entrySet()) {
       switch (entry.getKey()) {
         case "clusterName":
-          Validator.ensureType(String.class, entry.getValue(), "Region should be of String type");
+          ensureType(String.class, entry.getValue(), "Region should be of String type");
           setClusterName((String) entry.getValue());
           break;
         case "namespace":
-          Validator.ensureType(String.class, entry.getValue(), "Namespace should be of String type");
+          ensureType(String.class, entry.getValue(), "Namespace should be of String type");
           setNamespace((String) entry.getValue());
           break;
         case "releaseName":
-          Validator.ensureType(String.class, entry.getValue(), "Release name should be of String type");
+          ensureType(String.class, entry.getValue(), "Release name should be of String type");
           setReleaseName((String) entry.getValue());
           break;
         default:

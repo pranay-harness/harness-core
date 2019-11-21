@@ -4,9 +4,9 @@ import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

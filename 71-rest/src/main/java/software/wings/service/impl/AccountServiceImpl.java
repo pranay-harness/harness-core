@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -25,7 +26,6 @@ import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 import static software.wings.utils.Misc.generateSecretKey;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

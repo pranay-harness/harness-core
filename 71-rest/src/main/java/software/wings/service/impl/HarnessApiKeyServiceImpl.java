@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,7 +24,6 @@ import software.wings.security.annotations.HarnessApiKeyAuth;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.Validator;
 
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
@@ -87,7 +87,7 @@ public class HarnessApiKeyServiceImpl implements HarnessApiKeyService {
     if (apiKey == null) {
       HarnessApiKey globalApiKey =
           wingsPersistence.createQuery(HarnessApiKey.class).filter(HarnessApiKeyKeys.clientType, clientType).get();
-      Validator.notNullCheck("global api key null for client type " + clientType, globalApiKey, USER);
+      notNullCheck("global api key null for client type " + clientType, globalApiKey, USER);
       apiKey = getDecryptedKey(globalApiKey.getEncryptedKey());
       harnessApiKeyCache.put(clientType, apiKey);
     }

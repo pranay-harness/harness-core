@@ -3,6 +3,7 @@ package software.wings.service.impl.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,7 +19,6 @@ import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.artifact.CustomBuildSourceService;
-import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.util.List;
@@ -42,7 +42,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   }
 
   private List<BuildDetails> getBuildDetails(ArtifactStream artifactStream) {
-    Validator.notNullCheck("Artifact source does not exist", artifactStream, USER);
+    notNullCheck("Artifact source does not exist", artifactStream, USER);
 
     CustomArtifactStream customArtifactStream = (CustomArtifactStream) artifactStream;
 
@@ -76,7 +76,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   public boolean validateArtifactSource(ArtifactStream artifactStream) {
     logger.info("Validating artifact source for Custom Repository artifactStreamId {}",
         artifactStream.fetchArtifactStreamAttributes().getArtifactStreamId());
-    Validator.notNullCheck("Artifact source does not exist", artifactStream, USER);
+    notNullCheck("Artifact source does not exist", artifactStream, USER);
 
     CustomArtifactStream customArtifactStream = (CustomArtifactStream) artifactStream;
 

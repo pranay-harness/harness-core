@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -36,7 +37,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
-import software.wings.utils.Validator;
 
 import java.util.Collection;
 import java.util.List;
@@ -61,7 +61,7 @@ public class AwsInstanceHandler extends InstanceHandler {
     Multimap<String, Instance> asgInstanceMap = ArrayListMultimap.create();
 
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-    Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
+    notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
     if (!(infrastructureMapping instanceof AwsInfrastructureMapping)) {
       String msg =

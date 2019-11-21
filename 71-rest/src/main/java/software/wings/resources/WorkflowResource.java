@@ -10,11 +10,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
+import static io.harness.validation.PersistenceValidator.validateUuid;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
-import static software.wings.utils.Validator.notNullCheck;
-import static software.wings.utils.Validator.validateUuid;
 
 import com.google.inject.Inject;
 

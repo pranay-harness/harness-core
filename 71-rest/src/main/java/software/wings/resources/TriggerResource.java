@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -27,7 +28,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.utils.Validator;
 
 import java.util.Map;
 import javax.ws.rs.BeanParam;
@@ -111,7 +111,7 @@ public class TriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Trigger> save(@QueryParam("appId") String appId, Trigger trigger) {
-    Validator.notNullCheck("trigger", trigger);
+    notNullCheck("trigger", trigger);
     trigger.setAppId(appId);
     if (trigger.getUuid() != null) {
       Trigger existingTrigger = triggerService.get(appId, trigger.getUuid());

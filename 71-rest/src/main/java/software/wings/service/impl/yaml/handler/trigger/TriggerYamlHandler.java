@@ -5,10 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
+import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -38,7 +38,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.utils.Validator;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
 import java.util.ArrayList;
@@ -149,7 +148,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   @Override
   public Trigger get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId);
+    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId);
     return yamlHelper.getTrigger(appId, yamlFilePath);
   }
 
@@ -216,7 +215,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     } else if (workflowType.equals(WorkflowType.PIPELINE)) {
       return PIPELINE;
     } else {
-      Validator.notNullCheck("WorkflowType type is invalid", workflowType);
+      notNullCheck("WorkflowType type is invalid", workflowType);
       return null;
     }
   }
@@ -227,7 +226,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     } else if (name.equals(PIPELINE)) {
       return WorkflowType.PIPELINE;
     } else {
-      Validator.notNullCheck("Execution type is invalid" + yamlFilePath, name);
+      notNullCheck("Execution type is invalid" + yamlFilePath, name);
       return null;
     }
   }

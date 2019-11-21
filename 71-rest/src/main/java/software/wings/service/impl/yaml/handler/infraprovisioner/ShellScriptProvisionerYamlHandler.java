@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
 import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.Validator.notNullCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;

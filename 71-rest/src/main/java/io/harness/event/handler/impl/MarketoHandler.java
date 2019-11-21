@@ -26,6 +26,7 @@ import static io.harness.event.model.EventType.TRIAL_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -54,7 +55,6 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.Validator;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -202,7 +202,7 @@ public class MarketoHandler implements EventHandler {
       }
 
       Account account = accountService.get(accountId);
-      Validator.notNullCheck("Account is null for accountId:" + accountId, account);
+      notNullCheck("Account is null for accountId:" + accountId, account);
 
       switch (eventType) {
         case COMMUNITY_TO_PAID:

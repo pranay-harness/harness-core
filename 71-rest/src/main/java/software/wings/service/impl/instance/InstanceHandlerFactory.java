@@ -1,8 +1,8 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.exception.WingsException.EVERYBODY;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

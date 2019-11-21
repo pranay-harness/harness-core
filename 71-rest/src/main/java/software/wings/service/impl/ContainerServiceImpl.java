@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
@@ -39,7 +40,6 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -116,7 +116,7 @@ public class ContainerServiceImpl implements ContainerService {
     if (isKubernetesClusterConfig(value)) {
       logger.info("Kubernetes cluster config for account {}, controller: {}", accountId, containerServiceName);
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
+      notNullCheck("KubernetesConfig", kubernetesConfig);
       HasMetadata controller = kubernetesContainerService.getController(
           kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
       if (controller != null) {
@@ -158,7 +158,7 @@ public class ContainerServiceImpl implements ContainerService {
     } else if (value instanceof AwsConfig) {
       AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(
           containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails());
-      Validator.notNullCheck("AwsConfig", awsConfig);
+      notNullCheck("AwsConfig", awsConfig);
 
       List<Task> tasks;
 
@@ -221,7 +221,7 @@ public class ContainerServiceImpl implements ContainerService {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
+      notNullCheck("KubernetesConfig", kubernetesConfig);
       List<? extends HasMetadata> controllers =
           kubernetesContainerService
               .getControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)

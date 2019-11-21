@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toMap;
@@ -27,7 +28,6 @@ import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
-import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.Joiner;
@@ -48,6 +48,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.queue.Queue;
 import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
+import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -101,7 +102,6 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.DataProvider;
-import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -255,7 +255,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     String accountId = appService.getAccountIdByAppId(environment.getAppId());
     environment.setAccountId(accountId);
     environment.setKeywords(trimmedLowercaseSet(environment.generateKeywords()));
-    Environment savedEnvironment = Validator.duplicateCheck(
+    Environment savedEnvironment = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
 
     // Mark this create op into GlobalAuditContext so nested entity creation can be related to it

@@ -2,6 +2,7 @@ package migrations.all;
 
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.utils.Validator;
 
 import java.util.Set;
 
@@ -48,8 +48,8 @@ public class UserPermissionReadMigration implements Migration {
   }
 
   private void update(UserGroup userGroup, UpdateOperations<UserGroup> operations) {
-    Validator.notNullCheck("uuid", userGroup.getUuid());
-    Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
+    notNullCheck("uuid", userGroup.getUuid());
+    notNullCheck(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
                                  .filter(ID_KEY, userGroup.getUuid())
                                  .filter(UserGroup.ACCOUNT_ID_KEY, userGroup.getAccountId());

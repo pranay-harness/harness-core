@@ -3,6 +3,8 @@ package software.wings.service.impl.template;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -18,8 +20,6 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_V4
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_START_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_STOP_PATH;
-import static software.wings.utils.Validator.duplicateCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

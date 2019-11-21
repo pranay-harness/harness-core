@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -19,7 +20,6 @@ import static software.wings.common.TemplateConstants.HTTP_VERIFICATION;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
 import static software.wings.common.TemplateConstants.TOMCAT_COMMANDS;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,6 +29,7 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
+import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -47,7 +48,6 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,8 +99,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     }
     templateFolder.setKeywords(getKeywords(templateFolder));
     TemplateFolder savedTemplateFolder =
-        Validator.duplicateCheck(()
-                                     -> wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder),
+        PersistenceValidator.duplicateCheck(()
+                                                -> wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder),
             TemplateFolder.NAME_KEY, templateFolder.getName());
 
     // TODO: AUDIT: Once this entity is yamlized, this can be removed
@@ -139,7 +139,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     }
     operations.set("name", templateFolder.getName());
     operations.set("keywords", getKeywords(templateFolder));
-    Validator.duplicateCheck(() -> wingsPersistence.update(query, operations), "name", templateFolder.getName());
+    PersistenceValidator.duplicateCheck(
+        () -> wingsPersistence.update(query, operations), "name", templateFolder.getName());
     TemplateFolder updatedTemplateFolder = get(savedTemplateFolder.getUuid());
     // TODO: AUDIT: Once this entity is yamlized, this can be removed
     auditServiceHelper.reportForAuditingUsingAccountId(
@@ -199,7 +200,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Override
   public void loadDefaultTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
-    Validator.notNullCheck("Harness Template gallery was deleted", templateGallery, SRE);
+    notNullCheck("Harness Template gallery was deleted", templateGallery, SRE);
 
     TemplateFolder harnessFolder = save(TemplateFolder.builder()
                                             .appId(GLOBAL_APP_ID)

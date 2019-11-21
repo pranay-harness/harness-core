@@ -3,10 +3,10 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
+import static io.harness.validation.Validator.equalCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 import static software.wings.utils.ArtifactType.DOCKER;
-import static software.wings.utils.Validator.equalCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

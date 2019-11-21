@@ -25,6 +25,7 @@ import static io.harness.security.encryption.EncryptionType.CYBERARK;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
+import static io.harness.validation.Validator.equalCheck;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -141,7 +142,6 @@ import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
-import software.wings.utils.Validator;
 import software.wings.utils.WingsReflectionUtils;
 
 import java.io.BufferedReader;
@@ -476,7 +476,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public void resetUnchangedEncryptedFields(EncryptableSetting sourceObject, EncryptableSetting destinationObject) {
-    Validator.equalCheck(sourceObject.getClass().getName(), destinationObject.getClass().getName());
+    equalCheck(sourceObject.getClass().getName(), destinationObject.getClass().getName());
 
     List<Field> encryptedFields = sourceObject.getEncryptedFields();
     try {

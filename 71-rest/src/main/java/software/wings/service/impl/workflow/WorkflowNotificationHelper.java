@@ -8,6 +8,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptySet;
@@ -19,7 +20,6 @@ import static software.wings.beans.FailureNotification.Builder.aFailureNotificat
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.utils.Misc.getDurationString;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,7 +63,6 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.PhaseSubWorkflow;
-import software.wings.utils.Validator;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -296,7 +295,7 @@ public class WorkflowNotificationHelper {
   }
 
   private void renderUserGroups(ExecutionContext context, NotificationRule notificationRule) {
-    Validator.notNullCheck("Invalid notificationRule", notificationRule);
+    notNullCheck("Invalid notificationRule", notificationRule);
     if (!notificationRule.isUserGroupAsExpression()) {
       return;
     }

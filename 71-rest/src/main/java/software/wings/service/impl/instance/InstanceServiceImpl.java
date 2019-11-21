@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.Validator.nullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,7 +40,6 @@ import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
-import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -73,7 +73,7 @@ public class InstanceServiceImpl implements InstanceService {
     }
 
     Instance currentInstance = get(instance.getUuid(), false);
-    Validator.nullCheck("Instance", currentInstance);
+    nullCheck("Instance", currentInstance);
 
     String key = wingsPersistence.save(instance);
     Instance updatedInstance = wingsPersistence.getWithAppId(Instance.class, instance.getAppId(), key);

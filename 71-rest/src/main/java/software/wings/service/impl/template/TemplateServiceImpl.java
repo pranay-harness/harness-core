@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -29,7 +30,6 @@ import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
 import static software.wings.beans.template.VersionedTemplate.TEMPLATE_ID_KEY;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,6 +41,7 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
+import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -72,7 +73,6 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
-import software.wings.utils.Validator;
 
 import java.io.IOException;
 import java.net.URL;
@@ -123,7 +123,8 @@ public class TemplateServiceImpl implements TemplateService {
     template.setVersion(1L);
     template.setKeywords(getKeywords(template));
 
-    String templateUuid = Validator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
+    String templateUuid =
+        PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
     getTemplateVersion(template, templateUuid, template.getType(), template.getName(), CREATED);
 
     // Save Versioned template
@@ -213,7 +214,7 @@ public class TemplateServiceImpl implements TemplateService {
       templateDetailsChanged = true;
     }
 
-    Validator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
+    PersistenceValidator.duplicateCheck(() -> wingsPersistence.save(template), NAME_KEY, template.getName());
 
     Template savedTemplate = get(template.getAccountId(), template.getUuid(), String.valueOf(template.getVersion()));
     if (templateDetailsChanged) {

@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

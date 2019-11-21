@@ -2,8 +2,8 @@ package software.wings.service.impl.yaml.handler.InfraDefinition;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,7 +27,6 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -110,7 +109,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     if (isNotEmpty(yaml.getProvisioner())) {
       InfrastructureProvisioner infrastructureProvisioner =
           infrastructureProvisionerService.getByName(appId, yaml.getProvisioner());
-      Validator.notNullCheck(
+      notNullCheck(
           "Couldn't retrieve infrastructure provisioner from name:" + yaml.getProvisioner(), infrastructureProvisioner);
       bean.setProvisionerId(infrastructureProvisioner.getUuid());
     }

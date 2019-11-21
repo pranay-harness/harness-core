@@ -11,6 +11,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.Validator.notEmptyCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
@@ -31,7 +33,6 @@ import static software.wings.expression.ManagerExpressionEvaluator.getName;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -100,7 +101,6 @@ import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.states.ApprovalState;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -375,7 +375,7 @@ public class PipelineServiceImpl implements PipelineService {
                             .filter(PipelineKeys.appId, appId)
                             .filter(Pipeline.ID_KEY, pipelineId)
                             .get();
-    Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
+    notNullCheck("Pipeline does not exist", pipeline, USER);
     return pipeline.getName();
   }
 
@@ -625,8 +625,8 @@ public class PipelineServiceImpl implements PipelineService {
             workflow = workflowCache.get(workflowId);
           } else {
             workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
-            Validator.notNullCheck("Workflow does not exist", workflow, USER);
-            Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+            notNullCheck("Workflow does not exist", workflow, USER);
+            notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
             workflowCache.put(workflowId, workflow);
           }
 
@@ -723,8 +723,8 @@ public class PipelineServiceImpl implements PipelineService {
             workflow = workflowCache.get(workflowId);
           } else {
             workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
-            Validator.notNullCheck("Workflow does not exist", workflow, USER);
-            Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
+            notNullCheck("Workflow does not exist", workflow, USER);
+            notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
             workflowCache.put(workflowId, workflow);
           }
 
@@ -788,7 +788,7 @@ public class PipelineServiceImpl implements PipelineService {
       return;
     }
     for (Variable variable : workflowVariables) {
-      Validator.notEmptyCheck("Empty variable name", variable.getName());
+      notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       if (variable.obtainEntityType() == null) {
         // Non-entity variables.
@@ -1196,7 +1196,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<String> artifactNeededServiceIds, List<String> envIds, boolean withDefaultArtifact,
       WorkflowExecution workflowExecution, Map<String, Workflow> workflowCache,
       DeploymentMetadata.Include... includeList) {
-    Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
+    notNullCheck("Pipeline does not exist", pipeline, USER);
     if (artifactNeededServiceIds == null) {
       artifactNeededServiceIds = new ArrayList<>();
     }
@@ -1227,8 +1227,8 @@ public class PipelineServiceImpl implements PipelineService {
           workflow = workflowCache.get(workflowId);
         } else {
           workflow = workflowService.readWorkflowWithoutServices(pipeline.getAppId(), workflowId, infraRefactor);
-          Validator.notNullCheck("Workflow does not exist", workflow, USER);
-          Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+          notNullCheck("Workflow does not exist", workflow, USER);
+          notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
           workflowCache.put(workflowId, workflow);
         }
 

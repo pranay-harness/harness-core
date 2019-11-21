@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_BRANCH_NAME_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_GIT_CONNECTOR_ID_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_WEBHOOK_SOURCE_KEY;
@@ -37,7 +38,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
-import software.wings.utils.Validator;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -156,7 +156,7 @@ public class WebhookTriggerProcessor {
       @NotEmpty String appId, @NotEmpty String gitConnectorId, @NotEmpty String currentCommitId,
       @NotEmpty String oldCommitId, @NotEmpty String branch, List<String> filePaths) {
     GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitConnectorId);
-    Validator.notNullCheck("Git connector was deleted", gitConfig);
+    notNullCheck("Git connector was deleted", gitConfig);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(gitConfig, null, null);
 
     return TriggerDeploymentNeededRequest.builder()

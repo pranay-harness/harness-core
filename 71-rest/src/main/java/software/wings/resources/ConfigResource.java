@@ -14,6 +14,7 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
+import io.harness.validation.PersistenceValidator;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -26,7 +27,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
-import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.InputStream;
@@ -110,7 +110,7 @@ public class ConfigResource {
       }
     }
 
-    String fileId = Validator.duplicateCheck(
+    String fileId = PersistenceValidator.duplicateCheck(
         ()
             -> configService.save(configFile,
                 new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())),

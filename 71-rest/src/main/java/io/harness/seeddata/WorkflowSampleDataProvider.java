@@ -3,6 +3,7 @@ package io.harness.seeddata;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_BASIC_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_ROLLING_WORKFLOW_NAME;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
@@ -30,7 +31,6 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.ContainerServiceSetup.ContainerServiceSetupKeys;
-import software.wings.utils.Validator;
 
 import java.util.Map;
 
@@ -51,8 +51,8 @@ public class WorkflowSampleDataProvider {
                             .build();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
-    Validator.notNullCheck("Workflow not saved", savedWorkflow);
-    Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
+    notNullCheck("Workflow not saved", savedWorkflow);
+    notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
 
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
@@ -79,8 +79,8 @@ public class WorkflowSampleDataProvider {
                             .build();
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
-    Validator.notNullCheck("Workflow not saved", savedWorkflow);
-    Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
+    notNullCheck("Workflow not saved", savedWorkflow);
+    notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
 
     // Attach workflow first Workflow Phase
     WorkflowPhase workflowPhase = workflowService.createWorkflowPhase(
@@ -119,8 +119,8 @@ public class WorkflowSampleDataProvider {
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
-    Validator.notNullCheck("Workflow not saved", savedWorkflow);
-    Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
+    notNullCheck("Workflow not saved", savedWorkflow);
+    notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
 
     return savedWorkflow.getUuid();
   }
@@ -142,8 +142,8 @@ public class WorkflowSampleDataProvider {
     workflow.getOrchestrationWorkflow().setOrchestrationWorkflowType(OrchestrationWorkflowType.CANARY);
 
     Workflow savedWorkflow = workflowService.createWorkflow(workflow);
-    Validator.notNullCheck("Workflow not saved", savedWorkflow);
-    Validator.notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
+    notNullCheck("Workflow not saved", savedWorkflow);
+    notNullCheck("Orchestration workflow not saved", savedWorkflow.getOrchestrationWorkflow());
 
     return savedWorkflow.getUuid();
   }
@@ -156,7 +156,7 @@ public class WorkflowSampleDataProvider {
             .filter(phaseStep -> phaseStep.getPhaseStepType().equals(PhaseStepType.CONTAINER_SETUP))
             .findFirst()
             .orElse(null);
-    Validator.notNullCheck("Container Setup Phase Step required", containerSetup);
+    notNullCheck("Container Setup Phase Step required", containerSetup);
 
     GraphNode kubernetesSetupNode =
         containerSetup.getSteps()
@@ -165,7 +165,7 @@ public class WorkflowSampleDataProvider {
             .findFirst()
             .orElse(null);
 
-    Validator.notNullCheck("Kebernetes Setup Step required", containerSetup);
+    notNullCheck("Kebernetes Setup Step required", containerSetup);
 
     // Add properties
     Map<String, Object> properties = kubernetesSetupNode.getProperties();
@@ -186,7 +186,7 @@ public class WorkflowSampleDataProvider {
             .filter(phaseStep -> phaseStep.getPhaseStepType().equals(PhaseStepType.CONTAINER_DEPLOY))
             .findFirst()
             .orElse(null);
-    Validator.notNullCheck("Container Deploy Phase Step required", containerDeploy);
+    notNullCheck("Container Deploy Phase Step required", containerDeploy);
 
     GraphNode upgradeContainerNode =
         containerDeploy.getSteps()
@@ -195,7 +195,7 @@ public class WorkflowSampleDataProvider {
             .findFirst()
             .orElse(null);
 
-    Validator.notNullCheck("Kubernetes Deploy Step required", upgradeContainerNode);
+    notNullCheck("Kubernetes Deploy Step required", upgradeContainerNode);
 
     Map<String, Object> properties = upgradeContainerNode.getProperties();
     properties.put(INSTANCE_UNIT_TYPE_KEY, InstanceUnitType.PERCENTAGE);

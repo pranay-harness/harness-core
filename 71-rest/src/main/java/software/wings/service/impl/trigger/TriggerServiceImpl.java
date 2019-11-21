@@ -11,6 +11,9 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
+import static io.harness.validation.Validator.equalCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
@@ -33,9 +36,6 @@ import static software.wings.service.impl.trigger.TriggerServiceHelper.overrideT
 import static software.wings.service.impl.trigger.TriggerServiceHelper.validateAndSetCronExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getServiceWorkflowVariables;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
-import static software.wings.utils.Validator.duplicateCheck;
-import static software.wings.utils.Validator.equalCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -121,7 +121,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1436,7 +1435,7 @@ public class TriggerServiceImpl implements TriggerService {
   private Artifact getAlreadyCollectedOrCollectNewArtifactForBuildNumber(
       String appId, String artifactStreamId, String buildNumber) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
-    Validator.notNullCheck("Artifact Source doesn't exist", artifactStream, USER);
+    notNullCheck("Artifact Source doesn't exist", artifactStream, USER);
     Artifact collectedArtifactForBuildNumber =
         artifactService.getArtifactByBuildNumber(artifactStream, buildNumber, false);
 
@@ -1510,13 +1509,13 @@ public class TriggerServiceImpl implements TriggerService {
     List<Variable> variables;
     if (PIPELINE.equals(workflowType)) {
       Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
-      Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
+      notNullCheck("Pipeline does not exist", pipeline, USER);
       envParamaterized = pipeline.isEnvParameterized();
       variables = pipeline.getPipelineVariables();
     } else if (WorkflowType.ORCHESTRATION.equals(workflowType)) {
       Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
-      Validator.notNullCheck("Workflow does not exist", workflow, USER);
-      Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+      notNullCheck("Workflow does not exist", workflow, USER);
+      notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
       envParamaterized = workflow.checkEnvironmentTemplatized();
       variables = workflow.getOrchestrationWorkflow().getUserVariables();
     } else {

@@ -3,9 +3,9 @@ package software.wings.service.impl.yaml.handler.notification;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

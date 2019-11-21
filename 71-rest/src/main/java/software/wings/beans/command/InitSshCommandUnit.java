@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.Utils.escapifyString;
@@ -24,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -107,7 +107,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
     activityId = context.getActivityId();
     executionStagingDir = "/tmp/" + activityId;
     preInitCommand = "mkdir -p " + executionStagingDir;
-    Validator.notNullCheck("Service Variables", context.getServiceVariables());
+    notNullCheck("Service Variables", context.getServiceVariables());
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
       envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
@@ -118,7 +118,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
 
     commandUnitHelper.addArtifactFileNameToEnv(envVariables, context);
 
-    Validator.notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
+    notNullCheck("Safe Display Service Variables", context.getSafeDisplayServiceVariables());
     for (Map.Entry<String, String> entry : context.getSafeDisplayServiceVariables().entrySet()) {
       safeDisplayEnvVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }

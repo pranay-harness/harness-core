@@ -7,6 +7,8 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
@@ -17,8 +19,6 @@ import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
-import static software.wings.utils.Validator.duplicateCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

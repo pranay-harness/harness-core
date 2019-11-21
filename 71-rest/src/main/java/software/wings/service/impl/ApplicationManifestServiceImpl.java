@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -12,8 +14,6 @@ import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
-import static software.wings.utils.Validator.duplicateCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -16,7 +17,6 @@ import software.wings.service.intfc.SystemCatalogService;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
 import software.wings.utils.Misc;
-import software.wings.utils.Validator;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -44,7 +44,7 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
   @Override
   public SystemCatalog update(SystemCatalog systemCatalog, String url, FileBucket fileBucket, long size) {
     SystemCatalog storedSystemCatalog = get(systemCatalog.getUuid());
-    Validator.notNullCheck("System Catalog", storedSystemCatalog);
+    notNullCheck("System Catalog", storedSystemCatalog);
     if (newPlatformSoftwareBinaryUploaded(storedSystemCatalog, systemCatalog)) {
       uploadSystemCatalogFile(systemCatalog, url, fileBucket, size);
     }

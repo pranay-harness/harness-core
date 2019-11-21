@@ -10,6 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -49,6 +50,7 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
+import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -111,7 +113,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 import software.wings.utils.Utils;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -442,7 +443,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
     // Set collection status initially to UNSTABLE.
     artifactStream.setCollectionStatus(ArtifactStreamCollectionStatus.UNSTABLE.name());
-    String id = Validator.duplicateCheck(() -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
+    String id = PersistenceValidator.duplicateCheck(
+        () -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
 
@@ -561,7 +563,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         String version = artifactStream.getTemplateVersion() != null ? artifactStream.getTemplateVersion() : LATEST_TAG;
         ArtifactStream artifactStreamFromTemplate = (ArtifactStream) templateService.constructEntityFromTemplate(
             artifactStream.getTemplateUuid(), version, EntityType.ARTIFACT_STREAM);
-        Validator.notNullCheck("Template does not exist", artifactStreamFromTemplate, USER);
+        notNullCheck("Template does not exist", artifactStreamFromTemplate, USER);
         artifactStream.setTemplateVariables(templateHelper.overrideVariables(
             artifactStreamFromTemplate.getTemplateVariables(), oldTemplateVariables, false));
         if (artifactStream.getArtifactStreamType().equals(CUSTOM.name())) {
@@ -587,7 +589,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
 
-    ArtifactStream finalArtifactStream = Validator.duplicateCheck(
+    ArtifactStream finalArtifactStream = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream), "name", artifactStream.getName());
 
     if (!existingArtifactStream.getSourceName().equals(finalArtifactStream.getSourceName())) {
@@ -1145,7 +1147,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     String serviceId = artifactStream.getServiceId();
-    Validator.notNullCheck("ArtifactStream.serviceId", serviceId);
+    notNullCheck("ArtifactStream.serviceId", serviceId);
 
     // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is deleted
     // in parallel
@@ -1181,7 +1183,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     String serviceId = artifactStream.getServiceId();
-    Validator.notNullCheck("ArtifactStream.serviceId", serviceId);
+    notNullCheck("ArtifactStream.serviceId", serviceId);
 
     // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is deleted
     // in parallel

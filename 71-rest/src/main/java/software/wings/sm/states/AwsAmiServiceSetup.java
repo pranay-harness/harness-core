@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -13,7 +14,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
 import static software.wings.utils.Misc.normalizeExpression;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;

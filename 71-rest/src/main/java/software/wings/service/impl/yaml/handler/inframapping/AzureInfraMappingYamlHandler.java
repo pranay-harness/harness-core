@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.Validator.notNullCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.exception.HarnessException;
 import software.wings.beans.AzureInfrastructureMapping;

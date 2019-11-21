@@ -1,11 +1,11 @@
 package software.wings.service.impl.workflow.creation;
 
+import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.FeatureName.INFRA_MAPPING_REFACTOR;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.WorkflowConstants.K8S_CANARY_PHASE_NAME;
 import static software.wings.common.WorkflowConstants.K8S_PRIMARY_PHASE_NAME;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 

@@ -4,6 +4,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -17,7 +18,6 @@ import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -92,7 +92,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Validator;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -414,7 +413,7 @@ public class AwsAmiServiceDeployState extends State {
 
     awsAmiDeployStateExecutionData.setDelegateMetaInfo(amiServiceDeployResponse.getDelegateMetaInfo());
     Activity activity = activityService.get(awsAmiDeployStateExecutionData.getActivityId(), appId);
-    Validator.notNullCheck("Activity", activity);
+    notNullCheck("Activity", activity);
 
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     Builder logBuilder = aLog()
@@ -482,17 +481,17 @@ public class AwsAmiServiceDeployState extends State {
         (AwsAmiDeployStateExecutionData) context.getStateExecutionData();
 
     Application app = workflowStandardParams.getApp();
-    Validator.notNullCheck("Application", app);
+    notNullCheck("Application", app);
 
     Activity activity = activityService.get(awsAmiDeployStateExecutionData.getActivityId(), app.getUuid());
-    Validator.notNullCheck("Activity", activity);
+    notNullCheck("Activity", activity);
 
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
         activity.getAppId(), context.fetchInfraMappingId());
 
     String serviceId = phaseElement.getServiceElement().getUuid();
     Environment env = workflowStandardParams.getEnv();
-    Validator.notNullCheck("Environment", env);
+    notNullCheck("Environment", env);
     Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);

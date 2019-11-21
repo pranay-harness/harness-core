@@ -28,6 +28,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeValidate;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
 import static java.util.Arrays.asList;
@@ -57,7 +58,6 @@ import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -249,7 +249,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
-import software.wings.utils.Validator;
 
 import java.io.ObjectStreamClass;
 import java.util.ArrayList;
@@ -2038,7 +2037,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public DeploymentMetadata fetchDeploymentMetadata(
       String appId, ExecutionArgs executionArgs, boolean withDefaultArtifact, String workflowExecutionId) {
-    Validator.notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
+    notNullCheck("Workflow type is required", executionArgs.getWorkflowType());
     WorkflowExecution workflowExecution = null;
     if (withDefaultArtifact && workflowExecutionId != null) {
       workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
@@ -2128,7 +2127,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
-    Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
+    notNullCheck("stateExecutionInstance", stateExecutionInstance);
 
     Map<String, ExecutionInterruptEffect> map = new HashMap<>();
     stateExecutionInstance.getInterruptHistory().forEach(effect -> map.put(effect.getInterruptId(), effect));
@@ -2166,10 +2165,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<StateExecutionElement> getExecutionElements(String appId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
-    Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
+    notNullCheck("stateExecutionInstance", stateExecutionInstance);
 
     StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
-    Validator.notNullCheck("stateExecutionData", stateExecutionData);
+    notNullCheck("stateExecutionData", stateExecutionData);
     if (!(stateExecutionData instanceof RepeatStateExecutionData)) {
       throw new InvalidRequestException("Request for elements of instance that is not repeated", USER);
     }

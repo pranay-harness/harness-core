@@ -8,10 +8,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

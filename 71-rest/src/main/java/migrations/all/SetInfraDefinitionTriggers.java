@@ -4,7 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.utils.Validator.notNullCheck;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

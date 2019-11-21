@@ -8,12 +8,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Objects.requireNonNull;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
@@ -47,7 +47,6 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.utils.CacheManager;
 import software.wings.utils.CryptoUtils;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -78,7 +77,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   private SimpleEncryption getSimpleEncryption(String accountId) {
     Account account = accountService.get(accountId);
-    Validator.notNullCheck("Account is null for accountId: " + accountId, account);
+    notNullCheck("Account is null for accountId: " + accountId, account);
     return new SimpleEncryption(account.getAccountKey().toCharArray());
   }
 
@@ -105,9 +104,9 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   @RestrictedApi(ApiKeysFeature.class)
   public ApiKeyEntry update(String uuid, String accountId, ApiKeyEntry apiKeyEntry) {
-    Validator.notNullCheck("ApiKeyEntry is null", apiKeyEntry, USER);
-    Validator.notNullCheck("uuid is null for the given api key entry", uuid, USER);
-    Validator.notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);
+    notNullCheck("ApiKeyEntry is null", apiKeyEntry, USER);
+    notNullCheck("uuid is null for the given api key entry", uuid, USER);
+    notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);
 
     ApiKeyEntry apiKeyEntryBeforeUpdate = get(uuid, accountId);
 
@@ -233,7 +232,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private ApiKeyEntry buildApiKeyEntry(String uuid, ApiKeyEntry entry, boolean details) {
-    Validator.notNullCheck("apiKeyEntry is null for id: " + uuid, entry);
+    notNullCheck("apiKeyEntry is null for id: " + uuid, entry);
     String decryptedKey = new String(getSimpleEncryption(entry.getAccountId()).decryptChars(entry.getEncryptedKey()));
 
     return ApiKeyEntry.builder()

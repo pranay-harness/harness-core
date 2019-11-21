@@ -4,10 +4,10 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -69,7 +69,6 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.Validator;
 
 import java.util.Collections;
 import java.util.List;
@@ -161,7 +160,7 @@ public abstract class CloudFormationState extends State {
 
   protected AwsConfig getAwsConfig(String awsConfigId) {
     SettingAttribute awsSettingAttribute = settingsService.get(awsConfigId);
-    Validator.notNullCheck("awsSettingAttribute", awsSettingAttribute);
+    notNullCheck("awsSettingAttribute", awsSettingAttribute);
     if (!(awsSettingAttribute.getValue() instanceof AwsConfig)) {
       throw new InvalidRequestException("Setting attribute is of AwsConfig");
     }

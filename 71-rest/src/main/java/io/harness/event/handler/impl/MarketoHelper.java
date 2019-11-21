@@ -2,6 +2,7 @@ package io.harness.event.handler.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -21,7 +22,6 @@ import retrofit2.Retrofit;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 import software.wings.service.intfc.UserService;
-import software.wings.utils.Validator;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -39,7 +39,7 @@ public class MarketoHelper {
 
   public long createOrUpdateLead(Account account, String userName, String email, String accessToken,
       String oauthProvider, Retrofit retrofit) throws IOException, URISyntaxException {
-    Validator.notNullCheck("Email is null while registering the lead", email);
+    notNullCheck("Email is null while registering the lead", email);
 
     int existingLeadId = 0;
     retrofit2.Response<GetLeadResponse> response =
