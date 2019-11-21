@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.search.framework.changestreams.ChangeEvent;
 import software.wings.search.framework.changestreams.ChangeSubscriber;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Queue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -32,7 +34,11 @@ public class ElasticsearchRealtimeSyncTask {
 
   private ChangeSubscriber<?> getChangeSubscriber() {
     return changeEvent -> {
+      Instant start = Instant.now();
       boolean isRunningSuccessfully = elasticsearchSyncHelper.processChange(changeEvent);
+      long timeTaken = Duration.between(Instant.now(), start).toMillis();
+      logger.info("ChangeEvent {} of type {}:{} took {} ms to process", changeEvent.getUuid(),
+          changeEvent.getEntityType(), changeEvent.getChangeType(), timeTaken);
       if (!isRunningSuccessfully) {
         elasticsearchSyncHelper.stopChangeListeners();
       }
