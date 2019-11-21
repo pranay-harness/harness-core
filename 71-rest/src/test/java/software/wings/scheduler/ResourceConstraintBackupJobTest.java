@@ -1,38 +1,29 @@
 package software.wings.scheduler;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static software.wings.scheduler.ResourceConstraintBackupJob.GROUP;
+import static software.wings.scheduler.ResourceConstraintBackupJob.NAME;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
-import io.harness.distribution.constraint.Constraint;
-import io.harness.distribution.constraint.Constraint.Strategy;
-import io.harness.distribution.constraint.ConstraintUnit;
-import io.harness.distribution.constraint.Consumer;
-import io.harness.distribution.constraint.ConsumerId;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.quartz.JobExecutionContext;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ResourceConstraint;
-import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
-import software.wings.beans.ResourceConstraintUsage;
-import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.WorkflowExecutionService;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ResourceConstraintBackupJobTest extends WingsBaseTest {
   @Mock WorkflowExecutionService workflowExecutionService;
@@ -44,35 +35,16 @@ public class ResourceConstraintBackupJobTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void jobExecute() throws Exception {
-    final String accountId = generateUuid();
-
-    final ResourceConstraint resourceConstraint =
-        ResourceConstraint.builder().accountId(accountId).strategy(Strategy.ASAP).capacity(1).name("Foo").build();
-    resourceConstraintService.save(resourceConstraint);
-
-    final Constraint constraint = resourceConstraintService.createAbstraction(resourceConstraint);
-
-    final String appId = generateUuid();
-    final String workflowExecutionId = generateUuid();
-
-    Map<String, Object> constraintContext = new HashMap();
-    constraintContext.put(ResourceConstraintInstanceKeys.appId, appId);
-    constraintContext.put(ResourceConstraintInstanceKeys.releaseEntityType, "WORKFLOW");
-    constraintContext.put(ResourceConstraintInstanceKeys.releaseEntityId, workflowExecutionId);
-    constraintContext.put(ResourceConstraintInstanceKeys.order, 1);
-
-    final Consumer.State state = constraint.registerConsumer(
-        new ConstraintUnit("1"), new ConsumerId("1"), 1, constraintContext, resourceConstraintService.getRegistry());
-
-    final WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
-    workflowExecution.setStatus(ExecutionStatus.ABORTED);
-    when(workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId)).thenReturn(workflowExecution);
-
+    ArgumentCaptor<JobKey> captor = ArgumentCaptor.forClass(JobKey.class);
     JobExecutionContext context = mock(JobExecutionContext.class);
-    job.execute(context);
 
-    final List<ResourceConstraintUsage> usage =
-        resourceConstraintService.usage(accountId, asList(resourceConstraint.getUuid()));
-    assertThat(usage.size()).isEqualTo(0);
+    Scheduler scheduler = mock(Scheduler.class);
+    when(context.getScheduler()).thenReturn(scheduler);
+
+    job.execute(context);
+    verify(scheduler, times(1)).deleteJob(captor.capture());
+    JobKey jobKey = captor.getValue();
+    assertThat(jobKey.getGroup()).isEqualTo(GROUP);
+    assertThat(jobKey.getName()).isEqualTo(NAME);
   }
 }

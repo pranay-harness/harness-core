@@ -1,14 +1,7 @@
 package software.wings.scheduler;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static java.lang.String.join;
-
 import com.google.inject.Inject;
 
-import io.fabric8.utils.Strings;
-import io.harness.exception.WingsException;
-import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -16,14 +9,18 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.service.intfc.ResourceConstraintService;
 
-import java.util.Set;
-
+/*
+This job is migrated to use Iterators
+io.harness.workers.background.critical.iterator.ResourceConstraintBackupHandler
+ */
 @Slf4j
+@Deprecated
 public class ResourceConstraintBackupJob implements Job {
   public static final String NAME = "BACKUP";
   public static final String GROUP = "RESOURCE_CONSTRAINT_GROUP";
@@ -46,25 +43,9 @@ public class ResourceConstraintBackupJob implements Job {
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
-      // Combine the constants that we just switched active to finished with all blocked ones.
-      Set<String> completelyBlocked = resourceConstraintService.selectBlockedConstraints();
-      if (isNotEmpty(completelyBlocked)) {
-        if (logger.isWarnEnabled()) {
-          logger.error("There are completely blocked constraints: {}", Strings.join(", ", completelyBlocked));
-        }
-      }
-
-      Set<String> constraintIds = resourceConstraintService.updateActiveConstraints(null, null);
-      constraintIds.addAll(completelyBlocked);
-
-      logger.info("The following resource constrained need to be unblocked: {}", join(", ", constraintIds));
-
-      // Unblock the constraints that can be unblocked
-      resourceConstraintService.updateBlockedConstraints(constraintIds);
-    } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
-    } catch (RuntimeException e) {
-      logger.error("", e);
+      jobExecutionContext.getScheduler().deleteJob(new JobKey(NAME, GROUP));
+    } catch (Exception ex) {
+      logger.warn("Exception while deleting job {}-{}", NAME, GROUP);
     }
   }
 }

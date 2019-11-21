@@ -88,6 +88,7 @@ import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
+import io.harness.workers.background.critical.iterator.ResourceConstraintBackupHandler;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +122,6 @@ import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.LicenseCheckJob;
-import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.UsageMetricsJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
@@ -624,6 +624,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
     injector.getInstance(UsageMetricsHandler.class).registerIterators();
+    injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators();
 
     if (injector.getInstance(FeatureFlagService.class).isGlobalEnabled(PERPETUAL_TASK_SERVICE)) {
       logger.info("Initializing Perpetual Task Assignor..");
@@ -645,7 +646,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       // and they will initialize the jobs.
       if (acquiredLock != null) {
         WorkflowExecutionMonitorJob.add(jobScheduler);
-        ResourceConstraintBackupJob.addJob(jobScheduler);
         AdministrativeJob.addJob(jobScheduler);
         LicenseCheckJob.addJob(jobScheduler);
         UsageMetricsJob.addJob(jobScheduler);
