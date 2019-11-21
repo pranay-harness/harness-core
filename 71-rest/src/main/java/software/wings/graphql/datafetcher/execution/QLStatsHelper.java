@@ -14,6 +14,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
+import software.wings.graphql.utils.nameservice.NameResult;
 
 @Singleton
 @Slf4j
@@ -52,7 +53,7 @@ public class QLStatsHelper {
     if (workflow != null) {
       return workflow.getName();
     }
-    return entityId;
+    return NameResult.DELETED;
   }
 
   private String getEnvName(String entityId) {
@@ -60,7 +61,7 @@ public class QLStatsHelper {
     if (environment != null) {
       return environment.getName();
     }
-    return entityId;
+    return NameResult.DELETED;
   }
 
   private String getServiceName(String entityId) {
@@ -68,7 +69,7 @@ public class QLStatsHelper {
     if (service != null) {
       return service.getName();
     }
-    return entityId;
+    return NameResult.DELETED;
   }
 
   private String getApplicationName(String entityId) {
@@ -76,7 +77,7 @@ public class QLStatsHelper {
     if (application != null) {
       return application.getName();
     } else {
-      return entityId;
+      return NameResult.DELETED;
     }
   }
 
@@ -85,7 +86,7 @@ public class QLStatsHelper {
     if (attribute != null) {
       return attribute.getName();
     } else {
-      return entityId;
+      return NameResult.DELETED;
     }
   }
 
@@ -94,14 +95,14 @@ public class QLStatsHelper {
     if (pipeline != null) {
       return pipeline.getName();
     } else {
-      return entityId;
+      return NameResult.DELETED;
     }
   }
 
   private String getUserName(String userId) {
     User user = wingsPersistence.get(User.class, userId);
     if (user == null) {
-      return userId;
+      return NameResult.DELETED;
     }
     return user.getName();
   }
@@ -111,6 +112,6 @@ public class QLStatsHelper {
     if (trigger != null) {
       return trigger.getName();
     }
-    return triggerId;
+    return NameResult.DELETED;
   }
 }
