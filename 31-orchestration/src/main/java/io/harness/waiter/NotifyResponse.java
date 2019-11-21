@@ -27,12 +27,12 @@ import java.util.Date;
 @FieldNameConstants(innerTypeName = "NotifyResponseKeys")
 @Entity(value = "notifyResponses", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class NotifyResponse<T extends ResponseData> implements PersistentEntity, UuidAccess, CreatedAtAccess {
+public class NotifyResponse implements PersistentEntity, UuidAccess, CreatedAtAccess {
   public static final Duration TTL = ofDays(21);
 
   @Id private String uuid;
   @Indexed private long createdAt;
-  private T response;
+  private ResponseData response;
   private boolean error;
 
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

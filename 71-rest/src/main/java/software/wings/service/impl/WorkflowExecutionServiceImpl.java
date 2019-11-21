@@ -2105,6 +2105,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String workflowExecutionId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    notNullCheck("The state details are not available", stateExecutionInstance);
     return graphRenderer.convertToNode(stateExecutionInstance);
   }
 
@@ -2113,6 +2114,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String workflowExecutionId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    notNullCheck("The state history is not available", stateExecutionInstance);
     return stateExecutionInstance.getStateExecutionDataHistory();
   }
 

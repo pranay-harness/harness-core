@@ -98,11 +98,11 @@ public class WaitNotifyEngine {
     return waitInstanceId;
   }
 
-  public <T extends ResponseData> String notify(String correlationId, T response) {
+  public String notify(String correlationId, ResponseData response) {
     return notify(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
 
-  private <T extends ResponseData> String notify(String correlationId, T response, boolean error) {
+  private String notify(String correlationId, ResponseData response, boolean error) {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
     if (logger.isDebugEnabled()) {
@@ -110,7 +110,7 @@ public class WaitNotifyEngine {
     }
 
     try {
-      persistence.save(NotifyResponse.<T>builder()
+      persistence.save(NotifyResponse.builder()
                            .uuid(correlationId)
                            .createdAt(currentTimeMillis())
                            .response(response)
