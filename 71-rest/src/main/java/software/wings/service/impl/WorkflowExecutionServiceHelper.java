@@ -30,8 +30,6 @@ public class WorkflowExecutionServiceHelper {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
-  private static final String CHANGED_MESSAGE =
-      "Workflow Variables have changed since previous execution. Please select new values.";
 
   public WorkflowVariablesMetadata fetchWorkflowVariables(
       String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
@@ -55,15 +53,12 @@ public class WorkflowExecutionServiceHelper {
 
     Map<String, String> oldWorkflowVariablesValueMap = workflowExecution.getExecutionArgs().getWorkflowVariables();
     if (isEmpty(oldWorkflowVariablesValueMap)) {
-      return new WorkflowVariablesMetadata(workflowVariables);
+      return new WorkflowVariablesMetadata(
+          workflowVariables, workflowVariables.stream().anyMatch(variable -> ENTITY.equals(variable.getType())));
     }
 
     boolean changed = populateWorkflowVariablesValues(workflowVariables, new HashMap<>(oldWorkflowVariablesValueMap));
-    String changedMessage = null;
-    if (changed) {
-      changedMessage = CHANGED_MESSAGE;
-    }
-    return new WorkflowVariablesMetadata(workflowVariables, changed, changedMessage);
+    return new WorkflowVariablesMetadata(workflowVariables, changed);
   }
 
   private List<Variable> fetchWorkflowVariables(String appId, ExecutionArgs executionArgs) {

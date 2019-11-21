@@ -23,7 +23,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -266,11 +265,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
     when(workflowExecutionService.getWorkflowExecution(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(workflowExecution);
     WorkflowVariablesMetadata workflowVariablesMetadata = workflowExecutionServiceHelper.fetchWorkflowVariables(
         APP_ID, prepareExecutionArgs(null, false), WORKFLOW_EXECUTION_ID);
-    if (EmptyPredicate.isEmpty(workflowVariablesMap)) {
-      assertThat(workflowVariablesMetadata.isChanged()).isFalse();
-    } else {
-      assertThat(workflowVariablesMetadata.isChanged()).isTrue();
-    }
+    assertThat(workflowVariablesMetadata.isChanged()).isTrue();
     List<Variable> newWorkflowVariables = workflowVariablesMetadata.getWorkflowVariables();
     validateUnsetWorkflowVariables(newWorkflowVariables);
   }
