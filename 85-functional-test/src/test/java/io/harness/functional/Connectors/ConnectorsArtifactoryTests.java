@@ -117,7 +117,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
 
   public boolean TC1_createNexusConnector() {
     String NEXUS_URL = "https://nexus2.harness.io";
-    String VERSION = "3.x";
+    String VERSION = "2.x";
     String USER_NAME = "admin";
 
     SettingAttribute settingAttribute =
@@ -146,7 +146,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
 
   public void TC2_updateNexusConnector() {
     String NEXUS_URL = "https://nexus2.harness.io";
-    String VERSION = "3.x";
+    String VERSION = "2.x";
     String USER_NAME = "admin";
     CONNECTOR_NAME_NEXUS = CONNECTOR_NAME_NEXUS + "update";
 

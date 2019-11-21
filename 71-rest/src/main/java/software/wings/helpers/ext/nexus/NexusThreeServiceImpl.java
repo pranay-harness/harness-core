@@ -33,6 +33,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.DockerImageResponse;
 import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
@@ -627,6 +628,29 @@ public class NexusThreeServiceImpl {
       }
     }
     return true;
+  }
+
+  public boolean isServerValid(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
+      throws IOException {
+    logger.info("Validate if nexus is running by retrieving repositories");
+    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
+    Response<List<Nexus3Repository>> response;
+    if (nexusConfig.hasCredentials()) {
+      response =
+          nexusThreeRestClient
+              .listRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())))
+              .execute();
+    } else {
+      response = nexusThreeRestClient.listRepositories().execute();
+    }
+    if (response == null) {
+      return false;
+    }
+
+    if (response.code() == 404) {
+      throw new InvalidArtifactServerException("Invalid Artifact server");
+    }
+    return isSuccessful(response);
   }
 
   static class MyAuthenticator extends Authenticator {
