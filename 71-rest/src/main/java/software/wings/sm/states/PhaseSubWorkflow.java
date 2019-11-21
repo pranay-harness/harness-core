@@ -37,6 +37,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -48,6 +49,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.settings.SettingValue;
@@ -97,6 +99,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @Inject @Transient private SweepingOutputService sweepingOutputService;
   @Inject @Transient private FeatureFlagService featureFlagService;
   @Inject @Transient private PhaseSubWorkflowHelperService phaseSubWorkflowHelperService;
+  @Inject @Transient private SettingsService settingsService;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -169,10 +172,15 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           .withDeploymentType(deploymentType.getDisplayName());
     }
     if (infrastructureDefinition != null) {
+      SettingAttribute settingAttribute =
+          settingsService.get(infrastructureDefinition.getInfrastructure().getCloudProviderId());
       phaseExecutionDataBuilder.withInfraDefinitionId(infrastructureDefinition.getUuid())
           .withDeploymentType(infrastructureDefinition.getDeploymentType().getDisplayName())
           .withComputeProviderType(infrastructureDefinition.getCloudProviderType().name())
           .withComputeProviderId(infrastructureDefinition.getInfrastructure().getCloudProviderId());
+      if (settingAttribute != null) {
+        phaseExecutionDataBuilder.withComputeProviderName(settingAttribute.getName());
+      }
     }
     if (service != null) {
       phaseExecutionDataBuilder.withServiceId(service.getUuid()).withServiceName(service.getName());
