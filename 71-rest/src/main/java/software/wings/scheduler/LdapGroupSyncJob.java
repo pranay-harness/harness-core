@@ -281,8 +281,6 @@ public class LdapGroupSyncJob implements Job {
     }
 
     try (AutoLogContext ignore = new LdapGroupSyncJobLogContext(accountId, ssoId, OVERRIDE_ERROR)) {
-      ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
-
       logger.info("Executing ldap group sync job for ssoId: {}", ssoId);
 
       LdapTestResponse ldapTestResponse = ssoService.validateLdapConnectionSettings(ldapSettings, accountId);
