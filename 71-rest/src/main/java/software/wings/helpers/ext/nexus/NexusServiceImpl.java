@@ -24,6 +24,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
@@ -352,7 +353,9 @@ public class NexusServiceImpl implements NexusService {
       return getRepositories(nexusConfig, encryptionDetails, null) != null;
     } else {
       try {
-        return getRepositories(nexusConfig, encryptionDetails, null) != null;
+        return nexusThreeService.isServerValid(nexusConfig, encryptionDetails);
+      } catch (InvalidArtifactServerException e) {
+        throw e;
       } catch (WingsException e) {
         if (ExceptionUtils.getMessage(e).contains("Invalid Nexus credentials")) {
           throw e;

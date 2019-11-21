@@ -38,6 +38,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 
@@ -450,6 +451,8 @@ public class NexusServiceTest extends WingsBaseTest {
    * The Wire mock rule.
    */
   @Rule public WireMockRule wireMockRule = new WireMockRule(8881);
+  @Rule public WireMockRule wireMockRule2 = new WireMockRule(8882);
+  @Rule public WireMockRule wireMockRule3 = new WireMockRule(8883);
 
   private static final String DEFAULT_NEXUS_URL = "http://localhost:8881/nexus/";
 
@@ -1271,5 +1274,44 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getFileUuid()).isEqualTo("FILE_ID");
     assertThat(((ArtifactFile) listNotifyResponseData.getData().get(0)).getName())
         .isEqualTo("NuGet.Sample.Package-1.0.0.18279.nupkg");
+  }
+
+  @Test(expected = InvalidArtifactServerException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testNonMatchingServerAndVersionWithAuthentication() {
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl("http://localhost:8882/")
+                             .version("3.x")
+                             .username("admin")
+                             .password("wings123!".toCharArray())
+                             .build();
+    nexusService.isRunning(config, null);
+  }
+
+  @Test(expected = InvalidArtifactServerException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testNonMatchingServerAndVersionWithoutAuthentication() {
+    NexusConfig config = NexusConfig.builder().nexusUrl("http://localhost:8882/").version("3.x").build();
+    nexusService.isRunning(config, null);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testInvalidCredentials() {
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl("http://localhost:8883/")
+                             .version("3.x")
+                             .username("admin")
+                             .password("wings123!".toCharArray())
+                             .build();
+
+    wireMockRule3.stubFor(get(urlEqualTo("/service/rest/v1/repositories")).willReturn(aResponse().withStatus(401)));
+
+    assertThatThrownBy(() -> nexusService.isRunning(config, null))
+        .isInstanceOf(WingsException.class)
+        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
   }
 }
