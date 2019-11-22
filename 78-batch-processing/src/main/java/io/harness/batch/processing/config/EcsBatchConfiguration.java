@@ -8,6 +8,7 @@ import io.harness.batch.processing.writer.EcsContainerInstanceLifecycleWriter;
 import io.harness.batch.processing.writer.EcsSyncEventWriter;
 import io.harness.batch.processing.writer.EcsTaskInfoWriter;
 import io.harness.batch.processing.writer.EcsTaskLifecycleWriter;
+import io.harness.batch.processing.writer.EcsUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,11 @@ public class EcsBatchConfiguration {
   @Bean
   public ItemWriter<PublishedMessage> ecsTaskInfoWriter() {
     return new EcsTaskInfoWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> ecsUtilizationMetricsWriter() {
+    return new EcsUtilizationMetricsWriter();
   }
 
   @Bean
@@ -168,6 +174,19 @@ public class EcsBatchConfiguration {
   }
 
   @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> ecsUtilizationMetricsMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    try {
+      String messageType = EventTypeConstants.ECS_UTILIZATION;
+      return mongoEventReader.getEventReader(messageType, startDate, endDate);
+    } catch (Exception ex) {
+      logger.error("Exception ecsUtilizationMetricsMessageReader ", ex);
+      return null;
+    }
+  }
+
+  @Bean
   @Qualifier(value = "ecsJob")
   public Job ecsEventJob(Step ec2InstanceInfoStep, Step ec2InstanceLifecycleStep, Step ecsContainerInstanceInfoStep,
       Step ecsContainerInstanceLifecycleStep, Step ecsTaskInfoStep, Step ecsTaskLifecycleStep, Step ecsSyncEventStep) {
@@ -180,6 +199,15 @@ public class EcsBatchConfiguration {
         .next(ecsTaskInfoStep)
         .next(ecsTaskLifecycleStep)
         .next(ecsSyncEventStep)
+        .build();
+  }
+
+  @Bean
+  @Qualifier(value = "ecsUtilizationJob")
+  public Job ecsUtilizationJob(Step ecsUtilizationMetricsStep) {
+    return jobBuilderFactory.get("ecsEventJob")
+        .incrementer(new RunIdIncrementer())
+        .start(ecsUtilizationMetricsStep)
         .build();
   }
 
@@ -279,6 +307,21 @@ public class EcsBatchConfiguration {
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(ecsSyncEventMessageReader(null, null))
         .writer(ecsSyncEventWriter())
+        .faultTolerant()
+        .retryLimit(RETRY_LIMIT)
+        .retry(Exception.class)
+        .skipLimit(SKIP_BATCH_SIZE)
+        .skip(Exception.class)
+        .listener(ecsStepSkipListener)
+        .build();
+  }
+
+  @Bean
+  public Step ecsUtilizationMetricsStep() {
+    return stepBuilderFactory.get("ecsUtilizationMetricsStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(ecsUtilizationMetricsMessageReader(null, null))
+        .writer(ecsUtilizationMetricsWriter())
         .faultTolerant()
         .retryLimit(RETRY_LIMIT)
         .retry(Exception.class)
