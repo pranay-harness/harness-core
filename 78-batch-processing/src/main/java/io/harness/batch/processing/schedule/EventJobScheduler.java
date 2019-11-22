@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 public class EventJobScheduler {
   @Autowired @Qualifier("ecsJob") private Job ecsJob;
   @Autowired @Qualifier("k8sJob") private Job k8sJob;
+  @Autowired @Qualifier("ecsUtilizationJob") private Job ecsUtilizationJob;
   @Autowired @Qualifier("instanceBillingJob") private Job instanceBillingJob;
 
   @Autowired private BatchJobRunner batchJobRunner;
@@ -45,6 +46,15 @@ public class EventJobScheduler {
       batchJobRunner.runJob(k8sJob, BatchJobType.K8S_EVENT, 1, ChronoUnit.DAYS); // TODO: change to DAYS
     } catch (Exception ex) {
       logger.error("Exception while running runK8sEventJob job ", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 */1 * * * ?")
+  public void runEcsUtilizationJob() {
+    try {
+      batchJobRunner.runJob(ecsUtilizationJob, BatchJobType.ECS_UTILIZATION, 1, ChronoUnit.DAYS);
+    } catch (Exception ex) {
+      logger.error("Exception while running runEcsUtilizationJob job ", ex);
     }
   }
 }

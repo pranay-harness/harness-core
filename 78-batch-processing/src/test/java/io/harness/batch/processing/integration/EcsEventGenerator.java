@@ -19,6 +19,8 @@ import io.harness.event.payloads.EcsSyncEvent;
 import io.harness.event.payloads.EcsTaskDescription;
 import io.harness.event.payloads.EcsTaskInfo;
 import io.harness.event.payloads.EcsTaskLifecycle;
+import io.harness.event.payloads.EcsUtilization;
+import io.harness.event.payloads.EcsUtilization.MetricValue;
 import io.harness.event.payloads.InstanceState;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
@@ -130,6 +132,50 @@ public interface EcsEventGenerator {
                                     .setLastProcessedTimestamp(lastProcessedTimestamp)
                                     .build();
     return getPublishedMessage(accountId, ecsSyncEvent);
+  }
+
+  default PublishedMessage getEcsUtilizationMetricsMessage(
+      String accountId, String clusterName, String clusterArn, String serviceName, String serviceArn) {
+    EcsUtilization ecsUtilization =
+        EcsUtilization.newBuilder()
+            .setClusterArn(clusterArn)
+            .setClusterName(clusterName)
+            .setServiceArn(serviceArn)
+            .setServiceName(serviceName)
+            .addMetricValues(MetricValue.newBuilder()
+                                 .setStatistic("Maximum")
+                                 .setMetricName("MemoryUtilization")
+                                 .addValues(1034.0)
+                                 .addValues(1500.0)
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(12000000).build())
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(14000000).build())
+                                 .build())
+            .addMetricValues(MetricValue.newBuilder()
+                                 .setStatistic("Average")
+                                 .setMetricName("MemoryUtilization")
+                                 .addValues(1034.0)
+                                 .addValues(1500.0)
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(12000000).build())
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(14000000).build())
+                                 .build())
+            .addMetricValues(MetricValue.newBuilder()
+                                 .setStatistic("Maximum")
+                                 .setMetricName("CPUUtilization")
+                                 .addValues(60.0)
+                                 .addValues(70.0)
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(12000000).build())
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(14000000).build())
+                                 .build())
+            .addMetricValues(MetricValue.newBuilder()
+                                 .setStatistic("Average")
+                                 .setMetricName("CPUUtilization")
+                                 .addValues(60.0)
+                                 .addValues(70.0)
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(12000000).build())
+                                 .addTimestamps(Timestamp.newBuilder().setSeconds(14000000).build())
+                                 .build())
+            .build();
+    return getPublishedMessage(accountId, ecsUtilization);
   }
 
   default InstanceData createEc2InstanceData(
