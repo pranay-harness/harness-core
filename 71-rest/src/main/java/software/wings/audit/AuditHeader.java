@@ -51,7 +51,10 @@ import java.util.List;
         @Field(AuditHeaderKeys.accountId)
         , @Field(AuditHeaderKeys.affectedResourceType), @Field(AuditHeaderKeys.affectedResourceOp),
             @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-      }, options = @IndexOptions(name = "entityRecordIndex_3"))
+      }, options = @IndexOptions(name = "entityRecordIndex_3")), @Index(fields = {
+        @Field(AuditHeaderKeys.accountId)
+        , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
+      }, options = @IndexOptions(name = "entityRecordIndex_4"))
 })
 @Entity(value = "audits", noClassnameStored = true)
 @HarnessEntity(exportable = false)
