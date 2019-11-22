@@ -12,11 +12,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.microsoft.azure.keyvault.KeyVaultClient;
-import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
@@ -162,27 +160,6 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
         secretsManagerConfig, String.format("Azure vault config not found for id: %s in account: %s", id, accountId));
     decryptAzureConfigSecrets(secretsManagerConfig, false);
     return secretsManagerConfig;
-  }
-
-  /**
-   * If the test test fails, throw an exception, otherwise bo return.
-   * @param encryptionConfig - Azure encryption config to be used for initiating a connection with Azure vault.
-   */
-  @Override
-  public void validateAzureVaultConfig(AzureVaultConfig encryptionConfig) {
-    try {
-      KeyVaultClient client = getAzureVaultClient(encryptionConfig);
-
-      // Azure vault returns null if the secret isn not found in the db. Otherwise it returns a secretBundle. If the url
-      // is incorrect or it doesn't have access, an exception will be thrown
-      SecretBundle someRandomString = client.getSecret(encryptionConfig.getEncryptionServiceUrl(), "someRandomString");
-      logger.info("Azure vault connection validation was successful for vault: {} and accountId: {}",
-          encryptionConfig.getName(), encryptionConfig.getAccountId());
-    } catch (Exception ex) {
-      logger.error("Failed to validate azure config with id {} for account {}", encryptionConfig.getUuid(),
-          encryptionConfig.getAccountId(), ex);
-      throw new WingsException(ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR);
-    }
   }
 
   public boolean deleteConfig(String accountId, String configId) {

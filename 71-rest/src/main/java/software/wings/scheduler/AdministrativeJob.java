@@ -31,7 +31,7 @@ public class AdministrativeJob implements Job {
 
   private void executeInternal() {
     logger.info("Running Administrative Job");
-    secretManager.checkAndAlertForInvalidManagers();
+    secretManager.renewVaultTokensAndValidateGlobalSecretManager();
     logger.info("Administrative Job complete");
   }
 

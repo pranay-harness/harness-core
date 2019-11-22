@@ -39,7 +39,6 @@ import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkNotNull;
 import static software.wings.service.impl.security.AbstractSecretServiceImpl.checkState;
-import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.service.intfc.security.VaultService.DEFAULT_BASE_PATH;
 import static software.wings.service.intfc.security.VaultService.DEFAULT_KEY_NAME;
@@ -83,7 +82,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.Base;
@@ -95,7 +93,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.ServiceTemplate;
@@ -105,8 +102,6 @@ import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -1118,20 +1113,15 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public void checkAndAlertForInvalidManagers() {
+  public void renewVaultTokensAndValidateGlobalSecretManager() {
     Query<Account> query = wingsPersistence.createQuery(Account.class, excludeAuthority);
     try (HIterator<Account> records = new HIterator<>(query.fetch())) {
       for (Account account : records) {
         try {
-          // PL-3286: Should not perform check and alert operation on the DELETED/INACTIVE accounts
-          if (shouldCheckAndAlert(account)) {
-            validateSecretManagerConfigs(account.getUuid());
-            vaultService.renewTokens(account.getUuid());
-            vaultService.appRoleLogin(account.getUuid());
-          }
+          vaultService.renewTokens(account.getUuid());
+          vaultService.appRoleLogin(account.getUuid());
         } catch (Exception e) {
-          logger.info(
-              "Failed to validate secret manager for {} account id {}", account.getAccountName(), account.getUuid(), e);
+          logger.info("Failed to renew vault token for account id {}", account.getUuid(), e);
         }
       }
     }
@@ -2356,48 +2346,6 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
-  private void validateSecretManagerConfigs(String accountId) {
-    List<SecretManagerConfig> encryptionConfigs =
-        secretManagerConfigService.listSecretManagers(accountId, false, false);
-    for (EncryptionConfig encryptionConfig : encryptionConfigs) {
-      KmsSetupAlert kmsSetupAlert =
-          KmsSetupAlert.builder()
-              .kmsId(encryptionConfig.getUuid())
-              .message("Secret manager " + encryptionConfig.getName() + " of type "
-                  + encryptionConfig.getEncryptionType() + " is not able to encrypt/decrypt. Please check your setup")
-              .build();
-      try {
-        switch (encryptionConfig.getEncryptionType()) {
-          case KMS:
-            kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), accountId, (KmsConfig) encryptionConfig);
-            break;
-          case VAULT:
-            vaultService.encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT,
-                (VaultConfig) encryptionConfig, null);
-            break;
-          case AWS_SECRETS_MANAGER:
-            secretsManagerService.validateSecretsManagerConfig((AwsSecretsManagerConfig) encryptionConfig);
-            break;
-          case AZURE_VAULT:
-            azureSecretsManagerService.validateAzureVaultConfig((AzureVaultConfig) encryptionConfig);
-            break;
-          case CYBERARK:
-            cyberArkService.validateConfig((CyberArkConfig) encryptionConfig);
-            break;
-          default:
-            break;
-        }
-        alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-        logger.info("Successfully validated secret manager {} of type {} for account {} ", encryptionConfig.getUuid(),
-            encryptionConfig.getEncryptionType(), accountId);
-      } catch (Exception e) {
-        logger.info("Could not validate secret manager {} of type {} for account {}", encryptionConfig.getUuid(),
-            encryptionConfig.getEncryptionType(), accountId, e);
-        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, kmsSetupAlert);
-      }
-    }
-  }
-
   private void validateGlobalSecretManager() {
     KmsConfig kmsConfig = kmsService.getGlobalKmsConfig();
     if (kmsConfig != null) {
@@ -2509,12 +2457,6 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return deleted;
-  }
-
-  private boolean shouldCheckAndAlert(Account account) {
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    String accountStatus = licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
-    return !(AccountStatus.DELETED.equals(accountStatus) || AccountStatus.INACTIVE.equals(accountStatus));
   }
 
   @Builder

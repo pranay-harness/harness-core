@@ -124,7 +124,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public void checkAndAlertForInvalidManagers() {
+  public void renewVaultTokensAndValidateGlobalSecretManager() {
     throw new UnsupportedOperationException();
   }
 

@@ -440,7 +440,7 @@ public class SecretManagerTest extends CategoryTest {
 
     KmsConfig kmsConfig = mock(KmsConfig.class);
     when(kmsService.getGlobalKmsConfig()).thenReturn(kmsConfig);
-    secretManager.checkAndAlertForInvalidManagers();
+    secretManager.renewVaultTokensAndValidateGlobalSecretManager();
     when(kmsService.encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig))).thenReturn(null);
     verify(kmsService, times(1)).encrypt(any(), eq(GLOBAL_ACCOUNT_ID), eq(kmsConfig));
   }

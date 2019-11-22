@@ -92,34 +92,6 @@ public class KmsAlertTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testAlertFiredForVault() throws InterruptedException {
-    VaultConfig vaultConfig = getVaultConfig();
-    vaultConfig.setAccountId(accountId);
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    vaultService.saveVaultConfig(accountId, vaultConfig);
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
-    secretManager.checkAndAlertForInvalidManagers();
-
-    PageResponse<Alert> alerts = listOpenAlerts(accountId);
-    assertThat(alerts).hasSize(1);
-    Alert alert = alerts.get(0);
-    assertThat(alert.getAccountId()).isEqualTo(accountId);
-    assertThat(alert.getType()).isEqualTo(AlertType.InvalidKMS);
-    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
-    KmsSetupAlert alertData = (KmsSetupAlert) alert.getAlertData();
-    assertThat(alertData.getKmsId()).isEqualTo(vaultConfig.getUuid());
-
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    secretManager.checkAndAlertForInvalidManagers();
-    Thread.sleep(2000);
-    assertThat(listOpenAlerts(accountId)).isEmpty();
-
-    assertThat(listClosedAlerts(accountId)).hasSize(1);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
   public void testAlertFiredForVaultRenewal() throws InterruptedException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultConfig.setRenewIntervalHours(1);
@@ -152,32 +124,16 @@ public class KmsAlertTest extends WingsBaseTest {
     assertThat(listClosedAlerts(accountId)).hasSize(1);
   }
 
-  @Test
+  @Test(expected = SecretManagementException.class)
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testAlertFiredForKms() throws InterruptedException {
+  public void testValidateKms() {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     kmsService.saveKmsConfig(accountId, kmsConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
-    secretManager.checkAndAlertForInvalidManagers();
-
-    PageResponse<Alert> alerts = listOpenAlerts(accountId);
-    assertThat(alerts).hasSize(1);
-    Alert alert = alerts.get(0);
-    assertThat(alert.getAccountId()).isEqualTo(accountId);
-    assertThat(alert.getType()).isEqualTo(AlertType.InvalidKMS);
-    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
-    KmsSetupAlert alertData = (KmsSetupAlert) alert.getAlertData();
-    assertThat(alertData.getKmsId()).isEqualTo(kmsConfig.getUuid());
-
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    secretManager.checkAndAlertForInvalidManagers();
-    Thread.sleep(2000);
-    assertThat(listOpenAlerts(accountId)).isEmpty();
-
-    assertThat(listClosedAlerts(accountId)).hasSize(1);
+    kmsService.saveKmsConfig(accountId, kmsConfig);
   }
 
   @Test
@@ -195,7 +151,7 @@ public class KmsAlertTest extends WingsBaseTest {
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
     kmsService.saveKmsConfig(accountId, kmsConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
-    secretManager.checkAndAlertForInvalidManagers();
+    secretManager.renewVaultTokensAndValidateGlobalSecretManager();
     PageResponse<Alert> alerts = listOpenAlerts(accountId);
     assertThat(alerts).hasSize(0);
   }

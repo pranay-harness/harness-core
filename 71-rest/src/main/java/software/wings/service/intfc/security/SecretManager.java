@@ -78,7 +78,7 @@ public interface SecretManager extends OwnedByAccount {
   void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType, String fromKmsId,
       EncryptionType toEncryptionType, String toKmsId) throws IOException;
 
-  void checkAndAlertForInvalidManagers();
+  void renewVaultTokensAndValidateGlobalSecretManager();
 
   EncryptedData getSecretMappedToAccountByName(String accountId, String name);
 
