@@ -138,4 +138,6 @@ public interface AccountService {
   Optional<Account> getOnPremAccount();
 
   boolean postCustomEvent(String accountId, AccountEvent accountEvent, boolean oneTimeOnly, boolean trialOnly);
+
+  boolean isSSOEnabled(Account account);
 }

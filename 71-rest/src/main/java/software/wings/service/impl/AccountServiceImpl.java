@@ -1350,4 +1350,9 @@ public class AccountServiceImpl implements AccountService {
     eventPublishHelper.publishAccountEvent(accountId, accountEvent, oneTimeOnly, trialOnly);
     return true;
   }
+
+  public boolean isSSOEnabled(Account account) {
+    return (account.getAuthenticationMechanism() != null)
+        && (account.getAuthenticationMechanism() != AuthenticationMechanism.USER_PASSWORD);
+  }
 }
