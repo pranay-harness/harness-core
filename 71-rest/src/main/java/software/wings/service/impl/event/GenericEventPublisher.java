@@ -7,14 +7,14 @@ import io.harness.event.model.Event;
 import io.harness.event.model.GenericEvent;
 import io.harness.event.publisher.EventPublishException;
 import io.harness.event.publisher.EventPublisher;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 
 /**
  * @author rktummala on 11/26/18
  */
 @Singleton
 public class GenericEventPublisher implements EventPublisher {
-  @Inject private Queue<GenericEvent> eventQueue;
+  @Inject private QueuePublisher<GenericEvent> eventQueue;
 
   @Override
   public void publishEvent(Event event) throws EventPublishException {

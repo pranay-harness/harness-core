@@ -21,7 +21,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -59,7 +59,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private PersistentLocker persistentLocker;
-  @Inject private Queue<InstanceEvent> eventQueue;
+  @Inject private QueuePublisher<InstanceEvent> eventQueue;
 
   @Override
   public Instance save(Instance instance) {

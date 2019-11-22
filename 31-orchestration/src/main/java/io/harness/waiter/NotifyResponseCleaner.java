@@ -15,8 +15,8 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.Queue;
 import io.harness.queue.QueueController;
+import io.harness.queue.QueuePublisher;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ import java.util.List;
 public class NotifyResponseCleaner implements Runnable {
   @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;
-  @Inject private Queue<NotifyEvent> notifyQueue;
+  @Inject private QueuePublisher<NotifyEvent> notifyPublisher;
   @Inject private QueueController queueController;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -91,7 +91,7 @@ public class NotifyResponseCleaner implements Runnable {
           for (WaitInstance waitInstance : waitInstances) {
             if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
               if (waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
-                notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+                notifyPublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
               }
             } else if (waitInstance.getWaitingOnCorrelationIds().contains(uuid)) {
               needHandling = true;

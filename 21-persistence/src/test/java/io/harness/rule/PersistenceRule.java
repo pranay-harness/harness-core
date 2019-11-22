@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.AbstractModule;
@@ -16,11 +17,13 @@ import io.harness.module.TestMongoModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.QueryFactory;
-import io.harness.mongo.queue.MongoQueue;
+import io.harness.mongo.queue.MongoQueueConsumer;
+import io.harness.mongo.queue.MongoQueuePublisher;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.Queue;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.QueuePublisher;
 import io.harness.queue.TestUnversionedQueuableObject;
 import io.harness.queue.TestUnversionedQueuableObjectListener;
 import io.harness.queue.TestVersionedQueuableObject;
@@ -111,10 +114,14 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(new TypeLiteral<Queue<TestVersionedQueuableObject>>() {})
-            .toInstance(new MongoQueue<>(TestVersionedQueuableObject.class, ofSeconds(5), true));
-        bind(new TypeLiteral<Queue<TestUnversionedQueuableObject>>() {})
-            .toInstance(new MongoQueue<>(TestUnversionedQueuableObject.class, ofSeconds(5), true));
+        bind(new TypeLiteral<QueuePublisher<TestVersionedQueuableObject>>() {})
+            .toInstance(new MongoQueuePublisher<>(VERSIONED));
+        bind(new TypeLiteral<QueueConsumer<TestVersionedQueuableObject>>() {})
+            .toInstance(new MongoQueueConsumer<>(TestVersionedQueuableObject.class, VERSIONED, ofSeconds(5)));
+        bind(new TypeLiteral<QueuePublisher<TestUnversionedQueuableObject>>() {})
+            .toInstance(new MongoQueuePublisher<>(VERSIONED));
+        bind(new TypeLiteral<QueueConsumer<TestUnversionedQueuableObject>>() {})
+            .toInstance(new MongoQueueConsumer<>(TestUnversionedQueuableObject.class, VERSIONED, ofSeconds(5)));
 
         bind(QueueController.class).toInstance(new QueueController() {
           @Override

@@ -69,7 +69,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Subject;
 import io.harness.persistence.HQuery.QueryChecks;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import io.harness.validation.Create;
@@ -230,7 +230,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private SweepingOutputService sweepingOutputService;
 
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {

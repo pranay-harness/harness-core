@@ -52,7 +52,7 @@ import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -121,7 +121,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
-  @Inject private Queue<CollectEvent> collectQueue;
+  @Inject private QueuePublisher<CollectEvent> collectQueue;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;

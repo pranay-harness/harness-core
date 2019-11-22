@@ -64,7 +64,7 @@ import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
 import lombok.Getter;
@@ -180,7 +180,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private WorkflowService workflowService;
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
 

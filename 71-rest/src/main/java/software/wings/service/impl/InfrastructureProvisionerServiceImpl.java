@@ -36,7 +36,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.validation.Create;
@@ -142,7 +142,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private FeatureFlagService featureFlagService;
   @Inject private LogService logService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private HarnessTagService harnessTagService;

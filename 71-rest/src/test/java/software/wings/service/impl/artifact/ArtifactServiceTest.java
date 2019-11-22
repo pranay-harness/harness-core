@@ -45,7 +45,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -105,7 +105,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;
   @Mock private HQuery<Application> appQuery;
-  @Mock private Queue<CollectEvent> collectQueue;
+  @Mock private QueuePublisher<CollectEvent> collectQueue;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private SettingsService settingsService;

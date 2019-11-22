@@ -19,7 +19,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
@@ -42,7 +42,7 @@ import java.util.Set;
 @Slf4j
 public class WaitNotifyEngine {
   @Inject private HPersistence persistence;
-  @Inject private Queue<NotifyEvent> notifyQueue;
+  @Inject private QueuePublisher<NotifyEvent> notifyPublisher;
 
   public String waitForAll(NotifyCallback callback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
@@ -89,7 +89,7 @@ public class WaitNotifyEngine {
         if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
             && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
           try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
-            notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+            notifyPublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
           }
         }
       }
@@ -137,7 +137,7 @@ public class WaitNotifyEngine {
     while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
         try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
-          notifyQueue.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+          notifyPublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
         }
       }
     }

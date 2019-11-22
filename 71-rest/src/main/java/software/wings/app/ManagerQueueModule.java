@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static io.harness.queue.Queue.VersionType.UNVERSIONED;
+import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -9,8 +11,9 @@ import com.google.inject.TypeLiteral;
 import io.harness.config.PublisherConfiguration;
 import io.harness.event.model.GenericEvent;
 import io.harness.mongo.queue.QueueFactory;
-import io.harness.queue.Queue;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+import io.harness.queue.QueuePublisher;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.api.InstanceEvent;
@@ -32,35 +35,63 @@ import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 
 public class ManagerQueueModule extends AbstractModule {
-  private PublisherConfiguration publisherConfiguration;
+  private PublisherConfiguration config;
 
   public ManagerQueueModule(PublisherConfiguration configuration) {
-    publisherConfiguration = configuration;
+    config = configuration;
   }
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<Queue<PruneEvent>>() {})
-        .toInstance(QueueFactory.createQueue(PruneEvent.class, publisherConfiguration));
-    bind(new TypeLiteral<Queue<EmailData>>() {})
-        .toInstance(QueueFactory.createQueue(EmailData.class, publisherConfiguration));
-    bind(new TypeLiteral<Queue<CollectEvent>>() {})
-        .toInstance(QueueFactory.createQueue(CollectEvent.class, publisherConfiguration));
-    bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
-        .toInstance(QueueFactory.createQueue(DeploymentEvent.class, ofMinutes(1), true, publisherConfiguration));
-    bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
-        .toInstance(QueueFactory.createQueue(KmsTransitionEvent.class, ofSeconds(30), publisherConfiguration));
-    bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
-        .toInstance(QueueFactory.createQueue(ExecutionEvent.class, ofSeconds(30), true, publisherConfiguration));
-    bind(new TypeLiteral<Queue<DelayEvent>>() {})
-        .toInstance(QueueFactory.createQueue(DelayEvent.class, ofSeconds(5), true, publisherConfiguration));
-    bind(new TypeLiteral<Queue<GenericEvent>>() {})
-        .toInstance(QueueFactory.createQueue(GenericEvent.class, ofMinutes(1), true, publisherConfiguration));
-    bind(new TypeLiteral<Queue<InstanceEvent>>() {})
-        .toInstance(QueueFactory.createQueue(InstanceEvent.class, ofMinutes(1), true, publisherConfiguration));
-    bind(new TypeLiteral<Queue<DeploymentTimeSeriesEvent>>() {})
-        .toInstance(
-            QueueFactory.createQueue(DeploymentTimeSeriesEvent.class, ofMinutes(1), true, publisherConfiguration));
+    bind(new TypeLiteral<QueuePublisher<PruneEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(PruneEvent.class, UNVERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<PruneEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(PruneEvent.class, UNVERSIONED, ofSeconds(5), config));
+
+    bind(new TypeLiteral<QueuePublisher<EmailData>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(EmailData.class, UNVERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<EmailData>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(EmailData.class, UNVERSIONED, ofSeconds(5), config));
+
+    bind(new TypeLiteral<QueuePublisher<CollectEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(CollectEvent.class, UNVERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<CollectEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(CollectEvent.class, UNVERSIONED, ofSeconds(5), config));
+
+    bind(new TypeLiteral<QueuePublisher<DeploymentEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(DeploymentEvent.class, VERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<DeploymentEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(DeploymentEvent.class, VERSIONED, ofMinutes(1), config));
+
+    bind(new TypeLiteral<QueuePublisher<KmsTransitionEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(KmsTransitionEvent.class, UNVERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<KmsTransitionEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(KmsTransitionEvent.class, UNVERSIONED, ofSeconds(30), config));
+
+    bind(new TypeLiteral<QueuePublisher<ExecutionEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(ExecutionEvent.class, VERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<ExecutionEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(ExecutionEvent.class, VERSIONED, ofSeconds(30), config));
+
+    bind(new TypeLiteral<QueuePublisher<DelayEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(DelayEvent.class, VERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<DelayEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(DelayEvent.class, VERSIONED, ofSeconds(5), config));
+
+    bind(new TypeLiteral<QueuePublisher<GenericEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(GenericEvent.class, VERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<GenericEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(GenericEvent.class, VERSIONED, ofMinutes(1), config));
+
+    bind(new TypeLiteral<QueuePublisher<InstanceEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(InstanceEvent.class, VERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<InstanceEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(InstanceEvent.class, VERSIONED, ofMinutes(1), config));
+
+    bind(new TypeLiteral<QueuePublisher<DeploymentTimeSeriesEvent>>() {})
+        .toInstance(QueueFactory.createQueuePublisher(DeploymentTimeSeriesEvent.class, VERSIONED, config));
+    bind(new TypeLiteral<QueueConsumer<DeploymentTimeSeriesEvent>>() {})
+        .toInstance(QueueFactory.createQueueConsumer(DeploymentTimeSeriesEvent.class, VERSIONED, ofMinutes(1), config));
 
     bind(new TypeLiteral<QueueListener<PruneEvent>>() {}).to(PruneEntityListener.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);

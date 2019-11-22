@@ -73,7 +73,7 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.counter.service.CounterSyncer;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
 import lombok.extern.slf4j.Slf4j;
@@ -282,7 +282,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private EventPublishHelper eventPublishHelper;
 
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;

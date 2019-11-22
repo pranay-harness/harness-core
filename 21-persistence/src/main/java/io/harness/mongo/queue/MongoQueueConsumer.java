@@ -1,10 +1,9 @@
 package io.harness.mongo.queue;
 
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.lang.String.format;
-import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
@@ -12,7 +11,8 @@ import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
-import io.harness.queue.Queue;
+import io.harness.queue.Queue.VersionType;
+import io.harness.queue.QueueConsumer;
 import io.harness.version.VersionInfoManager;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,28 +28,20 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class MongoQueue<T extends Queuable> implements Queue<T> {
+public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> {
   private final Class<T> klass;
   @Setter private Duration heartbeat;
-  private final boolean filterWithVersion;
+  private final VersionType versionType;
 
   private Semaphore semaphore = new Semaphore(1);
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
-  public MongoQueue(Class<T> klass) {
-    this(klass, ofSeconds(5));
-  }
-
-  public MongoQueue(Class<T> klass, Duration heartbeat) {
-    this(klass, heartbeat, false);
-  }
-
-  public MongoQueue(Class<T> klass, Duration heartbeat, boolean filterWithVersion) {
+  public MongoQueueConsumer(Class<T> klass, VersionType versionType, Duration heartbeat) {
     Objects.requireNonNull(klass);
     this.klass = klass;
     this.heartbeat = heartbeat;
-    this.filterWithVersion = filterWithVersion;
+    this.versionType = versionType;
   }
 
   @Override
@@ -164,14 +156,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public void send(final T payload) {
-    Objects.requireNonNull(payload);
-    payload.setGlobalContext(obtainGlobalContext());
-    payload.setVersion(filterWithVersion ? versionInfoManager.getVersionInfo().getVersion() : null);
-    persistence.insertIgnoringDuplicateKeys(payload);
-  }
-
-  @Override
   public Duration heartbeat() {
     return heartbeat;
   }
@@ -183,6 +167,6 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
 
   private Query<T> createQuery() {
     return persistence.createQuery(klass).filter(
-        QueuableKeys.version, filterWithVersion ? versionInfoManager.getVersionInfo().getVersion() : null);
+        QueuableKeys.version, versionType == VERSIONED ? versionInfoManager.getVersionInfo().getVersion() : null);
   }
 }

@@ -24,7 +24,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -94,7 +94,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InstanceHelper {
   // This queue is used to asynchronously process all the instance information that the workflow touched upon.
-  @Inject private Queue<DeploymentEvent> deploymentEventQueue;
+  @Inject private QueuePublisher<DeploymentEvent> deploymentEventQueue;
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private AppService appService;
   @Inject private InstanceUtils instanceUtil;

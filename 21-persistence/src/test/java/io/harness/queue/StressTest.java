@@ -1,6 +1,6 @@
 package io.harness.queue;
 
-import static io.harness.queue.Queue.Filter.ALL;
+import static io.harness.queue.QueueConsumer.Filter.ALL;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -29,8 +29,10 @@ public class StressTest extends PersistenceTest {
   private static final int COUNT = 1000000;
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
-  @Inject private Queue<TestVersionedQueuableObject> versionedQueue;
-  @Inject private Queue<TestUnversionedQueuableObject> unversionedQueue;
+  @Inject private QueueConsumer<TestVersionedQueuableObject> versionedConsumer;
+  @Inject private QueuePublisher<TestVersionedQueuableObject> versionedPublisher;
+  @Inject private QueueConsumer<TestUnversionedQueuableObject> unversionedConsumer;
+  @Inject private QueuePublisher<TestUnversionedQueuableObject> unversionedPublisher;
 
   @Test
   @Owner(developers = GEORGE)
@@ -48,20 +50,20 @@ public class StressTest extends PersistenceTest {
           persistence.save(queuableObject);
 
           if (i % 10000 == 0) {
-            logger.info("Previous version records added: {}, still in queue {}", i, versionedQueue.count(ALL));
+            logger.info("Previous version records added: {}, still in queue {}", i, versionedConsumer.count(ALL));
           }
         }
         for (int i = 1; i <= COUNT; ++i) {
-          versionedQueue.send(new TestVersionedQueuableObject(i));
+          versionedPublisher.send(new TestVersionedQueuableObject(i));
           if (i % 10000 == 0) {
-            logger.info("Correct version records added: {} , still in the queue {}", i, versionedQueue.count(ALL));
+            logger.info("Correct version records added: {} , still in the queue {}", i, versionedConsumer.count(ALL));
           }
         }
 
-        final long start = versionedQueue.count(ALL);
+        final long start = versionedConsumer.count(ALL);
         try {
           Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
-            final long count = versionedQueue.count(ALL);
+            final long count = versionedConsumer.count(ALL);
             // logger.info("Intermittent queue count: {}", count);
             return count == 0;
           });
@@ -69,7 +71,7 @@ public class StressTest extends PersistenceTest {
           // do nothing
         }
 
-        final long diff = start - versionedQueue.count(ALL);
+        final long diff = start - versionedConsumer.count(ALL);
         logger.info("Items handled for 10s: {}", diff);
       }
     })
@@ -89,23 +91,23 @@ public class StressTest extends PersistenceTest {
         for (int i = 1; i <= COUNT; ++i) {
           final TestUnversionedQueuableObject queuableObject = new TestUnversionedQueuableObject(i);
           queuableObject.setVersion("dummy");
-          unversionedQueue.send(queuableObject);
+          unversionedPublisher.send(queuableObject);
 
           if (i % 10000 == 0) {
-            logger.info("Previous version records added: {}, still in queue {}", i, unversionedQueue.count(ALL));
+            logger.info("Previous version records added: {}, still in queue {}", i, unversionedConsumer.count(ALL));
           }
         }
         for (int i = 1; i <= COUNT; ++i) {
-          unversionedQueue.send(new TestUnversionedQueuableObject(i));
+          unversionedPublisher.send(new TestUnversionedQueuableObject(i));
           if (i % 10000 == 0) {
-            logger.info("Correct version records added: {} , still in the queue {}", i, unversionedQueue.count(ALL));
+            logger.info("Correct version records added: {} , still in the queue {}", i, unversionedConsumer.count(ALL));
           }
         }
 
-        final long start = unversionedQueue.count(ALL);
+        final long start = unversionedConsumer.count(ALL);
         try {
           Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
-            final long count = unversionedQueue.count(ALL);
+            final long count = unversionedConsumer.count(ALL);
             // logger.info("Intermittent queue count: {}", count);
             return count == 0;
           });
@@ -113,7 +115,7 @@ public class StressTest extends PersistenceTest {
           // do nothing
         }
 
-        final long diff = start - unversionedQueue.count(ALL);
+        final long diff = start - unversionedConsumer.count(ALL);
         logger.info("Items handled for 10s: {}", diff);
       }
     })
