@@ -1236,7 +1236,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = GEORGE, intermittent = true)
   @Category(UnitTests.class)
   public void shouldAbortAllStates() {
     Service service1 = addService("svc1");
