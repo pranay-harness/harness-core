@@ -8,7 +8,6 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ExpAnalysisInfo;
 import software.wings.service.impl.analysis.ExperimentalMessageComparisonResult;
@@ -56,7 +55,6 @@ public class ExperimentalLogResource {
   @Path(VerificationConstants.MSG_PAIRS_TO_VOTE)
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   public RestResponse<List<ExperimentalMessageComparisonResult>> getMessageComparisonList(
       @QueryParam("accountId") String accountId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(analysisService.getMessagePairsToVote(serviceId));
@@ -66,7 +64,6 @@ public class ExperimentalLogResource {
   @Path(VerificationConstants.MSG_PAIRS_TO_VOTE)
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   public RestResponse<Boolean> saveMessageComparisonList(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, Map<String, String> userVotes) {
     return new RestResponse<>(analysisService.saveMessagePairsToVote(serviceId, userVotes));
