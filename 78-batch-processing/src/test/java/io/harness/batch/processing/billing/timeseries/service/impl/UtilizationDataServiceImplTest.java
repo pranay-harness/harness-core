@@ -38,7 +38,6 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     Connection mockConnection = mock(Connection.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
-    when(timeScaleDBService.isValid()).thenReturn(true);
     when(mockConnection.prepareStatement(utilizationDataService.INSERT_STATEMENT)).thenReturn(statement);
     when(utils.getDefaultCalendar()).thenReturn(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
   }
@@ -47,6 +46,7 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testCreateBillingData() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenReturn(true);
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationData();
     boolean insert = utilizationDataService.create(instanceUtilizationData);
@@ -57,7 +57,18 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testNullCreateBillingData() throws SQLException {
+    when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.execute()).thenThrow(new SQLException());
+    InstanceUtilizationData instanceUtilizationData = instanceUtilizationData();
+    boolean insert = utilizationDataService.create(instanceUtilizationData);
+    assertThat(insert).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testInvalidDBService() {
+    when(timeScaleDBService.isValid()).thenReturn(false);
     InstanceUtilizationData instanceUtilizationData = instanceUtilizationData();
     boolean insert = utilizationDataService.create(instanceUtilizationData);
     assertThat(insert).isFalse();
