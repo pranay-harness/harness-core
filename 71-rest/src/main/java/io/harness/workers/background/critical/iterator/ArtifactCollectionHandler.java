@@ -11,12 +11,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import com.codahale.metrics.InstrumentedExecutorService;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -41,16 +43,19 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private PermitService permitService;
+  @Inject private HarnessMetricRegistry harnessMetricRegistry;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
+    InstrumentedExecutorService instrumentedExecutorService = new InstrumentedExecutorService(
+        artifactCollectionExecutor, harnessMetricRegistry.getThreadPoolMetricRegistry(), "Iterator-ArtifactCollection");
     PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCollectionHandler.class,
         MongoPersistenceIterator.<ArtifactStream>builder()
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextIteration)
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofSeconds(30))
-            .executorService(artifactCollectionExecutor)
+            .executorService(instrumentedExecutorService)
             .semaphore(new Semaphore(25))
             .handler(this)
             .schedulingType(REGULAR)

@@ -112,7 +112,6 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
-
 /**
  * The main application - entry point for the entire verification service.
  *

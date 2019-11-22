@@ -2,14 +2,17 @@ package io.harness.iterator;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import com.codahale.metrics.MetricRegistry;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.config.WorkersConfiguration;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.rule.OwnerRule.Owner;
 import org.assertj.core.api.Assertions;
@@ -24,6 +27,7 @@ import java.util.Random;
 
 public class PersistenceIteratorFactoryTest extends PersistenceTest {
   @Mock WorkersConfiguration workersConfiguration;
+  @Mock HarnessMetricRegistry harnessMetricRegistry;
   @InjectMocks @Inject PersistenceIteratorFactory persistenceIteratorFactory;
 
   private MongoPersistenceIteratorBuilder iteratorBuilder;
@@ -54,6 +58,9 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
   @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void testCreatePumpIteratorWithDedicatedThreadPool() {
+    MetricRegistry metricRegistry = mock(MetricRegistry.class);
+    when(harnessMetricRegistry.getThreadPoolMetricRegistry()).thenReturn(metricRegistry);
+
     // disable setup
     when(workersConfiguration.confirmWorkerIsActive(DummyClass.class)).thenReturn(false);
     Assertions

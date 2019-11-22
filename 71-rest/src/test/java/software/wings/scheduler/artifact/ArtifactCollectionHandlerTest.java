@@ -16,10 +16,12 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
+import com.codahale.metrics.MetricRegistry;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
@@ -49,6 +51,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
 
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private PermitService permitService;
+  @Mock private HarnessMetricRegistry harnessMetricRegistry;
   @InjectMocks @Inject private ArtifactCollectionHandler artifactCollectionHandler;
 
   @Test
@@ -114,6 +117,9 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
     // setup mock
     when(persistenceIteratorFactory.createIterator(any(), any()))
         .thenReturn(MongoPersistenceIterator.<ArtifactStream>builder().build());
+
+    MetricRegistry metricRegistry = mock(MetricRegistry.class);
+    when(harnessMetricRegistry.getThreadPoolMetricRegistry()).thenReturn(metricRegistry);
 
     ScheduledThreadPoolExecutor executor = mock(ScheduledThreadPoolExecutor.class);
     artifactCollectionHandler.registerIterators(executor);

@@ -6,8 +6,10 @@ import static java.time.Duration.ofSeconds;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 
+import com.codahale.metrics.InstrumentedExecutorService;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIterator.ProcessMode;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
@@ -26,17 +28,20 @@ public class RecentlyDisconnectedDelegateHandler implements Handler<Delegate> {
   private static final long DELEGATE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
   @Inject PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Inject HarnessMetricRegistry harnessMetricRegistry;
 
   public void registerIterators() {
-    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-        POOL_SIZE, new ThreadFactoryBuilder().setNameFormat("Iterator-DelegateProcessor").build());
-
+    String name = "Iterator-DelegateProcessor";
+    final ScheduledThreadPoolExecutor executor =
+        new ScheduledThreadPoolExecutor(POOL_SIZE, new ThreadFactoryBuilder().setNameFormat(name).build());
+    InstrumentedExecutorService instrumentedExecutorService =
+        new InstrumentedExecutorService(executor, harnessMetricRegistry.getThreadPoolMetricRegistry(), name);
     PersistenceIterator iterator = MongoPersistenceIterator.<Delegate>builder()
                                        .clazz(Delegate.class)
                                        .fieldName(DelegateKeys.nextRecentlyDisconnectedIteration)
                                        .targetInterval(ofSeconds(ITERATOR_PERIOD_SECOND))
                                        .acceptableNoAlertDelay(ofSeconds(45))
-                                       .executorService(executor)
+                                       .executorService(instrumentedExecutorService)
                                        .semaphore(new Semaphore(POOL_SIZE))
                                        .handler(this)
                                        .filterExpander(q
