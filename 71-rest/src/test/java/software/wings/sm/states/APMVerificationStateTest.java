@@ -241,4 +241,64 @@ public class APMVerificationStateTest extends WingsBaseTest {
         + ". When configuring multi url verification all metrics should follow the same pattern.")
         .isEqualTo(invalidFields.get("collectionUrl"));
   }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidInitialDelay() throws Exception {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr =
+        Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+    apmVerificationState.setInitialAnalysisDelay("4m");
+    assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testInValidInitialDelay_Minutes() throws Exception {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr =
+        Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+    apmVerificationState.setInitialAnalysisDelay("40m");
+    assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidInitialDelay_Seconds() throws Exception {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr =
+        Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+    apmVerificationState.setInitialAnalysisDelay("200s");
+    assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testInValidInitialDelay_Seconds() throws Exception {
+    APMVerificationState apmVerificationState = new APMVerificationState("dummy");
+    YamlUtils yamlUtils = new YamlUtils();
+    String yamlStr =
+        Resources.toString(APMVerificationStateTest.class.getResource("/apm/apm_config.yml"), Charsets.UTF_8);
+    List<APMVerificationState.MetricCollectionInfo> mcInfo =
+        yamlUtils.read(yamlStr, new TypeReference<List<APMVerificationState.MetricCollectionInfo>>() {});
+    apmVerificationState.setMetricCollectionInfos(mcInfo);
+    apmVerificationState.setInitialAnalysisDelay("500s");
+    assertThat(apmVerificationState.validateFields().containsKey("initialAnalysisDelay")).isTrue();
+  }
 }

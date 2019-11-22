@@ -40,6 +40,7 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
   private int dataCollectionFrequency;
   private int dataCollectionTotalTime;
   private String cvConfigId;
+  private int initialDelaySeconds;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

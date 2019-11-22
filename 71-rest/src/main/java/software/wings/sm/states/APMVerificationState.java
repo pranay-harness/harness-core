@@ -16,7 +16,6 @@ import com.google.common.collect.Sets;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
@@ -45,7 +44,6 @@ import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -142,6 +140,16 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
+  @Attributes(title = "Initial Delay (10s, 30s, 1m, 2m")
+  @DefaultValue("2m")
+  public String getInitialAnalysisDelay() {
+    return initialAnalysisDelay;
+  }
+
+  public void setInitialAnalysisDelay(String initialDelay) {
+    this.initialAnalysisDelay = initialDelay;
+  }
+
   @Override
   public Logger getLogger() {
     return logger;
@@ -163,6 +171,13 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     if (isEmpty(metricCollectionInfos)) {
       invalidFields.put("Metric Collection Info", "Metric collection info should not be empty");
       return invalidFields;
+    }
+
+    if (isNotEmpty(initialAnalysisDelay)) {
+      int delaySeconds = getDelaySeconds(initialAnalysisDelay);
+      if (delaySeconds > 5 * 60) {
+        invalidFields.put("initialAnalysisDelay", "Initial Delay can be 5mins at most");
+      }
     }
     AtomicBoolean hasBaselineUrl = new AtomicBoolean(false);
     metricCollectionInfos.forEach(metricCollectionInfo -> {
@@ -271,9 +286,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
 
     SettingAttribute settingAttribute = null;
     String serverConfigId = analysisServerConfigId;
@@ -327,6 +340,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .canaryMetricInfos(canaryMetricInfos)
             .accountId(accountId)
             .strategy(getComparisonStrategy())
+            .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .build();
 
     analysisContext.getTestNodes().put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);

@@ -554,7 +554,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA)
+  @Owner(developers = SOWMYA, intermittent = true)
   @Category(UnitTests.class)
   public void testDatadogLogsCollection() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);

@@ -2024,6 +2024,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .strategy(AnalysisComparisonStrategy.PREDICTIVE)
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
+            .initialDelaySeconds(0)
             .build();
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
@@ -2061,6 +2062,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .strategy(AnalysisComparisonStrategy.PREDICTIVE)
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
+            .initialDelaySeconds(0)
             .build();
 
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
