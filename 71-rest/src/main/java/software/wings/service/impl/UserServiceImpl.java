@@ -83,7 +83,6 @@ import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
@@ -764,9 +763,11 @@ public class UserServiceImpl implements UserService {
       } else {
         addAccountRoles(user, account, userInvite.getRoles());
       }
-      if (StringUtils.equals(user.getName(), user.getEmail())) {
-        sendNewInvitationMail(userInvite, account);
-        sendNotification = false;
+      if (!accountService.isSSOEnabled(account)) {
+        if (!user.isEmailVerified()) {
+          sendNewInvitationMail(userInvite, account);
+          sendNotification = false;
+        }
       }
     }
 

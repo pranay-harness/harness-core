@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -69,6 +70,7 @@ import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -683,5 +685,33 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .build());
     Boolean result = accountService.updateCloudCostEnabled(account.getUuid(), true);
     assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testIsSSOEnabled() {
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName("CompanyName 1")
+                                              .withAccountName("Account Name 1")
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withAuthenticationMechanism(AuthenticationMechanism.LDAP)
+                                              .withLicenseInfo(getLicenseInfo())
+                                              .withWhitelistedDomains(new HashSet<>())
+                                              .build());
+    Boolean result = accountService.isSSOEnabled(account);
+    assertThat(result).isTrue();
+
+    Account userPassAccount =
+        accountService.save(anAccount()
+                                .withCompanyName("CompanyName 1")
+                                .withAccountName("Account Name 2")
+                                .withAccountKey("ACCOUNT_KEY")
+                                .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                                .withLicenseInfo(getLicenseInfo())
+                                .withWhitelistedDomains(new HashSet<>())
+                                .build());
+    Boolean isSSO = accountService.isSSOEnabled(userPassAccount);
+    assertThat(isSSO).isFalse();
   }
 }
