@@ -28,6 +28,8 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   PageResponse<InfraDefinitionDetail> listInfraDefinitionDetail(
       PageRequest<InfrastructureDefinition> pageRequest, @NotEmpty String appId, @NotEmpty String envId);
   InfrastructureDefinition save(@Valid InfrastructureDefinition infrastructureDefinition, boolean migration);
+  InfrastructureDefinition save(
+      @Valid InfrastructureDefinition infrastructureDefinition, boolean migration, boolean skipValidation);
   InfrastructureDefinition get(String appId, String infraDefinitionId);
   InfrastructureDefinition update(@Valid InfrastructureDefinition infrastructureDefinition);
   void delete(String appId, String infraDefinitionId);

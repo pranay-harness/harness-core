@@ -67,6 +67,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.observer.Subject;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.QueuePublisher;
@@ -279,6 +280,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return;
     }
 
+    if (infraMapping instanceof ContainerInfrastructureMapping) {
+      ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infraMapping;
+      // skipValidation if the namespace is an expression
+      if (isNamespaceExpression(containerInfraMapping)) {
+        logger.info(
+            "Ignore validation for InfraMapping as mapping is of type ContainerInfrastructureMapping and namespace is an expression. infraMapping = {}",
+            infraMapping);
+        return;
+      }
+    }
+
     if (infraMapping instanceof AwsInfrastructureMapping) {
       validateAwsInfraMapping((AwsInfrastructureMapping) infraMapping);
     }
@@ -345,6 +357,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infraMapping instanceof AwsAmiInfrastructureMapping) {
       validateAwsAmiInfrastructureMapping((AwsAmiInfrastructureMapping) infraMapping);
     }
+  }
+
+  @VisibleForTesting
+  boolean isNamespaceExpression(ContainerInfrastructureMapping containerInfraMapping) {
+    return ExpressionEvaluator.containsVariablePattern(containerInfraMapping.getNamespace());
   }
 
   @VisibleForTesting

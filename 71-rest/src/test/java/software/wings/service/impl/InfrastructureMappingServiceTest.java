@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -22,6 +23,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,6 +105,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -112,6 +115,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -1218,5 +1222,32 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     } catch (InvalidRequestException ex) {
       Assertions.assertThat(ExceptionUtils.getMessage(ex)).contains("Namespace");
     }
+  }
+
+  @Test
+  @Owner(developers = DINESH)
+  @Category(UnitTests.class)
+  public void testSkipValidationForNamespaceExpression() {
+    InfrastructureMapping infrastructureMapping =
+        aDirectKubernetesInfrastructureMapping()
+            .withNamespace("${serviceVariable.NAMESPACE}")
+            .withAppId(APP_ID)
+            .withEnvId(ENV_ID)
+            .withServiceId(SERVICE_ID)
+            .withServiceTemplateId(TEMPLATE_ID)
+            .withComputeProviderType(KUBERNETES_CLUSTER.name())
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .withUuid(INFRA_MAPPING_ID)
+            .withDeploymentType(DeploymentType.KUBERNETES.name())
+            .withInfraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
+            .withAccountId(ACCOUNT_ID)
+            .build();
+
+    InfrastructureMappingServiceImpl spyInfrastructureMappingService = spy(InfrastructureMappingServiceImpl.class);
+    doReturn(true)
+        .when(spyInfrastructureMappingService)
+        .isNamespaceExpression(any(ContainerInfrastructureMapping.class));
+    spyInfrastructureMappingService.validateInfraMapping(infrastructureMapping, false);
+    verify(spyInfrastructureMappingService, times(1)).isNamespaceExpression(any(ContainerInfrastructureMapping.class));
   }
 }

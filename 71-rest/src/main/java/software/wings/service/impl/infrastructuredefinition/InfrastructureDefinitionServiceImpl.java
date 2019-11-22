@@ -317,8 +317,14 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public InfrastructureDefinition save(InfrastructureDefinition infrastructureDefinition, boolean migration) {
+    return save(infrastructureDefinition, migration, false);
+  }
+
+  @Override
+  public InfrastructureDefinition save(
+      InfrastructureDefinition infrastructureDefinition, boolean migration, boolean skipValidation) {
     String accountId = appService.getAccountIdByAppId(infrastructureDefinition.getAppId());
-    if (!migration) {
+    if (!migration && !skipValidation) {
       validateInfraDefinition(infrastructureDefinition);
     }
     String uuid;
@@ -1312,7 +1318,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         final InfrastructureDefinition clonedInfraDef = infraDef.cloneForUpdate();
         clonedInfraDef.setEnvId(targetEnvID);
         clonedInfraDef.setAppId(targetAppID);
-        save(clonedInfraDef, false);
+        save(clonedInfraDef, false, true);
       } catch (Exception e) {
         logger.error("Failed to clone infrastructure definition name {}, id {} of environment {}", infraDef.getName(),
             infraDef.getUuid(), infraDef.getEnvId(), e);
