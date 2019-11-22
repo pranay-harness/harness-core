@@ -66,6 +66,10 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+datadogConfig:
+  enabled: false #datadogConfigEnable
+  apiKey: "datadog_api_key"
+
 githubConfig:
   clientId: githubClientId
   clientSecret: githubClientSecret

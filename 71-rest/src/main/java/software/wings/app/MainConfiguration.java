@@ -21,6 +21,7 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -98,6 +99,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("clusterName") private String clusterName;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
+  @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
   @JsonProperty("defaultSalesContacts") private DefaultSalesContacts defaultSalesContacts;
   @JsonProperty("githubConfig") private GithubConfig githubConfig;
   @JsonProperty("linkedinConfig") private LinkedinConfig linkedinConfig;

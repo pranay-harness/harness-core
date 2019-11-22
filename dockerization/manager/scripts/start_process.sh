@@ -26,6 +26,9 @@ fi
 
 export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS"
 
+if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] && [[ -e /opt/harness/datadog/dd-java-agent.jar ]]; then
+    JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/datadog/dd-java-agent.jar"
+fi
 
 if [[ "${ENABLE_APPDYNAMICS}" == "true" ]] && [[ "${DISABLE_NEW_RELIC}" == "true" ]]; then
     tar -xvzf AppServerAgent-4.5.0.23604.tar.gz

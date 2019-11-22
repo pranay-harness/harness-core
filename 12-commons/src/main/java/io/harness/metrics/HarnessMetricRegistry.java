@@ -33,11 +33,13 @@ import java.util.Set;
 public class HarnessMetricRegistry {
   // DropWizard metric registry that stores the metrics
   private MetricRegistry metricRegistry;
+  private MetricRegistry threadPoolMetricRegistry;
 
   // Prometheus Collector Registry used for exposing metrics to prometheus by rest endpoint
   private CollectorRegistry collectorRegistry;
 
   private final Map<String, Object> namesToCollectors = new HashMap<>();
+  private final Map<String, Object> codahaleNamesToCollectors = new HashMap<>();
 
   // Default metric path for Custom Metrics
   // Any new custom metric that needs to be registered should have this path as prefix.
@@ -47,7 +49,15 @@ public class HarnessMetricRegistry {
   public HarnessMetricRegistry(MetricRegistry metricRegistry, CollectorRegistry collectorRegistry) {
     this.metricRegistry = metricRegistry;
     this.collectorRegistry = collectorRegistry;
-    this.collectorRegistry.register(new CustomDropWizardExports(metricRegistry));
+    this.threadPoolMetricRegistry = new MetricRegistry();
+    // this.collectorRegistry.register(new CustomDropWizardExports(metricRegistry));
+  }
+
+  public MetricRegistry getMetricRegistry() {
+    return metricRegistry;
+  }
+  public MetricRegistry getThreadPoolMetricRegistry() {
+    return threadPoolMetricRegistry;
   }
 
   public void registerCounterMetric(String metricName, String[] labels, String doc) {
@@ -63,7 +73,12 @@ public class HarnessMetricRegistry {
     }
     Counter metric = builder.create();
 
+    com.codahale.metrics.Counter counterMetric = metricRegistry.counter(name);
+
+    codahaleNamesToCollectors.put(name, counterMetric);
+
     collectorRegistry.register(metric);
+
     namesToCollectors.put(name, metric);
   }
 

@@ -50,6 +50,7 @@ import io.harness.ccm.CCMPerpetualTaskHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.event.EventsModule;
@@ -92,6 +93,8 @@ import io.harness.workers.background.critical.iterator.ResourceConstraintBackupH
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.coursera.metrics.datadog.DatadogReporter;
+import org.coursera.metrics.datadog.transport.HttpTransport;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -445,10 +448,31 @@ public class WingsApplication extends Application<MainConfiguration> {
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+
+    registerDatadogPublisherIfEnabled(configuration);
+
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
     logger.info("Starting app done");
+  }
+
+  private void registerDatadogPublisherIfEnabled(MainConfiguration configuration) {
+    DatadogConfig datadogConfig = configuration.getDatadogConfig();
+    if (datadogConfig != null && datadogConfig.isEnabled()) {
+      try {
+        logger.info("Registering datadog javaagent");
+        HttpTransport httpTransport = new HttpTransport.Builder().withApiKey(datadogConfig.getApiKey()).build();
+        DatadogReporter reporter = DatadogReporter.forRegistry(harnessMetricRegistry.getThreadPoolMetricRegistry())
+                                       .withTransport(httpTransport)
+                                       .build();
+
+        reporter.start(60, TimeUnit.SECONDS);
+        logger.info("Registered datadog javaagent");
+      } catch (Exception t) {
+        logger.error("Error while initializing datadog", t);
+      }
+    }
   }
 
   private void initMetrics() {
