@@ -2,6 +2,7 @@ package software.wings.service.impl.infrastructuredefinition;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
@@ -41,6 +42,7 @@ import com.google.common.collect.Maps;
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
@@ -50,6 +52,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
@@ -82,6 +85,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
 
 import java.util.Collections;
@@ -102,8 +106,10 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private SettingsService mockSettingsService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private YamlPushService yamlPushService;
+  @Mock private EventPublishHelper eventPublishHelper;
 
-  @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
+  @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -420,7 +426,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     doReturn(InfrastructureDefinition.builder().build())
         .when(spyInfrastructureDefinitionService)
-        .save(any(InfrastructureDefinition.class), any(boolean.class));
+        .save(any(InfrastructureDefinition.class), any(boolean.class), any(boolean.class));
     doReturn(aPageResponse().withResponse(Collections.singletonList(infraDef)).build())
         .when(spyInfrastructureDefinitionService)
         .list("appid", "envid", null);
@@ -430,7 +436,8 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     // test
     ArgumentCaptor<InfrastructureDefinition> cloneInfraDef = ArgumentCaptor.forClass(InfrastructureDefinition.class);
 
-    verify(spyInfrastructureDefinitionService, times(1)).save(cloneInfraDef.capture(), any(boolean.class));
+    verify(spyInfrastructureDefinitionService, times(1))
+        .save(cloneInfraDef.capture(), any(boolean.class), any(boolean.class));
     verify(spyInfrastructureDefinitionService, times(1)).list("appid", "envid", null);
 
     InfrastructureDefinition value = cloneInfraDef.getValue();
@@ -770,6 +777,20 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
         .isEqualTo(cloudProvider.getName());
     assertThat(infrastructureDefinitionService.cloudProviderNameForDefinition(def.getAppId(), def.getUuid()))
         .isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = DINESH)
+  @Category(UnitTests.class)
+  public void testSaveWithSkipValidation() {
+    InfrastructureDefinition infraDef =
+        InfrastructureDefinition.builder().uuid("infra-uuid").envId("envid").appId("appid").name("infra-name").build();
+
+    when(wingsPersistence.save(any(InfrastructureDefinition.class))).thenReturn(infraDef.getUuid());
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
+
+    infrastructureDefinitionService.save(infraDef, false, true);
+    verify(infrastructureDefinitionService, times(0)).validateInfraDefinition(any(InfrastructureDefinition.class));
   }
 
   //  @Test
