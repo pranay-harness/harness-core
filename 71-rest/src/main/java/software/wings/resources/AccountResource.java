@@ -172,7 +172,6 @@ public class AccountResource {
   @Path("services-cv-24x7")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   public RestResponse<PageResponse<CVEnabledService>> getAllServicesFor24x7(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<String> request) {
     return new RestResponse<>(
@@ -183,7 +182,6 @@ public class AccountResource {
   @Path("services-cv-24x7-breadcrumb")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   public RestResponse<List<Service>> getAllServicesFor24x7(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getServicesBreadCrumb(accountId, UserThreadLocal.get().getPublicUser()));
   }

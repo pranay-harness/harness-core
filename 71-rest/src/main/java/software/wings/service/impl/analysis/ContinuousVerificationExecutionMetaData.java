@@ -39,7 +39,9 @@ import java.util.Date;
   ,
       @Index(fields = {
         @Field("workflowExecutionId"), @Field(value = "createdAt", type = IndexType.DESC)
-      }, options = @IndexOptions(name = "workflowExec_idx"))
+      }, options = @IndexOptions(name = "workflowExec_idx")), @Index(fields = {
+        @Field("pipelineExecutionId"), @Field(value = "accountId")
+      }, options = @IndexOptions(name = "cv_certified_index"))
 })
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @HarnessEntity(exportable = false)
