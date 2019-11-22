@@ -171,6 +171,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           logger.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
         }
         match = environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType());
+      } else {
+        match = false;
       }
     }
     if (match && isNotEmpty(scope.getTaskTypes())) {
