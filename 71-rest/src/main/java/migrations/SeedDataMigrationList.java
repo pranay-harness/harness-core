@@ -25,7 +25,8 @@ public class SeedDataMigrationList {
         .add(Pair.of(9, BaseSeedDataMigration.class))
         .add(Pair.of(10, BaseSeedDataMigration.class))
         .add(Pair.of(11, TomcatInstallCommandMigration.class))
-        .add(Pair.of(12, ReImportTemplatesMigration.class))
+        .add(Pair.of(12, BaseSeedDataMigration.class))
+        .add(Pair.of(13, ReImportTemplatesMigration.class))
         .build();
   }
 }

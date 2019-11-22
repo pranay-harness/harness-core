@@ -15,7 +15,7 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 
 public class ReImportTemplatesMigration implements SeedDataMigration {
   private static final Logger logger = getLogger(ReImportTemplatesMigration.class);
-  private static final String ACCOUNT_ID = "cMjNnjMmRSiPAdQGOmV94A";
+  private static final String ACCOUNT_ID = "-czOfo4UTPumhprgLZkDYg"; // Bitcentral Inc.
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private WingsPersistence wingsPersistence;
 
