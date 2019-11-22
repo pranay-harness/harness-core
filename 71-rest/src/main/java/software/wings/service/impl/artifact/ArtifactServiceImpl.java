@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
@@ -229,10 +230,11 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   private void updateArtifactIdentity(
       ArtifactStream artifactStream, ArtifactStreamAttributes artifactStreamAttributes, Artifact artifact) {
+    StringBuilder stringBuilder = new StringBuilder();
     String artifactStreamType = artifactStream.getArtifactStreamType();
     Function<Artifact, String> keyFn = getArtifactKeyFn(artifactStreamType, artifactStreamAttributes);
-    String identity = keyFn.apply(artifact);
-    artifact.setBuildIdentity(identity);
+    stringBuilder.append(keyFn.apply(artifact)).append('_').append(generateUuid());
+    artifact.setBuildIdentity(stringBuilder.toString());
   }
 
   private Artifact getArtifactByUniqueKey(
