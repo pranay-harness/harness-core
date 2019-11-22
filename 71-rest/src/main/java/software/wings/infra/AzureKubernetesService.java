@@ -25,7 +25,7 @@ public class AzureKubernetesService
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
   @IncludeFieldMap @Expression private String namespace;
-  @Expression private String releaseName;
+  private String releaseName;
   private String subscriptionId;
   private String resourceGroup;
 

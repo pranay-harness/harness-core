@@ -492,15 +492,14 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Owner(developers = YOGESH_CHAUHAN)
   @Category(UnitTests.class)
   public void shouldGetExpressionAnnotatedFields() {
-    InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
-        (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
-    GoogleKubernetesEngine googleKubernetesEngine = GoogleKubernetesEngine.builder().releaseName("rel").build();
+    InfrastructureDefinitionServiceImpl infrastructureDefinitionService = this.infrastructureDefinitionService;
+    GoogleKubernetesEngine googleKubernetesEngine = GoogleKubernetesEngine.builder().namespace("namespace").build();
 
     Map<String, Object> allFields =
         infrastructureDefinitionService.getExpressionAnnotatedFields(googleKubernetesEngine);
 
-    assertThat(allFields).hasSize(2);
-    assertThat(allFields.get(GoogleKubernetesEngineKeys.releaseName).equals("rel")).isTrue();
+    assertThat(allFields).hasSize(1);
+    assertThat(allFields.get(GoogleKubernetesEngineKeys.namespace).equals("namespace")).isTrue();
   }
 
   @Test

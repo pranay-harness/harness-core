@@ -26,7 +26,7 @@ public class DirectKubernetesInfrastructure
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
   @IncludeFieldMap @Expression private String namespace;
-  @Expression @Trimmed private String releaseName;
+  @Trimmed private String releaseName;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
