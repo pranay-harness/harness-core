@@ -35,7 +35,7 @@ public class GoogleKubernetesEngine
   private String cloudProviderId;
   @IncludeFieldMap private String clusterName;
   @IncludeFieldMap @Expression private String namespace;
-  @Expression private String releaseName;
+  private String releaseName;
   private Map<String, String> expressions;
 
   @Override
