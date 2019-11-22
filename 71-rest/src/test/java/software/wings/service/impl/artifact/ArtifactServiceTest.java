@@ -171,7 +171,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact oldArtifact = artifactService.create(artifactBuilder.but().build());
     Artifact newArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(newArtifact.getUuid()).isEqualTo(oldArtifact.getUuid());
-    assertThat(oldArtifact.getBuildIdentity()).isEqualTo("200");
+    assertThat(oldArtifact.getBuildIdentity()).contains("200");
   }
 
   @Test
@@ -190,7 +190,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact oldArtifact = artifactService.create(artifactBuilder.but().build());
     Artifact newArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(newArtifact.getUuid()).isEqualTo(oldArtifact.getUuid());
-    assertThat(oldArtifact.getBuildIdentity()).isEqualTo("1.0");
+    assertThat(oldArtifact.getBuildIdentity()).contains("1.0");
   }
 
   @Test
@@ -210,7 +210,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact oldArtifact = artifactService.create(artifactBuilder.but().withMetadata(metadata).build());
     Artifact newArtifact = artifactService.create(artifactBuilder.but().withMetadata(metadata).build());
     assertThat(newArtifact.getUuid()).isEqualTo(oldArtifact.getUuid());
-    assertThat(oldArtifact.getBuildIdentity()).isEqualTo("path");
+    assertThat(oldArtifact.getBuildIdentity()).contains("path");
   }
 
   @Test
@@ -222,7 +222,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact oldArtifact = artifactService.create(artifactBuilder.but().build());
     Artifact newArtifact = artifactService.create(artifactLatestBuilder.but().build());
     assertThat(newArtifact.getUuid()).isNotEqualTo(oldArtifact.getUuid());
-    assertThat(oldArtifact.getBuildIdentity()).isEqualTo("200");
+    assertThat(oldArtifact.getBuildIdentity()).contains("200");
   }
 
   @Test
