@@ -124,7 +124,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
           }
           pendingTask = true;
         }
-      }, getInitialDelayMinutes(), getPeriodMinutes(), TimeUnit.MINUTES);
+      }, getInitialDelaySeconds(), getPeriodSeconds(), TimeUnit.SECONDS);
       getLogger().info("going to collect data for " + parameters);
       waitForCompletion();
       getLogger().info(" finish data collection for " + parameters + ". result is " + taskResult);
@@ -178,10 +178,14 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     return DELAY_MINUTES;
   }
 
+  protected int getInitialDelaySeconds() {
+    return (int) TimeUnit.MINUTES.toSeconds(getInitialDelayMinutes());
+  }
+
   protected abstract boolean is24X7Task();
 
-  protected int getPeriodMinutes() {
-    return COLLECTION_PERIOD_MINS;
+  protected int getPeriodSeconds() {
+    return (int) TimeUnit.MINUTES.toSeconds(COLLECTION_PERIOD_MINS);
   }
 
   protected void addHeartbeat(String host, LogDataCollectionInfo logDataCollectionInfo, long logCollectionMinute,

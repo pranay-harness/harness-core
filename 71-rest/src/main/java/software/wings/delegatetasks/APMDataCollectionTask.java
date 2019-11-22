@@ -79,12 +79,13 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final int MAX_HOSTS_PER_BATCH = 15;
   private static Pattern pattern = Pattern.compile("\\$\\{(.*?)\\}");
   private static final String URL_BODY_APPENDER = "__harness-body__";
+  private static final int FIVE_MINS_IN_SECONDS = 5 * 60;
+  private static final int TWO_MINS_IN_SECONDS = 2 * 60;
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
   @Inject private DelegateLogService delegateLogService;
 
-  private int initialDelayMins = 2;
   private int collectionWindow = 1;
 
   private APMDataCollectionInfo dataCollectionInfo;
@@ -102,7 +103,26 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected int getInitialDelayMinutes() {
-    return is24X7Task() ? 0 : initialDelayMins;
+    if (is24X7Task()) {
+      return 0;
+    }
+    int delayMinsFromDataCollectionTask = (int) TimeUnit.SECONDS.toMinutes(dataCollectionInfo.getInitialDelaySeconds());
+    if (delayMinsFromDataCollectionTask > 5 || delayMinsFromDataCollectionTask < 0) {
+      return 2;
+    }
+    return delayMinsFromDataCollectionTask;
+  }
+
+  @Override
+  protected int getInitialDelaySeconds() {
+    if (is24X7Task()) {
+      return 0;
+    }
+    if (dataCollectionInfo.getInitialDelaySeconds() > FIVE_MINS_IN_SECONDS
+        || dataCollectionInfo.getInitialDelaySeconds() < 0) {
+      return TWO_MINS_IN_SECONDS;
+    }
+    return dataCollectionInfo.getInitialDelaySeconds();
   }
 
   @Override
@@ -110,7 +130,6 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     dataCollectionInfo = (APMDataCollectionInfo) parameters;
     collectionWindow =
         dataCollectionInfo.getDataCollectionFrequency() != 0 ? dataCollectionInfo.getDataCollectionFrequency() : 1;
-    initialDelayMins = 2;
     logger.info("apm collection - dataCollectionInfo: {}", dataCollectionInfo);
 
     if (!EmptyPredicate.isEmpty(dataCollectionInfo.getEncryptedDataDetails())) {

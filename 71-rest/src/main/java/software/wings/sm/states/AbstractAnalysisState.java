@@ -145,6 +145,7 @@ public abstract class AbstractAnalysisState extends State {
   protected String comparisonStrategy;
   protected String tolerance;
   protected String predictiveHistoryMinutes;
+  protected String initialAnalysisDelay = "2m";
 
   private static final int DEFAULT_VERIFICATION_STATE_TIMEOUT_MILLIS = 3 * 60 * 60 * 1000; // 3 hours
   private static final int TIMEOUT_BUFFER = 150; // 150 Minutes.
@@ -1027,5 +1028,18 @@ public abstract class AbstractAnalysisState extends State {
 
   protected String getAppName(ExecutionContext executionContext) {
     return executionContext.getApp() == null ? null : executionContext.getApp().getName();
+  }
+
+  protected int getDelaySeconds(String initialDelay) {
+    char lastChar = initialDelay.charAt(initialDelay.length() - 1);
+    switch (lastChar) {
+      case 's':
+        return Integer.parseInt(initialDelay.substring(0, initialDelay.length() - 1));
+      case 'm':
+        return (int) TimeUnit.MINUTES.toSeconds(1)
+            * Integer.parseInt(initialDelay.substring(0, initialDelay.length() - 1));
+      default:
+        throw new WingsException("Specify delay in seconds (1s) or minutes (1m) ");
+    }
   }
 }

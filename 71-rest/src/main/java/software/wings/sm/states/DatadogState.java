@@ -218,6 +218,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
             .strategy(getComparisonStrategy())
             .dataCollectionFrequency(DATA_COLLECTION_RATE_MINS)
             .dataCollectionTotalTime(timeDurationInInteger)
+            .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .build();
 
     String waitId = generateUuid();

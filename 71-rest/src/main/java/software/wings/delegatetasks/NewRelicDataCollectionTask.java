@@ -112,8 +112,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   }
 
   @Override
-  protected int getPeriodMinutes() {
-    return PERIOD_MINS;
+  protected int getPeriodSeconds() {
+    return (int) TimeUnit.MINUTES.toSeconds(1) * PERIOD_MINS;
   }
 
   private class NewRelicMetricCollector implements Runnable {
