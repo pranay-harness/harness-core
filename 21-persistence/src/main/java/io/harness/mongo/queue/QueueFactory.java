@@ -18,7 +18,7 @@ public class QueueFactory {
   public static <T extends Queuable> QueuePublisher<T> createQueuePublisher(
       Class<T> klass, VersionType versionType, PublisherConfiguration configuration) {
     if (configuration.isPublisherActive(klass)) {
-      return new MongoQueuePublisher(versionType);
+      return new MongoQueuePublisher(klass.getSimpleName(), versionType);
     } else {
       logger.error("NoOpQueue has been setup for eventType:[{}]", klass.getName());
       return new NoopQueuePublisher();

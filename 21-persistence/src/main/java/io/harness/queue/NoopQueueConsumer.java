@@ -18,7 +18,7 @@ public class NoopQueueConsumer<T extends Queuable> implements QueueConsumer<T> {
   }
 
   @Override
-  public String name() {
+  public String getName() {
     return null;
   }
 

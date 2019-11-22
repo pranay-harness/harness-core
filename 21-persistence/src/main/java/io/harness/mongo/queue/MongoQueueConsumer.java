@@ -11,7 +11,6 @@ import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
-import io.harness.queue.Queue.VersionType;
 import io.harness.queue.QueueConsumer;
 import io.harness.version.VersionInfoManager;
 import lombok.Setter;
@@ -161,8 +160,8 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
   }
 
   @Override
-  public String name() {
-    return persistence.getCollection(klass).getName();
+  public String getName() {
+    return klass.getSimpleName();
   }
 
   private Query<T> createQuery() {

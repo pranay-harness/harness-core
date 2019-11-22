@@ -302,7 +302,8 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSendAndGetMessageWithEntityReference() {
-    MongoQueuePublisher<TestQueuableWithEntity> entityProducer = new MongoQueuePublisher<>(UNVERSIONED);
+    MongoQueuePublisher<TestQueuableWithEntity> entityProducer =
+        new MongoQueuePublisher<>(TestQueuableWithEntity.class.getSimpleName(), UNVERSIONED);
     on(entityProducer).set("persistence", persistence);
     on(entityProducer).set("versionInfoManager", versionInfoManager);
 
@@ -329,7 +330,8 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldFilterWithVersion() {
-    MongoQueuePublisher<TestVersionedQueuableObject> versionProducer = new MongoQueuePublisher<>(VERSIONED);
+    MongoQueuePublisher<TestVersionedQueuableObject> versionProducer =
+        new MongoQueuePublisher<>(TestVersionedQueuableObject.class.getSimpleName(), VERSIONED);
     on(versionProducer).set("persistence", persistence);
     on(versionProducer).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
 
@@ -348,7 +350,8 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldNotFilterWithVersion() {
-    MongoQueuePublisher<TestVersionedQueuableObject> versionProducer = new MongoQueuePublisher<>(UNVERSIONED);
+    MongoQueuePublisher<TestVersionedQueuableObject> versionProducer =
+        new MongoQueuePublisher<>(TestVersionedQueuableObject.class.getSimpleName(), UNVERSIONED);
     on(versionProducer).set("persistence", persistence);
     on(versionProducer).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
 
