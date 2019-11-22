@@ -28,7 +28,8 @@ public class WaiterModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}).toInstance(new MongoQueuePublisher<>(VERSIONED));
+    bind(new TypeLiteral<QueuePublisher<NotifyEvent>>() {})
+        .toInstance(new MongoQueuePublisher<>(NotifyEvent.class.getSimpleName(), VERSIONED));
     bind(new TypeLiteral<QueueConsumer<NotifyEvent>>() {})
         .toInstance(new MongoQueueConsumer<>(NotifyEvent.class, VERSIONED, ofSeconds(5)));
     bind(new TypeLiteral<QueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);

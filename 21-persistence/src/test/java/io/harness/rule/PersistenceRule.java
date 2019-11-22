@@ -115,11 +115,11 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       protected void configure() {
         bind(new TypeLiteral<QueuePublisher<TestVersionedQueuableObject>>() {})
-            .toInstance(new MongoQueuePublisher<>(VERSIONED));
+            .toInstance(new MongoQueuePublisher<>(TestVersionedQueuableObject.class.getSimpleName(), VERSIONED));
         bind(new TypeLiteral<QueueConsumer<TestVersionedQueuableObject>>() {})
             .toInstance(new MongoQueueConsumer<>(TestVersionedQueuableObject.class, VERSIONED, ofSeconds(5)));
         bind(new TypeLiteral<QueuePublisher<TestUnversionedQueuableObject>>() {})
-            .toInstance(new MongoQueuePublisher<>(VERSIONED));
+            .toInstance(new MongoQueuePublisher<>(TestUnversionedQueuableObject.class.getSimpleName(), VERSIONED));
         bind(new TypeLiteral<QueueConsumer<TestUnversionedQueuableObject>>() {})
             .toInstance(new MongoQueueConsumer<>(TestUnversionedQueuableObject.class, VERSIONED, ofSeconds(5)));
 

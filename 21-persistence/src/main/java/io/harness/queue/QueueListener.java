@@ -43,7 +43,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
    */
   @Override
   public void run() {
-    String threadName = queue.name() + "-handler-" + generateUuid();
+    String threadName = queue.getName() + "-handler-" + generateUuid();
     logger.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 
@@ -66,10 +66,10 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       message = queue.get(ofSeconds(3), ofSeconds(1));
     } catch (Exception exception) {
       if (exception.getCause() instanceof InterruptedException) {
-        logger.info("Thread interrupted, shutting down for queue {}", queue.name());
+        logger.info("Thread interrupted, shutting down for queue {}", queue.getName());
         return false;
       }
-      logger.error(format("Exception happened while fetching message from queue %s", queue.name()), exception);
+      logger.error(format("Exception happened while fetching message from queue %s", queue.getName()), exception);
     }
 
     if (message != null) {
@@ -86,10 +86,10 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
         message = queue.get(Duration.ZERO, Duration.ZERO);
       } catch (Exception exception) {
         if (exception.getCause() instanceof InterruptedException) {
-          logger.info("Thread interrupted, shutting down for queue {}", queue.name());
+          logger.info("Thread interrupted, shutting down for queue {}", queue.getName());
           return;
         }
-        logger.error(format("Exception happened while fetching message from queue %s", queue.name()), exception);
+        logger.error(format("Exception happened while fetching message from queue %s", queue.getName()), exception);
       }
 
       if (message == null) {
@@ -123,7 +123,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
       queue.ack(message);
     } catch (InstantiationError exception) {
-      logger.error(format("Critical exception happened in onMessage %s", queue.name()), exception);
+      logger.error(format("Critical exception happened in onMessage %s", queue.getName()), exception);
       queue.ack(message);
     } catch (Throwable exception) {
       onException(exception, message);

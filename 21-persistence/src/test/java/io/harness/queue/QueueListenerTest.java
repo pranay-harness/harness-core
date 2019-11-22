@@ -52,7 +52,7 @@ public class QueueListenerTest extends PersistenceTest {
   public void setup() throws Exception {
     queueListenerController.stop();
 
-    producer = spy(new MongoQueuePublisher<>(VERSIONED));
+    producer = spy(new MongoQueuePublisher<>(TestVersionedQueuableObject.class.getSimpleName(), VERSIONED));
     on(producer).set("persistence", persistence);
     on(producer).set("versionInfoManager", versionInfoManager);
 
