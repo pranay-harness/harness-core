@@ -15,7 +15,7 @@ import io.harness.beans.PageResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
@@ -60,7 +60,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EventEmitter eventEmitter;
 
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {

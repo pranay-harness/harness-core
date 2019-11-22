@@ -66,7 +66,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -187,7 +187,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private FileService fileService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private SettingsService settingsService;
-  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
+  @Inject private QueuePublisher<KmsTransitionEvent> transitionKmsQueue;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ConfigService configService;
   @Inject private AppService appService;

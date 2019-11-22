@@ -102,7 +102,7 @@ import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.counter.service.CounterSyncer;
 import io.harness.observer.Rejection;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
@@ -325,7 +325,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ArtifactService artifactService;
 
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private DeploymentTriggerService deploymentTriggerService;

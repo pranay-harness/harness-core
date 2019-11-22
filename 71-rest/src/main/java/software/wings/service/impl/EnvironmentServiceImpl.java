@@ -45,7 +45,7 @@ import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
@@ -146,7 +146,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EventPublishHelper eventPublishHelper;
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
 

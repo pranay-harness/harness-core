@@ -15,8 +15,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.Queue;
-import io.harness.queue.Queue.Filter;
+import io.harness.queue.QueueConsumer;
+import io.harness.queue.QueueConsumer.Filter;
 import io.harness.queue.QueueListenerController;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Concurrent;
@@ -39,7 +39,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
   @Inject private HPersistence persistence;
 
-  @Inject private Queue<NotifyEvent> notifyEventQueue;
+  @Inject private QueueConsumer<NotifyEvent> notifyConsumer;
 
   @Inject private NotifyResponseCleaner notifyResponseCleaner;
   @Inject private NotifyEventListener notifyEventListener;
@@ -77,7 +77,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .isEqualTo(data);
 
-      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(1).isEqualTo(of(uuid, data));
       assertThat(callCount.get()).isEqualTo(1);
@@ -104,7 +104,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       Concurrent.test(10, i -> { notifyEventListener.execute(); });
 
-      assertThat(notifyEventQueue.count(Filter.ALL)).isEqualTo(0);
+      assertThat(notifyConsumer.count(Filter.ALL)).isEqualTo(0);
 
       assertThat(responseMap).hasSize(1).isEqualTo(of(uuid, data));
       assertThat(callCount.get()).isEqualTo(1);
@@ -131,7 +131,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       notifyEventListener.execute();
 
-      assertThat(notifyEventQueue.count(Filter.ALL)).isEqualTo(0);
+      assertThat(notifyConsumer.count(Filter.ALL)).isEqualTo(0);
 
       assertThat(responseMap).hasSize(1).isEqualTo(of(uuid, data));
       assertThat(callCount.get()).isEqualTo(1);
@@ -163,7 +163,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .isEqualTo(data1);
 
-      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
       ResponseData data2 = StringNotifyResponseData.builder().data("response-" + uuid2).build();
@@ -175,7 +175,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .isEqualTo(data2);
 
-      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(0);
       ResponseData data3 = StringNotifyResponseData.builder().data("response-" + uuid3).build();
@@ -187,7 +187,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .isEqualTo(data3);
 
-      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyEventQueue.count(Filter.ALL) == 0);
+      Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
       assertThat(responseMap).hasSize(3).containsAllEntriesOf(of(uuid1, data1, uuid2, data2, uuid3, data3));
       assertThat(callCount.get()).isEqualTo(1);
@@ -221,7 +221,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .extracting(NotifyResponse::getResponse)
           .isEqualTo(data);
 
-      while (notifyEventQueue.count(Filter.ALL) != 0) {
+      while (notifyConsumer.count(Filter.ALL) != 0) {
         Thread.yield();
       }
 

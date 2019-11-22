@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 public class EmailNotificationServiceImpl implements EmailNotificationService {
   @Inject private Mailer mailer;
 
-  @Inject private Queue<EmailData> emailEventQueue;
+  @Inject private QueuePublisher<EmailData> emailEventQueue;
 
   @Inject private MainConfiguration mainConfiguration;
 

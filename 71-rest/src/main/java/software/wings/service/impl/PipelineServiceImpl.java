@@ -52,7 +52,7 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.counter.service.CounterSyncer;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -145,7 +145,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private CounterSyncer counterSyncer;
   @Inject private EventPublishHelper eventPublishHelper;
 
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject FeatureFlagService featureFlagService;

@@ -40,7 +40,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -131,7 +131,7 @@ public class AppServiceImpl implements AppService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private ResourceLookupService resourceLookupService;
 
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   private void validateAppName(Application app) {

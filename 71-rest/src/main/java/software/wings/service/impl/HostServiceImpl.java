@@ -10,7 +10,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -53,7 +53,7 @@ public class HostServiceImpl implements HostService {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceResourceService serviceResourceService;
 
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)

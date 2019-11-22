@@ -19,7 +19,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -103,7 +103,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
 
   @Mock private SettingsService settingsService;
 
-  @Mock private Queue<EmailData> queue;
+  @Mock private QueuePublisher<EmailData> queue;
 
   @Mock private SecretManager secretManager;
 

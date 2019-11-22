@@ -71,7 +71,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
@@ -205,7 +205,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject private SpotinstHelperServiceManager spotinstHelperServiceManager;
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureDefinitionHelper infrastructureDefinitionHelper;
   @Inject private EventPublishHelper eventPublishHelper;

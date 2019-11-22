@@ -10,7 +10,7 @@ import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.queue.Queue;
+import io.harness.queue.QueueConsumer;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Rule;
@@ -72,7 +72,7 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected ConfigService configService;
   @Inject protected EncryptionService encryptionService;
-  @Inject protected Queue<KmsTransitionEvent> transitionKmsQueue;
+  @Inject protected QueueConsumer<KmsTransitionEvent> transitionKmsQueue;
   @Inject protected SettingsService settingsService;
   @Inject protected FeatureFlagService featureFlagService;
 

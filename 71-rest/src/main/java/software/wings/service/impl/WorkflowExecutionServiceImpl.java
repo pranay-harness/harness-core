@@ -95,7 +95,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoUtils;
 import io.harness.serializer.MapperUtils;
 import io.harness.waiter.WaitNotifyEngine;
@@ -300,7 +300,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private PipelineService pipelineService;
   @Inject private ExecutorService executorService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private Queue<ExecutionEvent> executionEventQueue;
+  @Inject private QueuePublisher<ExecutionEvent> executionEventQueue;
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private MongoStore mongoStore;

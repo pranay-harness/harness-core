@@ -12,7 +12,7 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.event.timeseries.processor.EventProcessor;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.WorkflowExecution;
@@ -38,7 +38,7 @@ public class UsageMetricsEventPublisher {
   @Inject EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private Queue<DeploymentTimeSeriesEvent> deploymentTimeSeriesEventQueue;
+  @Inject private QueuePublisher<DeploymentTimeSeriesEvent> deploymentTimeSeriesEventQueue;
   SimpleDateFormat sdf;
 
   public UsageMetricsEventPublisher() {

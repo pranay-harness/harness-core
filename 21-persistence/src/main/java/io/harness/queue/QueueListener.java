@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public abstract class QueueListener<T extends Queuable> implements Runnable {
-  @Inject @Getter @Setter private Queue<T> queue;
+  @Inject @Getter @Setter private QueueConsumer<T> queue;
 
   @Setter private boolean runOnce;
   private final boolean primaryOnly;

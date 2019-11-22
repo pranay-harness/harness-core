@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueueConsumer;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +65,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   @Inject private SecretManager secretManager;
-  @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
+  @Inject private QueueConsumer<KmsTransitionEvent> transitionKmsQueue;
   @Inject private WingsPersistence wingsPersistence;
   private KmsTransitionEventListener transitionEventListener;
 

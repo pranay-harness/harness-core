@@ -1,15 +1,18 @@
 package io.harness.waiter;
 
+import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.time.Duration.ofSeconds;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.TypeLiteral;
 
 import io.harness.govern.DependencyModule;
-import io.harness.mongo.queue.MongoQueue;
-import io.harness.queue.Queue;
+import io.harness.mongo.queue.MongoQueueConsumer;
+import io.harness.mongo.queue.MongoQueuePublisher;
+import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueModule;
+import io.harness.queue.QueuePublisher;
 
 import java.util.Set;
 
@@ -25,7 +28,9 @@ public class WaiterModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueue<>(NotifyEvent.class, ofSeconds(5), true));
+    bind(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}).toInstance(new MongoQueuePublisher<>(VERSIONED));
+    bind(new TypeLiteral<QueueConsumer<NotifyEvent>>() {})
+        .toInstance(new MongoQueueConsumer<>(NotifyEvent.class, VERSIONED, ofSeconds(5)));
     bind(new TypeLiteral<QueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
   }
 

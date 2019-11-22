@@ -23,7 +23,7 @@ import io.harness.event.usagemetrics.UsageMetricsEventPublisher;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +74,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
-  @Inject private Queue<ExecutionEvent> executionEventQueue;
+  @Inject private QueuePublisher<ExecutionEvent> executionEventQueue;
   @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
   @Inject private transient DeploymentTriggerService deploymentTriggerService;

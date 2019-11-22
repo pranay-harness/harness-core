@@ -48,7 +48,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
@@ -141,7 +141,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
-  @Inject private Queue<PruneEvent> pruneQueue;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppService appService;

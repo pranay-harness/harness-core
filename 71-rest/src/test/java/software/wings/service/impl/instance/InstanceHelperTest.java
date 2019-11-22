@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
-import io.harness.queue.Queue;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -116,7 +116,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ArtifactService artifactService;
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock private Queue<DeploymentEvent> deploymentEventQueue;
+  @Mock private QueuePublisher<DeploymentEvent> deploymentEventQueue;
   @Mock private ExecutionContext context;
   @Mock private ContainerSync containerSync;
   @Mock private DeploymentService deploymentService;
