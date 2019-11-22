@@ -38,6 +38,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
+import io.harness.k8s.manifest.ResourceUtils;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.io.IOUtils;
@@ -57,7 +58,7 @@ public class KubernetesResource {
   private KubernetesResourceId resourceId;
   private Object value;
   private String spec;
-  private static KubernetesClient k8sClient = new DefaultKubernetesClient().inAnyNamespace();
+  static KubernetesClient k8sClient = new DefaultKubernetesClient().inAnyNamespace();
 
   private static final String dotMatch = "\\.";
 
@@ -229,7 +230,7 @@ public class KubernetesResource {
     podTemplateSpec.getMetadata().setLabels(podLabels);
 
     try {
-      this.spec = KubernetesHelper.toYaml(resource);
+      this.spec = ResourceUtils.toYamlNotEmpty(resource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -442,5 +443,24 @@ public class KubernetesResource {
   public boolean isManaged() {
     String isManaged = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.managed));
     return StringUtils.equalsIgnoreCase(isManaged, "true");
+  }
+
+  /* Issue https://github.com/kubernetes/kubernetes/pull/66165 was fixed in 1.11.2.
+  The issue didn't allow update to stateful set which has empty/null fields in its spec. */
+  public String getSpec() {
+    if (!"StatefulSet".equals(resourceId.getKind())) {
+      return spec;
+    }
+
+    try {
+      return ResourceUtils.toYamlNotEmpty(getResource());
+    } catch (IOException e) {
+      // Return original spec
+      return spec;
+    }
+  }
+
+  private HasMetadata getResource() {
+    return k8sClient.load(IOUtils.toInputStream(spec, UTF_8)).get().get(0);
   }
 }

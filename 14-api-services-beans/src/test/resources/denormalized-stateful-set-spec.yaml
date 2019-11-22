@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    harness.io/original-image: 'launcher.gcr.io/google/nginx1:1.15'
+  finalizers: []
+  labels: {}
+  name: harness-manager-nginx
+  namespace: harness
+  ownerReferences: []
+spec:
+  selector:
+    matchExpressions: []
+    matchLabels:
+      app: harness-manager-nginx
+  serviceName: harness-manager-nginx
+  template:
+    metadata:
+      annotations: {}
+      finalizers: []
+      labels:
+        app: harness-manager-nginx
+        harness.io/release-name: release-b2639c3e-0166-3047-a60a-11659d9fb9d1
+      ownerReferences: []
+    spec:
+      containers:
+        -
+          args: []
+          command: []
+          env: []
+          envFrom: []
+          image: 'docker-registry-default.104.155.183.78.nip.io:443/harness/nginx1:1.15'
+          imagePullPolicy: Always
+          name: harness-manager-nginx
+          ports: []
+          resources:
+            limits:
+              cpu: 200m
+              memory: 250Mi
+            requests:
+              cpu: 200m
+              memory: 250Mi
+          volumeMounts:
+            -
+              mountPath: /www/data
+              name: harness-data
+            -
+              mountPath: /etc/nginx/conf.d
+              name: harness-nginx-conf
+      hostAliases: []
+      imagePullSecrets:
+        -
+          name: regcred
+      initContainers: []
+      nodeSelector: {}
+      securityContext:
+        fsGroup: 0
+        runAsUser: 0
+        supplementalGroups: []
+      tolerations: []
+      volumes:
+        -
+          configMap:
+            items:
+              -
+                key: proxy.conf
+                path: proxy.conf
+            name: harness-manager-nginx
+          name: harness-nginx-conf
+  volumeClaimTemplates:
+    -
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        annotations: {}
+        finalizers: []
+        labels: {}
+        name: harness-data
+        namespace: harness
+        ownerReferences: []
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          limits: {}
+          requests:
+            storage: 10Gi
+        storageClassName: standard
