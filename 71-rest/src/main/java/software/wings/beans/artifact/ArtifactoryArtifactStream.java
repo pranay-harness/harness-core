@@ -30,7 +30,6 @@ import java.util.Set;
 public class ArtifactoryArtifactStream extends ArtifactStream {
   private String repositoryType = "any";
   @NotEmpty private String jobname;
-  private String groupId;
   private String imageName;
   private List<String> artifactPaths;
   private String artifactPattern;
@@ -44,13 +43,12 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   public ArtifactoryArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath, String sourceName, String settingId,
       String name, boolean autoPopulate, String serviceId, boolean metadataOnly, String repositoryType, String jobname,
-      String groupId, String imageName, List<String> artifactPaths, String artifactPattern,
-      String dockerRepositoryServer, String accountId, Set<String> keywords, boolean sample) {
+      String imageName, List<String> artifactPaths, String artifactPattern, String dockerRepositoryServer,
+      String accountId, Set<String> keywords, boolean sample) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath, ARTIFACTORY.name(),
         sourceName, settingId, name, autoPopulate, serviceId, metadataOnly, accountId, keywords, sample);
     this.repositoryType = repositoryType;
     this.jobname = jobname;
-    this.groupId = groupId;
     this.imageName = imageName;
     this.artifactPaths = artifactPaths;
     this.artifactPattern = artifactPattern;
@@ -65,14 +63,6 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
               new SimpleDateFormat(dateFormat).format(new Date()));
   }
 
-  /**
-   * Set Group Id
-   */
-  public void setGroupId(String groupId) {
-    this.groupId = groupId;
-    this.imageName = groupId;
-  }
-
   @Override
   public String fetchRepositoryName() {
     return imageName;
@@ -85,7 +75,13 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    return getJobname() + '/' + (isBlank(getImageName()) ? getArtifactPattern() : getImageName());
+    StringBuilder builder = new StringBuilder(getJobname());
+    if (isNotEmpty(artifactPattern)) {
+      builder.append('/').append(getArtifactPattern());
+    } else {
+      builder.append('/').append(getImageName());
+    }
+    return builder.toString();
   }
 
   // TODO: remove this method after migration of old artifact streams
@@ -122,7 +118,6 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .artifactStreamType(getArtifactStreamType())
         .jobName(jobname)
         .imageName(imageName)
-        .groupId(getGroupId())
         .artifactPattern(artifactPattern)
         .artifactName(artifactPaths == null ? "" : artifactPaths.get(0))
         .repositoryType(getRepositoryType())
@@ -160,10 +155,9 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String repositoryName,
-        String groupId, String imageName, List<String> artifactPaths, String artifactPattern, String repositoryType) {
+        String imageName, List<String> artifactPaths, String artifactPattern, String repositoryType) {
       super(ARTIFACTORY.name(), harnessApiVersion, serverName);
       this.repositoryName = repositoryName;
-      this.groupId = groupId;
       this.imageName = imageName;
       this.artifactPaths = artifactPaths;
       this.artifactPattern = artifactPattern;

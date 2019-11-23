@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Singleton;
 
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
@@ -17,12 +19,14 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
-    yaml.setArtifactPattern(bean.getArtifactPattern());
-    yaml.setGroupId(bean.getGroupId());
-    yaml.setImageName(bean.getImageName());
+    if (isNotEmpty(bean.getArtifactPattern())) {
+      yaml.setArtifactPattern(bean.getArtifactPattern());
+    } else {
+      yaml.setImageName(bean.getImageName());
+      yaml.setDockerRepositoryServer(bean.getDockerRepositoryServer());
+    }
     yaml.setRepositoryName(bean.getJobname());
     yaml.setRepositoryType(bean.getRepositoryType());
-    yaml.setDockerRepositoryServer(bean.getDockerRepositoryServer());
     if (!bean.getRepositoryType().equals(RepositoryType.docker.name())) {
       yaml.setMetadataOnly(bean.isMetadataOnly());
     } else {
@@ -35,12 +39,14 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     super.toBean(artifactStream, changeContext, appId);
     Yaml yaml = changeContext.getYaml();
     artifactStream.setArtifactPaths(yaml.getArtifactPaths());
-    artifactStream.setArtifactPattern(yaml.getArtifactPattern());
-    artifactStream.setGroupId(yaml.getGroupId());
-    artifactStream.setImageName(yaml.getImageName());
+    if (isNotEmpty(yaml.getArtifactPattern())) {
+      artifactStream.setArtifactPattern(yaml.getArtifactPattern());
+    } else {
+      artifactStream.setImageName(yaml.getImageName());
+      artifactStream.setDockerRepositoryServer(yaml.getDockerRepositoryServer());
+    }
     artifactStream.setJobname(yaml.getRepositoryName());
     artifactStream.setRepositoryType(yaml.getRepositoryType());
-    artifactStream.setDockerRepositoryServer(yaml.getDockerRepositoryServer());
     if (!yaml.getRepositoryType().equals(RepositoryType.docker.name())) {
       artifactStream.setMetadataOnly(yaml.isMetadataOnly());
     } else {
