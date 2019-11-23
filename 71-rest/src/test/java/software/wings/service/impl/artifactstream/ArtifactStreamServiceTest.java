@@ -1249,7 +1249,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .appId(APP_ID)
                                                               .settingId(SETTING_ID)
                                                               .jobname("docker")
-                                                              .groupId("wingsplugins/todolist")
                                                               .imageName("wingsplugins/todolist")
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
@@ -1273,7 +1272,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getImageName()).isEqualTo("wingsplugins/todolist");
-    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("wingsplugins/todolist");
     assertThat(savedArtifactSteam.getCollectionStatus()).isEqualTo(UNSTABLE.name());
 
     ArtifactoryArtifactStream savedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
@@ -1293,7 +1291,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .appId(APP_ID)
                                                               .settingId(SETTING_ID)
                                                               .jobname("docker")
-                                                              .groupId("wingsplugins/todolist")
                                                               .imageName("wingsplugins/todolist")
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
@@ -1317,7 +1314,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getRepositoryType()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getJobName()).isEqualTo("docker");
     assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getImageName()).isEqualTo("wingsplugins/todolist");
-    assertThat(savedArtifactSteam.fetchArtifactStreamAttributes().getGroupId()).isEqualTo("wingsplugins/todolist");
 
     ArtifactoryArtifactStream savedArtifactoryArtifactStream = (ArtifactoryArtifactStream) savedArtifactSteam;
     assertThat(savedArtifactoryArtifactStream.getJobname()).isEqualTo("docker");
@@ -1327,7 +1323,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     savedArtifactoryArtifactStream.setName("Aritfactory_Changed");
     savedArtifactoryArtifactStream.setJobname("docker-local");
     //    savedArtifactoryArtifactStream.setArtifactPattern("todolist*");
-    savedArtifactoryArtifactStream.setGroupId("wingsplugins/todolist-changed");
     savedArtifactoryArtifactStream.setImageName("wingsplugins/todolist-changed");
 
     ArtifactStream updatedArtifactStream = artifactStreamService.update(savedArtifactoryArtifactStream);

@@ -1201,7 +1201,6 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                                               .sourceName("docker/hello-world-harness")
                                                               .settingId(SETTING_ID)
                                                               .appId(GLOBAL_APP_ID)
-                                                              .groupId("hello-world-harness")
                                                               .imageName("hello-world-harness")
                                                               .autoPopulate(true)
                                                               .build();
