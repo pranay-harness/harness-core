@@ -69,6 +69,7 @@ import migrations.all.LicenseDataMigration;
 import migrations.all.LimitCounterAccountIdMigration;
 import migrations.all.LogAnalysisDeprecatedRecordMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
+import migrations.all.LoginRateLimitMigration;
 import migrations.all.MarketoLeadDataMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
@@ -290,6 +291,7 @@ public class MigrationList {
         .add(Pair.of(282, PcfServiceDeploymentMigration.class))
         .add(Pair.of(283, StackdriverServiceGuardMetricsGroupingMigration.class))
         .add(Pair.of(284, BaseMigration.class))
+        .add(Pair.of(285, LoginRateLimitMigration.class))
         .build();
   }
 }
