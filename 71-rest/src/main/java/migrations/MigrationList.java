@@ -292,6 +292,7 @@ public class MigrationList {
         .add(Pair.of(283, StackdriverServiceGuardMetricsGroupingMigration.class))
         .add(Pair.of(284, BaseMigration.class))
         .add(Pair.of(285, LoginRateLimitMigration.class))
+        .add(Pair.of(286, BaseMigration.class))
         .build();
   }
 }
