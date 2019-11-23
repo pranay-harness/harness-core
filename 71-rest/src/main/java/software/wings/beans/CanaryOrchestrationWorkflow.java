@@ -968,7 +968,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return false;
   }
 
-  public boolean checkLastPhase(@NotNull String phaseName) {
+  public boolean checkLastPhaseForOnDemandRollback(@NotNull String phaseName) {
     if (isNotEmpty(workflowPhases)) {
       return phaseName.equals(
           STAGING_PHASE_NAME + WHITE_SPACE + workflowPhases.get(workflowPhases.size() - 1).getName());
