@@ -133,6 +133,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(76, TimeSeriesThresholdsMigration.class))
         .add(Pair.of(77, BaseMigration.class))
         .add(Pair.of(78, BaseMigration.class))
+        .add(Pair.of(79, BaseMigration.class))
+        .add(Pair.of(80, BaseMigration.class))
         .build();
   }
 }
