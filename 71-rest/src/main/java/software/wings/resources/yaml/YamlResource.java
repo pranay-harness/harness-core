@@ -13,6 +13,8 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
 import io.swagger.annotations.Api;
@@ -1106,5 +1108,17 @@ public class YamlResource {
   @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<ServiceCommand> updateTags(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
+  }
+
+  @GET
+  @Path("/internal/full-sync-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse fullSyncAccountInternal(@QueryParam("accountId") String accountId) {
+    if (!harnessUserGroupService.isHarnessSupportUser(UserThreadLocal.get().getUuid())) {
+      throw new UnauthorizedException("You don't have the permissions to perform this action.", WingsException.USER);
+    }
+    yamlGitService.asyncFullSyncForEntireAccount(accountId);
+    return new RestResponse<>("Triggered async full git sync");
   }
 }
