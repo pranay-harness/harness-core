@@ -20,6 +20,7 @@ import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.EcsUtilization.Builder;
 import io.harness.event.payloads.EcsUtilization.MetricValue;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -73,7 +74,8 @@ public class EcsMetricClient {
   }
 
   public List<EcsUtilization> getUtilizationMetrics(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String region, Date startTime, Date endTime, Cluster cluster, List<Service> services) {
+      Date startTime, Date endTime, Cluster cluster, List<Service> services,
+      EcsPerpetualTaskParams ecsPerpetualTaskParams) {
     // Aggregate all the individual metric queries we need into a single query.
     List<MetricDataQuery> aggregatedQuery = new ArrayList<>();
     for (Statistic stat : Arrays.asList(Average, Maximum)) {
@@ -100,7 +102,7 @@ public class EcsMetricClient {
             .getMetricData(AwsCloudWatchMetricDataRequest.builder()
                                .awsConfig(awsConfig)
                                .encryptionDetails(encryptionDetails)
-                               .region(region)
+                               .region(ecsPerpetualTaskParams.getRegion())
                                .startTime(startTime)
                                .endTime(endTime)
                                .metricDataQueries(aggregatedQuery)
@@ -112,26 +114,31 @@ public class EcsMetricClient {
     List<EcsUtilization> utilizationMetrics = new ArrayList<>();
     // Add service level metrics
     for (Service service : services) {
-      utilizationMetrics.add(extractMetricResult(metricDataResultMap, cluster, service));
+      utilizationMetrics.add(extractMetricResult(metricDataResultMap, cluster, service,
+          ecsPerpetualTaskParams.getClusterId(), ecsPerpetualTaskParams.getSettingId()));
     }
 
     // Add cluster level metrics
-    utilizationMetrics.add(extractMetricResult(metricDataResultMap, cluster, null));
+    utilizationMetrics.add(extractMetricResult(metricDataResultMap, cluster, null,
+        ecsPerpetualTaskParams.getClusterId(), ecsPerpetualTaskParams.getSettingId()));
     return utilizationMetrics;
   }
 
-  private EcsUtilization extractMetricResult(
-      Map<String, MetricDataResult> metricDataResultMap, Cluster cluster, @Nullable Service service) {
-    Builder serviceMetrics =
-        EcsUtilization.newBuilder().setClusterArn(cluster.getClusterArn()).setClusterName(cluster.getClusterName());
+  private EcsUtilization extractMetricResult(Map<String, MetricDataResult> metricDataResultMap, Cluster cluster,
+      @Nullable Service service, String clusterId, String settingId) {
+    Builder metrics = EcsUtilization.newBuilder()
+                          .setClusterArn(cluster.getClusterArn())
+                          .setClusterName(cluster.getClusterName())
+                          .setClusterId(clusterId)
+                          .setSettingId(settingId);
     if (service != null) {
-      serviceMetrics.setServiceArn(service.getServiceArn()).setServiceName(service.getServiceName());
+      metrics.setServiceArn(service.getServiceArn()).setServiceName(service.getServiceName());
     }
     for (Statistic stat : Arrays.asList(Average, Maximum)) {
       for (String metricName : Arrays.asList(CPU_UTILIZATION, MEMORY_UTILIZATION)) {
         MetricDataResult mdr = metricDataResultMap.get(generateId(metricName, stat.toString(), cluster, service));
         if (mdr != null) {
-          serviceMetrics.addMetricValues(
+          metrics.addMetricValues(
               MetricValue.newBuilder()
                   .setMetricName(metricName)
                   .setStatistic(stat.toString())
@@ -142,6 +149,6 @@ public class EcsMetricClient {
         }
       }
     }
-    return serviceMetrics.build();
+    return metrics.build();
   }
 }

@@ -42,7 +42,8 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testCreate() {
-    K8WatchPerpetualTaskClientParams params = new K8WatchPerpetualTaskClientParams(cloudProviderId, "Pod");
+    K8WatchPerpetualTaskClientParams params =
+        new K8WatchPerpetualTaskClientParams(cloudProviderId, "Pod", "clusterId", "clusterName");
     k8SWatchPerpetualTaskServiceClient.create(accountId, params);
     verify(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId), isA(PerpetualTaskClientContext.class),

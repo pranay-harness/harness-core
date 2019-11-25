@@ -23,7 +23,7 @@ public class BillingDataServiceImpl {
 
   private static final int MAX_RETRY_COUNT = 5;
   static final String INSERT_STATEMENT =
-      "INSERT INTO BILLING_DATA (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERID, SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO BILLING_DATA (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   public boolean create(InstanceBillingData instanceBillingData) {
     boolean successfulInsert = false;
@@ -60,18 +60,21 @@ public class BillingDataServiceImpl {
     statement.setDouble(7, instanceBillingData.getUsageDurationSeconds());
     statement.setString(8, instanceBillingData.getInstanceId());
     statement.setString(9, instanceBillingData.getClusterName());
-    statement.setString(10, instanceBillingData.getServiceId());
-    statement.setString(11, instanceBillingData.getAppId());
-    statement.setString(12, instanceBillingData.getCloudProviderId());
-    statement.setString(13, instanceBillingData.getEnvId());
-    statement.setDouble(14, instanceBillingData.getCpuUnitSeconds());
-    statement.setDouble(15, instanceBillingData.getMemoryMbSeconds());
-    statement.setString(16, instanceBillingData.getParentInstanceId());
-    statement.setString(17, instanceBillingData.getRegion());
-    statement.setString(18, instanceBillingData.getLaunchType());
-    statement.setString(19, instanceBillingData.getClusterType());
-    statement.setString(20, instanceBillingData.getCloudProvider());
-    statement.setString(21, instanceBillingData.getWorkloadName());
-    statement.setString(22, instanceBillingData.getWorkloadType());
+    statement.setString(10, instanceBillingData.getClusterId());
+    statement.setString(11, instanceBillingData.getSettingId());
+    statement.setString(12, instanceBillingData.getServiceId());
+    statement.setString(13, instanceBillingData.getAppId());
+    statement.setString(14, instanceBillingData.getCloudProviderId());
+    statement.setString(15, instanceBillingData.getEnvId());
+    statement.setDouble(16, instanceBillingData.getCpuUnitSeconds());
+    statement.setDouble(17, instanceBillingData.getMemoryMbSeconds());
+    statement.setString(18, instanceBillingData.getParentInstanceId());
+    statement.setString(19, instanceBillingData.getRegion());
+    statement.setString(20, instanceBillingData.getLaunchType());
+    statement.setString(21, instanceBillingData.getClusterType());
+    statement.setString(22, instanceBillingData.getCloudProvider());
+    statement.setString(23, instanceBillingData.getWorkloadName());
+    statement.setString(24, instanceBillingData.getWorkloadType());
+    statement.setString(25, instanceBillingData.getNamespace());
   }
 }

@@ -40,6 +40,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = "account_id";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String CLUSTER_NAME = "cluster_name";
+  private static final String CLUSTER_ID = "cluster_id";
   private final double DEFAULT_INSTANCE_CPU = 36;
   private final double DEFAULT_INSTANCE_MEMORY = 60;
   private final Instant NOW = Instant.now();
@@ -148,7 +149,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
         .instanceId(instanceId)
         .instanceName(INSTANCE_NAME)
         .accountId(ACCOUNT_ID)
-        .cloudProviderId(CLOUD_PROVIDER_ID)
+        .settingId(CLOUD_PROVIDER_ID)
         .instanceState(instanceState)
         .clusterName(CLUSTER_NAME)
         .instanceType(InstanceType.EC2_INSTANCE)
@@ -163,7 +164,9 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
         .instanceName(INSTANCE_NAME)
         .instanceId(RUNNING_INSTANCE_ID)
         .instanceType(InstanceType.K8S_POD)
-        .cloudProviderId(CLOUD_PROVIDER_ID)
+        .settingId(CLOUD_PROVIDER_ID)
+        .clusterId(CLUSTER_ID)
+        .clusterName(CLUSTER_NAME)
         .harnessServiceInfo(harnessServiceInfo())
         .resource(resource())
         .metaData(metaData())

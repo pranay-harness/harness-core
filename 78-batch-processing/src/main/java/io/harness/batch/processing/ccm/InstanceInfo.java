@@ -11,8 +11,10 @@ import java.util.Map;
 @Builder
 public class InstanceInfo {
   String accountId;
-  String cloudProviderId;
+  String settingId;
   String instanceId;
+  String clusterId;
+  String clusterName;
   String instanceName;
   InstanceType instanceType;
   Resource resource;

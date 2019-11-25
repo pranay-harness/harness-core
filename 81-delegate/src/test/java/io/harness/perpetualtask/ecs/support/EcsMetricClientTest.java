@@ -16,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.EcsUtilization.MetricValue;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
@@ -55,6 +56,10 @@ public class EcsMetricClientTest extends CategoryTest {
     AwsConfig awsConfig = AwsConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = emptyList();
     String region = "region";
+    String clusterId = "clusterId";
+    String settingId = "settingId";
+    EcsPerpetualTaskParams ecsPerpetualTaskParams =
+        EcsPerpetualTaskParams.newBuilder().setRegion(region).setClusterId(clusterId).setSettingId(settingId).build();
     Instant now = Instant.now();
     Date startTime = Date.from(now.minus(10, ChronoUnit.MINUTES));
     Date endTime = Date.from(now);
@@ -81,12 +86,14 @@ public class EcsMetricClientTest extends CategoryTest {
                         .build());
 
     final List<EcsUtilization> utilizationMetrics = ecsMetricClient.getUtilizationMetrics(
-        awsConfig, encryptionDetails, region, startTime, endTime, cluster, services);
+        awsConfig, encryptionDetails, startTime, endTime, cluster, services, ecsPerpetualTaskParams);
     assertThat(utilizationMetrics)
         .containsExactlyInAnyOrder(
             EcsUtilization.newBuilder()
                 .setClusterArn("cluster1-arn")
                 .setClusterName("cluster1")
+                .setClusterId(clusterId)
+                .setSettingId(settingId)
                 .addMetricValues(MetricValue.newBuilder()
                                      .setMetricName("CPUUtilization")
                                      .setStatistic("Average")
@@ -99,6 +106,8 @@ public class EcsMetricClientTest extends CategoryTest {
                 .setClusterName("cluster1")
                 .setServiceArn("svc2-arn")
                 .setServiceName("svc2")
+                .setClusterId(clusterId)
+                .setSettingId(settingId)
                 .addMetricValues(MetricValue.newBuilder()
                                      .setMetricName("CPUUtilization")
                                      .setStatistic("Maximum")
@@ -111,6 +120,8 @@ public class EcsMetricClientTest extends CategoryTest {
                 .setClusterName("cluster1")
                 .setServiceArn("svc1-arn")
                 .setServiceName("svc1")
+                .setClusterId(clusterId)
+                .setSettingId(settingId)
                 .addMetricValues(MetricValue.newBuilder()
                                      .setMetricName("MemoryUtilization")
                                      .setStatistic("Average")

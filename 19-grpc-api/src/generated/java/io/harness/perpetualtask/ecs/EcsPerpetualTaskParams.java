@@ -20,6 +20,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     region_ = "";
     awsConfig_ = com.google.protobuf.ByteString.EMPTY;
     encryptionDetail_ = com.google.protobuf.ByteString.EMPTY;
+    clusterId_ = "";
+    settingId_ = "";
   }
 
   @java.
@@ -62,6 +64,18 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
           }
           case 34: {
             encryptionDetail_ = input.readBytes();
+            break;
+          }
+          case 42: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterId_ = s;
+            break;
+          }
+          case 50: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            settingId_ = s;
             break;
           }
           default: {
@@ -173,6 +187,66 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     return encryptionDetail_;
   }
 
+  public static final int CLUSTER_ID_FIELD_NUMBER = 5;
+  private volatile java.lang.Object clusterId_;
+  /**
+   * <code>string cluster_id = 5;</code>
+   */
+  public java.lang.String getClusterId() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_id = 5;</code>
+   */
+  public com.google.protobuf.ByteString getClusterIdBytes() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int SETTING_ID_FIELD_NUMBER = 6;
+  private volatile java.lang.Object settingId_;
+  /**
+   * <code>string setting_id = 6;</code>
+   */
+  public java.lang.String getSettingId() {
+    java.lang.Object ref = settingId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      settingId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string setting_id = 6;</code>
+   */
+  public com.google.protobuf.ByteString getSettingIdBytes() {
+    java.lang.Object ref = settingId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      settingId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -200,6 +274,12 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     if (!encryptionDetail_.isEmpty()) {
       output.writeBytes(4, encryptionDetail_);
     }
+    if (!getClusterIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, clusterId_);
+    }
+    if (!getSettingIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, settingId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -221,6 +301,12 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     }
     if (!encryptionDetail_.isEmpty()) {
       size += com.google.protobuf.CodedOutputStream.computeBytesSize(4, encryptionDetail_);
+    }
+    if (!getClusterIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, clusterId_);
+    }
+    if (!getSettingIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, settingId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -246,6 +332,10 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       return false;
     if (!getEncryptionDetail().equals(other.getEncryptionDetail()))
       return false;
+    if (!getClusterId().equals(other.getClusterId()))
+      return false;
+    if (!getSettingId().equals(other.getSettingId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -266,6 +356,10 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
     hash = (53 * hash) + getAwsConfig().hashCode();
     hash = (37 * hash) + ENCRYPTION_DETAIL_FIELD_NUMBER;
     hash = (53 * hash) + getEncryptionDetail().hashCode();
+    hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterId().hashCode();
+    hash = (37 * hash) + SETTING_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getSettingId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -388,6 +482,10 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
 
       encryptionDetail_ = com.google.protobuf.ByteString.EMPTY;
 
+      clusterId_ = "";
+
+      settingId_ = "";
+
       return this;
     }
 
@@ -423,6 +521,8 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       result.region_ = region_;
       result.awsConfig_ = awsConfig_;
       result.encryptionDetail_ = encryptionDetail_;
+      result.clusterId_ = clusterId_;
+      result.settingId_ = settingId_;
       onBuilt();
       return result;
     }
@@ -478,6 +578,14 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
       }
       if (other.getEncryptionDetail() != com.google.protobuf.ByteString.EMPTY) {
         setEncryptionDetail(other.getEncryptionDetail());
+      }
+      if (!other.getClusterId().isEmpty()) {
+        clusterId_ = other.clusterId_;
+        onChanged();
+      }
+      if (!other.getSettingId().isEmpty()) {
+        settingId_ = other.settingId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -682,6 +790,130 @@ public final class EcsPerpetualTaskParams extends com.google.protobuf.GeneratedM
      */
     public Builder clearEncryptionDetail() {
       encryptionDetail_ = getDefaultInstance().getEncryptionDetail();
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object clusterId_ = "";
+    /**
+     * <code>string cluster_id = 5;</code>
+     */
+    public java.lang.String getClusterId() {
+      java.lang.Object ref = clusterId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 5;</code>
+     */
+    public com.google.protobuf.ByteString getClusterIdBytes() {
+      java.lang.Object ref = clusterId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 5;</code>
+     */
+    public Builder setClusterId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 5;</code>
+     */
+    public Builder clearClusterId() {
+      clusterId_ = getDefaultInstance().getClusterId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 5;</code>
+     */
+    public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object settingId_ = "";
+    /**
+     * <code>string setting_id = 6;</code>
+     */
+    public java.lang.String getSettingId() {
+      java.lang.Object ref = settingId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        settingId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string setting_id = 6;</code>
+     */
+    public com.google.protobuf.ByteString getSettingIdBytes() {
+      java.lang.Object ref = settingId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        settingId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string setting_id = 6;</code>
+     */
+    public Builder setSettingId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      settingId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string setting_id = 6;</code>
+     */
+    public Builder clearSettingId() {
+      settingId_ = getDefaultInstance().getSettingId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string setting_id = 6;</code>
+     */
+    public Builder setSettingIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      settingId_ = value;
       onChanged();
       return this;
     }

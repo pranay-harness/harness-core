@@ -20,6 +20,8 @@ message EcsTaskDescription {
   string launch_type = 5;
   string desired_status = 6;
   string region = 7;
+  string cluster_id = 8;
+  string setting_id = 9;
 }
 
 message EcsTaskLifecycle {
@@ -37,6 +39,8 @@ message EcsContainerInstanceDescription {
   string ec2_instance_id = 3;
   string operating_system = 4;
   string region = 5;
+  string cluster_id = 6;
+  string setting_id = 7;
 }
 
 message EcsContainerInstanceInfo {
@@ -64,6 +68,8 @@ message EcsUtilization {
     repeated double values = 4;
   }
   repeated MetricValue metric_values = 5;
+  string cluster_id = 6;
+  string setting_id = 7;
 }
 
 message EcsSyncEvent {
@@ -72,4 +78,6 @@ message EcsSyncEvent {
   repeated string active_container_instance_arns = 3;
   repeated string active_task_arns = 4;
   google.protobuf.Timestamp last_processed_timestamp = 5;
+  string cluster_id = 6;
+  string setting_id = 7;
 }

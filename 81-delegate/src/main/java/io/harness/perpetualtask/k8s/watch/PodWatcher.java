@@ -35,14 +35,18 @@ public class PodWatcher implements Watcher<Pod> {
 
   private final Watch watch;
   private final String cloudProviderId;
+  private final String clusterId;
+  private final String clusterName;
   private final EventPublisher eventPublisher;
   private final Set<String> publishedPods;
 
   @Inject
   public PodWatcher(
-      @Assisted KubernetesClient client, @Assisted String cloudProviderId, EventPublisher eventPublisher) {
+      @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
     watch = client.pods().inAnyNamespace().watch(this);
-    this.cloudProviderId = cloudProviderId;
+    this.cloudProviderId = params.getCloudProviderId();
+    this.clusterId = params.getClusterId();
+    this.clusterName = params.getClusterName();
     publishedPods = new HashSet<>();
     this.eventPublisher = eventPublisher;
   }
@@ -57,6 +61,8 @@ public class PodWatcher implements Watcher<Pod> {
       Timestamp creationTimestamp = HTimestamps.parse(pod.getMetadata().getCreationTimestamp());
       PodInfo podInfo = PodInfo.newBuilder()
                             .setCloudProviderId(cloudProviderId)
+                            .setClusterId(clusterId)
+                            .setClusterName(clusterName)
                             .setPodUid(uid)
                             .setPodName(pod.getMetadata().getName())
                             .setNamespace(pod.getMetadata().getNamespace())

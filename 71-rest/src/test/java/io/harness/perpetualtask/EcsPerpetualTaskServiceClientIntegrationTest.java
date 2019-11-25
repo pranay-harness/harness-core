@@ -27,13 +27,14 @@ public class EcsPerpetualTaskServiceClientIntegrationTest extends BaseIntegratio
   private final String DEFAULT_REGION = "region";
   private final String DEFAULT_SETTING_ID = "settingId";
   private final String DEFAULT_CLUSTER_NAME = "clusterName";
+  private final String DEFAULT_CLUSTER_ID = "clusterId";
 
   @Test
   @Owner(developers = HITESH)
   @Category(IntegrationTests.class)
   public void shouldCreatePerpetualTask() {
     EcsPerpetualTaskClientParams ecsPerpetualTaskClientParams =
-        new EcsPerpetualTaskClientParams(DEFAULT_REGION, DEFAULT_SETTING_ID, DEFAULT_CLUSTER_NAME);
+        new EcsPerpetualTaskClientParams(DEFAULT_REGION, DEFAULT_SETTING_ID, DEFAULT_CLUSTER_NAME, DEFAULT_CLUSTER_ID);
     String taskId = ecsPerpetualTaskServiceClient.create(TEST_ACCOUNT_ID, ecsPerpetualTaskClientParams);
     assertThat(taskId).isNotNull();
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);

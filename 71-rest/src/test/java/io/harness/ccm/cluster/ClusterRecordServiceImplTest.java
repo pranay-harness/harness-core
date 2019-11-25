@@ -52,7 +52,7 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   public void shouldInformUponUpsert() {
     when(clusterRecordDao.get(isA(ClusterRecord.class))).thenReturn(null);
     clusterRecordService.upsert(clusterRecord);
-    verify(subject, times(1)).fireInform(any(), eq(clusterRecord));
+    verify(subject, times(1)).fireInform(any(), eq(clusterRecordWithId));
   }
 
   @Test
@@ -61,7 +61,7 @@ public class ClusterRecordServiceImplTest extends CategoryTest {
   public void shouldNotInformUponUpdate() {
     when(clusterRecordDao.get(isA(ClusterRecord.class))).thenReturn(null);
     clusterRecordService.upsert(clusterRecord);
-    verify(subject, times(1)).fireInform(any(), eq(clusterRecord)); // instead of 2
+    verify(subject, times(1)).fireInform(any(), eq(clusterRecordWithId)); // instead of 2
   }
 
   @Test

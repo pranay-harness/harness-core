@@ -69,4 +69,22 @@ public interface EcsTaskDescriptionOrBuilder extends
    * <code>string region = 7;</code>
    */
   com.google.protobuf.ByteString getRegionBytes();
+
+  /**
+   * <code>string cluster_id = 8;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 8;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string setting_id = 9;</code>
+   */
+  java.lang.String getSettingId();
+  /**
+   * <code>string setting_id = 9;</code>
+   */
+  com.google.protobuf.ByteString getSettingIdBytes();
 }

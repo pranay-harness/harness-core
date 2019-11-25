@@ -44,6 +44,8 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   private static final String NODE_NAME = "node_name";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ACCOUNT_ID = "account_id";
+  private static final String CLUSTER_ID = "cluster_id";
+  private static final String CLUSTER_NAME = "cluster_name";
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
 
@@ -91,14 +93,16 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M", ""));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M", ""));
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
-    PublishedMessage k8sNodeEventMessage =
-        getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, label, resource, START_TIMESTAMP);
+    PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(
+        NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_NAME, CLUSTER_ID, label, resource, START_TIMESTAMP);
     InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_NODE);
+    assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(infoResource.getCpuUnits()).isEqualTo(Double.valueOf(CPU_AMOUNT));
     assertThat(infoResource.getMemoryMb()).isEqualTo(Double.valueOf(MEMORY_AMOUNT));
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
@@ -109,12 +113,15 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   }
 
   private PublishedMessage getK8sNodeInfoMessage(String nodeUid, String nodeName, String cloudProviderId,
-      String accountId, Map<String, String> label, Resource resource, Timestamp timestamp) {
+      String accountId, String clusterName, String clusterId, Map<String, String> label, Resource resource,
+      Timestamp timestamp) {
     NodeInfo nodeInfo = NodeInfo.newBuilder()
                             .setNodeUid(nodeUid)
                             .setNodeName(nodeName)
                             .setCloudProviderId(cloudProviderId)
                             .setAccountId(accountId)
+                            .setClusterId(clusterId)
+                            .setClusterName(clusterName)
                             .setCreationTime(timestamp)
                             .putAllLabels(label)
                             .setAllocatableResource(resource)

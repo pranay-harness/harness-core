@@ -44,6 +44,8 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
       InstanceBillingData instanceBillingData =
           InstanceBillingData.builder()
               .accountId(instanceData.getAccountId())
+              .settingId(instanceData.getSettingId())
+              .clusterId(instanceData.getClusterId())
               .instanceType(instanceData.getInstanceType().toString())
               .billingAccountId("BILLING_ACCOUNT_ID")
               .startTimestamp(startTime.toEpochMilli())
@@ -61,6 +63,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
               .parentInstanceId(
                   getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.PARENT_RESOURCE_ID, instanceData))
               .launchType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData))
+              .namespace(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData))
               .region(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, instanceData))
               .clusterType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))
               .cloudProvider(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData))

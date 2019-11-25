@@ -8,4 +8,6 @@ message K8sWatchTaskParams {
   string cloud_provider_id = 1;
   bytes k8s_cluster_config = 2;
   string k8s_resource_kind = 3;
+  string cluster_id = 4;
+  string cluster_name = 5;
 }

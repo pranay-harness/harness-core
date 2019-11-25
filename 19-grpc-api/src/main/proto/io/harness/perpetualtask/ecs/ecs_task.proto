@@ -9,4 +9,6 @@ message EcsPerpetualTaskParams {
   string region = 2;
   bytes aws_config = 3;
   bytes encryption_detail = 4;
+  string cluster_id = 5;
+  string setting_id = 6;
 }

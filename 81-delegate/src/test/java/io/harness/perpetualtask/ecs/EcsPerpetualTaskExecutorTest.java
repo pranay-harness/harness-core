@@ -63,6 +63,9 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     List<EncryptedDataDetail> encryptionDetails = Collections.emptyList();
     String clusterArn = "arn:aws:ecs:us-east-2:132359207506:cluster/ecs-ccm-cluster";
     String clusterName = "ecs-ccm-cluster";
+    String clusterId = "clusterId";
+    String settingId = "settingId";
+
     Instant pollTime = Instant.now();
     final ImmutableList<Service> services =
         ImmutableList.of(new Service()
@@ -76,12 +79,17 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
 
     given(ecsHelperServiceDelegate.listServicesForCluster(awsConfig, encryptionDetails, region, clusterArn))
         .willReturn(services);
-    given(ecsMetricClient.getUtilizationMetrics(awsConfig, encryptionDetails, region,
-              Date.from(pollTime.minus(10, MINUTES)), Date.from(pollTime),
-              new Cluster().withClusterName(clusterName).withClusterArn(clusterArn), services))
+    given(ecsMetricClient.getUtilizationMetrics(awsConfig, encryptionDetails, Date.from(pollTime.minus(10, MINUTES)),
+              Date.from(pollTime), new Cluster().withClusterName(clusterName).withClusterArn(clusterArn), services,
+              EcsPerpetualTaskParams.newBuilder()
+                  .setClusterId(clusterId)
+                  .setSettingId(settingId)
+                  .setRegion(region)
+                  .build()))
         .willReturn(utilizationMessages);
 
-    ecsPerpetualTaskExecutor.publishUtilizationMetrics(region, awsConfig, encryptionDetails, clusterArn, pollTime);
+    ecsPerpetualTaskExecutor.publishUtilizationMetrics(
+        clusterId, settingId, region, awsConfig, encryptionDetails, clusterArn, pollTime);
 
     then(eventPublisher)
         .should(times(2))

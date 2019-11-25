@@ -37,6 +37,7 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
   private static final String REGION = "region";
   private static final String SETTING_ID = "settingId";
   private static final String CLUSTER_NAME = "clusterName";
+  private static final String CLUSTER_ID = "clusterId";
 
   @Override
   public String create(String accountId, EcsPerpetualTaskClientParams clientParams) {
@@ -44,6 +45,8 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
     clientParamMap.put(REGION, clientParams.getRegion());
     clientParamMap.put(SETTING_ID, clientParams.getSettingId());
     clientParamMap.put(CLUSTER_NAME, clientParams.getClusterName());
+    clientParamMap.put(CLUSTER_ID, clientParams.getClusterId());
+
     PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
@@ -71,6 +74,7 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
     String region = clientParams.get(REGION);
     String settingId = clientParams.get(SETTING_ID);
     String clusterName = clientParams.get(CLUSTER_NAME);
+    String clusterId = clientParams.get(CLUSTER_ID);
 
     AwsConfig awsConfig = getAwsConfig(settingId);
     ByteString awsConfigBytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
@@ -78,6 +82,8 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
 
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterName(clusterName)
+                                                        .setClusterId(clusterId)
+                                                        .setSettingId(settingId)
                                                         .setRegion(region)
                                                         .setEncryptionDetail(encryptionDetailBytes)
                                                         .setAwsConfig(awsConfigBytes)

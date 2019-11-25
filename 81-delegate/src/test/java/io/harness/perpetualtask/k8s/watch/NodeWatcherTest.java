@@ -62,7 +62,13 @@ public class NodeWatcherTest extends CategoryTest {
     watch = mock(Watch.class);
     when(kubernetesClient.nodes()).thenReturn(nodeOps);
     when(nodeOps.watch(any())).thenReturn(watch);
-    nodeWatcher = new NodeWatcher(kubernetesClient, "cloud-provider-id", eventPublisher);
+    nodeWatcher = new NodeWatcher(kubernetesClient,
+        K8sWatchTaskParams.newBuilder()
+            .setClusterName("clusterName")
+            .setClusterId("clusterId")
+            .setCloudProviderId("cloud-provider-id")
+            .build(),
+        eventPublisher);
   }
 
   @Test

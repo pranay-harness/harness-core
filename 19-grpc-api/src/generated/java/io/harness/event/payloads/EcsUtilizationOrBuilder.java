@@ -80,4 +80,22 @@ public interface EcsUtilizationOrBuilder extends
    * <code>repeated .io.harness.event.payloads.EcsUtilization.MetricValue metric_values = 5;</code>
    */
   io.harness.event.payloads.EcsUtilization.MetricValueOrBuilder getMetricValuesOrBuilder(int index);
+
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string setting_id = 7;</code>
+   */
+  java.lang.String getSettingId();
+  /**
+   * <code>string setting_id = 7;</code>
+   */
+  com.google.protobuf.ByteString getSettingIdBytes();
 }

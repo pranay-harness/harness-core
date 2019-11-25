@@ -55,6 +55,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   private static final String NODE_NAME = "node_name";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ACCOUNT_ID = "account_id";
+  private static final String CLUSTER_ID = "cluster_id";
+  private static final String CLUSTER_NAME = "cluster_name";
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
 
@@ -104,13 +106,15 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M", ""));
     requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M", ""));
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
-    PublishedMessage k8sNodeEventMessage = getK8sPodInfoMessage(
-        POD_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, NAMESPACE, label, resource, START_TIMESTAMP);
+    PublishedMessage k8sNodeEventMessage = getK8sPodInfoMessage(POD_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
+        CLUSTER_ID, CLUSTER_NAME, NAMESPACE, label, resource, START_TIMESTAMP);
     InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sNodeEventMessage);
     io.harness.batch.processing.ccm.Resource infoResource = instanceInfo.getResource();
     Map<String, String> metaData = instanceInfo.getMetaData();
     assertThat(instanceInfo).isNotNull();
     assertThat(instanceInfo.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_POD);
     assertThat(infoResource.getCpuUnits()).isEqualTo(Double.valueOf(CPU_AMOUNT));
     assertThat(infoResource.getMemoryMb()).isEqualTo(Double.valueOf(MEMORY_AMOUNT));
@@ -148,12 +152,15 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   }
 
   private PublishedMessage getK8sPodInfoMessage(String podUid, String nodeName, String cloudProviderId,
-      String accountId, String namespace, Map<String, String> label, Resource resource, Timestamp timestamp) {
+      String accountId, String clusterId, String clusterName, String namespace, Map<String, String> label,
+      Resource resource, Timestamp timestamp) {
     PodInfo nodeInfo = PodInfo.newBuilder()
                            .setPodUid(podUid)
                            .setNodeName(nodeName)
                            .setCloudProviderId(cloudProviderId)
                            .setAccountId(accountId)
+                           .setClusterId(clusterId)
+                           .setClusterName(clusterName)
                            .setNamespace(namespace)
                            .putAllLabels(label)
                            .setTotalResource(resource)

@@ -188,4 +188,22 @@ public interface PodInfoOrBuilder extends
    * <code>repeated .io.harness.perpetualtask.k8s.watch.Container containers = 12;</code>
    */
   io.harness.perpetualtask.k8s.watch.ContainerOrBuilder getContainersOrBuilder(int index);
+
+  /**
+   * <code>string cluster_id = 13;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 13;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string cluster_name = 14;</code>
+   */
+  java.lang.String getClusterName();
+  /**
+   * <code>string cluster_name = 14;</code>
+   */
+  com.google.protobuf.ByteString getClusterNameBytes();
 }

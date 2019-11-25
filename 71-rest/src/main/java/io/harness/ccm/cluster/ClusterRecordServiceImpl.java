@@ -30,9 +30,9 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
       logger.info("Upserted a new {} Cluster with id={}.", upsertedClusterRecord.getCluster().getClusterType(),
           upsertedClusterRecord.getUuid());
       try {
-        subject.fireInform(ClusterRecordObxxxxxxxx:onUpserted, clusterRecord);
+        subject.fireInform(ClusterRecordObxxxxxxxx:onUpserted, upsertedClusterRecord);
       } catch (Exception e) {
-        logger.error("Failed to inform the observers for the Cluster with id={}", clusterRecord.getUuid(), e);
+        logger.error("Failed to inform the observers for the Cluster with id={}", upsertedClusterRecord.getUuid(), e);
       }
     }
     return upsertedClusterRecord;

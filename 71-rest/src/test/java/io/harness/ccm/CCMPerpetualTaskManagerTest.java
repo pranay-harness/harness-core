@@ -3,6 +3,7 @@ package io.harness.ccm;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.perpetualtask.PerpetualTaskType.K8S_WATCH;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -21,9 +22,11 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
@@ -42,7 +45,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class CCMPerpetualTaskManagerTest extends CategoryTest {
+  private String clusterRecordId = "clusterId";
+  private String clusterName = "clusterName";
   private String accountId = "ACCOUNT_ID";
+  private String region = "region";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
 
   private static final String masterUrl = "dummyMasterUrl";
@@ -51,7 +57,9 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
   private SettingAttribute cloudProvider;
 
   private Cluster k8sCluster;
+  private Cluster ecsCluster;
   private ClusterRecord clusterRecord;
+  private ClusterRecord ecsClusterRecord;
 
   private String podTaskId = "POD_WATCHER_TASK_ID";
   private String nodeTaskId = "NODE_WATCHER_TASK_ID";
@@ -61,6 +69,8 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
   @Mock private PerpetualTaskService perpetualTaskService;
   @Mock private PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock private K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
+  @Mock private EcsPerpetualTaskServiceClient ecsPerpetualTaskServiceClient;
+
   @Inject @InjectMocks CCMPerpetualTaskManager manager;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -74,14 +84,17 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
                         .withValue(kubernetesClusterConfig)
                         .build();
 
-    k8sCluster = DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build();
-    clusterRecord = ClusterRecord.builder().accountId(accountId).cluster(k8sCluster).build();
+    k8sCluster = DirectKubernetesCluster.builder().clusterName(clusterName).cloudProviderId(cloudProviderId).build();
+    ecsCluster = EcsCluster.builder().clusterName(clusterName).cloudProviderId(cloudProviderId).region(region).build();
+    clusterRecord = ClusterRecord.builder().uuid(clusterRecordId).accountId(accountId).cluster(k8sCluster).build();
+    ecsClusterRecord = ClusterRecord.builder().uuid(clusterRecordId).accountId(accountId).cluster(ecsCluster).build();
 
     response = aPageResponse().withResponse(Arrays.asList(clusterRecord)).build();
     when(clusterRecordService.list(eq(accountId), eq(cloudProviderId))).thenReturn(response);
     when(clusterRecordService.attachPerpetualTaskId(eq(clusterRecord), anyString())).thenReturn(clusterRecord);
     when(clusterRecordService.removePerpetualTaskId(isA(ClusterRecord.class), anyString())).thenReturn(clusterRecord);
     when(clientRegistry.getClient(eq(PerpetualTaskType.K8S_WATCH))).thenReturn(k8sWatchPerpetualTaskServiceClient);
+    when(clientRegistry.getClient(eq(PerpetualTaskType.ECS_CLUSTER))).thenReturn(ecsPerpetualTaskServiceClient);
     when(perpetualTaskService.getPerpetualTaskType(anyString())).thenReturn(K8S_WATCH);
   }
 
@@ -122,6 +135,14 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
   public void shouldCreatePerpetualTasksForCluster() {
     manager.createPerpetualTasks(clusterRecord);
     verify(clusterRecordService, times(2)).attachPerpetualTaskId(eq(clusterRecord), anyString());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldCreatePerpetualTasksForECSCluster() {
+    manager.createPerpetualTasks(ecsClusterRecord);
+    verify(clusterRecordService, times(1)).attachPerpetualTaskId(eq(ecsClusterRecord), anyString());
   }
 
   @Test

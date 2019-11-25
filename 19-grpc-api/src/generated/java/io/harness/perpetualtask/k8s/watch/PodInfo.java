@@ -24,6 +24,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     nodeName_ = "";
     owner_ = java.util.Collections.emptyList();
     containers_ = java.util.Collections.emptyList();
+    clusterId_ = "";
+    clusterName_ = "";
   }
 
   @java.
@@ -148,6 +150,18 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             }
             containers_.add(
                 input.readMessage(io.harness.perpetualtask.k8s.watch.Container.parser(), extensionRegistry));
+            break;
+          }
+          case 106: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterId_ = s;
+            break;
+          }
+          case 114: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterName_ = s;
             break;
           }
           default: {
@@ -593,6 +607,66 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     return containers_.get(index);
   }
 
+  public static final int CLUSTER_ID_FIELD_NUMBER = 13;
+  private volatile java.lang.Object clusterId_;
+  /**
+   * <code>string cluster_id = 13;</code>
+   */
+  public java.lang.String getClusterId() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_id = 13;</code>
+   */
+  public com.google.protobuf.ByteString getClusterIdBytes() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int CLUSTER_NAME_FIELD_NUMBER = 14;
+  private volatile java.lang.Object clusterName_;
+  /**
+   * <code>string cluster_name = 14;</code>
+   */
+  public java.lang.String getClusterName() {
+    java.lang.Object ref = clusterName_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterName_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_name = 14;</code>
+   */
+  public com.google.protobuf.ByteString getClusterNameBytes() {
+    java.lang.Object ref = clusterName_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterName_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -642,6 +716,12 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     for (int i = 0; i < containers_.size(); i++) {
       output.writeMessage(12, containers_.get(i));
+    }
+    if (!getClusterIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 13, clusterId_);
+    }
+    if (!getClusterNameBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 14, clusterName_);
     }
     unknownFields.writeTo(output);
   }
@@ -694,6 +774,12 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     for (int i = 0; i < containers_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(12, containers_.get(i));
     }
+    if (!getClusterIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(13, clusterId_);
+    }
+    if (!getClusterNameBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(14, clusterName_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -745,6 +831,10 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
     }
     if (!getContainersList().equals(other.getContainersList()))
       return false;
+    if (!getClusterId().equals(other.getClusterId()))
+      return false;
+    if (!getClusterName().equals(other.getClusterName()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -793,6 +883,10 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       hash = (37 * hash) + CONTAINERS_FIELD_NUMBER;
       hash = (53 * hash) + getContainersList().hashCode();
     }
+    hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterId().hashCode();
+    hash = (37 * hash) + CLUSTER_NAME_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterName().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -969,6 +1063,10 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       } else {
         containersBuilder_.clear();
       }
+      clusterId_ = "";
+
+      clusterName_ = "";
+
       return this;
     }
 
@@ -1042,6 +1140,8 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
       } else {
         result.containers_ = containersBuilder_.build();
       }
+      result.clusterId_ = clusterId_;
+      result.clusterName_ = clusterName_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -1168,6 +1268,14 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
             containersBuilder_.addAllMessages(other.containers_);
           }
         }
+      }
+      if (!other.getClusterId().isEmpty()) {
+        clusterId_ = other.clusterId_;
+        onChanged();
+      }
+      if (!other.getClusterName().isEmpty()) {
+        clusterName_ = other.clusterName_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -2508,6 +2616,130 @@ public final class PodInfo extends com.google.protobuf.GeneratedMessageV3 implem
         containers_ = null;
       }
       return containersBuilder_;
+    }
+
+    private java.lang.Object clusterId_ = "";
+    /**
+     * <code>string cluster_id = 13;</code>
+     */
+    public java.lang.String getClusterId() {
+      java.lang.Object ref = clusterId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 13;</code>
+     */
+    public com.google.protobuf.ByteString getClusterIdBytes() {
+      java.lang.Object ref = clusterId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 13;</code>
+     */
+    public Builder setClusterId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 13;</code>
+     */
+    public Builder clearClusterId() {
+      clusterId_ = getDefaultInstance().getClusterId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 13;</code>
+     */
+    public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object clusterName_ = "";
+    /**
+     * <code>string cluster_name = 14;</code>
+     */
+    public java.lang.String getClusterName() {
+      java.lang.Object ref = clusterName_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterName_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_name = 14;</code>
+     */
+    public com.google.protobuf.ByteString getClusterNameBytes() {
+      java.lang.Object ref = clusterName_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_name = 14;</code>
+     */
+    public Builder setClusterName(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterName_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_name = 14;</code>
+     */
+    public Builder clearClusterName() {
+      clusterName_ = getDefaultInstance().getClusterName();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_name = 14;</code>
+     */
+    public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterName_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

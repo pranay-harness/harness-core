@@ -16,6 +16,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 public class ClusterRecordUtilsTest extends CategoryTest {
   private String accoundId = "ACCOUNT_ID";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
+  private String computeProvider = "clusterName";
 
   @Test
   @Owner(developers = HANTANG)
@@ -26,11 +27,13 @@ public class ClusterRecordUtilsTest extends CategoryTest {
                                                                 .infraMappingType(DIRECT_KUBERNETES)
                                                                 .cloudProviderId(cloudProviderId)
                                                                 .build();
+    k8sInfraMapping.setComputeProviderName(computeProvider);
 
     ClusterRecord expectedClusterRecord =
         ClusterRecord.builder()
             .accountId(accoundId)
-            .cluster(DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).build())
+            .cluster(
+                DirectKubernetesCluster.builder().cloudProviderId(cloudProviderId).clusterName(computeProvider).build())
             .build();
     ClusterRecord actualClusterRecord = ClusterRecordUtils.from(k8sInfraMapping);
     assertThat(actualClusterRecord).isEqualTo(expectedClusterRecord);

@@ -45,10 +45,11 @@ import java.util.Map;
 public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;
-  String cloudProviderId;
+  String settingId;
   String instanceId;
   String instanceName;
   String clusterName;
+  String clusterId;
   InstanceType instanceType;
   Resource totalResource;
   List<Container> containerList;

@@ -64,7 +64,13 @@ public class PodWatcherTest extends CategoryTest {
     when(kubernetesClient.pods()).thenReturn(podeOps);
     when(podeOps.inAnyNamespace()).thenReturn(ks);
     when(ks.watch(any())).thenReturn(watch);
-    podWatcher = new PodWatcher(kubernetesClient, "cloud-provider-id", eventPublisher);
+    podWatcher = new PodWatcher(kubernetesClient,
+        K8sWatchTaskParams.newBuilder()
+            .setClusterName("clusterName")
+            .setClusterId("clusterId")
+            .setCloudProviderId("cloud-provider-id")
+            .build(),
+        eventPublisher);
   }
 
   @Test

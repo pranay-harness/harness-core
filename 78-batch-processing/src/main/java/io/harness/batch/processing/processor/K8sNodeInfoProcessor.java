@@ -33,8 +33,10 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
 
     return InstanceInfo.builder()
         .accountId(publishedMessage.getAccountId())
-        .cloudProviderId(nodeInfo.getCloudProviderId())
+        .settingId(nodeInfo.getCloudProviderId())
         .instanceId(nodeInfo.getNodeUid())
+        .clusterId(nodeInfo.getClusterId())
+        .clusterName(nodeInfo.getClusterName())
         .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)
         .resource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResource()))
