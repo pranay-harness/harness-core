@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -1068,7 +1069,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void transitionVault() throws InterruptedException, IllegalAccessException {
@@ -1137,7 +1138,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(UnitTests.class)
   public void transitionAndDeleteVault() throws InterruptedException, IllegalAccessException {
     Thread listenerThread = startTransitionListener();

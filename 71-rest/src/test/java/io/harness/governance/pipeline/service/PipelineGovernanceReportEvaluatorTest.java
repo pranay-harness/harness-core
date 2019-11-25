@@ -21,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.service.intfc.FeatureFlagService;
@@ -103,7 +102,6 @@ public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
     final PipelineGovernanceConfig config = new PipelineGovernanceConfig(null, SOME_ACCOUNT_ID, "some-name",
         "some-desc", Collections.emptyList(), Collections.emptyList(), standardEnabled);
     when(pipelineGovernanceService.list(SOME_ACCOUNT_ID)).thenReturn(Collections.singletonList(config));
-    when(featureFlagService.isEnabled(FeatureName.PIPELINE_GOVERNANCE_DRAFT, SOME_ACCOUNT_ID)).thenReturn(true);
 
     final Pipeline mockPipeline = Pipeline.builder().name("some-pipeline").build();
     when(pipelineService.readPipelineWithResolvedVariables(Mockito.eq(appId), Mockito.eq(pipelineId), Mockito.anyMap()))
