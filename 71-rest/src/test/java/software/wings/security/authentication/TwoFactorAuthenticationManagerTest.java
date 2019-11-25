@@ -176,7 +176,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldOverrideTwoFactorAuthentication() {
     Account account = getAccount(AccountType.PAID, false);
-    accountService.save(account);
+    accountService.save(account, false);
 
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
 
@@ -194,7 +194,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotEnableTwoFactorAuthenticationForAccountWith2FAFeatureUnavailable() {
     Account account = getAccount(AccountType.COMMUNITY, false);
-    accountService.save(account);
+    accountService.save(account, false);
 
     TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
 
@@ -216,7 +216,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForNoAdminEnforce() {
-    Account account = accountService.save(getAccount(AccountType.PAID, false));
+    Account account = accountService.save(getAccount(AccountType.PAID, false), false);
 
     // Original user object
     User user = getUser(true);
@@ -235,7 +235,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForAdminEnforce() {
-    Account account = accountService.save(getAccount(AccountType.PAID, true));
+    Account account = accountService.save(getAccount(AccountType.PAID, true), false);
 
     User user = getUser(true);
     user.setAccounts(Arrays.asList(account));
@@ -249,8 +249,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Owner(developers = MARK)
   @Category(UnitTests.class)
   public void shouldDisableTwoFactorAuthenticationForMultiAccounts() {
-    Account account1 = accountService.save(getAccount(AccountType.PAID, false));
-    Account account2 = accountService.save(getAccount(AccountType.PAID, false));
+    Account account1 = accountService.save(getAccount(AccountType.PAID, false), false);
+    Account account2 = accountService.save(getAccount(AccountType.PAID, false), false);
 
     User user = getUser(true);
     user.setAccounts(Arrays.asList(account1, account2));
@@ -277,12 +277,12 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotEnableTwoFactorAuthenticationForUserWhosePrimaryAccountHas2FAFeatureUnavailable() {
     Account account = getAccount(AccountType.PAID, false);
-    accountService.save(account);
+    accountService.save(account, false);
 
     for (String restrictedAccountType : twoFactorAuthenticationFeature.getRestrictedAccountTypes()) {
       Account primaryAccount = getAccount(restrictedAccountType, false);
       primaryAccount.setAccountName(accountService.suggestAccountName(primaryAccount.getAccountName()));
-      accountService.save(primaryAccount);
+      accountService.save(primaryAccount, false);
 
       User user = getUser(false);
       user.setAccounts(Arrays.asList(primaryAccount, account));

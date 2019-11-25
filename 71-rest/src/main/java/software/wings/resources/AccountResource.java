@@ -335,7 +335,7 @@ public class AccountResource {
     RestResponse<Account> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to create account");
     if (response == null) {
       account.setAppId(GLOBAL_APP_ID);
-      response = new RestResponse<>(accountService.save(account));
+      response = new RestResponse<>(accountService.save(account, false));
     }
     return response;
   }

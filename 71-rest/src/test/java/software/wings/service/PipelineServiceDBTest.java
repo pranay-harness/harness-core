@@ -64,7 +64,7 @@ public class PipelineServiceDBTest extends WingsBaseTest {
     licenseInfo.setLicenseUnits(10);
     Account account =
         anAccount().withAccountName("test-account").withCompanyName("Harness").withLicenseInfo(licenseInfo).build();
-    return accountService.save(account);
+    return accountService.save(account, false);
   }
 
   private Application createApplication(Account account) {

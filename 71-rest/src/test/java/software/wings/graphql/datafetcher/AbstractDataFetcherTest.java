@@ -113,7 +113,8 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
                                    .withAccountKey("ACCOUNT_KEY")
                                    .withLicenseInfo(licenseInfo)
                                    .withUuid(accountId)
-                                   .build());
+                                   .build(),
+        false);
   }
 
   public Application createApp(String accountId, String appId, String appName, String tagKey, String tagValue) {

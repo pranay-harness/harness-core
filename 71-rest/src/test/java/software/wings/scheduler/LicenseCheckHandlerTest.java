@@ -56,7 +56,7 @@ public class LicenseCheckHandlerTest extends WingsBaseTest {
                                .licenseUnits(100)
                                .expiryTime(System.currentTimeMillis() + 5000)
                                .build());
-    Account savedAccount = accountService.save(account);
+    Account savedAccount = accountService.save(account, false);
     Thread.sleep(10000);
     //    when(permitService.acquirePermit(any())).thenThrow(new WingsException("Exception"));
     licenseCheckHandler.handle(account);
