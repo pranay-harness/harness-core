@@ -38,6 +38,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.ElkCVConfiguration;
@@ -68,6 +69,7 @@ public class WorkflowVerificationTaskPoller {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
+  @Inject private CVTaskService cvTaskService;
 
   @SuppressWarnings("PMD")
   public void scheduleTaskPoll() {
@@ -82,7 +84,7 @@ public class WorkflowVerificationTaskPoller {
               && !PREDICTIVE.equals(verificationAnalysisTask.getComparisonStrategy())) {
             // for both Log and Metric
             logger.info("Scheduling Data collection cron");
-            scheduleDataCollectionCronJob(verificationAnalysisTask);
+            scheduleDataCollection(verificationAnalysisTask);
             switch (verificationAnalysisTask.getAnalysisType()) {
               case TIME_SERIES:
                 scheduleTimeSeriesAnalysisCronJob(verificationAnalysisTask);
@@ -115,12 +117,14 @@ public class WorkflowVerificationTaskPoller {
     }, 5, 5, TimeUnit.SECONDS);
   }
 
-  private void scheduleDataCollectionCronJob(AnalysisContext context) {
-    if ((verificationManagerClientHelper
-                .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                    FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
-                .getResource()
-            && PER_MINUTE_CV_STATES.contains(context.getStateType()))
+  private void scheduleDataCollection(AnalysisContext context) {
+    if (context.getDataCollectionInfov2() != null) {
+      cvTaskService.createCVTasks(context);
+    } else if ((verificationManagerClientHelper
+                       .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
+                           FeatureName.CV_DATA_COLLECTION_JOB, context.getAccountId()))
+                       .getResource()
+                   && PER_MINUTE_CV_STATES.contains(context.getStateType()))
         || GA_PER_MINUTE_CV_STATES.contains(context.getStateType())) {
       logger.info("PER MINUTE data collection will be triggered for accountId : {} and stateExecutionId : {}",
           context.getAccountId(), context.getStateExecutionId());

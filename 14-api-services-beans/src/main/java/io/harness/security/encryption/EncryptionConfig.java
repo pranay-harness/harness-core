@@ -1,5 +1,8 @@
 package io.harness.security.encryption;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public interface EncryptionConfig {
   /**
    * Return the UUID of this secret manager

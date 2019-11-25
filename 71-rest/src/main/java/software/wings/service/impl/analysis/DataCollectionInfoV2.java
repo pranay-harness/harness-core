@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -33,6 +34,7 @@ public abstract class DataCollectionInfoV2 implements TaskParameters {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String cvTaskId;
 
   public Set<String> getHosts() {
     // morphia converts empty objects to null while saving to database so making sure it's always returns empty set if
@@ -42,22 +44,17 @@ public abstract class DataCollectionInfoV2 implements TaskParameters {
     }
     return hosts;
   }
-
-  public abstract TaskType getTaskType();
-
-  public abstract StateType getStateType();
-
+  @JsonIgnore public abstract TaskType getTaskType();
+  @JsonIgnore public abstract StateType getStateType();
+  @JsonIgnore
   public abstract Class<? extends DataCollector<? extends DataCollectionInfoV2>> getDataCollectorImplClass();
+  @JsonIgnore public abstract Optional<String> getUrlForValidation();
 
-  public abstract Optional<String> getUrlForValidation();
-
-  public abstract Optional<EncryptionConfig> getEncryptionConfig();
-
-  public abstract Optional<EncryptableSetting> getEncryptableSetting();
+  @JsonIgnore public abstract Optional<EncryptionConfig> getEncryptionConfig();
+  @JsonIgnore public abstract Optional<EncryptableSetting> getEncryptableSetting();
 
   public abstract List<EncryptedDataDetail> getEncryptedDataDetails();
-
-  public abstract DataCollectionInfoV2 deepCopy();
+  @JsonIgnore public abstract DataCollectionInfoV2 deepCopy();
 
   protected void copy(DataCollectionInfoV2 dataCollectionInfo) {
     dataCollectionInfo.setAccountId(this.accountId);

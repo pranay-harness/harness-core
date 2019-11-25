@@ -5,6 +5,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public abstract class LogDataCollectionInfoV2 extends DataCollectionInfoV2 implements ExecutionCapabilityDemander {
@@ -21,10 +23,10 @@ public abstract class LogDataCollectionInfoV2 extends DataCollectionInfoV2 imple
 
   public LogDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, String query, String hostnameField,
+      String workflowExecutionId, String serviceId, String cvTaskId, String query, String hostnameField,
       List<EncryptedDataDetail> encryptedDataDetails) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId);
+        workflowExecutionId, serviceId, cvTaskId);
     this.query = query;
     this.hostnameField = hostnameField;
     this.encryptedDataDetails = encryptedDataDetails;
@@ -34,6 +36,8 @@ public abstract class LogDataCollectionInfoV2 extends DataCollectionInfoV2 imple
     super.copy(logDataCollectionInfo);
     logDataCollectionInfo.setQuery(this.query);
     logDataCollectionInfo.setHostnameField(this.hostnameField);
-    logDataCollectionInfo.setEncryptedDataDetails(new ArrayList<>(encryptedDataDetails));
+    if (encryptedDataDetails != null) {
+      logDataCollectionInfo.setEncryptedDataDetails(new ArrayList<>(encryptedDataDetails));
+    }
   }
 }

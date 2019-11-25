@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -17,7 +18,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -48,6 +51,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.entities.CVTask;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.rest.RestResponse;
@@ -91,6 +95,7 @@ import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionInfo;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.service.impl.analysis.LogDataRecord;
@@ -126,9 +131,12 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
+import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -137,6 +145,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -391,11 +400,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFuture() throws IOException {
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
-
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     logger.info("currentMin: {}", currentMinute);
 
@@ -426,10 +430,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testLogsCollectionBaselineInFutureDatadogLog() throws IOException {
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     long currentMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     logger.info("currentMin: {}", currentMinute);
 
@@ -491,9 +491,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testLogsCollection() throws IOException {
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
@@ -554,13 +551,42 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   }
 
   @Test
-  @Owner(developers = SOWMYA, intermittent = true)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testDatadogLogsCollection() throws IOException {
+  public void testSplunkLogCollectionWithCVTask() throws IOException {
     Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
     when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.SPLUNK_24_7_CV_TASK, accountId))
         .thenReturn(managerFeatureFlagCall);
+    SplunkCVConfiguration splunkCVConfiguration = SplunkCVConfiguration.builder().build();
+    splunkCVConfiguration.setEnabled24x7(true);
+    splunkCVConfiguration.setUuid(generateUuid());
+    splunkCVConfiguration.setAccountId(accountId);
+    splunkCVConfiguration.setStateType(StateType.SPLUNKV2);
+    splunkCVConfiguration.setBaselineStartMinute(
+        TimeUnit.MILLISECONDS.toMinutes(Instant.now().minus(60, ChronoUnit.MINUTES).toEpochMilli()));
+    splunkCVConfiguration.setBaselineEndMinute(
+        TimeUnit.MILLISECONDS.toMinutes(Instant.now().minus(30, ChronoUnit.MINUTES).toEpochMilli()));
+    when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(splunkCVConfiguration));
+    Call<RestResponse<DataCollectionInfoV2>> managerCall = mock(Call.class);
+    DataCollectionInfoV2 dataCollectionInfoV2 = mock(DataCollectionInfoV2.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(dataCollectionInfoV2)));
+    when(verificationManagerClient.createDataCollectionInfo(any(), anyLong(), anyLong())).thenReturn(managerCall);
+
+    continuousVerificationService.triggerLogDataCollection(accountId);
+    ArgumentCaptor<CVTask> capture = ArgumentCaptor.forClass(CVTask.class);
+    verify(cvTaskService).saveCVTask(capture.capture());
+    CVTask savedTask = capture.getValue();
+    assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(savedTask.getDataCollectionInfo()).isEqualTo(dataCollectionInfoV2);
+    assertThat(savedTask.getCvConfigId()).isEqualTo(splunkCVConfiguration.getUuid());
+    assertThat(savedTask.getAccountId()).isEqualTo(accountId);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testDatadogLogsCollection() throws IOException {
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
@@ -621,10 +647,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testDatadogLogsCollectionEndTimeGreaterThanCurrentTime() throws IOException {
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     continuousVerificationService.triggerLogDataCollection(accountId);
     List<DelegateTask> delegateTasks =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
@@ -1671,10 +1693,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     long expectedEnd = currentTime - TimeUnit.MINUTES.toMillis(2);
     long expectedStart = expectedEnd - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES * 2);
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
@@ -1706,10 +1724,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     long expectedEnd = currentTime - TimeUnit.MINUTES.toMillis(2);
     long expectedStart = TimeUnit.MINUTES.toMillis(TimeUnit.MILLISECONDS.toMinutes(currentTime) - 60);
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
@@ -1728,10 +1742,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     when(cvConfigurationService.listConfigurations(accountId)).thenReturn(Lists.newArrayList(nrConfig));
 
     long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(TIME_DELAY_QUERY_MINS + 135);
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     continuousVerificationService.triggerAPMDataCollection(accountId);
     verify(delegateService).queueTask(taskCaptor.capture());
@@ -1769,10 +1779,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // here it brings it closer to the actual 15min boundary
     sumoConfig.setBaselineStartMinute(expectedStart);
     long expectedEnd = sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1;
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1849,11 +1855,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(60) + TimeUnit.MINUTES.toMillis(1);
 
     long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
-
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1885,10 +1886,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     long expectedStart = currentTime - TimeUnit.MINUTES.toMillis(60) + TimeUnit.MINUTES.toMillis(1);
 
     long expectedEnd = expectedStart + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES - 1);
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -1915,10 +1912,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     // here it brings it closer to the actual 15min boundary
     sumoConfig.setBaselineStartMinute(expectedStart);
     long expectedEnd = sumoConfig.getBaselineStartMinute() + CRON_POLL_INTERVAL_IN_MINUTES - 1;
-    Call<RestResponse<Boolean>> managerFeatureFlagCall = mock(Call.class);
-    when(managerFeatureFlagCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.CV_TASKS, accountId))
-        .thenReturn(managerFeatureFlagCall);
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     continuousVerificationService.triggerLogDataCollection(accountId);
@@ -2439,6 +2432,29 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(task).isNotNull();
     assertThat(currentMinute - task.getAnalysis_minute()).isLessThanOrEqualTo(120); // brings it within the 2hour range.
     assertThat(task.getTest_input_url()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testProcessNextTask() {
+    CVTask cvTask = CVTask.builder()
+                        .accountId(accountId)
+                        .dataCollectionInfo(mock(DataCollectionInfoV2.class))
+                        .status(ExecutionStatus.QUEUED)
+                        .build();
+    when(verificationManagerClient.collectCVData(anyString(), anyObject())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      Call<Boolean> restCall = mock(Call.class);
+      when(restCall.execute()).thenReturn(Response.success(true));
+      return restCall;
+    });
+    when(cvTaskService.getNextTask(eq(accountId)))
+        .thenReturn(Optional.of(cvTask))
+        .thenReturn(Optional.of(cvTask))
+        .thenReturn(Optional.empty());
+    continuousVerificationService.processNextCVTasks(accountId);
+    verify(verificationManagerClient, times(2)).collectCVData(cvTask.getUuid(), cvTask.getDataCollectionInfo());
   }
 
   private void waitForAlert(int expectedNumOfAlerts) {

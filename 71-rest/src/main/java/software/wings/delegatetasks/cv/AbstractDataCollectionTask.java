@@ -23,6 +23,7 @@ import retrofit2.Response;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
+import software.wings.delegatetasks.DelegateCVTaskService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -51,6 +52,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   @Inject private DataCollectorFactory dataCollectorFactory;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateCVActivityLogService cvActivityLogService;
+  @Inject private DelegateCVTaskService cvTaskService;
   private DataCollectionInfoV2 dataCollectionInfo;
   private DataCollector<T> dataCollector;
   private DataCollectionExecutionContext dataCollectionExecutionContext;
@@ -69,6 +71,23 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
   @Override
   public ResponseData run(TaskParameters parameters) {
     dataCollectionInfo = (DataCollectionInfoV2) parameters;
+    DataCollectionTaskResult dataCollectionTaskResult;
+    try {
+      dataCollectionTaskResult = run(dataCollectionInfo);
+      cvTaskService.updateCVTaskStatus(
+          dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvTaskId(), dataCollectionTaskResult);
+    } catch (Exception e) {
+      dataCollectionTaskResult = DataCollectionTaskResult.builder()
+                                     .status(DataCollectionTaskStatus.FAILURE)
+                                     .errorMessage(e.getMessage())
+                                     .stateType(dataCollectionInfo.getStateType())
+                                     .build();
+      cvTaskService.updateCVTaskStatus(
+          dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvTaskId(), dataCollectionTaskResult);
+    }
+    return dataCollectionTaskResult;
+  }
+  private DataCollectionTaskResult run(DataCollectionInfoV2 dataCollectionInfo) {
     decryptIfHasEncryptableSetting(dataCollectionInfo);
     DataCollectionTaskResult taskResult = DataCollectionTaskResult.builder()
                                               .status(DataCollectionTaskStatus.SUCCESS)
@@ -78,42 +97,37 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
              new VerificationLogContext(dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvConfigId(),
                  dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getStateType(), OVERRIDE_ERROR)) {
       initializeActivityLogger();
-      try {
-        RetryPolicy<Object> retryPolicy =
-            new RetryPolicy<>()
-                .handle(Exception.class)
-                .withDelay(RETRY_SLEEP_DURATION)
-                .withMaxRetries(MAX_RETRIES)
-                .onFailedAttempt(event -> {
-                  activityLogger.warn(
-                      "[Retrying] Data collection task failed with exception: " + event.getLastFailure().getMessage());
-                  taskResult.setErrorMessage(event.getLastFailure().getMessage());
-                })
-                .onFailure(event -> {
-                  activityLogger.error("Data collection failed with exception: " + event.getFailure().getMessage());
-                  logger.error("DataCollectionException: ", event.getFailure());
-                  taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                  taskResult.setErrorMessage(event.getFailure().getMessage());
-                });
-        activityLogger.info("Starting data collection.");
+      RetryPolicy<Object> retryPolicy =
+          new RetryPolicy<>()
+              .handle(Exception.class)
+              .withDelay(RETRY_SLEEP_DURATION)
+              .withMaxRetries(MAX_RETRIES)
+              .onFailedAttempt(event -> {
+                activityLogger.warn(
+                    "[Retrying] Data collection task failed with exception: " + event.getLastFailure().getMessage());
+                taskResult.setErrorMessage(event.getLastFailure().getMessage());
+              })
+              .onFailure(event -> {
+                activityLogger.error("Data collection failed with exception: " + event.getFailure().getMessage());
+                logger.error("DataCollectionException: ", event.getFailure());
+                taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+                taskResult.setErrorMessage(event.getFailure().getMessage());
+              });
+      activityLogger.info("Starting data collection.");
 
-        Failsafe.with(retryPolicy).run(() -> {
-          initializeDataCollector();
-          dataCollectionExecutionContext = createDataCollectionExecutionContext();
-          dataCollector.init(dataCollectionExecutionContext, (T) dataCollectionInfo);
-          collectAndSaveData((T) dataCollectionInfo);
-        });
-      } catch (Exception e) {
-        taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-        taskResult.setErrorMessage(e.getMessage());
-      }
+      Failsafe.with(retryPolicy).run(() -> {
+        initializeDataCollector();
+        dataCollectionExecutionContext = createDataCollectionExecutionContext();
+        dataCollector.init(dataCollectionExecutionContext, (T) dataCollectionInfo);
+        collectAndSaveData((T) dataCollectionInfo);
+      });
 
-      logger.info("Data collection task completed with status {}", taskResult.getStatus());
+      logger.info("Data collection task completed {}", dataCollectionInfo.getStateExecutionId());
       activityLogger.info("Finished data collection with status: " + taskResult.getStatus());
+
       return taskResult;
     }
   }
-
   private void decryptIfHasEncryptableSetting(DataCollectionInfoV2 dataCollectionInfo) {
     if (dataCollectionInfo.getEncryptableSetting().isPresent()) {
       encryptionService.decrypt(

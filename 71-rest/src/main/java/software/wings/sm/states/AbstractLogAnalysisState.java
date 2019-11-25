@@ -220,9 +220,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       hostsToBeCollected.remove(null);
       getLogger().info("triggering data collection for {} state", getStateType());
 
+      DataCollectionInfoV2 dataCollectionInfoV2 = null;
       if (isCVTaskEnqueuingEnabled(executionContext.getAccountId())) {
         getLogger().info("Data collection will be done with cv tasks.");
-        createCVTasks(executionContext, hostsToBeCollected, correlationId);
+        analysisContext.setDataCollectionInfov2(createDataCollectionInfo(executionContext, hostsToBeCollected));
       } else if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {
         // In case of predictive the data collection will be handled as per 24x7 logic
         // Or in case when feature flag CV_DATA_COLLECTION_JOB is enabled. Delegate task creation will be every minute
@@ -266,11 +267,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                   .build())
           .build();
     }
-  }
-
-  private void createCVTasks(ExecutionContext context, Set<String> hosts, String correlationId) {
-    DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo(context, hosts);
-    createCVTasks(context, dataCollectionInfo, correlationId);
   }
 
   protected DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {

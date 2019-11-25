@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class VerificationConstants {
   public static final long ML_RECORDS_TTL_MONTHS = 6;
   public static final long CV_TASK_TTL_MONTHS = 1;
-  public static final String CREATE_CV_TASK_24X7_PATH_PREFIX = "/create-cv-task-24-7";
+  public static final String CREATE_DATA_COLLECTION_INFO_PATH = "/create-data-collection-info";
   public static final long ACTIVITY_LOG_TTL_WEEKS = 2;
   /*
     New Relic constants
@@ -49,6 +49,7 @@ public class VerificationConstants {
   public static final String HEATMAP_SUMMARY = "/heatmap-summary";
   public static final String CV_ACTIVITY_LOGS_PATH = "/cv-activity-logs";
   public static final String SAVE_CV_ACTIVITY_LOGS_PATH = "/save-cv-activity-logs";
+  public static final String CV_TASK_STATUS_UPDATE_PATH = "/update-cv-task-status";
   public static final String TIMESERIES = "/timeseries";
   public static final String LOG_24x7_SUMMARY = "/log-24x7-summary";
   public static final String GET_LOG_FEEDBACKS = "/log-ml-feedbacks";

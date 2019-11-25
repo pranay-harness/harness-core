@@ -83,7 +83,6 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
-import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -101,7 +100,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
-import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -115,7 +113,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DefaultValue;
-import software.wings.verification.CVTask;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -175,7 +172,6 @@ public abstract class AbstractAnalysisState extends State {
   @Inject private AccountService accountService;
   @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject protected CVActivityLogService cvActivityLogService;
-  @Inject protected CVTaskService cvTaskService;
 
   protected String hostnameField;
 
@@ -190,38 +186,6 @@ public abstract class AbstractAnalysisState extends State {
       return String.valueOf(15);
     }
     return timeDuration;
-  }
-
-  /**
-   * default value of task is one and this is designed to be overridden by the state.
-   */
-  protected Duration getTaskDuration() {
-    return Duration.ofMinutes(1);
-  }
-
-  protected void createCVTasks(
-      ExecutionContext context, DataCollectionInfoV2 dataCollectionInfo, String correlationId) {
-    List<CVTask> cvTasks = new ArrayList<>();
-    long startTime = dataCollectionStartTimestampMillis();
-    int timeDuration = Integer.parseInt(getTimeDuration());
-    long taskDurationInMinutes = getTaskDuration().toMinutes();
-    for (int minute = 0; minute < timeDuration; minute += taskDurationInMinutes) {
-      long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
-      DataCollectionInfoV2 copy = dataCollectionInfo.deepCopy();
-      copy.setStartTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute));
-      Duration duration = Duration.ofMinutes(Math.min(timeDuration - minute, taskDurationInMinutes));
-      copy.setEndTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute + duration.toMillis()));
-      CVTask cvTask = CVTask.builder()
-                          .accountId(context.getAccountId())
-                          .stateExecutionId(context.getStateExecutionInstanceId())
-                          .dataCollectionInfo(copy)
-                          .correlationId(correlationId)
-                          .status(ExecutionStatus.WAITING)
-                          .validAfter(startTimeMSForCurrentMinute + Duration.ofMinutes(DELAY_MINUTES).toMillis())
-                          .build();
-      cvTasks.add(cvTask);
-    }
-    cvTaskService.enqueueSequentialTasks(cvTasks);
   }
 
   protected boolean isEligibleForPerMinuteTask(String accountId) {
@@ -776,9 +740,9 @@ public abstract class AbstractAnalysisState extends State {
     logDataCollectionTriggeredMessage(activityLogger);
     long startTime = dataCollectionStartTimestampMillis();
     int duration = Integer.parseInt(getTimeDuration());
-    for (int minute = 0; minute < duration; minute += getTaskDuration().toMinutes()) {
+    for (int minute = 0; minute < duration; minute++) {
       long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
-      long endTimeMSForCurrentMinute = startTimeMSForCurrentMinute + getTaskDuration().toMillis();
+      long endTimeMSForCurrentMinute = startTimeMSForCurrentMinute + Duration.ofMinutes(1).toMillis();
       activityLogger.info(
           "Starting data collection. Time range %t to %t", startTimeMSForCurrentMinute, endTimeMSForCurrentMinute);
       if (minute == duration - 1 && failedState) {
@@ -812,7 +776,7 @@ public abstract class AbstractAnalysisState extends State {
     long startTime = dataCollectionStartTimestampMillis();
     int duration = Integer.parseInt(getTimeDuration());
     Random random = new Random();
-    for (int minute = 0; minute < duration; minute += getTaskDuration().toMinutes()) {
+    for (int minute = 0; minute < duration; minute++) {
       long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
       ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(accountId, stateExecutionId);
       apiCallLog.setTitle("Demo third party API call log");

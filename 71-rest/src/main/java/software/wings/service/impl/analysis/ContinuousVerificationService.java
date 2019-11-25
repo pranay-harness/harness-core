@@ -65,9 +65,9 @@ public interface ContinuousVerificationService {
   List<ContinuousVerificationExecutionMetaData> getCVDeploymentData(
       PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 
-  boolean collectCVData(String cvTaskId);
+  boolean collectCVData(String cvTaskId, DataCollectionInfoV2 dataCollectionInfo);
 
-  boolean createCVTask247(String cvTaskId, Instant startTime, Instant endTime);
+  DataCollectionInfoV2 createDataCollectionInfo(String cvConfigId, Instant startTime, Instant endTime);
 
   VerificationStateAnalysisExecutionData getVerificationStateExecutionData(String stateExecutionId);
 

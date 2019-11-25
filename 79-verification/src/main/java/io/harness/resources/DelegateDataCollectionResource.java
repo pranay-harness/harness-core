@@ -12,11 +12,13 @@ import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVActivityLog;
 
@@ -36,6 +38,7 @@ public class DelegateDataCollectionResource {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LogAnalysisService analysisService;
   @Inject private CVActivityLogService cvActivityLogService;
+  @Inject private CVTaskService cvTaskService;
   @POST
   @Path("/save-metrics")
   @Timed
@@ -72,6 +75,18 @@ public class DelegateDataCollectionResource {
   public RestResponse<Void> saveActivityLogs(
       @QueryParam("accountId") @Valid final String accountId, List<CVActivityLog> cvActivityLogs) {
     cvActivityLogService.saveActivityLogs(cvActivityLogs);
+    return new RestResponse<>(null);
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path(VerificationConstants.CV_TASK_STATUS_UPDATE_PATH)
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<Void> updateCVTaskStatus(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("cvTaskId") String cvTaskId, DataCollectionTaskResult dataCollectionTaskResult) {
+    cvTaskService.updateTaskStatus(cvTaskId, dataCollectionTaskResult);
     return new RestResponse<>(null);
   }
 }

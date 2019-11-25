@@ -1,36 +1,42 @@
 package software.wings.service.impl.verification;
 
-import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static java.lang.Thread.sleep;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.VerificationBaseTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.entities.CVTask;
+import io.harness.entities.CVTask.CVTaskKeys;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
+import org.mockito.Mockito;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.verification.CVTaskService;
-import software.wings.verification.CVTask;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -39,15 +45,19 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public class CVTaskServiceTest extends WingsBaseTest {
+public class CVTaskServiceTest extends VerificationBaseTest {
   @Inject CVTaskService cvTaskService;
+  @Inject WingsPersistence wingsPersistence;
   private String stateExecutionId;
   private String cvConfigId;
   private String accountId;
-  @Mock private WaitNotifyEngine waitNotifyEngine;
+
+  @Mock VerificationManagerClientHelper verificationManagerClientHelper;
 
   @Before
   public void setupTests() throws IllegalAccessException {
@@ -55,8 +65,8 @@ public class CVTaskServiceTest extends WingsBaseTest {
     accountId = generateUUID();
     stateExecutionId = generateUUID();
     cvConfigId = generateUUID();
-    cvTaskService = spy(cvTaskService);
-    FieldUtils.writeField(cvTaskService, "waitNotifyEngine", waitNotifyEngine, true);
+    cvTaskService = Mockito.spy(cvTaskService);
+    FieldUtils.writeField(cvTaskService, "verificationManagerClientHelper", verificationManagerClientHelper, true);
   }
 
   @Test
@@ -153,7 +163,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
     assertThat(cvTaskService.getNextTask(accountId).isPresent()).isFalse();
   }
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testIfCVTaskValidUntilIsBeingSetToOneMonth() {
     CVTask cvTask = createAndSaveCVTaskWithStateExecutionId();
@@ -183,6 +193,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
                           .accountId(generateUUID())
                           .stateExecutionId(generateUUID())
                           .correlationId(generateUUID())
+                          .dataCollectionInfo(createDataCollectionInfo())
                           .validAfter(startTimeMSForCurrentMinute)
                           .status(ExecutionStatus.WAITING)
                           .build();
@@ -253,7 +264,8 @@ public class CVTaskServiceTest extends WingsBaseTest {
     cvTaskService.updateTaskStatus(cvTask.getUuid(), dataCollectionTaskResult);
     ArgumentCaptor<VerificationDataAnalysisResponse> responseArgumentCaptor =
         ArgumentCaptor.forClass(VerificationDataAnalysisResponse.class);
-    verify(waitNotifyEngine).notify(eq(correlationId), responseArgumentCaptor.capture());
+    verify(verificationManagerClientHelper)
+        .notifyManagerForVerificationAnalysis(eq(accountId), eq(correlationId), responseArgumentCaptor.capture());
     VerificationStateAnalysisExecutionData stateExecutionData =
         responseArgumentCaptor.getValue().getStateExecutionData();
     assertThat(stateExecutionData.getErrorMsg()).isEqualTo("Error from unit test");
@@ -273,6 +285,16 @@ public class CVTaskServiceTest extends WingsBaseTest {
     CVTask updatedTask = cvTaskService.getCVTask(cvTask.getUuid());
     assertThat(updatedTask.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(updatedTask.getException()).isEqualTo("Task timed out");
+    ArgumentCaptor<VerificationDataAnalysisResponse> responseArgumentCaptor =
+        ArgumentCaptor.forClass(VerificationDataAnalysisResponse.class);
+    verify(verificationManagerClientHelper)
+        .notifyManagerForVerificationAnalysis(
+            eq(accountId), eq(cvTask.getCorrelationId()), responseArgumentCaptor.capture());
+    VerificationStateAnalysisExecutionData stateExecutionData =
+        responseArgumentCaptor.getValue().getStateExecutionData();
+    assertThat(stateExecutionData.getErrorMsg()).isEqualTo("Task timed out");
+    assertThat(stateExecutionData.getStatus()).isEqualTo(ExecutionStatus.ERROR);
+    assertThat(stateExecutionData.getCorrelationId()).isEqualTo(cvTask.getCorrelationId());
   }
 
   @Test
@@ -290,6 +312,37 @@ public class CVTaskServiceTest extends WingsBaseTest {
     CVTask updatedNextTask = cvTaskService.getCVTask(nextTask.getUuid());
     assertThat(updatedNextTask.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(updatedNextTask.getException()).isEqualTo("Previous task timed out");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateCVTasks() {
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
+    analysisContext.setAccountId(accountId);
+    analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
+    analysisContext.setTimeDuration(10);
+    analysisContext.setStateExecutionId(stateExecutionId);
+    cvTaskService.createCVTasks(analysisContext);
+    List<CVTask> cvTasks = getByStateExecutionId(stateExecutionId);
+    Collections.sort(cvTasks, Comparator.comparing(cvTask -> cvTask.getDataCollectionInfo().getStartTime()));
+    assertThat(cvTasks).hasSize(10);
+    assertThat(cvTasks.get(0).getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    for (int i = 0; i < 9; i++) {
+      assertThat(cvTasks.get(i + 1).getUuid()).isEqualTo(cvTasks.get(i).getNextTaskId());
+    }
+    assertThat(cvTasks.get(cvTasks.size() - 1).getNextTaskId()).isNull();
+    for (int i = 1; i < 10; i++) {
+      assertThat(cvTasks.get(i).getStatus()).isEqualTo(ExecutionStatus.WAITING);
+    }
+  }
+
+  private List<CVTask> getByStateExecutionId(String stateExecutionId) {
+    PageRequest<CVTask> pageRequest = aPageRequest()
+                                          .addFilter(CVTaskKeys.accountId, Operator.EQ, accountId)
+                                          .addFilter(CVTaskKeys.stateExecutionId, Operator.EQ, stateExecutionId)
+                                          .build();
+    return wingsPersistence.query(CVTask.class, pageRequest).getResponse();
   }
 
   private CVTask getCVTask(String cvTaskId) {
@@ -313,6 +366,7 @@ public class CVTaskServiceTest extends WingsBaseTest {
   private DataCollectionInfoV2 createDataCollectionInfo() {
     return SplunkDataCollectionInfoV2.builder()
         .accountId(accountId)
+        .hosts(Sets.newHashSet("example.com"))
         .serviceId(generateUUID())
         .workflowId(generateUUID())
         .startTime(Instant.now().minus(10, ChronoUnit.MINUTES))

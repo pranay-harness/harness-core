@@ -7,6 +7,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SplunkConfig;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
 public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 implements ExecutionCapabilityDemander {
@@ -32,10 +34,10 @@ public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 implemen
   @Builder
   public SplunkDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, String query, String hostnameField,
+      String workflowExecutionId, String serviceId, String cvTaskId, String query, String hostnameField,
       List<EncryptedDataDetail> encryptedDataDetails, SplunkConfig splunkConfig, boolean isAdvancedQuery) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, query, hostnameField, encryptedDataDetails);
+        workflowExecutionId, serviceId, cvTaskId, query, hostnameField, encryptedDataDetails);
     this.splunkConfig = splunkConfig;
     this.isAdvancedQuery = isAdvancedQuery;
   }

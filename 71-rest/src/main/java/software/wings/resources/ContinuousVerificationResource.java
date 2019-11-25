@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.common.VerificationConstants.COLLECT_CV_DATA;
-import static software.wings.common.VerificationConstants.CREATE_CV_TASK_24X7_PATH_PREFIX;
+import static software.wings.common.VerificationConstants.CREATE_DATA_COLLECTION_INFO_PATH;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -21,6 +21,7 @@ import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.CVCertifiedDetailsForWorkflowState;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.apm.APMSetupTestNodeData;
 import software.wings.sm.StateType;
@@ -116,22 +117,23 @@ public class ContinuousVerificationResource {
     return new RestResponse<>(cvManagerService.collectCVDataForWorkflow(contextId, collectionMinute));
   }
 
-  @GET
+  @POST
   @Path(COLLECT_CV_DATA)
   @Timed
   @LearningEngineAuth
-  public RestResponse<Boolean> collectCVData(@QueryParam("cvTaskId") String cvTaskId) {
-    return new RestResponse<>(cvManagerService.collectCVData(cvTaskId));
+  public RestResponse<Boolean> collectCVData(
+      @QueryParam("cvTaskId") String cvTaskId, DataCollectionInfoV2 dataCollectionInfoV2) {
+    return new RestResponse<>(cvManagerService.collectCVData(cvTaskId, dataCollectionInfoV2));
   }
 
   @GET
-  @Path(CREATE_CV_TASK_24X7_PATH_PREFIX)
+  @Path(CREATE_DATA_COLLECTION_INFO_PATH)
   @Timed
   @LearningEngineAuth
-  public RestResponse<Boolean> createCVTask247(@QueryParam("cvConfigId") String cvConfigId,
+  public RestResponse<DataCollectionInfoV2> createDataCollectionInfo(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
-    return new RestResponse<>(
-        cvManagerService.createCVTask247(cvConfigId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+    return new RestResponse<>(cvManagerService.createDataCollectionInfo(
+        cvConfigId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET

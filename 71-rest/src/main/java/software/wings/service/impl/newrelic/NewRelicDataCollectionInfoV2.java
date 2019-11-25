@@ -9,6 +9,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.TaskType;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo implements ExecutionCapabilityDemander {
   private NewRelicConfig newRelicConfig;
@@ -39,10 +41,10 @@ public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo impl
   @Builder
   public NewRelicDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, NewRelicConfig newRelicConfig, long newRelicAppId,
+      String workflowExecutionId, String serviceId, String cvTaskId, NewRelicConfig newRelicConfig, long newRelicAppId,
       List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> hostsToGroupNameMap) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, hostsToGroupNameMap);
+        workflowExecutionId, serviceId, cvTaskId, hostsToGroupNameMap);
     this.encryptedDataDetails = encryptedDataDetails;
     this.newRelicConfig = newRelicConfig;
     this.newRelicAppId = newRelicAppId;

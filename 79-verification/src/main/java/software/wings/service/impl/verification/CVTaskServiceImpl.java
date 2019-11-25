@@ -1,48 +1,75 @@
 package software.wings.service.impl.verification;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.PageRequest;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.waiter.WaitNotifyEngine;
+import io.harness.entities.CVTask;
+import io.harness.entities.CVTask.CVTaskKeys;
+import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.persistence.HIterator;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.service.intfc.verification.CVTaskService;
-import software.wings.verification.CVTask;
-import software.wings.verification.CVTask.CVTaskKeys;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Nullable;
+
 @Slf4j
 public class CVTaskServiceImpl implements CVTaskService {
   public static final int CV_TASK_TIMEOUT_MINUTES = 15;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private CVActivityLogService activityLogService;
   @Inject Clock clock;
-  // This is only available at manager side and not accessible from verification.
-  @Inject(optional = true) @Nullable private WaitNotifyEngine waitNotifyEngine;
+  @Inject VerificationManagerClientHelper verificationManagerClientHelper;
 
   @Override
   public void saveCVTask(CVTask cvTask) {
     wingsPersistence.save(cvTask);
+  }
+
+  @Override
+  public void createCVTasks(AnalysisContext context) {
+    List<CVTask> cvTasks = new ArrayList<>();
+    long startTime = Timestamp.currentMinuteBoundary();
+    int timeDuration = context.getTimeDuration();
+    for (int minute = 0; minute < timeDuration; minute++) {
+      long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
+      DataCollectionInfoV2 copy = context.getDataCollectionInfov2().deepCopy();
+      copy.setStartTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute));
+      Duration duration = Duration.ofMinutes(Math.min(timeDuration - minute, 1));
+      copy.setEndTime(Instant.ofEpochMilli(startTimeMSForCurrentMinute + duration.toMillis()));
+      CVTask cvTask = CVTask.builder()
+                          .accountId(context.getAccountId())
+                          .stateExecutionId(context.getStateExecutionId())
+                          .dataCollectionInfo(copy)
+                          .correlationId(context.getCorrelationId())
+                          .status(ExecutionStatus.WAITING)
+                          .validAfter(startTimeMSForCurrentMinute + Duration.ofMinutes(DELAY_MINUTES).toMillis())
+                          .build();
+      cvTasks.add(cvTask);
+    }
+    enqueueSequentialTasks(cvTasks);
   }
 
   @Override
@@ -59,6 +86,7 @@ public class CVTaskServiceImpl implements CVTaskService {
     if (cvTasks.size() > 0) {
       cvTasks.get(0).setStatus(ExecutionStatus.QUEUED);
     }
+    // TODO - we should do bulk write here
     cvTasks.forEach(cvTask -> this.saveCVTask(cvTask));
   }
 
@@ -112,13 +140,13 @@ public class CVTaskServiceImpl implements CVTaskService {
           cvTask.getDataCollectionInfo().getStartTime().toEpochMilli(),
           cvTask.getDataCollectionInfo().getEndTime().toEpochMilli() + 1);
     } else {
-      activityLogger.error("Data collection failed for time range %t to %t",
+      activityLogger.error("Data collection failed for time range %t to %t. Error: " + cvTask.getException(),
           cvTask.getDataCollectionInfo().getStartTime().toEpochMilli(),
           cvTask.getDataCollectionInfo().getEndTime().toEpochMilli() + 1);
     }
   }
 
-  public void enqueueNextTask(CVTask cvTask) {
+  private void enqueueNextTask(CVTask cvTask) {
     if (cvTask.getNextTaskId() != null) {
       logger.info("Enqueuing next task {}", cvTask.getUuid());
       wingsPersistence.updateField(CVTask.class, cvTask.getNextTaskId(), CVTaskKeys.status, ExecutionStatus.QUEUED);
@@ -135,11 +163,13 @@ public class CVTaskServiceImpl implements CVTaskService {
                               .filter(CVTaskKeys.status, ExecutionStatus.RUNNING)
                               .filter(CVTaskKeys.lastUpdatedAt + " <=",
                                   clock.instant().minus(CV_TASK_TIMEOUT_MINUTES, ChronoUnit.MINUTES).toEpochMilli());
-    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
-    if (updateResults.getUpdatedCount() != 0) {
-      findByExecutionStatus(accountId, ExecutionStatus.EXPIRED).forEach(cvTask -> {
+    wingsPersistence.update(query, updateOperations);
+    try (HIterator<CVTask> cvTaskHIterator =
+             new HIterator<>(queryToFindByCVTaskByExecutionStatus(accountId, ExecutionStatus.EXPIRED).fetch())) {
+      cvTaskHIterator.forEach(cvTask -> {
         markWaitingTasksFailed(cvTask);
         wingsPersistence.updateField(CVTask.class, cvTask.getUuid(), CVTaskKeys.status, ExecutionStatus.FAILED);
+        markStateFailed(cvTask);
       });
     }
   }
@@ -151,7 +181,6 @@ public class CVTaskServiceImpl implements CVTaskService {
 
   private void markStateFailed(CVTask cvTask) {
     if (isWorkflowTask(cvTask)) {
-      Preconditions.checkNotNull(waitNotifyEngine, "Wait notify engine is only available from manager");
       logger.info("Marking stateExecutionId {} as failed", cvTask.getStateExecutionId());
       VerificationStateAnalysisExecutionData analysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
@@ -163,7 +192,8 @@ public class CVTaskServiceImpl implements CVTaskService {
       VerificationDataAnalysisResponse verificationDataAnalysisResponse =
           VerificationDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
       verificationDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
-      waitNotifyEngine.notify(analysisExecutionData.getCorrelationId(), verificationDataAnalysisResponse);
+      verificationManagerClientHelper.notifyManagerForVerificationAnalysis(
+          cvTask.getAccountId(), analysisExecutionData.getCorrelationId(), verificationDataAnalysisResponse);
     }
   }
 
@@ -190,12 +220,10 @@ public class CVTaskServiceImpl implements CVTaskService {
         cvTask.getDataCollectionInfo().getEndTime().toEpochMilli(), cvTask.getStateExecutionId());
   }
 
-  public List<CVTask> findByExecutionStatus(String accountId, ExecutionStatus executionStatus) {
-    PageRequest<CVTask> pageRequest = aPageRequest()
-                                          .addFilter(CVTaskKeys.accountId, Operator.EQ, accountId)
-                                          .addFilter(CVTaskKeys.status, Operator.EQ, executionStatus)
-                                          .build();
-    return wingsPersistence.query(CVTask.class, pageRequest).getResponse();
+  private Query<CVTask> queryToFindByCVTaskByExecutionStatus(String accountId, ExecutionStatus executionStatus) {
+    return wingsPersistence.createQuery(CVTask.class, excludeAuthority)
+        .filter(CVTaskKeys.accountId, accountId)
+        .filter(CVTaskKeys.status, executionStatus);
   }
 
   private boolean isWorkflowTask(CVTask cvTask) {

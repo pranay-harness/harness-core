@@ -41,6 +41,7 @@ import retrofit2.Response;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
+import software.wings.delegatetasks.DelegateCVTaskService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
@@ -66,6 +67,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   @Mock private DelegateCVActivityLogService delegateCVActivityLogService;
   @Mock private Logger logger;
   @Mock private DelegateLogService delegateLogService;
+  @Mock private DelegateCVTaskService cvTaskService;
   private AbstractDataCollectionTask<DataCollectionInfoV2> abstractDataCollectionTask;
 
   @Before
@@ -78,6 +80,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     FieldUtils.writeField(abstractDataCollectionTask, "cvActivityLogService", delegateCVActivityLogService, true);
     FieldUtils.writeField(abstractDataCollectionTask, "encryptionService", encryptionService, true);
     FieldUtils.writeField(abstractDataCollectionTask, "delegateLogService", delegateLogService, true);
+    FieldUtils.writeField(abstractDataCollectionTask, "cvTaskService", cvTaskService, true);
     AbstractDataCollectionTask.RETRY_SLEEP_DURATION = Duration.ofMillis(1); // to run retry based test faster.
   }
   @Test
@@ -131,6 +134,8 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     assertThat(DataCollectionTaskStatus.SUCCESS).isEqualTo(taskResult.getStatus());
     assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
     assertThat(taskResult.getErrorMessage()).isNull();
+    verify(cvTaskService)
+        .updateCVTaskStatus(dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvTaskId(), taskResult);
   }
 
   @Test
@@ -191,6 +196,8 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     assertThat(DataCollectionTaskStatus.FAILURE).isEqualTo(taskResult.getStatus());
     assertThat(StateType.SPLUNKV2).isEqualTo(taskResult.getStateType());
     assertThat("error message from test").isEqualTo(taskResult.getErrorMessage());
+    verify(cvTaskService)
+        .updateCVTaskStatus(dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvTaskId(), taskResult);
   }
 
   @Test
@@ -376,6 +383,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     when(dataCollectionInfoV2.getStateExecutionId()).thenReturn(UUID.randomUUID().toString());
     when(dataCollectionInfoV2.getStartTime()).thenReturn(Instant.now().minus(5, ChronoUnit.MINUTES));
     when(dataCollectionInfoV2.getEndTime()).thenReturn(Instant.now());
+    when(dataCollectionInfoV2.getCvTaskId()).thenReturn(UUID.randomUUID().toString());
     return dataCollectionInfoV2;
   }
 

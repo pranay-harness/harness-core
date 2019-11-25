@@ -1,4 +1,4 @@
-package software.wings.verification;
+package io.harness.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

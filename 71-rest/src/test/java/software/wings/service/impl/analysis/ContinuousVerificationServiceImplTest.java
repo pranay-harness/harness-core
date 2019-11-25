@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.harness.beans.ExecutionStatus;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -36,6 +36,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.SplunkConfig;
+import software.wings.beans.TaskType;
 import software.wings.beans.User;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
@@ -50,16 +52,16 @@ import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVTask;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.apm.APMCVServiceConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
@@ -103,7 +105,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Mock private CVConfigurationService cvConfigurationService;
   @Mock private DataCollectionInfoService dataCollectionInfoService;
-  @Mock private CVTaskService cvTaskService;
   @InjectMocks private ContinuousVerificationServiceImpl continuousVerificationService;
 
   @Before
@@ -131,7 +132,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     when(mockAuthService.getUserPermissionInfo(accountId, user, false)).thenReturn(mockUserPermissionInfo);
     FieldUtils.writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     FieldUtils.writeField(continuousVerificationService, "dataCollectionInfoService", dataCollectionInfoService, true);
-    FieldUtils.writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {
@@ -340,7 +340,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCreateCVTask247() {
+  public void testCreateDataCollectionInfo() {
     CVConfiguration cvConfiguration = mock(CVConfiguration.class);
     Instant startTime = Instant.now().minus(5, ChronoUnit.MINUTES);
     Instant endTime = Instant.now();
@@ -350,13 +350,33 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     when(cvConfiguration.getAccountId()).thenReturn(accountId);
     DataCollectionInfoV2 dataCollectionInfo = mock(DataCollectionInfoV2.class);
     when(dataCollectionInfoService.create(any(), any(), any())).thenReturn(dataCollectionInfo);
-    continuousVerificationService.createCVTask247(cvConfigId, startTime, endTime);
-    verify(dataCollectionInfoService).create(eq(cvConfiguration), eq(startTime), eq(endTime));
-    ArgumentCaptor<CVTask> cvTaskArgumentCaptor = ArgumentCaptor.forClass(CVTask.class);
-    verify(cvTaskService).saveCVTask(cvTaskArgumentCaptor.capture());
-    assertThat(cvTaskArgumentCaptor.getValue().getStatus()).isEqualTo(ExecutionStatus.QUEUED);
-    assertThat(cvTaskArgumentCaptor.getValue().getAccountId()).isEqualTo(accountId);
-    assertThat(cvTaskArgumentCaptor.getValue().getDataCollectionInfo()).isEqualTo(dataCollectionInfo);
+    DataCollectionInfoV2 createdDataCollectionInfo =
+        continuousVerificationService.createDataCollectionInfo(cvConfigId, startTime, endTime);
+    assertThat(createdDataCollectionInfo).isEqualTo(dataCollectionInfo);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCollectCVData() throws IllegalAccessException {
+    String cvTaskId = generateUuid();
+    DataCollectionInfoV2 dataCollectionInfoV2 = SplunkDataCollectionInfoV2.builder()
+                                                    .accountId(accountId)
+                                                    .stateExecutionId(generateUuid())
+                                                    .splunkConfig(mock(SplunkConfig.class))
+                                                    .build();
+    DelegateService delegateService = mock(DelegateService.class);
+    FieldUtils.writeField(continuousVerificationService, "delegateService", delegateService, true);
+    continuousVerificationService.collectCVData(cvTaskId, dataCollectionInfoV2);
+    ArgumentCaptor<DelegateTask> argumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(argumentCaptor.capture());
+    DelegateTask delegateTask = argumentCaptor.getValue();
+    assertThat(delegateTask.getAccountId()).isEqualTo(dataCollectionInfoV2.getAccountId());
+    assertThat(delegateTask.getData().getParameters()).hasSize(1);
+    DataCollectionInfoV2 params = (DataCollectionInfoV2) delegateTask.getData().getParameters()[0];
+    assertThat(params).isEqualTo(dataCollectionInfoV2);
+    assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.SPLUNK_COLLECT_LOG_DATAV2.toString());
+    assertThat(params.getCvTaskId()).isEqualTo(cvTaskId);
   }
 
   @Test
