@@ -1,5 +1,7 @@
 package io.harness.mongo.queue;
 
+import com.google.inject.Injector;
+
 import io.harness.config.PublisherConfiguration;
 import io.harness.queue.NoopQueueConsumer;
 import io.harness.queue.NoopQueuePublisher;
@@ -16,19 +18,23 @@ import java.time.Duration;
 @Slf4j
 public class QueueFactory {
   public static <T extends Queuable> QueuePublisher<T> createQueuePublisher(
-      Class<T> klass, VersionType versionType, PublisherConfiguration configuration) {
+      Injector injector, Class<T> klass, VersionType versionType, PublisherConfiguration configuration) {
     if (configuration.isPublisherActive(klass)) {
-      return new MongoQueuePublisher(klass.getSimpleName(), versionType);
+      final MongoQueuePublisher mongoQueuePublisher = new MongoQueuePublisher(klass.getSimpleName(), versionType);
+      injector.injectMembers(mongoQueuePublisher);
+      return mongoQueuePublisher;
     } else {
       logger.error("NoOpQueue has been setup for eventType:[{}]", klass.getName());
       return new NoopQueuePublisher();
     }
   }
 
-  public static <T extends Queuable> QueueConsumer<T> createQueueConsumer(
-      Class<T> klass, VersionType versionType, Duration heartbeat, PublisherConfiguration configuration) {
+  public static <T extends Queuable> QueueConsumer<T> createQueueConsumer(Injector injector, Class<T> klass,
+      VersionType versionType, Duration heartbeat, PublisherConfiguration configuration) {
     if (configuration.isPublisherActive(klass)) {
-      return new MongoQueueConsumer(klass, versionType, heartbeat);
+      final MongoQueueConsumer mongoQueueConsumer = new MongoQueueConsumer(klass, versionType, heartbeat);
+      injector.injectMembers(mongoQueueConsumer);
+      return mongoQueueConsumer;
     } else {
       logger.error("NoOpQueue has been setup for eventType:[{}]", klass.getName());
       return new NoopQueueConsumer<>();

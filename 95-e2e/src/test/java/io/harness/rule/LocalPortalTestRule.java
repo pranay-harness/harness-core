@@ -14,7 +14,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
 import io.dropwizard.Configuration;
-import io.harness.config.PublisherConfiguration;
 import io.harness.configuration.ConfigurationType;
 import io.harness.e2e.AbstractE2ETest;
 import io.harness.event.EventsModule;
@@ -48,7 +47,6 @@ import software.wings.app.GraphQLModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
-import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
@@ -108,10 +106,7 @@ public class LocalPortalTestRule implements MethodRule, MongoRuleMixin, Injector
 
     Configuration configuration = getConfiguration(mongoUri);
 
-    List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
-    modules.add(new ManagerQueueModule(new PublisherConfiguration()));
-
-    return modules;
+    return getRequiredModules(configuration, distributedLockSvc);
   }
 
   protected Configuration getConfiguration(String mongoUri) {

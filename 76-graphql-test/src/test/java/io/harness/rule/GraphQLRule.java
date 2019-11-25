@@ -12,7 +12,6 @@ import com.google.inject.TypeLiteral;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.hazelcast.core.HazelcastInstance;
 import graphql.GraphQL;
-import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -145,7 +144,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new ManagerQueueModule(new PublisherConfiguration()));
+    modules.add(new ManagerQueueModule());
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));

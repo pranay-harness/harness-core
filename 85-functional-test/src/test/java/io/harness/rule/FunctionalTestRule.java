@@ -14,7 +14,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
 import io.dropwizard.Configuration;
-import io.harness.config.PublisherConfiguration;
 import io.harness.configuration.ConfigurationType;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -132,8 +131,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     Configuration configuration = getConfiguration(mongoUri, elasticsearchConfig, isSearchEnabled);
 
     List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
-    modules.add(new ManagerQueueModule(new PublisherConfiguration()));
-
+    modules.add(new ManagerQueueModule());
     return modules;
   }
 

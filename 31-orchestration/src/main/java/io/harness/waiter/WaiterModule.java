@@ -4,11 +4,14 @@ import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.time.Duration.ofSeconds;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
+import io.harness.config.PublisherConfiguration;
 import io.harness.govern.DependencyModule;
-import io.harness.mongo.queue.MongoQueueConsumer;
-import io.harness.mongo.queue.MongoQueuePublisher;
+import io.harness.mongo.queue.QueueFactory;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueModule;
@@ -26,12 +29,20 @@ public class WaiterModule extends DependencyModule {
     return instance;
   }
 
+  @Provides
+  @Singleton
+  QueuePublisher<NotifyEvent> notifyQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, NotifyEvent.class, VERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<NotifyEvent> notifyQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, VERSIONED, ofSeconds(5), config);
+  }
+
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueuePublisher<NotifyEvent>>() {})
-        .toInstance(new MongoQueuePublisher<>(NotifyEvent.class.getSimpleName(), VERSIONED));
-    bind(new TypeLiteral<QueueConsumer<NotifyEvent>>() {})
-        .toInstance(new MongoQueueConsumer<>(NotifyEvent.class, VERSIONED, ofSeconds(5)));
     bind(new TypeLiteral<QueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
   }
 
