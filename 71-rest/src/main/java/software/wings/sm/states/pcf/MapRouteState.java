@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -19,7 +20,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
-import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
+import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -38,6 +39,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -60,6 +62,7 @@ public class MapRouteState extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject @Transient protected transient LogService logService;
+  @Inject @Transient private SweepingOutputService sweepingOutputService;
 
   public static final String PCF_MAP_ROUTE_COMMAND = "PCF Map Route";
 
@@ -132,9 +135,13 @@ public class MapRouteState extends State {
 
     PcfRouteUpdateRequestConfigData requestConfigData = null;
     if (isRollback()) {
-      PcfSwapRouteRollbackContextElement pcfSwapRouteRollbackContextElement =
-          context.getContextElement(ContextElementType.PCF_ROUTE_SWAP_ROLLBACK);
-      requestConfigData = pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData();
+      SweepingOutputInstance sweepingOutputInstance =
+          sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
+                                         .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
+                                         .build());
+      SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf =
+          (SwapRouteRollbackSweepingOutputPcf) sweepingOutputInstance.getValue();
+      requestConfigData = swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData();
       requestConfigData.setRollback(true);
       requestConfigData.setMapRoutesOperation(!requestConfigData.isMapRoutesOperation());
     } else {

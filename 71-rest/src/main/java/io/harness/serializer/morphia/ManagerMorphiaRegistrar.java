@@ -109,6 +109,7 @@ import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupExecutionSummary;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
+import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.audit.AuditHeader;
@@ -1023,6 +1024,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.pcf.PcfSetupExecutionSummary", PcfSetupExecutionSummary.class);
     w.put("api.pcf.PcfSetupStateExecutionData", PcfSetupStateExecutionData.class);
     w.put("api.pcf.PcfSwapRouteRollbackContextElement", PcfSwapRouteRollbackContextElement.class);
+    w.put("api.pcf.SwapRouteRollbackSweepingOutputPcf", SwapRouteRollbackSweepingOutputPcf.class);
     w.put("api.PcfDeploymentInfo", PcfDeploymentInfo.class);
     w.put("api.PcfInstanceElement", PcfInstanceElement.class);
     w.put("api.pcf.PcfPluginStateExecutionData", PcfPluginStateExecutionData.class);

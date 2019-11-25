@@ -13,6 +13,8 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
@@ -21,10 +23,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
-import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
+import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -41,6 +44,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -61,6 +65,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient LogService logService;
+  @Inject @Transient private SweepingOutputService sweepingOutputService;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
 
@@ -114,18 +119,20 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement);
     if (isRollback()) {
-      PcfSwapRouteRollbackContextElement pcfSwapRouteRollbackContextElement =
-          context.getContextElement(ContextElementType.PCF_ROUTE_SWAP_ROLLBACK);
-
-      // it means no update route happened.
-      requestConfigData.setSkipRollback(pcfSwapRouteRollbackContextElement == null);
-
-      if (pcfSwapRouteRollbackContextElement != null
-          && pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData() != null) {
-        downsizeOldApps =
-            pcfSwapRouteRollbackContextElement.getPcfRouteUpdateRequestConfigData().isDownsizeOldApplication();
-        requestConfigData.setDownsizeOldApplication(downsizeOldApps);
+      SweepingOutputInstance sweepingOutputInstance =
+          sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
+                                         .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
+                                         .build());
+      if (sweepingOutputInstance != null) {
+        SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf =
+            (SwapRouteRollbackSweepingOutputPcf) sweepingOutputInstance.getValue();
+        // it means no update route happened.
+        if (swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData() != null) {
+          downsizeOldApps =
+              swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData().isDownsizeOldApplication();
+        }
       }
+      requestConfigData.setSkipRollback(sweepingOutputInstance == null);
     }
 
     Activity activity = createActivity(context);
@@ -203,6 +210,15 @@ public class PcfSwitchBlueGreenRoutes extends State {
           (PcfRouteUpdateStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+      if (!isRollback()) {
+        sweepingOutputService.save(
+            context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false))
+                .value(SwapRouteRollbackSweepingOutputPcf.builder()
+                           .pcfRouteUpdateRequestConfigData(stateExecutionData.getPcfRouteUpdateRequestConfigData())
+                           .build())
+                .build());
+      }
 
       return ExecutionResponse.builder()
           .executionStatus(executionStatus)

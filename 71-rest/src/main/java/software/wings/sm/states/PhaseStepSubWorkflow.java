@@ -53,7 +53,6 @@ import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
-import software.wings.api.pcf.PcfRouteSwapExecutionSummary;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
@@ -363,15 +362,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       }
       case PCF_SWICH_ROUTES:
       case PCF_ROUTE_UPDATE: {
-        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                                   .stream()
-                                                   .filter(s -> s instanceof PcfRouteSwapExecutionSummary)
-                                                   .findFirst();
-        if (!first.isPresent()) {
-          return null;
-        }
-        PcfRouteSwapExecutionSummary pcfRouteSwapExecutionSummary = (PcfRouteSwapExecutionSummary) first.get();
-        return asList(pcfRouteSwapExecutionSummary.getPcfRouteSwapContextForRollback());
+        // As the PcfSwapRouteRollbackContextElement uses Sweeping Output Now
+        return emptyList();
       }
       case ECS_UPDATE_LISTENER_BG:
       case ECS_UPDATE_ROUTE_53_DNS_WEIGHT:
