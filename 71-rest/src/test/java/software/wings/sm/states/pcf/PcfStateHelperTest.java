@@ -57,8 +57,8 @@ import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
-import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -430,7 +430,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .build();
 
     ExecutionResponse response = pcfStateHelper.queueDelegateTaskForRouteUpdate(requestData,
-        PcfSetupContextElement.builder()
+        SetupSweepingOutputPcf.builder()
             .pcfCommandRequest(PcfCommandSetupRequest.builder().organization("org").space("space").build())
             .build());
     assertThat(response).isNotNull();

@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
-import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Application;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
@@ -37,7 +37,7 @@ public class PcfRollbackState extends PcfDeployState {
 
   @Override
   public PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
-      PcfSetupContextElement pcfSetupContextElement, PcfConfig pcfConfig, Integer updateCount,
+      SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
       PcfInfrastructureMapping infrastructureMapping) {
     PcfDeployContextElement pcfDeployContextElement = context.getContextElement(ContextElementType.PCF_SERVICE_DEPLOY);
@@ -71,9 +71,9 @@ public class PcfRollbackState extends PcfDeployState {
         .activityId(activityId)
         .commandName(PCF_RESIZE_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
-        .organization(getOrgFromContext(pcfSetupContextElement))
-        .space(fetchSpaceFromContext(pcfSetupContextElement))
-        .resizeStrategy(pcfSetupContextElement.getResizeStrategy())
+        .organization(getOrgFromContext(setupSweepingOutputPcf))
+        .space(fetchSpaceFromContext(setupSweepingOutputPcf))
+        .resizeStrategy(setupSweepingOutputPcf.getResizeStrategy())
         .routeMaps(infrastructureMapping.getRouteMaps())
         .tempRouteMaps(infrastructureMapping.getTempRouteMap())
         .pcfConfig(pcfConfig)
@@ -81,29 +81,29 @@ public class PcfRollbackState extends PcfDeployState {
         .instanceData(instanceData)
         .appId(application.getUuid())
         .accountId(application.getAccountId())
-        .timeoutIntervalInMin(firstNonNull(pcfSetupContextElement.getTimeoutIntervalInMinutes(), Integer.valueOf(5)))
-        .appsToBeDownSized(pcfSetupContextElement.getAppDetailsToBeDownsized())
-        .newApplicationDetails(pcfSetupContextElement.getNewPcfApplicationDetails())
-        .isStandardBlueGreenWorkflow(pcfSetupContextElement.isStandardBlueGreenWorkflow())
-        .enforceSslValidation(pcfSetupContextElement.isEnforceSslValidation())
-        .useAppAutoscalar(pcfSetupContextElement.isUseAppAutoscalar())
+        .timeoutIntervalInMin(firstNonNull(setupSweepingOutputPcf.getTimeoutIntervalInMinutes(), Integer.valueOf(5)))
+        .appsToBeDownSized(setupSweepingOutputPcf.getAppDetailsToBeDownsized())
+        .newApplicationDetails(setupSweepingOutputPcf.getNewPcfApplicationDetails())
+        .isStandardBlueGreenWorkflow(setupSweepingOutputPcf.isStandardBlueGreenWorkflow())
+        .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
+        .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
         .build();
   }
 
-  private String fetchSpaceFromContext(PcfSetupContextElement setupContext) {
-    if (setupContext == null || setupContext.getPcfCommandRequest() == null) {
+  private String fetchSpaceFromContext(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    if (setupSweepingOutputPcf == null || setupSweepingOutputPcf.getPcfCommandRequest() == null) {
       return StringUtils.EMPTY;
     }
 
-    return setupContext.getPcfCommandRequest().getSpace();
+    return setupSweepingOutputPcf.getPcfCommandRequest().getSpace();
   }
 
-  private String getOrgFromContext(PcfSetupContextElement contextElement) {
-    if (contextElement == null || contextElement.getPcfCommandRequest() == null) {
+  private String getOrgFromContext(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    if (setupSweepingOutputPcf == null || setupSweepingOutputPcf.getPcfCommandRequest() == null) {
       return StringUtils.EMPTY;
     }
 
-    return contextElement.getPcfCommandRequest().getOrganization();
+    return setupSweepingOutputPcf.getPcfCommandRequest().getOrganization();
   }
 
   @Override
@@ -127,12 +127,12 @@ public class PcfRollbackState extends PcfDeployState {
   }
 
   @Override
-  public Integer getUpsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
+  public Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     return -1;
   }
 
   @Override
-  public Integer getDownsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
+  public Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     return -1;
   }
 

@@ -24,7 +24,7 @@ public class PcfDeployStateExecutionData extends StateExecutionData implements D
   private String commandName;
   private List<PcfServiceData> instanceData;
   private String updateDetails;
-  private PcfSetupContextElement setupContextElement;
+  private SetupSweepingOutputPcf setupSweepingOutputPcf;
 
   private Integer updateCount;
 

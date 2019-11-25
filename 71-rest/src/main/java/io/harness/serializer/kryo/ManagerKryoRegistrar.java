@@ -111,6 +111,7 @@ import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.k8s.K8sSwapServiceElement;
+import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
@@ -123,6 +124,7 @@ import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupExecutionSummary;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
@@ -1431,6 +1433,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(VerificationDataAnalysisResponse.class, 7275);
     kryo.register(ResourceConstraintStatusData.class, 7276);
     kryo.register(BarrierStatusData.class, 7277);
-    kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7278);
+    kryo.register(SetupSweepingOutputPcf.class, 7278);
+    kryo.register(InfoVariables.class, 7279);
+    kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7280);
   }
 }

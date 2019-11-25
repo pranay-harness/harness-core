@@ -23,10 +23,9 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
-import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -40,9 +39,7 @@ import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
@@ -59,13 +56,11 @@ import java.util.Map;
 public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient DelegateService delegateService;
   @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
-  @Inject private transient LogService logService;
-  @Inject @Transient private SweepingOutputService sweepingOutputService;
+  @Inject private transient SweepingOutputService sweepingOutputService;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
 
@@ -110,14 +105,16 @@ public class PcfSwitchBlueGreenRoutes extends State {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    PcfSetupContextElement pcfSetupContextElement =
-        context.<PcfSetupContextElement>getContextElementList(ContextElementType.PCF_SERVICE_SETUP)
-            .stream()
-            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
-            .findFirst()
-            .orElse(PcfSetupContextElement.builder().build());
+    SetupSweepingOutputPcf setupSweepingOutputPcf;
+    SweepingOutputInstance instance = sweepingOutputService.find(
+        context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build());
+    if (instance == null) {
+      setupSweepingOutputPcf = SetupSweepingOutputPcf.builder().build();
+    } else {
+      setupSweepingOutputPcf = (SetupSweepingOutputPcf) instance.getValue();
+    }
 
-    PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement);
+    PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
     if (isRollback()) {
       SweepingOutputInstance sweepingOutputInstance =
           sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
@@ -149,22 +146,22 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .pcfInfrastructureMapping(pcfInfrastructureMapping)
             .activityId(activity.getUuid())
             .envId(env.getUuid())
-            .timeoutIntervalInMinutes(firstNonNull(pcfSetupContextElement.getTimeoutIntervalInMinutes(), 5))
+            .timeoutIntervalInMinutes(firstNonNull(setupSweepingOutputPcf.getTimeoutIntervalInMinutes(), 5))
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
             .downsizeOldApps(downsizeOldApps)
             .build(),
-        pcfSetupContextElement);
+        setupSweepingOutputPcf);
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
-      PcfSetupContextElement pcfSetupContextElement) {
+      SetupSweepingOutputPcf setupSweepingOutputPcf) {
     List<String> existingAppNames;
 
-    if (pcfSetupContextElement != null
-        && EmptyPredicate.isNotEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())) {
-      existingAppNames = pcfSetupContextElement.getAppDetailsToBeDownsized()
+    if (setupSweepingOutputPcf != null
+        && EmptyPredicate.isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
+      existingAppNames = setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                              .stream()
                              .map(PcfAppSetupTimeDetails::getApplicationName)
                              .collect(toList());
@@ -173,12 +170,12 @@ public class PcfSwitchBlueGreenRoutes extends State {
     }
 
     return PcfRouteUpdateRequestConfigData.builder()
-        .newApplicatiaonName(getNewApplicationName(pcfSetupContextElement))
+        .newApplicatiaonName(getNewApplicationName(setupSweepingOutputPcf))
         .existingApplicationDetails(
-            pcfSetupContextElement != null ? pcfSetupContextElement.getAppDetailsToBeDownsized() : null)
+            setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getAppDetailsToBeDownsized() : null)
         .existingApplicationNames(existingAppNames)
-        .tempRoutes(pcfSetupContextElement != null ? pcfSetupContextElement.getTempRouteMap() : emptyList())
-        .finalRoutes(pcfSetupContextElement != null ? pcfSetupContextElement.getRouteMaps() : emptyList())
+        .tempRoutes(setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getTempRouteMap() : emptyList())
+        .finalRoutes(setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getRouteMaps() : emptyList())
         .isRollback(isRollback())
         .isStandardBlueGreen(true)
         .downsizeOldApplication(downsizeOldApps)
@@ -186,10 +183,10 @@ public class PcfSwitchBlueGreenRoutes extends State {
   }
 
   @VisibleForTesting
-  String getNewApplicationName(PcfSetupContextElement pcfSetupContextElement) {
+  String getNewApplicationName(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     String name = EMPTY;
-    if (pcfSetupContextElement != null && pcfSetupContextElement.getNewPcfApplicationDetails() != null) {
-      name = pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName();
+    if (setupSweepingOutputPcf != null && setupSweepingOutputPcf.getNewPcfApplicationDetails() != null) {
+      name = setupSweepingOutputPcf.getNewPcfApplicationDetails().getApplicationName();
     }
 
     return name;

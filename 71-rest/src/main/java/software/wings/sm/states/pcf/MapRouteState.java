@@ -19,7 +19,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
-import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -35,7 +35,6 @@ import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
@@ -56,13 +55,12 @@ import java.util.Map;
 public class MapRouteState extends State {
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient DelegateService delegateService;
   @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
+  @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject @Transient protected transient LogService logService;
-  @Inject @Transient private SweepingOutputService sweepingOutputService;
 
   public static final String PCF_MAP_ROUTE_COMMAND = "PCF Map Route";
 
@@ -119,12 +117,14 @@ public class MapRouteState extends State {
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
         application.getUuid(), context.fetchInfraMappingId());
 
-    PcfSetupContextElement pcfSetupContextElement =
-        context.<PcfSetupContextElement>getContextElementList(ContextElementType.PCF_SERVICE_SETUP)
-            .stream()
-            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
-            .findFirst()
-            .orElse(PcfSetupContextElement.builder().build());
+    SetupSweepingOutputPcf setupSweepingOutputPcf;
+    SweepingOutputInstance instance = sweepingOutputService.find(
+        context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build());
+    if (instance == null) {
+      setupSweepingOutputPcf = SetupSweepingOutputPcf.builder().build();
+    } else {
+      setupSweepingOutputPcf = (SetupSweepingOutputPcf) instance.getValue();
+    }
 
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -145,7 +145,7 @@ public class MapRouteState extends State {
       requestConfigData.setRollback(true);
       requestConfigData.setMapRoutesOperation(!requestConfigData.isMapRoutesOperation());
     } else {
-      requestConfigData = getPcfRouteUpdateRequestConfigData(pcfSetupContextElement, infrastructureMapping);
+      requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf, infrastructureMapping);
     }
 
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
@@ -155,26 +155,26 @@ public class MapRouteState extends State {
             .pcfInfrastructureMapping(infrastructureMapping)
             .activityId(activity.getUuid())
             .envId(environment.getUuid())
-            .timeoutIntervalInMinutes(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+            .timeoutIntervalInMinutes(setupSweepingOutputPcf.getTimeoutIntervalInMinutes())
             .commandName(PCF_MAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDetails)
             .build(),
-        pcfSetupContextElement);
+        setupSweepingOutputPcf);
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
-      PcfSetupContextElement pcfSetupContextElement, PcfInfrastructureMapping infrastructureMapping) {
+      SetupSweepingOutputPcf setupSweepingOutputPcf, PcfInfrastructureMapping infrastructureMapping) {
     return PcfRouteUpdateRequestConfigData.builder()
-        .existingApplicationNames(getApplicationNamesTobeUpdated(pcfSetupContextElement))
-        .finalRoutes(getRoutes(pcfSetupContextElement))
+        .existingApplicationNames(getApplicationNamesTobeUpdated(setupSweepingOutputPcf))
+        .finalRoutes(getRoutes(setupSweepingOutputPcf))
         .isRollback(false)
         .isStandardBlueGreen(false)
         .isMapRoutesOperation(checkIfMapRouteOperation())
         .build();
   }
 
-  private List<String> getRoutes(PcfSetupContextElement pcfSetupContextElement) {
+  private List<String> getRoutes(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     // determine which routes to map
     boolean isOriginalRoute = false;
     String infraRouteConst = "${" + Constants.INFRA_ROUTE + "}";
@@ -185,7 +185,7 @@ public class MapRouteState extends State {
     }
 
     List<String> routes =
-        isOriginalRoute ? pcfSetupContextElement.getRouteMaps() : pcfSetupContextElement.getTempRouteMap();
+        isOriginalRoute ? setupSweepingOutputPcf.getRouteMaps() : setupSweepingOutputPcf.getTempRouteMap();
     if (routes == null) {
       routes = Collections.EMPTY_LIST;
     }
@@ -193,18 +193,18 @@ public class MapRouteState extends State {
     return routes;
   }
 
-  private List<String> getApplicationNamesTobeUpdated(PcfSetupContextElement pcfSetupContextElement) {
+  private List<String> getApplicationNamesTobeUpdated(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     String appConst = "${" + Constants.PCF_APP_NAME + "}";
     boolean isNewApplication = pcfAppName == null || appConst.equalsIgnoreCase(pcfAppName.trim());
 
     List<String> appNames = new ArrayList<>();
 
     if (isNewApplication) {
-      appNames.add(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName());
+      appNames.add(setupSweepingOutputPcf.getNewPcfApplicationDetails().getApplicationName());
     } else {
-      appNames.addAll(pcfSetupContextElement.getAppDetailsToBeDownsized() == null
+      appNames.addAll(setupSweepingOutputPcf.getAppDetailsToBeDownsized() == null
               ? Collections.EMPTY_LIST
-              : pcfSetupContextElement.getAppDetailsToBeDownsized()
+              : setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                     .stream()
                     .map(app -> app.getApplicationName())
                     .collect(toList()));

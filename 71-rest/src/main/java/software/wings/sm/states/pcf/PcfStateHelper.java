@@ -49,8 +49,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
-import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -177,7 +177,7 @@ public class PcfStateHelper {
   }
 
   public ExecutionResponse queueDelegateTaskForRouteUpdate(
-      PcfRouteUpdateQueueRequestData queueRequestData, PcfSetupContextElement pcfSetupContextElement) {
+      PcfRouteUpdateQueueRequestData queueRequestData, SetupSweepingOutputPcf setupSweepingOutputPcf) {
     Integer timeoutIntervalInMinutes = queueRequestData.getTimeoutIntervalInMinutes() == null
         ? Integer.valueOf(5)
         : queueRequestData.getTimeoutIntervalInMinutes();
@@ -192,12 +192,12 @@ public class PcfStateHelper {
                                               .accountId(app.getAccountId())
                                               .activityId(activityId)
                                               .pcfConfig(queueRequestData.getPcfConfig())
-                                              .organization(getOrganizationFromSetupContext(pcfSetupContextElement))
-                                              .space(getSpaceFromSetupContext(pcfSetupContextElement))
+                                              .organization(getOrganizationFromSetupContext(setupSweepingOutputPcf))
+                                              .space(getSpaceFromSetupContext(setupSweepingOutputPcf))
                                               .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
                                               .timeoutIntervalInMin(timeoutIntervalInMinutes)
-                                              .enforceSslValidation(pcfSetupContextElement.isEnforceSslValidation())
-                                              .useAppAutoscalar(pcfSetupContextElement.isUseAppAutoscalar())
+                                              .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
+                                              .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
                                               .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
@@ -225,19 +225,19 @@ public class PcfStateHelper {
         .build();
   }
 
-  String getSpaceFromSetupContext(PcfSetupContextElement setupContextElement) {
-    if (setupContextElement == null || setupContextElement.getPcfCommandRequest() == null) {
+  String getSpaceFromSetupContext(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    if (setupSweepingOutputPcf == null || setupSweepingOutputPcf.getPcfCommandRequest() == null) {
       return StringUtils.EMPTY;
     }
-    return setupContextElement.getPcfCommandRequest().getSpace();
+    return setupSweepingOutputPcf.getPcfCommandRequest().getSpace();
   }
 
-  public String getOrganizationFromSetupContext(PcfSetupContextElement pcfSetupContextElement) {
-    if (pcfSetupContextElement == null || pcfSetupContextElement.getPcfCommandRequest() == null) {
+  public String getOrganizationFromSetupContext(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    if (setupSweepingOutputPcf == null || setupSweepingOutputPcf.getPcfCommandRequest() == null) {
       return StringUtils.EMPTY;
     }
 
-    return pcfSetupContextElement.getPcfCommandRequest().getOrganization();
+    return setupSweepingOutputPcf.getPcfCommandRequest().getOrganization();
   }
 
   public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,
@@ -610,6 +610,13 @@ public class PcfStateHelper {
     Map<String, Object> treeMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     treeMap.putAll(map);
     return treeMap;
+  }
+
+  @NotNull
+  public String obtainSetupSweepingOutputName(ExecutionContext context, boolean isRollback) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    return isRollback ? SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback()
+                      : SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName();
   }
 
   @NotNull

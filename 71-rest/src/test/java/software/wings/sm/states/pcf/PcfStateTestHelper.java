@@ -24,11 +24,8 @@ import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfPluginStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
-import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -79,23 +76,7 @@ public class PcfStateTestHelper {
 
   public StateExecutionInstance getStateExecutionInstanceForDeployState(
       WorkflowStandardParams workflowStandardParams, PhaseElement phaseElement, ServiceElement serviceElement) {
-    return getStateExecutionInstancBuilder(workflowStandardParams, phaseElement, serviceElement)
-        .addContextElement(
-            PcfSetupContextElement.builder()
-                .uuid(serviceElement.getUuid())
-                .name(PCF_SERVICE_NAME)
-                .maxInstanceCount(10)
-                .desiredActualFinalCount(10)
-                .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
-                .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
-                                              .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
-                                              .applicationGuid("1")
-                                              .build())
-                .infraMappingId(INFRA_MAPPING_ID)
-                .resizeStrategy(RESIZE_NEW_FIRST)
-                .routeMaps(Arrays.asList("R1", "R2"))
-                .build())
-        .build();
+    return getStateExecutionInstancBuilder(workflowStandardParams, phaseElement, serviceElement).build();
   }
 
   public StateExecutionInstance getStateExecutionInstanceForRollbackState(
@@ -116,28 +97,7 @@ public class PcfStateTestHelper {
 
   public StateExecutionInstance getStateExecutionInstanceForRouteUpdateState(
       WorkflowStandardParams workflowStandardParams, PhaseElement phaseElement, ServiceElement serviceElement) {
-    return getStateExecutionInstancBuilder(workflowStandardParams, phaseElement, serviceElement)
-        .addContextElement(
-            PcfSetupContextElement.builder()
-                .uuid(serviceElement.getUuid())
-                .name(PCF_SERVICE_NAME)
-                .maxInstanceCount(10)
-                .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
-                .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
-                                              .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__2")
-                                              .applicationGuid("1")
-                                              .urls(Arrays.asList("R1", "R2"))
-                                              .build())
-                .infraMappingId(INFRA_MAPPING_ID)
-                .resizeStrategy(RESIZE_NEW_FIRST)
-                .routeMaps(Arrays.asList("R1", "R2"))
-                .tempRouteMap(Arrays.asList("R3"))
-                .appDetailsToBeDownsized(Arrays.asList(PcfAppSetupTimeDetails.builder()
-                                                           .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
-                                                           .urls(Arrays.asList("R3"))
-                                                           .build()))
-                .build())
-        .build();
+    return getStateExecutionInstancBuilder(workflowStandardParams, phaseElement, serviceElement).build();
   }
 
   private StateExecutionInstance.Builder getStateExecutionInstancBuilder(

@@ -36,7 +36,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
-import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.PcfConfig;
@@ -100,8 +100,8 @@ public class PcfRollbackStateTest extends WingsBaseTest {
 
     PcfDeployStateExecutionData stateExecutionData = PcfDeployStateExecutionData.builder().build();
 
-    PcfSetupContextElement pcfSetupContextElement =
-        PcfSetupContextElement.builder()
+    SetupSweepingOutputPcf setupSweepingOutputPcf =
+        SetupSweepingOutputPcf.builder()
             .newPcfApplicationDetails(
                 PcfAppSetupTimeDetails.builder().applicationName("APP_SERVICE_ENV_NAME__1").build())
             .pcfCommandRequest(PcfCommandSetupRequest.builder().organization(ORG).space(SPACE).build())
@@ -110,7 +110,7 @@ public class PcfRollbackStateTest extends WingsBaseTest {
 
     PcfCommandRequest pcfCommandRequest =
         pcfRollbackState.getPcfCommandRequest(context, anApplication().name(APP_NAME).uuid(APP_ID).build(), ACTIVITY_ID,
-            pcfSetupContextElement, (PcfConfig) computeProvider.getValue(), -1, -1, stateExecutionData,
+            setupSweepingOutputPcf, (PcfConfig) computeProvider.getValue(), -1, -1, stateExecutionData,
             pcfStateTestHelper.getPcfInfrastructureMapping(Arrays.asList("R1", "R2"), Arrays.asList("R3")));
 
     PcfCommandRollbackRequest commandRollbackRequest = (PcfCommandRollbackRequest) pcfCommandRequest;
