@@ -216,7 +216,7 @@ public abstract class NodeSelectState extends State {
       List<StateExecutionInstance> stateExecutionInstancesForPhases =
           workflowExecutionService.getStateExecutionInstancesForPhases(workflowExecutionId);
       if (stateExecutionInstancesForPhases.size() == 1) {
-        message.append("Nodes have been overridden from execution time nodes");
+        message.append("Targeted nodes have overridden configured nodes");
         List<String> executionHosts = workflowStandardParams.getExecutionHosts();
         selectionParams.withSelectSpecificHosts(true);
         selectionParams.withHostNames(executionHosts);
