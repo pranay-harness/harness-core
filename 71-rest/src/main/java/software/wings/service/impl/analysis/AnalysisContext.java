@@ -87,6 +87,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   private int collectionInterval;
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
   private DataCollectionInfo dataCollectionInfo;
+  private DataCollectionInfoV2 dataCollectionInfov2;
 
   private int retry;
   @Indexed private Long timeSeriesAnalysisIteration;

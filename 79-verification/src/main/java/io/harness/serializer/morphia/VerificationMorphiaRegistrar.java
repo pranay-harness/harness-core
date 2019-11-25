@@ -1,6 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.entities.AnomalousLogRecord;
+import io.harness.entities.CVTask;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.morphia.MorphiaRegistrar;
@@ -14,6 +15,7 @@ public class VerificationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TimeSeriesAnomaliesRecord.class);
     set.add(TimeSeriesCumulativeSums.class);
     set.add(AnomalousLogRecord.class);
+    set.add(CVTask.class);
   }
 
   @Override

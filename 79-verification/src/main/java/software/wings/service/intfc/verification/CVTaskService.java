@@ -1,13 +1,16 @@
 package software.wings.service.intfc.verification;
 
+import io.harness.entities.CVTask;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
-import software.wings.verification.CVTask;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface CVTaskService {
   void saveCVTask(CVTask cvTask);
+
+  void createCVTasks(AnalysisContext context);
 
   void enqueueSequentialTasks(List<CVTask> cvTasks);
 

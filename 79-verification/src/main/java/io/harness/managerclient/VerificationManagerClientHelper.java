@@ -52,6 +52,12 @@ public class VerificationManagerClientHelper {
     callManagerWithRetry(managerClient.sendNotifyForVerificationState(headers, context.getCorrelationId(), response));
   }
 
+  public void notifyManagerForVerificationAnalysis(
+      String accountId, String correlationId, VerificationDataAnalysisResponse response) {
+    callManagerWithRetry(
+        managerClient.sendNotifyForVerificationState(getManagerHeader(accountId, null), correlationId, response));
+  }
+
   public <T> T callManagerWithRetry(Call<T> call) {
     int retryCount = 0;
     while (retryCount < MAX_RETRY) {

@@ -6,6 +6,7 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 import software.wings.common.VerificationConstants;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -34,4 +35,8 @@ public interface VerificationServiceClient {
   @POST(VerificationConstants.DELEGATE_DATA_COLLETION + VerificationConstants.SAVE_CV_ACTIVITY_LOGS_PATH)
   Call<RestResponse<Void>> saveActivityLogs(
       @Query("accountId") String accountId, @Body List<CVActivityLog> activityLogs);
+
+  @POST(VerificationConstants.DELEGATE_DATA_COLLETION + VerificationConstants.CV_TASK_STATUS_UPDATE_PATH)
+  Call<RestResponse<Void>> updateCVTaskStatus(@Query("accountId") String accountId, @Query("cvTaskId") String cvTaskId,
+      @Body DataCollectionTaskResult dataCollectionTaskResult);
 }

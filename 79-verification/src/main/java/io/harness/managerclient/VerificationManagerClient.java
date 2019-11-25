@@ -18,6 +18,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -63,8 +64,9 @@ public interface VerificationManagerClient {
   Call<RestResponse<Boolean>> triggerWorkflowDataCollection(
       @Query("analysisContextId") String contextId, @Query("startDataCollectionMinute") long collectionMinute);
 
-  @GET("apm" + VerificationConstants.COLLECT_CV_DATA)
-  Call<RestResponse<Boolean>> collectCVData(@Query("cvTaskId") String cvTaskId);
+  @POST("apm" + VerificationConstants.COLLECT_CV_DATA)
+  Call<RestResponse<Boolean>> collectCVData(
+      @Query("cvTaskId") String cvTaskId, @Body DataCollectionInfoV2 dataCollectionInfoV2);
 
   @GET("harness-api-keys/validate")
   Call<RestResponse<Boolean>> validateHarnessApiKey(
@@ -86,7 +88,7 @@ public interface VerificationManagerClient {
   Call<RestResponse<Boolean>> updateMismatchStatusInExperiment(
       @Query("stateExecutionId") String stateExecutionId, @Query("analysisMinute") Integer analysisMinute);
 
-  @GET("apm" + VerificationConstants.CREATE_CV_TASK_24X7_PATH_PREFIX)
-  Call<RestResponse<Boolean>> createCVTask(
+  @GET("apm" + VerificationConstants.CREATE_DATA_COLLECTION_INFO_PATH)
+  Call<RestResponse<DataCollectionInfoV2>> createDataCollectionInfo(
       @Query("cvConfigId") String cvConfigId, @Query("startTime") long startTime, @Query("endTime") long endTime);
 }

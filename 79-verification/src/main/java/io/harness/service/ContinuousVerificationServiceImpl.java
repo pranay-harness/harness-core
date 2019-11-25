@@ -40,10 +40,12 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.entities.CVTask;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.rest.RestResponse;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -60,6 +62,7 @@ import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.FeedbackAction;
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -82,7 +85,6 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVTask;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -639,8 +641,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private void createCVTask(CVConfiguration cvConfiguration, long startTime, long endTime) {
-    verificationManagerClientHelper.callManagerWithRetry(
-        verificationManagerClient.createCVTask(cvConfiguration.getUuid(), startTime, endTime));
+    RestResponse<DataCollectionInfoV2> dataCollectionInfo = verificationManagerClientHelper.callManagerWithRetry(
+        verificationManagerClient.createDataCollectionInfo(cvConfiguration.getUuid(), startTime, endTime));
+    CVTask cvTask = CVTask.builder()
+                        .status(ExecutionStatus.QUEUED)
+                        .cvConfigId(cvConfiguration.getUuid())
+                        .accountId(cvConfiguration.getAccountId())
+                        .dataCollectionInfo(dataCollectionInfo.getResource())
+                        .build();
+    cvTaskService.saveCVTask(cvTask);
   }
 
   @Override
@@ -655,7 +664,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       lastDataCollectionMinute = logAnalysisService.getLastLogDataCollectedMinute(
           context.getQuery(), context.getAppId(), context.getStateExecutionId(), context.getStateType());
     }
-    logger.info("Inside triggerLogDataCollection with stateType {}, stateExecutionId {} lastDataCollectionMinute {}",
+    logger.info("Inside triggerWorkflowCollection with stateType {}, stateExecutionId {} lastDataCollectionMinute {}",
         context.getStateType(), context.getStateExecutionId(), lastDataCollectionMinute);
     boolean isStateValid = verificationManagerClientHelper
                                .callManagerWithRetry(verificationManagerClient.isStateValid(
@@ -1615,7 +1624,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       Optional<CVTask> cvTask = cvTaskService.getNextTask(accountId);
       if (cvTask.isPresent()) {
         verificationManagerClientHelper.callManagerWithRetry(
-            verificationManagerClient.collectCVData(cvTask.get().getUuid()));
+            verificationManagerClient.collectCVData(cvTask.get().getUuid(), cvTask.get().getDataCollectionInfo()));
       } else {
         break;
       }

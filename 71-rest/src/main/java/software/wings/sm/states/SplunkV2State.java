@@ -8,7 +8,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
@@ -30,7 +29,6 @@ import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -135,10 +133,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null || workflowStandardParams.getEnv() == null
-        ? null
-        : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
     String finalServerConfigId = getServerConfigId(context);
     final SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
     if (settingAttribute == null) {
@@ -209,12 +204,10 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   public DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
     // TODO: see if this can be moved to base class.
     // TODO: some common part needs to be refactored
+
     String finalServerConfigId = getServerConfigId(context);
     final SettingAttribute settingAttribute = settingsService.get(finalServerConfigId);
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null || workflowStandardParams.getEnv() == null
-        ? null
-        : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     return SplunkDataCollectionInfoV2.builder()
         .splunkConfig(splunkConfig)

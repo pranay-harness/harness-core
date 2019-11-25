@@ -57,14 +57,12 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
-import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.InstanceStatusSummary;
@@ -72,11 +70,9 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.verification.CVTask;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -120,7 +116,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateDemoActivityLogs_whenStateIsSuccessful() {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
-    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
     when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
     Logger activityLogger = mock(Logger.class);
     abstractAnalysisState.generateDemoActivityLogs(activityLogger, false);
@@ -133,7 +128,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateDemoActivityLogs_whenStateFailed() {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
-    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
     when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
     Logger activityLogger = mock(Logger.class);
     abstractAnalysisState.generateDemoActivityLogs(activityLogger, true);
@@ -149,7 +143,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
     WingsPersistence wingsPersistence = mock(WingsPersistence.class);
     FieldUtils.writeField(abstractAnalysisState, "wingsPersistence", wingsPersistence, true);
-    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
     when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
     String accountId = generateUuid();
     String stateExecutionId = generateUuid();
@@ -182,7 +175,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
     WingsPersistence wingsPersistence = mock(WingsPersistence.class);
     FieldUtils.writeField(abstractAnalysisState, "wingsPersistence", wingsPersistence, true);
-    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
     when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
     String accountId = generateUuid();
     String stateExecutionId = generateUuid();
@@ -211,55 +203,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
         assertThat(callLog.getResponse().get(1).getValue()).isEqualTo("response body");
       }
     }
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testCreateCVTasksPerMinute() throws IllegalAccessException {
-    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
-    ExecutionContext executionContext = mock(ExecutionContext.class);
-    DataCollectionInfoV2 dataCollectionInfo = mock(DataCollectionInfoV2.class);
-    when(executionContext.getAccountId()).thenReturn(UUID.randomUUID().toString());
-    when(executionContext.getStateExecutionInstanceId()).thenReturn(UUID.randomUUID().toString());
-    when(dataCollectionInfo.deepCopy()).thenReturn(dataCollectionInfo);
-    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(1));
-    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
-    String correlationId = UUID.randomUUID().toString();
-    CVTaskService cvTaskService = mock(CVTaskService.class);
-    FieldUtils.writeField(abstractAnalysisState, "cvTaskService", cvTaskService, true);
-    abstractAnalysisState.createCVTasks(executionContext, dataCollectionInfo, correlationId);
-    ArgumentCaptor<List> cvTasksCapture = ArgumentCaptor.forClass(List.class);
-    verify(cvTaskService).enqueueSequentialTasks(cvTasksCapture.capture());
-    List<CVTask> enqueuedTasks = cvTasksCapture.getValue();
-    assertThat(enqueuedTasks.size()).isEqualTo(15);
-    enqueuedTasks.forEach(cvTask -> {
-      assertThat(cvTask.getAccountId()).isEqualTo(executionContext.getAccountId());
-      assertThat(cvTask.getStateExecutionId()).isEqualTo(executionContext.getStateExecutionInstanceId());
-      assertThat(cvTask.getDataCollectionInfo()).isEqualTo(dataCollectionInfo);
-    });
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testCreateCVTasksForTaskDuration() throws IllegalAccessException {
-    AbstractAnalysisState abstractAnalysisState = mock(AbstractAnalysisState.class, Mockito.CALLS_REAL_METHODS);
-    ExecutionContext executionContext = mock(ExecutionContext.class);
-    DataCollectionInfoV2 dataCollectionInfo = mock(DataCollectionInfoV2.class);
-    when(executionContext.getAccountId()).thenReturn(UUID.randomUUID().toString());
-    when(executionContext.getStateExecutionInstanceId()).thenReturn(UUID.randomUUID().toString());
-    when(dataCollectionInfo.deepCopy()).thenReturn(dataCollectionInfo);
-    when(abstractAnalysisState.getTaskDuration()).thenReturn(Duration.ofMinutes(4));
-    when(abstractAnalysisState.getTimeDuration()).thenReturn("15");
-    String correlationId = UUID.randomUUID().toString();
-    CVTaskService cvTaskService = mock(CVTaskService.class);
-    FieldUtils.writeField(abstractAnalysisState, "cvTaskService", cvTaskService, true);
-    abstractAnalysisState.createCVTasks(executionContext, dataCollectionInfo, correlationId);
-    ArgumentCaptor<List> cvTasksCapture = ArgumentCaptor.forClass(List.class);
-    verify(cvTaskService).enqueueSequentialTasks(cvTasksCapture.capture());
-    List<CVTask> enqueuedTasks = cvTasksCapture.getValue();
-    assertThat(enqueuedTasks.size()).isEqualTo(4);
   }
 
   @Test

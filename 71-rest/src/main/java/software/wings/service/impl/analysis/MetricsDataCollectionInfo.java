@@ -2,20 +2,22 @@ package software.wings.service.impl.analysis;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public abstract class MetricsDataCollectionInfo extends DataCollectionInfoV2 {
   private Map<String, String> hostsToGroupNameMap;
   public MetricsDataCollectionInfo(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, Map<String, String> hostsToGroupNameMap) {
+      String workflowExecutionId, String serviceId, String cvTaskId, Map<String, String> hostsToGroupNameMap) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId);
+        workflowExecutionId, serviceId, cvTaskId);
     this.hostsToGroupNameMap = hostsToGroupNameMap;
   }
 
