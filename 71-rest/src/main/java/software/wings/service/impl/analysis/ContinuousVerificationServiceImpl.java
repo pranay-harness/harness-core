@@ -2610,6 +2610,31 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+
+    if (isDemoPath(stateExecutionInstance)) {
+      VerificationStateAnalysisExecutionData demoStatExecutionData = null;
+
+      if (stateExecutionMap != null && stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName())) {
+        demoStatExecutionData =
+            (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+      } else {
+        demoStatExecutionData =
+            VerificationStateAnalysisExecutionData.builder()
+                .canaryNewHostNames(
+                    ((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
+                        .getCanaryNewHostNames())
+                .lastExecutionNodes(
+                    ((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
+                        .getLastExecutionNodes())
+                .build();
+      }
+      demoStatExecutionData.setProgressPercentage(100);
+      demoStatExecutionData.setRemainingMinutes(0);
+      demoStatExecutionData.setStartTs(Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(5));
+      demoStatExecutionData.setEndTs(Timestamp.currentMinuteBoundary());
+      return demoStatExecutionData;
+    }
+
     if (isEmpty(stateExecutionMap)) {
       logger.info("No state execution map found for {}", stateExecutionId);
       return null;
@@ -2634,6 +2659,20 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       stateAnalysisExecutionData.setErrorMsg(null);
     }
     return stateAnalysisExecutionData;
+  }
+
+  private boolean isDemoPath(StateExecutionInstance stateExecutionInstance) {
+    String accountId = appService.getAccountIdByAppId(stateExecutionInstance.getAppId());
+    if (featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId)) {
+      SettingAttribute settingAttribute = settingsService.get(
+          ((VerificationStateAnalysisExecutionData) stateExecutionInstance.fetchStateExecutionData())
+              .getServerConfigId());
+      if (settingAttribute.getName().toLowerCase().endsWith("dev")
+          || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void setProgress(

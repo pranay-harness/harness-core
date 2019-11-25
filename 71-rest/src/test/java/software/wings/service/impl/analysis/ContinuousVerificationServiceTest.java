@@ -9,7 +9,9 @@ import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import com.google.common.collect.Sets;
@@ -30,6 +32,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertCategory;
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Notification;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -39,6 +42,7 @@ import software.wings.service.impl.event.GenericEventPublisher;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.intfc.AlertNotificationRuleService;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -71,6 +75,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
   @Inject private AlertNotificationRuleService ruleService;
   private AlertNotificationHandler alertNotificationHandler;
   @Mock private NotificationDispatcherService notificationDispatcher;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Before
   public void setUp() throws Exception {
@@ -84,6 +89,7 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
 
     writeField(alertService, "eventPublisher", genericEventPublisher, true);
     writeField(continuousVerificationService, "alertService", alertService, true);
+    writeField(continuousVerificationService, "featureFlagService", featureFlagService, true);
     alertNotificationHandler = new AlertNotificationHandler(genericEventListener);
     writeField(alertNotificationHandler, "notificationDispatcher", notificationDispatcher, true);
     writeField(alertNotificationHandler, "ruleChecker", ruleChecker, true);
@@ -97,6 +103,8 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     assertThat(continuousVerificationService.getVerificationStateExecutionData(generateUuid())).isNull();
     String stateExecutionId = wingsPersistence.save(Builder.aStateExecutionInstance().build());
     assertThat(continuousVerificationService.getVerificationStateExecutionData(stateExecutionId)).isNull();
+
+    when(featureFlagService.isEnabled(any(FeatureName.class), anyString())).thenReturn(false);
 
     final String displayName = "new relic";
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
