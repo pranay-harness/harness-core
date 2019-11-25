@@ -40,6 +40,8 @@ public enum ExecutionStatus {
       EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, QUEUED, WAITING);
   private static Set<ExecutionStatus> positiveStatuses = EnumSet.<ExecutionStatus>of(SUCCESS, SKIPPED);
   private static Set<ExecutionStatus> discontinueStatuses = EnumSet.<ExecutionStatus>of(ABORTED, REJECTED, EXPIRED);
+  private static Set<ExecutionStatus> flowingStatuses =
+      EnumSet.<ExecutionStatus>of(DISCONTINUING, NEW, PAUSED, RUNNING, STARTING, WAITING);
 
   ExecutionStatus() {}
 
@@ -65,6 +67,10 @@ public enum ExecutionStatus {
 
   public static Set<ExecutionStatus> negativeStatuses() {
     return negativeStatuses;
+  }
+
+  public static Set<ExecutionStatus> flowingStatuses() {
+    return flowingStatuses;
   }
 
   public static boolean isNegativeStatus(ExecutionStatus status) {
