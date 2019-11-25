@@ -1935,19 +1935,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   List<String> getInfrastructureMappingHostDisplayNames(
       InfrastructureMapping infrastructureMapping, String appId, String workflowExecutionId) {
-    if (isNotEmpty(infrastructureMapping.getProvisionerId())) {
-      return Collections.emptyList();
-    }
     List<String> hostDisplayNames = new ArrayList<>();
     if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
+      PhysicalInfrastructureMappingBase physicalInfraMapping =
+          (PhysicalInfrastructureMappingBase) infrastructureMapping;
       if (infrastructureMapping.getProvisionerId() != null) {
-        return ((PhysicalInfrastructureMappingBase) infrastructureMapping)
-            .hosts()
-            .stream()
-            .map(Host::getHostName)
-            .collect(Collectors.toList());
+        if (isEmpty(physicalInfraMapping.hosts())) {
+          return emptyList();
+        }
+        return physicalInfraMapping.hosts().stream().map(Host::getHostName).collect(Collectors.toList());
       }
-      return ((PhysicalInfrastructureMappingBase) infrastructureMapping).getHostNames();
+      return physicalInfraMapping.getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       AwsInfrastructureProvider infrastructureProvider =
