@@ -16,8 +16,8 @@ public class PcfRouteSwapExecutionSummary extends StepExecutionSummary {
   private String space;
   private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
 
-  public PcfSwapRouteRollbackContextElement getPcfRouteSwapContextForRollback() {
-    return PcfSwapRouteRollbackContextElement.builder()
+  public SwapRouteRollbackSweepingOutputPcf getSwapRouteRollbackSweepingOutputPcf() {
+    return SwapRouteRollbackSweepingOutputPcf.builder()
         .pcfRouteUpdateRequestConfigData(pcfRouteUpdateRequestConfigData)
         .build();
   }

@@ -123,6 +123,7 @@ import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.pcf.PcfSetupExecutionSummary;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.PcfSwapRouteRollbackContextElement;
+import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.APMValidateCollectorConfig;
@@ -1430,5 +1431,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(VerificationDataAnalysisResponse.class, 7275);
     kryo.register(ResourceConstraintStatusData.class, 7276);
     kryo.register(BarrierStatusData.class, 7277);
+    kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7278);
   }
 }
