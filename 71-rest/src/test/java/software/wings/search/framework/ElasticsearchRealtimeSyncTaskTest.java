@@ -38,6 +38,7 @@ import java.util.concurrent.TimeoutException;
 public class ElasticsearchRealtimeSyncTaskTest extends WingsBaseTest {
   private final ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
   @Mock private ElasticsearchSyncHelper elasticsearchSyncHelper;
+  @Mock private ElasticsearchChangeEventProcessor elasticsearchChangeEventProcessor;
   @Inject @InjectMocks private ElasticsearchRealtimeSyncTask elasticsearchRealtimeSyncTask;
 
   @Test
@@ -80,7 +81,7 @@ public class ElasticsearchRealtimeSyncTaskTest extends WingsBaseTest {
         .when(elasticsearchSyncHelper)
         .stopChangeListeners();
 
-    when(elasticsearchSyncHelper.processChange(any())).thenReturn(true);
+    when(elasticsearchChangeEventProcessor.processChange(any())).thenReturn(true);
 
     Future realTimeSyncFuture = threadPoolExecutor.submit(() -> { elasticsearchRealtimeSyncTask.run(changeEvents); });
 
@@ -89,7 +90,7 @@ public class ElasticsearchRealtimeSyncTaskTest extends WingsBaseTest {
 
     latch.await(10000, TimeUnit.SECONDS);
     verify(elasticsearchSyncHelper, times(1)).startChangeListeners(any());
-    verify(elasticsearchSyncHelper, times(2)).processChange(any());
+    verify(elasticsearchChangeEventProcessor, times(2)).processChange(any());
 
     elasticsearchRealtimeSyncTask.stop();
     realTimeSyncFuture.get(10000, TimeUnit.SECONDS);
