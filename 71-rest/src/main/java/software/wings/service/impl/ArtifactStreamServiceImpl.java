@@ -41,11 +41,10 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.validator.EntityNameValidator;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
+import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
@@ -416,7 +415,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setSourceName(artifactStream.generateSourceName());
     setAutoPopulatedName(artifactStream);
     if (!artifactStream.isAutoPopulate() && isEmpty(artifactStream.getName())) {
-      throw new WingsException("Artifact source name is mandatory", USER);
+      throw new InvalidRequestException("Artifact source name is mandatory", USER);
     }
 
     if (artifactStream.getTemplateUuid() != null) {
@@ -612,7 +611,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     if (isEmpty(artifactStream.getName())) {
-      throw new WingsException("Please provide valid artifact name", USER);
+      throw new InvalidRequestException("Please provide valid artifact name", USER);
     }
 
     boolean isRename = !artifactStream.getName().equals(existingArtifactStream.getName());
@@ -650,9 +649,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void validateRepositoryFormat(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
     if (artifactStream != null && existingArtifactStream != null) {
       if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-        if (!((NexusArtifactStream) artifactStream)
-                 .getRepositoryFormat()
-                 .equals(((NexusArtifactStream) existingArtifactStream).getRepositoryFormat())) {
+        NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
+        if (nexusArtifactStream.getRepositoryFormat() == null
+            || !nexusArtifactStream.getRepositoryFormat().equals(
+                   ((NexusArtifactStream) existingArtifactStream).getRepositoryFormat())) {
           throw new InvalidRequestException("Repository Format cannot be updated", USER);
         }
       }
@@ -662,7 +662,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void validateExtensionAndClassifier(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
     if (artifactStream != null && existingArtifactStream != null) {
       if (artifactStream instanceof NexusArtifactStream
-          && ((NexusArtifactStream) artifactStream).getRepositoryFormat().equals(RepositoryFormat.maven.name())
+          && RepositoryFormat.maven.name().equals(((NexusArtifactStream) artifactStream).getRepositoryFormat())
           && !existingArtifactStream.artifactSourceChanged(artifactStream)) {
         String extension = ((NexusArtifactStream) artifactStream).getExtension();
         String existingExtension = ((NexusArtifactStream) existingArtifactStream).getExtension();
@@ -684,7 +684,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   // TODO: move this to NexusArtifactStream instead of handling here
   private void setMetadataOnly(ArtifactStream artifactStream) {
     if (artifactStream != null && artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
-      if (((NexusArtifactStream) artifactStream).getRepositoryFormat().equals(RepositoryFormat.docker.name())) {
+      if (RepositoryFormat.docker.name().equals(((NexusArtifactStream) artifactStream).getRepositoryFormat())) {
         artifactStream.setMetadataOnly(true);
       }
     }
@@ -817,7 +817,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (GLOBAL_APP_ID.equals(artifactStream.fetchAppId())) {
       if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
               accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()))) {
-        throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+        throw new UnauthorizedUsageRestrictionsException(USER);
       }
       ensureArtifactStreamSafeToDelete(GLOBAL_APP_ID, artifactStreamId, accountId);
     }
@@ -844,7 +844,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         accountId = settingsService.fetchAccountIdBySettingId(artifactStream.getSettingId());
         if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
                 accountId, settingsService.getUsageRestrictionsForSettingId(artifactStream.getSettingId()))) {
-          throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+          throw new UnauthorizedUsageRestrictionsException(USER);
         }
       }
     }
