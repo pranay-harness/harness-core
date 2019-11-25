@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
-import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -46,6 +46,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -71,6 +72,7 @@ public class PcfDeployState extends State {
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
+  @Inject private transient SweepingOutputService sweepingOutputService;
 
   @Attributes(title = "Desired Instances(cumulative)", required = true) private Integer instanceCount;
   @Attributes(title = "Instance Unit Type", required = true)
@@ -140,12 +142,11 @@ public class PcfDeployState extends State {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    PcfSetupContextElement pcfSetupContextElement =
-        context.<PcfSetupContextElement>getContextElementList(ContextElementType.PCF_SERVICE_SETUP)
-            .stream()
-            .filter(cse -> context.fetchInfraMappingId().equals(cse.getInfraMappingId()))
-            .findFirst()
-            .orElse(PcfSetupContextElement.builder().build());
+    SetupSweepingOutputPcf setupSweepingOutputPcf = (SetupSweepingOutputPcf) sweepingOutputService.findSweepingOutput(
+        context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build());
+    if (setupSweepingOutputPcf == null) {
+      setupSweepingOutputPcf = SetupSweepingOutputPcf.builder().build();
+    }
 
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
@@ -154,13 +155,13 @@ public class PcfDeployState extends State {
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
-    Integer upsizeUpdateCount = getUpsizeUpdateCount(pcfSetupContextElement);
-    Integer downsizeUpdateCount = getDownsizeUpdateCount(pcfSetupContextElement);
+    Integer upsizeUpdateCount = getUpsizeUpdateCount(setupSweepingOutputPcf);
+    Integer downsizeUpdateCount = getDownsizeUpdateCount(setupSweepingOutputPcf);
 
     PcfDeployStateExecutionData stateExecutionData =
-        getPcfDeployStateExecutionData(pcfSetupContextElement, activity, upsizeUpdateCount, downsizeUpdateCount);
+        getPcfDeployStateExecutionData(setupSweepingOutputPcf, activity, upsizeUpdateCount, downsizeUpdateCount);
 
-    PcfCommandRequest commandRequest = getPcfCommandRequest(context, app, activity.getUuid(), pcfSetupContextElement,
+    PcfCommandRequest commandRequest = getPcfCommandRequest(context, app, activity.getUuid(), setupSweepingOutputPcf,
         pcfConfig, upsizeUpdateCount, downsizeUpdateCount, stateExecutionData, pcfInfrastructureMapping);
 
     DelegateTask task =
@@ -184,45 +185,45 @@ public class PcfDeployState extends State {
         .build();
   }
 
-  private PcfDeployStateExecutionData getPcfDeployStateExecutionData(PcfSetupContextElement pcfSetupContextElement,
+  private PcfDeployStateExecutionData getPcfDeployStateExecutionData(SetupSweepingOutputPcf setupSweepingOutputPcf,
       Activity activity, Integer upsizeUpdateCount, Integer downsizeUpdateCount) {
     return PcfDeployStateExecutionData.builder()
         .activityId(activity.getUuid())
         .commandName(PCF_RESIZE_COMMAND)
-        .releaseName(getApplicationNameFromSetupContext(pcfSetupContextElement))
+        .releaseName(getApplicationNameFromSetupContext(setupSweepingOutputPcf))
         .updateCount(upsizeUpdateCount)
         .updateDetails(new StringBuilder()
                            .append("{Name: ")
-                           .append(getApplicationNameFromSetupContext(pcfSetupContextElement))
+                           .append(getApplicationNameFromSetupContext(setupSweepingOutputPcf))
                            .append(", DesiredCount: ")
                            .append(upsizeUpdateCount)
                            .append("}")
                            .toString())
-        .setupContextElement(pcfSetupContextElement)
+        .setupSweepingOutputPcf(setupSweepingOutputPcf)
         .build();
   }
 
-  private String getApplicationNameFromSetupContext(PcfSetupContextElement setupElement) {
-    if (setupElement == null || setupElement.getNewPcfApplicationDetails() == null) {
+  private String getApplicationNameFromSetupContext(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    if (setupSweepingOutputPcf == null || setupSweepingOutputPcf.getNewPcfApplicationDetails() == null) {
       return StringUtils.EMPTY;
     }
-    return setupElement.getNewPcfApplicationDetails().getApplicationName();
+    return setupSweepingOutputPcf.getNewPcfApplicationDetails().getApplicationName();
   }
 
-  protected Integer getUpsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
-    Integer count = pcfSetupContextElement.getDesiredActualFinalCount();
+  protected Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    Integer count = setupSweepingOutputPcf.getDesiredActualFinalCount();
     return getInstanceCountToBeUpdated(count, instanceCount, instanceUnitType, true);
   }
 
   @VisibleForTesting
-  protected Integer getDownsizeUpdateCount(PcfSetupContextElement pcfSetupContextElement) {
+  protected Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
     Integer downsizeUpdateCount = downsizeInstanceCount == null ? instanceCount : downsizeInstanceCount;
     downsizeInstanceUnitType = downsizeInstanceUnitType == null ? instanceUnitType : downsizeInstanceUnitType;
 
-    Integer instanceCount = pcfSetupContextElement.getDesiredActualFinalCount();
+    Integer runningInstanceCount = setupSweepingOutputPcf.getDesiredActualFinalCount();
 
     downsizeUpdateCount =
-        getInstanceCountToBeUpdated(instanceCount, downsizeUpdateCount, downsizeInstanceUnitType, false);
+        getInstanceCountToBeUpdated(runningInstanceCount, downsizeUpdateCount, downsizeInstanceUnitType, false);
 
     return downsizeUpdateCount;
   }
@@ -257,37 +258,37 @@ public class PcfDeployState extends State {
   }
 
   protected PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
-      PcfSetupContextElement pcfSetupContextElement, PcfConfig pcfConfig, Integer updateCount,
+      SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
       PcfInfrastructureMapping infrastructureMapping) {
     return PcfCommandDeployRequest.builder()
         .activityId(activityId)
         .commandName(PCF_RESIZE_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
-        .organization(pcfSetupContextElement.getPcfCommandRequest().getOrganization())
-        .space(pcfSetupContextElement.getPcfCommandRequest().getSpace())
+        .organization(setupSweepingOutputPcf.getPcfCommandRequest().getOrganization())
+        .space(setupSweepingOutputPcf.getPcfCommandRequest().getSpace())
         .pcfConfig(pcfConfig)
         .pcfCommandType(PcfCommandType.RESIZE)
-        .maxCount(pcfSetupContextElement.getDesiredActualFinalCount())
+        .maxCount(setupSweepingOutputPcf.getDesiredActualFinalCount())
         .updateCount(updateCount)
         .downSizeCount(downsizeUpdateCount)
-        .totalPreviousInstanceCount(pcfSetupContextElement.getTotalPreviousInstanceCount() == null
+        .totalPreviousInstanceCount(setupSweepingOutputPcf.getTotalPreviousInstanceCount() == null
                 ? Integer.valueOf(0)
-                : pcfSetupContextElement.getTotalPreviousInstanceCount())
-        .resizeStrategy(pcfSetupContextElement.getResizeStrategy())
+                : setupSweepingOutputPcf.getTotalPreviousInstanceCount())
+        .resizeStrategy(setupSweepingOutputPcf.getResizeStrategy())
         .instanceData(emptyList())
-        .routeMaps(pcfSetupContextElement.getRouteMaps())
+        .routeMaps(setupSweepingOutputPcf.getRouteMaps())
         .appId(application.getUuid())
         .accountId(application.getAccountId())
-        .newReleaseName(getApplicationNameFromSetupContext(pcfSetupContextElement))
-        .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
-        .downsizeAppDetail(isEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())
+        .newReleaseName(getApplicationNameFromSetupContext(setupSweepingOutputPcf))
+        .timeoutIntervalInMin(setupSweepingOutputPcf.getTimeoutIntervalInMinutes())
+        .downsizeAppDetail(isEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())
                 ? null
-                : pcfSetupContextElement.getAppDetailsToBeDownsized().get(0))
-        .isStandardBlueGreen(pcfSetupContextElement.isStandardBlueGreenWorkflow())
-        .useAppAutoscalar(pcfSetupContextElement.isUseAppAutoscalar())
-        .enforceSslValidation(pcfSetupContextElement.isEnforceSslValidation())
-        .pcfManifestsPackage(pcfSetupContextElement.getPcfManifestsPackage())
+                : setupSweepingOutputPcf.getAppDetailsToBeDownsized().get(0))
+        .isStandardBlueGreen(setupSweepingOutputPcf.isStandardBlueGreenWorkflow())
+        .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
+        .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
+        .pcfManifestsPackage(setupSweepingOutputPcf.getPcfManifestsPackage())
         .build();
   }
 

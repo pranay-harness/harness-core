@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -44,6 +45,7 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_TEMP_ROUTE;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
+import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -74,6 +76,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
@@ -97,6 +100,8 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -205,6 +210,36 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
                                                               .pipelineExecutionId(null)
                                                               .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
                                                               .build();
+  private SetupSweepingOutputPcf setupSweepingOutputPcf =
+      SetupSweepingOutputPcf.builder()
+          .uuid(serviceElement.getUuid())
+          .name(PCF_SERVICE_NAME)
+          .maxInstanceCount(10)
+          .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
+          .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+                                        .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__2")
+                                        .applicationGuid("1")
+                                        .urls(Arrays.asList("R1", "R2"))
+                                        .build())
+          .infraMappingId(INFRA_MAPPING_ID)
+          .resizeStrategy(RESIZE_NEW_FIRST)
+          .routeMaps(Arrays.asList("R1", "R2"))
+          .tempRouteMap(Arrays.asList("R3"))
+          .appDetailsToBeDownsized(Arrays.asList(PcfAppSetupTimeDetails.builder()
+                                                     .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
+                                                     .urls(Arrays.asList("R3"))
+                                                     .build()))
+          .build();
+
+  private SweepingOutputInstance pcfSweepingOutputInstance = SweepingOutputInstance.builder()
+                                                                 .appId(APP_ID)
+                                                                 .name(outputName)
+                                                                 .uuid(generateUuid())
+                                                                 .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                                 .stateExecutionId(null)
+                                                                 .pipelineExecutionId(null)
+                                                                 .value(setupSweepingOutputPcf)
+                                                                 .build();
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -213,7 +248,6 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
-    when(sweepingOutputService.find(any())).thenReturn(sweepingOutputInstance);
     ServiceCommand serviceCommand =
         aServiceCommand()
             .withCommand(aCommand().withCommandType(CommandType.SETUP).withName("Setup Service Cluster").build())
@@ -278,6 +312,11 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
                         .serviceId(service.getUuid())
                         .build());
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
+    when(sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(outputName).build()))
+        .thenReturn(sweepingOutputInstance);
+    when(sweepingOutputService.find(
+             context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build()))
+        .thenReturn(pcfSweepingOutputInstance);
   }
 
   @Test

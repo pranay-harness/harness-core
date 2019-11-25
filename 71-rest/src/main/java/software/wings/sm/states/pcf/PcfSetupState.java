@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
@@ -36,9 +37,10 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.api.pcf.PcfSetupContextElement;
-import software.wings.api.pcf.PcfSetupContextElement.PcfSetupContextElementBuilder;
+import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
+import software.wings.api.pcf.SetupSweepingOutputPcf.SetupSweepingOutputPcfBuilder;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -75,6 +77,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -108,6 +111,7 @@ public class PcfSetupState extends State {
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient FeatureFlagService featureFlagService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
+  @Inject private transient SweepingOutputService sweepingOutputService;
 
   @Inject @Transient protected transient LogService logService;
 
@@ -470,7 +474,6 @@ public class PcfSetupState extends State {
   protected ExecutionResponse handleAsyncResponseForPCFTask(
       ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = getActivityId(context);
-
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus =
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
@@ -484,8 +487,8 @@ public class PcfSetupState extends State {
         (PcfSetupCommandResponse) executionResponse.getPcfCommandResponse();
 
     boolean isPcfSetupCommandResponseNull = pcfSetupCommandResponse == null;
-    PcfSetupContextElementBuilder pcfSetupContextElementBuilder =
-        PcfSetupContextElement.builder()
+    SetupSweepingOutputPcfBuilder setupSweepingOutputPcfBuilder =
+        SetupSweepingOutputPcf.builder()
             .serviceId(stateExecutionData.getServiceId())
             .commandName(PCF_SETUP_COMMAND)
             .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
@@ -501,24 +504,31 @@ public class PcfSetupState extends State {
             .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage());
 
     if (!isPcfSetupCommandResponseNull) {
-      pcfSetupContextElementBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
+      setupSweepingOutputPcfBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
           .totalPreviousInstanceCount(
               Optional.ofNullable(pcfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
           .appDetailsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
       if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
-        pcfSetupContextElementBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
-        addNewlyCreateRouteMapIfRequired(stateExecutionData, pcfSetupCommandResponse, pcfSetupContextElementBuilder);
+        setupSweepingOutputPcfBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
+        addNewlyCreateRouteMapIfRequired(stateExecutionData, pcfSetupCommandResponse, setupSweepingOutputPcfBuilder);
       }
     }
 
-    PcfSetupContextElement pcfSetupContextElement = pcfSetupContextElementBuilder.build();
+    SetupSweepingOutputPcf setupSweepingOutputPcf = setupSweepingOutputPcfBuilder.build();
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                   .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME)
+                                   .value(setupSweepingOutputPcf)
+                                   .build());
+
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                   .name(InfoVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(setupSweepingOutputPcf.fetchPcfVariableInfo())
+                                   .build());
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)
-        .contextElement(pcfSetupContextElement)
-        .notifyElement(pcfSetupContextElement)
         .build();
   }
 
@@ -553,7 +563,7 @@ public class PcfSetupState extends State {
   }
 
   private void addNewlyCreateRouteMapIfRequired(PcfSetupStateExecutionData stateExecutionData,
-      PcfSetupCommandResponse pcfSetupCommandResponse, PcfSetupContextElementBuilder pcfSetupContextElementBuilder) {
+      PcfSetupCommandResponse pcfSetupCommandResponse, SetupSweepingOutputPcfBuilder setupSweepingOutputPcfBuilder) {
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
         stateExecutionData.getAppId(), stateExecutionData.getInfraMappingId());
     boolean isInfraUpdated = false;
@@ -564,9 +574,9 @@ public class PcfSetupState extends State {
         isInfraUpdated = true;
         infrastructureMapping.setTempRouteMap(tempRoutes);
       }
-      pcfSetupContextElementBuilder.tempRouteMap(tempRoutes);
+      setupSweepingOutputPcfBuilder.tempRouteMap(tempRoutes);
       stateExecutionData.setTempRouteMaps(tempRoutes);
-      pcfSetupContextElementBuilder.routeMaps(stateExecutionData.getRouteMaps());
+      setupSweepingOutputPcfBuilder.routeMaps(stateExecutionData.getRouteMaps());
     } else {
       List<String> routes = stateExecutionData.getRouteMaps();
       if (EmptyPredicate.isEmpty(routes)) {
@@ -574,9 +584,9 @@ public class PcfSetupState extends State {
         isInfraUpdated = true;
         infrastructureMapping.setRouteMaps(routes);
       }
-      pcfSetupContextElementBuilder.routeMaps(routes);
+      setupSweepingOutputPcfBuilder.routeMaps(routes);
       stateExecutionData.setRouteMaps(routes);
-      pcfSetupContextElementBuilder.tempRouteMap(stateExecutionData.getTempRouteMaps());
+      setupSweepingOutputPcfBuilder.tempRouteMap(stateExecutionData.getTempRouteMaps());
     }
 
     if (isInfraUpdated) {

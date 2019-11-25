@@ -53,7 +53,6 @@ import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
-import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
@@ -617,11 +616,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
       contextElements.add(instanceElementListParam);
-    } else if (phaseStepType == PhaseStepType.PCF_SETUP) {
-      PcfSetupContextElement pcfSetupContextElement = (PcfSetupContextElement) notifiedElement(
-          elementNotifyResponseData, PcfSetupContextElement.class, "Missing PcfSetupContextElement");
-      contextElements.add(pcfSetupContextElement);
-      addNotifyElement = true;
     } else if (phaseStepType == PhaseStepType.PCF_RESIZE) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");

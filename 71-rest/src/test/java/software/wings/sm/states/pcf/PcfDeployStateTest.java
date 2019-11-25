@@ -18,6 +18,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -33,6 +34,7 @@ import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -59,7 +61,7 @@ import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
@@ -75,6 +77,8 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -144,6 +148,22 @@ public class PcfDeployStateTest extends WingsBaseTest {
                                                               .pipelineExecutionId(null)
                                                               .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
                                                               .build();
+  private SetupSweepingOutputPcf setupSweepingOutputPcf =
+      SetupSweepingOutputPcf.builder()
+          .uuid(serviceElement.getUuid())
+          .name(PCF_SERVICE_NAME)
+          .maxInstanceCount(10)
+          .desiredActualFinalCount(10)
+          .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
+          .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+                                        .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
+                                        .applicationGuid("1")
+                                        .build())
+          .infraMappingId(INFRA_MAPPING_ID)
+          .resizeStrategy(RESIZE_NEW_FIRST)
+          .routeMaps(Arrays.asList("R1", "R2"))
+          .build();
+
   /**
    * Set up.
    */
@@ -195,7 +215,11 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(evaluator.substitute(anyString(), anyMap(), any(VariableResolverTracker.class), anyString()))
         .thenAnswer(i -> i.getArguments()[0]);
     doReturn(null).when(encryptionService).decrypt(any(), any());
-    when(sweepingOutputService.find(any())).thenReturn(sweepingOutputInstance);
+    when(sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(outputName).build()))
+        .thenReturn(sweepingOutputInstance);
+    when(sweepingOutputService.findSweepingOutput(
+             context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build()))
+        .thenReturn(setupSweepingOutputPcf);
   }
 
   @Test
@@ -239,44 +263,44 @@ public class PcfDeployStateTest extends WingsBaseTest {
     // PERCENT
     pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
     pcfDeployState.setDownsizeInstanceCount(40);
-    PcfSetupContextElement pcfSetupContextElement = PcfSetupContextElement.builder()
+    SetupSweepingOutputPcf setupSweepingOutputPcf = SetupSweepingOutputPcf.builder()
                                                         .useCurrentRunningInstanceCount(false)
                                                         .maxInstanceCount(10)
                                                         .desiredActualFinalCount(10)
                                                         .build();
 
-    Integer answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    Integer answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
     assertThat(answer.intValue()).isEqualTo(6);
 
     pcfDeployState.setDownsizeInstanceUnitType(COUNT);
     pcfDeployState.setDownsizeInstanceCount(4);
-    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
     assertThat(answer.intValue()).isEqualTo(6);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(COUNT);
     pcfDeployState.setInstanceCount(6);
-    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
     assertThat(answer.intValue()).isEqualTo(4);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(null);
     pcfDeployState.setInstanceUnitType(COUNT);
     pcfDeployState.setInstanceCount(6);
-    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
     assertThat(answer.intValue()).isEqualTo(4);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
     pcfDeployState.setInstanceCount(60);
-    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
     assertThat(answer.intValue()).isEqualTo(4);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(null);
     pcfDeployState.setInstanceUnitType(PERCENTAGE);
     pcfDeployState.setInstanceCount(40);
-    answer = pcfDeployState.getDownsizeUpdateCount(pcfSetupContextElement);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
     assertThat(answer.intValue()).isEqualTo(6);
   }
 }

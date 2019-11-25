@@ -9,7 +9,7 @@ import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.api.pcf.PcfSetupContextElement;
+import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 public class PcfSwitchBlueGreenRoutesTest extends CategoryTest {
@@ -19,10 +19,10 @@ public class PcfSwitchBlueGreenRoutesTest extends CategoryTest {
   public void testGetNewApplicationName() {
     PcfSwitchBlueGreenRoutes pcfSwitchBlueGreenRoutes = new PcfSwitchBlueGreenRoutes("");
     assertThat(pcfSwitchBlueGreenRoutes.getNewApplicationName(null)).isEqualTo(StringUtils.EMPTY);
-    assertThat(pcfSwitchBlueGreenRoutes.getNewApplicationName(PcfSetupContextElement.builder().build()))
+    assertThat(pcfSwitchBlueGreenRoutes.getNewApplicationName(SetupSweepingOutputPcf.builder().build()))
         .isEqualTo(StringUtils.EMPTY);
     assertThat(pcfSwitchBlueGreenRoutes.getNewApplicationName(
-                   PcfSetupContextElement.builder()
+                   SetupSweepingOutputPcf.builder()
                        .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder().applicationName("name").build())
                        .build()))
         .isEqualTo("name");
