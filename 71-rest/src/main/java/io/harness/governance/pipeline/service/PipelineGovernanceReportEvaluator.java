@@ -17,7 +17,6 @@ import io.harness.governance.pipeline.service.model.Restriction;
 import io.harness.governance.pipeline.service.model.Tag;
 import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
@@ -102,9 +101,7 @@ public class PipelineGovernanceReportEvaluator {
             .filter(config -> isConfigValidForApp(accountId, config.getRestrictions(), appId))
             .collect(Collectors.toList());
 
-    if (featureFlagService.isEnabled(FeatureName.PIPELINE_GOVERNANCE_DRAFT, accountId)) {
-      governanceConfigs = governanceConfigs.stream().filter(PipelineGovernanceConfig::isEnabled).collect(toList());
-    }
+    governanceConfigs = governanceConfigs.stream().filter(PipelineGovernanceConfig::isEnabled).collect(toList());
 
     List<PipelineReportCard> pipelineReport = new LinkedList<>();
     Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, Collections.emptyMap());

@@ -1,9 +1,12 @@
 package software.wings.security.authentication;
 
+import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.rule.OwnerRule.AMAN;
 import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -13,8 +16,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import com.google.inject.Inject;
 
@@ -99,6 +100,17 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void getLoginTypeResponseForInvalidUser() {
+    when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), any(EnumSet.class)))
+        .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
+    assertThatThrownBy(() -> authenticationManager.getLoginTypeResponse(NON_EXISTING_USER))
+        .isInstanceOf(WingsException.class)
+        .matches(ex -> ((WingsException) ex).getCode() == USER_DOES_NOT_EXIST);
+  }
+
+  @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void getLoginTypeResponse() {
@@ -106,20 +118,14 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     Account account1 = mock(Account.class);
     Account account2 = mock(Account.class);
 
-    when(FEATURE_FLAG_SERVICE.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)).thenReturn(true);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(mockUser.isEmailVerified()).thenReturn(true);
-    when(AUTHENTICATION_UTL.getUser(Matchers.same(NON_EXISTING_USER), any(EnumSet.class)))
-        .thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
-    LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse(NON_EXISTING_USER);
-    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
-    assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1, account2));
     when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
     when(USER_SERVICE.getAccountByIdIfExistsElseGetDefaultAccount(any(User.class), Optional.of(anyString())))
         .thenReturn(account1);
-    loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
+    LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
     assertThat(loginTypeResponse.getSSORequest()).isNull();
 
@@ -153,7 +159,6 @@ public class AuthenticationManagerTest extends WingsBaseTest {
 
     doNothing().when(failedLoginAttemptCountChecker).check(Mockito.any(User.class));
 
-    when(FEATURE_FLAG_SERVICE.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)).thenReturn(false);
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
     when(USER_SERVICE.getAccountByIdIfExistsElseGetDefaultAccount(any(User.class), Optional.of(anyString())))
         .thenReturn(account1);

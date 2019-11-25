@@ -22,14 +22,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.beans.Account;
-import software.wings.beans.FeatureName;
-import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.HarnessUserAccountActions;
-import software.wings.security.HarnessUserThreadLocal;
 import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -63,34 +58,16 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
   @Override
   public Set<Action> listAllowedUserActionsForAccount(String accountId, String userId) {
     Set<Action> actionSet = Sets.newHashSet();
-
-    if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
-      // If it's called by identity service, thread local should have been populated
-      HarnessUserAccountActions harnessUserAccountActions = HarnessUserThreadLocal.get();
-      logger.info("Got account actions {} for account {} from context", harnessUserAccountActions, accountId);
-      if (harnessUserAccountActions != null) {
-        if (harnessUserAccountActions.isApplyToAllAccounts()) {
-          actionSet.addAll(harnessUserAccountActions.getActions());
-        }
-        Set<Action> actionSetFromAccountActions = harnessUserAccountActions.getAccountActions().get(accountId);
-        if (actionSetFromAccountActions != null) {
-          actionSet.addAll(actionSetFromAccountActions);
-        }
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+    query.filter("memberIds", userId);
+    query.or(query.criteria("applyToAllAccounts").equal(true), query.criteria("accountIds").equal(accountId));
+    List<HarnessUserGroup> harnessUserGroups = query.asList();
+    harnessUserGroups.forEach(harnessUserGroup -> {
+      Set<Action> actions = harnessUserGroup.getActions();
+      if (isNotEmpty(actions)) {
+        actionSet.addAll(actions);
       }
-      logger.info("Got allowed actions {} for account {} from context", actionSet, accountId);
-    } else {
-      Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
-      query.filter("memberIds", userId);
-      query.or(query.criteria("applyToAllAccounts").equal(true), query.criteria("accountIds").equal(accountId));
-      List<HarnessUserGroup> harnessUserGroups = query.asList();
-      harnessUserGroups.forEach(harnessUserGroup -> {
-        Set<Action> actions = harnessUserGroup.getActions();
-        if (isNotEmpty(actions)) {
-          actionSet.addAll(actions);
-        }
-      });
-    }
-
+    });
     return actionSet;
   }
 
@@ -99,34 +76,19 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     Set<String> accountIds = Sets.newHashSet();
     boolean applyToAllAccounts = false;
 
-    if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
-      // If it's called by identity service, thread local should have been populated
-      HarnessUserAccountActions harnessUserAccountActions = HarnessUserThreadLocal.get();
-      logger.info("Got account actions {} for user {} from context", harnessUserAccountActions, userId);
-      if (harnessUserAccountActions != null) {
-        applyToAllAccounts = harnessUserAccountActions.isApplyToAllAccounts();
-        if (!applyToAllAccounts) {
-          Set<String> accountsFromHarnessUserAccountActions = harnessUserAccountActions.getAccountActions().keySet();
-          if (isNotEmpty(accountsFromHarnessUserAccountActions)) {
-            accountIds.addAll(accountsFromHarnessUserAccountActions);
-          }
-        }
-      }
-    } else {
-      Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
-      query.filter("memberIds", userId);
-      List<HarnessUserGroup> harnessUserGroups = query.asList();
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+    query.filter("memberIds", userId);
+    List<HarnessUserGroup> harnessUserGroups = query.asList();
 
-      for (HarnessUserGroup harnessUserGroup : harnessUserGroups) {
-        // If any of the groups have all accounts selected, we just return all the accounts except the excluded ones
-        if (harnessUserGroup.isApplyToAllAccounts()) {
-          applyToAllAccounts = true;
-          break;
-        } else {
-          Set<String> accountIdsFromUserGroup = harnessUserGroup.getAccountIds();
-          if (isNotEmpty(accountIdsFromUserGroup)) {
-            accountIds.addAll(accountIdsFromUserGroup);
-          }
+    for (HarnessUserGroup harnessUserGroup : harnessUserGroups) {
+      // If any of the groups have all accounts selected, we just return all the accounts except the excluded ones
+      if (harnessUserGroup.isApplyToAllAccounts()) {
+        applyToAllAccounts = true;
+        break;
+      } else {
+        Set<String> accountIdsFromUserGroup = harnessUserGroup.getAccountIds();
+        if (isNotEmpty(accountIdsFromUserGroup)) {
+          accountIds.addAll(accountIdsFromUserGroup);
         }
       }
     }
@@ -234,17 +196,6 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
     if (DeployMode.isOnPrem(deployMode)) {
       return false;
-    }
-
-    if (featureFlagService.isGlobalEnabled(FeatureName.GLOBAL_HARNESS_USER_GROUP)) {
-      // Identity service auth filter may set this thread local if the call comes from identity service
-      // and identity service indicates this call should be treated as from a harness user.
-      if (HarnessUserThreadLocal.get() != null) {
-        User currentUser = UserThreadLocal.get();
-        if (currentUser != null && currentUser.getUuid().equals(userId)) {
-          return true;
-        }
-      }
     }
 
     Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);

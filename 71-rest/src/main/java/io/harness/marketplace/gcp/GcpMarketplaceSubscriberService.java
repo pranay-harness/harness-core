@@ -5,8 +5,6 @@ import com.google.inject.Singleton;
 
 import io.dropwizard.lifecycle.Managed;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.Account;
-import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;
 
 @Slf4j
@@ -18,11 +16,7 @@ public class GcpMarketplaceSubscriberService implements Managed {
   @Override
   public void start() {
     try {
-      boolean featEnabled =
-          featureFlagService.isEnabled(FeatureName.GCP_MARKETPLACE_INTEGRATION, Account.GLOBAL_ACCOUNT_ID);
-      if (featEnabled) {
-        this.gcpMarketplaceTopicSubscriber.subscribeAsync();
-      }
+      this.gcpMarketplaceTopicSubscriber.subscribeAsync();
     } catch (Exception e) {
       logger.error(
           "Could not subscribe to GCP marketplace topic. Users will not be able to subscribe from GCP marketplace.", e);

@@ -17,8 +17,6 @@ import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static org.apache.cxf.common.util.UrlUtils.urlDecode;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.FeatureName.LOGIN_PROMPT_WHEN_NO_USER;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -168,60 +166,50 @@ public class AuthenticationManager {
      * The next page throws INVALID_CREDENTIAL exception in case of wrong userId/password which doesn't reveals any
      * information.
      */
+    User user = authenticationUtils.getUser(userName, USER);
+
+    boolean showCaptcha = false;
     try {
-      User user = authenticationUtils.getUser(userName, USER);
-
-      boolean showCaptcha = false;
-      try {
-        failedLoginAttemptCountChecker.check(user);
-      } catch (MaxLoginAttemptExceededException e) {
-        logger.info("User exceeded max failed login attemts. {}", e.getMessage());
-        showCaptcha = true;
-      }
-
-      builder.showCaptcha(showCaptcha);
-      Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
-          user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
-      boolean isPostRequest = false;
-      if (featureFlagService.isEnabled(FeatureName.LOGIN_POST_REQUEST, null)) {
-        isPostRequest = true;
-      }
-      AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
-      if (null == authenticationMechanism) {
-        authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
-      }
-      builder.isOauthEnabled(account.isOauthEnabled());
-      if (account.isOauthEnabled()) {
-        builder.SSORequest(oauthOptions.createOauthSSORequest(userName, account.getUuid()));
-      }
-
-      SSORequest ssoRequest;
-      switch (authenticationMechanism) {
-        case USER_PASSWORD:
-          if (!user.isEmailVerified() && !DeployMode.isOnPrem(mainConfiguration.getDeployMode().getDeployedAs())) {
-            // HAR-7984: Return 401 http code if user email not verified yet.
-            throw new WingsException(EMAIL_NOT_VERIFIED, USER);
-          }
-          break;
-        case SAML:
-          ssoRequest = samlClientService.generateSamlRequest(user);
-          builder.SSORequest(ssoRequest);
-          break;
-        case OAUTH:
-        case LDAP: // No need to build anything extra for the response.
-        default:
-          // Nothing to do by default
-      }
-      return builder.postRequest(isPostRequest).authenticationMechanism(authenticationMechanism).build();
-    } catch (WingsException we) {
-      if (featureFlagService.isEnabled(LOGIN_PROMPT_WHEN_NO_USER, GLOBAL_ACCOUNT_ID)) {
-        logger.warn(we.getMessage(), we);
-        builder.postRequest(false);
-        return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
-      } else {
-        throw we;
-      }
+      failedLoginAttemptCountChecker.check(user);
+    } catch (MaxLoginAttemptExceededException e) {
+      logger.info("User exceeded max failed login attemts. {}", e.getMessage());
+      showCaptcha = true;
     }
+
+    builder.showCaptcha(showCaptcha);
+    Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
+        user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
+    boolean isPostRequest = false;
+    if (featureFlagService.isEnabled(FeatureName.LOGIN_POST_REQUEST, null)) {
+      isPostRequest = true;
+    }
+    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    if (null == authenticationMechanism) {
+      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+    }
+    builder.isOauthEnabled(account.isOauthEnabled());
+    if (account.isOauthEnabled()) {
+      builder.SSORequest(oauthOptions.createOauthSSORequest(userName, account.getUuid()));
+    }
+
+    SSORequest ssoRequest;
+    switch (authenticationMechanism) {
+      case USER_PASSWORD:
+        if (!user.isEmailVerified() && !DeployMode.isOnPrem(mainConfiguration.getDeployMode().getDeployedAs())) {
+          // HAR-7984: Return 401 http code if user email not verified yet.
+          throw new WingsException(EMAIL_NOT_VERIFIED, USER);
+        }
+        break;
+      case SAML:
+        ssoRequest = samlClientService.generateSamlRequest(user);
+        builder.SSORequest(ssoRequest);
+        break;
+      case OAUTH:
+      case LDAP: // No need to build anything extra for the response.
+      default:
+        // Nothing to do by default
+    }
+    return builder.postRequest(isPostRequest).authenticationMechanism(authenticationMechanism).build();
   }
 
   public User switchAccount(String bearerToken, String accountId) {
