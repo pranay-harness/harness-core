@@ -1009,19 +1009,26 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
+  @SuppressWarnings("PMD.AvoidCatchingThrowable")
   public void fullSyncForEntireAccount(String accountId) {
-    logger.info(format(GIT_YAML_LOG_PREFIX + "Performing full sync for account %s", accountId));
+    try {
+      logger.info(format(GIT_YAML_LOG_PREFIX + "Performing full sync for account %s", accountId));
 
-    // Perform fullsync for account level entities
-    fullSync(accountId, accountId, EntityType.ACCOUNT, false);
+      // Perform fullsync for account level entities
+      fullSync(accountId, accountId, EntityType.ACCOUNT, false);
 
-    try (HIterator<Application> apps = new HIterator<>(
-             wingsPersistence.createQuery(Application.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
-      for (Application application : apps) {
-        fullSync(accountId, application.getUuid(), EntityType.APPLICATION, false);
+      try (HIterator<Application> apps = new HIterator<>(
+               wingsPersistence.createQuery(Application.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
+        for (Application application : apps) {
+          fullSync(accountId, application.getUuid(), EntityType.APPLICATION, false);
+        }
       }
+      logger.info(format(GIT_YAML_LOG_PREFIX + "Performed full sync for account %s", accountId));
+    } catch (Throwable t) {
+      // any thread that faces an error should continue to perform full sync for other accountIds
+      // if possible.
+      logger.error(format("Error occured in full sync for account %s", accountId), t);
     }
-    logger.info(format(GIT_YAML_LOG_PREFIX + "Performed full sync for account %s", accountId));
   }
 
   private GitCommit fetchLastProcessedGitCommitId(String accountId, List<String> yamlGitConfigIds) {
