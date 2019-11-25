@@ -156,7 +156,7 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
         .forEach(msg -> eventPublisher.publishMessage(msg, HTimestamps.fromInstant(pollTime)));
   }
 
-  private void publishEcsClusterSyncEvent(String clusterId, String settingId, String clusterName,
+  void publishEcsClusterSyncEvent(String clusterId, String settingId, String clusterName,
       Set<String> activeEc2InstanceIds, Set<String> activeContainerInstanceArns, Set<String> activeTaskArns,
       Instant startTime) {
     EcsSyncEvent ecsSyncEvent = EcsSyncEvent.newBuilder()
