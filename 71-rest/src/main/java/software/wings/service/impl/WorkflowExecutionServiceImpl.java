@@ -1786,8 +1786,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   void validateExecutionArgsHosts(ExecutionArgs executionArgs, Trigger trigger) {
-    if (isEmpty(executionArgs.getHosts())) {
+    if (!executionArgs.isTargetToSpecificHosts()) {
+      // Hack as later validations are on empty host list, not on target flag
+      executionArgs.setHosts(Collections.emptyList());
       return;
+    }
+    if (isEmpty(executionArgs.getHosts())) {
+      throw new InvalidRequestException(
+          "Host list can't be empty when Target To Specific Hosts option is enabled", USER);
     }
 
     if (executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {

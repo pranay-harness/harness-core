@@ -359,7 +359,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
         APP_ID, selectionParams, workflowStandardParams, message, WingsTestConstants.WORKFLOW_EXECUTION_ID);
 
     assertThat(nodesOverridden).isTrue();
-    assertThat(message.toString()).isEqualTo("Nodes have been overridden from execution time nodes");
+    assertThat(message.toString()).isEqualTo("Targeted nodes have overridden configured nodes");
     assertThat(selectionParams.build().getCount()).isEqualTo(2);
   }
 

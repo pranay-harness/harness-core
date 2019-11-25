@@ -2262,8 +2262,24 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
+  public void emptyExecutionHostsWithTargetEnabledShouldThrowException() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setHosts(Collections.emptyList());
+    executionArgs.setTargetToSpecificHosts(true);
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+
+    assertThatThrownBy(
+        () -> ((WorkflowExecutionServiceImpl) workflowExecutionService).validateExecutionArgsHosts(executionArgs, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Host list can't be empty when Target To Specific Hosts option is enabled");
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
   public void executionHostsShouldNotBeSetForPipelines() {
     ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setTargetToSpecificHosts(true);
     executionArgs.setHosts(Arrays.asList("host1", "host2"));
     executionArgs.setWorkflowType(WorkflowType.PIPELINE);
 
@@ -2278,6 +2294,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void executionHostsShouldNotBeSetForTriggers() {
     ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setTargetToSpecificHosts(true);
     executionArgs.setHosts(Arrays.asList("host1", "host2"));
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     Trigger trigger = Trigger.builder().build();
@@ -2324,12 +2341,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
-  public void emptyExecutionHostsShouldPassValidation() {
+  public void targetHostsOptionDisabledShouldPassValidation() {
     ExecutionArgs executionArgs = spy(new ExecutionArgs());
 
     ((WorkflowExecutionServiceImpl) workflowExecutionService).validateExecutionArgsHosts(executionArgs, null);
 
-    verify(executionArgs, times(1)).getHosts();
+    verify(executionArgs, times(1)).isTargetToSpecificHosts();
   }
 
   @Test
