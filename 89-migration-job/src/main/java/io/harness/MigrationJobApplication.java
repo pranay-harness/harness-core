@@ -35,7 +35,6 @@ import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GuiceObjectFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
-import software.wings.app.ManagerQueueModule;
 import software.wings.app.SSOModule;
 import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
@@ -109,7 +108,6 @@ public class MigrationJobApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new ManagerQueueModule(configuration.getPublisherConfiguration()));
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));

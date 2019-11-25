@@ -299,7 +299,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new ManagerQueueModule(configuration.getPublisherConfiguration()));
+    modules.add(new ManagerQueueModule());
+
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));

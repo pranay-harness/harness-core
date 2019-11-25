@@ -6,6 +6,9 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import io.harness.config.PublisherConfiguration;
@@ -35,64 +38,130 @@ import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 
 public class ManagerQueueModule extends AbstractModule {
-  private PublisherConfiguration config;
+  @Provides
+  @Singleton
+  QueuePublisher<PruneEvent> pruneQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, PruneEvent.class, UNVERSIONED, config);
+  }
 
-  public ManagerQueueModule(PublisherConfiguration configuration) {
-    config = configuration;
+  @Provides
+  @Singleton
+  QueueConsumer<PruneEvent> pruneQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, PruneEvent.class, UNVERSIONED, ofSeconds(5), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<EmailData> emailQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, EmailData.class, UNVERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<EmailData> emailQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, EmailData.class, UNVERSIONED, ofSeconds(5), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<CollectEvent> collectQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, CollectEvent.class, UNVERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<CollectEvent> collectQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, CollectEvent.class, UNVERSIONED, ofSeconds(5), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<KmsTransitionEvent> kmsTransitionQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, KmsTransitionEvent.class, UNVERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<KmsTransitionEvent> kmsTransitionQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, KmsTransitionEvent.class, UNVERSIONED, ofSeconds(30), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<DeploymentEvent> deploymentQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, DeploymentEvent.class, VERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<DeploymentEvent> deploymentQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, DeploymentEvent.class, VERSIONED, ofMinutes(1), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<ExecutionEvent> executionQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, ExecutionEvent.class, VERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<ExecutionEvent> executionQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, ExecutionEvent.class, VERSIONED, ofSeconds(30), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<DelayEvent> delayQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, DelayEvent.class, VERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<DelayEvent> delayQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, DelayEvent.class, VERSIONED, ofSeconds(5), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<GenericEvent> genericQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, GenericEvent.class, VERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<GenericEvent> genericQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, GenericEvent.class, VERSIONED, ofMinutes(1), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<InstanceEvent> instanceQueuePublisher(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, InstanceEvent.class, VERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<InstanceEvent> instanceQueueConsumer(Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, InstanceEvent.class, VERSIONED, ofMinutes(1), config);
+  }
+
+  @Provides
+  @Singleton
+  QueuePublisher<DeploymentTimeSeriesEvent> deploymentTimeSeriesQueuePublisher(
+      Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(injector, DeploymentTimeSeriesEvent.class, VERSIONED, config);
+  }
+
+  @Provides
+  @Singleton
+  QueueConsumer<DeploymentTimeSeriesEvent> deploymentTimeSeriesQueueConsumer(
+      Injector injector, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, DeploymentTimeSeriesEvent.class, VERSIONED, ofMinutes(1), config);
   }
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueuePublisher<PruneEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(PruneEvent.class, UNVERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<PruneEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(PruneEvent.class, UNVERSIONED, ofSeconds(5), config));
-
-    bind(new TypeLiteral<QueuePublisher<EmailData>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(EmailData.class, UNVERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<EmailData>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(EmailData.class, UNVERSIONED, ofSeconds(5), config));
-
-    bind(new TypeLiteral<QueuePublisher<CollectEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(CollectEvent.class, UNVERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<CollectEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(CollectEvent.class, UNVERSIONED, ofSeconds(5), config));
-
-    bind(new TypeLiteral<QueuePublisher<DeploymentEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(DeploymentEvent.class, VERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<DeploymentEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(DeploymentEvent.class, VERSIONED, ofMinutes(1), config));
-
-    bind(new TypeLiteral<QueuePublisher<KmsTransitionEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(KmsTransitionEvent.class, UNVERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<KmsTransitionEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(KmsTransitionEvent.class, UNVERSIONED, ofSeconds(30), config));
-
-    bind(new TypeLiteral<QueuePublisher<ExecutionEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(ExecutionEvent.class, VERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<ExecutionEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(ExecutionEvent.class, VERSIONED, ofSeconds(30), config));
-
-    bind(new TypeLiteral<QueuePublisher<DelayEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(DelayEvent.class, VERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<DelayEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(DelayEvent.class, VERSIONED, ofSeconds(5), config));
-
-    bind(new TypeLiteral<QueuePublisher<GenericEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(GenericEvent.class, VERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<GenericEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(GenericEvent.class, VERSIONED, ofMinutes(1), config));
-
-    bind(new TypeLiteral<QueuePublisher<InstanceEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(InstanceEvent.class, VERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<InstanceEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(InstanceEvent.class, VERSIONED, ofMinutes(1), config));
-
-    bind(new TypeLiteral<QueuePublisher<DeploymentTimeSeriesEvent>>() {})
-        .toInstance(QueueFactory.createQueuePublisher(DeploymentTimeSeriesEvent.class, VERSIONED, config));
-    bind(new TypeLiteral<QueueConsumer<DeploymentTimeSeriesEvent>>() {})
-        .toInstance(QueueFactory.createQueueConsumer(DeploymentTimeSeriesEvent.class, VERSIONED, ofMinutes(1), config));
-
     bind(new TypeLiteral<QueueListener<PruneEvent>>() {}).to(PruneEntityListener.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<QueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);

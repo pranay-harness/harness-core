@@ -13,6 +13,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -28,6 +30,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
 import io.harness.globalcontex.AuditGlobalContextData;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
@@ -242,7 +245,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
   }
 
   protected void addQueueModules(List<Module> modules) {
-    modules.add(new ManagerQueueModule(new PublisherConfiguration()));
+    modules.add(new ManagerQueueModule());
   }
 
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {
@@ -298,6 +301,14 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
         bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
+      }
+    });
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      PublisherConfiguration publisherConfiguration() {
+        return PublisherConfiguration.allOn();
       }
     });
 
