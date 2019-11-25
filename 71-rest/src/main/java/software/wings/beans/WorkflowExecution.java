@@ -14,10 +14,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
-import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.Builder;
@@ -92,11 +92,13 @@ import javax.validation.constraints.NotNull;
         @Field(WorkflowExecutionKeys.accountId)
         , @Field(value = WorkflowExecutionKeys.createdAt, type = IndexType.DESC),
             @Field(WorkflowExecutionKeys.pipelineExecutionId)
+      }), @Index(options = @IndexOptions(name = "workflowExecutionMonitor", background = true), fields = {
+        @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.nextIteration)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
+    implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
 
@@ -169,6 +171,8 @@ public class WorkflowExecution
   private List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries;
   private ConcurrencyStrategy concurrencyStrategy;
 
+  private Long nextIteration;
+
   @Default
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
@@ -195,6 +199,16 @@ public class WorkflowExecution
                 .format(DateTimeFormatter.ofPattern("MM/dd/yyyy hh:mm a"));
     }
     return name + dateSuffix;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, Long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
   }
 
   public static final class WorkflowExecutionKeys {
