@@ -995,6 +995,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     return webhookEventUtils.obtainBranchName(webhookSource, headers, payLoadMap);
   }
   @Override
+  @SuppressWarnings("PMD.AvoidCatchingThrowable")
   public void asyncFullSyncForEntireAccount(String accountId) {
     logger.info(format(GIT_YAML_LOG_PREFIX + "Triggered async full git sync for account %s", accountId));
     executorService.submit(() -> {
@@ -1002,7 +1003,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         fullSyncForEntireAccount(accountId);
       } catch (WingsException ex) {
         ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
-      } catch (Exception e) {
+      } catch (Throwable e) {
         logger.error(format("Exception while performing async full git sync for account %s", accountId), e);
       }
     });
