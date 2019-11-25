@@ -17,6 +17,7 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
   public LdapGetUsersResponse apply(LdapGetUsersRequest ldapGetUsersRequest) {
     Status searchStatus = Status.FAILURE;
     String searchStatusMsg = null;
+    ResultCode ldapResultCode = null;
 
     LdapSearch ldapSearch = ldapGetUsersRequest.getLdapSearch();
     LdapUserConfig ldapUserConfig = ldapGetUsersRequest.getLdapUserConfig();
@@ -28,19 +29,23 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
         searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
       }
     } catch (LdapException le) {
+      ldapResultCode = le.getResultCode();
+      logger.error("LdapException ErrorCode = {}", searchStatusMsg);
       if (ResultCode.UNAVAILABLE_CRITICAL_EXTENSION == le.getResultCode()) {
         try {
+          logger.info("LDAP Search failed errorCode = {} , trying fallback ldapSearch", searchStatusMsg);
           searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
         } catch (LdapException ldapException) {
-          logger.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {} ",
-              ldapUserConfig.getSearchFilter(), ldapUserConfig.getSearchFilter());
-          searchStatusMsg = ldapException.getResultCode().toString();
+          ldapResultCode = ldapException.getResultCode();
+          logger.error("LdapException ErrorCode = {}", searchStatusMsg);
+          logger.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {}",
+              ldapUserConfig.getBaseDN(), ldapUserConfig.getSearchFilter());
         }
       } else {
-        logger.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {} ",
-            ldapUserConfig.getSearchFilter(), ldapUserConfig.getSearchFilter());
-        searchStatusMsg = le.getResultCode().toString();
+        logger.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {}",
+            ldapUserConfig.getBaseDN(), ldapUserConfig.getSearchFilter());
       }
+      searchStatusMsg = ldapResultCode.toString();
     }
 
     if (searchResult != null) { // Scenario when search result
