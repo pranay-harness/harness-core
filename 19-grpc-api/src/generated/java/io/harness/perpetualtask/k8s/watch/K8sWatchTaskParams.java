@@ -19,6 +19,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     cloudProviderId_ = "";
     k8SClusterConfig_ = com.google.protobuf.ByteString.EMPTY;
     k8SResourceKind_ = "";
+    clusterId_ = "";
+    clusterName_ = "";
   }
 
   @java.
@@ -57,6 +59,18 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
             java.lang.String s = input.readStringRequireUtf8();
 
             k8SResourceKind_ = s;
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterId_ = s;
+            break;
+          }
+          case 42: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterName_ = s;
             break;
           }
           default: {
@@ -159,6 +173,66 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
   }
 
+  public static final int CLUSTER_ID_FIELD_NUMBER = 4;
+  private volatile java.lang.Object clusterId_;
+  /**
+   * <code>string cluster_id = 4;</code>
+   */
+  public java.lang.String getClusterId() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_id = 4;</code>
+   */
+  public com.google.protobuf.ByteString getClusterIdBytes() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int CLUSTER_NAME_FIELD_NUMBER = 5;
+  private volatile java.lang.Object clusterName_;
+  /**
+   * <code>string cluster_name = 5;</code>
+   */
+  public java.lang.String getClusterName() {
+    java.lang.Object ref = clusterName_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterName_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_name = 5;</code>
+   */
+  public com.google.protobuf.ByteString getClusterNameBytes() {
+    java.lang.Object ref = clusterName_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterName_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -183,6 +257,12 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     if (!getK8SResourceKindBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, k8SResourceKind_);
     }
+    if (!getClusterIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, clusterId_);
+    }
+    if (!getClusterNameBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, clusterName_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -201,6 +281,12 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
     if (!getK8SResourceKindBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, k8SResourceKind_);
+    }
+    if (!getClusterIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, clusterId_);
+    }
+    if (!getClusterNameBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, clusterName_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -224,6 +310,10 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return false;
     if (!getK8SResourceKind().equals(other.getK8SResourceKind()))
       return false;
+    if (!getClusterId().equals(other.getClusterId()))
+      return false;
+    if (!getClusterName().equals(other.getClusterName()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -242,6 +332,10 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     hash = (53 * hash) + getK8SClusterConfig().hashCode();
     hash = (37 * hash) + K8S_RESOURCE_KIND_FIELD_NUMBER;
     hash = (53 * hash) + getK8SResourceKind().hashCode();
+    hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterId().hashCode();
+    hash = (37 * hash) + CLUSTER_NAME_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterName().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -362,6 +456,10 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
       k8SResourceKind_ = "";
 
+      clusterId_ = "";
+
+      clusterName_ = "";
+
       return this;
     }
 
@@ -396,6 +494,8 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       result.cloudProviderId_ = cloudProviderId_;
       result.k8SClusterConfig_ = k8SClusterConfig_;
       result.k8SResourceKind_ = k8SResourceKind_;
+      result.clusterId_ = clusterId_;
+      result.clusterName_ = clusterName_;
       onBuilt();
       return result;
     }
@@ -447,6 +547,14 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
       if (!other.getK8SResourceKind().isEmpty()) {
         k8SResourceKind_ = other.k8SResourceKind_;
+        onChanged();
+      }
+      if (!other.getClusterId().isEmpty()) {
+        clusterId_ = other.clusterId_;
+        onChanged();
+      }
+      if (!other.getClusterName().isEmpty()) {
+        clusterName_ = other.clusterName_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -624,6 +732,130 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       checkByteStringIsUtf8(value);
 
       k8SResourceKind_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object clusterId_ = "";
+    /**
+     * <code>string cluster_id = 4;</code>
+     */
+    public java.lang.String getClusterId() {
+      java.lang.Object ref = clusterId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 4;</code>
+     */
+    public com.google.protobuf.ByteString getClusterIdBytes() {
+      java.lang.Object ref = clusterId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 4;</code>
+     */
+    public Builder setClusterId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 4;</code>
+     */
+    public Builder clearClusterId() {
+      clusterId_ = getDefaultInstance().getClusterId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 4;</code>
+     */
+    public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object clusterName_ = "";
+    /**
+     * <code>string cluster_name = 5;</code>
+     */
+    public java.lang.String getClusterName() {
+      java.lang.Object ref = clusterName_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterName_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_name = 5;</code>
+     */
+    public com.google.protobuf.ByteString getClusterNameBytes() {
+      java.lang.Object ref = clusterName_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_name = 5;</code>
+     */
+    public Builder setClusterName(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterName_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_name = 5;</code>
+     */
+    public Builder clearClusterName() {
+      clusterName_ = getDefaultInstance().getClusterName();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_name = 5;</code>
+     */
+    public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterName_ = value;
       onChanged();
       return this;
     }

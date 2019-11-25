@@ -8,7 +8,6 @@ import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.cluster.entities.Cluster;
-import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -36,12 +35,17 @@ public class K8sWatchPerpetualTaskServiceClient
 
   private static final String CLOUD_PROVIDER_ID = "cloudProviderId";
   private static final String K8_RESOURCE_KIND = "k8sResourceKind";
+  private static final String CLUSTER_ID = "clusterId";
+  private static final String CLUSTER_NAME = "clusterName";
 
   @Override
   public String create(String accountId, K8WatchPerpetualTaskClientParams clientParams) {
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put(CLOUD_PROVIDER_ID, clientParams.getCloudProviderId());
     clientParamMap.put(K8_RESOURCE_KIND, clientParams.getK8sResourceKind());
+    clientParamMap.put(CLUSTER_ID, clientParams.getClusterId());
+    clientParamMap.put(CLUSTER_NAME, clientParams.getClusterName());
+
     PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
@@ -66,6 +70,8 @@ public class K8sWatchPerpetualTaskServiceClient
     Map<String, String> clientParams = clientContext.getClientParams();
     String cloudProviderId = clientParams.get(CLOUD_PROVIDER_ID);
     String k8sResourceKind = clientParams.get(K8_RESOURCE_KIND);
+    String clusterId = clientParams.get(CLUSTER_ID);
+    String clusterName = clientParams.get(CLUSTER_NAME);
 
     SettingAttribute settingAttribute = settingsService.get(cloudProviderId);
     K8sClusterConfig config = k8sClusterConfigFactory.getK8sClusterConfig(settingAttribute);
@@ -77,6 +83,8 @@ public class K8sWatchPerpetualTaskServiceClient
         .setCloudProviderId(cloudProviderId)
         .setK8SClusterConfig(bytes)
         .setK8SResourceKind(k8sResourceKind)
+        .setClusterId(clusterId)
+        .setClusterName(clusterName)
         .build();
   }
 
@@ -100,8 +108,8 @@ public class K8sWatchPerpetualTaskServiceClient
         .build();
   }
 
-  public static K8WatchPerpetualTaskClientParams from(Cluster cluster, String k8sResourceKind) {
-    return new K8WatchPerpetualTaskClientParams(
-        ((DirectKubernetesCluster) cluster).getCloudProviderId(), k8sResourceKind);
+  public static K8WatchPerpetualTaskClientParams from(
+      Cluster cluster, String k8sResourceKind, String clusterId, String clusterName) {
+    return new K8WatchPerpetualTaskClientParams(cluster.getCloudProviderId(), k8sResourceKind, clusterId, clusterName);
   }
 }

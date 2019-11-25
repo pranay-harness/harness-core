@@ -20,6 +20,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     activeEc2InstanceArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     activeContainerInstanceArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     activeTaskArns_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    clusterId_ = "";
+    settingId_ = "";
   }
 
   @java.
@@ -88,6 +90,18 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
               lastProcessedTimestamp_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 50: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            clusterId_ = s;
+            break;
+          }
+          case 58: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            settingId_ = s;
             break;
           }
           default: {
@@ -262,6 +276,66 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     return getLastProcessedTimestamp();
   }
 
+  public static final int CLUSTER_ID_FIELD_NUMBER = 6;
+  private volatile java.lang.Object clusterId_;
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  public java.lang.String getClusterId() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      clusterId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  public com.google.protobuf.ByteString getClusterIdBytes() {
+    java.lang.Object ref = clusterId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      clusterId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int SETTING_ID_FIELD_NUMBER = 7;
+  private volatile java.lang.Object settingId_;
+  /**
+   * <code>string setting_id = 7;</code>
+   */
+  public java.lang.String getSettingId() {
+    java.lang.Object ref = settingId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      settingId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string setting_id = 7;</code>
+   */
+  public com.google.protobuf.ByteString getSettingIdBytes() {
+    java.lang.Object ref = settingId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      settingId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -291,6 +365,12 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     }
     if (lastProcessedTimestamp_ != null) {
       output.writeMessage(5, getLastProcessedTimestamp());
+    }
+    if (!getClusterIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, clusterId_);
+    }
+    if (!getSettingIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 7, settingId_);
     }
     unknownFields.writeTo(output);
   }
@@ -332,6 +412,12 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
     if (lastProcessedTimestamp_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, getLastProcessedTimestamp());
     }
+    if (!getClusterIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, clusterId_);
+    }
+    if (!getSettingIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, settingId_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -361,6 +447,10 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       if (!getLastProcessedTimestamp().equals(other.getLastProcessedTimestamp()))
         return false;
     }
+    if (!getClusterId().equals(other.getClusterId()))
+      return false;
+    if (!getSettingId().equals(other.getSettingId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -391,6 +481,10 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       hash = (37 * hash) + LAST_PROCESSED_TIMESTAMP_FIELD_NUMBER;
       hash = (53 * hash) + getLastProcessedTimestamp().hashCode();
     }
+    hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getClusterId().hashCode();
+    hash = (37 * hash) + SETTING_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getSettingId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -515,6 +609,10 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
         lastProcessedTimestamp_ = null;
         lastProcessedTimestampBuilder_ = null;
       }
+      clusterId_ = "";
+
+      settingId_ = "";
+
       return this;
     }
 
@@ -567,6 +665,8 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       } else {
         result.lastProcessedTimestamp_ = lastProcessedTimestampBuilder_.build();
       }
+      result.clusterId_ = clusterId_;
+      result.settingId_ = settingId_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -646,6 +746,14 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
       }
       if (other.hasLastProcessedTimestamp()) {
         mergeLastProcessedTimestamp(other.getLastProcessedTimestamp());
+      }
+      if (!other.getClusterId().isEmpty()) {
+        clusterId_ = other.clusterId_;
+        onChanged();
+      }
+      if (!other.getSettingId().isEmpty()) {
+        settingId_ = other.settingId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1111,6 +1219,130 @@ public final class EcsSyncEvent extends com.google.protobuf.GeneratedMessageV3 i
         lastProcessedTimestamp_ = null;
       }
       return lastProcessedTimestampBuilder_;
+    }
+
+    private java.lang.Object clusterId_ = "";
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public java.lang.String getClusterId() {
+      java.lang.Object ref = clusterId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clusterId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public com.google.protobuf.ByteString getClusterIdBytes() {
+      java.lang.Object ref = clusterId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        clusterId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public Builder setClusterId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public Builder clearClusterId() {
+      clusterId_ = getDefaultInstance().getClusterId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string cluster_id = 6;</code>
+     */
+    public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      clusterId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object settingId_ = "";
+    /**
+     * <code>string setting_id = 7;</code>
+     */
+    public java.lang.String getSettingId() {
+      java.lang.Object ref = settingId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        settingId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string setting_id = 7;</code>
+     */
+    public com.google.protobuf.ByteString getSettingIdBytes() {
+      java.lang.Object ref = settingId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        settingId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string setting_id = 7;</code>
+     */
+    public Builder setSettingId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      settingId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string setting_id = 7;</code>
+     */
+    public Builder clearSettingId() {
+      settingId_ = getDefaultInstance().getSettingId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string setting_id = 7;</code>
+     */
+    public Builder setSettingIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      settingId_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

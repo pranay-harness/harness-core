@@ -52,4 +52,22 @@ public interface EcsContainerInstanceDescriptionOrBuilder extends
    * <code>string region = 5;</code>
    */
   com.google.protobuf.ByteString getRegionBytes();
+
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 6;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string setting_id = 7;</code>
+   */
+  java.lang.String getSettingId();
+  /**
+   * <code>string setting_id = 7;</code>
+   */
+  com.google.protobuf.ByteString getSettingIdBytes();
 }

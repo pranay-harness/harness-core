@@ -24,8 +24,10 @@ public class ClusterRecordUtils {
     switch (InfrastructureMappingType.valueOf(infraMapping.getInfraMappingType())) {
       case DIRECT_KUBERNETES:
         DirectKubernetesInfrastructureMapping k8sInfraMapping = (DirectKubernetesInfrastructureMapping) infraMapping;
-        cluster =
-            DirectKubernetesCluster.builder().cloudProviderId(k8sInfraMapping.getComputeProviderSettingId()).build();
+        cluster = DirectKubernetesCluster.builder()
+                      .cloudProviderId(k8sInfraMapping.getComputeProviderSettingId())
+                      .clusterName(k8sInfraMapping.getComputeProviderName())
+                      .build();
         break;
       case AWS_ECS:
         EcsInfrastructureMapping ecsInfraMapping = (EcsInfrastructureMapping) infraMapping;

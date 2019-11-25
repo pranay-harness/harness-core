@@ -95,4 +95,22 @@ public interface NodeInfoOrBuilder extends
    * <code>.io.harness.perpetualtask.k8s.watch.Resource allocatable_resource = 7;</code>
    */
   io.harness.perpetualtask.k8s.watch.ResourceOrBuilder getAllocatableResourceOrBuilder();
+
+  /**
+   * <code>string cluster_id = 8;</code>
+   */
+  java.lang.String getClusterId();
+  /**
+   * <code>string cluster_id = 8;</code>
+   */
+  com.google.protobuf.ByteString getClusterIdBytes();
+
+  /**
+   * <code>string cluster_name = 9;</code>
+   */
+  java.lang.String getClusterName();
+  /**
+   * <code>string cluster_name = 9;</code>
+   */
+  com.google.protobuf.ByteString getClusterNameBytes();
 }

@@ -65,18 +65,20 @@ public final class EcsMessages {
         + "\0132-.io.harness.event.payloads.EcsTaskDes"
         + "cription\022F\n\021ecs_task_resource\030\002 \001(\0132+.io"
         + ".harness.event.payloads.ReservedResource"
-        + "\"\256\001\n\022EcsTaskDescription\022\020\n\010task_arn\030\001 \001("
+        + "\"\326\001\n\022EcsTaskDescription\022\020\n\010task_arn\030\001 \001("
         + "\t\022\023\n\013cluster_arn\030\002 \001(\t\022\024\n\014service_name\030\003"
         + " \001(\t\022\036\n\026container_instance_arn\030\004 \001(\t\022\023\n\013"
         + "launch_type\030\005 \001(\t\022\026\n\016desired_status\030\006 \001("
-        + "\t\022\016\n\006region\030\007 \001(\t\"K\n\020EcsTaskLifecycle\0227\n"
+        + "\t\022\016\n\006region\030\007 \001(\t\022\022\n\ncluster_id\030\010 \001(\t\022\022\n"
+        + "\nsetting_id\030\t \001(\t\"K\n\020EcsTaskLifecycle\0227\n"
         + "\tlifecycle\030\001 \001(\0132$.io.harness.event.payl"
         + "oads.Lifecycle\"/\n\020ReservedResource\022\013\n\003cp"
-        + "u\030\001 \001(\001\022\016\n\006memory\030\002 \001(\001\"\231\001\n\037EcsContainer"
+        + "u\030\001 \001(\001\022\016\n\006memory\030\002 \001(\001\"\301\001\n\037EcsContainer"
         + "InstanceDescription\022\036\n\026container_instanc"
         + "e_arn\030\001 \001(\t\022\023\n\013cluster_arn\030\002 \001(\t\022\027\n\017ec2_"
         + "instance_id\030\003 \001(\t\022\030\n\020operating_system\030\004 "
-        + "\001(\t\022\016\n\006region\030\005 \001(\t\"\330\001\n\030EcsContainerInst"
+        + "\001(\t\022\016\n\006region\030\005 \001(\t\022\022\n\ncluster_id\030\006 \001(\t\022"
+        + "\022\n\nsetting_id\030\007 \001(\t\"\330\001\n\030EcsContainerInst"
         + "anceInfo\022f\n\"ecs_container_instance_descr"
         + "iption\030\001 \001(\0132:.io.harness.event.payloads"
         + ".EcsContainerInstanceDescription\022T\n\037ecs_"
@@ -84,19 +86,21 @@ public final class EcsMessages {
         + "arness.event.payloads.ReservedResource\"X"
         + "\n\035EcsContainerInstanceLifecycle\0227\n\tlifec"
         + "ycle\030\001 \001(\0132$.io.harness.event.payloads.L"
-        + "ifecycle\"\253\002\n\016EcsUtilization\022\023\n\013cluster_a"
+        + "ifecycle\"\323\002\n\016EcsUtilization\022\023\n\013cluster_a"
         + "rn\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\023\n\013servic"
         + "e_arn\030\003 \001(\t\022\024\n\014service_name\030\004 \001(\t\022L\n\rmet"
         + "ric_values\030\005 \003(\01325.io.harness.event.payl"
-        + "oads.EcsUtilization.MetricValue\032u\n\013Metri"
+        + "oads.EcsUtilization.MetricValue\022\022\n\nclust"
+        + "er_id\030\006 \001(\t\022\022\n\nsetting_id\030\007 \001(\t\032u\n\013Metri"
         + "cValue\022\023\n\013metric_name\030\001 \001(\t\022\021\n\tstatistic"
         + "\030\002 \001(\t\022.\n\ntimestamps\030\003 \003(\0132\032.google.prot"
-        + "obuf.Timestamp\022\016\n\006values\030\004 \003(\001\"\305\001\n\014EcsSy"
+        + "obuf.Timestamp\022\016\n\006values\030\004 \003(\001\"\355\001\n\014EcsSy"
         + "ncEvent\022\023\n\013cluster_arn\030\001 \001(\t\022 \n\030active_e"
         + "c2_instance_arns\030\002 \003(\t\022&\n\036active_contain"
         + "er_instance_arns\030\003 \003(\t\022\030\n\020active_task_ar"
         + "ns\030\004 \003(\t\022<\n\030last_processed_timestamp\030\005 \001"
-        + "(\0132\032.google.protobuf.TimestampB\002P\001b\006prot"
+        + "(\0132\032.google.protobuf.Timestamp\022\022\n\ncluste"
+        + "r_id\030\006 \001(\t\022\022\n\nsetting_id\030\007 \001(\tB\002P\001b\006prot"
         + "o3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -132,6 +136,8 @@ public final class EcsMessages {
                 "LaunchType",
                 "DesiredStatus",
                 "Region",
+                "ClusterId",
+                "SettingId",
             });
     internal_static_io_harness_event_payloads_EcsTaskLifecycle_descriptor = getDescriptor().getMessageTypes().get(2);
     internal_static_io_harness_event_payloads_EcsTaskLifecycle_fieldAccessorTable =
@@ -159,6 +165,8 @@ public final class EcsMessages {
                 "Ec2InstanceId",
                 "OperatingSystem",
                 "Region",
+                "ClusterId",
+                "SettingId",
             });
     internal_static_io_harness_event_payloads_EcsContainerInstanceInfo_descriptor =
         getDescriptor().getMessageTypes().get(5);
@@ -187,6 +195,8 @@ public final class EcsMessages {
                 "ServiceArn",
                 "ServiceName",
                 "MetricValues",
+                "ClusterId",
+                "SettingId",
             });
     internal_static_io_harness_event_payloads_EcsUtilization_MetricValue_descriptor =
         internal_static_io_harness_event_payloads_EcsUtilization_descriptor.getNestedTypes().get(0);
@@ -209,6 +219,8 @@ public final class EcsMessages {
                 "ActiveContainerInstanceArns",
                 "ActiveTaskArns",
                 "LastProcessedTimestamp",
+                "ClusterId",
+                "SettingId",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
     io.harness.event.payloads.CommonMessages.getDescriptor();

@@ -38,6 +38,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
     metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, podInfo.getNodeName());
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.K8S.name());
+    metaData.put(InstanceMetaDataConstants.NAMESPACE, podInfo.getNamespace());
 
     InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(
         accountId, podInfo.getNodeName(), publishedMessage.getOccurredAt());
@@ -60,8 +61,10 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
 
     return InstanceInfo.builder()
         .accountId(accountId)
-        .cloudProviderId(podInfo.getCloudProviderId())
+        .settingId(podInfo.getCloudProviderId())
         .instanceId(podInfo.getPodUid())
+        .clusterId(podInfo.getClusterId())
+        .clusterName(podInfo.getClusterName())
         .instanceName(podInfo.getPodName())
         .instanceType(InstanceType.K8S_POD)
         .resource(K8sResourceUtils.getResource(podInfo.getTotalResource()))

@@ -49,6 +49,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String ENV_ID = "env_id";
   private static final String INFRA_MAPPING_ID = "infra_mapping_id";
+  private static final String CLUSTER_ID = "cluster_id";
+  private static final String CLUSTER_NAME = "cluster_name";
 
   private final double CPU_UNIT_SECONDS = 400;
   private final double MEMORY_MB_SECONDS = 400;
@@ -121,6 +123,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
                                     .metaData(metaDataMap)
                                     .accountId(ACCOUNT_ID)
                                     .instanceId(INSTANCE_ID)
+                                    .clusterId(CLUSTER_ID)
+                                    .clusterName(CLUSTER_NAME)
                                     .harnessServiceInfo(getHarnessServiceInfo())
                                     .build();
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
@@ -133,6 +137,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     verify(billingDataService).create(instanceBillingDataArgumentCaptor.capture());
     InstanceBillingData instanceBillingData = instanceBillingDataArgumentCaptor.getValue();
     assertThat(instanceBillingData.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(instanceBillingData.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(instanceBillingData.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(instanceBillingData.getBillingAmount()).isEqualTo(BigDecimal.ONE);
     assertThat(instanceBillingData.getUsageDurationSeconds()).isEqualTo(USAGE_DURATION_SECONDS);
     assertThat(instanceBillingData.getCpuUnitSeconds()).isEqualTo(CPU_UNIT_SECONDS);

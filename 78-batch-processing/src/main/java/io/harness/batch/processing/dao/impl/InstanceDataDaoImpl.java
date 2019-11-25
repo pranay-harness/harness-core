@@ -37,7 +37,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   public InstanceData upsert(InstanceEvent instanceEvent) {
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
                                     .filter(InstanceDataKeys.accountId, instanceEvent.getAccountId())
-                                    .filter(InstanceDataKeys.cloudProviderId, instanceEvent.getCloudProviderId())
+                                    .filter(InstanceDataKeys.settingId, instanceEvent.getCloudProviderId())
                                     .filter(InstanceDataKeys.instanceId, instanceEvent.getInstanceId());
     InstanceData instanceData = query.get();
     if (null != instanceData) {
@@ -66,17 +66,19 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   public InstanceData upsert(InstanceInfo instanceInfo) {
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
                                     .filter(InstanceDataKeys.accountId, instanceInfo.getAccountId())
-                                    .filter(InstanceDataKeys.cloudProviderId, instanceInfo.getCloudProviderId())
+                                    .filter(InstanceDataKeys.settingId, instanceInfo.getSettingId())
                                     .filter(InstanceDataKeys.instanceId, instanceInfo.getInstanceId());
     InstanceData instanceData = query.get();
     if (null == instanceData) {
       UpdateOperations<InstanceData> updateOperations =
           hPersistence.createUpdateOperations(InstanceData.class)
               .set(InstanceDataKeys.accountId, instanceInfo.getAccountId())
-              .set(InstanceDataKeys.cloudProviderId, instanceInfo.getCloudProviderId())
+              .set(InstanceDataKeys.settingId, instanceInfo.getSettingId())
               .set(InstanceDataKeys.instanceId, instanceInfo.getInstanceId())
               .set(InstanceDataKeys.instanceName, instanceInfo.getInstanceName())
-              .set(InstanceDataKeys.instanceType, instanceInfo.getInstanceType());
+              .set(InstanceDataKeys.instanceType, instanceInfo.getInstanceType())
+              .set(InstanceDataKeys.clusterId, instanceInfo.getClusterId())
+              .set(InstanceDataKeys.clusterName, instanceInfo.getClusterName());
 
       if (!isNull(instanceInfo.getResource())) {
         updateOperations.set(InstanceDataKeys.totalResource, instanceInfo.getResource());

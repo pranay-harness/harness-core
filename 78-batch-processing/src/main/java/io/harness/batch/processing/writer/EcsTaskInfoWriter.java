@@ -42,7 +42,9 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
           ReservedResource ecsTaskResource = ecsTaskInfo.getEcsTaskResource();
           String accountId = publishedMessage.getAccountId();
           String taskId = getIdFromArn(ecsTaskDescription.getTaskArn());
-          String clusterId = getIdFromArn(ecsTaskDescription.getClusterArn());
+          String clusterName = getIdFromArn(ecsTaskDescription.getClusterArn());
+          String clusterId = ecsTaskDescription.getClusterId();
+          String settingId = ecsTaskDescription.getSettingId();
 
           InstanceData instanceData = fetchActiveInstanceData(accountId, taskId);
           InstanceType instanceType = getInstanceType(ecsTaskDescription);
@@ -75,13 +77,15 @@ public class EcsTaskInfoWriter extends EventWriter implements ItemWriter<Publish
             if (!ecsTaskDescription.getServiceName().equals("")) {
               String serviceName = getIdFromArn(ecsTaskDescription.getServiceName());
               metaData.put(InstanceMetaDataConstants.ECS_SERVICE_NAME, serviceName);
-              harnessServiceInfo = getHarnessServiceInfo(accountId, clusterId, serviceName);
+              harnessServiceInfo = getHarnessServiceInfo(accountId, clusterName, serviceName);
             }
 
             instanceData = InstanceData.builder()
                                .accountId(accountId)
                                .instanceId(taskId)
-                               .clusterName(clusterId)
+                               .clusterName(clusterName)
+                               .clusterId(clusterId)
+                               .settingId(settingId)
                                .instanceType(instanceType)
                                .instanceState(InstanceState.INITIALIZING)
                                .totalResource(resource)

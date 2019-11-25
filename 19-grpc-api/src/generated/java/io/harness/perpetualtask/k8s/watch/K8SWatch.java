@@ -23,10 +23,11 @@ public final class K8SWatch {
   static {
     java.lang.String[] descriptorData = {"\n2io/harness/perpetualtask/k8s.watch/k8s"
         + "_watch.proto\022\"io.harness.perpetualtask.k"
-        + "8s.watch\"f\n\022K8sWatchTaskParams\022\031\n\021cloud_"
-        + "provider_id\030\001 \001(\t\022\032\n\022k8s_cluster_config\030"
-        + "\002 \001(\014\022\031\n\021k8s_resource_kind\030\003 \001(\tB\002P\001b\006pr"
-        + "oto3"};
+        + "8s.watch\"\220\001\n\022K8sWatchTaskParams\022\031\n\021cloud"
+        + "_provider_id\030\001 \001(\t\022\032\n\022k8s_cluster_config"
+        + "\030\002 \001(\014\022\031\n\021k8s_resource_kind\030\003 \001(\t\022\022\n\nclu"
+        + "ster_id\030\004 \001(\t\022\024\n\014cluster_name\030\005 \001(\tB\002P\001b"
+        + "\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -46,6 +47,8 @@ public final class K8SWatch {
                 "CloudProviderId",
                 "K8SClusterConfig",
                 "K8SResourceKind",
+                "ClusterId",
+                "ClusterName",
             });
   }
 

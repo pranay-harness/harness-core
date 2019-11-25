@@ -24,14 +24,18 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class NodeWatcher implements Watcher<Node> {
   private final Watch watch;
   private final String cloudProviderId;
+  private final String clusterId;
+  private final String clusterName;
   private final EventPublisher eventPublisher;
   private final Set<String> publishedNodes;
 
   @Inject
   public NodeWatcher(
-      @Assisted KubernetesClient client, @Assisted String cloudProviderId, EventPublisher eventPublisher) {
+      @Assisted KubernetesClient client, @Assisted K8sWatchTaskParams params, EventPublisher eventPublisher) {
     this.watch = client.nodes().watch(this);
-    this.cloudProviderId = cloudProviderId;
+    this.cloudProviderId = params.getCloudProviderId();
+    this.clusterId = params.getClusterId();
+    this.clusterName = params.getClusterName();
     this.eventPublisher = eventPublisher;
     this.publishedNodes = new ConcurrentSkipListSet<>();
   }
@@ -79,6 +83,8 @@ public class NodeWatcher implements Watcher<Node> {
       final Timestamp timestamp = HTimestamps.parse(node.getMetadata().getCreationTimestamp());
       NodeInfo nodeInfo = NodeInfo.newBuilder()
                               .setCloudProviderId(cloudProviderId)
+                              .setClusterId(clusterId)
+                              .setClusterName(clusterName)
                               .setNodeUid(node.getMetadata().getUid())
                               .setNodeName(node.getMetadata().getName())
                               .setCreationTime(timestamp)

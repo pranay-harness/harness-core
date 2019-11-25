@@ -17,13 +17,17 @@ import org.mongodb.morphia.query.Query;
 @FieldNameConstants(innerTypeName = "DirectKubernetesClusterKeys")
 public class DirectKubernetesCluster implements Cluster {
   final String cloudProviderId;
+  final String clusterName;
 
   public static final String cloudProviderIdField =
       ClusterRecordKeys.cluster + "." + DirectKubernetesClusterKeys.cloudProviderId;
+  public static final String clusterNameField =
+      ClusterRecordKeys.cluster + "." + DirectKubernetesClusterKeys.clusterName;
 
   @Builder
-  public DirectKubernetesCluster(String cloudProviderId) {
+  public DirectKubernetesCluster(String cloudProviderId, String clusterName) {
     this.cloudProviderId = cloudProviderId;
+    this.clusterName = clusterName;
   }
 
   @Override
@@ -33,6 +37,9 @@ public class DirectKubernetesCluster implements Cluster {
 
   @Override
   public Query addRequiredQueryFilters(Query<ClusterRecord> query) {
-    return query.field(cloudProviderIdField).equal(this.getCloudProviderId());
+    return query.field(cloudProviderIdField)
+        .equal(this.getCloudProviderId())
+        .field(clusterNameField)
+        .equal(this.getClusterName());
   }
 }

@@ -9,4 +9,6 @@ import lombok.Value;
 public class K8WatchPerpetualTaskClientParams implements PerpetualTaskClientParams {
   private String cloudProviderId;
   private String k8sResourceKind;
+  private String clusterId;
+  private String clusterName;
 }
