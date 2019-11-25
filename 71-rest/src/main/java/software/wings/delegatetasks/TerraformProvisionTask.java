@@ -81,7 +81,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String WORKSPACE_STATE_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/%s/terraform.tfstate";
   private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
-  private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
+  private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs-%s";
   private static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";
   private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
 
@@ -168,6 +168,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
     String scriptDirectory = resolveScriptDirectory(gitOperationContext, parameters.getScriptPath());
     logger.info("Script Directory: " + scriptDirectory);
+    saveExecutionLog(parameters, format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING);
 
     File tfVariablesFile = null, tfBackendConfigsFile = null;
 
@@ -178,7 +179,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       tfVariablesFile =
           Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
-      tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
+      tfBackendConfigsFile =
+          Paths.get(scriptDirectory, format(TERRAFORM_BACKEND_CONFIGS_FILE_NAME, parameters.getEntityId())).toFile();
 
       downloadTfStateFile(parameters, scriptDirectory);
 
