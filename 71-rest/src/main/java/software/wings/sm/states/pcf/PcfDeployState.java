@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -20,7 +21,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.InstanceElementListParam;
+import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Activity;
@@ -43,8 +44,6 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
@@ -64,12 +63,10 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfDeployState extends State {
   @Inject private transient AppService appService;
-  @Inject private transient ServiceResourceService serviceResourceService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;
-  @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;
@@ -322,18 +319,20 @@ public class PcfDeployState extends State {
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
     stateExecutionData.setInstanceData(pcfDeployCommandResponse.getInstanceDataUpdated());
 
-    InstanceElementListParam instanceElementListParam =
-        InstanceElementListParam.builder()
-            .instanceElements(emptyList())
-            .pcfInstanceElements(pcfDeployCommandResponse.getPcfInstanceElements())
-            .build();
+    if (!isRollback()) {
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                     .name(pcfStateHelper.obtainDeploySweepingOutputName(context, false, true))
+                                     .value(DeploySweepingOutputPcf.builder()
+                                                .instanceData(stateExecutionData.getInstanceData())
+                                                .name(stateExecutionData.getReleaseName())
+                                                .build())
+                                     .build());
+    }
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .errorMessage(executionResponse.getErrorMessage())
         .stateExecutionData(stateExecutionData)
-        .contextElement(instanceElementListParam)
-        .notifyElement(instanceElementListParam)
         .build();
   }
 

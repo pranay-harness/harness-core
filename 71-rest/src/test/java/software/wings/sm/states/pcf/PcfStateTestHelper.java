@@ -21,15 +21,12 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfPluginStateExecutionData;
-import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class PcfStateTestHelper {
@@ -81,18 +78,7 @@ public class PcfStateTestHelper {
 
   public StateExecutionInstance getStateExecutionInstanceForRollbackState(
       WorkflowStandardParams workflowStandardParams, PhaseElement phaseElement, ServiceElement serviceElement) {
-    return getStateExecutionInstancBuilder(workflowStandardParams, phaseElement, serviceElement)
-        .addContextElement(
-            PcfDeployContextElement.builder()
-                .uuid(serviceElement.getUuid())
-                .name(PCF_SERVICE_NAME)
-                .instanceData(Arrays.asList(
-                    PcfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__1").build(),
-                    PcfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__2").build(),
-                    PcfServiceData.builder().previousCount(0).desiredCount(2).name("APP_SERVICE_ENV__3").build()))
-                //.resizeStrategy(RESIZE_NEW_FIRST)
-                .build())
-        .build();
+    return getStateExecutionInstancBuilder(workflowStandardParams, phaseElement, serviceElement).build();
   }
 
   public StateExecutionInstance getStateExecutionInstanceForRouteUpdateState(

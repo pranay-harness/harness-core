@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.URL;
@@ -34,6 +35,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -48,6 +50,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
@@ -59,6 +62,8 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private SecretManager secretManager;
+  @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private PcfStateHelper pcfStateHelper;
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
 
@@ -82,6 +87,17 @@ public class PcfRollbackStateTest extends WingsBaseTest {
 
   private ExecutionContextImpl context;
 
+  private DeploySweepingOutputPcf deploySweepingOutputPcf =
+      DeploySweepingOutputPcf.builder()
+          .uuid(serviceElement.getUuid())
+          .name(PCF_SERVICE_NAME)
+          .instanceData(Arrays.asList(
+              PcfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__1").build(),
+              PcfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__2").build(),
+              PcfServiceData.builder().previousCount(0).desiredCount(2).name("APP_SERVICE_ENV__3").build()))
+          //.resizeStrategy(RESIZE_NEW_FIRST)
+          .build();
+
   @Before
   public void setup() throws IllegalAccessException {
     FieldUtils.writeField(pcfRollbackState, "secretManager", secretManager, true);
@@ -97,6 +113,8 @@ public class PcfRollbackStateTest extends WingsBaseTest {
   public void testExecute() throws Exception {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    when(sweepingOutputService.findSweepingOutput(any())).thenReturn(deploySweepingOutputPcf);
 
     PcfDeployStateExecutionData stateExecutionData = PcfDeployStateExecutionData.builder().build();
 

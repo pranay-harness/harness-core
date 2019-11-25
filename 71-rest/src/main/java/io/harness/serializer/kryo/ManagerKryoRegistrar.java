@@ -111,6 +111,7 @@ import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.k8s.K8sSwapServiceElement;
+import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
@@ -1436,5 +1437,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SetupSweepingOutputPcf.class, 7278);
     kryo.register(InfoVariables.class, 7279);
     kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7280);
+    kryo.register(DeploySweepingOutputPcf.class, 7281);
   }
 }

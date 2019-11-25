@@ -48,6 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -84,9 +85,11 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
@@ -113,6 +116,7 @@ public class PcfStateHelper {
   @Inject private DelegateService delegateService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
+  @Inject private transient StateExecutionService stateExecutionService;
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
@@ -624,5 +628,25 @@ public class PcfStateHelper {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     return isRollback ? SwapRouteRollbackSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback()
                       : SwapRouteRollbackSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName();
+  }
+
+  @NotNull
+  String obtainDeploySweepingOutputName(ExecutionContext context, boolean isRollback, boolean forSave) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    if (isRollback) {
+      return DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback();
+    } else {
+      if (forSave) {
+        return DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName();
+      } else {
+        StateExecutionInstance previousPhaseStateExecutionInstance =
+            stateExecutionService.fetchPreviousPhaseStateExecutionInstance(
+                context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId());
+        String suffix = previousPhaseStateExecutionInstance == null
+            ? phaseElement.getPhaseName()
+            : previousPhaseStateExecutionInstance.getStateName();
+        return DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + suffix;
+      }
+    }
   }
 }
