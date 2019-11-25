@@ -1,6 +1,5 @@
-package io.harness.perpetualtask.k8s.watch;
+package io.harness.perpetualtask.ecs;
 
-import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -25,66 +24,73 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
+public class EcsPerpetualTaskServiceClientTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
   private String taskId = "TASK_ID";
-
-  private static final String CLOUD_PROVIDER_ID = "cloudProviderId";
-  private static final String K8_RESOURCE_KIND = "k8sResourceKind";
-  private static final String CLUSTER_ID = "clusterId";
+  private static final String REGION = "region";
+  private static final String SETTING_ID = "settingId";
   private static final String CLUSTER_NAME = "clusterName";
+  private static final String CLUSTER_ID = "clusterId";
   private Map<String, String> clientParamsMap = new HashMap<>();
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock PerpetualTaskService perpetualTaskService;
-  @Mock SettingsService settingsService;
-  @Mock K8sClusterConfigFactory k8sClusterConfigFactory;
-  @InjectMocks K8sWatchPerpetualTaskServiceClient k8SWatchPerpetualTaskServiceClient;
+  @Mock private SettingsService settingsService;
+  @Mock private SecretManager secretManager;
+  @InjectMocks EcsPerpetualTaskServiceClient ecsPerpetualTaskServiceClient;
 
   @Before
   public void setUp() {
-    when(perpetualTaskService.createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId),
+    when(perpetualTaskService.createTask(eq(PerpetualTaskType.ECS_CLUSTER), eq(accountId),
              isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false)))
         .thenReturn(taskId);
 
-    when(settingsService.get(CLOUD_PROVIDER_ID)).thenReturn(null);
-    when(k8sClusterConfigFactory.getK8sClusterConfig(any())).thenReturn(null);
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(
+            SettingAttribute.Builder.aSettingAttribute()
+                .withValue(AwsConfig.builder().accessKey("accessKey").secretKey("secretKey".toCharArray()).build())
+                .build());
 
-    clientParamsMap.put(CLOUD_PROVIDER_ID, CLOUD_PROVIDER_ID);
-    clientParamsMap.put(K8_RESOURCE_KIND, K8_RESOURCE_KIND);
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(null);
+
+    clientParamsMap.put(REGION, REGION);
+    clientParamsMap.put(SETTING_ID, SETTING_ID);
     clientParamsMap.put(CLUSTER_NAME, CLUSTER_NAME);
     clientParamsMap.put(CLUSTER_ID, CLUSTER_ID);
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testCreate() {
-    K8WatchPerpetualTaskClientParams params =
-        new K8WatchPerpetualTaskClientParams(cloudProviderId, "Pod", "clusterId", "clusterName");
-    k8SWatchPerpetualTaskServiceClient.create(accountId, params);
+    EcsPerpetualTaskClientParams params =
+        new EcsPerpetualTaskClientParams("region", cloudProviderId, "clusterName", "clusterId");
+    ecsPerpetualTaskServiceClient.create(accountId, params);
     verify(perpetualTaskService)
-        .createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId), isA(PerpetualTaskClientContext.class),
+        .createTask(eq(PerpetualTaskType.ECS_CLUSTER), eq(accountId), isA(PerpetualTaskClientContext.class),
             isA(PerpetualTaskSchedule.class), eq(false));
   }
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testGetTaskParams() {
+  public void testGet() {
     PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
-    K8sWatchTaskParams k8sWatchTaskParams =
-        k8SWatchPerpetualTaskServiceClient.getTaskParams(perpetualTaskClientContext);
-    assertThat(k8sWatchTaskParams.getClusterId()).isEqualTo(CLUSTER_ID);
-    assertThat(k8sWatchTaskParams.getClusterName()).isEqualTo(CLUSTER_NAME);
-    assertThat(k8sWatchTaskParams.getK8SResourceKind()).isEqualTo(K8_RESOURCE_KIND);
-    assertThat(k8sWatchTaskParams.getCloudProviderId()).isEqualTo(CLOUD_PROVIDER_ID);
+    EcsPerpetualTaskParams ecsPerpetualTaskParams =
+        ecsPerpetualTaskServiceClient.getTaskParams(perpetualTaskClientContext);
+    assertThat(ecsPerpetualTaskParams.getClusterId()).isEqualTo(CLUSTER_ID);
+    assertThat(ecsPerpetualTaskParams.getClusterName()).isEqualTo(CLUSTER_NAME);
+    assertThat(ecsPerpetualTaskParams.getRegion()).isEqualTo(REGION);
+    assertThat(ecsPerpetualTaskParams.getSettingId()).isEqualTo(SETTING_ID);
   }
 
   @Test
@@ -92,17 +98,16 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetValidationTask() {
     PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
-    DelegateTask delegateTask =
-        k8SWatchPerpetualTaskServiceClient.getValidationTask(perpetualTaskClientContext, accountId);
+    DelegateTask delegateTask = ecsPerpetualTaskServiceClient.getValidationTask(perpetualTaskClientContext, accountId);
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testDelete() {
-    k8SWatchPerpetualTaskServiceClient.delete(accountId, taskId);
+    ecsPerpetualTaskServiceClient.delete(accountId, taskId);
     verify(perpetualTaskService).deleteTask(accountId, taskId);
   }
 }
