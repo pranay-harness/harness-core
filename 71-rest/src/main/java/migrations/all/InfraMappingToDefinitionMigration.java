@@ -65,6 +65,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.yaml.YamlGitService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,6 +90,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
   @Inject private SetInfraDefinitionWorkflows setInfraDefinitionWorkflows;
   @Inject private MigrateDelegateScopesToInfraDefinition migrateDelegateScopesToInfraDefinition;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private YamlGitService yamlGitService;
 
   private final String DEBUG_LINE = " INFRA_MAPPING_MIGRATION: ";
   // Accounts Migrated "jDOmhrFmSOGZJ1C91UC_hg", "SAsyUUHTTImuYSZ35HPDvw", "-oSRX0KNRni3wCdyoesp8Q",
@@ -97,7 +99,7 @@ public class InfraMappingToDefinitionMigration implements Migration {
   // "0LRUeE0IR8ax08KOXrMv3A","XtqjhVchTfOwuNqXiSzxdQ", "i3p84Q6oTXaN7JvCNLQJRA","UtTa95tnQqWxGByLkXlp6Q",
   // "wXdRHOtoSuK1Qdi6QWnGgA"
 
-  private static final List<String> accountIds = Arrays.asList("aVU4sCM8XS1wQCiFxyI3p6");
+  private final List<String> accountIds = Collections.singletonList("x2Ynq8DDwjotzB9sw6X9nl");
 
   public void migrate() {
     for (String accountId : accountIds) {
@@ -194,6 +196,8 @@ public class InfraMappingToDefinitionMigration implements Migration {
       logger.info(format("Enabling feature flag for accountId : [%s]", accountId));
       featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
       logger.info(format("Enabled feature flag for accountId : [%s]", accountId));
+
+      yamlGitService.asyncFullSyncForEntireAccount(accountId);
     }
   }
 
