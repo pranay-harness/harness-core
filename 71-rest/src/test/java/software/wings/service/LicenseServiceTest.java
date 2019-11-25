@@ -53,7 +53,8 @@ public class LicenseServiceTest extends WingsBaseTest {
     thrown.expect(WingsException.class);
     thrown.expectMessage("Invalid / Null license info");
     accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
+        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build(),
+        false);
   }
 
   @Test
@@ -69,7 +70,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
@@ -93,7 +95,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
@@ -114,7 +117,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
@@ -138,7 +142,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
     licenseService.updateAccountLicense(accountFromDB.getUuid(), accountFromDB.getLicenseInfo());
     accountFromDB = accountService.get(account.getUuid());
@@ -160,7 +165,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
 
     long newExpiryTime = System.currentTimeMillis() + 400000;
@@ -190,7 +196,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
     thrown.expect(WingsException.class);
     thrown.expectMessage("Invalid / Null license info for update");
@@ -213,7 +220,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
 
     LicenseInfo updatedLicenseInfo = new LicenseInfo();
@@ -241,7 +249,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
     LicenseInfo updatedLicenseInfo = new LicenseInfo();
     updatedLicenseInfo.setAccountType(AccountType.PAID);
@@ -270,7 +279,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
     Account accountFromDB = accountService.get(account.getUuid());
 
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
@@ -298,7 +308,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                                     .withAccountName(HARNESS_NAME)
                                                     .withAccountKey("ACCOUNT_KEY")
                                                     .withLicenseInfo(licenseInfo)
-                                                    .build());
+                                                    .build(),
+        false);
     LicenseInfo updatedLicenseInfo = new LicenseInfo();
     updatedLicenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     updatedLicenseInfo.setAccountType(AccountType.TRIAL);
@@ -328,7 +339,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                                     .withAccountName(HARNESS_NAME)
                                                     .withAccountKey("ACCOUNT_KEY")
                                                     .withLicenseInfo(licenseInfo)
-                                                    .build());
+                                                    .build(),
+        false);
 
     LicenseInfo updatedLicenseInfo = new LicenseInfo();
     updatedLicenseInfo.setAccountStatus(AccountStatus.EXPIRED);
@@ -389,7 +401,8 @@ public class LicenseServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build());
+                                              .build(),
+        false);
 
     Thread.sleep(2000);
     licenseService.checkForLicenseExpiry(account);

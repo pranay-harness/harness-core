@@ -52,7 +52,8 @@ public class FlowControlFeatureTest extends WingsBaseTest {
                             .withAccountName("Harness")
                             .withAccountKey("ACCOUNT_KEY")
                             .withLicenseInfo(licenseInfo)
-                            .build());
+                            .build(),
+        false);
   }
 
   @Test

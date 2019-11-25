@@ -60,7 +60,7 @@ public class GovernanceConfigServiceTest extends BaseIntegrationTest {
                           .withCompanyName(WingsTestConstants.COMPANY_NAME)
                           .withLicenseInfo(getLicenseInfo())
                           .build();
-    accountService.save(account);
+    accountService.save(account, false);
     accountId = account.getUuid();
     setUserRequestContext();
   }

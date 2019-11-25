@@ -118,7 +118,7 @@ public class UserResourceRestClient {
                     .withCompanyName(defaultCompanyName)
                     .build();
       try {
-        account = accountService.save(account);
+        account = accountService.save(account, false);
       } catch (Exception e) {
         account = accountService.get(defaultAccountId);
       }
