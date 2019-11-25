@@ -98,6 +98,7 @@ import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.lambda.AwsLambdaDeploymentInfo;
+import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
@@ -1018,6 +1019,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.KubernetesSwapServiceSelectorsExecutionData", KubernetesSwapServiceSelectorsExecutionData.class);
     w.put("api.PartitionElement", PartitionElement.class);
     w.put("api.pcf.PcfDeployContextElement", PcfDeployContextElement.class);
+    w.put("api.pcf.DeploySweepingOutputPcf", DeploySweepingOutputPcf.class);
     w.put("api.pcf.PcfDeployExecutionSummary", PcfDeployExecutionSummary.class);
     w.put("api.pcf.PcfDeployStateExecutionData", PcfDeployStateExecutionData.class);
     w.put("api.pcf.PcfRouteSwapExecutionSummary", PcfRouteSwapExecutionSummary.class);

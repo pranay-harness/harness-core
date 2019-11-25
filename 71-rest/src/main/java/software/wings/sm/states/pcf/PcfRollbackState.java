@@ -3,10 +3,12 @@ package software.wings.sm.states.pcf;
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyMap;
 
+import com.google.inject.Inject;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.context.ContextElementType;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.api.pcf.PcfDeployContextElement;
+import org.simpleframework.xml.Transient;
+import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -17,6 +19,7 @@ import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
@@ -26,6 +29,8 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PcfRollbackState extends PcfDeployState {
+  @Inject @Transient private SweepingOutputService sweepingOutputService;
+  @Inject @Transient private PcfStateHelper pcfStateHelper;
   /**
    * Instantiates a new state.
    *
@@ -40,15 +45,19 @@ public class PcfRollbackState extends PcfDeployState {
       SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
       PcfInfrastructureMapping infrastructureMapping) {
-    PcfDeployContextElement pcfDeployContextElement = context.getContextElement(ContextElementType.PCF_SERVICE_DEPLOY);
+    DeploySweepingOutputPcf deploySweepingOutputPcf =
+        (DeploySweepingOutputPcf) sweepingOutputService.findSweepingOutput(
+            context.prepareSweepingOutputInquiryBuilder()
+                .name(pcfStateHelper.obtainDeploySweepingOutputName(context, isRollback(), false))
+                .build());
 
     // Just revert previousCount and desiredCount values for Rollback
     // Deploy sends emptyInstanceData and PcfCommandTask figured out which apps to be resized,
     // in case of rollback, we send InstanceData mentioning apps and their reset counts
     StringBuilder updateDetails = new StringBuilder();
     List<PcfServiceData> instanceData = new ArrayList<>();
-    if (pcfDeployContextElement != null && pcfDeployContextElement.getInstanceData() != null) {
-      pcfDeployContextElement.getInstanceData().forEach(pcfServiceData -> {
+    if (deploySweepingOutputPcf != null && deploySweepingOutputPcf.getInstanceData() != null) {
+      deploySweepingOutputPcf.getInstanceData().forEach(pcfServiceData -> {
         Integer temp = pcfServiceData.getDesiredCount();
         pcfServiceData.setDesiredCount(pcfServiceData.getPreviousCount());
         pcfServiceData.setPreviousCount(temp);

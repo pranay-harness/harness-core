@@ -52,7 +52,6 @@ import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
-import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
@@ -349,15 +348,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                           .build());
       }
       case PCF_RESIZE: {
-        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                                   .stream()
-                                                   .filter(s -> s instanceof PcfDeployExecutionSummary)
-                                                   .findFirst();
-        if (!first.isPresent()) {
-          return null;
-        }
-        PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) first.get();
-        return asList(pcfDeployExecutionSummary.getPcfDeployContextForRollback());
+        // Returning empty list as PcfDeployContextElement used from sweeping output
+        return emptyList();
       }
       case PCF_SWICH_ROUTES:
       case PCF_ROUTE_UPDATE: {
@@ -613,10 +605,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
       contextElements.add(instanceElementListParam);
     } else if (phaseStepType == PhaseStepType.HELM_DEPLOY) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
-      contextElements.add(instanceElementListParam);
-    } else if (phaseStepType == PhaseStepType.PCF_RESIZE) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
       contextElements.add(instanceElementListParam);

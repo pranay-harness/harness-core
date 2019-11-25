@@ -16,7 +16,7 @@ public class PcfDeployExecutionSummary extends StepExecutionSummary {
   private String releaseName;
   private List<PcfServiceData> instaceData;
 
-  public PcfDeployContextElement getPcfDeployContextForRollback() {
-    return PcfDeployContextElement.builder().instanceData(instaceData).name(releaseName).build();
+  public DeploySweepingOutputPcf getDeploySweepingOutputPcf() {
+    return DeploySweepingOutputPcf.builder().instanceData(instaceData).name(releaseName).build();
   }
 }
