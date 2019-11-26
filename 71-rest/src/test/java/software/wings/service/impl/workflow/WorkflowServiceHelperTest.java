@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -90,6 +91,7 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -464,8 +466,8 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, Arrays.asList(INFRA_MAPPING_ID)))
         .thenReturn(Arrays.asList(awsInfrastructureMapping));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(
-        workflowServiceHelper.needArtifactCheckStep(awsInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow))
+    assertThat(workflowServiceHelper.needArtifactCheckStep(
+                   awsInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow, false))
         .isTrue();
 
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
@@ -481,7 +483,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         .thenReturn(Arrays.asList(physicalInfrastructureMapping));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
     assertThat(workflowServiceHelper.needArtifactCheckStep(
-                   physicalInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow))
+                   physicalInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow, false))
         .isTrue();
 
     PcfInfrastructureMapping pcfInfrastructureMapping = PcfInfrastructureMapping.builder()
@@ -495,8 +497,8 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, Arrays.asList(INFRA_MAPPING_ID)))
         .thenReturn(Arrays.asList(pcfInfrastructureMapping));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(
-        workflowServiceHelper.needArtifactCheckStep(pcfInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow))
+    assertThat(workflowServiceHelper.needArtifactCheckStep(
+                   pcfInfrastructureMapping.getAppId(), canaryOrchestrationWorkflow, false))
         .isTrue();
 
     GcpKubernetesInfrastructureMapping gcpK8sInfraMapping =
@@ -512,12 +514,25 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     when(infrastructureMappingService.getInfraStructureMappingsByUuids(APP_ID, Arrays.asList(INFRA_MAPPING_ID)))
         .thenReturn(Arrays.asList(gcpK8sInfraMapping));
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(gcpK8sInfraMapping.getAppId(), canaryOrchestrationWorkflow))
+    assertThat(
+        workflowServiceHelper.needArtifactCheckStep(gcpK8sInfraMapping.getAppId(), canaryOrchestrationWorkflow, false))
         .isFalse();
 
     workflowPhases = Collections.emptyList();
     canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
-    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow)).isFalse();
+    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow, false)).isFalse();
+
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .uuid("id1")
+                                                            .appId(APP_ID)
+                                                            .infrastructure(PcfInfraStructure.builder().build())
+                                                            .build();
+    when(infrastructureDefinitionService.getInfraStructureDefinitionByUuids(anyString(), anyList()))
+        .thenReturn(Arrays.asList(infrastructureDefinition));
+    workflowPhases = ImmutableList.<WorkflowPhase>of(aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).build());
+    canaryOrchestrationWorkflow = aCanaryOrchestrationWorkflow().withWorkflowPhases(workflowPhases).build();
+    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow, true)).isTrue();
+    assertThat(workflowServiceHelper.needArtifactCheckStep(APP_ID, canaryOrchestrationWorkflow, false)).isFalse();
   }
 
   @Test

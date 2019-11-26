@@ -773,7 +773,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
 
       // Ensure artifact check
-      ensureArtifactCheck(workflow.getAppId(), orchestrationWorkflow);
+      ensureArtifactCheck(workflow.getAppId(), orchestrationWorkflow, infraRefactor);
 
       // Add environment expressions
       WorkflowServiceTemplateHelper.transformEnvTemplateExpressions(workflow, orchestrationWorkflow);
@@ -906,7 +906,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+  public boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow, boolean infraRefactor) {
     if (orchestrationWorkflow == null) {
       return false;
     }
@@ -920,7 +920,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (canaryOrchestrationWorkflow.getWorkflowPhases() == null) {
       return false;
     }
-    if (workflowServiceHelper.needArtifactCheckStep(appId, canaryOrchestrationWorkflow)) {
+    if (workflowServiceHelper.needArtifactCheckStep(appId, canaryOrchestrationWorkflow, infraRefactor)) {
       return workflowServiceHelper.ensureArtifactCheckInPreDeployment(canaryOrchestrationWorkflow);
     }
     return false;
