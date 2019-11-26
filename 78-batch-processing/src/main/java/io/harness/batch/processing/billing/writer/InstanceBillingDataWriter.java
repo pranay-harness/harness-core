@@ -4,8 +4,10 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
+import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
+import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -19,12 +21,14 @@ import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Singleton
 public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
   @Autowired private BillingCalculationService billingCalculationService;
   @Autowired private BillingDataServiceImpl billingDataService;
+  @Autowired private UtilizationDataServiceImpl utilizationDataService;
 
   private JobParameters parameters;
 
@@ -37,8 +41,11 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
     logger.info("Instance data list {} {} {} {}", instanceDataList.size(), startTime, endTime, parameters.toString());
+    Map<String, UtilizationData> utilizationDataForInstances = utilizationDataService.getUtilizationDataForInstances(
+        instanceDataList, startTime.toString(), endTime.toString());
     instanceDataList.forEach(instanceData -> {
-      BillingData billingData = billingCalculationService.getInstanceBillingAmount(instanceData, startTime, endTime);
+      BillingData billingData = billingCalculationService.getInstanceBillingAmount(
+          instanceData, utilizationDataForInstances.get(instanceData.getInstanceId()), startTime, endTime);
       logger.info("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmount());
       HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
       InstanceBillingData instanceBillingData =
@@ -51,6 +58,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
               .startTimestamp(startTime.toEpochMilli())
               .endTimestamp(endTime.toEpochMilli())
               .billingAmount(billingData.getBillingAmount())
+              .idleCost(billingData.getIdleCost())
               .usageDurationSeconds(billingData.getUsageDurationSeconds())
               .instanceId(instanceData.getInstanceId())
               .clusterName(instanceData.getClusterName())
@@ -69,6 +77,10 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
               .cloudProvider(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData))
               .workloadName(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_NAME, instanceData))
               .workloadType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, instanceData))
+              .cloudServiceName(
+                  getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData))
+              // todo : insert kubernetes namespace here
+              .namespace("NAMESPACE")
               .build();
       billingDataService.create(instanceBillingData);
     });

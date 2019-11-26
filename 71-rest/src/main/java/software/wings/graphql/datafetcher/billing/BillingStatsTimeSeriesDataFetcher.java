@@ -73,6 +73,9 @@ public class BillingStatsTimeSeriesDataFetcher extends AbstractStatsDataFetcher<
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
+    if (filters == null) {
+      filters = new ArrayList<>();
+    }
 
     queryData =
         billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, sortCriteria);
@@ -95,17 +98,19 @@ public class BillingStatsTimeSeriesDataFetcher extends AbstractStatsDataFetcher<
       BillingDataQueryMetadata queryData, ResultSet resultSet, long startTimeFromFilters) throws SQLException {
     Map<Long, List<QLTimeDataPoint>> qlTimeDataPointMap = new LinkedHashMap<>();
 
-    if (checkStartTimeFilterIsValid(startTimeFromFilters) && resultSet != null && resultSet.next()) {
+    if (resultSet != null && resultSet.next()) {
       String id = "";
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         if (field.getFieldName().contains("ID")) {
           id = resultSet.getString(field.getFieldName());
         }
       }
-      long timeOfFirstEntry =
-          resultSet.getTimestamp(BillingDataMetaDataFields.STARTTIME.getFieldName(), utils.getDefaultCalendar())
-              .getTime();
-      addDummyData(queryData, qlTimeDataPointMap, id, timeOfFirstEntry, startTimeFromFilters);
+      if (checkStartTimeFilterIsValid(startTimeFromFilters)) {
+        long timeOfFirstEntry =
+            resultSet.getTimestamp(BillingDataMetaDataFields.STARTTIME.getFieldName(), utils.getDefaultCalendar())
+                .getTime();
+        addDummyData(queryData, qlTimeDataPointMap, id, timeOfFirstEntry, startTimeFromFilters);
+      }
     }
 
     do {

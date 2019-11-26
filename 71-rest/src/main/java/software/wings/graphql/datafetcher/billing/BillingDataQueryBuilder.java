@@ -55,6 +55,10 @@ public class BillingDataQueryBuilder {
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
     List<BillingDataMetaDataFields> groupByFields = new ArrayList<>();
 
+    if (isGroupByClusterPresent(groupBy)) {
+      addInstanceTypeFilter(filters);
+    }
+
     decorateQueryWithAggregation(selectQuery, aggregateFunction, fieldNames);
 
     selectQuery.addCustomFromTable(schema.getBillingDataTable());
@@ -220,6 +224,18 @@ public class BillingDataQueryBuilder {
         return schema.getEnvId();
       case Cluster:
         return schema.getClusterId();
+      case CloudServiceName:
+        return schema.getCloudServiceName();
+      case LaunchType:
+        return schema.getLaunchType();
+      case InstanceId:
+        return schema.getInstanceId();
+      case InstanceType:
+        return schema.getInstanceType();
+      case WorkloadName:
+        return schema.getWorkloadName();
+      case Namespace:
+        return schema.getNamespace();
       default:
         throw new InvalidRequestException("Filter type not supported " + type);
     }
@@ -236,9 +252,6 @@ public class BillingDataQueryBuilder {
 
   private void decorateSimpleGroupBy(List<BillingDataMetaDataFields> fieldNames, SelectQuery selectQuery,
       QLCCMEntityGroupBy aggregation, List<BillingDataMetaDataFields> groupByFields) {
-    /**
-     * Application, Service, Cluster
-     */
     DbColumn groupBy;
     switch (aggregation) {
       case Application:
@@ -259,6 +272,24 @@ public class BillingDataQueryBuilder {
       case Environment:
         groupBy = schema.getEnvId();
         break;
+      case CloudServiceName:
+        groupBy = schema.getCloudServiceName();
+        break;
+      case InstanceId:
+        groupBy = schema.getInstanceId();
+        break;
+      case LaunchType:
+        groupBy = schema.getLaunchType();
+        break;
+      case WorkloadName:
+        groupBy = schema.getWorkloadName();
+        break;
+      case WorkloadType:
+        groupBy = schema.getWorkloadType();
+        break;
+      case Namespace:
+        groupBy = schema.getNamespace();
+        break;
       default:
         throw new InvalidRequestException("Invalid groupBy clause");
     }
@@ -278,7 +309,7 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean isValidGroupBy(List<QLCCMEntityGroupBy> groupBy) {
-    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 2;
+    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 3;
   }
 
   private List<QLBillingSortCriteria> validateAndAddSortCriteria(
@@ -310,5 +341,29 @@ public class BillingDataQueryBuilder {
       default:
         throw new InvalidRequestException("Order type not supported " + sortType);
     }
+  }
+
+  private boolean isGroupByClusterPresent(List<QLCCMEntityGroupBy> groupBy) {
+    for (QLCCMEntityGroupBy aggregation : groupBy) {
+      if (aggregation.equals(QLCCMEntityGroupBy.Cluster)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
+    List<String> instanceTypeValues = new ArrayList<>();
+    instanceTypeValues.add("ECS_TASK_FARGATE");
+    instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
+    instanceTypeValues.add("K8S_NODE");
+
+    QLBillingDataFilter instanceTypeFilter = QLBillingDataFilter.builder()
+                                                 .instanceType(QLIdFilter.builder()
+                                                                   .operator(QLIdOperator.EQUALS)
+                                                                   .values(instanceTypeValues.toArray(new String[0]))
+                                                                   .build())
+                                                 .build();
+    filters.add(instanceTypeFilter);
   }
 }

@@ -40,6 +40,12 @@ enum CCMEntityGroupBy {
   StartTime
   Environment
   Region
+  CloudServiceName
+  InstanceId
+  LaunchType
+  WorkloadName
+  WorkloadType
+  Namespace
 }
 
 input TimeSeriesGroupBy {
@@ -71,6 +77,11 @@ type BillingEntityDataPoint {
   costTrend: Number
   trendType: String
   region: String
+  launchType: String
+  cloudServiceName: String
+  workloadName: String
+  workloadType: String
+  namespace: String
 }
 
 type BillingEntityData {
@@ -94,6 +105,11 @@ input CCMFilter {
   service: IdFilter
   environment: IdFilter
   cluster: IdFilter
+  cloudServiceName: IdFilter
+  launchType: IdFilter
+  instanceId: IdFilter
+  namespace: IdFilter
+  workloadName: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter
 }

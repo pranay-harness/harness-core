@@ -9,7 +9,13 @@ public enum QLBillingDataFilterType {
   StartTime(BillingDataMetaDataFields.STARTTIME),
   Service(BillingDataMetaDataFields.SERVICEID),
   Environment(BillingDataMetaDataFields.ENVID),
-  Cluster(BillingDataMetaDataFields.CLUSTERID);
+  Cluster(BillingDataMetaDataFields.CLUSTERID),
+  CloudServiceName(BillingDataMetaDataFields.CLOUDSERVICENAME),
+  LaunchType(BillingDataMetaDataFields.LAUNCHTYPE),
+  InstanceId(BillingDataMetaDataFields.INSTANCEID),
+  InstanceType(BillingDataMetaDataFields.INSTANCETYPE),
+  WorkloadName(BillingDataMetaDataFields.WORKLOADNAME),
+  Namespace(BillingDataMetaDataFields.NAMESPACE);
 
   private QLDataType dataType;
   private BillingDataMetaDataFields metaDataFields;

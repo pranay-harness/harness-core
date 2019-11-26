@@ -8,7 +8,13 @@ public enum QLCCMEntityGroupBy {
   Cluster(QLAggregationKind.SIMPLE),
   StartTime(QLAggregationKind.SIMPLE),
   Region(QLAggregationKind.SIMPLE),
-  Environment(QLAggregationKind.SIMPLE);
+  Environment(QLAggregationKind.SIMPLE),
+  CloudServiceName(QLAggregationKind.SIMPLE),
+  InstanceId(QLAggregationKind.SIMPLE),
+  LaunchType(QLAggregationKind.SIMPLE),
+  WorkloadName(QLAggregationKind.SIMPLE),
+  WorkloadType(QLAggregationKind.SIMPLE),
+  Namespace(QLAggregationKind.SIMPLE);
 
   QLAggregationKind aggregationKind;
 
