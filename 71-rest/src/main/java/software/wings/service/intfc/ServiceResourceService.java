@@ -66,7 +66,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param clonedService     the service
    * @return the service
    */
-  Service clone(String appId, String originalServiceId, Service clonedService);
+  @ValidationGroups(Create.class) Service clone(String appId, String originalServiceId, @Valid Service clonedService);
 
   boolean hasInternalCommands(Service service);
 
@@ -87,8 +87,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   @ValidationGroups(Update.class) Service update(@Valid Service service, boolean fromYaml);
 
-  @ValidationGroups(Update.class)
-  Service updateArtifactStreamIds(@Valid Service service, List<String> artifactStreamIds);
+  Service updateArtifactStreamIds(Service service, List<String> artifactStreamIds);
 
   /**
    * Gets the.
