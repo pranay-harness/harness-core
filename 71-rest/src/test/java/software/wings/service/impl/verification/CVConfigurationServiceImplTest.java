@@ -32,7 +32,12 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.alerts.AlertStatus;
 import software.wings.beans.FeatureName;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -42,6 +47,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeries
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
@@ -74,12 +80,15 @@ import java.util.Map;
 public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Inject private CVConfigurationService cvConfigurationService;
+  @Inject private AlertService alertService;
 
   private String accountId;
+  private String appId;
 
   @Before
   public void setupTest() throws Exception {
     accountId = generateUuid();
+    appId = generateUuid();
     MockitoAnnotations.initMocks(this);
     when(featureFlagService.isEnabled(FeatureName.STACKDRIVER_SERVICEGUARD, accountId)).thenReturn(true);
     when(featureFlagService.isEnabled(FeatureName.CUSTOM_LOGS_SERVICEGUARD, accountId)).thenReturn(true);
@@ -611,6 +620,43 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     configuration.setBaselineStartMinute(16);
     configuration.setBaselineEndMinute(30);
     return configuration;
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testDeleteAlertDuringPrune() throws Exception {
+    String cvConfigId = generateUuid();
+    DatadogCVServiceConfiguration configuration = createDatadogCVConfiguration(true, true);
+    configuration.setUuid(cvConfigId);
+    wingsPersistence.save(configuration);
+
+    alertService.openAlert(accountId, appId, AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT,
+        ContinuousVerificationDataCollectionAlert.builder()
+            .cvConfiguration(configuration)
+            .message("test alert message")
+            .build());
+
+    Alert alert = wingsPersistence.createQuery(Alert.class)
+                      .filter(AlertKeys.type, AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT)
+                      .get();
+
+    assertThat(alert).isNotNull();
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Open);
+
+    // test behavior
+    cvConfigurationService.pruneByEnvironment(appId, configuration.getEnvId());
+
+    // verify
+    CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, cvConfigId);
+
+    assertThat(cvConfiguration).isNull();
+
+    alert = wingsPersistence.createQuery(Alert.class)
+                .filter(AlertKeys.type, AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT)
+                .get();
+
+    assertThat(alert.getStatus()).isEqualTo(AlertStatus.Closed);
   }
 
   private LogsCVConfiguration createLogsCVConfig(boolean enabled24x7) {
