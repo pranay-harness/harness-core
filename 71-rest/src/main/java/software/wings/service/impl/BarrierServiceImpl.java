@@ -201,10 +201,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       case STANDING:
         return barrierInstance;
       case DOWN:
-        waitNotifyEngine.notify(barrierInstance.getUuid(), BarrierStatusData.builder().failed(false).build());
+        waitNotifyEngine.doneWith(barrierInstance.getUuid(), BarrierStatusData.builder().failed(false).build());
         break;
       case ENDURE:
-        waitNotifyEngine.notify(barrierInstance.getUuid(), BarrierStatusData.builder().failed(true).build());
+        waitNotifyEngine.doneWith(barrierInstance.getUuid(), BarrierStatusData.builder().failed(true).build());
         break;
       default:
         unhandled(state);

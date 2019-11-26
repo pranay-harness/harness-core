@@ -32,6 +32,6 @@ public class SimpleNotifier implements Runnable {
 
   @Override
   public void run() {
-    waitNotifyEngine.notify(correlationId, response);
+    waitNotifyEngine.doneWith(correlationId, response);
   }
 }

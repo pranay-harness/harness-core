@@ -1897,7 +1897,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (delegateTask.isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
-        waitNotifyEngine.notify(waitId, response.getResponse());
+        waitNotifyEngine.doneWith(waitId, response.getResponse());
       } else {
         logger.error("Async task has no wait ID");
       }
@@ -2053,7 +2053,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           logger.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {
-            waitNotifyEngine.notify(
+            waitNotifyEngine.doneWith(
                 delegateTask.getWaitId(), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
           }
         }

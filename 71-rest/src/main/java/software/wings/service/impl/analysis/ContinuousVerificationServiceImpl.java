@@ -1647,7 +1647,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public boolean notifyVerificationState(String correlationId, VerificationDataAnalysisResponse response) {
     try {
       logger.info("Received state notification for {} data {}", correlationId, response);
-      waitNotifyEngine.notify(correlationId, response);
+      waitNotifyEngine.doneWith(correlationId, response);
       return true;
     } catch (Exception ex) {
       logger.error("Exception while notifying correlationId {}", correlationId, ex);
@@ -1729,7 +1729,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       analysisResponse.setExecutionStatus(status);
 
       logger.info("for {} user triggered notification, data {}", stateExecutionId, analysisResponse);
-      final String notificationId = waitNotifyEngine.notify(analysisContext.getCorrelationId(), analysisResponse);
+      final String notificationId = waitNotifyEngine.doneWith(analysisContext.getCorrelationId(), analysisResponse);
       logger.info("for {} user triggered notification, notification id", stateExecutionId, notificationId);
       return true;
     } catch (Exception ex) {

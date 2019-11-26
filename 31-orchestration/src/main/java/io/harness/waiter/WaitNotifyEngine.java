@@ -98,11 +98,11 @@ public class WaitNotifyEngine {
     return waitInstanceId;
   }
 
-  public String notify(String correlationId, ResponseData response) {
-    return notify(correlationId, response, response instanceof ErrorNotifyResponseData);
+  public String doneWith(String correlationId, ResponseData response) {
+    return doneWith(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
 
-  private String notify(String correlationId, ResponseData response, boolean error) {
+  private String doneWith(String correlationId, ResponseData response, boolean error) {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
     if (logger.isDebugEnabled()) {

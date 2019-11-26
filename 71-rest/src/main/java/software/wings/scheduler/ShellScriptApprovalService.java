@@ -114,6 +114,6 @@ public class ShellScriptApprovalService {
     }
 
     executionData.setStatus(approvalStatus);
-    waitNotifyEngine.notify(approvalId, executionData);
+    waitNotifyEngine.doneWith(approvalId, executionData);
   }
 }

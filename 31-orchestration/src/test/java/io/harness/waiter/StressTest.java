@@ -66,7 +66,7 @@ public class StressTest extends OrchestrationTest {
           while (vector.size() > 0) {
             int index = random.nextInt(vector.size());
             time -= System.currentTimeMillis();
-            waitNotifyEngine.notify(vector.get(index), null);
+            waitNotifyEngine.doneWith(vector.get(index), null);
             time += System.currentTimeMillis();
 
             final int last = vector.size() - 1;

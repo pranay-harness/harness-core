@@ -963,7 +963,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (isNotEmpty(stateExecutionInstance.getNotifyElements())) {
       elementNotifyResponseDataBuilder.contextElements(stateExecutionInstance.getNotifyElements());
     }
-    waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), elementNotifyResponseDataBuilder.build());
+    waitNotifyEngine.doneWith(stateExecutionInstance.getNotifyId(), elementNotifyResponseDataBuilder.build());
   }
 
   private void handleSpawningStateExecutionInstances(

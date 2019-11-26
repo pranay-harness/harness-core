@@ -484,7 +484,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public boolean consumerUnblocked(
       ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
-    waitNotifyEngine.notify(consumerId.getValue(), ResourceConstraintStatusData.builder().build());
+    waitNotifyEngine.doneWith(consumerId.getValue(), ResourceConstraintStatusData.builder().build());
 
     final Query<ResourceConstraintInstance> query =
         wingsPersistence.createQuery(ResourceConstraintInstance.class)
