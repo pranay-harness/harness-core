@@ -21,6 +21,7 @@ import java.util.TreeMap;
 public class TimeSeriesDataPoint {
   private long timestamp;
   private double value;
+  int risk;
 
   public static SortedMap<Long, TimeSeriesDataPoint> initializeTimeSeriesDataPointsList(
       long startTime, long endTime, long period, int initialValue) {

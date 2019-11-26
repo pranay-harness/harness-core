@@ -9,6 +9,7 @@ import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
+import software.wings.verification.ServiceGuardTimeSeries;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -19,6 +20,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 
 public interface ContinuousVerificationService {
@@ -41,8 +43,10 @@ public interface ContinuousVerificationService {
 
   List<HeatMap> getHeatMap(
       String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed);
-
   SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(TimeSeriesFilter filter);
+
+  ServiceGuardTimeSeries getTimeSeriesOfHeatMapUnitV2(
+      TimeSeriesFilter filter, Optional<Integer> offset, Optional<Integer> pageSize);
 
   Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
       long startTime, long endTime, CVConfiguration cvConfiguration, long historyStartTime);

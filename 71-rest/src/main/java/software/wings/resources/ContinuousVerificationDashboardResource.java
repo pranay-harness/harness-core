@@ -13,6 +13,7 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.security.UserThreadLocal;
@@ -22,14 +23,17 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.TimeSeriesFilter;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.verification.HeatMap;
+import software.wings.verification.ServiceGuardTimeSeries;
 import software.wings.verification.TransactionTimeSeries;
 
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 import javax.validation.Valid;
 import javax.ws.rs.BeanParam;
@@ -46,6 +50,7 @@ import javax.ws.rs.QueryParam;
 public class ContinuousVerificationDashboardResource {
   @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
   @Inject private CV24x7DashboardService cv24x7DashboardService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @GET
   @Path(VerificationConstants.CV_DASH_GET_RECORDS)
@@ -174,6 +179,34 @@ public class ContinuousVerificationDashboardResource {
                                                                      .metricNames(Sets.newHashSet(metricNames))
                                                                      .tags(Sets.newHashSet(tags))
                                                                      .build()));
+  }
+
+  @GET
+  @Path(VerificationConstants.SERVICE_GUARD_TIMESERIES_V2)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ServiceGuardTimeSeries> getFilteredTimeSeriesOfHeatMapUnitV2(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("cvConfigId") @Valid final String cvConfigId,
+      @QueryParam("startTime") @Valid final long startTime, @QueryParam("endTime") @Valid final long endTime,
+      @QueryParam("historyStartTime") @Valid final long historyStartTime,
+      @QueryParam("txnNames") @Valid final List<String> txnNames,
+      @QueryParam("metricNames") @Valid final List<String> metricNames,
+      @QueryParam("tags") @Valid final List<String> tags, @QueryParam("offset") final Integer offset,
+      @QueryParam("pageSize") final Integer pageSize) {
+    if (!featureFlagService.isEnabled(FeatureName.TIME_SERIES_SERVICEGUARD_V2, accountId)) {
+      throw new UnsupportedOperationException("This feature is not enabled for account " + accountId);
+    }
+    return new RestResponse<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(TimeSeriesFilter.builder()
+                                                                       .cvConfigId(cvConfigId)
+                                                                       .startTime(startTime)
+                                                                       .endTime(endTime)
+                                                                       .historyStartTime(historyStartTime)
+                                                                       .txnNames(Sets.newHashSet(txnNames))
+                                                                       .metricNames(Sets.newHashSet(metricNames))
+                                                                       .tags(Sets.newHashSet(tags))
+                                                                       .build(),
+            Optional.ofNullable(offset), Optional.ofNullable(pageSize)));
   }
 
   @POST
