@@ -34,7 +34,7 @@ public class UtilizationDataServiceImpl {
 
   private static final int MAX_RETRY_COUNT = 5;
   static final String INSERT_STATEMENT =
-      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, CLUSTERARN, CLUTERNAME, SERVICEARN, SERVICENAME, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY ) VALUES (?,?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, CLUSTERARN, CLUTERNAME, SERVICEARN, SERVICENAME, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTACEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
   private static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(MAXCPU) as CPUUTILIZATION, MAX(MAXMEMORY) as MEMORYUTILIZATION, INSTANCEID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY INSTANCEID;";
 
@@ -76,6 +76,9 @@ public class UtilizationDataServiceImpl {
     statement.setDouble(8, instanceUtilizationData.getMemoryUtilizationMax());
     statement.setDouble(9, instanceUtilizationData.getCpuUtilizationAvg());
     statement.setDouble(10, instanceUtilizationData.getMemoryUtilizationAvg());
+    statement.setString(11, instanceUtilizationData.getInstanceId());
+    statement.setString(12, instanceUtilizationData.getInstanceType());
+    statement.setString(13, instanceUtilizationData.getSettingId());
   }
 
   public Map<String, UtilizationData> getUtilizationDataForInstances(

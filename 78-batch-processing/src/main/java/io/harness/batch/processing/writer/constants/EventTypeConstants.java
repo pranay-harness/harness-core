@@ -8,6 +8,8 @@ import io.harness.event.payloads.EcsSyncEvent;
 import io.harness.event.payloads.EcsTaskInfo;
 import io.harness.event.payloads.EcsTaskLifecycle;
 import io.harness.event.payloads.EcsUtilization;
+import io.harness.event.payloads.NodeMetric;
+import io.harness.event.payloads.PodMetric;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
@@ -24,6 +26,8 @@ public class EventTypeConstants {
   public static final String EC2_INSTANCE_INFO = Ec2InstanceInfo.class.getName();
   public static final String EC2_INSTANCE_LIFECYCLE = Ec2Lifecycle.class.getName();
   public static final String ECS_TASK_LIFECYCLE = EcsTaskLifecycle.class.getName();
+  public static final String NODE_UTILIZATION = NodeMetric.class.getName();
+  public static final String POD_UTILIZATION = PodMetric.class.getName();
   public static final String ECS_CONTAINER_INSTANCE_INFO = EcsContainerInstanceInfo.class.getName();
   public static final String ECS_CONTAINER_INSTANCE_LIFECYCLE = EcsContainerInstanceLifecycle.class.getName();
 

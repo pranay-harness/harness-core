@@ -19,6 +19,7 @@ public class EventJobScheduler {
   @Autowired @Qualifier("k8sJob") private Job k8sJob;
   @Autowired @Qualifier("ecsUtilizationJob") private Job ecsUtilizationJob;
   @Autowired @Qualifier("instanceBillingJob") private Job instanceBillingJob;
+  @Autowired @Qualifier("k8sUtilizationJob") private Job k8sUtilizationJob;
 
   @Autowired private BatchJobRunner batchJobRunner;
 
@@ -28,6 +29,15 @@ public class EventJobScheduler {
       batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
     } catch (Exception ex) {
       logger.error("Exception while running runEcsEventJob job ", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 */1 * * * ?")
+  public void runK8sUtilizationJob() {
+    try {
+      batchJobRunner.runJob(k8sUtilizationJob, BatchJobType.K8S_UTILIZATION, 1, ChronoUnit.HOURS);
+    } catch (Exception ex) {
+      logger.error("Exception while running runK8sUtilizationJob job ", ex);
     }
   }
 

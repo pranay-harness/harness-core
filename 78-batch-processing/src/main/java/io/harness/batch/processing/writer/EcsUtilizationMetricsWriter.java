@@ -1,5 +1,8 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.batch.processing.ccm.UtilizationJobType.ECS_CLUSTER;
+import static io.harness.batch.processing.ccm.UtilizationJobType.ECS_SERVICE;
+
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
@@ -29,6 +32,21 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
         .forEach(publishedMessage -> {
           EcsUtilization ecsUtilization = (EcsUtilization) publishedMessage.getMessage();
           logger.info("Ecs Utilization {} ", ecsUtilization);
+
+          String clusterArn = ecsUtilization.getClusterArn();
+          String clusterName = ecsUtilization.getClusterName();
+          String serviceArn = ecsUtilization.getServiceArn();
+          String serviceName = ecsUtilization.getServiceName();
+          String settingId = ecsUtilization.getSettingId();
+          String instanceId;
+          String instanceType;
+          if (serviceArn.equals("") && serviceName.equals("")) {
+            instanceId = clusterArn;
+            instanceType = ECS_CLUSTER;
+          } else {
+            instanceId = serviceArn;
+            instanceType = ECS_SERVICE;
+          }
 
           // Handle the Utilization event
           double cpuUtilizationAvg = 0.0;
@@ -80,10 +98,13 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
           }
 
           InstanceUtilizationData utilizationData = InstanceUtilizationData.builder()
-                                                        .clusterArn(ecsUtilization.getClusterArn())
-                                                        .clusterName(ecsUtilization.getClusterName())
-                                                        .serviceArn(ecsUtilization.getServiceArn())
-                                                        .serviceName(ecsUtilization.getServiceName())
+                                                        .clusterArn(clusterArn)
+                                                        .clusterName(clusterName)
+                                                        .serviceArn(serviceArn)
+                                                        .serviceName(serviceName)
+                                                        .instanceId(instanceId)
+                                                        .instanceType(instanceType)
+                                                        .settingId(settingId)
                                                         .cpuUtilizationMax(cpuUtilizationMax)
                                                         .cpuUtilizationAvg(cpuUtilizationAvg)
                                                         .memoryUtilizationMax(memoryUtilizationMax)

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
+import io.harness.batch.processing.ccm.UtilizationJobType;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
@@ -41,13 +42,16 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   private final String INVALID_STATISTIC = "invalid_statistic";
   private final String INVALID_METRIC = "invalid_metric";
   private final String METRIC = "MemoryUtilization";
+  private final String INSTANCEID = TEST_SERVICE_ARN;
+  private final String INSTANCETYPE = UtilizationJobType.ECS_SERVICE;
 
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldWriteTaskInfo() {
+    String settingId = "SETTING_ID";
     PublishedMessage ecsUtilizationMetricsMessages = getEcsUtilizationMetricsMessage(
-        TEST_ACCOUNT_ID, TEST_CLUSTER_NAME, TEST_CLUSTER_ARN, TEST_SERVICE_NAME, TEST_SERVICE_ARN);
+        TEST_ACCOUNT_ID, TEST_CLUSTER_NAME, TEST_CLUSTER_ARN, TEST_SERVICE_NAME, TEST_SERVICE_ARN, settingId);
 
     ecsUtilizationMetricsWriter.write(Arrays.asList(ecsUtilizationMetricsMessages));
     ArgumentCaptor<InstanceUtilizationData> instanceUtilizationDataArgumentCaptor =
@@ -58,6 +62,9 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
     assertThat(instanceUtilizationData.getClusterName()).isEqualTo(TEST_CLUSTER_NAME);
     assertThat(instanceUtilizationData.getServiceArn()).isEqualTo(TEST_SERVICE_ARN);
     assertThat(instanceUtilizationData.getServiceName()).isEqualTo(TEST_SERVICE_NAME);
+    assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
+    assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
+    assertThat(instanceUtilizationData.getSettingId()).isEqualTo(settingId);
     assertThat(instanceUtilizationData.getCpuUtilizationAvg()).isEqualTo(65.0);
     assertThat(instanceUtilizationData.getCpuUtilizationMax()).isEqualTo(70.0);
     assertThat(instanceUtilizationData.getMemoryUtilizationAvg()).isEqualTo(1267.0);

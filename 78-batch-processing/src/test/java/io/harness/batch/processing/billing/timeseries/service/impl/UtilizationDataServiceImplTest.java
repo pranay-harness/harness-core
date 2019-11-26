@@ -12,6 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.UtilizationJobType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
@@ -136,6 +137,9 @@ public class UtilizationDataServiceImplTest extends CategoryTest {
 
   private InstanceUtilizationData instanceUtilizationData() {
     return InstanceUtilizationData.builder()
+        .instanceId("serviceArn")
+        .settingId("settingId")
+        .instanceType(UtilizationJobType.ECS_SERVICE)
         .clusterName(CLUSTER_NAME)
         .clusterArn(CLUSTER_ARN)
         .serviceName(SERVICE_NAME)
