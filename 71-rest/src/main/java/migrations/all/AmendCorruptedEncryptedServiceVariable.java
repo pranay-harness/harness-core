@@ -34,11 +34,17 @@ public class AmendCorruptedEncryptedServiceVariable implements Migration {
                                  .contains(":")
                                  .fetch())) {
       for (ServiceVariable serviceVariable : serviceVariableHIterator) {
-        if (serviceVariable.getEncryptedValue() != null && serviceVariable.getEncryptedValue().contains(":")) {
+        /*
+         encrypted values in hashicorp vault are stored differently from others. Their yaml
+         reference does not have the same format
+         */
+        if (serviceVariable.getEncryptedValue() != null && serviceVariable.getEncryptedValue().contains(":")
+            && !serviceVariable.getEncryptedValue().startsWith("hashicorpvault:")) {
           String corruptedValue = serviceVariable.getEncryptedValue();
           String correctValue = yamlHelper.extractEncryptedRecordId(corruptedValue);
           logger.info(HarnessStringUtils.join(StringUtils.SPACE, DEBUG_LINE,
               format("Updating Service Variable from %s-> %s", corruptedValue, correctValue)));
+          serviceVariable.setEncryptedValue(correctValue);
           wingsPersistence.save(serviceVariable);
           updations++;
         }
