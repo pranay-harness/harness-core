@@ -7,6 +7,8 @@ import io.harness.batch.processing.processor.K8sNodeInfoProcessor;
 import io.harness.batch.processing.processor.K8sPodEventProcessor;
 import io.harness.batch.processing.processor.K8sPodInfoProcessor;
 import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.writer.NodeUtilizationMetricsWriter;
+import io.harness.batch.processing.writer.PodUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.event.grpc.PublishedMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +56,22 @@ public class K8sBatchConfiguration {
 
   @Bean
   @StepScope
+  public ItemReader<PublishedMessage> k8sPodUtilizationEventMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    String messageType = EventTypeConstants.POD_UTILIZATION;
+    return eventReaderFactory.getEventReader(messageType, startDate, endDate);
+  }
+
+  @Bean
+  @StepScope
+  public ItemReader<PublishedMessage> k8sNodeUtilizationEventMessageReader(
+      @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
+    String messageType = EventTypeConstants.NODE_UTILIZATION;
+    return eventReaderFactory.getEventReader(messageType, startDate, endDate);
+  }
+
+  @Bean
+  @StepScope
   public ItemReader<PublishedMessage> k8sNodeInfoMessageReader(
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
     String messageType = EventTypeConstants.K8S_NODE_INFO;
@@ -89,6 +107,16 @@ public class K8sBatchConfiguration {
   }
 
   @Bean
+  public ItemWriter<PublishedMessage> podUtilizationMetricsWriter() {
+    return new PodUtilizationMetricsWriter();
+  }
+
+  @Bean
+  public ItemWriter<PublishedMessage> nodeUtilizationMetricsWriter() {
+    return new NodeUtilizationMetricsWriter();
+  }
+
+  @Bean
   @Autowired
   @Qualifier(value = "k8sJob")
   public Job k8sJob(JobBuilderFactory jobBuilderFactory, Step k8sNodeInfoStep, Step k8sNodeEventStep,
@@ -99,6 +127,18 @@ public class K8sBatchConfiguration {
         .next(k8sNodeEventStep)
         .next(k8sPodInfoStep)
         .next(k8sPodEventStep)
+        .build();
+  }
+
+  @Bean
+  @Autowired
+  @Qualifier(value = "k8sUtilizationJob")
+  public Job k8sUtilizationJob(
+      JobBuilderFactory jobBuilderFactory, Step k8sPodUtilizationEventStep, Step k8sNodeUtilizationEventStep) {
+    return jobBuilderFactory.get("k8sUtilizationJob")
+        .incrementer(new RunIdIncrementer())
+        .start(k8sPodUtilizationEventStep)
+        .next(k8sNodeUtilizationEventStep)
         .build();
   }
 
@@ -139,6 +179,24 @@ public class K8sBatchConfiguration {
         .reader(k8sPodEventMessageReader(null, null))
         .processor(k8sPodEventProcessor())
         .writer(instanceEventWriter)
+        .build();
+  }
+
+  @Bean
+  public Step k8sPodUtilizationEventStep() {
+    return stepBuilderFactory.get("k8sPodUtilizationEventStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(k8sPodUtilizationEventMessageReader(null, null))
+        .writer(podUtilizationMetricsWriter())
+        .build();
+  }
+
+  @Bean
+  public Step k8sNodeUtilizationEventStep() {
+    return stepBuilderFactory.get("k8sNodeUtilizationEventStep")
+        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .reader(k8sNodeUtilizationEventMessageReader(null, null))
+        .writer(nodeUtilizationMetricsWriter())
         .build();
   }
 }

@@ -134,14 +134,15 @@ public interface EcsEventGenerator {
     return getPublishedMessage(accountId, ecsSyncEvent);
   }
 
-  default PublishedMessage getEcsUtilizationMetricsMessage(
-      String accountId, String clusterName, String clusterArn, String serviceName, String serviceArn) {
+  default PublishedMessage getEcsUtilizationMetricsMessage(String accountId, String clusterName, String clusterArn,
+      String serviceName, String serviceArn, String settingId) {
     EcsUtilization ecsUtilization =
         EcsUtilization.newBuilder()
             .setClusterArn(clusterArn)
             .setClusterName(clusterName)
             .setServiceArn(serviceArn)
             .setServiceName(serviceName)
+            .setSettingId(settingId)
             .addMetricValues(MetricValue.newBuilder()
                                  .setStatistic("Maximum")
                                  .setMetricName("MemoryUtilization")

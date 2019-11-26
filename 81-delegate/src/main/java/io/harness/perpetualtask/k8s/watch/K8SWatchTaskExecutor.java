@@ -54,6 +54,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     if (k8sMetricsClient == null) {
       k8sMetricsClient = kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
     }
+
     publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams.getCloudProviderId(), heartbeatTime);
     publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams.getCloudProviderId(), heartbeatTime);
     return true;
