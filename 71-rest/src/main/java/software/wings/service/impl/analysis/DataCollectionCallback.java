@@ -104,7 +104,7 @@ public class DataCollectionCallback implements NotifyCallback {
     VerificationDataAnalysisResponse verificationDataAnalysisResponse =
         VerificationDataAnalysisResponse.builder().stateExecutionData(analysisExecutionData).build();
     verificationDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
-    waitNotifyEngine.notify(analysisExecutionData.getCorrelationId(), verificationDataAnalysisResponse);
+    waitNotifyEngine.doneWith(analysisExecutionData.getCorrelationId(), verificationDataAnalysisResponse);
     if (isDataCollectionPerMinuteTask) {
       deleteDataCollectionCron();
     }

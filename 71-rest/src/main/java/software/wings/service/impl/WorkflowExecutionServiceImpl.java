@@ -455,7 +455,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       executionData.setStatus(ExecutionStatus.REJECTED);
     }
 
-    waitNotifyEngine.notify(approvalDetails.getApprovalId(), executionData);
+    waitNotifyEngine.doneWith(approvalDetails.getApprovalId(), executionData);
     return true;
   }
 

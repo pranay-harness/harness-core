@@ -208,7 +208,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       }
       if (needToNotifyPipeline) {
         try {
-          waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+          waitNotifyEngine.doneWith(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
         } catch (WingsException exception) {
           ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         }

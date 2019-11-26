@@ -186,7 +186,7 @@ public class DelegateQueueTask implements Runnable {
               ? assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTasks.get(taskId))
               : "Unable to determine proper error as delegate task could not be deserialized.";
           logger.info("Marking task as failed - {}: {}", taskId, errorMessage);
-          waitNotifyEngine.notify(
+          waitNotifyEngine.doneWith(
               taskWaitIds.get(taskId), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
         }
       });

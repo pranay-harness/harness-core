@@ -144,7 +144,7 @@ public class ExecutionInterruptManager {
         throw new WingsException(RESUME_ALL_ALREADY, USER);
       }
       seize(pauseAll);
-      waitNotifyEngine.notify(pauseAll.getUuid(), ExecutionStatusData.builder().executionStatus(SUCCESS).build());
+      waitNotifyEngine.doneWith(pauseAll.getUuid(), ExecutionStatusData.builder().executionStatus(SUCCESS).build());
     }
 
     wingsPersistence.save(executionInterrupt);

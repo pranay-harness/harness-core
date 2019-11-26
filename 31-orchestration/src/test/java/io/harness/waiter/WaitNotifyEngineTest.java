@@ -70,7 +70,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
-      String id = waitNotifyEngine.notify(uuid, data);
+      String id = waitNotifyEngine.doneWith(uuid, data);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -95,7 +95,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
-      String id = waitNotifyEngine.notify(uuid, data);
+      String id = waitNotifyEngine.doneWith(uuid, data);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -118,7 +118,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
     String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(true)) {
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
-      String id = waitNotifyEngine.notify(uuid, data);
+      String id = waitNotifyEngine.doneWith(uuid, data);
 
       String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
 
@@ -156,7 +156,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       ResponseData data1 = StringNotifyResponseData.builder().data("response-" + uuid1).build();
 
-      String id = waitNotifyEngine.notify(uuid1, data1);
+      String id = waitNotifyEngine.doneWith(uuid1, data1);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -168,7 +168,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(responseMap).hasSize(0);
       ResponseData data2 = StringNotifyResponseData.builder().data("response-" + uuid2).build();
 
-      id = waitNotifyEngine.notify(uuid2, data2);
+      id = waitNotifyEngine.doneWith(uuid2, data2);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -180,7 +180,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       assertThat(responseMap).hasSize(0);
       ResponseData data3 = StringNotifyResponseData.builder().data("response-" + uuid3).build();
 
-      id = waitNotifyEngine.notify(uuid3, data3);
+      id = waitNotifyEngine.doneWith(uuid3, data3);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()
@@ -214,7 +214,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
           .containsExactly(waitInstanceId1, waitInstanceId2, waitInstanceId3);
 
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
-      String id = waitNotifyEngine.notify(uuid, data);
+      String id = waitNotifyEngine.doneWith(uuid, data);
 
       assertThat(persistence.get(NotifyResponse.class, id))
           .isNotNull()

@@ -55,7 +55,7 @@ public class ApprovalUtils {
     executionData.setErrorMsg(message);
 
     logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
-    waitNotifyEngine.notify(approvalId, executionData);
+    waitNotifyEngine.doneWith(approvalId, executionData);
   }
 
   private static void continuePauseWorkflow(StateExecutionService stateExecutionService, String approvalId,

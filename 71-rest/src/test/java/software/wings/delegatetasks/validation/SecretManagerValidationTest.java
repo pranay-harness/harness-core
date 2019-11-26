@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -60,7 +61,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testValidationWithEncryptionConfig() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);

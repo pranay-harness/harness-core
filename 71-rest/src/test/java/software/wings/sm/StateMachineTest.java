@@ -685,9 +685,9 @@ public class StateMachineTest extends WingsBaseTest {
       }
       StaticMap.putValue(name, System.currentTimeMillis());
       if (shouldFail) {
-        waitNotifyEngine.notify(uuid, StringNotifyResponseData.builder().data("FAILURE").build());
+        waitNotifyEngine.doneWith(uuid, StringNotifyResponseData.builder().data("FAILURE").build());
       } else {
-        waitNotifyEngine.notify(uuid, StringNotifyResponseData.builder().data("SUCCESS").build());
+        waitNotifyEngine.doneWith(uuid, StringNotifyResponseData.builder().data("SUCCESS").build());
       }
     }
   }
