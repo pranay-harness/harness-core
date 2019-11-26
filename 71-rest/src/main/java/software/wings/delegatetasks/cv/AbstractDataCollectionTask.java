@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -82,8 +83,13 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
                                      .errorMessage(e.getMessage())
                                      .stateType(dataCollectionInfo.getStateType())
                                      .build();
-      cvTaskService.updateCVTaskStatus(
-          dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvTaskId(), dataCollectionTaskResult);
+      try {
+        cvTaskService.updateCVTaskStatus(
+            dataCollectionInfo.getAccountId(), dataCollectionInfo.getCvTaskId(), dataCollectionTaskResult);
+      } catch (TimeoutException ex) {
+        throw new DataCollectionException(ex);
+      }
+      logger.error("Data collection failed", e);
     }
     return dataCollectionTaskResult;
   }
