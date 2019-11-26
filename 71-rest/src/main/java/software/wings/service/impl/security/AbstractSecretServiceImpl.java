@@ -36,9 +36,7 @@ import java.util.UUID;
 public abstract class AbstractSecretServiceImpl {
   static final String SECRET_MASK = SecretString.SECRET_MASK;
   static final String REASON_KEY = "reason";
-  static final String IS_DEFAULT_KEY = "isDefault";
   static final String ID_KEY = "_id";
-  static final String NAME_KEY = "name";
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected DelegateProxyFactory delegateProxyFactory;

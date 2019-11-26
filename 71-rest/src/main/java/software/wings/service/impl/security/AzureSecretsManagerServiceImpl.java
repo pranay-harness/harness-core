@@ -15,7 +15,7 @@ import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
-import io.harness.exception.WingsException;
+import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -73,8 +73,9 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     try {
       secretsManagerConfigId = secretManagerConfigService.save(azureVautConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER_SRE)
-          .addParam(REASON_KEY, "Another Azure vault secret configuration with the same name or URL exists");
+      throw new AzureKeyVaultOperationException(
+          "Another Azure vault secret configuration with the same name or URL exists", AZURE_KEY_VAULT_OPERATION_ERROR,
+          USER_SRE);
     }
 
     // Create a LOCAL encrypted record for Azure secret key
@@ -173,7 +174,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
       String message =
           "Can not delete the Azure Secrets Manager configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to another secret manager and try again.";
-      throw new WingsException(AZURE_KEY_VAULT_OPERATION_ERROR, USER).addParam(REASON_KEY, message);
+      throw new AzureKeyVaultOperationException(message, AZURE_KEY_VAULT_OPERATION_ERROR, USER);
     }
     AzureVaultConfig azureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, configId);
     Preconditions.checkNotNull(azureVaultConfig, "no Azure vault config found with id " + configId);

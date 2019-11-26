@@ -12,12 +12,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.message.MessageConstants.MIGRATE;
 import static io.harness.delegate.message.MessageConstants.SELF_DESTRUCT;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
-import static io.harness.eraro.ErrorCode.UNAVAILABLE_DELEGATES;
-import static io.harness.exception.WingsException.NOBODY;
+import static io.harness.eraro.ErrorCode.REQUEST_TIMEOUT;
+import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -85,14 +83,14 @@ import io.harness.delegate.task.CapabilityUtils;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
+import io.harness.exception.LimitsExceededException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.lock.AcquiredLock;
@@ -204,6 +202,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
+import javax.ws.rs.ServiceUnavailableException;
 
 @Singleton
 @ValidateOnExecution
@@ -229,7 +228,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String UPGRADE_VERSION = "upgradeVersion";
   private static final String ASYNC = "async";
   private static final String SYNC = "sync";
-  private static final String MESSAGE = "message";
   private static final String STREAM_DELEGATE = "/stream/delegate/";
   private static final String TAR_GZ = ".tar.gz";
   private static final String README = "README";
@@ -1119,9 +1117,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         if (currentDelegateCount < maxUsageAllowed) {
           savedDelegate = saveDelegate(delegate);
         } else {
-          throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
-              format("Can not add delegate to the account. Maximum [%d] delegates are supported", maxUsageAllowed),
-              USER);
+          throw new LimitsExceededException(
+              String.format(
+                  "Can not add delegate to the account. Maximum [%d] delegates are supported", maxUsageAllowed),
+              USAGE_LIMITS_EXCEEDED, USER);
         }
       }
     } else {
@@ -1403,8 +1402,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       os.flush();
       return new String(os.toByteArray(), UTF_8);
     } catch (Exception e) {
-      throw new WingsException(GENERAL_ERROR, e)
-          .addParam(MESSAGE, "Profile execution log temporarily unavailable. Try again in a few moments.");
+      throw new GeneralException("Profile execution log temporarily unavailable. Try again in a few moments.");
     }
   }
 
@@ -1465,7 +1463,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         logger.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
-        throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
+        throw new ServiceUnavailableException("Delegates are not available");
       }
 
       try {
@@ -1481,7 +1479,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
       } catch (Exception e) {
         logger.error("Error while waiting for sync task", e);
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", "Error while waiting for completion");
+        throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"));
       } finally {
         syncTaskWaitMap.remove(task.getUuid());
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
@@ -1491,14 +1489,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       if (completedTask == null) {
         logger.info("Task was deleted while waiting for completion");
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Task was deleted while waiting for completion");
+        throw new InvalidArgumentsException(Pair.of("args", "Task was deleted while waiting for completion"));
       }
 
       responseData = completedTask.getNotifyResponse();
       if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
-        throw new WingsException(ErrorCode.REQUEST_TIMEOUT, WingsException.USER_ADMIN)
-            .addParam("name", "Harness delegate");
+        throw new InvalidRequestException("Harness delegate", REQUEST_TIMEOUT, USER_ADMIN);
       }
 
       logger.info("Returning response to calling function for delegate task");
@@ -1568,11 +1564,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
     if (task == null) {
       logger.warn("Delegate task is null");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate task is null");
+      throw new InvalidArgumentsException(Pair.of("args", "Delegate task is null"));
     }
     if (task.getAccountId() == null) {
       logger.warn("Delegate task has null account ID");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate task has null account ID");
+      throw new InvalidArgumentsException(Pair.of("args", "Delegate task has null account ID"));
     }
 
     List<String> activeDelegates = wingsPersistence.createQuery(Delegate.class)
@@ -1964,7 +1960,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public void processDelegateResponse(
       String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
     if (response == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, NOBODY).addParam("args", "response cannot be null");
+      throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
     }
 
     logger.info("Response received for task with responseCode [{}]", response.getResponseCode());
@@ -2234,8 +2230,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     // can not proceed unless we receive valid token
     if (isBlank(delegate.getDelegateRandomToken()) || "null".equalsIgnoreCase(delegate.getDelegateRandomToken())) {
-      throw new WingsException(GENERAL_ERROR, "Received invalid token from ECS delegate", USER_SRE)
-          .addParam(MESSAGE, "Received invalid token from ECS delegate");
+      throw new GeneralException("Received invalid token from ECS delegate");
     }
 
     // SCENARIO 2: Delegate passed sequenceNum & delegateToken but not UUID.
@@ -2349,7 +2344,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   /**
    * Get existing delegate having same {hostName (prefix without seqNum), AccId, type = ECS}
-   * Copy {SCOPE/PROFILE/TAG} config into new delegate being registered
+   * Copy {SCOPE/PROFILE/TAG/KEYWORDS/DESCRIPTION} config into new delegate being registered
    *
    */
   @VisibleForTesting
@@ -2371,6 +2366,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate existingDelegate = delegateQuery.project(DelegateKeys.hostName, true)
                                     .project(DelegateKeys.status, true)
                                     .project(DelegateKeys.delegateProfileId, true)
+                                    .project(DelegateKeys.description, true)
                                     .get();
 
     if (existingDelegate != null) {
@@ -2408,7 +2404,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             getHostNameToBeUsedForECSDelegate(delegate.getHostName(), config.getSequenceNum().toString());
         delegate.setHostName(hostNameWithSeqNum);
 
-        // Init this delegate with TAG/SCOPE/PROFILE config reading from similar delegate
+        // Init this delegate with TAG/SCOPE/PROFILE/KEYWORDS/DESCRIPTION config reading from similar delegate
         initDelegateWithConfigFromExistingDelegate(delegate);
 
         return upsertDelegateOperation(null, delegate);
@@ -2418,8 +2414,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
     // All 3 attempts of sequenceNum generation for delegate failed. Registration can not be completed.
     // Delegate will need to send request again
-    throw new WingsException(GENERAL_ERROR, "Failed to generate sequence number for Delegate", USER_SRE)
-        .addParam(MESSAGE, "Failed to generate sequence number for Delegate");
+    throw new GeneralException("Failed to generate sequence number for Delegate");
   }
 
   /**
