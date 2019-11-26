@@ -142,8 +142,7 @@ public class BuildSourceCallback implements NotifyCallback {
           try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
                AutoLogContext ignore2 = new ArtifactStreamLogContext(
                    artifactStream.getUuid(), artifactStream.getArtifactStreamType(), OVERRIDE_ERROR)) {
-            logger.info("Build number {} new artifacts collected for artifactStreamId {}", artifact.getBuildNo(),
-                artifactStream.getUuid());
+            logger.info("Build number {} new artifacts collected for artifactStreamId", artifact.getBuildNo());
           }
         });
 
