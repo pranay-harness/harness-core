@@ -340,6 +340,8 @@ public enum ErrorCode {
 
   KUBERNETES_VALUES_ERROR,
 
+  KUBERNETES_CLUSTER_ERROR,
+
   INCORRECT_SIGN_IN_MECHANISM("Using incorrect sign-in mechanism. Please contact Account Admin."),
 
   OAUTH_LOGIN_FAILED,

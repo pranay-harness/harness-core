@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class K8sMetricsExtensionAdapter implements ExtensionAdapter<K8sMetricsClient> {
-  private final ConcurrentMap<String, Boolean> cache = new ConcurrentHashMap<>();
+  private static final ConcurrentMap<String, Boolean> cache = new ConcurrentHashMap<>();
 
   @Override
   public Class<K8sMetricsClient> getExtensionType() {

@@ -15,14 +15,6 @@ import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 import okhttp3.OkHttpClient;
 
 public class DefaultK8sMetricsClient extends BaseClient implements K8sMetricsClient {
-  public DefaultK8sMetricsClient() {
-    // default
-  }
-
-  public DefaultK8sMetricsClient(Config config) {
-    super(config);
-  }
-
   public DefaultK8sMetricsClient(OkHttpClient httpClient, Config config) {
     super(httpClient, config);
   }
