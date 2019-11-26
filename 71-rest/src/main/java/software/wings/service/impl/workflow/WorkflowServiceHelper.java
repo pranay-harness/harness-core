@@ -347,19 +347,38 @@ public class WorkflowServiceHelper {
     return new ArrayList<>();
   }
 
-  public boolean needArtifactCheckStep(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+  public boolean needArtifactCheckStep(
+      String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow, boolean infraRefactor) {
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
     if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-      List<String> infraMappingIds = workflowPhases.stream()
-                                         .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
-                                         .map(WorkflowPhase::getInfraMappingId)
-                                         .collect(toList());
-      return infrastructureMappingService.getInfraStructureMappingsByUuids(appId, infraMappingIds)
-          .stream()
-          .anyMatch((InfrastructureMapping infra)
-                        -> AWS_SSH.name().equals(infra.getInfraMappingType())
-                  || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType())
-                  || PCF_PCF.name().equals(infra.getInfraMappingType()));
+      if (infraRefactor) {
+        List<String> infraDefinitionIds = workflowPhases.stream()
+                                              .filter(workflowPhase -> workflowPhase.getInfraDefinitionId() != null)
+                                              .map(WorkflowPhase::getInfraDefinitionId)
+                                              .collect(toList());
+
+        return infrastructureDefinitionService.getInfraStructureDefinitionByUuids(appId, infraDefinitionIds)
+            .stream()
+            .filter(infrastructureDefinition -> infrastructureDefinition.getInfrastructure() != null)
+            .anyMatch((InfrastructureDefinition infra)
+                          -> AWS_SSH.name().equals(infra.getInfrastructure().getInfrastructureType())
+                    || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfrastructure().getInfrastructureType())
+                    || PCF_PCF.name().equals(infra.getInfrastructure().getInfrastructureType()));
+      } else {
+        List<String> infraMappingIds = workflowPhases.stream()
+                                           .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
+                                           .map(WorkflowPhase::getInfraMappingId)
+                                           .collect(toList());
+
+        if (isNotEmpty(infraMappingIds)) {
+          return infrastructureMappingService.getInfraStructureMappingsByUuids(appId, infraMappingIds)
+              .stream()
+              .anyMatch((InfrastructureMapping infra)
+                            -> AWS_SSH.name().equals(infra.getInfraMappingType())
+                      || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType())
+                      || PCF_PCF.name().equals(infra.getInfraMappingType()));
+        }
+      }
     }
     return false;
   }
