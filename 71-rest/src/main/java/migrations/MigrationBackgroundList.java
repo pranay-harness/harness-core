@@ -11,6 +11,7 @@ import migrations.all.AddOrchestrationToWorkflows;
 import migrations.all.AddStateMachineToWorkflowExecutions;
 import migrations.all.AddValidUntilToCommandLog;
 import migrations.all.AddValidUntilToWorkflowExecution;
+import migrations.all.AmendCorruptedEncryptedServiceVariable;
 import migrations.all.ApiKeysSetNameMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
@@ -135,6 +136,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(78, BaseMigration.class))
         .add(Pair.of(79, BaseMigration.class))
         .add(Pair.of(80, BaseMigration.class))
+        .add(Pair.of(81, AmendCorruptedEncryptedServiceVariable.class))
         .build();
   }
 }
