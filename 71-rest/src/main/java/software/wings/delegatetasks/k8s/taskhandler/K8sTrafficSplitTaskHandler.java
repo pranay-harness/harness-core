@@ -15,6 +15,7 @@ import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.TrafficSplit;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -91,8 +92,8 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sTrafficSplitResponse, CommandExecutionStatus.SUCCESS);
   }
 
-  private boolean init(
-      K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParameters, ExecutionLogCallback executionLogCallback) {
+  @VisibleForTesting
+  boolean init(K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParameters, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..");
 
     kubernetesConfig =
@@ -241,13 +242,16 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
 
     for (KubernetesResourceId resourceId : resourceIds) {
       if (Kind.VirtualService.name().equals(resourceId.getKind())) {
-        VirtualService virtualService =
+        VirtualService istioVirtualService =
             kubernetesContainerService.getIstioVirtualService(kubernetesConfig, emptyList(), resourceId.getName());
 
-        Map<String, String> annotations = virtualService.getMetadata().getAnnotations();
-        if (annotations.containsKey(HarnessAnnotations.managed)
-            && annotations.get(HarnessAnnotations.managed).equalsIgnoreCase("true")) {
-          managedVirtualServices.add(resourceId);
+        if (istioVirtualService != null && istioVirtualService.getMetadata() != null
+            && isNotEmpty(istioVirtualService.getMetadata().getAnnotations())) {
+          Map<String, String> annotations = istioVirtualService.getMetadata().getAnnotations();
+          if (annotations.containsKey(HarnessAnnotations.managed)
+              && annotations.get(HarnessAnnotations.managed).equalsIgnoreCase("true")) {
+            managedVirtualServices.add(resourceId);
+          }
         }
       }
     }
