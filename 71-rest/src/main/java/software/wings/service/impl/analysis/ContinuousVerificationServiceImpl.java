@@ -171,6 +171,7 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
+import software.wings.verification.ServiceGuardTimeSeries;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.VerificationDataAnalysisResponse;
@@ -1177,6 +1178,31 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       filter.setHistoryStartTime(filter.getStartTime() - TimeUnit.HOURS.toMillis(2) + 1);
     }
     return convertTimeSeriesResponse(getTimeSeriesForTimeRangeFromDataRecords(cvConfiguration, filter));
+  }
+
+  @Override
+  public ServiceGuardTimeSeries getTimeSeriesOfHeatMapUnitV2(
+      TimeSeriesFilter filter, Optional<Integer> offset, Optional<Integer> pageSize) {
+    int txnOffset = offset.isPresent() ? offset.get() : 0;
+    int txnPageSize = pageSize.isPresent() ? pageSize.get() : 10;
+
+    SortedSet<TransactionTimeSeries> timeSeries = getTimeSeriesOfHeatMapUnit(filter);
+    List<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
+    SortedSet<TransactionTimeSeries> timeseriesToReturn = new TreeSet<>();
+
+    for (int i = txnOffset; i < timeSeriesList.size() && i < txnOffset + txnPageSize; i++) {
+      timeseriesToReturn.add(timeSeriesList.get(i));
+    }
+    ServiceGuardTimeSeries serviceGuardTimeSeries = ServiceGuardTimeSeries.builder()
+                                                        .timeSeriesSet(timeseriesToReturn)
+                                                        .transactionsInAnalysis(new HashSet<>())
+                                                        .build();
+    timeSeries.forEach(transactionTimeSeries -> {
+      serviceGuardTimeSeries.getTransactionsInAnalysis().add(transactionTimeSeries.getTransactionName());
+      serviceGuardTimeSeries.setTotalRecords(serviceGuardTimeSeries.getTotalRecords() + 1);
+    });
+
+    return serviceGuardTimeSeries;
   }
 
   private void populateMetricNames(CVConfiguration cvConfiguration, TimeSeriesFilter filter) {

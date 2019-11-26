@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -372,8 +373,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .startTime(start12HoursAgo)
                                   .endTime(endTime)
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(2);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("TRANSACTION1");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("METRIC1");
@@ -392,8 +394,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .startTime(start12HoursAgo)
                                   .endTime(endTime)
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(2);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/exception");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("Error Percentage");
@@ -411,8 +414,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .startTime(start12HoursAgo)
                                   .endTime(endTime)
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(2);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("METRIC1");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("METRIC1");
@@ -429,8 +433,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .startTime(start12HoursAgo)
                                   .endTime(endTime)
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(2);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/exception");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("Error Percentage");
@@ -448,8 +453,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .startTime(start12HoursAgo)
                                   .endTime(endTime)
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(2);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("ECS Container CPU Usage");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("ECS Container CPU Usage");
@@ -468,8 +474,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .endTime(endTime)
                                   .metricNames(Sets.newHashSet("apdexScore", "averageResponseTime"))
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(1);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/login");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("apdexScore");
@@ -484,8 +491,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .startTime(start12HoursAgo)
                                   .endTime(endTime)
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(2);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("/exception");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("Error Percentage");
@@ -503,8 +511,9 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
                                   .startTime(start12HoursAgo)
                                   .endTime(endTime)
                                   .build();
-    List<TransactionTimeSeries> fetchedObject =
-        new ArrayList<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(filter));
+    List<TransactionTimeSeries> fetchedObject = new ArrayList<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnitV2(filter, Optional.empty(), Optional.empty())
+            .getTimeSeriesSet());
     assertThat(fetchedObject).hasSize(2);
     assertThat(fetchedObject.get(0).getTransactionName()).isEqualTo("CPU Reservation");
     assertThat(fetchedObject.get(0).getMetricTimeSeries().first().getMetricName()).isEqualTo("CPU Reservation");

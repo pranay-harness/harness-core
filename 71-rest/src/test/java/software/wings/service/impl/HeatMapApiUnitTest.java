@@ -76,6 +76,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.concurrent.ThreadLocalRandom;
@@ -506,12 +507,15 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     createCloudwatchMetricRecord((int) TimeUnit.MICROSECONDS.toMinutes(startTime), cvConfiguration.getUuid());
 
     SortedSet<TransactionTimeSeries> timeSeries =
-        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
-                                                                     .cvConfigId(cvConfiguration.getUuid())
-                                                                     .startTime(startTime)
-                                                                     .endTime(endTime)
-                                                                     .historyStartTime(historyStartTime)
-                                                                     .build());
+        continuousVerificationService
+            .getTimeSeriesOfHeatMapUnitV2(TimeSeriesFilter.builder()
+                                              .cvConfigId(cvConfiguration.getUuid())
+                                              .startTime(startTime)
+                                              .endTime(endTime)
+                                              .historyStartTime(historyStartTime)
+                                              .build(),
+                Optional.empty(), Optional.empty())
+            .getTimeSeriesSet();
 
     assertThat(timeSeries).isNotNull();
   }
@@ -554,13 +558,15 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     String cvConfigId = readAndSaveAnalysisRecords();
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
 
-    SortedSet<TransactionTimeSeries> timeSeries =
-        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
-                                                                     .cvConfigId(cvConfigId)
-                                                                     .startTime(startTime + 1)
-                                                                     .endTime(1541177160000L)
-                                                                     .historyStartTime(0)
-                                                                     .build());
+    SortedSet<TransactionTimeSeries> timeSeries = continuousVerificationService
+                                                      .getTimeSeriesOfHeatMapUnitV2(TimeSeriesFilter.builder()
+                                                                                        .cvConfigId(cvConfigId)
+                                                                                        .startTime(startTime + 1)
+                                                                                        .endTime(1541177160000L)
+                                                                                        .historyStartTime(0)
+                                                                                        .build(),
+                                                          Optional.empty(), Optional.empty())
+                                                      .getTimeSeriesSet();
     assertThat(timeSeries).hasSize(7);
     TransactionTimeSeries insideTimeSeries = null;
     for (TransactionTimeSeries series : timeSeries) {
@@ -774,12 +780,15 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long endTime = TimeUnit.MINUTES.toMillis(25685461);
     long historyStart = TimeUnit.MINUTES.toMillis(25685326);
     SortedSet<TransactionTimeSeries> timeseries =
-        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
-                                                                     .cvConfigId(cvConfigId)
-                                                                     .startTime(startTime + 1)
-                                                                     .endTime(endTime)
-                                                                     .historyStartTime(historyStart + 1)
-                                                                     .build());
+        continuousVerificationService
+            .getTimeSeriesOfHeatMapUnitV2(TimeSeriesFilter.builder()
+                                              .cvConfigId(cvConfigId)
+                                              .startTime(startTime + 1)
+                                              .endTime(endTime)
+                                              .historyStartTime(historyStart + 1)
+                                              .build(),
+                Optional.empty(), Optional.empty())
+            .getTimeSeriesSet();
     assertThat(timeseries).hasSize(5);
     assertThat(timeseries.first().getMetricTimeSeries()).isNotNull();
     assertThat(timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries()).hasSize(9);
@@ -886,13 +895,15 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long endTime = 1541523660000L;
     long historyStart = 1541515560001L;
     boolean longterm = false;
-    SortedSet<TransactionTimeSeries> timeseries =
-        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
-                                                                     .cvConfigId(cvConfigId)
-                                                                     .startTime(startTime)
-                                                                     .endTime(endTime)
-                                                                     .historyStartTime(historyStart)
-                                                                     .build());
+    SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService
+                                                      .getTimeSeriesOfHeatMapUnitV2(TimeSeriesFilter.builder()
+                                                                                        .cvConfigId(cvConfigId)
+                                                                                        .startTime(startTime)
+                                                                                        .endTime(endTime)
+                                                                                        .historyStartTime(historyStart)
+                                                                                        .build(),
+                                                          Optional.of(0), Optional.of(1000))
+                                                      .getTimeSeriesSet();
     for (TransactionTimeSeries s : timeseries) {
       for (TimeSeriesOfMetric tms : s.getMetricTimeSeries()) {
         if (tms.isLongTermPattern()) {
@@ -977,12 +988,15 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long endTime = TimeUnit.MINUTES.toMillis(25685461);
     long historyStart = TimeUnit.MINUTES.toMillis(25685326);
     SortedSet<TransactionTimeSeries> timeseries =
-        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
-                                                                     .cvConfigId(cvConfigId)
-                                                                     .startTime(startTime + 1)
-                                                                     .endTime(endTime)
-                                                                     .historyStartTime(historyStart + 1)
-                                                                     .build());
+        continuousVerificationService
+            .getTimeSeriesOfHeatMapUnitV2(TimeSeriesFilter.builder()
+                                              .cvConfigId(cvConfigId)
+                                              .startTime(startTime + 1)
+                                              .endTime(endTime)
+                                              .historyStartTime(historyStart + 1)
+                                              .build(),
+                Optional.empty(), Optional.empty())
+            .getTimeSeriesSet();
     for (Iterator<TransactionTimeSeries> txnIterator = timeseries.iterator(); txnIterator.hasNext();) {
       TransactionTimeSeries txnTimeSeries = txnIterator.next();
       for (Iterator<TimeSeriesOfMetric> metricTSIterator = txnTimeSeries.getMetricTimeSeries().iterator();
