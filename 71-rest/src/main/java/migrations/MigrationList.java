@@ -62,6 +62,7 @@ import migrations.all.InitPipelineCounters;
 import migrations.all.InitServiceCounters;
 import migrations.all.InitUserCounters;
 import migrations.all.InitWorkflowCounters;
+import migrations.all.InstanceComputerProviderNameFixMigration;
 import migrations.all.K8sV2ServiceInfraReleaseNameMigration;
 import migrations.all.LdapSettingsMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
@@ -293,6 +294,7 @@ public class MigrationList {
         .add(Pair.of(284, BaseMigration.class))
         .add(Pair.of(285, LoginRateLimitMigration.class))
         .add(Pair.of(286, BaseMigration.class))
+        .add(Pair.of(287, InstanceComputerProviderNameFixMigration.class))
         .build();
   }
 }
