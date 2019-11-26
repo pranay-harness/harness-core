@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -133,6 +134,31 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherForClusterInsight() {
+    String[] instanceIdFilterValues = new String[] {INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeCloudServiceNameEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeInstanceIdFilter(instanceIdFilterValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(CLOUD_SERVICE_NAME_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("CLOUDSERVICENAME");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
   public QLCCMAggregationFunction makeBillingAmtAggregation() {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
@@ -154,9 +180,19 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMGroupBy.builder().entityGroupBy(applicationGroupBy).build();
   }
 
+  public QLCCMGroupBy makeCloudServiceNameEntityGroupBy() {
+    QLCCMEntityGroupBy cloudServiceNameGroupBy = QLCCMEntityGroupBy.CloudServiceName;
+    return QLCCMGroupBy.builder().entityGroupBy(cloudServiceNameGroupBy).build();
+  }
+
   public QLBillingDataFilter makeApplicationFilter(String[] values) {
     QLIdFilter applicationFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().application(applicationFilter).build();
+  }
+
+  public QLBillingDataFilter makeInstanceIdFilter(String[] values) {
+    QLIdFilter instanceIdFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().launchType(instanceIdFilter).build();
   }
 
   public QLBillingDataFilter makeTimeFilter(Long filterTime) {
@@ -174,7 +210,11 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
     when(resultSet.getDouble(anyString())).thenAnswer((Answer<Double>) invocation -> 10.0 + doubleVal[0]++);
 
-    when(resultSet.getString(anyString())).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
+    when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
+    when(resultSet.getString("CLOUDSERVICENAME"))
+        .thenAnswer((Answer<String>) invocation -> CLOUD_SERVICE_NAME_ACCOUNT1);
+    when(resultSet.getString("INSTANCEID"))
+        .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     when(resultSet.getTimestamp("STARTTIME", utils.getDefaultCalendar())).thenAnswer((Answer<Timestamp>) invocation -> {
       calendar[0] = calendar[0] + 3600000;
       return new Timestamp(calendar[0]);

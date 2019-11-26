@@ -58,7 +58,7 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
 
     queryData =
         billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, sortCriteria);
-    logger.info("BillingStatsTimeSeriesDataFetcher query!! {}", queryData.getQuery());
+    logger.info("BillingStatsEntityDataFetcher query!! {}", queryData.getQuery());
     logger.info(queryData.getQuery());
 
     try (Connection connection = timeScaleDBService.getDBConnection();
@@ -85,21 +85,47 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
       Double costTrend = BillingStatsDefaultKeys.COSTTREND;
       String trendType = BillingStatsDefaultKeys.TRENDTYPE;
       String region = BillingStatsDefaultKeys.REGION;
+      String launchType = BillingStatsDefaultKeys.LAUNCHTYPE;
+      String cloudServiceName = BillingStatsDefaultKeys.CLOUDSERVICENAME;
+      String workloadName = BillingStatsDefaultKeys.WORKLOADNAME;
+      String workloadType = BillingStatsDefaultKeys.WORKLOADTYPE;
+      String namespace = BillingStatsDefaultKeys.NAMESPACE;
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
-        if (field.equals(BillingDataMetaDataFields.APPID) || field.equals(BillingDataMetaDataFields.ENVID)
-            || field.equals(BillingDataMetaDataFields.SERVICEID) || field.equals(BillingDataMetaDataFields.CLUSTERID)) {
-          type = field.getFieldName();
-          entityId = resultSet.getString(field.getFieldName());
-          name = statsHelper.getEntityName(field, entityId);
-        }
-
-        if (field.equals(BillingDataMetaDataFields.REGION)) {
-          region = resultSet.getString(field.getFieldName());
-        }
-
-        if (field.equals(BillingDataMetaDataFields.SUM)) {
-          totalCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+        switch (field) {
+          case APPID:
+          case ENVID:
+          case SERVICEID:
+          case CLUSTERID:
+          case INSTANCEID:
+            type = field.getFieldName();
+            entityId = resultSet.getString(field.getFieldName());
+            name = statsHelper.getEntityName(field, entityId);
+            break;
+          case REGION:
+            region = resultSet.getString(field.getFieldName());
+            break;
+          case SUM:
+            totalCost = Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+            break;
+          case CLOUDSERVICENAME:
+            cloudServiceName = resultSet.getString(field.getFieldName());
+            break;
+          case LAUNCHTYPE:
+            launchType = resultSet.getString(field.getFieldName());
+            break;
+          case WORKLOADNAME:
+            workloadName = resultSet.getString(field.getFieldName());
+            break;
+          case WORKLOADTYPE:
+            workloadType = resultSet.getString(field.getFieldName());
+            break;
+          case NAMESPACE:
+            namespace
+            = resultSet.getString(field.getFieldName());
+            break;
+          default:
+            break;
         }
       }
 
@@ -111,7 +137,12 @@ public class BillingStatsEntityDataFetcher extends AbstractStatsDataFetcher<QLCC
           .idleCost(idleCost)
           .costTrend(costTrend)
           .trendType(trendType)
-          .region(region);
+          .region(region)
+          .launchType(launchType)
+          .cloudServiceName(cloudServiceName)
+          .workloadName(workloadName)
+          .workloadType(workloadType)
+          .namespace(namespace);
 
       entityTableListData.add(entityTableDataBuilder.build());
     }

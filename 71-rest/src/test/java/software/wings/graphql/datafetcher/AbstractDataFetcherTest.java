@@ -73,6 +73,9 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String CLOUD_PROVIDER1_ID_ACCOUNT1 = "CLOUD_PROVIDER1_ID_ACCOUNT1";
   public static final String CLOUD_PROVIDER2_ID_ACCOUNT1 = "CLOUD_PROVIDER2_ID_ACCOUNT1";
   public static final String CLOUD_PROVIDER3_ID_ACCOUNT2 = "CLOUD_PROVIDER3_ID_ACCOUNT2";
+  public static final String CLOUD_SERVICE_NAME_ACCOUNT1 = "CLOUD_SERVICE_NAME_ACCOUNT1";
+  public static final String WORKLOAD_NAME_ACCOUNT1 = "WORKLOAD_NAME_ACCOUNT1";
+  public static final String WORKLOAD_TYPE_ACCOUNT1 = "WORKLOAD_TYPE_ACCOUNT1";
   public static final String ACCOUNT2_ID = "ACCOUNT2_ID";
   public static final String APP3_ID_ACCOUNT2 = "APP3_ID_ACCOUNT2";
   public static final String SERVICE4_ID_APP3_ACCOUNT2 = "SERVICE4_ID_APP3_ACCOUNT2";

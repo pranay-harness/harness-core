@@ -22,15 +22,17 @@ public class BillingCalculationService {
     this.instancePricingStrategyContext = instancePricingStrategyContext;
   }
 
-  public BillingData getInstanceBillingAmount(InstanceData instanceData, Instant startTime, Instant endTime) {
+  public BillingData getInstanceBillingAmount(
+      InstanceData instanceData, UtilizationData utilizationData, Instant startTime, Instant endTime) {
     double instanceActiveSeconds = getInstanceActiveSeconds(instanceData, startTime, endTime);
     InstancePricingStrategy instancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(instanceData.getInstanceType());
     PricingData pricingData = instancePricingStrategy.getPricePerHour(instanceData);
-    return getBillingAmount(instanceData, pricingData, instanceActiveSeconds);
+    return getBillingAmount(instanceData, utilizationData, pricingData, instanceActiveSeconds);
   }
 
-  BillingData getBillingAmount(InstanceData instanceData, PricingData pricingData, double instanceActiveSeconds) {
+  BillingData getBillingAmount(InstanceData instanceData, UtilizationData utilizationData, PricingData pricingData,
+      double instanceActiveSeconds) {
     double pricePerHour = pricingData.getPricePerHour();
     BigDecimal billingAmount = BigDecimal.valueOf((pricePerHour * instanceActiveSeconds) / 3600);
     double cpuUnit = 0;
@@ -43,7 +45,9 @@ public class BillingCalculationService {
       memoryMb = pricingData.getMemoryMb();
     }
     logger.info("Billing amount {} {} {}", billingAmount, pricePerHour, instanceActiveSeconds);
-    return new BillingData(getBillingAmountForResource(instanceData, billingAmount), instanceActiveSeconds,
+    BigDecimal billingAmountForResource = getBillingAmountForResource(instanceData, billingAmount);
+    return new BillingData(billingAmountForResource,
+        getIdleCostForResource(billingAmountForResource, utilizationData, instanceData), instanceActiveSeconds,
         cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
   }
 
@@ -61,6 +65,16 @@ public class BillingCalculationService {
       return instanceUsage.multiply(billingAmount);
     }
     return billingAmount;
+  }
+
+  BigDecimal getIdleCostForResource(
+      BigDecimal billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
+    if (instanceData.getInstanceType().toString().equals("ECS_TASK_FARGATE") || utilizationData == null) {
+      return BigDecimal.ZERO;
+    }
+    Double idleResourceFraction =
+        1 - (utilizationData.getCpuUtilization() + utilizationData.getMemoryUtilization()) / 2;
+    return BigDecimal.valueOf(billingDataForResource.doubleValue() * idleResourceFraction);
   }
 
   double getInstanceActiveSeconds(InstanceData instanceData, Instant startTime, Instant endTime) {

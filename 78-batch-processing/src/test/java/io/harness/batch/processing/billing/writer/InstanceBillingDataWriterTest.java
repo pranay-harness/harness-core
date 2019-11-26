@@ -9,8 +9,10 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
+import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
+import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
@@ -55,6 +57,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   private final double CPU_UNIT_SECONDS = 400;
   private final double MEMORY_MB_SECONDS = 400;
   private final double USAGE_DURATION_SECONDS = 400;
+  private final double CPU_UTILIZATION = 1;
+  private final double MEMORY_UTILIZATION = 1;
 
   private final Instant NOW = Instant.now();
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
@@ -64,6 +68,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Mock private BillingDataServiceImpl billingDataService;
   @Mock private JobParameters parameters;
   @Mock private BillingCalculationService billingCalculationService;
+  @Mock private UtilizationDataServiceImpl utilizationDataService;
 
   @Before
   public void setup() {
@@ -118,6 +123,9 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   public void testWriteBillingData() throws Exception {
     Map<String, String> metaDataMap = new HashMap<>();
     metaDataMap.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+    Map<String, UtilizationData> utilizationDataForInstances = new HashMap<>();
+    utilizationDataForInstances.put(INSTANCE_ID,
+        UtilizationData.builder().cpuUtilization(CPU_UTILIZATION).memoryUtilization(MEMORY_UTILIZATION).build());
     InstanceData instanceData = InstanceData.builder()
                                     .instanceType(InstanceType.EC2_INSTANCE)
                                     .metaData(metaDataMap)
@@ -129,8 +137,11 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
                                     .build();
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any()))
-        .thenReturn(new BillingData(BigDecimal.ONE, USAGE_DURATION_SECONDS, CPU_UNIT_SECONDS, MEMORY_MB_SECONDS));
+    when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any()))
+        .thenReturn(utilizationDataForInstances);
+    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
+        .thenReturn(new BillingData(
+            BigDecimal.ONE, BigDecimal.ZERO, USAGE_DURATION_SECONDS, CPU_UNIT_SECONDS, MEMORY_MB_SECONDS));
     instanceBillingDataWriter.write(Arrays.asList(instanceData));
     ArgumentCaptor<InstanceBillingData> instanceBillingDataArgumentCaptor =
         ArgumentCaptor.forClass(InstanceBillingData.class);
@@ -140,6 +151,7 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
     assertThat(instanceBillingData.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceBillingData.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(instanceBillingData.getBillingAmount()).isEqualTo(BigDecimal.ONE);
+    assertThat(instanceBillingData.getIdleCost()).isEqualTo(BigDecimal.ZERO);
     assertThat(instanceBillingData.getUsageDurationSeconds()).isEqualTo(USAGE_DURATION_SECONDS);
     assertThat(instanceBillingData.getCpuUnitSeconds()).isEqualTo(CPU_UNIT_SECONDS);
     assertThat(instanceBillingData.getMemoryMbSeconds()).isEqualTo(MEMORY_MB_SECONDS);

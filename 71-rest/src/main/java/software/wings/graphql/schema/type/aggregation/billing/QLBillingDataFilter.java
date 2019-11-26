@@ -20,6 +20,12 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter service;
   private QLIdFilter environment;
   private QLIdFilter cluster;
+  private QLIdFilter cloudServiceName;
+  private QLIdFilter launchType;
+  private QLIdFilter instanceId;
+  private QLIdFilter instanceType;
+  private QLIdFilter namespace;
+  private QLIdFilter workloadName;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
 
@@ -43,6 +49,24 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getEnvironment() != null) {
       filterTypes.add(QLBillingDataFilterType.Environment);
     }
+    if (filter.getCloudServiceName() != null) {
+      filterTypes.add(QLBillingDataFilterType.CloudServiceName);
+    }
+    if (filter.getLaunchType() != null) {
+      filterTypes.add(QLBillingDataFilterType.LaunchType);
+    }
+    if (filter.getInstanceId() != null) {
+      filterTypes.add(QLBillingDataFilterType.InstanceId);
+    }
+    if (filter.getInstanceType() != null) {
+      filterTypes.add(QLBillingDataFilterType.InstanceType);
+    }
+    if (filter.getNamespace() != null) {
+      filterTypes.add(QLBillingDataFilterType.Namespace);
+    }
+    if (filter.getWorkloadName() != null) {
+      filterTypes.add(QLBillingDataFilterType.WorkloadName);
+    }
     return filterTypes;
   }
 
@@ -60,6 +84,18 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getEndTime();
       case StartTime:
         return filter.getStartTime();
+      case CloudServiceName:
+        return filter.getCloudServiceName();
+      case LaunchType:
+        return filter.getLaunchType();
+      case InstanceId:
+        return filter.getInstanceId();
+      case InstanceType:
+        return filter.getInstanceType();
+      case Namespace:
+        return filter.getNamespace();
+      case WorkloadName:
+        return filter.getWorkloadName();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }

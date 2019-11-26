@@ -12,6 +12,7 @@ public class InstanceBillingData {
   private String envId;
   private String region;
   private String serviceId;
+  private String cloudServiceName;
   private String accountId;
   private String instanceId;
   private String clusterId;
@@ -28,6 +29,7 @@ public class InstanceBillingData {
   private String cloudProviderId;
   private String cloudProvider;
   private BigDecimal billingAmount;
+  private BigDecimal idleCost;
   private double cpuUnitSeconds;
   private double memoryMbSeconds;
   private double usageDurationSeconds;

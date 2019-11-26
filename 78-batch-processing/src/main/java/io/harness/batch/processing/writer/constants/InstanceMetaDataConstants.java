@@ -14,6 +14,7 @@ public class InstanceMetaDataConstants {
   public static final String INSTANCE_FAMILY = "instance_family";
   public static final String EC2_INSTANCE_ID = "ec2_instance_id";
   public static final String ECS_SERVICE_NAME = "ecs_service_name";
+  public static final String ECS_SERVICE_ARN = "ecs_service_arn";
   public static final String OPERATING_SYSTEM = "operating_system";
   public static final String PARENT_RESOURCE_ID = "parent_resource_id";
   public static final String PARENT_RESOURCE_CPU = "parent_resource_cpu";

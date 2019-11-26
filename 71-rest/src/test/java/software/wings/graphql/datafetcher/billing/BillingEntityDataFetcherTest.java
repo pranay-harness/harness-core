@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
@@ -122,6 +123,40 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(4).getTotalCost()).isEqualTo(14.0);
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingEntitySeriesDataFetcherForClusterInsight() {
+    Long filterTime = 0L;
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLBillingDataFilter> filters = Arrays.asList(makeTimeFilter(filterTime));
+    List<QLCCMGroupBy> groupBy =
+        Arrays.asList(makeStartTimeEntityGroupBy(), makeWorkloadTypeEntityGroupBy(), makeWorkloadNameEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLEntityTableListData data = (QLEntityTableListData) billingStatsEntityDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(filters.get(0).getStartTime().getOperator()).isEqualTo(QLTimeOperator.AFTER);
+    assertThat(filters.get(0).getStartTime().getValue()).isEqualTo(filterTime);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getWorkloadName()).isEqualTo("WORKLOAD_NAME_ACCOUNT1");
+    assertThat(data.getData().get(0).getWorkloadType()).isEqualTo("WORKLOAD_TYPE_ACCOUNT1");
+    assertThat(data.getData().get(0).getId()).isEqualTo(BillingStatsDefaultKeys.ENTITYID);
+    assertThat(data.getData().get(0).getName()).isEqualTo(BillingStatsDefaultKeys.NAME);
+    assertThat(data.getData().get(0).getType()).isEqualTo(BillingStatsDefaultKeys.TYPE);
+    assertThat(data.getData().get(0).getCostTrend()).isEqualTo(BillingStatsDefaultKeys.COSTTREND);
+    assertThat(data.getData().get(0).getIdleCost()).isEqualTo(BillingStatsDefaultKeys.IDLECOST);
+    assertThat(data.getData().get(0).getTrendType()).isEqualTo(BillingStatsDefaultKeys.TRENDTYPE);
+    assertThat(data.getData().get(0).getRegion()).isEqualTo(BillingStatsDefaultKeys.REGION);
+    assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
+  }
+
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
     return QLBillingSortCriteria.builder().sortOrder(QLSortOrder.DESCENDING).sortType(QLBillingSortType.Time).build();
   }
@@ -143,6 +178,16 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMGroupBy.builder().entityGroupBy(applicationGroupBy).build();
   }
 
+  public QLCCMGroupBy makeWorkloadNameEntityGroupBy() {
+    QLCCMEntityGroupBy workloadNameGroupBy = QLCCMEntityGroupBy.WorkloadName;
+    return QLCCMGroupBy.builder().entityGroupBy(workloadNameGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeWorkloadTypeEntityGroupBy() {
+    QLCCMEntityGroupBy workloadTypeGroupBy = QLCCMEntityGroupBy.WorkloadType;
+    return QLCCMGroupBy.builder().entityGroupBy(workloadTypeGroupBy).build();
+  }
+
   public QLBillingDataFilter makeTimeFilter(Long filterTime) {
     QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build();
     return QLBillingDataFilter.builder().startTime(timeFilter).build();
@@ -158,7 +203,9 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
 
     when(resultSet.getDouble(anyString())).thenAnswer((Answer<Double>) invocation -> 10.0 + doubleVal[0]++);
 
-    when(resultSet.getString(anyString())).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
+    when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
+    when(resultSet.getString("WORKLOADNAME")).thenAnswer((Answer<String>) invocation -> WORKLOAD_NAME_ACCOUNT1);
+    when(resultSet.getString("WORKLOADTYPE")).thenAnswer((Answer<String>) invocation -> WORKLOAD_TYPE_ACCOUNT1);
     when(resultSet.getTimestamp(BillingDataMetaDataFields.STARTTIME.getFieldName(), utils.getDefaultCalendar()))
         .thenAnswer((Answer<Timestamp>) invocation -> {
           calendar[0] = calendar[0] + 3600000;

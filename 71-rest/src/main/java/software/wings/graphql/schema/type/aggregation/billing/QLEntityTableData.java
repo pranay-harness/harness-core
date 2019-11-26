@@ -21,4 +21,9 @@ public class QLEntityTableData implements QLData {
   Double costTrend;
   String trendType;
   String region;
+  String launchType;
+  String cloudServiceName;
+  String workloadName;
+  String workloadType;
+  String namespace;
 }

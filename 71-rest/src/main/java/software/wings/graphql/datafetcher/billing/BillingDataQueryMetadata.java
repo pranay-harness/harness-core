@@ -29,7 +29,14 @@ public class BillingDataQueryMetadata {
     REGION("REGION", DataType.STRING, QLFilterKind.SIMPLE),
     SERVICEID("SERVICEID", DataType.STRING, QLFilterKind.SIMPLE),
     CLUSTERID("CLUSTERID", DataType.STRING, QLFilterKind.SIMPLE),
-    ENVID("ENVID", DataType.STRING, QLFilterKind.SIMPLE);
+    ENVID("ENVID", DataType.STRING, QLFilterKind.SIMPLE),
+    CLOUDSERVICENAME("CLOUDSERVICENAME", DataType.STRING, QLFilterKind.SIMPLE),
+    INSTANCEID("INSTANCEID", DataType.STRING, QLFilterKind.SIMPLE),
+    INSTANCETYPE("INSTANCETYPE", DataType.STRING, QLFilterKind.SIMPLE),
+    LAUNCHTYPE("LAUNCHTYPE", DataType.STRING, QLFilterKind.SIMPLE),
+    WORKLOADNAME("WORKLOADNAME", DataType.STRING, QLFilterKind.SIMPLE),
+    WORKLOADTYPE("WORKLOADTYPE", DataType.STRING, QLFilterKind.SIMPLE),
+    NAMESPACE("NAMESPACE", DataType.STRING, QLFilterKind.SIMPLE);
 
     private DataType dataType;
     private String fieldName;
