@@ -3,7 +3,6 @@ package software.wings.verification;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -68,8 +67,6 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   }
 
   private void updateRiskForEachTimeSeriesDatapoint(long analysisTime, int risk) {
-    long endTimeMillis = Timestamp.minuteBoundary(TimeUnit.MINUTES.toMillis(analysisTime));
-
     for (long timeToSetRisk = analysisTime;
          timeToSetRisk > analysisTime - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
          timeToSetRisk -= TimeUnit.MINUTES.toMillis(1)) {

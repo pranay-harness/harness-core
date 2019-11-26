@@ -241,12 +241,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     dynaTraceCVServiceConfiguration.setEnvId(envId);
     dynaTraceCVServiceConfiguration.setServiceId(serviceId);
     dynaTraceCVServiceConfiguration.setEnabled24x7(true);
-    dynaTraceCVServiceConfiguration.setServiceMethods("SERVICE_METHOD-991CE862F114C79F\n"
-        + "SERVICE_METHOD-65C2EED098275731\n"
-        + "SERVICE_METHOD-9D3499F155C8070D\n"
-        + "SERVICE_METHOD-AECEC4A5C7E348EC\n"
-        + "SERVICE_METHOD-9ACB771237BE05C6\n"
-        + "SERVICE_METHOD-DA487A489220E53D");
     dynaTraceCVServiceConfiguration.setConnectorId(generateUuid());
     dynaTraceCVServiceConfiguration.setStateType(APP_DYNAMICS);
     dynaTraceCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
@@ -690,7 +684,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertThat(fetchedObject.getEnvId()).isEqualTo(envId);
     assertThat(fetchedObject.getServiceId()).isEqualTo(serviceId);
     assertThat(fetchedObject.getStateType()).isEqualTo(DYNA_TRACE);
-    assertThat(fetchedObject.getServiceMethods()).isEqualTo(dynaTraceCVServiceConfiguration.getServiceMethods());
     assertThat(fetchedObject.getAnalysisTolerance()).isEqualTo(AnalysisTolerance.HIGH);
   }
 

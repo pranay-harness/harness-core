@@ -13,7 +13,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.ESSENTIALS;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
-import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.common.VerificationConstants.GA_PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.PER_MINUTE_CV_STATES;
 import static software.wings.common.VerificationConstants.URL_STRING;
@@ -904,9 +903,10 @@ public abstract class AbstractAnalysisState extends State {
 
   protected void logDataCollectionTriggeredMessage(CVActivityLogService.Logger activityLogger) {
     long dataCollectionStartTime = dataCollectionStartTimestampMillis();
+    long initDelayMins = TimeUnit.SECONDS.toMinutes(getDelaySeconds(initialAnalysisDelay));
     activityLogger.info("Triggered data collection for " + getTimeDuration()
-            + " minutes, Data will be collected for time range %t to %t. Waiting for " + DELAY_MINUTES
-            + " Minutes before starting data collection.",
+            + " minutes, Data will be collected for time range %t to %t. Waiting for " + initDelayMins
+            + " minutes before starting data collection.",
         dataCollectionStartTime, dataCollectionEndTimestampMillis(dataCollectionStartTime));
   }
 
@@ -995,6 +995,9 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected int getDelaySeconds(String initialDelay) {
+    if (isEmpty(initialDelay)) {
+      initialDelay = "2m";
+    }
     char lastChar = initialDelay.charAt(initialDelay.length() - 1);
     switch (lastChar) {
       case 's':

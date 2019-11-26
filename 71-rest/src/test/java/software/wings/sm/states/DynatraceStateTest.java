@@ -48,7 +48,6 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -175,7 +174,6 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
             .startTime(0)
             .collectionTime(Integer.parseInt(dynatraceState.getTimeDuration()))
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
-            .serviceMethods(new HashSet<>(serviceMethods))
             .dataCollectionMinute(0)
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails((DynaTraceConfig) settingAttribute.getValue(), null, null))

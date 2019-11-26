@@ -25,6 +25,7 @@ import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,6 +42,8 @@ public class DynaTraceServiceImpl implements DynaTraceService {
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(DynaTraceSetupTestNodeData setupTestNodeData) {
     try {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
+      setupTestNodeData.setFromTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime()));
+      setupTestNodeData.setToTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime()));
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()
@@ -61,7 +64,10 @@ public class DynaTraceServiceImpl implements DynaTraceService {
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)
             .dataForNode(response)
-            .loadResponse(VerificationLoadResponse.builder().isLoadPresent(isDataPresent(response)).build())
+            .loadResponse(VerificationLoadResponse.builder()
+                              .isLoadPresent(isDataPresent(response))
+                              .loadResponse(response)
+                              .build())
             .build();
       }
     } catch (Exception e) {

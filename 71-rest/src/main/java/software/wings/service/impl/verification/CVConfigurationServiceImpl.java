@@ -636,7 +636,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("tierId", ((AppDynamicsCVServiceConfiguration) cvConfiguration).getTierId());
         break;
       case DYNA_TRACE:
-        updateOperations.set("serviceMethods", ((DynaTraceCVServiceConfiguration) cvConfiguration).getServiceMethods());
         break;
       case PROMETHEUS:
         updateOperations.set(
