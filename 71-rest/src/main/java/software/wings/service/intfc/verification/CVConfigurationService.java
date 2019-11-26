@@ -3,6 +3,7 @@ package software.wings.service.intfc.verification;
 import io.harness.beans.PageRequest;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.intfc.ownership.OwnedByAccount;
+import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
@@ -14,7 +15,7 @@ import java.util.Map;
  * @author Vaibhav Tulsyan
  * 09/Oct/2018
  */
-public interface CVConfigurationService extends OwnedByAccount {
+public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironment {
   String saveConfiguration(String accountId, String appId, StateType stateType, Object params);
   String saveConfiguration(String accountId, String appId, StateType stateType, Object params, boolean createdFromYaml);
   <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId);

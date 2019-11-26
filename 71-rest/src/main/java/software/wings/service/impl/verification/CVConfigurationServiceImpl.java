@@ -19,6 +19,8 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
@@ -34,6 +36,11 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
+import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.resources.PrometheusResource;
@@ -45,6 +52,7 @@ import software.wings.service.impl.analysis.TimeSeriesMetricTemplates.TimeSeries
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -100,6 +108,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject private YamlPushService yamlPushService;
   @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private AlertService alertService;
 
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
 
@@ -506,7 +515,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
     wingsPersistence.delete(CVConfiguration.class, serviceConfigurationId);
     deleteTemplate(accountId, serviceConfigurationId, ((CVConfiguration) savedConfig).getStateType());
-
+    closeCVAlertsForConfiguration(serviceConfigurationId);
     yamlPushService.pushYamlChangeSet(accountId, savedConfig, null, Type.DELETE, isSyncFromGit, false);
 
     try {
@@ -990,5 +999,54 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public void pruneByEnvironment(String appId, String envId) {
+    logger.info("Deleting all configurations for envId: {}", envId);
+    Query<CVConfiguration> cvConfigurationQuery =
+        wingsPersistence.createQuery(CVConfiguration.class).filter(CVConfigurationKeys.envId, envId);
+
+    try (HIterator<CVConfiguration> configurations = new HIterator<>(cvConfigurationQuery.fetch())) {
+      while (configurations.hasNext()) {
+        CVConfiguration cvConfiguration = configurations.next();
+        closeCVAlertsForConfiguration(cvConfiguration.getUuid());
+        wingsPersistence.delete(CVConfiguration.class, cvConfiguration.getUuid());
+      }
+    }
+  }
+
+  private void closeCVAlertsForConfiguration(final String cvConfigurationId) {
+    PageResponse<Alert> pageResponse =
+        alertService.list(PageRequestBuilder.aPageRequest()
+                              .addFilter(AlertKeys.type, Operator.IN,
+                                  Arrays
+                                      .asList(AlertType.CONTINUOUS_VERIFICATION_ALERT,
+                                          AlertType.CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT)
+                                      .toArray())
+                              .build());
+
+    if (pageResponse == null) {
+      logger.info("No CV alerts found to delete for cvConfigId: {}", cvConfigurationId);
+      return;
+    }
+
+    List<Alert> alertList = pageResponse.getResponse();
+    if (isNotEmpty(alertList)) {
+      alertList.forEach(alert -> {
+        CVConfiguration cvConfigurationInAlert = null;
+        if (alert.getType().equals(AlertType.CONTINUOUS_VERIFICATION_ALERT)) {
+          cvConfigurationInAlert = ((ContinuousVerificationAlertData) alert.getAlertData()).getCvConfiguration();
+        } else {
+          cvConfigurationInAlert =
+              ((ContinuousVerificationDataCollectionAlert) alert.getAlertData()).getCvConfiguration();
+        }
+
+        if (cvConfigurationId.equals(cvConfigurationInAlert.getUuid())) {
+          alertService.closeAlert(
+              cvConfigurationInAlert.getAccountId(), alert.getAppId(), alert.getType(), alert.getAlertData());
+        }
+      });
+    }
   }
 }

@@ -12,6 +12,7 @@ import io.harness.queue.QueueController;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
+import io.harness.service.NoOpAlertService;
 import io.harness.service.NoOpCvValidationServiceImpl;
 import io.harness.service.NoOpYamlPushService;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
@@ -34,6 +35,7 @@ import software.wings.service.impl.verification.CVActivityLogServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.impl.verification.CVTaskServiceImpl;
 import software.wings.service.impl.verification.CvValidationService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MigrationService;
@@ -91,6 +93,7 @@ public class VerificationServiceModule extends AbstractModule {
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
     bind(CvValidationService.class).to(NoOpCvValidationServiceImpl.class);
     bind(YamlPushService.class).to(NoOpYamlPushService.class);
+    bind(AlertService.class).to(NoOpAlertService.class);
 
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,

@@ -100,6 +100,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.DataProvider;
 
@@ -149,6 +150,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject private CVConfigurationService cvConfigurationService;
 
   /**
    * {@inheritDoc}
