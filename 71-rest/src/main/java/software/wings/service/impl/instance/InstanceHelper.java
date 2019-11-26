@@ -26,6 +26,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
@@ -252,10 +253,11 @@ public class InstanceHelper {
       InstanceStatusSummary instanceStatusSummary, PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, InfrastructureMapping infraMapping) {
     HostElement host = instanceStatusSummary.getInstanceElement().getHost();
-    notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
+    Validator.notNullCheck("Host is null for workflow execution:" + workflowExecution.getWorkflowId(), host);
+    SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
 
-    InstanceBuilder builder =
-        buildInstanceBase(workflowExecution, artifact, phaseExecutionData, phaseStepExecutionData, infraMapping);
+    InstanceBuilder builder = buildInstanceBase(
+        workflowExecution, artifact, phaseExecutionData, phaseStepExecutionData, infraMapping, cloudProviderSetting);
     String hostUuid = host.getUuid();
 
     String region = null;
@@ -270,7 +272,6 @@ public class InstanceHelper {
         setInstanceInfoAndKey(builder, host.getEc2Instance(), infraMapping.getUuid());
       } else if (host.getInstanceId() != null && region != null) {
         // TODO:: Avoid sequential fetch for Instance
-        SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
         List<EncryptedDataDetail> encryptionDetails =
             secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(),
                 workflowExecution.getAppId(), workflowExecution.getUuid());
@@ -343,12 +344,13 @@ public class InstanceHelper {
 
   public InstanceBuilder buildInstanceBase(WorkflowExecution workflowExecution, Artifact artifact,
       PhaseExecutionData phaseExecutionData, PhaseStepExecutionData phaseStepExecutionData,
-      InfrastructureMapping infrastructureMapping) {
+      InfrastructureMapping infrastructureMapping, SettingAttribute cloudProviderSetting) {
     PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
     Application application = appService.get(workflowExecution.getAppId());
     notNullCheck("Application", application);
     EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
-    notNullCheck("triggeredBy", triggeredBy);
+    Validator.notNullCheck("triggeredBy", triggeredBy);
+    String computeProviderName = cloudProviderSetting == null ? null : cloudProviderSetting.getName();
 
     InstanceBuilder builder =
         Instance.builder()
@@ -359,7 +361,7 @@ public class InstanceHelper {
             .envId(workflowExecution.getEnvId())
             .envType(workflowExecution.getEnvType())
             .computeProviderId(phaseExecutionData.getComputeProviderId())
-            .computeProviderName(phaseExecutionData.getComputeProviderName())
+            .computeProviderName(computeProviderName)
             .infraMappingId(infrastructureMapping.getUuid())
             .infraMappingName(infrastructureMapping.getDisplayName())
             .infraMappingType(infrastructureMapping.getInfraMappingType())

@@ -14,6 +14,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
@@ -60,6 +62,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
@@ -82,6 +85,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionContext;
@@ -110,6 +114,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   public static final String WORKFLOW_EXECUTION_ID = "workflow_1";
   public static final String STATE_EXECUTION_INSTANCE_ID = "stateExeInstanceId_1";
   public static final String CLUSTER_NAME = "clusterName";
+  public static final String COMPUTE_PROVIDER_ID = "computeProvider_1";
   @Mock private InstanceService instanceService;
   @Mock private InfrastructureMappingService infraMappingService;
   @Mock private HostService hostService;
@@ -122,6 +127,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private DeploymentService deploymentService;
   @Mock FeatureFlagService featureFlagService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private SettingsService settingsService;
   @InjectMocks @Spy WorkflowStandardParams workflowStandardParams;
 
   @InjectMocks @Inject private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
@@ -164,7 +170,9 @@ public class InstanceHelperTest extends WingsBaseTest {
                             .build();
 
     when(instanceService.saveOrUpdate(anyList())).thenAnswer(i -> i.getArguments()[0]);
-
+    SettingAttribute settingAttribute = mock(SettingAttribute.class);
+    when(settingAttribute.getName()).thenReturn("computeProviderName");
+    when(settingsService.get(Mockito.matches(COMPUTE_PROVIDER_ID))).thenReturn(settingAttribute);
     doReturn(Application.Builder.anApplication().name("app").uuid("app_1").accountId(ACCOUNT_ID).build())
         .when(appService)
         .get(anyString());
@@ -236,6 +244,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     doReturn(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType("PHYSICAL_DATA_CENTER_SSH")
+                 .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                  .withAppId(APP_ID)
                  .build())
         .when(infraMappingService)
@@ -285,6 +294,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     doReturn(AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_SSH.getName())
+                 .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                  .withAppId(APP_ID)
                  .build())
         .when(infraMappingService)
@@ -329,6 +339,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     doReturn(CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_SSH.getName())
+                 .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                  .withAppId(APP_ID)
                  .build())
         .when(infraMappingService)
@@ -372,6 +383,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     phaseStepExecutionData = getPhaseStepExecutionData(phaseExecutionSummary);
     doReturn(AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
                  .withUuid(INFRA_MAP_ID)
+                 .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                  .withInfraMappingType(InfrastructureMappingType.AWS_AMI.getName())
                  .withAppId(APP_ID)
                  .build())
