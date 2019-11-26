@@ -47,7 +47,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Override
   public GovernanceConfig get(String accountId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Getting Deployment Freeze window for account: {}", accountId);
+      logger.info("Getting Deployment Freeze window");
       GovernanceConfig governanceConfig =
           wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId).get();
       if (governanceConfig == null) {

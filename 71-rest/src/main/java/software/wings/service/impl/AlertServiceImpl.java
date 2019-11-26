@@ -252,7 +252,7 @@ public class AlertServiceImpl implements AlertService {
 
   public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     try (AutoLogContext ignore = new AlertLogContext(accountId, alertType, appId, OVERRIDE_ERROR)) {
-      logger.info("Finding existing alerts for accountId: {} of type:{}", accountId, alertType);
+      logger.info("Finding existing alerts for type: {}", alertType);
       Query<Alert> alertQuery = getAlertsQuery(accountId, appId, alertType, alertData);
       for (Alert alert : alertQuery) {
         injector.injectMembers(alert.getAlertData());

@@ -173,8 +173,7 @@ public class LicenseServiceImpl implements LicenseService {
   private void sendEmailToSales(
       Account account, long expiryTime, String accountType, String subject, String body, List<String> defaultContacts) {
     if (isEmpty(account.getSalesContacts()) && isEmpty(defaultContacts)) {
-      logger.info(
-          "Skipping the sending of email for account {} since no sales contacts were configured", account.getUuid());
+      logger.info("Skipping the sending of email since no sales contacts were configured");
       return;
     }
 
