@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,7 +29,6 @@ import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -98,8 +96,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     Preconditions.checkNotNull(settingAttribute, "No dynatrace setting with id: " + analysisServerConfigId + " found");
 
@@ -117,7 +114,6 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .startTime(dataCollectionStartTimeStamp)
             .collectionTime(Integer.parseInt(getTimeDuration()))
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
-            .serviceMethods(splitServiceMethods(serviceMethods))
             .dataCollectionMinute(0)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 dynaTraceConfig, context.getAppId(), context.getWorkflowExecutionId()))

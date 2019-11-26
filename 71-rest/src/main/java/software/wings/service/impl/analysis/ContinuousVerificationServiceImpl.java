@@ -1867,7 +1867,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .cvConfigId(config.getUuid())
             .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
-            .serviceMethods(DynatraceState.splitServiceMethods(config.getServiceMethods()))
             .startTime(startTime)
             .collectionTime(timeDuration)
             .dataCollectionMinute(0)

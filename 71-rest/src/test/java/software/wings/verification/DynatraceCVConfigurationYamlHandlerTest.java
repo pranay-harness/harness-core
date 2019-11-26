@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.VerificationOperationException;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -101,7 +100,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   }
 
   private DynaTraceCVConfigurationYaml buildYaml() {
-    DynaTraceCVConfigurationYaml yaml = DynaTraceCVConfigurationYaml.builder().serviceMethods("service1").build();
+    DynaTraceCVConfigurationYaml yaml = DynaTraceCVConfigurationYaml.builder().build();
     yaml.setName("TestDynaTraceConfig");
     yaml.setAccountId(accountId);
     yaml.setServiceName(serviceName);
@@ -116,8 +115,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testToYaml() {
     final String appId = "appId";
-    DynaTraceCVServiceConfiguration cvServiceConfiguration =
-        DynaTraceCVServiceConfiguration.builder().serviceMethods("service1").build();
+    DynaTraceCVServiceConfiguration cvServiceConfiguration = DynaTraceCVServiceConfiguration.builder().build();
     setBasicInfo(cvServiceConfiguration);
 
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
@@ -126,15 +124,13 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getEnvName()).isEqualTo(envName);
-    assertThat(yaml.getServiceMethods().split(",")).isEqualTo(cvServiceConfiguration.getServiceMethods().split("\n"));
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testToYamlMultipleServiceMethods() {
-    DynaTraceCVServiceConfiguration cvServiceConfiguration =
-        DynaTraceCVServiceConfiguration.builder().serviceMethods("service1\nservice2\nservice3").build();
+    DynaTraceCVServiceConfiguration cvServiceConfiguration = DynaTraceCVServiceConfiguration.builder().build();
     setBasicInfo(cvServiceConfiguration);
 
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
@@ -143,7 +139,6 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     assertThat(yaml.getAccountId()).isEqualTo(cvServiceConfiguration.getAccountId());
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getEnvName()).isEqualTo(envName);
-    assertThat(yaml.getServiceMethods().split(",")).isEqualTo(cvServiceConfiguration.getServiceMethods().split("\n"));
   }
 
   @Test
@@ -165,47 +160,5 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     assertThat(bean.getEnvId()).isEqualTo(envId);
     assertThat(bean.getServiceId()).isEqualTo(serviceId);
     assertThat(bean.getUuid()).isNotNull();
-    assertThat(bean.getServiceMethods()).isEqualTo("service1");
-  }
-
-  @Test(expected = VerificationOperationException.class)
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testUpsertEmptyServiceMethod() throws Exception {
-    when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
-    when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
-    when(yamlHelper.getNameFromYamlFilePath("TestDynaTraceConfig.yaml")).thenReturn("TestDynaTraceConfig");
-
-    ChangeContext<DynaTraceCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDynaTraceConfig.yaml").build();
-    changeContext.setChange(c);
-    DynaTraceCVConfigurationYaml yaml = buildYaml();
-    yaml.setServiceMethods(null);
-    changeContext.setYaml(yaml);
-    DynaTraceCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testUpsertMultipleServiceMethods() throws Exception {
-    when(yamlHelper.getAppId(anyString(), anyString())).thenReturn(appId);
-    when(yamlHelper.getEnvironmentId(anyString(), anyString())).thenReturn(envId);
-    when(yamlHelper.getNameFromYamlFilePath("TestDynaTraceConfig.yaml")).thenReturn("TestDynaTraceConfig");
-
-    ChangeContext<DynaTraceCVConfigurationYaml> changeContext = new ChangeContext<>();
-    Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestDynaTraceConfig.yaml").build();
-    changeContext.setChange(c);
-    DynaTraceCVConfigurationYaml yaml = buildYaml();
-    yaml.setServiceMethods("service1,service2,service3");
-    changeContext.setYaml(yaml);
-    DynaTraceCVServiceConfiguration bean = yamlHandler.upsertFromYaml(changeContext, null);
-
-    assertThat(bean.getName()).isEqualTo("TestDynaTraceConfig");
-    assertThat(bean.getAppId()).isEqualTo(appId);
-    assertThat(bean.getEnvId()).isEqualTo(envId);
-    assertThat(bean.getServiceId()).isEqualTo(serviceId);
-    assertThat(bean.getUuid()).isNotNull();
-    assertThat(bean.getServiceMethods()).isEqualTo("service1\nservice2\nservice3");
   }
 }

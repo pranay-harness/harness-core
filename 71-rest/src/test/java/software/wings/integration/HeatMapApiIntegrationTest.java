@@ -155,7 +155,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   private void createDynaTraceConfig() {
-    dynaTraceCVServiceConfiguration = DynaTraceCVServiceConfiguration.builder().serviceMethods("default").build();
+    dynaTraceCVServiceConfiguration = DynaTraceCVServiceConfiguration.builder().build();
     dynaTraceCVServiceConfiguration.setStateType(StateType.DYNA_TRACE);
     setCommonConfigDetails(dynaTraceCVServiceConfiguration);
     wingsPersistence.save(dynaTraceCVServiceConfiguration);

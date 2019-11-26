@@ -1,12 +1,9 @@
 package software.wings.verification;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.VerificationOperationException;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
@@ -22,7 +19,6 @@ public class DynatraceCVConfigurationYamlHandler
     super.toYaml(yaml, bean);
 
     yaml.setType(StateType.DYNA_TRACE.name());
-    yaml.setServiceMethods(bean.getServiceMethods().replaceAll("\n", ","));
     return yaml;
   }
 
@@ -43,15 +39,7 @@ public class DynatraceCVConfigurationYamlHandler
     DynaTraceCVServiceConfiguration bean = DynaTraceCVServiceConfiguration.builder().build();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setStateType(StateType.DYNA_TRACE);
-    if (isEmpty(changeContext.getYaml().getServiceMethods())) {
-      throw new VerificationOperationException(
-          ErrorCode.DYNA_TRACE_CONFIGURATION_ERROR, "Service methods cannot be empty in Dynatrace Yaml");
-    }
-    String serviceMethods = changeContext.getYaml().getServiceMethods();
-    serviceMethods =
-        serviceMethods.replaceAll(",", "\n"); // assuming here that the service methods in yaml will be comma separated
 
-    bean.setServiceMethods(serviceMethods);
     if (previous != null) {
       bean.setUuid(previous.getUuid());
       cvConfigurationService.updateConfiguration(bean, appId);

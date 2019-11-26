@@ -112,15 +112,13 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
     List<Callable<DynaTraceMetricDataResponse>> callables = new ArrayList<>();
     for (DynaTraceTimeSeries timeSeries : Lists.newArrayList(DynaTraceTimeSeries.REQUEST_PER_MINUTE)) {
       callables.add(() -> {
-        DynaTraceMetricDataRequest dataRequest =
-            DynaTraceMetricDataRequest.builder()
-                .timeseriesId(timeSeries.getTimeseriesId())
-                .entities(DynatraceState.splitServiceMethods(setupTestNodeData.getServiceMethods()))
-                .aggregationType(timeSeries.getAggregationType())
-                .percentile(timeSeries.getPercentile())
-                .startTimestamp(setupTestNodeData.getFromTime())
-                .endTimestamp(setupTestNodeData.getToTime())
-                .build();
+        DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
+                                                     .timeseriesId(timeSeries.getTimeseriesId())
+                                                     .aggregationType(timeSeries.getAggregationType())
+                                                     .percentile(timeSeries.getPercentile())
+                                                     .startTimestamp(setupTestNodeData.getFromTime())
+                                                     .endTimestamp(setupTestNodeData.getToTime())
+                                                     .build();
 
         DynaTraceMetricDataResponse metricDataResponse =
             fetchMetricData(config, dataRequest, encryptionDetails, thirdPartyApiCallLog);

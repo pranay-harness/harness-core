@@ -431,8 +431,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetDynatraceMetricType() {
-    DynaTraceCVServiceConfiguration cvConfig =
-        DynaTraceCVServiceConfiguration.builder().serviceMethods(generateUuid()).build();
+    DynaTraceCVServiceConfiguration cvConfig = DynaTraceCVServiceConfiguration.builder().build();
     cvConfig.setStateType(StateType.DYNA_TRACE);
     assertThat(
         continuousVerificationService.getMetricType(cvConfig, NewRelicMetricValueDefinition.CLIENT_SIDE_FAILURE_RATE))
