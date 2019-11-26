@@ -101,10 +101,10 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
     for (NotificationReceiverInfo notificationReceiver : receivers) {
       if (notificationReceiver instanceof NotificationGroup) {
-        logger.info("[notification-group-dispatch] accountId={}", notifications.get(0).getAccountId());
+        logger.info("notification group dispatch");
         notificationGroupDispatcher.dispatch(notifications, (NotificationGroup) notificationReceiver);
       } else if (notificationReceiver instanceof UserGroup) {
-        logger.info("[user-group-dispatch] accountId={}", notifications.get(0).getAccountId());
+        logger.info("user group dispatch");
         userGroupDispatcher.dispatch(notifications, (UserGroup) notificationReceiver);
       } else {
         logger.error("Unhandled implementation of NotificationReceiverInfo. Class: {}",

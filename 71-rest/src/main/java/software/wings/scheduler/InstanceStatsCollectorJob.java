@@ -85,7 +85,7 @@ public class InstanceStatsCollectorJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) {
     String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID_KEY);
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Running instance stats collector job for accountId: {}", accountId);
+      logger.info("Running instance stats collector job");
       executorService.submit(() -> {
         Objects.requireNonNull(accountId, "Account Id must be passed in job context");
         createStats(accountId);

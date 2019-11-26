@@ -91,7 +91,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     DashboardSettings updatedDashboardSettings = get(accountId, id);
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, dashboardSettingsBeforeUpdate, updatedDashboardSettings, Type.UPDATE);
-    logger.info("Updated dashboard {} for account {}", id, accountId);
+    logger.info("Updated dashboard {}", id);
     return updatedDashboardSettings;
   }
 
