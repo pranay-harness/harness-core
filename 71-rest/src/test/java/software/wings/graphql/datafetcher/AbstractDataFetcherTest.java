@@ -85,6 +85,11 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String INSTANCE8_SERVICE4_ENV6_APP3_ACCOUNT2 = "INSTANCE8_SERVICE4_ENV6_APP3_ACCOUNT2";
   public static final String WORKFLOW1 = "WORKFLOW1";
   public static final String PIPELINE1 = "PIPELINE1";
+  public static final String REGION1 = "REGION1";
+  public static final String CLUSTER1_ID = "CLUSTER1_ID";
+  public static final String LAUNCH_TYPE1 = "LAUNCH_TYPE1";
+  public static final String NAMESPACE1 = "NAMESPACE1";
+  public static final String INSTANCE_TYPE1 = "INSTANCE_TYPE1";
   public static final String QUERY1 =
       "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY SUM_VALUE) AS CNT, time_bucket_gapfill('1 hours',REPORTEDAT,'2009-02-12T11:19:15.233Z','2009-02-12T16:19:15.233Z') AS GRP_BY_TIME FROM (SELECT REPORTEDAT, SUM(INSTANCECOUNT) AS SUM_VALUE FROM INSTANCE_STATS WHERE  REPORTEDAT  >= timestamp '2009-02-12T11:19:15.233Z' AND REPORTEDAT  < timestamp '2009-02-12T16:19:15.233Z' AND ACCOUNTID = 'ACCOUNT1_ID' GROUP BY REPORTEDAT) INSTANCE_STATS GROUP BY GRP_BY_TIME ORDER BY GRP_BY_TIME";
   public static final String QUERY2 =
