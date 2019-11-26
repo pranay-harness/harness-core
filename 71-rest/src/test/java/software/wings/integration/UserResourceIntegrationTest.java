@@ -43,7 +43,7 @@ public class UserResourceIntegrationTest extends BaseIntegrationTest {
 
     WebTarget target = client.target(url);
     Response response = target.request().get();
-    assertThat(401 == response.getStatus());
+    assertThat(401).isEqualTo(response.getStatus());
   }
 
   private String getLoginTypeResponseUri(final String uri, final String arguments) {
