@@ -71,6 +71,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
+import com.sun.management.OperatingSystemMXBean;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.UUIDGenerator;
@@ -110,6 +111,7 @@ import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.Encoder;
 import org.atmosphere.wasync.Event;
@@ -154,6 +156,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -173,6 +176,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -241,6 +245,11 @@ public class DelegateServiceImpl implements DelegateService {
   private final Map<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyValidatingFutures = new ConcurrentHashMap<>();
   private final Map<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
+
+  private final AtomicInteger maxValidatingTasksCount = new AtomicInteger();
+  private final AtomicInteger maxExecutingTasksCount = new AtomicInteger();
+  private final AtomicInteger maxValidatingFuturesCount = new AtomicInteger();
+  private final AtomicInteger maxExecutingFuturesCount = new AtomicInteger();
 
   private final AtomicLong lastHeartbeatSentAt = new AtomicLong(System.currentTimeMillis());
   private final AtomicLong lastHeartbeatReceivedAt = new AtomicLong(System.currentTimeMillis());
@@ -1293,10 +1302,32 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void logCurrentTasks() {
-    logger.info("Currently validating tasks: {}", currentlyValidatingTasks.size());
-    logger.info("Currently validating futures: {}", currentlyValidatingFutures.size());
-    logger.info("Currently executing tasks: {}", currentlyExecutingTasks.size());
-    logger.info("Currently executing futures: {}", currentlyExecutingFutures.size());
+    logger.info("Max validating tasks since last checkpoint: {}", maxValidatingTasksCount.getAndSet(0));
+    logger.info("Max validating futures since last checkpoint: {}", maxValidatingFuturesCount.getAndSet(0));
+    logger.info("Max executing tasks since last checkpoint: {}", maxExecutingTasksCount.getAndSet(0));
+    logger.info("Max executing futures since last checkpoint: {}", maxExecutingFuturesCount.getAndSet(0));
+    logger.info("Memory Usage -  Heap: {}, Non-Heap: {}", ManagementFactory.getMemoryMXBean().getHeapMemoryUsage(),
+        ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage());
+    OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+    logger.info("CPU Load percentage - Process: {}, System: {}", Precision.round(osBean.getProcessCpuLoad() * 100, 2),
+        Precision.round(osBean.getSystemCpuLoad() * 100, 2));
+
+    if (systemExecutorService instanceof ThreadPoolExecutor) {
+      logger.info("systemExecutorService active thread count: {}",
+          ((ThreadPoolExecutor) systemExecutorService).getActiveCount());
+    }
+    if (asyncExecutorService instanceof ThreadPoolExecutor) {
+      logger.info(
+          "asyncExecutorService active thread count: {}", ((ThreadPoolExecutor) asyncExecutorService).getActiveCount());
+    }
+    if (artifactExecutorService instanceof ThreadPoolExecutor) {
+      logger.info("artifactExecutorService active thread count: {}",
+          ((ThreadPoolExecutor) artifactExecutorService).getActiveCount());
+    }
+    if (timeoutEnforcementService instanceof ThreadPoolExecutor) {
+      logger.info("timeoutEnforcementService active thread count: {}",
+          ((ThreadPoolExecutor) timeoutEnforcementService).getActiveCount());
+    }
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
@@ -1364,10 +1395,12 @@ public class DelegateServiceImpl implements DelegateService {
         DelegateValidateTask delegateValidateTask = getDelegateValidateTask(delegateTaskEvent, delegateTask);
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTask.getUuid(), delegateTask);
+        updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
         ExecutorService executorService = delegateTask.isAsync()
             ? asyncExecutorService
             : delegateTask.getData().getTaskType().contains("BUILD") ? artifactExecutorService : syncExecutorService;
         currentlyValidatingFutures.put(delegateTask.getUuid(), executorService.submit(delegateValidateTask));
+        updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
         logger.info("Task [{}] submitted for validation", delegateTask.getUuid());
       } else if (delegateId.equals(delegateTask.getDelegateId())) {
         applyDelegateSecretFunctor(delegatePackage);
@@ -1457,6 +1490,8 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Task future in executeTask: {} - done:{}, cancelled:{}", delegateTask.getUuid(), taskFuture.isDone(),
         taskFuture.isCancelled());
     currentlyExecutingFutures.put(delegateTask.getUuid(), taskFuture);
+    updateCounterIfLessThanCurrent(maxExecutingFuturesCount, currentlyExecutingFutures.size());
+
     timeoutEnforcementService.submit(() -> enforceDelegateTaskTimeout(delegateTask.getUuid(), delegateTask.getData()));
     logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
   }
@@ -1530,6 +1565,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (!currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
         logger.info("Adding task {} to executing tasks", delegateTask.getUuid());
         currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask);
+        updateCounterIfLessThanCurrent(maxExecutingTasksCount, currentlyExecutingTasks.size());
         if (sanitizer != null) {
           delegateLogService.registerLogSanitizer(sanitizer);
         }
@@ -1539,6 +1575,10 @@ public class DelegateServiceImpl implements DelegateService {
         return false;
       }
     };
+  }
+
+  private void updateCounterIfLessThanCurrent(AtomicInteger counter, int current) {
+    counter.updateAndGet(value -> value < current ? current : value);
   }
 
   private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId, LogSanitizer sanitizer) {
