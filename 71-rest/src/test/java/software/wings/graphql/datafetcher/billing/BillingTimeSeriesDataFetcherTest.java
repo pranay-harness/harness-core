@@ -43,6 +43,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -138,11 +139,11 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetchMethodInBillingTimeSeriesDataFetcherForClusterInsight() {
-    String[] instanceIdFilterValues = new String[] {INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1};
+    String[] cloudServiceNameFilterValues = new String[] {CLOUD_SERVICE_NAME_ACCOUNT1};
 
     QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeCloudServiceNameEntityGroupBy(), makeStartTimeEntityGroupBy());
-    List<QLBillingDataFilter> filters = Arrays.asList(makeInstanceIdFilter(instanceIdFilterValues));
+    List<QLBillingDataFilter> filters = Arrays.asList(makeCloudServiceNameFilter(cloudServiceNameFilterValues));
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
 
     QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
@@ -156,6 +157,185 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(CLOUD_SERVICE_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("CLOUDSERVICENAME");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherServiceQuery() {
+    String[] serviceValues = new String[] {SERVICE1_ID_APP1_ACCOUNT1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeServiceEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeServiceFilter(serviceValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("SERVICEID");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherEnvironmentQuery() {
+    String[] environmentValues = new String[] {SERVICE1_ID_APP1_ACCOUNT1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeEnvironmentEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeEnvironmentFilter(environmentValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("ENVID");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherClusterQuery() {
+    String[] clusterValues = new String[] {CLUSTER1_ID};
+    String[] workloadNameValues = new String[] {WORKLOAD_NAME_ACCOUNT1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeClusterEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeClusterFilter(clusterValues));
+    filters.add(makeWorkloadNameFilter(workloadNameValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(CLUSTER1_ID);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("CLUSTERID");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherInstanceIdQuery() {
+    String[] instanceIdValues = new String[] {INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeInstanceIdEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeInstanceIdFilter(instanceIdValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId())
+        .isEqualTo(INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("INSTANCEID");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherLaunchTypeQuery() {
+    String[] launchTypeValues = new String[] {LAUNCH_TYPE1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeLaunchTypeEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeLaunchTypeFilter(launchTypeValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(LAUNCH_TYPE1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("LAUNCHTYPE");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherRegionQuery() {
+    String[] instanceTypeValues = new String[] {INSTANCE_TYPE1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeRegionEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeInstanceTypeFilter(instanceTypeValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(REGION1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("REGION");
+    assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingTimeSeriesDataFetcherNamespaceQuery() {
+    String[] namespaceValues = new String[] {NAMESPACE1};
+
+    QLCCMAggregationFunction aggregationFunction = makeBillingAmtAggregation();
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNamespaceEntityGroupBy(), makeStartTimeEntityGroupBy());
+    List<QLBillingDataFilter> filters = Arrays.asList(makeNamespaceFilter(namespaceValues));
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
+
+    QLStackedTimeSeriesData data = (QLStackedTimeSeriesData) billingStatsTimeSeriesDataFetcher.fetch(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria);
+
+    assertThat(aggregationFunction.getColumnName()).isEqualTo("billingamount");
+    assertThat(aggregationFunction.getOperationType()).isEqualTo(QLCCMAggregateOperation.SUM);
+    assertThat(groupBy.get(0).getEntityGroupBy().getAggregationKind()).isEqualTo(QLAggregationKind.SIMPLE);
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Amount);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.ASCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getId()).isEqualTo(NAMESPACE1);
+    assertThat(data.getData().get(0).getValues().get(0).getKey().getType()).isEqualTo("NAMESPACE");
     assertThat(data.getData().get(0).getValues().get(0).getValue()).isEqualTo(10.0);
   }
 
@@ -185,6 +365,41 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMGroupBy.builder().entityGroupBy(cloudServiceNameGroupBy).build();
   }
 
+  public QLCCMGroupBy makeServiceEntityGroupBy() {
+    QLCCMEntityGroupBy serviceGroupBy = QLCCMEntityGroupBy.Service;
+    return QLCCMGroupBy.builder().entityGroupBy(serviceGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeRegionEntityGroupBy() {
+    QLCCMEntityGroupBy regionGroupBy = QLCCMEntityGroupBy.Region;
+    return QLCCMGroupBy.builder().entityGroupBy(regionGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeClusterEntityGroupBy() {
+    QLCCMEntityGroupBy clusterGroupBy = QLCCMEntityGroupBy.Cluster;
+    return QLCCMGroupBy.builder().entityGroupBy(clusterGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeInstanceIdEntityGroupBy() {
+    QLCCMEntityGroupBy instanceIdGroupBy = QLCCMEntityGroupBy.InstanceId;
+    return QLCCMGroupBy.builder().entityGroupBy(instanceIdGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeEnvironmentEntityGroupBy() {
+    QLCCMEntityGroupBy environmentGroupBy = QLCCMEntityGroupBy.Environment;
+    return QLCCMGroupBy.builder().entityGroupBy(environmentGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeLaunchTypeEntityGroupBy() {
+    QLCCMEntityGroupBy launchTypeGroupBy = QLCCMEntityGroupBy.LaunchType;
+    return QLCCMGroupBy.builder().entityGroupBy(launchTypeGroupBy).build();
+  }
+
+  public QLCCMGroupBy makeNamespaceEntityGroupBy() {
+    QLCCMEntityGroupBy namespaceGroupBy = QLCCMEntityGroupBy.Namespace;
+    return QLCCMGroupBy.builder().entityGroupBy(namespaceGroupBy).build();
+  }
+
   public QLBillingDataFilter makeApplicationFilter(String[] values) {
     QLIdFilter applicationFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLBillingDataFilter.builder().application(applicationFilter).build();
@@ -192,12 +407,52 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
 
   public QLBillingDataFilter makeInstanceIdFilter(String[] values) {
     QLIdFilter instanceIdFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
-    return QLBillingDataFilter.builder().launchType(instanceIdFilter).build();
+    return QLBillingDataFilter.builder().instanceId(instanceIdFilter).build();
+  }
+
+  public QLBillingDataFilter makeLaunchTypeFilter(String[] values) {
+    QLIdFilter launchTypeFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().launchType(launchTypeFilter).build();
   }
 
   public QLBillingDataFilter makeTimeFilter(Long filterTime) {
     QLTimeFilter timeFilter = QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(filterTime).build();
     return QLBillingDataFilter.builder().startTime(timeFilter).build();
+  }
+
+  public QLBillingDataFilter makeServiceFilter(String[] values) {
+    QLIdFilter serviceFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().service(serviceFilter).build();
+  }
+
+  public QLBillingDataFilter makeClusterFilter(String[] values) {
+    QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().cluster(clusterFilter).build();
+  }
+
+  public QLBillingDataFilter makeEnvironmentFilter(String[] values) {
+    QLIdFilter environmentFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().service(environmentFilter).build();
+  }
+
+  public QLBillingDataFilter makeCloudServiceNameFilter(String[] values) {
+    QLIdFilter cloudServiceNameFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().cloudServiceName(cloudServiceNameFilter).build();
+  }
+
+  public QLBillingDataFilter makeInstanceTypeFilter(String[] values) {
+    QLIdFilter instanceTypeFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().instanceType(instanceTypeFilter).build();
+  }
+
+  public QLBillingDataFilter makeNamespaceFilter(String[] values) {
+    QLIdFilter namespaceFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
+  }
+
+  public QLBillingDataFilter makeWorkloadNameFilter(String[] values) {
+    QLIdFilter workloadNameFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLBillingDataFilter.builder().workloadName(workloadNameFilter).build();
   }
 
   private void mockResultSet() throws SQLException {
@@ -213,6 +468,13 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
     when(resultSet.getString("CLOUDSERVICENAME"))
         .thenAnswer((Answer<String>) invocation -> CLOUD_SERVICE_NAME_ACCOUNT1);
+    when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
+    when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID);
+    when(resultSet.getString("REGION")).thenAnswer((Answer<String>) invocation -> REGION1);
+    when(resultSet.getString("LAUNCHTYPE")).thenAnswer((Answer<String>) invocation -> LAUNCH_TYPE1);
+    when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
+    when(resultSet.getString("NAMESPACE")).thenAnswer((Answer<String>) invocation -> NAMESPACE1);
+    when(resultSet.getString("REGION")).thenAnswer((Answer<String>) invocation -> REGION1);
     when(resultSet.getString("INSTANCEID"))
         .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
     when(resultSet.getTimestamp("STARTTIME", utils.getDefaultCalendar())).thenAnswer((Answer<Timestamp>) invocation -> {
