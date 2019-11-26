@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import com.google.inject.Inject;
 
+import io.harness.event.timeseries.processor.InstanceEventProcessor;
 import io.harness.queue.QueueListener;
 import software.wings.api.InstanceEvent;
 
@@ -11,7 +12,7 @@ import software.wings.api.InstanceEvent;
  *
  */
 public class InstanceEventListener extends QueueListener<InstanceEvent> {
-  @Inject private InstanceTimeScaleProcessor instanceTimeScaleProcessor;
+  @Inject private InstanceEventProcessor instanceEventProcessor;
 
   public InstanceEventListener() {
     super(false);
@@ -22,6 +23,6 @@ public class InstanceEventListener extends QueueListener<InstanceEvent> {
    */
   @Override
   public void onMessage(InstanceEvent instanceEvent) {
-    instanceTimeScaleProcessor.handleInstanceChanges(instanceEvent);
+    instanceEventProcessor.processEvent(instanceEvent.getTimeSeriesBatchEventInfo());
   }
 }

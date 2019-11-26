@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 
 import java.util.Set;
 
@@ -27,4 +28,5 @@ public class InstanceEvent extends Queuable {
   private Set<String> deletions;
   private long deletionTimestamp;
   private Set<Instance> insertions;
+  private TimeSeriesBatchEventInfo timeSeriesBatchEventInfo;
 }

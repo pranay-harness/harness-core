@@ -7,14 +7,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.utils.Lists;
-import io.harness.event.model.Event;
-import io.harness.event.model.EventData;
-import io.harness.event.model.EventType;
-import io.harness.event.publisher.EventPublisher;
 import io.harness.event.timeseries.processor.EventProcessor;
 import io.harness.queue.QueuePublisher;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentTimeSeriesEvent;
+import software.wings.api.InstanceEvent;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -35,10 +32,10 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class UsageMetricsEventPublisher {
-  @Inject EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private QueuePublisher<DeploymentTimeSeriesEvent> deploymentTimeSeriesEventQueue;
+  @Inject private QueuePublisher<InstanceEvent> instanceTimeSeriesEventQueue;
   SimpleDateFormat sdf;
 
   public UsageMetricsEventPublisher() {
@@ -127,16 +124,6 @@ public class UsageMetricsEventPublisher {
     return DeploymentTimeSeriesEvent.builder().timeSeriesEventInfo(eventInfo).build();
   }
 
-  private void publishEvent(Event event) {
-    executorService.submit(() -> {
-      try {
-        eventPublisher.publishEvent(event);
-      } catch (Exception e) {
-        logger.error("Failed to publish event:[{}]", event.getEventType(), e);
-      }
-    });
-  }
-
   public void publishInstanceTimeSeries(String accountId, long timestamp, List<Instance> instances) {
     if (isEmpty(instances)) {
       return;
@@ -175,7 +162,8 @@ public class UsageMetricsEventPublisher {
                                              .timestamp(timestamp)
                                              .dataPointList(dataPointList)
                                              .build();
-    EventData eventData = EventData.builder().eventInfo(eventInfo).build();
-    publishEvent(Event.builder().eventType(EventType.INSTANCE_EVENT).eventData(eventData).build());
+    InstanceEvent instanceEvent =
+        InstanceEvent.builder().accountId(accountId).timeSeriesBatchEventInfo(eventInfo).build();
+    instanceTimeSeriesEventQueue.send(instanceEvent);
   }
 }
