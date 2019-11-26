@@ -2,18 +2,26 @@ package io.harness.perpetualtask.k8s.metrics.client.model.node;
 
 import io.fabric8.kubernetes.client.CustomResource;
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
-import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
-import lombok.experimental.FieldDefaults;
 
 @Data
+@NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class NodeMetrics extends CustomResource {
   private String timestamp;
   private String window;
   private Usage usage;
+
+  @Builder
+  public NodeMetrics(String name, String timestamp, String window, Usage usage) {
+    this.getMetadata().setName(name);
+    this.timestamp = timestamp;
+    this.window = window;
+    this.usage = usage;
+  }
 }
