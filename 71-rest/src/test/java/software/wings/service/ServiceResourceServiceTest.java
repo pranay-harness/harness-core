@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
@@ -221,6 +222,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import javax.validation.ConstraintViolationException;
 
 public class ServiceResourceServiceTest extends WingsBaseTest {
   private static final Command.Builder commandBuilder = aCommand().withName("START").addCommandUnits(
@@ -582,14 +584,20 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(serviceVariableService).pruneByService(APP_ID, SERVICE_ID);
   }
 
-  @Test
+  @Test(expected = ConstraintViolationException.class)
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void shouldFailCloneWhenServiceNameIsNull() {
     Service originalService = Service.builder().build();
-    assertThatThrownBy(() -> srs.clone(APP_ID, SERVICE_ID, originalService))
-        .isInstanceOf(WingsException.class)
-        .hasMessage("Service Name can not be empty");
+    srs.clone(APP_ID, SERVICE_ID, originalService);
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldFailCloneWhenServiceNameHasLeadingAndTrailingSpace() {
+    Service originalService = Service.builder().name(" s1 ").appId(APP_ID).build();
+    srs.clone(APP_ID, SERVICE_ID, originalService);
   }
 
   @Test

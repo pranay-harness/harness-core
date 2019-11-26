@@ -76,6 +76,7 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
 import io.harness.validation.Create;
+import io.harness.validation.PersistenceValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -400,6 +401,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public Service clone(String appId, String originalServiceId, Service service) {
     String accountId = appService.getAccountIdByAppId(service.getAppId());
 
@@ -705,7 +707,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
 
-    wingsPersistence.update(savedService, updateOperations);
+    PersistenceValidator.duplicateCheck(
+        () -> wingsPersistence.update(savedService, updateOperations), "name", service.getName());
     Service updatedService = get(service.getAppId(), service.getUuid(), false);
 
     if (!savedService.getName().equals(service.getName())) {
