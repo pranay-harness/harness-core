@@ -59,6 +59,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 public class AbstractDataCollectionTaskTest extends CategoryTest {
   @Mock private DataCollectorFactory dataCollectorFactory;
@@ -124,7 +125,8 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testCorrectTaskResultIfNoFailure()
-      throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+      throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
+             TimeoutException {
     DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo();
     DataCollector<DataCollectionInfoV2> dataCollector = mock(DataCollector.class);
     doReturn(dataCollector).when(dataCollectorFactory).newInstance(any());
@@ -183,7 +185,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testStatusFailureInCaseOfExceptionOnCollectAndSaveWithRetryCount()
       throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
-             DataCollectionException {
+             DataCollectionException, TimeoutException {
     DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo();
     DataCollector<DataCollectionInfoV2> dataCollector = mock(DataCollector.class);
     doReturn(dataCollector).when(dataCollectorFactory).newInstance(any());

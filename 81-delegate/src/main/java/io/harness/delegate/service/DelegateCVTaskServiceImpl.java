@@ -10,19 +10,22 @@ import software.wings.delegatetasks.DelegateCVTaskService;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class DelegateCVTaskServiceImpl implements DelegateCVTaskService {
+  private static final int TIMEOUT_DURATION_SEC = 15;
   @Inject private VerificationServiceClient verificationClient;
   @Inject private TimeLimiter timeLimiter;
   @Override
-  public void updateCVTaskStatus(String accountId, String cvTaskId, DataCollectionTaskResult dataCollectionTaskResult) {
+  public void updateCVTaskStatus(String accountId, String cvTaskId, DataCollectionTaskResult dataCollectionTaskResult)
+      throws TimeoutException {
     try {
       timeLimiter.callWithTimeout(
           ()
               -> execute(verificationClient.updateCVTaskStatus(accountId, cvTaskId, dataCollectionTaskResult)),
-          15, TimeUnit.SECONDS, true);
+          TIMEOUT_DURATION_SEC, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new TimeoutException("Timeout of " + TIMEOUT_DURATION_SEC + " exceeded while updating CVTask status");
     }
   }
 }
