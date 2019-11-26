@@ -2,7 +2,6 @@ package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.validation.Validator.nullCheck;
 
@@ -26,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.InstanceEvent;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -82,9 +82,6 @@ public class InstanceServiceImpl implements InstanceService {
           + " and infraMappingId:" + instance.getInfraMappingId());
     }
 
-    InstanceEvent instanceEvent =
-        InstanceEvent.builder().accountId(instance.getAccountId()).insertions(Sets.newHashSet(instance)).build();
-    eventQueue.send(instanceEvent);
     return updatedInstance;
   }
 
@@ -181,8 +178,6 @@ public class InstanceServiceImpl implements InstanceService {
     Query<Instance> getQuery = wingsPersistence.createQuery(Instance.class);
     getQuery.filter(fieldName, value);
 
-    findInstanceIdsAndPublishEvent(deleteQuery, getQuery);
-
     if ("appId".equals(fieldName)) {
       Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
       syncStatusQuery.filter(fieldName, value);
@@ -198,7 +193,6 @@ public class InstanceServiceImpl implements InstanceService {
       getQuery.filter(key, value);
     });
 
-    findInstanceIdsAndPublishEvent(deleteQuery, getQuery);
     Query<SyncStatus> syncStatusQuery = wingsPersistence.createQuery(SyncStatus.class);
     inputs.forEach((key, value) -> syncStatusQuery.filter(key, value));
     wingsPersistence.delete(syncStatusQuery);
@@ -242,32 +236,12 @@ public class InstanceServiceImpl implements InstanceService {
   public boolean delete(Set<String> instanceIdSet) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.field("_id").in(instanceIdSet);
-
-    deleteAndPublishEvent(instanceIdSet, query);
-    return true;
-  }
-
-  private void findInstanceIdsAndPublishEvent(Query<Instance> deleteQuery, Query<Instance> getQuery) {
-    getQuery.project("_id", true);
-    List<Instance> instances = getQuery.asList();
-    if (isEmpty(instances)) {
-      return;
-    }
-    Set<String> instanceIdSet = instances.stream().map(Instance::getUuid).collect(Collectors.toSet());
-
-    deleteAndPublishEvent(instanceIdSet, deleteQuery);
-  }
-
-  private void deleteAndPublishEvent(Set<String> instanceIdSet, Query<Instance> query) {
     long currentTimeMillis = System.currentTimeMillis();
     UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
     setUnset(updateOperations, "deletedAt", currentTimeMillis);
     setUnset(updateOperations, "isDeleted", true);
-
-    wingsPersistence.update(query, updateOperations);
-    InstanceEvent instanceEvent =
-        InstanceEvent.builder().deletions(instanceIdSet).deletionTimestamp(currentTimeMillis).build();
-    eventQueue.send(instanceEvent);
+    UpdateResults updateResults = wingsPersistence.update(query, updateOperations);
+    return updateResults.getUpdatedCount() > 0;
   }
 
   @Override
@@ -276,7 +250,6 @@ public class InstanceServiceImpl implements InstanceService {
                                 .filter(InstanceKeys.isDeleted, true)
                                 .field("deletedAt")
                                 .lessThan(timestamp.toEpochMilli());
-
     return wingsPersistence.delete(query);
   }
 
