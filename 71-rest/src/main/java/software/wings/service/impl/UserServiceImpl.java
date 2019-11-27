@@ -2132,7 +2132,7 @@ public class UserServiceImpl implements UserService {
   private Account setupAccount(Account account) {
     // HAR-8645: Always set default appId for account creation to pass validation
     account.setAppId(GLOBAL_APP_ID);
-    Account savedAccount = accountService.save(account, false);
+    Account savedAccount = accountService.save(account);
     logger.info("New account created with accountId {} and licenseType {}", account.getUuid(),
         account.getLicenseInfo().getAccountType());
     return savedAccount;

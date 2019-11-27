@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -79,7 +78,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(accountChangeHandler, "secretManagerConfigService", secretManagerConfigService, true);
     when(accountService.get(anyString())).thenReturn(account);
     when(mainConfiguration.getSegmentConfig()).thenReturn(segmentConfig);
-    when(accountService.save(any(), eq(false))).thenReturn(account);
+    when(accountService.save(any())).thenReturn(account);
     account = eventTestHelper.createAccount();
     user = eventTestHelper.createUser(account);
   }

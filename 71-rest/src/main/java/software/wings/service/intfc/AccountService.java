@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 10/11/16.
  */
 public interface AccountService {
-  @ValidationGroups(Create.class) Account save(@Valid Account account, boolean fromDataGen);
+  @ValidationGroups(Create.class) Account save(@Valid Account account);
 
   @ValidationGroups(Update.class) Account update(@Valid Account account);
 
