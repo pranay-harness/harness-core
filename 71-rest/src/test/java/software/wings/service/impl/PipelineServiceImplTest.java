@@ -20,6 +20,7 @@ import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -115,6 +116,7 @@ public class PipelineServiceImplTest extends WingsBaseTest {
             .value("NewRelic configId")
             .metadata(ImmutableMap.of(Variable.RELATED_FIELD, "NewRelicAppId", Variable.ENTITY_TYPE, NEWRELIC_CONFIGID))
             .build(),
+        aVariable().entityType(SPLUNK_CONFIGID).name("SplunkConfigId").value("Splunk configId").build(),
         aVariable()
             .entityType(NEWRELIC_MARKER_APPID)
             .name("NewRelicMarkerAppId")

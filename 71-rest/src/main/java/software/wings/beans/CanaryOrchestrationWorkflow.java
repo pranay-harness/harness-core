@@ -24,6 +24,7 @@ import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
 import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
@@ -450,6 +451,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         addElkUserVariables(reorderVariables, entityVariables);
         // Add SUMO variables
         addSumoLogicUserVariables(reorderVariables, entityVariables);
+        // Add Splunk variables
+        addSplunkUserVariables(reorderVariables, entityVariables);
       }
       if (nonEntityVariables != null) {
         reorderVariables.addAll(nonEntityVariables);
@@ -521,6 +524,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
     addRemainingEntity(reorderVariables, entityVariables, NEWRELIC_APPID);
+  }
+
+  private void addSplunkUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (SPLUNK_CONFIGID.equals(variable.obtainEntityType())) {
+        reorderVariables.add(variable);
+      }
+    }
   }
 
   private void addNewRelicMarkerUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {

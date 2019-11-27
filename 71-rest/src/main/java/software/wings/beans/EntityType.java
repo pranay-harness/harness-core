@@ -151,6 +151,11 @@ public enum EntityType {
    */
   SUMOLOGIC_CONFIGID,
 
+  /***
+   * Splunk ConfigId
+   */
+  SPLUNK_CONFIGID,
+
   /**
    *  NewRelic ConfigId
    */
