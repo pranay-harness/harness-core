@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.PAUSING;
@@ -146,6 +147,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
@@ -3538,5 +3540,95 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                            .asList();
     workflowExecutions.sort(Comparator.comparing(item -> entityIds.indexOf(item.getUuid())));
     return workflowExecutions;
+  }
+
+  /**
+   *
+   * @param workflowExecution
+   * @return only the skeleton of the environment object. Contains only the ID,the type and the name ->
+   * Reconstructed from what we see in the pipelineExecution or the workflowExecution
+   */
+  public List<Environment> getEnvironmentsForExecution(WorkflowExecution workflowExecution) {
+    Set<Environment> environments = new HashSet<>();
+    if (workflowExecution.getPipelineExecution() != null) {
+      if (workflowExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
+        workflowExecution.getPipelineExecution().getPipelineStageExecutions().forEach(stageExecution
+            -> stageExecution.getWorkflowExecutions()
+                   .stream()
+                   .filter(wfExecution -> wfExecution.getEnvId() != null && wfExecution.getEnvType() != null)
+                   .map(wfExecution
+                       -> Environment.Builder.anEnvironment()
+                              .uuid(wfExecution.getEnvId())
+                              .environmentType(wfExecution.getEnvType())
+                              .name(wfExecution.getEnvName())
+                              .build())
+                   .forEach(environments::add));
+      }
+    } else {
+      if (workflowExecution.getEnvId() != null && workflowExecution.getEnvType() != null) {
+        environments.add(Environment.Builder.anEnvironment()
+                             .environmentType(workflowExecution.getEnvType())
+                             .uuid(workflowExecution.getEnvId())
+                             .name(workflowExecution.getEnvName())
+                             .build());
+      }
+    }
+    return environments.stream().collect(Collectors.toList());
+  }
+
+  /**
+   *
+   * @param workflowExecution
+   * @return only the serviceIds that have been deployed in the pipeline or workflowExecution ->
+   * Reconstructed from what we see in the pipelineExecution or the workflowExecution
+   */
+  public List<String> getServiceIdsForExecution(WorkflowExecution workflowExecution) {
+    Set<String> serviceIds = new HashSet<>();
+    if (workflowExecution.getPipelineExecution() != null) {
+      if (workflowExecution.getPipelineExecution() != null) {
+        if (workflowExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
+          workflowExecution.getPipelineExecution().getPipelineStageExecutions().forEach(stageExecution
+              -> stageExecution.getWorkflowExecutions()
+                     .stream()
+                     .filter(wfExecution -> wfExecution.getServiceIds() != null)
+                     .map(WorkflowExecution::getServiceIds)
+                     .forEach(serviceIds::addAll));
+        }
+      }
+    } else {
+      if (!isNullOrEmpty(workflowExecution.getServiceIds())) {
+        serviceIds.addAll(workflowExecution.getServiceIds());
+      }
+    }
+
+    return new ArrayList<>(serviceIds);
+  }
+
+  /**
+   *
+   * @param workflowExecution
+   * @return only the serviceIds that have been deployed in the pipeline or workflowExecution ->
+   * Reconstructed from what we see in the pipelineExecution or the workflowExecution
+   */
+  public List<String> getCloudProviderIdsForExecution(WorkflowExecution workflowExecution) {
+    Set<String> cloudProviderIds = new HashSet<>();
+    if (workflowExecution.getPipelineExecution() != null) {
+      if (workflowExecution.getPipelineExecution() != null) {
+        if (workflowExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
+          workflowExecution.getPipelineExecution().getPipelineStageExecutions().forEach(stageExecution
+              -> stageExecution.getWorkflowExecutions()
+                     .stream()
+                     .filter(wfExecution -> wfExecution.getCloudProviderIds() != null)
+                     .map(WorkflowExecution::getCloudProviderIds)
+                     .forEach(cloudProviderIds::addAll));
+        }
+      }
+    } else {
+      if (!isNullOrEmpty(workflowExecution.getCloudProviderIds())) {
+        cloudProviderIds.addAll(workflowExecution.getCloudProviderIds());
+      }
+    }
+
+    return new ArrayList<>(cloudProviderIds);
   }
 }

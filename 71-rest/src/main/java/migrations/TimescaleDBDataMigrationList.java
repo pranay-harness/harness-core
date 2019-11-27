@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import migrations.timescaledb.data.MigrateWorkflowsToTimeScaleDB;
 import migrations.timescaledb.data.SetInstancesDeployedInDeployment;
 import migrations.timescaledb.data.SetRollbackDurationInDeployment;
+import migrations.timescaledb.data.UpdateEnvSvcCPInDeployment;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class TimescaleDBDataMigrationList {
         .add(Pair.of(2, BaseTimeScaleDBDataMigration.class))
         .add(Pair.of(3, SetRollbackDurationInDeployment.class))
         .add(Pair.of(4, SetInstancesDeployedInDeployment.class))
+        .add(Pair.of(5, UpdateEnvSvcCPInDeployment.class))
         .build();
   }
 }

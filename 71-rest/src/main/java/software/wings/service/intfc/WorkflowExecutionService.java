@@ -15,6 +15,7 @@ import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
@@ -211,6 +212,12 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   Map<String, Object> extractServiceInfrastructureDetails(String appId, WorkflowExecution execution);
 
   int getInstancesDeployedFromExecution(WorkflowExecution workflowExecution);
+
+  List<Environment> getEnvironmentsForExecution(WorkflowExecution workflowExecution);
+
+  List<String> getServiceIdsForExecution(WorkflowExecution workflowExecution);
+
+  List<String> getCloudProviderIdsForExecution(WorkflowExecution workflowExecution);
 
   List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds);
 }
