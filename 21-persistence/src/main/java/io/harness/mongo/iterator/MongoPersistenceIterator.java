@@ -23,6 +23,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.DelayLogContext;
 import io.harness.mongo.EntityLogContext;
+import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import lombok.Builder;
@@ -241,6 +242,8 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         return;
       }
 
+      long startTime = currentTimeMillis();
+
       try {
         synchronized (entity) {
           entity.notify();
@@ -249,8 +252,6 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         if (schedulingType == REGULAR) {
           ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
         }
-
-        long startTime = currentTimeMillis();
 
         long delay = nextIteration == null ? 0 : startTime - nextIteration;
 
@@ -268,18 +269,21 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         } catch (RuntimeException exception) {
           logger.error("Catch and handle all exceptions in the entity handler", exception);
         }
-
-        if (acceptableExecutionTime != null) {
-          long handleTime = currentTimeMillis() - startTime;
-          if (handleTime > acceptableExecutionTime.toMillis()) {
-            logger.error(
-                "Entity was handled longer {} than the acceptable {}", handleTime, acceptableExecutionTime.toMillis());
-          }
-        }
       } catch (Throwable exception) {
         logger.error("Exception while processing entity", exception);
       } finally {
         semaphore.release();
+
+        long processTime = currentTimeMillis() - startTime;
+        try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(processTime, OVERRIDE_ERROR)) {
+          if (acceptableExecutionTime == null || processTime <= acceptableExecutionTime.toMillis()) {
+            logger.info("Done working on entity");
+          } else {
+            logger.error("Done working on entity but took too long acceptable {}", acceptableExecutionTime.toMillis());
+          }
+        } catch (Throwable exception) {
+          logger.error("Exception while recording the processing of entity", exception);
+        }
       }
     }
   }
