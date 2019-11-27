@@ -28,7 +28,7 @@ public class LoginRequestRateLimiter {
   private static final int GLOBAL_LOGIN_REQUEST_LIMIT_PER_MINUTE = 300;
 
   Cache<String, RequestRateLimiter> accountRateLimiterCache =
-      Caffeine.newBuilder().maximumSize(10000).expireAfterWrite(30, TimeUnit.MINUTES).build();
+      Caffeine.newBuilder().maximumSize(10000).expireAfterWrite(15, TimeUnit.MINUTES).build();
 
   RequestRateLimiter globalRateLimiter;
   LimitConfigurationService limitConfigurationService;
@@ -42,7 +42,7 @@ public class LoginRequestRateLimiter {
     boolean globalRateLimitReached =
         getAccountRateLimiter(Account.GLOBAL_ACCOUNT_ID).overLimitWhenIncremented(remoteHost);
     if (globalRateLimitReached) {
-      logger.warn("Global Login Request limit reached with this API Call from {}", remoteHost);
+      logger.error("Global Login Request has reached its limit with this API Call from {}", remoteHost);
       return true;
     }
     return false;
