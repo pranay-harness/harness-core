@@ -24,6 +24,7 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVIC
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
@@ -112,6 +113,7 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
+
 /**
  * The main application - entry point for the entire verification service.
  *
@@ -259,6 +261,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     registerGaugeMetric(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT, null);
     registerGaugeMetric(LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null);
     registerGaugeMetric(LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS, null);
+    registerGaugeMetric(LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS, null);
     registerGaugeMetric(LEARNING_ENGINE_WORKFLOW_TASK_COUNT, null);
     registerGaugeMetric(LEARNING_ENGINE_CLUSTERING_TASK_QUEUED_COUNT, null);
     registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null);

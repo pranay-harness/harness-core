@@ -22,8 +22,10 @@ import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVIC
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_SERVICE_GUARD_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_TASK_QUEUED_TIME_IN_SECONDS;
+import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_COUNT;
 import static software.wings.common.VerificationConstants.LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS;
+import static software.wings.service.impl.analysis.MLAnalysisType.LOG_CLUSTER;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.analysis.MLAnalysisType.TIME_SERIES;
 
@@ -242,9 +244,7 @@ public class ServiceGuardAccountPoller {
     long workflowTaskCount =
         createLETaskQuery(false, Lists.newArrayList(MLAnalysisType.LOG_CLUSTER, LOG_ML, TIME_SERIES)).count();
     LearningEngineAnalysisTask oldestWorkflowTask =
-        createLETaskQuery(false, Lists.newArrayList(MLAnalysisType.LOG_CLUSTER, LOG_ML, TIME_SERIES))
-            .order("createdAt")
-            .get();
+        createLETaskQuery(false, Lists.newArrayList(LOG_ML, TIME_SERIES)).order("createdAt").get();
     long taskQueuedTimeInSeconds = oldestWorkflowTask != null
         ? TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - oldestWorkflowTask.getCreatedAt())
         : 0;
@@ -254,6 +254,16 @@ public class ServiceGuardAccountPoller {
         getMetricName(env, LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS), null, taskQueuedTimeInSeconds);
 
     metricRegistry.recordGaugeValue(getMetricName(env, LEARNING_ENGINE_WORKFLOW_TASK_COUNT), null, workflowTaskCount);
+
+    LearningEngineAnalysisTask oldestClusteringTask = createLETaskQuery(false, Lists.newArrayList(LOG_CLUSTER))
+                                                          .order(LearningEngineAnalysisTask.BaseKeys.createdAt)
+                                                          .get();
+    long clusteringTaskQueuedTimeInSeconds = oldestClusteringTask != null
+        ? TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - oldestClusteringTask.getCreatedAt())
+        : 0;
+
+    metricRegistry.recordGaugeValue(getMetricName(env, LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS),
+        null, clusteringTaskQueuedTimeInSeconds);
   }
 
   public void deleteServiceGuardCrons() {
