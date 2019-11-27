@@ -37,6 +37,7 @@ import migrations.all.DeleteCVAlertsMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteNewRelicMetricNameCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
+import migrations.all.DeleteServiceGuardAlertMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
 import migrations.all.DropDelegateScopeCollectionMigration;
@@ -295,6 +296,7 @@ public class MigrationList {
         .add(Pair.of(285, LoginRateLimitMigration.class))
         .add(Pair.of(286, BaseMigration.class))
         .add(Pair.of(287, InstanceComputerProviderNameFixMigration.class))
+        .add(Pair.of(288, DeleteServiceGuardAlertMigration.class))
         .build();
   }
 }
