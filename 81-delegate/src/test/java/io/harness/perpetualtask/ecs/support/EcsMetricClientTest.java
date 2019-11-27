@@ -60,8 +60,8 @@ public class EcsMetricClientTest extends CategoryTest {
     String settingId = "settingId";
     EcsPerpetualTaskParams ecsPerpetualTaskParams =
         EcsPerpetualTaskParams.newBuilder().setRegion(region).setClusterId(clusterId).setSettingId(settingId).build();
-    Instant now = Instant.now();
-    Date startTime = Date.from(now.minus(10, ChronoUnit.MINUTES));
+    Instant now = Instant.now().truncatedTo(ChronoUnit.HOURS);
+    Date startTime = Date.from(now.minus(1, ChronoUnit.HOURS));
     Date endTime = Date.from(now);
     Cluster cluster = new Cluster().withClusterName("cluster1").withClusterArn("cluster1-arn");
     Service svc1 = new Service().withServiceName("svc1").withServiceArn("svc1-arn");

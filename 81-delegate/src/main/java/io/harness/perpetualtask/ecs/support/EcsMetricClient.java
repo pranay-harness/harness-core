@@ -27,6 +27,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchMetricDataRequest;
 import software.wings.service.intfc.aws.delegate.AwsCloudWatchHelperServiceDelegate;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -46,7 +47,7 @@ public class EcsMetricClient {
   private static final String SERVICE = "ServiceName";
   private static final String CLUSTER = "ClusterName";
 
-  private static final int PERIOD = 60; //  1min
+  private static final int PERIOD = (int) Duration.ofHours(1).getSeconds();
 
   private final AwsCloudWatchHelperServiceDelegate awsCloudWatchHelperServiceDelegate;
 
