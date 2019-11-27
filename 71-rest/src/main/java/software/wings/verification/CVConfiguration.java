@@ -96,4 +96,30 @@ public class CVConfiguration extends Base implements NameAccess {
       this.enabled24x7 = parseBoolean(enabled24x7);
     }
   }
+
+  // This should be an abstract method, but currently class cannot be converted to abstract due to multiple
+  // instantiations of this class
+  @JsonIgnore
+  public CVConfiguration deepCopy() {
+    throw new UnsupportedOperationException("Deep clone is being called from base method");
+  }
+
+  protected void copy(CVConfiguration cvConfiguration) {
+    cvConfiguration.setName(this.getName());
+    cvConfiguration.setAccountId(this.getAccountId());
+    cvConfiguration.setConnectorId(this.getConnectorId());
+    cvConfiguration.setEnvId(this.getEnvId());
+    cvConfiguration.setServiceId(this.getServiceId());
+    cvConfiguration.setStateType(this.getStateType());
+    cvConfiguration.setAnalysisTolerance(this.getAnalysisTolerance());
+    cvConfiguration.setEnabled24x7(this.isEnabled24x7());
+    cvConfiguration.setComparisonStrategy(this.getComparisonStrategy());
+    cvConfiguration.setContextId(this.getContextId());
+    cvConfiguration.setWorkflowConfig(this.isWorkflowConfig());
+    cvConfiguration.setAlertEnabled(this.isAlertEnabled());
+    cvConfiguration.setAlertThreshold(this.getAlertThreshold());
+    cvConfiguration.setSnoozeStartTime(this.getSnoozeStartTime());
+    cvConfiguration.setSnoozeEndTime(this.getSnoozeEndTime());
+    cvConfiguration.setAppId(this.getAppId());
+  }
 }

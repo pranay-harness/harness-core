@@ -20,6 +20,14 @@ import java.util.List;
 public class PrometheusCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = true, title = "Metrics To Monitor") private List<TimeSeries> timeSeriesToAnalyze;
 
+  @Override
+  public CVConfiguration deepCopy() {
+    PrometheusCVServiceConfiguration clonedConfig = new PrometheusCVServiceConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setTimeSeriesToAnalyze(getTimeSeriesToAnalyze());
+    return clonedConfig;
+  }
+
   /**
    * The type Yaml.
    */

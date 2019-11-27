@@ -60,6 +60,14 @@ public class LogsCVConfiguration extends CVConfiguration {
     this.baselineEndMinute = baselineEndMinute;
   }
 
+  @Override
+  public CVConfiguration deepCopy() {
+    LogsCVConfiguration clonedConfig = new LogsCVConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setQuery(this.getQuery());
+    return clonedConfig;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

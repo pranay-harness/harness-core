@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import software.wings.stencils.DefaultValue;
+import software.wings.verification.CVConfiguration;
 
 @Data
 @Builder
@@ -32,6 +33,17 @@ public class SplunkCVConfiguration extends LogsCVConfiguration {
   public void setAdvancedQuery(boolean advancedQuery) {
     this.isAdvancedQuery = advancedQuery;
   }
+
+  @Override
+  public CVConfiguration deepCopy() {
+    SplunkCVConfiguration clonedConfig = new SplunkCVConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setQuery(this.getQuery());
+    clonedConfig.setAdvancedQuery(this.isAdvancedQuery());
+    clonedConfig.setHostnameField(this.getHostnameField());
+    return clonedConfig;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

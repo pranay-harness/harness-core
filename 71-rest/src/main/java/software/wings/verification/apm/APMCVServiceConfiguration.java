@@ -27,6 +27,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class APMCVServiceConfiguration extends CVConfiguration {
   private List<MetricCollectionInfo> metricCollectionInfos;
 
+  @Override
+  public CVConfiguration deepCopy() {
+    APMCVServiceConfiguration clonedConfig = new APMCVServiceConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setMetricCollectionInfos(this.getMetricCollectionInfos());
+    return clonedConfig;
+  }
+
   @Data
   @Builder
   @AllArgsConstructor

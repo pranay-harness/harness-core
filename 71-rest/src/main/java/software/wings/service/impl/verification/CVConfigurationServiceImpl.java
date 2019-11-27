@@ -1047,4 +1047,18 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       });
     }
   }
+
+  @Override
+  public void cloneServiceGuardConfigs(final String sourceEnvID, final String targetEnvID) {
+    List<CVConfiguration> configurations = wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+                                               .filter(CVConfigurationKeys.envId, sourceEnvID)
+                                               .asList();
+    configurations.forEach(config -> {
+      CVConfiguration clonedConfig = config.deepCopy();
+      clonedConfig.setEnvId(targetEnvID);
+      clonedConfig.setAppId(config.getAppId());
+      clonedConfig.setUuid(generateUuid());
+      saveToDatabase(clonedConfig, false);
+    });
+  }
 }

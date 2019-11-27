@@ -35,6 +35,17 @@ public class DatadogCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = false, title = "ECS Metrics") private Map<String, String> ecsMetrics;
   @Attributes(required = false, title = "Custom Metrics") private Map<String, Set<Metric>> customMetrics;
 
+  @Override
+  public CVConfiguration deepCopy() {
+    DatadogCVServiceConfiguration clonedConfig = new DatadogCVServiceConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setDatadogServiceName(this.getDatadogServiceName());
+    clonedConfig.setDockerMetrics(this.getDockerMetrics());
+    clonedConfig.setEcsMetrics(this.getEcsMetrics());
+    clonedConfig.setCustomMetrics(this.getCustomMetrics());
+    return clonedConfig;
+  }
+
   /**
    * The type Yaml.
    */

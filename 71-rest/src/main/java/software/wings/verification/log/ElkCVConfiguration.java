@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.stencils.DefaultValue;
+import software.wings.verification.CVConfiguration;
 
 @Data
 @Builder
@@ -33,6 +34,20 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
   @Attributes(required = true, title = "Timestamp format")
   @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSSX")
   private String timestampFormat;
+
+  @Override
+  public CVConfiguration deepCopy() {
+    ElkCVConfiguration clonedConfig = new ElkCVConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setQuery(this.getQuery());
+    clonedConfig.setHostnameField(this.getHostnameField());
+    clonedConfig.setIndex(this.getIndex());
+    clonedConfig.setMessageField(this.getMessageField());
+    clonedConfig.setQueryType(this.getQueryType());
+    clonedConfig.setTimestampField(this.getTimestampField());
+    clonedConfig.setTimestampFormat(this.getTimestampFormat());
+    return clonedConfig;
+  }
 
   @Data
   @NoArgsConstructor

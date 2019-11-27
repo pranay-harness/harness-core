@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import software.wings.stencils.DefaultValue;
+import software.wings.verification.CVConfiguration;
 
 /**
  * Created by Pranjal on 06/04/2019
@@ -27,6 +28,17 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
   @Attributes(required = true, title = "Host Name Field") @DefaultValue("pod_id") protected String hostnameField;
 
   @Attributes(required = true, title = "Log Message Field") @DefaultValue("textPayload") protected String messageField;
+
+  @Override
+  public CVConfiguration deepCopy() {
+    StackdriverCVConfiguration clonedConfig = new StackdriverCVConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setHostnameField(this.getHostnameField());
+    clonedConfig.setLogsConfiguration(this.isLogsConfiguration);
+    clonedConfig.setMessageField(this.getMessageField());
+    clonedConfig.setQuery(this.getQuery());
+    return clonedConfig;
+  }
 
   @Data
   @NoArgsConstructor

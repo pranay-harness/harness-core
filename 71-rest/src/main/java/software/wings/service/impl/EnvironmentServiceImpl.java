@@ -119,6 +119,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
+
 /**
  * Created by anubhaw on 4/1/16.
  */
@@ -648,6 +649,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       cloneAppManifests(savedClonedEnv.getAppId(), savedClonedEnv.getUuid(), envId);
 
       cloneInfrastructureDefinitions(sourceEnvironment, savedClonedEnv);
+      cvConfigurationService.cloneServiceGuardConfigs(sourceEnvironment.getUuid(), savedClonedEnv.getUuid());
 
       return savedClonedEnv;
     } else {

@@ -77,6 +77,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class CVConfigurationServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
@@ -722,5 +723,46 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     configuration.setServiceId(generateUuid());
     configuration.setEnabled24x7(enabled24x7);
     return configuration;
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCloneServiceGuardConfigs() {
+    String oldEnvId = "EnvId";
+    String newEnvId = "NewEnvId";
+
+    List<TimeSeries> timeSeries = new ArrayList<>();
+    timeSeries.add(TimeSeries.builder().metricName("metric1").metricType("INFRA").txnName("txn1").build());
+
+    PrometheusCVServiceConfiguration config = new PrometheusCVServiceConfiguration();
+    config.setAccountId(accountId);
+    config.setEnvId(oldEnvId);
+    config.setTimeSeriesToAnalyze(timeSeries);
+    config.setStateType(StateType.PROMETHEUS);
+    wingsPersistence.save(config);
+
+    cvConfigurationService.cloneServiceGuardConfigs(oldEnvId, newEnvId);
+
+    List<CVConfiguration> configs = wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority)
+                                        .filter(CVConfigurationKeys.accountId, accountId)
+                                        .asList();
+
+    assertThat(configs.size()).isEqualTo(2);
+    Optional<CVConfiguration> oldConfig = configs.stream().filter(c -> c.getEnvId().equals(oldEnvId)).findAny();
+    Optional<CVConfiguration> newConfig = configs.stream().filter(c -> c.getEnvId().equals(newEnvId)).findAny();
+
+    assertThat(oldConfig).isPresent();
+    assertThat(newConfig).isPresent();
+
+    // Assert that templates are also copied along with cv configuration
+    if (newConfig.isPresent()) {
+      List<TimeSeriesMetricTemplates> definitions =
+          wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
+              .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, newConfig.get().getUuid())
+              .asList();
+      assertThat(definitions.size()).isEqualTo(1);
+      assertThat(definitions.get(0).getMetricTemplates().size()).isEqualTo(1);
+    }
   }
 }
