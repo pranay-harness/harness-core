@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -297,6 +298,14 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions()).isNotNull();
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions().size()).isEqualTo(3);
     assertThat(stackDriverMetricCVConfiguration.getMetricDefinitions().get(0).getFilter()).isNotBlank();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetConfiguration_returnsNullForInvalidCVConfigId() {
+    CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(generateUuid());
+    assertThat(cvConfiguration).isNull();
   }
 
   @Test(expected = VerificationOperationException.class)
