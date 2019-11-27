@@ -28,6 +28,7 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
@@ -868,6 +869,9 @@ public class PipelineServiceImpl implements PipelineService {
       case NEWRELIC_MARKER_APPID:
         handleNewRelicMarkerAppIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
         break;
+      case SPLUNK_CONFIGID:
+        handleSplunkConfigIdVariable(pipelineVariable, workflowVariables, originalVarName, pseWorkflowVariables);
+        break;
       default:
         // no parent fields required
         return;
@@ -907,6 +911,20 @@ public class PipelineServiceImpl implements PipelineService {
     Map<String, String> parentFields = new HashMap<>();
     for (Variable var : workflowVariables) {
       if (ELK_CONFIGID.equals(var.obtainEntityType())) {
+        if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
+          String relatedVarValue = pseWorkflowVariables.get(var.getName());
+          parentFields.put("analysisServerConfigId", relatedVarValue);
+        }
+      }
+    }
+    pipelineVariable.getMetadata().put(Variable.PARENT_FIELDS, parentFields);
+  }
+
+  private void handleSplunkConfigIdVariable(Variable pipelineVariable, List<Variable> workflowVariables,
+      String originalVarName, Map<String, String> pseWorkflowVariables) {
+    Map<String, String> parentFields = new HashMap<>();
+    for (Variable var : workflowVariables) {
+      if (SPLUNK_CONFIGID.equals(var.obtainEntityType())) {
         if (var.getMetadata() != null && originalVarName.equals(var.getMetadata().get(Variable.RELATED_FIELD))) {
           String relatedVarValue = pseWorkflowVariables.get(var.getName());
           parentFields.put("analysisServerConfigId", relatedVarValue);
