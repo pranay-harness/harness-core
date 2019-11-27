@@ -299,10 +299,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Override
   public <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId) {
     CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, serviceConfigurationId);
-    if (cvConfiguration == null) {
-      throw new IllegalArgumentException("No CV Configuration found for Id " + serviceConfigurationId);
+    if (cvConfiguration != null) {
+      fillInServiceAndConnectorNames(cvConfiguration);
     }
-    fillInServiceAndConnectorNames(cvConfiguration);
     return (T) cvConfiguration;
   }
 
