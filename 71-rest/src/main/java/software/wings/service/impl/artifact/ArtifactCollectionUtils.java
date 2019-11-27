@@ -491,7 +491,7 @@ public class ArtifactCollectionUtils {
     return aBuildDetails().withNumber(tag).withMetadata(metadata).withBuildUrl(tagUrl + tag).build();
   }
 
-  ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, boolean isMultiArtifact) {
+  public ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, boolean isMultiArtifact) {
     if (isMultiArtifact) {
       return artifactStream.fetchArtifactStreamAttributes();
     } else {
