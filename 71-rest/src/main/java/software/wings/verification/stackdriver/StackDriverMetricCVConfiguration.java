@@ -30,6 +30,15 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
     this.metricDefinitions.forEach(metricDefinition -> { metricDefinition.extractJson(); });
   }
 
+  @Override
+  public CVConfiguration deepCopy() {
+    StackDriverMetricCVConfiguration clonedConfig = new StackDriverMetricCVConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setMetricDefinitions(this.getMetricDefinitions());
+    clonedConfig.setMetricFilters();
+    return clonedConfig;
+  }
+
   /**
    * The type Yaml.
    */

@@ -41,4 +41,6 @@ public interface CVConfigurationService extends OwnedByAccount, OwnedByEnvironme
   String resetBaseline(String appId, String cvConfigId, LogsCVConfiguration logsCVConfiguration);
   boolean updateAlertSettings(String cvConfigId, CVConfiguration cvConfiguration);
   boolean updateSnooze(String cvConfigId, CVConfiguration cvConfiguration);
+
+  void cloneServiceGuardConfigs(String sourceEnvID, String targetEnvID);
 }

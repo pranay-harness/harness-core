@@ -16,6 +16,13 @@ import software.wings.verification.CVConfiguration;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class DynaTraceCVServiceConfiguration extends CVConfiguration {
+  @Override
+  public CVConfiguration deepCopy() {
+    DynaTraceCVServiceConfiguration clonedConfig = new DynaTraceCVServiceConfiguration();
+    super.copy(clonedConfig);
+    return clonedConfig;
+  }
+
   /**
    * The type Yaml.
    */

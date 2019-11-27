@@ -35,6 +35,19 @@ public class CloudWatchCVServiceConfiguration extends CVConfiguration {
 
   @Attributes(title = "Region") private String region;
 
+  @Override
+  public CVConfiguration deepCopy() {
+    CloudWatchCVServiceConfiguration clonedConfig = new CloudWatchCVServiceConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setEc2InstanceNames(this.getEc2InstanceNames());
+    clonedConfig.setEc2Metrics(this.getEc2Metrics());
+    clonedConfig.setEcsMetrics(this.getEcsMetrics());
+    clonedConfig.setLambdaFunctionsMetrics(this.getLambdaFunctionsMetrics());
+    clonedConfig.setLoadBalancerMetrics(this.getLoadBalancerMetrics());
+    clonedConfig.setRegion(this.getRegion());
+    return clonedConfig;
+  }
+
   /**
    * The type Yaml.
    */

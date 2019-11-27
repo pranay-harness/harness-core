@@ -17,6 +17,15 @@ public class AppDynamicsCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = true, title = "Application Name") private String appDynamicsApplicationId;
   @Attributes(required = true, title = "Tier Name") private String tierId;
 
+  @Override
+  public CVConfiguration deepCopy() {
+    AppDynamicsCVServiceConfiguration clonedConfig = new AppDynamicsCVServiceConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setAppDynamicsApplicationId(this.getAppDynamicsApplicationId());
+    clonedConfig.setTierId(this.getTierId());
+    return clonedConfig;
+  }
+
   /**
    * The type Yaml.
    */

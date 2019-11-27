@@ -24,6 +24,16 @@ import java.util.List;
 public class NewRelicCVServiceConfiguration extends CVConfiguration {
   @Attributes(required = true, title = "Application Name") private String applicationId;
   @Attributes(required = true, title = "Metrics") private List<String> metrics;
+
+  @Override
+  public CVConfiguration deepCopy() {
+    NewRelicCVServiceConfiguration clonedConfig = new NewRelicCVServiceConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setApplicationId(this.getApplicationId());
+    clonedConfig.setMetrics(this.getMetrics());
+    return clonedConfig;
+  }
+
   /**
    * The type Yaml.
    */

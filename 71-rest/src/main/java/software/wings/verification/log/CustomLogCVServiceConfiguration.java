@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
 import software.wings.sm.states.CustomLogVerificationState.Method;
+import software.wings.verification.CVConfiguration;
 
 @Data
 @Builder
@@ -54,6 +55,15 @@ public class CustomLogCVServiceConfiguration extends LogsCVConfiguration {
       }
     }
     return false;
+  }
+
+  @Override
+  public CVConfiguration deepCopy() {
+    CustomLogCVServiceConfiguration clonedConfig = new CustomLogCVServiceConfiguration();
+    super.copy(clonedConfig);
+    clonedConfig.setLogCollectionInfo(this.getLogCollectionInfo());
+    clonedConfig.setQuery(this.getQuery());
+    return clonedConfig;
   }
 
   @Data
