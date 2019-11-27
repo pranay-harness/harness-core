@@ -39,6 +39,7 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.entityinterface.KeywordsAware;
+import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateMachine;
 
@@ -166,6 +167,9 @@ public class WorkflowExecution
   private List<Artifact> artifacts;
 
   private Set<String> keywords;
+  private boolean onDemandRollback;
+  // Information of original execution is this is for OnDemand Rollback
+  private WorkflowExecutionInfo originalExecution;
 
   private HelmExecutionSummary helmExecutionSummary;
   private List<AwsLambdaExecutionSummary> awsLambdaExecutionSummaries;

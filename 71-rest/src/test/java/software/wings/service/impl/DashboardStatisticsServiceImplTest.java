@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static java.util.Arrays.asList;
 import static java.util.Objects.deepEquals;
@@ -463,7 +464,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = RAMA)
   @Category(UnitTests.class)
   @RealMongo
   public void shallGetServiceInstanceDashboard() {

@@ -17,5 +17,8 @@ public class CurrentActiveInstances {
   private long instanceCount;
   private ArtifactSummary artifact;
   private EntitySummary serviceInfra;
+  private EntitySummary workflow;
   private Date deployedAt;
+  private EntitySummary lastSuccessfulWorkflowExecution;
+  private boolean onDemandRollbackAvailable;
 }

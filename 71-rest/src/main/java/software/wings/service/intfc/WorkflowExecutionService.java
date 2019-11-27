@@ -37,6 +37,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.RollbackConfirmation;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -80,6 +81,10 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
 
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs, Trigger trigger);
+
+  WorkflowExecution triggerRollbackExecutionWorkflow(String appId, WorkflowExecution workflowExecution);
+
+  RollbackConfirmation getOnDemandRollbackConfirmation(String appId, WorkflowExecution workflowExecution);
 
   ExecutionInterrupt triggerExecutionInterrupt(@Valid ExecutionInterrupt executionInterrupt);
 
@@ -220,4 +225,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   List<String> getCloudProviderIdsForExecution(WorkflowExecution workflowExecution);
 
   List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds);
+
+  boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastSuccessfulWE);
 }

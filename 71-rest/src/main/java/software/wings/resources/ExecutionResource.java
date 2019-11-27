@@ -59,6 +59,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.RollbackConfirmation;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
@@ -215,6 +216,36 @@ public class ExecutionResource {
         workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null);
     workflowExecution.setStateMachine(null);
     return new RestResponse<>(workflowExecution);
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @Path("triggerRollback")
+  // We are handling the check programmatically for now, since we don't have enough info in the query / path parameters
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<WorkflowExecution> triggerRollbackExecution(
+      @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+    notNullCheck("No Workflow Execution exist for Id: " + workflowExecutionId, workflowExecution);
+    WorkflowExecution rollbackWorkflowExecution =
+        workflowExecutionService.triggerRollbackExecutionWorkflow(appId, workflowExecution);
+    return new RestResponse<>(rollbackWorkflowExecution);
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("rollbackConfirmation")
+  // We are handling the check programmatically for now, since we don't have enough info in the query / path parameters
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<RollbackConfirmation> getRollbackConfirmation(
+      @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+    notNullCheck("No Workflow Execution exist for Id: " + workflowExecutionId, workflowExecution);
+    RollbackConfirmation rollbackConfirmation =
+        workflowExecutionService.getOnDemandRollbackConfirmation(appId, workflowExecution);
+    return new RestResponse<>(rollbackConfirmation);
   }
 
   /**

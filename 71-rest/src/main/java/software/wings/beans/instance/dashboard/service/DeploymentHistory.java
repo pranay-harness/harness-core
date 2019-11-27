@@ -23,4 +23,5 @@ public class DeploymentHistory {
   private long instanceCount;
   private List<EntitySummary> inframappings;
   private List<EntitySummary> envs;
+  private boolean rolledBack;
 }
