@@ -12,6 +12,7 @@ import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.PipelineExecution.Builder;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
@@ -30,6 +31,7 @@ public class UsageMetricsTestUtils {
   private String PIPELINEEXECUTIONID;
   private String SERVICE1;
   private String ENV1;
+  private String ENV1NAME;
   private String TRIGGER1;
   private String USER1;
   private String EXECUTIONID;
@@ -53,11 +55,17 @@ public class UsageMetricsTestUtils {
     Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.PIPELINE))
         .contains(UsageMetricsTestKeys.PIPELINEID);
     Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.CLOUD_PROVIDER_LIST))
-        .contains(UsageMetricsTestKeys.CLOUDPROVIDER1, UsageMetricsTestKeys.CLOUDPROVIDER2);
+        .contains(UsageMetricsTestKeys.CLOUDPROVIDER1);
     Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGER_ID))
         .contains(UsageMetricsTestKeys.TRIGGER1);
     Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGERED_BY))
         .contains(UsageMetricsTestKeys.USER1);
+    Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENV_LIST))
+        .contains(UsageMetricsTestKeys.ENV1);
+    Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENVTYPES))
+        .contains(EnvironmentType.PROD.name());
+    Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.SERVICE_LIST))
+        .contains(UsageMetricsTestKeys.SERVICE1);
   }
 
   public static WorkflowExecution generateWorkflowExecution(int number) {
@@ -73,11 +81,25 @@ public class UsageMetricsTestUtils {
         .endTs(200L)
         .cloudProviderIds(Lists.newArrayList(UsageMetricsTestKeys.CLOUDPROVIDER1, UsageMetricsTestKeys.CLOUDPROVIDER2))
         .environments(Lists.newArrayList(EnvSummary.builder().environmentType(EnvironmentType.PROD).build()))
-        .pipelineExecution(Builder.aPipelineExecution().withPipelineId(UsageMetricsTestKeys.PIPELINEID).build())
+        .pipelineExecution(
+            Builder.aPipelineExecution()
+                .withPipelineId(UsageMetricsTestKeys.PIPELINEID)
+                .withPipelineStageExecutions(
+                    Arrays.asList(PipelineStageExecution.builder()
+                                      .workflowExecutions(Arrays.asList(
+                                          WorkflowExecution.builder()
+                                              .envId(UsageMetricsTestKeys.ENV1)
+                                              .envType(EnvironmentType.PROD)
+                                              .cloudProviderIds(Lists.newArrayList(UsageMetricsTestKeys.CLOUDPROVIDER1))
+                                              .serviceIds(Arrays.asList(UsageMetricsTestKeys.SERVICE1))
+
+                                              .build()))
+                                      .build()))
+                .build())
         .pipelineExecutionId(UsageMetricsTestKeys.PIPELINEEXECUTIONID)
         .artifacts(Lists.newArrayList(Artifact.Builder.anArtifact().withMetadata(artifactBuildNumber).build()))
         .serviceIds(Arrays.asList(UsageMetricsTestKeys.SERVICE1))
-        .envIds(Arrays.asList(UsageMetricsTestKeys.ENV1))
+
         .triggeredBy(EmbeddedUser.builder().uuid(UsageMetricsTestKeys.USER1).build())
         .deploymentTriggerId(UsageMetricsTestKeys.TRIGGER1)
         .duration(100L)
