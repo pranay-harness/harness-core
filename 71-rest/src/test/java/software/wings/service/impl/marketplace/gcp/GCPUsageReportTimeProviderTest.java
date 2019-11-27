@@ -18,9 +18,9 @@ public class GCPUsageReportTimeProviderTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testProvider() {
-    Instant currentTime = Instant.now();
-    Instant startTime = currentTime.minus(2, ChronoUnit.DAYS);
-    Instant endTime = currentTime.plus(1, ChronoUnit.MINUTES);
+    Instant currentTime = Instant.now().truncatedTo(ChronoUnit.DAYS);
+    Instant startTime = currentTime.minus(3, ChronoUnit.DAYS);
+    Instant endTime = currentTime;
 
     GCPUsageReportTimeProvider gcpUsageReportTimeProvider =
         new GCPUsageReportTimeProvider(startTime, endTime, TimeUnit.DAYS.toDays(1), ChronoUnit.DAYS);
