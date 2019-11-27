@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.GeneralException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,7 +46,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
   @Override
   public LdapTestResponse validateLdapConnectionSettings(
       LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    logger.info("Initiating validateLdapConnectionSettings with ldap settings : ", settings);
+    logger.info("Initiating validateLdapConnectionSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateConnectionConfig();
@@ -57,7 +58,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
   @Override
   public LdapTestResponse validateLdapUserSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    logger.info("Initiating validateLdapUserSettings with ldap settings : ", settings);
+    logger.info("Initiating validateLdapUserSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateUserConfig(settings.getUserSettingsList());
@@ -87,7 +88,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     try {
       password = new String(encryptionService.getDecryptedValue(passwordEncryptedDataDetail));
     } catch (IOException e) {
-      throw new WingsException("Failed to decrypt the password.");
+      throw new GeneralException("Failed to decrypt the password.");
     }
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     return helper.authenticate(settings.getUserSettingsList(), username, password);
@@ -132,7 +133,12 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     }
 
     if (Arrays.asList(user.getAttributeNames()).contains(userConfig.getDisplayNameAttr())) {
-      name = user.getAttribute(userConfig.getDisplayNameAttr()).getStringValue();
+      if (user.getAttribute(userConfig.getDisplayNameAttr()) != null) {
+        name = user.getAttribute(userConfig.getDisplayNameAttr()).getStringValue();
+      } else {
+        // This case didn't happen till now, but adding due to infer checks
+        name = null;
+      }
     } else {
       name = email;
     }
@@ -150,7 +156,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
           helper.searchGroupsByName(settings.getGroupSettingsList(), nameQuery);
       return createLdapGroupResponse(helper, ldapListGroupsResponses, settings);
     } catch (LdapException e) {
-      throw new WingsException(e.getResultCode().toString(), e);
+      throw new LdapDelegateException(e.getResultCode().toString(), e);
     }
   }
 
@@ -198,7 +204,8 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
       Collection<LdapUserResponse> userResponses = null;
 
-      List<LdapGetUsersResponse> ldapGetUsersResponses = helper.listGroupUsers(settings.getUserSettingsList(), dn);
+      List<LdapGetUsersResponse> ldapGetUsersResponses =
+          helper.listGroupUsers(settings.getUserSettingsList(), Collections.singletonList(dn));
 
       userResponses = ldapGetUsersResponses.stream()
                           .map(ldapGetUsersResponse
@@ -218,7 +225,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
             e.getResultCode().toString(), dn, settings.getPublicSSOSettings().getDisplayName()));
         return null;
       }
-      throw new WingsException(e.getResultCode().toString(), e);
+      throw new LdapDelegateException(e.getResultCode().toString(), e);
     }
   }
 }

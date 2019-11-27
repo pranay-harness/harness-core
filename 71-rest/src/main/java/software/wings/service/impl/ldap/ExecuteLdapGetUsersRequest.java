@@ -30,14 +30,14 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
       }
     } catch (LdapException le) {
       ldapResultCode = le.getResultCode();
-      logger.error("LdapException ErrorCode = {}", searchStatusMsg);
+      logger.error("LdapException ErrorCode = {}", ldapResultCode);
       if (ResultCode.UNAVAILABLE_CRITICAL_EXTENSION == le.getResultCode()) {
         try {
           logger.info("LDAP Search failed errorCode = {} , trying fallback ldapSearch", searchStatusMsg);
           searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
         } catch (LdapException ldapException) {
           ldapResultCode = ldapException.getResultCode();
-          logger.error("LdapException ErrorCode = {}", searchStatusMsg);
+          logger.error("LdapException ErrorCode = {}", ldapResultCode);
           logger.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {}",
               ldapUserConfig.getBaseDN(), ldapUserConfig.getSearchFilter());
         }
@@ -54,7 +54,7 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
 
     LdapResponse ldapResponse = LdapResponse.builder().status(searchStatus).message(searchStatusMsg).build();
 
-    return new LdapGetUsersResponse(ldapUserConfig, ldapResponse, searchResult);
+    return new LdapGetUsersResponse(ldapUserConfig, ldapResponse, searchResult, ldapGetUsersRequest.getGroupBaseDn());
   }
 
   private LdapSearch getFallBackLdapSearch(LdapSearch ldapSearch) {
