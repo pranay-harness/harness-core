@@ -23,7 +23,7 @@ public class LoginRateLimitMigration implements Migration {
       limitConfigurationService.configure(Account.GLOBAL_ACCOUNT_ID, ActionType.LOGIN_REQUEST_TASK,
           new RateLimit(globalRateLimit, 1, TimeUnit.MINUTES));
     } catch (Exception ex) {
-      logger.error("Exception while setting rate limit value ", ex);
+      logger.error("Exception while setting rate limit value during migration ", ex);
     }
   }
 }
