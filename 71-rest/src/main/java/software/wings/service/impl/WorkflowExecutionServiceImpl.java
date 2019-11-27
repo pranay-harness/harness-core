@@ -114,7 +114,6 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.api.AwsAmiDeployStateExecutionData;
-import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.EnvStateExecutionData;
@@ -148,6 +147,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
@@ -167,7 +167,6 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.User;
-import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -181,6 +180,7 @@ import software.wings.beans.concurrency.ConcurrentExecutionResponse;
 import software.wings.beans.concurrency.ConcurrentExecutionResponse.ConcurrentExecutionResponseBuilder;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.cache.MongoStore;
@@ -188,6 +188,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidBaselineConfigurationException;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
@@ -202,6 +203,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.EntityVersionService;
@@ -239,6 +241,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
+import software.wings.sm.RollbackConfirmation;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
@@ -248,6 +251,7 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.rollback.RollbackStateMachineGenerator;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
@@ -323,6 +327,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private HostService hostService;
   @Inject private WorkflowConcurrencyHelper workflowConcurrencyHelper;
   @Inject private ResourceConstraintService resourceConstraintService;
+  @Inject private AuthService authService;
+  @Inject private RollbackStateMachineGenerator rollbackStateMachineGenerator;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1103,18 +1109,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-
-    if (!workflow.getOrchestrationWorkflow().isValid()) {
-      throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
-    }
+    Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId, infraRefactor);
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
-
-    if (infraRefactor) {
-      workflow.setOrchestrationWorkflow(workflowConcurrencyHelper.enhanceWithConcurrencySteps(
-          workflow.getAppId(), workflow.getOrchestrationWorkflow()));
-    }
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
+        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
+    deploymentFreezeChecker.check(accountId);
+    checkPreDeploymentConditions(accountId, appId);
 
     StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
         ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(),
@@ -1126,83 +1127,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stateMachine.setOrchestrationWorkflow(null);
 
-    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
-    workflowExecution.setAppId(appId);
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
-    if (resolveEnvId != null) {
-      envId = resolveEnvId;
-      workflowExecution.setEnvId(resolveEnvId);
-      workflowExecution.setEnvIds(Collections.singletonList(resolveEnvId));
-    }
+    envId = resolveEnvId != null ? resolveEnvId : envId;
 
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
-    deploymentFreezeChecker.check(accountId);
-    checkPreDeploymentConditions(accountId, appId);
-
-    workflowExecution.setWorkflowId(workflowId);
-    workflowExecution.setWorkflowIds(asList(workflowId));
-    workflowExecution.setName(workflow.getName());
-    workflowExecution.setWorkflowType(ORCHESTRATION);
-    workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-    workflowExecution.setConcurrencyStrategy(workflow.getOrchestrationWorkflow().getConcurrencyStrategy());
-    workflowExecution.setStateMachine(stateMachine);
-    workflowExecution.setPipelineExecutionId(pipelineExecutionId);
-    workflowExecution.setExecutionArgs(executionArgs);
-    workflowExecution.setStageName(executionArgs.getStageName());
-
-    Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
-    List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);
-    if (isNotEmpty(services)) {
-      workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
-    }
-
-    if (infraRefactor) {
-      workflowExecution.setInfraDefinitionIds(
-          workflowService.getResolvedInfraDefinitionIds(workflow, workflowVariables));
-      workflowExecution.setCloudProviderIds(
-          infrastructureDefinitionService.fetchCloudProviderIds(appId, workflowExecution.getInfraDefinitionIds()));
-    } else {
-      workflowExecution.setInfraMappingIds(workflowService.getResolvedInfraMappingIds(workflow, workflowVariables));
-      workflowExecution.setCloudProviderIds(
-          infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
-    }
+    WorkflowExecution workflowExecution = workflowExecutionServiceHelper.obtainExecution(
+        workflow, stateMachine, resolveEnvId, pipelineExecutionId, executionArgs, infraRefactor);
 
     validateExecutionArgsHosts(executionArgs.getHosts(), workflowExecution, workflow);
 
-    WorkflowStandardParams stdParams;
-    if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.ROLLING
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.MULTI_SERVICE
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == BUILD
-        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BLUE_GREEN) {
-      stdParams = new CanaryWorkflowStandardParams();
-
-      if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
-        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-            (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-        if (canaryOrchestrationWorkflow.getUserVariables() != null) {
-          stdParams.setWorkflowElement(WorkflowElement.builder()
-                                           .variables(getWorkflowVariables(canaryOrchestrationWorkflow, executionArgs))
-                                           .build());
-        }
-      }
-    } else {
-      stdParams = new WorkflowStandardParams();
-    }
-
-    stdParams.setAppId(appId);
-    stdParams.setEnvId(envId);
-    if (isNotEmpty(executionArgs.getArtifacts())) {
-      stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
-    }
-
-    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
-
-    stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
-    stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
-    stdParams.setExecutionHosts(executionArgs.getHosts());
+    WorkflowStandardParams stdParams =
+        workflowExecutionServiceHelper.obtainWorkflowStandardParams(appId, envId, executionArgs, workflow);
 
     return triggerExecution(workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(),
         workflowExecutionUpdate, stdParams, trigger, null, workflow);
@@ -1226,56 +1160,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (deploymentTypes.get(0) != DeploymentType.SSH) {
       throw new InvalidRequestException("Execution Hosts only supported for SSH deployment type", USER);
     }
-  }
-
-  private Map<String, Object> getWorkflowVariables(
-      CanaryOrchestrationWorkflow orchestrationWorkflow, ExecutionArgs executionArgs) {
-    Map<String, Object> variables = new HashMap<>();
-    if (orchestrationWorkflow.getUserVariables() == null) {
-      return variables;
-    }
-    for (Variable variable : orchestrationWorkflow.getUserVariables()) {
-      if (variable.isFixed()) {
-        setVariables(variable.getName(), variable.getValue(), variables);
-        continue;
-      }
-
-      // no input from user
-      if (executionArgs == null || isEmpty(executionArgs.getWorkflowVariables())
-          || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
-        if (variable.isMandatory() && isBlank(variable.getValue())) {
-          throw new InvalidRequestException(
-              "Workflow variable [" + variable.getName() + "] is mandatory for execution", USER);
-        }
-        if (isBlank(variable.getValue())) {
-          setVariables(variable.getName(), "", variables);
-        } else {
-          setVariables(variable.getName(), variable.getValue(), variables);
-        }
-        continue;
-      }
-      // Verify for allowed values
-      if (isNotEmpty(variable.getAllowedValues())) {
-        if (isNotEmpty(variable.getValue())) {
-          if (!variable.getAllowedList().contains(variable.getValue())) {
-            throw new InvalidRequestException("Workflow variable value [" + variable.getValue()
-                + " is not in Allowed Values [" + variable.getAllowedList() + "]");
-          }
-        }
-      }
-      setVariables(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()), variables);
-    }
-    return variables;
-  }
-
-  private void setVariables(String key, Object value, Map<String, Object> variableMap) {
-    if (!isNull(key)) {
-      variableMap.put(key, value);
-    }
-  }
-
-  private boolean isNull(String string) {
-    return isEmpty(string) || string.equals("null");
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
@@ -1808,6 +1692,126 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public WorkflowExecution triggerRollbackExecutionWorkflow(String appId, WorkflowExecution workflowExecution) {
+    try (AutoLogContext ignore1 = new AccountLogContext(workflowExecution.getAccountId(), OVERRIDE_ERROR)) {
+      authorizeOnDemandRollback(appId, workflowExecution);
+
+      if (!getOnDemandRollbackAvailable(appId, workflowExecution)) {
+        throw new InvalidRequestException("On demand rollback should not be available for this execution");
+      }
+
+      WorkflowExecution activeWorkflowExecution = getRunningExecutions(workflowExecution);
+      if (activeWorkflowExecution != null) {
+        throw new InvalidRequestException("Cannot trigger Rollback, active execution found");
+      }
+
+      List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
+      if (isEmpty(previousArtifacts)) {
+        throw new InvalidRequestException("No previous artifact found to rollback to");
+      }
+
+      ExecutionArgs oldExecutionArgs = workflowExecution.getExecutionArgs();
+      oldExecutionArgs.setArtifacts(previousArtifacts);
+      oldExecutionArgs.setArtifactVariables(null);
+      return triggerRollbackExecution(appId, workflowExecution.getEnvId(), oldExecutionArgs, workflowExecution);
+    }
+  }
+
+  private void authorizeOnDemandRollback(String appId, WorkflowExecution workflowExecution) {
+    String workflowId = workflowExecution.getWorkflowId();
+    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
+    List<PermissionAttribute> permissionAttributeList = Collections.singletonList(permissionAttribute);
+    authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), workflowId);
+    authService.checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+  }
+
+  @Override
+  public RollbackConfirmation getOnDemandRollbackConfirmation(String appId, WorkflowExecution workflowExecution) {
+    String accountId = workflowExecution.getAccountId();
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      authorizeOnDemandRollback(appId, workflowExecution);
+
+      if (!getOnDemandRollbackAvailable(appId, workflowExecution)) {
+        throw new InvalidRequestException("On demand rollback should not be available for this execution");
+      }
+
+      if (workflowExecution.isOnDemandRollback()) {
+        return RollbackConfirmation.builder()
+            .valid(false)
+            .validationMessage("Cannot trigger Rollback for RolledBack execution")
+            .build();
+      }
+
+      String workflowId = workflowExecution.getWorkflowId();
+      Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+      notNullCheck("Error reading workflow associated with this workflowExecution. Might be deleted", workflow);
+      notNullCheck("Error reading workflow associated with this workflowExecution. Might be deleted",
+          workflow.getOrchestrationWorkflow());
+
+      WorkflowExecution activeWorkflowExecution = getRunningExecutions(workflowExecution);
+      if (activeWorkflowExecution != null) {
+        return RollbackConfirmation.builder()
+            .valid(false)
+            .validationMessage("Cannot trigger Rollback, active execution found")
+            .activeWorkflowExecution(activeWorkflowExecution)
+            .workflowId(workflowId)
+            .build();
+      }
+
+      List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
+      if (isEmpty(previousArtifacts)) {
+        throw new InvalidRequestException("No artifact found in previous execution");
+      }
+
+      return RollbackConfirmation.builder().artifacts(previousArtifacts).workflowId(workflowId).valid(true).build();
+    }
+  }
+
+  private WorkflowExecution getRunningExecutions(WorkflowExecution workflowExecution) {
+    final Query<WorkflowExecution> query =
+        wingsPersistence.createQuery(WorkflowExecution.class)
+            .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+            .filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds())
+            .field(WorkflowExecutionKeys.status)
+            .in(ExecutionStatus.activeStatuses());
+
+    return query.get();
+  }
+
+  private List<Artifact> validateAndGetPreviousArtifacts(WorkflowExecution workflowExecution) {
+    final Query<WorkflowExecution> query =
+        wingsPersistence.createQuery(WorkflowExecution.class)
+            .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+            .filter(WorkflowExecutionKeys.status, SUCCESS)
+            .filter(WorkflowExecutionKeys.onDemandRollback, false)
+            .filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds())
+            .order(Sort.descending(WorkflowExecutionKeys.createdAt));
+    final List<WorkflowExecution> workflowExecutionList = query.asList(new FindOptions().limit(2));
+
+    if (isEmpty(workflowExecutionList)) {
+      throw new InvalidRequestException(
+          "Not able to find previous successful workflowExecutions for workflowExecution: "
+          + workflowExecution.getName());
+    }
+
+    if (!workflowExecutionList.get(0).getUuid().equals(workflowExecution.getUuid())) {
+      logger.info("Last successful execution found: {} ", workflowExecutionList.get(0));
+      throw new InvalidRequestException(
+          "This is not the latest successful workflowExecution: " + workflowExecution.getName());
+    }
+
+    if (workflowExecutionList.size() < 2) {
+      throw new InvalidRequestException(
+          "No previous execution before this execution to rollback to, workflowExecution: "
+          + workflowExecution.getName());
+    }
+
+    WorkflowExecution lastSecondSuccessfulWE = workflowExecutionList.get(1);
+    logger.info("Fetching artifact from execution: {}", lastSecondSuccessfulWE);
+    return lastSecondSuccessfulWE.getArtifacts();
+  }
+
+  @Override
   public void incrementInProgressCount(String appId, String workflowExecutionId, int inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
     ops.inc("breakdown.inprogress", inc);
@@ -1892,6 +1896,60 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       default:
         throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "workflowType");
     }
+  }
+
+  WorkflowExecution triggerRollbackExecution(
+      String appId, String envId, ExecutionArgs executionArgs, WorkflowExecution previousWorkflowExecution) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (PIPELINE == executionArgs.getWorkflowType()) {
+      throw new InvalidRequestException("Emergency rollback not supported for pipelines");
+    }
+
+    logger.debug("Received an emergency rollback  execution request");
+    if (executionArgs.getOrchestrationId() == null) {
+      logger.error("workflowId is null for an orchestrated execution");
+      throw new InvalidRequestException("workflowId is null for an orchestrated execution");
+    }
+    boolean infraRefactor = featureFlagService.isEnabled(INFRA_MAPPING_REFACTOR, accountId);
+
+    logger.info("Execution Triggered. Type: {}, accountId={}", executionArgs.getWorkflowType(), accountId);
+
+    String workflowId = executionArgs.getOrchestrationId();
+    Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId, infraRefactor);
+
+    // Doing this check here so that workflow is already fetched from database.
+    preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
+
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
+        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
+    deploymentFreezeChecker.check(accountId);
+
+    // Not including instance limit and deployment limit check as it is a emergency rollback
+    accountExpirationChecker.check(accountId);
+
+    StateMachine stateMachine = rollbackStateMachineGenerator.generateForRollbackExecution(
+        appId, previousWorkflowExecution.getUuid(), infraRefactor);
+
+    // This is workaround for a side effect in the state machine generation that mangles with the original
+    //       workflow object.
+    workflow = workflowService.readWorkflow(appId, workflowId);
+
+    stateMachine.setOrchestrationWorkflow(null);
+
+    WorkflowExecution workflowExecution = workflowExecutionServiceHelper.obtainExecution(
+        workflow, stateMachine, envId, null, executionArgs, infraRefactor);
+    workflowExecution.setOnDemandRollback(true);
+    workflowExecution.setOriginalExecution(WorkflowExecutionInfo.builder()
+                                               .name(previousWorkflowExecution.getName())
+                                               .startTs(previousWorkflowExecution.getStartTs())
+                                               .executionId(previousWorkflowExecution.getUuid())
+                                               .build());
+
+    WorkflowStandardParams stdParams =
+        workflowExecutionServiceHelper.obtainWorkflowStandardParams(appId, envId, executionArgs, workflow);
+
+    return triggerExecution(
+        workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), null, stdParams, null, null, workflow);
   }
 
   private void checkDeploymentRateLimit(String accountId, String appId) {
@@ -3139,9 +3197,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .get();
   }
 
-  // TODO => Check with @Vaibhav for releaseName as variable and
-  // From a combination of infraDefinitionId and serviceId will there be always a unique InfraDefinition ID
-  //
   private WorkflowExecution fetchLastSuccessDeployment(WorkflowExecution workflowExecution) {
     Query<WorkflowExecution> workflowExecutionQuery =
         wingsPersistence.createQuery(WorkflowExecution.class)
@@ -3630,5 +3685,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return new ArrayList<>(cloudProviderIds);
+  }
+
+  public boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastSuccessfulWE) {
+    if (lastSuccessfulWE.getWorkflowType().equals(PIPELINE)) {
+      logger.info("On demand rollback not available for pipeline executions {}", lastSuccessfulWE);
+      return false;
+    }
+    if (!lastSuccessfulWE.getEnvType().equals(EnvironmentType.PROD)) {
+      logger.info("On demand rollback not available for Non prod environments {}", lastSuccessfulWE);
+      return false;
+    }
+    List<String> infraDefId = lastSuccessfulWE.getInfraDefinitionIds();
+    if (isEmpty(infraDefId) || infraDefId.size() != 1) {
+      // Only allowing on demand rollback for workflow deploying single infra definition.
+      logger.info("On demand rollback not available {}", lastSuccessfulWE);
+      return false;
+    } else {
+      InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId.get(0));
+      return infrastructureDefinition != null
+          && infrastructureDefinition.getDeploymentType().equals(DeploymentType.PCF);
+    }
   }
 }

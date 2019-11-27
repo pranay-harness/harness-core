@@ -1,34 +1,55 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.VariableType.ENTITY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.exception.InvalidRequestException;
+import software.wings.api.CanaryWorkflowStandardParams;
+import software.wings.api.WorkflowElement;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateMachine;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 public class WorkflowExecutionServiceHelper {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private WorkflowConcurrencyHelper workflowConcurrencyHelper;
   @Inject private PipelineService pipelineService;
 
   public WorkflowVariablesMetadata fetchWorkflowVariables(
@@ -59,6 +80,152 @@ public class WorkflowExecutionServiceHelper {
 
     boolean changed = populateWorkflowVariablesValues(workflowVariables, new HashMap<>(oldWorkflowVariablesValueMap));
     return new WorkflowVariablesMetadata(workflowVariables, changed);
+  }
+
+  @NotNull
+  public Workflow obtainWorkflow(@NotNull String appId, @NotNull String workflowId, boolean infraRefactor) {
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    notNullCheck("Error reading workflow. Might be deleted", workflow);
+    notNullCheck("Error reading workflow. Might be deleted", workflow.getOrchestrationWorkflow());
+    if (!workflow.getOrchestrationWorkflow().isValid()) {
+      throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
+    }
+    if (infraRefactor) {
+      workflow.setOrchestrationWorkflow(workflowConcurrencyHelper.enhanceWithConcurrencySteps(
+          workflow.getAppId(), workflow.getOrchestrationWorkflow()));
+    }
+    return workflow;
+  }
+
+  @NotNull
+  public WorkflowExecution obtainExecution(Workflow workflow, StateMachine stateMachine, String resolveEnvId,
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, boolean infraRefactor) {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
+    workflowExecution.setAppId(workflow.getAppId());
+
+    if (resolveEnvId != null) {
+      workflowExecution.setEnvId(resolveEnvId);
+      workflowExecution.setEnvIds(Collections.singletonList(resolveEnvId));
+    }
+
+    workflowExecution.setWorkflowId(workflow.getUuid());
+    workflowExecution.setWorkflowIds(asList(workflow.getUuid()));
+    workflowExecution.setName(workflow.getName());
+    workflowExecution.setWorkflowType(ORCHESTRATION);
+    workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+    workflowExecution.setConcurrencyStrategy(workflow.getOrchestrationWorkflow().getConcurrencyStrategy());
+    workflowExecution.setStateMachine(stateMachine);
+    workflowExecution.setPipelineExecutionId(pipelineExecutionId);
+    workflowExecution.setExecutionArgs(executionArgs);
+    workflowExecution.setStageName(executionArgs.getStageName());
+
+    Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
+    List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);
+    if (isNotEmpty(services)) {
+      workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
+    }
+
+    if (infraRefactor) {
+      workflowExecution.setInfraDefinitionIds(
+          workflowService.getResolvedInfraDefinitionIds(workflow, workflowVariables));
+      workflowExecution.setCloudProviderIds(infrastructureDefinitionService.fetchCloudProviderIds(
+          workflow.getAppId(), workflowExecution.getInfraDefinitionIds()));
+    } else {
+      workflowExecution.setInfraMappingIds(workflowService.getResolvedInfraMappingIds(workflow, workflowVariables));
+      workflowExecution.setCloudProviderIds(infrastructureMappingService.fetchCloudProviderIds(
+          workflow.getAppId(), workflowExecution.getInfraMappingIds()));
+    }
+    return workflowExecution;
+  }
+
+  @NotNull
+  public WorkflowStandardParams obtainWorkflowStandardParams(
+      String appId, String envId, @NotNull ExecutionArgs executionArgs, Workflow workflow) {
+    WorkflowStandardParams stdParams;
+    if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.ROLLING
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.MULTI_SERVICE
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == BUILD
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BLUE_GREEN) {
+      stdParams = new CanaryWorkflowStandardParams();
+
+      if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+            (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+        if (canaryOrchestrationWorkflow.getUserVariables() != null) {
+          stdParams.setWorkflowElement(WorkflowElement.builder()
+                                           .variables(fetchWorkflowVariablesFromOrchestrationWorkflow(
+                                               canaryOrchestrationWorkflow, executionArgs))
+                                           .build());
+        }
+      }
+    } else {
+      stdParams = new WorkflowStandardParams();
+    }
+
+    stdParams.setAppId(appId);
+    stdParams.setEnvId(envId);
+    if (isNotEmpty(executionArgs.getArtifacts())) {
+      stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
+    }
+
+    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
+
+    stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
+    stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
+    stdParams.setExecutionHosts(executionArgs.getHosts());
+    return stdParams;
+  }
+
+  private Map<String, Object> fetchWorkflowVariablesFromOrchestrationWorkflow(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, ExecutionArgs executionArgs) {
+    Map<String, Object> variables = new HashMap<>();
+    if (orchestrationWorkflow.getUserVariables() == null) {
+      return variables;
+    }
+    for (Variable variable : orchestrationWorkflow.getUserVariables()) {
+      if (variable.isFixed()) {
+        setVariables(variable.getName(), variable.getValue(), variables);
+        continue;
+      }
+
+      // no input from user
+      if (executionArgs == null || isEmpty(executionArgs.getWorkflowVariables())
+          || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
+        if (variable.isMandatory() && isBlank(variable.getValue())) {
+          throw new InvalidRequestException(
+              "Workflow variable [" + variable.getName() + "] is mandatory for execution", USER);
+        }
+        if (isBlank(variable.getValue())) {
+          setVariables(variable.getName(), "", variables);
+        } else {
+          setVariables(variable.getName(), variable.getValue(), variables);
+        }
+        continue;
+      }
+      // Verify for allowed values
+      if (isNotEmpty(variable.getAllowedValues())) {
+        if (isNotEmpty(variable.getValue())) {
+          if (!variable.getAllowedList().contains(variable.getValue())) {
+            throw new InvalidRequestException("Workflow variable value [" + variable.getValue()
+                + " is not in Allowed Values [" + variable.getAllowedList() + "]");
+          }
+        }
+      }
+      setVariables(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()), variables);
+    }
+    return variables;
+  }
+
+  private void setVariables(String key, Object value, Map<String, Object> variableMap) {
+    if (!isNull(key)) {
+      variableMap.put(key, value);
+    }
+  }
+
+  private boolean isNull(String string) {
+    return isEmpty(string) || string.equals("null");
   }
 
   private List<Variable> fetchWorkflowVariables(String appId, ExecutionArgs executionArgs) {

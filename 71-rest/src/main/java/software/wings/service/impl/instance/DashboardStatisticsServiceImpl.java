@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -65,6 +66,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.artifact.Artifact;
@@ -98,11 +100,13 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.PipelineSummary;
@@ -130,10 +134,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private InstanceService instanceService;
   @Inject private AppService appService;
   @Inject private UserService userService;
+  @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infraMappingService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private AccountService accountService;
   @Inject @Named(FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
@@ -782,10 +788,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .sort(descending("count"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfoList::add);
-    return constructCurrentActiveInstances(instanceInfoList);
+    return constructCurrentActiveInstances(instanceInfoList, appId, serviceId);
   }
 
-  private List<CurrentActiveInstances> constructCurrentActiveInstances(List<AggregationInfo> aggregationInfoList) {
+  private List<CurrentActiveInstances> constructCurrentActiveInstances(
+      List<AggregationInfo> aggregationInfoList, String appId, String serviceId) {
     List<CurrentActiveInstances> currentActiveInstancesList = Lists.newArrayList();
     for (AggregationInfo aggregationInfo : aggregationInfoList) {
       long count = aggregationInfo.getCount();
@@ -807,13 +814,49 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
       long deployedAt = aggregationInfo.getArtifactInfo().getDeployedAt();
 
-      CurrentActiveInstances currentActiveInstances = CurrentActiveInstances.builder()
-                                                          .artifact(artifactSummary)
-                                                          .deployedAt(new Date(deployedAt))
-                                                          .environment(environmentSummary)
-                                                          .instanceCount(count)
-                                                          .serviceInfra(serviceInfraSummary)
-                                                          .build();
+      // To fetch last execution
+      final WorkflowExecution lastSuccessfulWE =
+          wingsPersistence.createQuery(WorkflowExecution.class)
+              .filter(WorkflowExecutionKeys.appId, appId)
+              .filter(WorkflowExecutionKeys.status, SUCCESS)
+              .filter(WorkflowExecutionKeys.infraMappingIds, infraMappingInfo.getId())
+              .order(Sort.descending(WorkflowExecutionKeys.createdAt))
+              .get();
+
+      CurrentActiveInstances currentActiveInstances;
+      if (lastSuccessfulWE == null) {
+        currentActiveInstances = CurrentActiveInstances.builder()
+                                     .artifact(artifactSummary)
+                                     .deployedAt(new Date(deployedAt))
+                                     .environment(environmentSummary)
+                                     .instanceCount(count)
+                                     .serviceInfra(serviceInfraSummary)
+                                     .onDemandRollbackAvailable(false)
+                                     .build();
+      } else {
+        Workflow workflow = workflowService.readWorkflowWithoutOrchestration(appId, lastSuccessfulWE.getWorkflowId());
+        String workflowName;
+        if (workflow != null) {
+          workflowName = workflow.getName();
+        } else {
+          // if workflow is deleted setting workflowExecution name so UI does not break.
+          workflowName = lastSuccessfulWE.getName();
+        }
+        boolean rollbackAvailable = workflowExecutionService.getOnDemandRollbackAvailable(appId, lastSuccessfulWE);
+
+        EntitySummary workflowExecutionSummary =
+            getEntitySummary(workflowName, lastSuccessfulWE.getUuid(), EntityType.WORKFLOW_EXECUTION.name());
+
+        currentActiveInstances = CurrentActiveInstances.builder()
+                                     .artifact(artifactSummary)
+                                     .deployedAt(new Date(deployedAt))
+                                     .environment(environmentSummary)
+                                     .instanceCount(count)
+                                     .serviceInfra(serviceInfraSummary)
+                                     .lastSuccessfulWorkflowExecution(workflowExecutionSummary)
+                                     .onDemandRollbackAvailable(rollbackAvailable)
+                                     .build();
+      }
       currentActiveInstancesList.add(currentActiveInstances);
     }
 
@@ -1008,7 +1051,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                                   .addFilter("_id", IN, infraMappingIdList.toArray())
                                                                   .addFilter("serviceId", EQ, serviceId)
                                                                   .addFilter("appId", EQ, appId)
-                                                                  .addFieldsIncluded("_id", "name")
+                                                                  .addFieldsIncluded("_id", "name", "displayName")
                                                                   .build();
 
           PageResponse<InfrastructureMapping> pageResponse = infraMappingService.list(envPageRequest);
@@ -1031,6 +1074,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                   .envs(envList)
                                                   .inframappings(serviceInfraList)
                                                   .deployedAt(startDate)
+                                                  .rolledBack(workflowExecution.isOnDemandRollback())
                                                   .instanceCount(instanceCount)
                                                   .pipeline(pipelineEntitySummary)
                                                   .status(executionStatus)
