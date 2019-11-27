@@ -57,7 +57,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
                           .withCompanyName("Account 2")
                           .withAuthenticationMechanism(USER_PASSWORD)
                           .build();
-    accountService.save(account, false);
+    accountService.save(account);
 
     // Testcases to check logic for co-existence of USERNAME_PASSWORD and OAUTH
     // UP = USER_PASSWORD, OA = OAUTH
@@ -103,7 +103,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
                           .withCompanyName("Account 2")
                           .withAuthenticationMechanism(USER_PASSWORD)
                           .build();
-    accountService.save(account, false);
+    accountService.save(account);
     ssoService.setAuthenticationMechanism(account.getUuid(), SAML);
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
@@ -124,7 +124,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
                           .withCompanyName("Account 3")
                           .withAuthenticationMechanism(USER_PASSWORD)
                           .build();
-    accountService.save(account, false);
+    accountService.save(account);
     ssoService.setAuthenticationMechanism(account.getUuid(), LDAP);
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(LDAP);
@@ -145,7 +145,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
                           .withCompanyName("Account 3")
                           .withAuthenticationMechanism(USER_PASSWORD)
                           .build();
-    accountService.save(account, false);
+    accountService.save(account);
     doNothing().when(authHandler).authorizeAccountPermission(anyList());
     SSOConfig accountAccessManagementSettings = ssoService.getAccountAccessManagementSettings(account.getUuid());
     assertThat(accountAccessManagementSettings).isNotNull();
@@ -172,7 +172,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
                           .withCompanyName("Account 4")
                           .withAuthenticationMechanism(USER_PASSWORD)
                           .build();
-    accountService.save(account, false);
+    accountService.save(account);
     OauthSettings response =
         ssoSettingService.saveOauthSettings(OauthSettings.builder()
                                                 .accountId(account.getUuid())

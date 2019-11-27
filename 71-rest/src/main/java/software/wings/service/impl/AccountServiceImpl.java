@@ -222,7 +222,7 @@ public class AccountServiceImpl implements AccountService {
   private Map<String, UrlInfo> techStackDocLinks;
 
   @Override
-  public Account save(@Valid Account account, boolean fromDataGen) {
+  public Account save(@Valid Account account) {
     // Validate if account/company name is valid.
     validateAccount(account);
 
@@ -248,7 +248,7 @@ public class AccountServiceImpl implements AccountService {
       logger.info("Creating the account '{}' for import only, no default account entities will be created",
           account.getAccountName());
     } else {
-      createDefaultAccountEntities(account, fromDataGen);
+      createDefaultAccountEntities(account);
       // Schedule default account level jobs.
       scheduleAccountLevelJobs(account.getUuid());
     }
@@ -305,7 +305,7 @@ public class AccountServiceImpl implements AccountService {
     }
   }
 
-  private void createDefaultAccountEntities(Account account, boolean fromDataGen) {
+  private void createDefaultAccountEntities(Account account) {
     createDefaultRoles(account)
         .stream()
         .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))
@@ -318,14 +318,7 @@ public class AccountServiceImpl implements AccountService {
     executorService.submit(
         () -> templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName()));
 
-    enableFeatureFlags(account, fromDataGen);
     sampleDataProviderService.createK8sV2SampleApp(account);
-  }
-
-  private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
-    if (!fromDataGen) {
-      featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, account.getUuid());
-    }
   }
 
   List<Role> createDefaultRoles(Account account) {

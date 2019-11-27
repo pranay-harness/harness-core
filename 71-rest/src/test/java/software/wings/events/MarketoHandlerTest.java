@@ -3,7 +3,6 @@ package software.wings.events;
 import static io.harness.rule.OwnerRule.RAMA;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,7 +60,7 @@ public class MarketoHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(marketoHelper, "accountService", accountService, true);
     FieldUtils.writeField(marketoHelper, "userService", userService, true);
     when(accountService.get(anyString())).thenReturn(account);
-    when(accountService.save(any(), eq(false))).thenReturn(account);
+    when(accountService.save(any())).thenReturn(account);
     account = testUtils.createAccount();
     user = testUtils.createUser(account);
   }

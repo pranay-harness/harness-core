@@ -46,7 +46,6 @@ public class PipelineGenerator {
 
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
-  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ServiceGenerator serviceGenerator;
 

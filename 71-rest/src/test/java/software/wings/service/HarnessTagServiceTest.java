@@ -68,7 +68,7 @@ public class HarnessTagServiceTest extends WingsBaseTest {
                           .withCompanyName(WingsTestConstants.COMPANY_NAME)
                           .withLicenseInfo(getLicenseInfo())
                           .build();
-    accountService.save(account, false);
+    accountService.save(account);
   }
 
   @Test

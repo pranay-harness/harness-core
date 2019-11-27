@@ -138,8 +138,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(getLicenseInfo())
-                                              .build(),
-        false);
+                                              .build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }
 
@@ -174,8 +173,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                    .withAccountName(HARNESS_NAME)
                                    .withAccountKey("ACCOUNT_KEY")
                                    .withLicenseInfo(getLicenseInfo())
-                                   .build(),
-        false);
+                                   .build());
   }
 
   @Test
@@ -238,8 +236,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withAccountName(HARNESS_NAME)
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(licenseInfo)
-                                              .build(),
-        false);
+                                              .build());
 
     assertThat(accountService.getAccountType(account.getUuid())).isEqualTo(Optional.of(AccountType.COMMUNITY));
   }
@@ -255,7 +252,7 @@ public class AccountServiceTest extends WingsBaseTest {
                           .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> accountService.save(account, false));
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> accountService.save(account));
   }
 
   @Test
@@ -265,8 +262,7 @@ public class AccountServiceTest extends WingsBaseTest {
     thrown.expect(WingsException.class);
     thrown.expectMessage("Invalid / Null license info");
     accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build(),
-        false);
+        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
   }
 
   @Test
@@ -598,8 +594,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(getLicenseInfo())
                                               .withWhitelistedDomains(new HashSet<>())
-                                              .build(),
-        false);
+                                              .build());
     accountService.updateWhitelistedDomains(
         account.getUuid(), Sets.newHashSet(" harness.io", "harness.io ", " harness.io \t\t\t \t \t"));
     account = accountService.get(account.getUuid());
@@ -617,8 +612,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(getLicenseInfo())
                                               .withWhitelistedDomains(new HashSet<>())
-                                              .build(),
-        false);
+                                              .build());
     String newAccountName = "New Account Name";
     accountService.updateAccountName(account.getUuid(), newAccountName, null);
     account = accountService.get(account.getUuid());
@@ -688,8 +682,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withAccountKey("ACCOUNT_KEY")
                                               .withLicenseInfo(getLicenseInfo())
                                               .withWhitelistedDomains(new HashSet<>())
-                                              .build(),
-        false);
+                                              .build());
     Boolean result = accountService.updateCloudCostEnabled(account.getUuid(), true);
     assertThat(result).isTrue();
   }
@@ -705,8 +698,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withAuthenticationMechanism(AuthenticationMechanism.LDAP)
                                               .withLicenseInfo(getLicenseInfo())
                                               .withWhitelistedDomains(new HashSet<>())
-                                              .build(),
-        false);
+                                              .build());
     Boolean result = accountService.isSSOEnabled(account);
     assertThat(result).isTrue();
 
@@ -718,8 +710,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                 .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                                 .withLicenseInfo(getLicenseInfo())
                                 .withWhitelistedDomains(new HashSet<>())
-                                .build(),
-            false);
+                                .build());
     Boolean isSSO = accountService.isSSOEnabled(userPassAccount);
     assertThat(isSSO).isFalse();
   }

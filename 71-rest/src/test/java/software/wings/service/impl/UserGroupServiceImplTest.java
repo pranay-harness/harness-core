@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -131,7 +130,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void setup() {
     doNothing().when(authService).evictUserPermissionAndRestrictionCacheForAccount(anyString(), anyList());
     when(accountService.get(anyString())).thenReturn(account);
-    when(accountService.save(any(), eq(false))).thenReturn(account);
+    when(accountService.save(any())).thenReturn(account);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     when(roleService.getAccountAdminRole(any()))
         .thenReturn(Role.Builder.aRole().withAccountId(ACCOUNT_ID).withUuid(generateUuid()).build());
