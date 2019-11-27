@@ -63,7 +63,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
     ArgumentCaptor<String[]> taskCaptorParams = ArgumentCaptor.forClass(String[].class);
     ArgumentCaptor<Double> taskCaptorValue = ArgumentCaptor.forClass(Double.class);
 
-    verify(harnessMetricRegistry, times(14))
+    verify(harnessMetricRegistry, times(15))
         .recordGaugeValue(taskCaptorName.capture(), taskCaptorParams.capture(), taskCaptorValue.capture());
 
     verifyMetricsPublished(taskCaptorName);
@@ -105,6 +105,12 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
                               .ml_analysis_type(MLAnalysisType.TIME_SERIES)
                               .is24x7Task(false)
                               .build());
+    wingsPersistence.save(LearningEngineAnalysisTask.builder()
+                              .cvConfigId(generateUuid())
+                              .executionStatus(ExecutionStatus.QUEUED)
+                              .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
+                              .is24x7Task(false)
+                              .build());
 
     sleep(ofSeconds(1));
 
@@ -113,7 +119,7 @@ public class LearningEngineQueuedTasksMetricTests extends VerificationBaseTest {
     ArgumentCaptor<String[]> taskCaptorParams = ArgumentCaptor.forClass(String[].class);
     ArgumentCaptor<Double> taskCaptorValue = ArgumentCaptor.forClass(Double.class);
 
-    verify(harnessMetricRegistry, times(14))
+    verify(harnessMetricRegistry, times(15))
         .recordGaugeValue(taskCaptorName.capture(), taskCaptorParams.capture(), taskCaptorValue.capture());
 
     verifyMetricsPublished(taskCaptorName);

@@ -155,6 +155,8 @@ public class VerificationConstants {
   public static final String LEARNING_ENGINE_FEEDBACK_TASK_QUEUED_COUNT = "learning_engine_feedback_task_queued_count";
   public static final String LEARNING_ENGINE_WORKFLOW_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_workflow_task_queued_time_in_seconds";
+  public static final String LEARNING_ENGINE_WORKFLOW_CLUSTERING_TASK_QUEUED_TIME_IN_SECONDS =
+      "learning_engine_workflow_clustering_task_queued_time_in_seconds";
   public static final String LEARNING_ENGINE_WORKFLOW_TASK_COUNT = "learning_engine_workflow_task_queued_count";
   public static final String LEARNING_ENGINE_EXP_TASK_QUEUED_TIME_IN_SECONDS =
       "learning_engine_exp_task_queued_time_in_seconds";
