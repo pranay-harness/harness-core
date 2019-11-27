@@ -2,7 +2,7 @@ package io.harness.perpetualtask.ecs;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
-import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.HOURS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -79,6 +79,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     AwsConfig awsConfig = AwsConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = Collections.emptyList();
     Instant pollTime = Instant.now();
+    Instant truncatedPollTime = pollTime.truncatedTo(HOURS);
     final ImmutableList<Service> services =
         ImmutableList.of(new Service()
                              .withServiceArn("arn:aws:ecs:us-east-2:132359207506:service/ccm-test-service")
@@ -91,13 +92,14 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
 
     given(ecsHelperServiceDelegate.listServicesForCluster(awsConfig, encryptionDetails, REGION, CLUSTER_ARN))
         .willReturn(services);
-    given(ecsMetricClient.getUtilizationMetrics(awsConfig, encryptionDetails, Date.from(pollTime.minus(10, MINUTES)),
-              Date.from(pollTime), new Cluster().withClusterName(CLUSTER_NAME).withClusterArn(CLUSTER_ARN), services,
-              EcsPerpetualTaskParams.newBuilder()
-                  .setClusterId(CLUSTER_ID)
-                  .setSettingId(SETTING_ID)
-                  .setRegion(REGION)
-                  .build()))
+    given(ecsMetricClient.getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails),
+              eq(Date.from(truncatedPollTime.minus(1, HOURS))), eq(Date.from(truncatedPollTime)),
+              eq(new Cluster().withClusterName(CLUSTER_NAME).withClusterArn(CLUSTER_ARN)), eq(services),
+              eq(EcsPerpetualTaskParams.newBuilder()
+                      .setClusterId(CLUSTER_ID)
+                      .setSettingId(SETTING_ID)
+                      .setRegion(REGION)
+                      .build())))
         .willReturn(utilizationMessages);
 
     ecsPerpetualTaskExecutor.publishUtilizationMetrics(

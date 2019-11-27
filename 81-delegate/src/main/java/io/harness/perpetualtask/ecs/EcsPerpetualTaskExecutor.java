@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
-  private static final long METRIC_AGGREGATION_WINDOW_MINUTES = 10;
+  private static final long METRIC_AGGREGATION_WINDOW_MINUTES = 60;
   private static final String INSTANCE_TERMINATED_NAME = "terminated";
   private static final String ECS_OS_TYPE = "ecs.os-type";
 
@@ -141,8 +141,9 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @VisibleForTesting
   void publishUtilizationMetrics(String clusterId, String settingId, String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String clusterNameOrArn, Instant pollTime) {
-    Date startTime = Date.from(pollTime.minus(METRIC_AGGREGATION_WINDOW_MINUTES, ChronoUnit.MINUTES));
-    Date endTime = Date.from(pollTime);
+    Instant truncatedPollTime = pollTime.truncatedTo(ChronoUnit.HOURS);
+    Date startTime = Date.from(truncatedPollTime.minus(METRIC_AGGREGATION_WINDOW_MINUTES, ChronoUnit.MINUTES));
+    Date endTime = Date.from(truncatedPollTime);
     String clusterName = StringUtils.substringAfterLast(clusterNameOrArn, "/");
     List<Service> services = listServices(clusterNameOrArn, region, awsConfig, encryptionDetails);
     Cluster cluster = new Cluster().withClusterName(clusterName).withClusterArn(clusterNameOrArn);
