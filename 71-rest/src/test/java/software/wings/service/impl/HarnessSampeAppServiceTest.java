@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.seeddata.SampleDataProviderConstants.ARTIFACT_VARIABLE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.DOCKER_TODO_LIST_ARTIFACT_SOURCE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_DOCKER_HUB_CONNECTOR;
@@ -10,6 +11,7 @@ import static io.harness.seeddata.SampleDataProviderConstants.HARNESS_SAMPLE_APP
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_BASIC_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CANARY_WORKFLOW_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_CLOUD_PROVIDER_NAME;
+import static io.harness.seeddata.SampleDataProviderConstants.K8S_INFRA_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_PIPELINE_NAME;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_PROD_ENVIRONMENT;
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_QA_ENVIRONMENT;
@@ -19,17 +21,20 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_SERVICE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.seeddata.SampleDataProviderConstants;
 import io.harness.seeddata.SampleDataProviderService;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
@@ -37,6 +42,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.Builder;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -48,16 +54,17 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessSampleAppService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
 
@@ -75,12 +82,13 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SettingsService mockSettingsService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
+  @InjectMocks private HarnessSampleAppServiceImpl harnessSampleAppServiceImpl;
 
   private void assertSampleAppHealthIsBad(Application sampleApp) {
     boolean isV2 = false;
     // Update entities to check health
-    SettingAttribute k8sCloudProvider = settingsService.getSettingAttributeByName(
-        WingsTestConstants.ACCOUNT_ID, SampleDataProviderConstants.K8S_CLOUD_PROVIDER_NAME);
+    SettingAttribute k8sCloudProvider = settingsService.getSettingAttributeByName(ACCOUNT_ID, K8S_CLOUD_PROVIDER_NAME);
     assertThat(k8sCloudProvider).isNotNull();
     settingsService.update(k8sCloudProvider);
 
@@ -300,37 +308,72 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   private Application createHarnessSampleApp() {
-    Account savedAccount = wingsPersistence.saveAndGet(Account.class,
-        anAccount().withAccountName(WingsTestConstants.ACCOUNT_NAME).withUuid(WingsTestConstants.ACCOUNT_ID).build());
+    Account savedAccount = wingsPersistence.saveAndGet(
+        Account.class, anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build());
     assertThat(savedAccount).isNotNull();
 
     sampleDataProviderService.createHarnessSampleApp(savedAccount);
-    Application app = appService.getAppByName(savedAccount.getUuid(), SampleDataProviderConstants.HARNESS_SAMPLE_APP);
+    Application app = appService.getAppByName(savedAccount.getUuid(), HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;
   }
 
   private Application createHarnessSampleAppV2WithMultiArtifactSupport() throws IllegalAccessException {
     FieldUtils.writeField(sampleDataProviderService, "featureFlagService", featureFlagService, true);
-    Account savedAccount = wingsPersistence.saveAndGet(Account.class,
-        anAccount().withAccountName(WingsTestConstants.ACCOUNT_NAME).withUuid(WingsTestConstants.ACCOUNT_ID).build());
+    Account savedAccount = wingsPersistence.saveAndGet(
+        Account.class, anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build());
     assertThat(savedAccount).isNotNull();
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, savedAccount.getUuid())).thenReturn(true);
 
     sampleDataProviderService.createK8sV2SampleApp(savedAccount);
-    Application app = appService.getAppByName(savedAccount.getUuid(), SampleDataProviderConstants.HARNESS_SAMPLE_APP);
+    Application app = appService.getAppByName(savedAccount.getUuid(), HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;
   }
 
   private Application createHarnessSampleAppV2() {
-    Account savedAccount = wingsPersistence.saveAndGet(Account.class,
-        anAccount().withAccountName(WingsTestConstants.ACCOUNT_NAME).withUuid(WingsTestConstants.ACCOUNT_ID).build());
+    Account savedAccount = wingsPersistence.saveAndGet(
+        Account.class, anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build());
     assertThat(savedAccount).isNotNull();
 
     sampleDataProviderService.createK8sV2SampleApp(savedAccount);
-    Application app = appService.getAppByName(savedAccount.getUuid(), SampleDataProviderConstants.HARNESS_SAMPLE_APP);
+    Application app = appService.getAppByName(savedAccount.getUuid(), HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnGoodHealthWhenInfraDefFound() {
+    Environment env = Builder.anEnvironment().uuid("id").build();
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder().build();
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, "id", K8S_INFRA_NAME))
+        .thenReturn(infrastructureDefinition);
+
+    Health health = harnessSampleAppServiceImpl.getHealthForInfraDef(APP_ID, env);
+
+    assertThat(health).isEqualTo(Health.GOOD);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnBadHealthWhenInfraDefNotFound() {
+    Environment env = Builder.anEnvironment().uuid("id").build();
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, "id", K8S_INFRA_NAME)).thenReturn(null);
+
+    Health health = harnessSampleAppServiceImpl.getHealthForInfraDef(APP_ID, env);
+
+    assertThat(health).isEqualTo(Health.BAD);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void shouldReturnBadHealthWhenEnvNotFound() {
+    Health health = harnessSampleAppServiceImpl.getHealthForInfraDef(APP_ID, null);
+
+    assertThat(health).isEqualTo(Health.BAD);
   }
 }
