@@ -12,10 +12,12 @@ import javax.validation.constraints.NotNull;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapGetUsersRequest extends AbstractLdapRequest {
   LdapSearch ldapSearch;
+  String groupBaseDn;
 
   public LdapGetUsersRequest(@NotNull final LdapUserConfig ldapUserConfig, @NotNull final LdapSearch ldapSearch,
-      int responseTimeoutInSeconds) {
+      int responseTimeoutInSeconds, String groupBaseDn) {
     super(ldapUserConfig, responseTimeoutInSeconds);
     this.ldapSearch = ldapSearch;
+    this.groupBaseDn = groupBaseDn;
   }
 }

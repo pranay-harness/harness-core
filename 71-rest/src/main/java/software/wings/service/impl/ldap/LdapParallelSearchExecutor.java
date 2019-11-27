@@ -8,6 +8,9 @@ import de.danielbechler.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.ldaptive.Connection;
+import org.ldaptive.LdapException;
+import software.wings.helpers.ext.ldap.LdapSearch;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,9 +31,18 @@ import javax.validation.constraints.NotNull;
  */
 @Slf4j
 public class LdapParallelSearchExecutor {
-  static final int MAX_THREAD_COUNT = 3;
+  static final int MAX_THREAD_COUNT = 4;
 
-  static final int LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = 30;
+  static int LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = 30;
+
+  private static void updateLdapRequestTimeout(LdapSearch ldapSearch) {
+    try {
+      Connection connection = ldapSearch.getConnectionFactory().getConnection();
+      LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = (int) connection.getConnectionConfig().getResponseTimeout().getSeconds();
+    } catch (LdapException e) {
+      LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS = 30;
+    }
+  }
 
   public AbstractLdapResponse userExist(final List<LdapUserExistsRequest> userExistsQueryObjectList,
       Function<LdapUserExistsRequest, LdapUserExistsResponse> executeLdapUserExistsRequest) {
@@ -59,17 +71,21 @@ public class LdapParallelSearchExecutor {
             .map(request -> taskCompletionService.submit(() -> executeLdapUserExistsRequest.apply(request)))
             .collect(Collectors.toList());
 
+    if (ldapUserExistsRequest.size() != 0) {
+      updateLdapRequestTimeout(ldapUserExistsRequest.get(0).getLdapSearch());
+    }
+
     LdapUserExistsResponse ldapUserExistsCallResponseTemp = null;
     for (int i = 0; i < ldapUserExistsRequest.size(); i++) {
       try {
         ldapUserExistsCallResponseTemp =
             taskCompletionService.take().get(LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        logger.error("InterruptedException exception occurred when making user exist search", e.getMessage());
+        logger.error("InterruptedException exception occurred when making user exist search", e);
       } catch (ExecutionException e) {
-        logger.error("ExecutionException exception occurred when making user exist search", e.getMessage());
+        logger.error("ExecutionException exception occurred when making user exist search", e);
       } catch (TimeoutException e) {
-        logger.error("TimeoutException exception occurred when making user exist search", e.getMessage());
+        logger.error("TimeoutException exception occurred when making user exist search", e);
       }
 
       if (ldapUserExistsCallResponseTemp != null && StringUtils.isNotBlank(ldapUserExistsCallResponseTemp.getDn())) {
@@ -108,17 +124,21 @@ public class LdapParallelSearchExecutor {
 
     List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
 
+    if (ldapGetUsersRequests.size() != 0) {
+      updateLdapRequestTimeout(ldapGetUsersRequests.get(0).getLdapSearch());
+    }
+
     for (int i = 0; i < ldapGetUsersRequests.size(); i++) {
       LdapGetUsersResponse currentLdapGetUsersResponse = null;
       try {
         currentLdapGetUsersResponse =
             taskCompletionService.take().get(LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        logger.error("InterruptedException exception occurred when making user search", e.getMessage());
+        logger.error("InterruptedException exception occurred when making user search", e);
       } catch (ExecutionException e) {
-        logger.error("ExecutionException exception occurred when making user search", e.getMessage());
+        logger.error("ExecutionException exception occurred when making user search", e);
       } catch (TimeoutException e) {
-        logger.error("TimeoutException exception occurred when making user search", e.getMessage());
+        logger.error("TimeoutException exception occurred when making user search", e);
       }
 
       if (currentLdapGetUsersResponse != null) {
@@ -156,18 +176,20 @@ public class LdapParallelSearchExecutor {
         request -> taskCompletionService.submit(() -> executeLdapGroupsSearchRequest.apply(request)));
 
     List<LdapListGroupsResponse> ldapListGroupsResponses = new ArrayList<>();
-
+    if (ldapListGroupsRequests.size() != 0) {
+      updateLdapRequestTimeout(ldapListGroupsRequests.get(0).getLdapSearch());
+    }
     for (int i = 0; i < ldapListGroupsRequests.size(); i++) {
       LdapListGroupsResponse currentLdapGroupResponse = null;
       try {
         currentLdapGroupResponse =
             taskCompletionService.take().get(LDAP_SEARCH_MAX_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        logger.error("InterruptedException exception occurred when making group search name", e.getMessage());
+        logger.error("InterruptedException exception occurred when making group search name", e);
       } catch (ExecutionException e) {
-        logger.error("ExecutionException exception occurred when making group search name", e.getMessage());
+        logger.error("ExecutionException exception occurred when making group search name", e);
       } catch (TimeoutException e) {
-        logger.error("TimeoutException exception occurred when making group search name", e.getMessage());
+        logger.error("TimeoutException exception occurred when making group search name", e);
       }
 
       if (currentLdapGroupResponse != null) {

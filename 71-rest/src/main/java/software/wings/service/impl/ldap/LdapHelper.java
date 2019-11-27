@@ -40,7 +40,6 @@ import software.wings.helpers.ext.ldap.LdapUserConfig;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -94,9 +93,7 @@ public class LdapHelper {
 
   public LdapResponse validateConnectionConfig() {
     try (Connection connection = getConnection()) {
-      logger.info("LTVF: Inside validateConnectionConfig class. Testing the connection");
       connection.open();
-      logger.info("LTVF: Connection test successful");
       return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.CONNECTION_SUCCESS).build();
     } catch (LdapException e) {
       logger.error(String.format("Ldap connection validation failed for url: [%s]", connectionConfig.generateUrl()), e);
@@ -242,47 +239,49 @@ public class LdapHelper {
     return listGroups(groupConfig, String.format("*%s*", name), LdapConstants.MAX_GROUP_SEARCH_SIZE);
   }
 
-  public List<LdapGetUsersResponse> listGroupUsers(List<? extends LdapUserConfig> ldapUserConfigs, String groupDn)
-      throws LdapException {
+  public List<LdapGetUsersResponse> listGroupUsers(
+      List<? extends LdapUserConfig> ldapUserConfigs, List<String> groupDnList) {
     List<LdapGetUsersResponse> ldapGetUsersResponse = new ArrayList<>();
-
+    List<LdapGetUsersRequest> ldapGetUsersRequests;
     if (!Collections.isEmpty(ldapUserConfigs)) {
-      List<LdapGetUsersRequest> ldapGetUsersRequests =
-          ldapUserConfigs.stream()
-              .map(userConfig -> {
+      ldapGetUsersRequests =
+          groupDnList.stream()
+              .flatMap(groupDn -> ldapUserConfigs.stream().map(userConfig -> {
                 LdapSearch search = getDefaultLdapSearchBuilder(userConfig)
                                         .searchFilter(userConfig.getGroupMembershipFilter(groupDn))
                                         .fallBackSearchFilter(userConfig.getFallbackGroupMembershipFilter(groupDn))
                                         .build();
-
-                return new LdapGetUsersRequest(
-                    userConfig, search, connectionConfig.getConnectTimeout() + connectionConfig.getResponseTimeout());
-              })
+                return new LdapGetUsersRequest(userConfig, search,
+                    connectionConfig.getConnectTimeout() + connectionConfig.getResponseTimeout(), groupDn);
+              }))
               .collect(Collectors.toList());
 
       ldapGetUsersResponse =
           ldapParallelSearchExecutor.getUserSearchResult(ldapGetUsersRequests, executeLdapGetUsersRequest);
     } else {
-      logger.warn("No user config passed to listGroupUsers method for groupDn = {} ", groupDn);
+      logger.warn("No user config passed to listGroupUsers method for groupDn = {} ", groupDnList.toString());
     }
 
     return ldapGetUsersResponse;
   }
 
-  public int getGroupUserCount(List<? extends LdapUserConfig> configs, String groupDn) throws LdapException {
-    Collection<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(configs, groupDn);
-
-    return ldapGetUsersResponses.stream()
-        .mapToInt(ldapGetUsersResponse -> ldapGetUsersResponse.getSearchResult().size())
-        .sum();
-  }
-
   public void populateGroupSize(SearchResult groups, List<? extends LdapUserConfig> configs) throws LdapException {
-    for (LdapEntry group : groups.getEntries()) {
-      int groupSize = getGroupUserCount(configs, group.getDn());
+    long startTime = System.currentTimeMillis();
+    List<String> groupDnList = groups.getEntries().stream().map(LdapEntry::getDn).collect(Collectors.toList());
+    List<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(configs, groupDnList);
+
+    groups.getEntries().forEach(ldapEntry -> {
+      int groupSize =
+          ldapGetUsersResponses.stream()
+              .filter(ldapGetUsersResponse -> ldapEntry.getDn().equals(ldapGetUsersResponse.getGroupBaseDn()))
+              .mapToInt(ldapGetUsersResponse
+                  -> ldapGetUsersResponse.getSearchResult() != null ? ldapGetUsersResponse.getSearchResult().size() : 0)
+              .sum();
       LdapAttribute groupSizeAttr = new LdapAttribute("groupSize", String.valueOf(groupSize));
-      group.addAttribute(groupSizeAttr);
-    }
+      ldapEntry.addAttribute(groupSizeAttr);
+    });
+    long elapsedTime = System.currentTimeMillis() - startTime;
+    logger.info("elapsedTime : {}", elapsedTime);
   }
 
   public List<LdapListGroupsResponse> searchGroupsByName(List<LdapGroupSettings> groupConfig, String name)
@@ -357,9 +356,8 @@ public class LdapHelper {
         return LdapResponse.builder().status(Status.FAILURE).message(LdapConstants.INVALID_CREDENTIALS).build();
       }
     } catch (LdapException e) {
-      logger.error(String.format("Ldap authentication failed for identifier: [{}] and Ldap display Name: [{}]",
-                       identifier, ldapUserConfig.getDisplayNameAttr()),
-          e);
+      logger.error("Ldap authentication failed for identifier: [{}] and Ldap display Name: [{}]", identifier,
+          ldapUserConfig.getDisplayNameAttr(), e);
       return LdapResponse.builder()
           .status(Status.FAILURE)
           .message(e.getResultCode() == null ? LdapConstants.INVALID_CREDENTIALS : e.getResultCode().toString())
