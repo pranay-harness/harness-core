@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.CVConfiguration;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,6 +47,47 @@ public class DatadogCVServiceConfiguration extends CVConfiguration {
     private String datadogServiceName;
     private Map<String, String> dockerMetrics;
     private Map<String, String> ecsMetrics;
-    private Map<String, Set<Metric>> customMetrics;
+    private Map<String, List<YamlMetric>> customMetrics;
+
+    @Data
+    @Builder
+    public static class YamlMetric {
+      private String metricName;
+      private String mlMetricType;
+      private String datadogMetricType;
+      private String displayName;
+      private String transformation;
+      private String transformation24x7;
+      private List<String> tags;
+      private String txnName; // this field is optional. It can be extracted from the response
+
+      public Metric convertToDatadogMetric() {
+        Set<String> tagList = this.getTags() == null ? null : new HashSet<>(this.getTags());
+        return Metric.builder()
+            .metricName(this.getMetricName())
+            .mlMetricType(this.getMlMetricType())
+            .datadogMetricType(this.getDatadogMetricType())
+            .displayName(this.getDisplayName())
+            .transformation(this.getTransformation())
+            .transformation24x7(this.getTransformation24x7())
+            .tags(tagList)
+            .txnName(this.getTxnName())
+            .build();
+      }
+
+      public static YamlMetric convertToYamlMetric(Metric metric) {
+        List<String> tagList = metric.getTags() == null ? null : new ArrayList<>(metric.getTags());
+        return YamlMetric.builder()
+            .metricName(metric.getMetricName())
+            .mlMetricType(metric.getMlMetricType())
+            .datadogMetricType(metric.getDatadogMetricType())
+            .displayName(metric.getDisplayName())
+            .transformation(metric.getTransformation())
+            .transformation24x7(metric.getTransformation24x7())
+            .tags(tagList)
+            .txnName(metric.getTxnName())
+            .build();
+      }
+    }
   }
 }
