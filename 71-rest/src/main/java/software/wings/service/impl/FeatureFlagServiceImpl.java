@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -13,7 +14,10 @@ import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureFlag;
@@ -26,7 +30,6 @@ import software.wings.service.intfc.FeatureFlagService;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,27 +49,29 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabledReloadCache(FeatureName featureName, String accountId) {
-    cache.clear();
+    synchronized (cache) {
+      cache.clear();
+    }
     return isEnabled(featureName, accountId);
   }
 
   @Override
   public void enableAccount(FeatureName featureName, String accountId) {
+    logger.info(format("Enabling feature name :[%s] for account id: [%s]", featureName.name(), accountId));
+    Query<FeatureFlag> query =
+        wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
+    UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class)
+                                                         .addToSet(FeatureFlagKeys.accountIds, accountId)
+                                                         .setOnInsert(FeatureFlagKeys.name, featureName.name())
+                                                         .setOnInsert(FeatureFlagKeys.uuid, generateUuid())
+                                                         .setOnInsert(FeatureFlagKeys.obsolete, false)
+                                                         .setOnInsert(FeatureFlagKeys.enabled, false);
     FeatureFlag featureFlag =
-        wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name()).get();
-
-    if (featureFlag == null) {
-      featureFlag = FeatureFlag.builder().name(featureName.name()).accountIds(Collections.singleton(accountId)).build();
-    } else {
-      Set<String> accountIds = featureFlag.getAccountIds();
-      if (accountIds == null) {
-        accountIds = Collections.singleton(accountId);
-      } else {
-        accountIds.add(accountId);
-      }
-      featureFlag.setAccountIds(accountIds);
+        wingsPersistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    synchronized (cache) {
+      cache.put(featureName, featureFlag);
     }
-    wingsPersistence.save(featureFlag);
+    logger.info(format("Enabled feature name :[%s] for account id: [%s]", featureName.name(), accountId));
   }
 
   @Override
