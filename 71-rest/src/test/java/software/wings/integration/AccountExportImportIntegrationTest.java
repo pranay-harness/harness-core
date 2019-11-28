@@ -21,10 +21,8 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.LicenseInfo;
-import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
-import software.wings.beans.trigger.Trigger;
 import software.wings.dl.exportimport.ExportMode;
 import software.wings.dl.exportimport.ImportStatusReport;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;
@@ -76,46 +74,6 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
     assertThat(hasApplications).isTrue();
 
     importAccountData(accountId, exportedAccountData);
-  }
-
-  @Test
-  @Owner(developers = MARK)
-  @Category(IntegrationTests.class)
-  public void testImportBrandNewAccountDataFromZipFile() {
-    String qaHarnessAccountId = "zEaak-FLS425IEO7OLzMUg";
-    String qaHarnessAccountName = "Harness-QA";
-
-    // 1. Delete the account if it exists.
-    if (accountService.exists(qaHarnessAccountName)) {
-      deleteAccount(qaHarnessAccountId);
-    }
-    // 2. Create an empty account for the account to be imported.
-    createAccount(qaHarnessAccountId, qaHarnessAccountName);
-
-    try {
-      // 3. Actually import the Harness-QA account data from the exported Zip file.
-      String qaHarnessAccountDataZipFile = "./exportimport/account_zEaak-FLS425IEO7OLzMUg.zip";
-      importAccountDataFromFile(qaHarnessAccountId, qaHarnessAccountDataZipFile);
-
-      // 4. Verify relevant data has been imported successfully.
-      Application application = appService.getAppByName(qaHarnessAccountId, "Harness Verification");
-      assertThat(application).isNotNull();
-      Pipeline pipeline =
-          pipelineService.getPipelineByName(application.getAppId(), "Continuous Verification NewRelic Splunk Elk");
-      assertThat(pipeline).isNotNull();
-      Environment environment = environmentService.getEnvironmentByName(application.getUuid(), "Production");
-      assertThat(environment).isNotNull();
-      Workflow workflow = workflowService.readWorkflowByName(application.getAppId(), "CV Containers Canary AppD");
-      assertThat(workflow).isNotNull();
-      Trigger trigger = triggerService.getTriggerByWebhookToken("q1JbgjsCqeggY3Y6z3QPCvXpvQtBzZRPcSCm0Rqm");
-      assertThat(trigger).isNotNull();
-      // CVConfiguration cvConfiguration =
-      //   cvConfigurationService.getConfiguration("Prod-Manager", application.getUuid(), environment.getUuid());
-      // assertThat(cvConfiguration).isNotNull();
-    } finally {
-      // 5. Delete the imported account after done.
-      deleteAccount(qaHarnessAccountId);
-    }
   }
 
   @Test
