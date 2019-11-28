@@ -47,6 +47,6 @@ public class FeatureFlagServiceImplIntegrationTest extends BaseIntegrationTest {
 
     featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID2);
 
-    featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID2);
+    assertThat(featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, ACCOUNT_ID2)).isTrue();
   }
 }
