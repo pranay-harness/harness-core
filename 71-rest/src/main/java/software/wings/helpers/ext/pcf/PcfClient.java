@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf;
+
 import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.domains.Domain;
@@ -64,4 +66,7 @@ public interface PcfClient {
   boolean checkIfAppHasAutoscalarWithExpectedState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback logCallback) throws PivotalClientApiException;
   String resolvePcfPluginHome();
+
+  List<LogMessage> getRecentLogs(PcfRequestConfig pcfRequestConfig, long logsAfterTsNs)
+      throws PivotalClientApiException;
 }
