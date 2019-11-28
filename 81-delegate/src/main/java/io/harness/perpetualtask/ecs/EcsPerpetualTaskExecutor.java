@@ -4,6 +4,7 @@ import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
@@ -50,6 +51,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -67,7 +69,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
-  private static final long METRIC_AGGREGATION_WINDOW_MINUTES = 60;
+  public static final Duration METRIC_AGGREGATION_PERIOD = Duration.ofHours(1);
   private static final String INSTANCE_TERMINATED_NAME = "terminated";
   private static final String ECS_OS_TYPE = "ecs.os-type";
 
@@ -124,8 +126,11 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
           currentActiveTaskArns, startTime);
       publishEcsClusterSyncEvent(clusterId, settingId, clusterName, currentActiveEc2InstanceIds,
           currentActiveContainerInstanceArns, currentActiveTaskArns, startTime);
-      if (startTime.isAfter(lastMetricCollectionTime.plus(METRIC_AGGREGATION_WINDOW_MINUTES, ChronoUnit.MINUTES))) {
-        publishUtilizationMetrics(clusterId, settingId, region, awsConfig, encryptionDetails, clusterName, startTime);
+      lastMetricCollectionTime =
+          Ordering.natural().max(lastMetricCollectionTime, heartbeatTime, startTime.minus(Duration.ofDays(1)));
+      if (startTime.isAfter(lastMetricCollectionTime.plus(METRIC_AGGREGATION_PERIOD))) {
+        publishUtilizationMetrics(
+            ecsPerpetualTaskParams, awsConfig, encryptionDetails, clusterName, lastMetricCollectionTime);
         lastMetricCollectionTime = startTime;
       }
     } catch (Exception ex) {
@@ -139,22 +144,20 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   }
 
   @VisibleForTesting
-  void publishUtilizationMetrics(String clusterId, String settingId, String region, AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptionDetails, String clusterNameOrArn, Instant pollTime) {
-    Instant truncatedPollTime = pollTime.truncatedTo(ChronoUnit.HOURS);
-    Date startTime = Date.from(truncatedPollTime.minus(METRIC_AGGREGATION_WINDOW_MINUTES, ChronoUnit.MINUTES));
-    Date endTime = Date.from(truncatedPollTime);
-    String clusterName = StringUtils.substringAfterLast(clusterNameOrArn, "/");
-    List<Service> services = listServices(clusterNameOrArn, region, awsConfig, encryptionDetails);
+  void publishUtilizationMetrics(EcsPerpetualTaskParams ecsPerpetualTaskParams, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String clusterNameOrArn, Instant lastMetricCollectionTime) {
+    String clusterName =
+        clusterNameOrArn.contains("/") ? StringUtils.substringAfterLast(clusterNameOrArn, "/") : clusterNameOrArn;
+    List<Service> services =
+        listServices(clusterNameOrArn, ecsPerpetualTaskParams.getRegion(), awsConfig, encryptionDetails);
     Cluster cluster = new Cluster().withClusterName(clusterName).withClusterArn(clusterNameOrArn);
+
+    Instant startTime = lastMetricCollectionTime.truncatedTo(ChronoUnit.HOURS);
+    Instant endTime = Instant.now().truncatedTo(ChronoUnit.HOURS);
     ecsMetricClient
-        .getUtilizationMetrics(awsConfig, encryptionDetails, startTime, endTime, cluster, services,
-            EcsPerpetualTaskParams.newBuilder()
-                .setClusterId(clusterId)
-                .setSettingId(settingId)
-                .setRegion(region)
-                .build())
-        .forEach(msg -> eventPublisher.publishMessage(msg, HTimestamps.fromInstant(pollTime)));
+        .getUtilizationMetrics(awsConfig, encryptionDetails, Date.from(startTime), Date.from(endTime), cluster,
+            services, ecsPerpetualTaskParams)
+        .forEach(msg -> eventPublisher.publishMessage(msg, HTimestamps.fromInstant(lastMetricCollectionTime)));
   }
 
   void publishEcsClusterSyncEvent(String clusterId, String settingId, String clusterName,
