@@ -52,7 +52,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
                             .withLicenseInfo(licenseInfo)
                             .build();
 
-      accountService.save(account);
+      accountService.save(account, false);
       accountAdded = true;
     }
 

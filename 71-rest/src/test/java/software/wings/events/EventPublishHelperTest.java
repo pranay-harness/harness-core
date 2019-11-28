@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SRIRAM;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -99,7 +100,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
     FieldUtils.writeField(eventPublishHelper, "marketoConfig", marketoConfig, true);
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(accountService.getFromCache(ACCOUNT_ID)).thenReturn(account);
-    when(accountService.save(any())).thenReturn(account);
+    when(accountService.save(any(), eq(false))).thenReturn(account);
     user = eventTestHelper.createUser(account);
   }
 

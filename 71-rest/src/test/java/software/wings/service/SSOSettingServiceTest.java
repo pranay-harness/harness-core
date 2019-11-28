@@ -44,7 +44,7 @@ public class SSOSettingServiceTest extends WingsBaseTest {
                           .withCompanyName("Account 2")
                           .withAuthenticationMechanism(USER_PASSWORD)
                           .build();
-    accountService.save(account);
+    accountService.save(account, false);
 
     SamlSettings samlSettings = SamlSettings.builder()
                                     .metaDataFile("TestMetaDataFile")

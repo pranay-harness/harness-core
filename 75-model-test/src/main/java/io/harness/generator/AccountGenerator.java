@@ -168,7 +168,7 @@ public class AccountGenerator {
     try {
       updateLicenseInfo(account);
 
-      account = accountService.save(account);
+      account = accountService.save(account, true);
 
       updateAccountKey("harness_account_secret", account);
       updateLimitConfiguration(account.getUuid());
@@ -206,7 +206,7 @@ public class AccountGenerator {
   public Account ensureAccount(String accountName, String companyName, String accountType) {
     Account account = getOrCreateAccount(TestUtils.generateRandomUUID(), accountName, companyName, accountType);
     if (exists(account) == null) {
-      accountService.save(account);
+      accountService.save(account, true);
       updateAccountKey("harness_account_secret", account);
     }
 
