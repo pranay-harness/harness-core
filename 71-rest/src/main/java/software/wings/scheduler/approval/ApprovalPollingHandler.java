@@ -7,7 +7,8 @@ import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.WingsException;
+import io.harness.beans.ExecutionStatus;
+import io.harness.exception.InvalidRequestException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
@@ -15,10 +16,13 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ApprovalPollingJobEntity.ApprovalPollingJobEntityKeys;
 import software.wings.scheduler.ShellScriptApprovalService;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.intfc.ApprovalPolingService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
 @Slf4j
@@ -27,6 +31,8 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
   @Inject private JiraHelperService jiraHelperService;
   @Inject private ServiceNowService serviceNowService;
   @Inject private ShellScriptApprovalService shellScriptApprovalService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ApprovalPolingService approvalPolingService;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -49,6 +55,14 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
           "Polling Approval status for approval polling job {} approval type {}", entity, entity.getApprovalType());
     }
 
+    String workflowExecutionId = entity.getWorkflowExecutionId();
+    String appId = entity.getAppId();
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null || ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
+      approvalPolingService.delete(entity.getApprovalId());
+      return;
+    }
+
     switch (entity.getApprovalType()) {
       case JIRA:
         jiraHelperService.handleJiraPolling(entity);
@@ -60,7 +74,8 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
         shellScriptApprovalService.handleShellScriptPolling(entity);
         return;
       default:
-        throw new WingsException("No Polling should be required for approval type: " + entity.getApprovalType());
+        throw new InvalidRequestException(
+            "No Polling should be required for approval type: " + entity.getApprovalType());
     }
   }
 }
