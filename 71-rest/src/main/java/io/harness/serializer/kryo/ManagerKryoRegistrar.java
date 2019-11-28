@@ -1408,7 +1408,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(JiraIssueData.class, 7259);
     kryo.register(K8sSwapServiceElement.class, 7260);
-
     kryo.register(SlackMessage.class, 7261);
     kryo.register(SlackMessageSenderImpl.class, 7262);
     kryo.register(PcfRunPluginCommandRequest.class, 7263);

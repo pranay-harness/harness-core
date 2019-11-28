@@ -650,6 +650,10 @@ public class StateMachineExecutor implements StateInspectionListener {
         throw new WingsException(INVALID_ARGUMENT).addParam("args", "rollbackStateMachineId or rollbackStateName");
       }
       case ROLLBACK_DONE: {
+        if (checkIfOnDemand(context.getAppId(), context.getWorkflowExecutionId())) {
+          updateEndStatus(stateExecutionInstance, SUCCESS, asList(status));
+          return successTransition(context);
+        }
         endTransition(context, stateExecutionInstance, FAILED, null);
         break;
       }
@@ -686,6 +690,10 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     return stateExecutionInstance;
+  }
+
+  private boolean checkIfOnDemand(String appId, String executionUuid) {
+    return workflowExecutionService.checkIfOnDemand(appId, executionUuid);
   }
 
   private Map<String, String> getManualInterventionPlaceholderValues(ExecutionContextImpl context) {

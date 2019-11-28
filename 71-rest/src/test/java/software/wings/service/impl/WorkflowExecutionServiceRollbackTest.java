@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -52,6 +53,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
@@ -113,7 +115,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testOnDemandRollbackConfirmationAlreadyRunningExecution() {
-    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    WorkflowExecution workflowExecution = createNewWorkflowExecution(false);
     workflowExecution.setStatus(PAUSED);
     wingsPersistence.save(workflowExecution);
     RollbackConfirmation rollbackConfirmation =
@@ -125,33 +127,34 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
     assertThat(rollbackConfirmation.getActiveWorkflowExecution().getUuid()).isEqualTo(workflowExecution.getUuid());
   }
 
-  private WorkflowExecution createNewWorkflowExecution() {
-    return WorkflowExecution.builder()
-        .appId(APP_ID)
-        .appName(APP_NAME)
-        .envType(PROD)
-        .status(SUCCESS)
-        .workflowType(WorkflowType.ORCHESTRATION)
-        .workflowId(WORKFLOW_ID)
-        .infraMappingIds(Collections.singletonList(INFRA_MAPPING_ID))
-        .infraDefinitionIds(Collections.singletonList(INFRA_DEFINITION_ID))
-        .uuid(generateUuid())
-        .serviceExecutionSummaries(
-            asList(ElementExecutionSummaryBuilder.anElementExecutionSummary()
-                       .withInstanceStatusSummaries(asList(
-                           anInstanceStatusSummary()
-                               .withInstanceElement(
-                                   InstanceElement.Builder.anInstanceElement().uuid("id1").podName("pod").build())
-                               .build()))
-                       .build()))
-        .build();
+  private WorkflowExecution createNewWorkflowExecution(boolean rollback) {
+    WorkflowExecutionBuilder executionBuilder =
+        WorkflowExecution.builder()
+            .appId(APP_ID)
+            .appName(APP_NAME)
+            .envType(PROD)
+            .status(SUCCESS)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .workflowId(WORKFLOW_ID)
+            .infraMappingIds(Collections.singletonList(INFRA_MAPPING_ID))
+            .infraDefinitionIds(Collections.singletonList(INFRA_DEFINITION_ID))
+            .uuid(generateUuid())
+            .serviceExecutionSummaries(
+                asList(ElementExecutionSummaryBuilder.anElementExecutionSummary()
+                           .withInstanceStatusSummaries(asList(
+                               anInstanceStatusSummary()
+                                   .withInstanceElement(
+                                       InstanceElement.Builder.anInstanceElement().uuid("id1").podName("pod").build())
+                                   .build()))
+                           .build()));
+    return rollback ? executionBuilder.onDemandRollback(true).build() : executionBuilder.build();
   }
 
   @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testOnDemandRollbackConfirmationOnRolledBackExecution() {
-    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    WorkflowExecution workflowExecution = createNewWorkflowExecution(false);
     workflowExecution.setUuid(WORKFLOW_EXECUTION_ID);
     workflowExecution.setOnDemandRollback(true);
 
@@ -167,12 +170,12 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testOnDemandRollbackConfirmationExceptions() {
-    WorkflowExecution savedWE = createNewWorkflowExecution();
+    WorkflowExecution savedWE = createNewWorkflowExecution(false);
     savedWE.setStatus(SUCCESS);
     savedWE.setName("test");
     wingsPersistence.save(savedWE);
 
-    WorkflowExecution newWE = createNewWorkflowExecution();
+    WorkflowExecution newWE = createNewWorkflowExecution(false);
     newWE.setName("test");
 
     try {
@@ -194,13 +197,13 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testOnDemandRollbackConfirmationNoPrviousArtifact() {
-    WorkflowExecution previousWE = createNewWorkflowExecution();
+    WorkflowExecution previousWE = createNewWorkflowExecution(false);
     previousWE.setArtifacts(Collections.emptyList());
     previousWE.setName("test");
 
     wingsPersistence.save(previousWE);
 
-    WorkflowExecution newWE = createNewWorkflowExecution();
+    WorkflowExecution newWE = createNewWorkflowExecution(false);
     wingsPersistence.save(newWE);
 
     try {
@@ -215,7 +218,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testOnDemandRollbackConfirmationSuccess() {
-    WorkflowExecution previousWE = createNewWorkflowExecution();
+    WorkflowExecution previousWE = createNewWorkflowExecution(false);
     previousWE.setArtifacts(Collections.emptyList());
     previousWE.setName("test");
     Artifact artifact = anArtifact().build();
@@ -223,7 +226,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
 
     wingsPersistence.save(previousWE);
 
-    WorkflowExecution newWE = createNewWorkflowExecution();
+    WorkflowExecution newWE = createNewWorkflowExecution(false);
     wingsPersistence.save(newWE);
 
     RollbackConfirmation rollbackConfirmation = workflowExecutionService.getOnDemandRollbackConfirmation(APP_ID, newWE);
@@ -236,7 +239,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testGetOnDemandRollbackAvailable() {
-    WorkflowExecution lastSuccessfulWE = createNewWorkflowExecution();
+    WorkflowExecution lastSuccessfulWE = createNewWorkflowExecution(false);
     lastSuccessfulWE.setWorkflowType(WorkflowType.PIPELINE);
 
     boolean result = workflowExecutionService.getOnDemandRollbackAvailable(APP_ID, lastSuccessfulWE);
@@ -261,7 +264,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testTriggerRollbackExecutionWorkflow() {
-    WorkflowExecution previousWE = createNewWorkflowExecution();
+    WorkflowExecution previousWE = createNewWorkflowExecution(false);
     previousWE.setArtifacts(Collections.emptyList());
     previousWE.setName("test");
     Artifact artifact = anArtifact().build();
@@ -269,7 +272,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
 
     wingsPersistence.save(previousWE);
 
-    WorkflowExecution newWE = createNewWorkflowExecution();
+    WorkflowExecution newWE = createNewWorkflowExecution(false);
     ExecutionArgs executionArgs = new ExecutionArgs();
     newWE.setExecutionArgs(executionArgs);
     newWE.setEnvId(ENV_ID);
@@ -288,7 +291,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
         .thenReturn(rollbackSM);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
 
-    WorkflowExecution rollbackWE = createNewWorkflowExecution();
+    WorkflowExecution rollbackWE = createNewWorkflowExecution(false);
     rollbackWE.setExecutionArgs(executionArgs);
     rollbackWE.setUuid(WORKFLOW_EXECUTION_ID);
     when(workflowExecutionServiceHelper.obtainExecution(workflow, rollbackSM, ENV_ID, null, executionArgs, true))
@@ -302,5 +305,14 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
     assertThat(rollbackWEResult.isOnDemandRollback()).isTrue();
     assertThat(rollbackWEResult.getOriginalExecution().getExecutionId()).isEqualTo(newWE.getUuid());
     assertThat(rollbackWEResult.getOriginalExecution().getStartTs()).isEqualTo(newWE.getStartTs());
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testCheckIfOnDemand() {
+    WorkflowExecution rollbackExecution = createNewWorkflowExecution(true);
+    wingsPersistence.save(rollbackExecution);
+    assertThat(workflowExecutionService.checkIfOnDemand(APP_ID, rollbackExecution.getUuid())).isTrue();
   }
 }

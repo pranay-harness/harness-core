@@ -3575,6 +3575,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public boolean checkIfOnDemand(String appId, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    notNullCheck("Workflow Execution is Null", workflowExecution);
+    return workflowExecution.isOnDemandRollback();
+  }
+
+  @Override
   public List<WorkflowExecution> fetchWorkflowExecutionsForResourceConstraint(String appId, List<String> entityIds) {
     if (EmptyPredicate.isEmpty(entityIds)) {
       return Collections.emptyList();
