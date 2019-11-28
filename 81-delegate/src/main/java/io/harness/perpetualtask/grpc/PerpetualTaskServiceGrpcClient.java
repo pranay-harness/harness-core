@@ -35,10 +35,10 @@ public class PerpetualTaskServiceGrpcClient {
     return serviceBlockingStub.getTaskContext(taskId);
   }
 
-  public void publishHeartbeat(PerpetualTaskId taskId) {
+  public void publishHeartbeat(PerpetualTaskId taskId, Instant taskStartTime) {
     serviceBlockingStub.publishHeartbeat(HeartbeatRequest.newBuilder()
                                              .setId(taskId.getId())
-                                             .setHeartbeatTimestamp(HTimestamps.fromInstant(Instant.now()))
+                                             .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
                                              .build());
   }
 }

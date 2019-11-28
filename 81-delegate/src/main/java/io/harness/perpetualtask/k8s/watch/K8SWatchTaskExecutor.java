@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -88,6 +89,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         .list()
         .getItems()
         .stream()
+        .filter(podMetric -> isNotEmpty(podMetric.getContainers()))
         .map(podMetric
             -> PodMetric.newBuilder()
                    .setCloudProviderId(cloudProviderId)

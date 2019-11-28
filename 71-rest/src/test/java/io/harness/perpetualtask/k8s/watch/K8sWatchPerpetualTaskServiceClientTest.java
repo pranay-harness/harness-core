@@ -36,7 +36,6 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
   private String taskId = "TASK_ID";
 
   private static final String CLOUD_PROVIDER_ID = "cloudProviderId";
-  private static final String K8_RESOURCE_KIND = "k8sResourceKind";
   private static final String CLUSTER_ID = "clusterId";
   private static final String CLUSTER_NAME = "clusterName";
   private Map<String, String> clientParamsMap = new HashMap<>();
@@ -57,7 +56,6 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
     when(k8sClusterConfigFactory.getK8sClusterConfig(any())).thenReturn(null);
 
     clientParamsMap.put(CLOUD_PROVIDER_ID, CLOUD_PROVIDER_ID);
-    clientParamsMap.put(K8_RESOURCE_KIND, K8_RESOURCE_KIND);
     clientParamsMap.put(CLUSTER_NAME, CLUSTER_NAME);
     clientParamsMap.put(CLUSTER_ID, CLUSTER_ID);
   }
@@ -67,7 +65,7 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreate() {
     K8WatchPerpetualTaskClientParams params =
-        new K8WatchPerpetualTaskClientParams(cloudProviderId, "Pod", "clusterId", "clusterName");
+        new K8WatchPerpetualTaskClientParams(cloudProviderId, "clusterId", "clusterName");
     k8SWatchPerpetualTaskServiceClient.create(accountId, params);
     verify(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId), isA(PerpetualTaskClientContext.class),
@@ -83,7 +81,6 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
         k8SWatchPerpetualTaskServiceClient.getTaskParams(perpetualTaskClientContext);
     assertThat(k8sWatchTaskParams.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(k8sWatchTaskParams.getClusterName()).isEqualTo(CLUSTER_NAME);
-    assertThat(k8sWatchTaskParams.getK8SResourceKind()).isEqualTo(K8_RESOURCE_KIND);
     assertThat(k8sWatchTaskParams.getCloudProviderId()).isEqualTo(CLOUD_PROVIDER_ID);
   }
 

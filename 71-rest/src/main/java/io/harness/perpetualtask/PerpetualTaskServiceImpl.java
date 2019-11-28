@@ -13,7 +13,6 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,7 +48,6 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                      .clientContext(clientContext)
                                      .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
                                      .intervalSeconds(schedule.getInterval().getSeconds())
-                                     .lastHeartbeat(Instant.now().toEpochMilli())
                                      .delegateId("")
                                      .build();
     String taskId = perpetualTaskRecordDao.save(record);

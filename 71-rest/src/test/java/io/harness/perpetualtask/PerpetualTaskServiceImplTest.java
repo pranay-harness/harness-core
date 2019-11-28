@@ -61,6 +61,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   public void shouldNotUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false);
+    perpetualTaskService.updateHeartbeat(taskId, HEARTBEAT_MILLIS);
     boolean updateHeartbeat = perpetualTaskService.updateHeartbeat(taskId, OLD_HEARTBEAT_MILLIS);
     assertThat(updateHeartbeat).isFalse();
   }

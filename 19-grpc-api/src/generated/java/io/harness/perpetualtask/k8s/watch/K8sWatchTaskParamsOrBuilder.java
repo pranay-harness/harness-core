@@ -22,29 +22,20 @@ public interface K8sWatchTaskParamsOrBuilder extends
   com.google.protobuf.ByteString getK8SClusterConfig();
 
   /**
-   * <code>string k8s_resource_kind = 3;</code>
-   */
-  java.lang.String getK8SResourceKind();
-  /**
-   * <code>string k8s_resource_kind = 3;</code>
-   */
-  com.google.protobuf.ByteString getK8SResourceKindBytes();
-
-  /**
-   * <code>string cluster_id = 4;</code>
+   * <code>string cluster_id = 3;</code>
    */
   java.lang.String getClusterId();
   /**
-   * <code>string cluster_id = 4;</code>
+   * <code>string cluster_id = 3;</code>
    */
   com.google.protobuf.ByteString getClusterIdBytes();
 
   /**
-   * <code>string cluster_name = 5;</code>
+   * <code>string cluster_name = 4;</code>
    */
   java.lang.String getClusterName();
   /**
-   * <code>string cluster_name = 5;</code>
+   * <code>string cluster_name = 4;</code>
    */
   com.google.protobuf.ByteString getClusterNameBytes();
 }

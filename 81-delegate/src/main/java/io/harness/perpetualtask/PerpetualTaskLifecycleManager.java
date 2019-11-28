@@ -10,6 +10,7 @@ import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -54,10 +55,11 @@ public class PerpetualTaskLifecycleManager {
   }
 
   private Void call() throws Exception {
+    Instant taskStartTime = Instant.now();
     boolean taskStarted =
         perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
     if (taskStarted) {
-      perpetualTaskServiceGrpcClient.publishHeartbeat(taskId);
+      perpetualTaskServiceGrpcClient.publishHeartbeat(taskId, taskStartTime);
     }
     return null;
   }
