@@ -33,6 +33,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
@@ -115,6 +116,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     public static final String FAILED = "Deployment Failed";
     public static final String MODULE = "module";
     public static final String DEPLOYMENT = "Deployment";
+    public static final String PRODUCTION = "production";
   }
 
   /**
@@ -275,13 +277,19 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
   }
 
+  private boolean isProdEnv(WorkflowExecution workflowExecution) {
+    return workflowExecution.getEnvType().equals(EnvironmentType.PROD);
+  }
+
   @VisibleForTesting
   public void reportDeploymentEventToSegment(WorkflowExecution workflowExecution) {
     try {
       String accountId = workflowExecution.getAccountId();
+
       Map<String, String> properties = new HashMap<>();
       properties.put(SegmentHandler.Keys.GROUP_ID, accountId);
       properties.put(Keys.MODULE, Keys.DEPLOYMENT);
+      properties.put(Keys.PRODUCTION, Boolean.toString(isProdEnv(workflowExecution)));
 
       Map<String, Boolean> integrations = new HashMap<>();
       integrations.put(SegmentHandler.Keys.NATERO, true);
