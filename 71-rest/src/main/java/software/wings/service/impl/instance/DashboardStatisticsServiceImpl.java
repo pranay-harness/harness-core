@@ -41,6 +41,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -51,6 +52,7 @@ import io.harness.time.EpochUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.annotations.Id;
@@ -177,7 +179,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         entityNameColumn = "computeProviderName";
         entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
       } else {
-        throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
+        throw new InvalidArgumentsException("Unsupported groupBy entity type:" + groupByEntityType, USER);
       }
 
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
@@ -298,7 +300,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         entityIdColumn = "infraMappingId";
         entityNameColumn = "infraMappingType";
       } else {
-        throw WingsException.builder().message("Unsupported groupBy entity type:" + groupByEntityType).build();
+        throw new InvalidArgumentsException("Unsupported groupBy entity type:" + groupByEntityType, USER);
       }
 
       entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
@@ -577,6 +579,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       currentArtifactList.add(currentArtifact);
     }
 
+    currentEnvList.sort(
+        (lhs,
+            rhs) -> ObjectUtils.compare(lhs.getEnvironmentSummary().getName(), rhs.getEnvironmentSummary().getName()));
     return currentEnvList;
   }
 
