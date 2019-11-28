@@ -31,10 +31,13 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.OwnerRule.Owner;
+import org.cloudfoundry.doppler.LogMessage;
+import org.cloudfoundry.doppler.MessageType;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.Applications;
+import org.cloudfoundry.operations.applications.LogsRequest;
 import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.domains.Status;
 import org.cloudfoundry.operations.organizations.OrganizationDetail;
@@ -94,6 +97,7 @@ public class PivotalClientTest extends WingsBaseTest {
     when(operations.routes()).thenReturn(routes);
     doReturn(wrapper).when(client).getCloudFoundryOperationsWrapper(any());
   }
+
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
@@ -948,5 +952,50 @@ public class PivotalClientTest extends WingsBaseTest {
     connectTimeout = ((DefaultConnectionContext) connectionContext).getConnectTimeout();
     assertThat(connectTimeout.isPresent()).isTrue();
     assertThat(connectTimeout.get().getSeconds()).isEqualTo(300);
+  }
+
+  @Test
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_getRecentLogs() throws PivotalClientApiException {
+    final PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
+                                                  .applicationName("app_name")
+                                                  .orgName("org_name")
+                                                  .spaceName("space_name")
+                                                  .timeOutIntervalInMins(5)
+                                                  .build();
+    final LogMessage logMessage1 =
+        LogMessage.builder().message("msg1").messageType(MessageType.OUT).timestamp(1574924788770064207L).build();
+    final LogMessage logMessage2 =
+        LogMessage.builder().message("msg2").messageType(MessageType.OUT).timestamp(1574924788770064307L).build();
+    Flux<LogMessage> result = Flux.create(sink -> {
+      sink.next(logMessage1);
+      sink.next(logMessage2);
+      sink.complete();
+    });
+    when(applications.logs(any(LogsRequest.class))).thenReturn(result);
+    final List<LogMessage> recentLogs = client.getRecentLogs(pcfRequestConfig, 0);
+    assertThat(recentLogs).containsExactly(logMessage1, logMessage2);
+    assertThat(client.getRecentLogs(pcfRequestConfig, 1574924788770064207L)).containsExactly(logMessage2);
+  }
+
+  @Test(expected = PivotalClientApiException.class)
+  @Owner(developers = ROHIT_KUMAR)
+  @Category(UnitTests.class)
+  public void test_getRecentLogs_fail() throws PivotalClientApiException {
+    final PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
+                                                  .applicationName("app_name")
+                                                  .timeOutIntervalInMins(5)
+                                                  .spaceName("space_name")
+                                                  .orgName("org_name")
+                                                  .build();
+    final LogMessage logMessage1 =
+        LogMessage.builder().message("msg1").messageType(MessageType.OUT).timestamp(1574924788770064207L).build();
+    Flux<LogMessage> result = Flux.create(sink -> {
+      sink.next(logMessage1);
+      sink.error(new RuntimeException("error while fetching"));
+    });
+    when(applications.logs(any(LogsRequest.class))).thenReturn(result);
+    client.getRecentLogs(pcfRequestConfig, 0);
   }
 }

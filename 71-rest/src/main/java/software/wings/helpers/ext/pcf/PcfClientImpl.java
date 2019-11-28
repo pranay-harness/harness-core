@@ -30,6 +30,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.client.CloudFoundryClient;
+import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
@@ -40,6 +41,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.DeleteApplicationRequest;
 import org.cloudfoundry.operations.applications.GetApplicationRequest;
 import org.cloudfoundry.operations.applications.ListApplicationTasksRequest;
+import org.cloudfoundry.operations.applications.LogsRequest;
 import org.cloudfoundry.operations.applications.PushApplicationManifestRequest;
 import org.cloudfoundry.operations.applications.ScaleApplicationRequest;
 import org.cloudfoundry.operations.applications.StartApplicationRequest;
@@ -89,6 +91,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -646,6 +649,29 @@ public class PcfClientImpl implements PcfClient {
     }
     // default is user home
     return System.getProperty("user.home");
+  }
+
+  @Override
+  public List<LogMessage> getRecentLogs(PcfRequestConfig pcfRequestConfig, long logsAfterTsNs)
+      throws PivotalClientApiException {
+    try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
+      return operationsWrapper.getCloudFoundryOperations()
+          .applications()
+          .logs(LogsRequest.builder().name(pcfRequestConfig.getApplicationName()).recent(true).build())
+          .timeout(Duration.ofMinutes(
+              pcfRequestConfig.getTimeOutIntervalInMins() > 0 ? pcfRequestConfig.getTimeOutIntervalInMins() : 10))
+          .skipUntil(log -> log.getTimestamp() > logsAfterTsNs)
+          .toStream()
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      final StringBuilder errorBuilder = new StringBuilder();
+      handleException(e, "getRecentLogs", errorBuilder);
+      throw new PivotalClientApiException(new StringBuilder()
+                                              .append("Exception occurred while getting recent logs for application: ")
+                                              .append(pcfRequestConfig.getApplicationName())
+                                              .append(", Error: " + errorBuilder.toString())
+                                              .toString());
+    }
   }
 
   private int doCfPush(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
