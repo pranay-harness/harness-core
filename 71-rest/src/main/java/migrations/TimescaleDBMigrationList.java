@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.timescaledb.AddFieldsToWorkflowCVMetrics;
 import migrations.timescaledb.AddIndexToInstanceV2Migration;
 import migrations.timescaledb.AddInstancesDeployedToDeployment;
 import migrations.timescaledb.AddRollbackToDeployment;
@@ -33,6 +34,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(10, AddSchemaForServiceGuardStats.class))
         .add(Pair.of(11, AddInstancesDeployedToDeployment.class))
         .add(Pair.of(12, UpdateServiceGuardSchema.class))
+        .add(Pair.of(13, AddFieldsToWorkflowCVMetrics.class))
         .build();
   }
 }
