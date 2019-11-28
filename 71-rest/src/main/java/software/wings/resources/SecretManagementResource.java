@@ -139,7 +139,7 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding secret for accountId: {}", accountId);
+      logger.info("Adding a secret");
       return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue(),
           secretText.getPath(), secretText.getUsageRestrictions()));
     }
@@ -172,7 +172,7 @@ public class SecretManagementResource {
   public RestResponse<Boolean> deleteSecret(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting secret for accountId: {}", accountId);
+      logger.info("Deleting a secret");
       return new RestResponse<>(secretManager.deleteSecret(accountId, uuId));
     }
   }

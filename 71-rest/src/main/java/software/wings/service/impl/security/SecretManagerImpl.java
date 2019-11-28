@@ -209,7 +209,7 @@ public class SecretManagerImpl implements SecretManager {
   public EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, String path,
       EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Encrypting a secret for accountId: {}", accountId);
+      logger.info("Encrypting a secret");
       String toEncrypt = secret == null ? null : String.valueOf(secret);
       // Need to initialize an EncryptedData instance to carry the 'path' value for delegate to validate against.
       if (encryptedData == null) {
@@ -328,7 +328,7 @@ public class SecretManagerImpl implements SecretManager {
 
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Encrypting a secret for accountId: {}", accountId);
+      logger.info("Encrypting a secret");
       EncryptedData encryptedData = encrypt(accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
           null, null, UUID.randomUUID().toString(), usageRestrictions);
       String recordId = wingsPersistence.save(encryptedData);

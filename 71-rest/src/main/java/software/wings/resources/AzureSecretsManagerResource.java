@@ -37,7 +37,7 @@ public class AzureSecretsManagerResource {
   public RestResponse<String> saveAzureSecretsManagerConfig(
       @QueryParam("accountId") final String accountId, @Valid AzureVaultConfig azureVaultConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding Azure Secret Manager for accountId: {}", accountId);
+      logger.info("Adding Azure Secret Manager");
       return new RestResponse<>(azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, azureVaultConfig));
     }
   }
@@ -46,7 +46,7 @@ public class AzureSecretsManagerResource {
   public RestResponse<Boolean> deleteAzureVaultConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String secretsManagerConfigId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting Azure Secret Manager for accountId: {}", accountId);
+      logger.info("Deleting Azure Secret Manager");
       return new RestResponse<>(azureSecretsManagerService.deleteConfig(accountId, secretsManagerConfigId));
     }
   }

@@ -66,8 +66,10 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
-    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
-      logger.info("Authenticating via Username Password for accountId: {}", user.getDefaultAccountId());
+    String accountId = user == null ? null : user.getDefaultAccountId();
+    String uuid = user == null ? null : user.getUuid();
+    try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
+      logger.info("Authenticating via Username Password");
       if (!user.isEmailVerified()) {
         throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }
@@ -101,7 +103,9 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   }
 
   private void updateFailedLoginAttemptCount(User user) {
-    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+    String accountId = user == null ? null : user.getDefaultAccountId();
+    String uuid = user == null ? null : user.getUuid();
+    try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       int newCountOfFailedLoginAttempts = user.getUserLockoutInfo().getNumberOfFailedLoginAttempts() + 1;
       loginSettingsService.updateUserLockoutInfo(
           user, accountService.get(user.getDefaultAccountId()), newCountOfFailedLoginAttempts);
@@ -118,7 +122,9 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   private void checkPasswordExpiry(User user) {
     // throwing password expiration status only in case of password is correct. Other-wise invalidCredential exception
     // should be thrown.
-    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+    String accountId = user == null ? null : user.getDefaultAccountId();
+    String uuid = user == null ? null : user.getUuid();
+    try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       if (user.isPasswordExpired()) {
         throw new
 

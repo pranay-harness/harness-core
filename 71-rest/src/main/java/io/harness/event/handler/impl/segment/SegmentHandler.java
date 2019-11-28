@@ -322,7 +322,9 @@ public class SegmentHandler implements EventHandler {
 
   public void reportTrackEvent(Account account, String event, User user, Map<String, String> properties,
       Map<String, Boolean> integrations) throws URISyntaxException {
-    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+    String accountId = user == null ? null : user.getDefaultAccountId();
+    String uuid = user == null ? null : user.getUuid();
+    try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       String userId = user.getUuid();
       String identity = user.getSegmentIdentity();
       logger.info("Reporting track for event {} with lead {}", event, userId);

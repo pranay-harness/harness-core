@@ -59,8 +59,10 @@ public class LdapBasedAuthHandler implements AuthHandler {
     }
 
     Account account = authenticationUtils.getDefaultAccount(user);
-    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
-      logger.info("Authenticating via LDAP for accountId: {}", user.getDefaultAccountId());
+    String accountId = user == null ? null : user.getDefaultAccountId();
+    String uuid = user == null ? null : user.getUuid();
+    try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
+      logger.info("Authenticating via LDAP");
       if (!domainWhitelistCheckerService.isDomainWhitelisted(user, account)) {
         domainWhitelistCheckerService.throwDomainWhitelistFilterException();
       }

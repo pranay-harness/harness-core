@@ -894,7 +894,9 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public User generateBearerTokenForUser(User user) {
-    try (AutoLogContext ignore = new UserLogContext(user.getDefaultAccountId(), user.getUuid(), OVERRIDE_ERROR)) {
+    String acctId = user == null ? null : user.getDefaultAccountId();
+    String uuid = user == null ? null : user.getUuid();
+    try (AutoLogContext ignore = new UserLogContext(acctId, uuid, OVERRIDE_ERROR)) {
       logger.info("Generating bearer token");
       AuthToken authToken = new AuthToken(
           user.getLastAccountId(), user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());

@@ -54,7 +54,8 @@ public class EncryptionServiceImpl implements EncryptionService {
 
   @Override
   public EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
-    try (AutoLogContext ignore = new AccountLogContext(object.getAccountId(), OVERRIDE_ERROR)) {
+    String accountId = object == null ? null : object.getAccountId();
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       logger.info("Decrypting a secret");
       if (isEmpty(encryptedDataDetails)) {
         return object;
