@@ -65,7 +65,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @RestrictedApi(GovernanceFeature.class)
   public GovernanceConfig upsert(String accountId, @Nonnull GovernanceConfig governanceConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Updating Deployment Freeze window for account: {}", accountId);
+      logger.info("Updating Deployment Freeze window");
       GovernanceConfig oldSetting = get(accountId);
 
       Query<GovernanceConfig> query =
@@ -121,7 +121,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Override
   public void deleteByAccountId(String accountId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting Deployment Freeze window(s) for account: {}", accountId);
+      logger.info("Deleting Deployment Freeze window(s)");
       Query<GovernanceConfig> query =
           wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId);
       GovernanceConfig config = query.get();

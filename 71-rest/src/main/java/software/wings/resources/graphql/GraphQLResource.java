@@ -85,7 +85,7 @@ public class GraphQLResource {
   public Map<String, Object> execute(
       @HeaderParam(API_KEY_HEADER) String apiKey, @QueryParam("accountId") String accountId, String query) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Executing graphql query with apiKey: {} for accountId", apiKey, accountId);
+      logger.info("Executing graphql query");
       GraphQLQuery graphQLQuery = new GraphQLQuery();
       graphQLQuery.setQuery(query);
       return executeExternal(accountId, apiKey, graphQLQuery);
@@ -106,7 +106,7 @@ public class GraphQLResource {
   public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey,
       @QueryParam("accountId") String accountId, GraphQLQuery graphQLQuery) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Executing graphql query with apiKey: {} for accountId", apiKey, accountId);
+      logger.info("Executing graphql query");
       return executeExternal(accountId, apiKey, graphQLQuery);
     }
   }

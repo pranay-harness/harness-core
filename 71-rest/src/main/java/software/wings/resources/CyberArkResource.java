@@ -42,7 +42,7 @@ public class CyberArkResource {
   public RestResponse<String> saveCyberArkConfig(
       @QueryParam("accountId") final String accountId, CyberArkConfig cyberArkConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding CyberArk Secret Manager for accountId: {}", accountId);
+      logger.info("Adding CyberArk Secret Manager");
       return new RestResponse<>(cyberArkService.saveConfig(accountId, cyberArkConfig));
     }
   }
@@ -53,7 +53,7 @@ public class CyberArkResource {
   public RestResponse<Boolean> deleteCyberArkConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String configId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting CyberArk Secret Manager for accountId: {}", accountId);
+      logger.info("Deleting CyberArk Secret Manager");
       return new RestResponse<>(cyberArkService.deleteConfig(accountId, configId));
     }
   }

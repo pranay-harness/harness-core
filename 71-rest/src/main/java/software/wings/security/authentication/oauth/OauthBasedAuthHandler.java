@@ -2,7 +2,6 @@ package software.wings.security.authentication.oauth;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -85,8 +84,8 @@ public class OauthBasedAuthHandler implements AuthHandler {
     User user = null;
     try {
       user = authenticationUtils.getUserOrReturnNullIfUserDoesNotExists(userInfo.getEmail());
-      String accountId = user != null ? user.getDefaultAccountId() : GLOBAL_ACCOUNT_ID;
-      String uuid = user != null ? user.getUuid() : "";
+      String accountId = user == null ? null : user.getDefaultAccountId();
+      String uuid = user == null ? null : user.getUuid();
       try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
         logger.info("Authenticating via OAuth for accountId: {}", accountId);
         // if the email doesn't exists in harness system, sign him up.
