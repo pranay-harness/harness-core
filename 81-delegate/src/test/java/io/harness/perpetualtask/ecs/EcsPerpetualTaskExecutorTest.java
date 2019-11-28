@@ -3,10 +3,14 @@ package io.harness.perpetualtask.ecs;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
 import static java.time.temporal.ChronoUnit.HOURS;
+import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.google.common.collect.ImmutableList;
@@ -27,6 +31,7 @@ import io.harness.perpetualtask.ecs.support.EcsMetricClient;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +45,7 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import java.sql.Date;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,8 +84,9 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   public void shouldQueryEcsMetricClientAndPublishUtilizationMessages() throws Exception {
     AwsConfig awsConfig = AwsConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = Collections.emptyList();
-    Instant pollTime = Instant.now();
-    Instant truncatedPollTime = pollTime.truncatedTo(HOURS);
+    final Instant now = Instant.now();
+    Instant lastMetricCollectionTime = now.minus(Duration.ofHours(1));
+    Instant truncatedPollTime = lastMetricCollectionTime.truncatedTo(HOURS);
     final ImmutableList<Service> services =
         ImmutableList.of(new Service()
                              .withServiceArn("arn:aws:ecs:us-east-2:132359207506:service/ccm-test-service")
@@ -92,22 +99,20 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
 
     given(ecsHelperServiceDelegate.listServicesForCluster(awsConfig, encryptionDetails, REGION, CLUSTER_ARN))
         .willReturn(services);
-    given(ecsMetricClient.getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails),
-              eq(Date.from(truncatedPollTime.minus(1, HOURS))), eq(Date.from(truncatedPollTime)),
+    final EcsPerpetualTaskParams ecsPerpetualTaskParams =
+        EcsPerpetualTaskParams.newBuilder().setClusterId(CLUSTER_ID).setSettingId(SETTING_ID).setRegion(REGION).build();
+    given(ecsMetricClient.getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails), eq(Date.from(truncatedPollTime)),
+              eq(Date.from(now.truncatedTo(HOURS))),
               eq(new Cluster().withClusterName(CLUSTER_NAME).withClusterArn(CLUSTER_ARN)), eq(services),
-              eq(EcsPerpetualTaskParams.newBuilder()
-                      .setClusterId(CLUSTER_ID)
-                      .setSettingId(SETTING_ID)
-                      .setRegion(REGION)
-                      .build())))
+              eq(ecsPerpetualTaskParams)))
         .willReturn(utilizationMessages);
 
     ecsPerpetualTaskExecutor.publishUtilizationMetrics(
-        CLUSTER_ID, SETTING_ID, REGION, awsConfig, encryptionDetails, CLUSTER_ARN, pollTime);
+        ecsPerpetualTaskParams, awsConfig, encryptionDetails, CLUSTER_ARN, lastMetricCollectionTime);
 
     then(eventPublisher)
         .should(times(2))
-        .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)));
+        .publishMessage(messageCaptor.capture(), eq(HTimestamps.fromInstant(lastMetricCollectionTime)));
     assertThat(messageCaptor.getAllValues()).hasSize(2).containsAll(utilizationMessages);
   }
 
@@ -116,7 +121,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldQueryEcsClientAndPublishSyncMessages() {
     Set<String> activeEc2InstanceIds = new HashSet<>(Arrays.asList("instance1", "instance2"));
-    Set<String> activeContainerInstanceArns = new HashSet<>(Arrays.asList("containerInstance1"));
+    Set<String> activeContainerInstanceArns = new HashSet<>(Collections.singletonList("containerInstance1"));
     Set<String> activeTaskArns = new HashSet<>(Arrays.asList("task1", "task2"));
     Instant pollTime = Instant.now();
 
@@ -138,7 +143,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
 
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
-    List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Arrays.asList(encryptedDataDetail));
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
     ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
 
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
@@ -155,5 +160,136 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     boolean runOnce = ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
     assertThat(runOnce).isTrue();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldQuerySingleHourWindowInNormalCase() throws Exception {
+    final Instant now = Instant.now();
+    Instant heartBeatTime = now.minus(Duration.ofHours(3));
+    // lastMetricCollection not within last hour so collect.
+    Reflect.on(ecsPerpetualTaskExecutor).set("lastMetricCollectionTime", now.minus(70, MINUTES));
+    AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
+    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
+                                                        .setClusterId(CLUSTER_ID)
+                                                        .setRegion(REGION)
+                                                        .setSettingId(SETTING_ID)
+                                                        .setClusterName(CLUSTER_NAME)
+                                                        .setAwsConfig(bytes)
+                                                        .setEncryptionDetail(encryptionDetailBytes)
+                                                        .build();
+
+    PerpetualTaskParams params =
+        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
+    ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
+
+    then(ecsMetricClient)
+        .should(times(1))
+        .getUtilizationMetrics(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class),
+            eq(Date.from(now.minus(Duration.ofHours(1)).truncatedTo(HOURS))), eq(Date.from(now.truncatedTo(HOURS))),
+            any(Cluster.class), anyListOf(Service.class), any(EcsPerpetualTaskParams.class));
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldQuery24HoursIfNoLastHeartBeat() throws Exception {
+    Instant heartBeatTime = Instant.ofEpochMilli(0);
+    AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
+    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
+                                                        .setClusterId(CLUSTER_ID)
+                                                        .setRegion(REGION)
+                                                        .setSettingId(SETTING_ID)
+                                                        .setClusterName(CLUSTER_NAME)
+                                                        .setAwsConfig(bytes)
+                                                        .setEncryptionDetail(encryptionDetailBytes)
+                                                        .build();
+
+    PerpetualTaskParams params =
+        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
+    ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
+
+    Instant now = Instant.now();
+    then(ecsMetricClient)
+        .should(times(1))
+        .getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails),
+            eq(Date.from(now.truncatedTo(HOURS).minus(Duration.ofHours(24)))), eq(Date.from(now.truncatedTo(HOURS))),
+            any(Cluster.class), anyListOf(Service.class), any(EcsPerpetualTaskParams.class));
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldHandleMultiHourWindowIfMissingLessThan24Hours() throws Exception {
+    Instant now = Instant.now();
+    Instant heartBeatTime = now.minus(Duration.ofHours(7));
+    AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
+    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
+                                                        .setClusterId(CLUSTER_ID)
+                                                        .setRegion(REGION)
+                                                        .setSettingId(SETTING_ID)
+                                                        .setClusterName(CLUSTER_NAME)
+                                                        .setAwsConfig(bytes)
+                                                        .setEncryptionDetail(encryptionDetailBytes)
+                                                        .build();
+
+    PerpetualTaskParams params =
+        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
+    ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
+
+    then(ecsMetricClient)
+        .should(times(1))
+        .getUtilizationMetrics(eq(awsConfig), eq(encryptionDetails), eq(Date.from(heartBeatTime.truncatedTo(HOURS))),
+            eq(Date.from(now.truncatedTo(HOURS))), any(Cluster.class), anyListOf(Service.class),
+            any(EcsPerpetualTaskParams.class));
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldNotPublishUtilizationMetricsIfAlreadyWithinLastHour() throws Exception {
+    Instant now = Instant.now();
+    Instant heartBeatTime = now.minus(Duration.ofHours(7));
+    // lastMetricCollectionTime within last hour. So don't collect again.
+    Reflect.on(ecsPerpetualTaskExecutor).set("lastMetricCollectionTime", now.minus(50, MINUTES));
+    AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
+    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
+    List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
+                                                        .setClusterId(CLUSTER_ID)
+                                                        .setRegion(REGION)
+                                                        .setSettingId(SETTING_ID)
+                                                        .setClusterName(CLUSTER_NAME)
+                                                        .setAwsConfig(bytes)
+                                                        .setEncryptionDetail(encryptionDetailBytes)
+                                                        .build();
+
+    PerpetualTaskParams params =
+        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(ecsPerpetualTaskParams)).build();
+    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
+    ecsPerpetualTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
+
+    then(ecsMetricClient)
+        .should(never())
+        .getUtilizationMetrics(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), any(Date.class),
+            any(Date.class), any(Cluster.class), anyListOf(Service.class), any(EcsPerpetualTaskParams.class));
   }
 }
