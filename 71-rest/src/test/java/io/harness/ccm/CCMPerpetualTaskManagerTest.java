@@ -103,7 +103,7 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreatePerpetualTasksForCloudProvider() {
     manager.createPerpetualTasks(cloudProvider);
-    verify(clusterRecordService, times(2)).attachPerpetualTaskId(eq(clusterRecord), anyString());
+    verify(clusterRecordService, times(1)).attachPerpetualTaskId(eq(clusterRecord), anyString());
   }
 
   @Test
@@ -134,7 +134,7 @@ public class CCMPerpetualTaskManagerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCreatePerpetualTasksForCluster() {
     manager.createPerpetualTasks(clusterRecord);
-    verify(clusterRecordService, times(2)).attachPerpetualTaskId(eq(clusterRecord), anyString());
+    verify(clusterRecordService, times(1)).attachPerpetualTaskId(eq(clusterRecord), anyString());
   }
 
   @Test

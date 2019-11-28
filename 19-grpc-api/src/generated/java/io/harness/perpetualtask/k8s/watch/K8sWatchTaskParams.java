@@ -18,7 +18,6 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
   private K8sWatchTaskParams() {
     cloudProviderId_ = "";
     k8SClusterConfig_ = com.google.protobuf.ByteString.EMPTY;
-    k8SResourceKind_ = "";
     clusterId_ = "";
     clusterName_ = "";
   }
@@ -58,16 +57,10 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
           case 26: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            k8SResourceKind_ = s;
-            break;
-          }
-          case 34: {
-            java.lang.String s = input.readStringRequireUtf8();
-
             clusterId_ = s;
             break;
           }
-          case 42: {
+          case 34: {
             java.lang.String s = input.readStringRequireUtf8();
 
             clusterName_ = s;
@@ -143,40 +136,10 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     return k8SClusterConfig_;
   }
 
-  public static final int K8S_RESOURCE_KIND_FIELD_NUMBER = 3;
-  private volatile java.lang.Object k8SResourceKind_;
-  /**
-   * <code>string k8s_resource_kind = 3;</code>
-   */
-  public java.lang.String getK8SResourceKind() {
-    java.lang.Object ref = k8SResourceKind_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      k8SResourceKind_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string k8s_resource_kind = 3;</code>
-   */
-  public com.google.protobuf.ByteString getK8SResourceKindBytes() {
-    java.lang.Object ref = k8SResourceKind_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      k8SResourceKind_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
-  }
-
-  public static final int CLUSTER_ID_FIELD_NUMBER = 4;
+  public static final int CLUSTER_ID_FIELD_NUMBER = 3;
   private volatile java.lang.Object clusterId_;
   /**
-   * <code>string cluster_id = 4;</code>
+   * <code>string cluster_id = 3;</code>
    */
   public java.lang.String getClusterId() {
     java.lang.Object ref = clusterId_;
@@ -190,7 +153,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cluster_id = 4;</code>
+   * <code>string cluster_id = 3;</code>
    */
   public com.google.protobuf.ByteString getClusterIdBytes() {
     java.lang.Object ref = clusterId_;
@@ -203,10 +166,10 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
   }
 
-  public static final int CLUSTER_NAME_FIELD_NUMBER = 5;
+  public static final int CLUSTER_NAME_FIELD_NUMBER = 4;
   private volatile java.lang.Object clusterName_;
   /**
-   * <code>string cluster_name = 5;</code>
+   * <code>string cluster_name = 4;</code>
    */
   public java.lang.String getClusterName() {
     java.lang.Object ref = clusterName_;
@@ -220,7 +183,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     }
   }
   /**
-   * <code>string cluster_name = 5;</code>
+   * <code>string cluster_name = 4;</code>
    */
   public com.google.protobuf.ByteString getClusterNameBytes() {
     java.lang.Object ref = clusterName_;
@@ -254,14 +217,11 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     if (!k8SClusterConfig_.isEmpty()) {
       output.writeBytes(2, k8SClusterConfig_);
     }
-    if (!getK8SResourceKindBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, k8SResourceKind_);
-    }
     if (!getClusterIdBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, clusterId_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, clusterId_);
     }
     if (!getClusterNameBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, clusterName_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, clusterName_);
     }
     unknownFields.writeTo(output);
   }
@@ -279,14 +239,11 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     if (!k8SClusterConfig_.isEmpty()) {
       size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, k8SClusterConfig_);
     }
-    if (!getK8SResourceKindBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, k8SResourceKind_);
-    }
     if (!getClusterIdBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, clusterId_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, clusterId_);
     }
     if (!getClusterNameBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, clusterName_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, clusterName_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -308,8 +265,6 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return false;
     if (!getK8SClusterConfig().equals(other.getK8SClusterConfig()))
       return false;
-    if (!getK8SResourceKind().equals(other.getK8SResourceKind()))
-      return false;
     if (!getClusterId().equals(other.getClusterId()))
       return false;
     if (!getClusterName().equals(other.getClusterName()))
@@ -330,8 +285,6 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
     hash = (53 * hash) + getCloudProviderId().hashCode();
     hash = (37 * hash) + K8S_CLUSTER_CONFIG_FIELD_NUMBER;
     hash = (53 * hash) + getK8SClusterConfig().hashCode();
-    hash = (37 * hash) + K8S_RESOURCE_KIND_FIELD_NUMBER;
-    hash = (53 * hash) + getK8SResourceKind().hashCode();
     hash = (37 * hash) + CLUSTER_ID_FIELD_NUMBER;
     hash = (53 * hash) + getClusterId().hashCode();
     hash = (37 * hash) + CLUSTER_NAME_FIELD_NUMBER;
@@ -454,8 +407,6 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
       k8SClusterConfig_ = com.google.protobuf.ByteString.EMPTY;
 
-      k8SResourceKind_ = "";
-
       clusterId_ = "";
 
       clusterName_ = "";
@@ -493,7 +444,6 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
           new io.harness.perpetualtask.k8s.watch.K8sWatchTaskParams(this);
       result.cloudProviderId_ = cloudProviderId_;
       result.k8SClusterConfig_ = k8SClusterConfig_;
-      result.k8SResourceKind_ = k8SResourceKind_;
       result.clusterId_ = clusterId_;
       result.clusterName_ = clusterName_;
       onBuilt();
@@ -544,10 +494,6 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
       if (other.getK8SClusterConfig() != com.google.protobuf.ByteString.EMPTY) {
         setK8SClusterConfig(other.getK8SClusterConfig());
-      }
-      if (!other.getK8SResourceKind().isEmpty()) {
-        k8SResourceKind_ = other.k8SResourceKind_;
-        onChanged();
       }
       if (!other.getClusterId().isEmpty()) {
         clusterId_ = other.clusterId_;
@@ -674,71 +620,9 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
 
-    private java.lang.Object k8SResourceKind_ = "";
-    /**
-     * <code>string k8s_resource_kind = 3;</code>
-     */
-    public java.lang.String getK8SResourceKind() {
-      java.lang.Object ref = k8SResourceKind_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        k8SResourceKind_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
-    }
-    /**
-     * <code>string k8s_resource_kind = 3;</code>
-     */
-    public com.google.protobuf.ByteString getK8SResourceKindBytes() {
-      java.lang.Object ref = k8SResourceKind_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        k8SResourceKind_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string k8s_resource_kind = 3;</code>
-     */
-    public Builder setK8SResourceKind(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-
-      k8SResourceKind_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string k8s_resource_kind = 3;</code>
-     */
-    public Builder clearK8SResourceKind() {
-      k8SResourceKind_ = getDefaultInstance().getK8SResourceKind();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string k8s_resource_kind = 3;</code>
-     */
-    public Builder setK8SResourceKindBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      k8SResourceKind_ = value;
-      onChanged();
-      return this;
-    }
-
     private java.lang.Object clusterId_ = "";
     /**
-     * <code>string cluster_id = 4;</code>
+     * <code>string cluster_id = 3;</code>
      */
     public java.lang.String getClusterId() {
       java.lang.Object ref = clusterId_;
@@ -752,7 +636,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 4;</code>
+     * <code>string cluster_id = 3;</code>
      */
     public com.google.protobuf.ByteString getClusterIdBytes() {
       java.lang.Object ref = clusterId_;
@@ -765,7 +649,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_id = 4;</code>
+     * <code>string cluster_id = 3;</code>
      */
     public Builder setClusterId(java.lang.String value) {
       if (value == null) {
@@ -777,7 +661,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 4;</code>
+     * <code>string cluster_id = 3;</code>
      */
     public Builder clearClusterId() {
       clusterId_ = getDefaultInstance().getClusterId();
@@ -785,7 +669,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_id = 4;</code>
+     * <code>string cluster_id = 3;</code>
      */
     public Builder setClusterIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -800,7 +684,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
 
     private java.lang.Object clusterName_ = "";
     /**
-     * <code>string cluster_name = 5;</code>
+     * <code>string cluster_name = 4;</code>
      */
     public java.lang.String getClusterName() {
       java.lang.Object ref = clusterName_;
@@ -814,7 +698,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_name = 5;</code>
+     * <code>string cluster_name = 4;</code>
      */
     public com.google.protobuf.ByteString getClusterNameBytes() {
       java.lang.Object ref = clusterName_;
@@ -827,7 +711,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       }
     }
     /**
-     * <code>string cluster_name = 5;</code>
+     * <code>string cluster_name = 4;</code>
      */
     public Builder setClusterName(java.lang.String value) {
       if (value == null) {
@@ -839,7 +723,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_name = 5;</code>
+     * <code>string cluster_name = 4;</code>
      */
     public Builder clearClusterName() {
       clusterName_ = getDefaultInstance().getClusterName();
@@ -847,7 +731,7 @@ public final class K8sWatchTaskParams extends com.google.protobuf.GeneratedMessa
       return this;
     }
     /**
-     * <code>string cluster_name = 5;</code>
+     * <code>string cluster_name = 4;</code>
      */
     public Builder setClusterNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

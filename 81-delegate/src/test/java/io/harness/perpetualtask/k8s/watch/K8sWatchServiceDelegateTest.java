@@ -2,7 +2,6 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -28,9 +27,6 @@ import java.util.UUID;
 
 @Slf4j
 public class K8sWatchServiceDelegateTest extends CategoryTest {
-  private static final String RESOURCE_KIND_POD = "Pod";
-  private static final String RESOURCE_KIND_NODE = "Node";
-
   private K8sWatchServiceDelegate k8sWatchServiceDelegate;
   private WatcherFactory watcherFactory;
 
@@ -56,7 +52,6 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
-                                                .setK8SResourceKind(RESOURCE_KIND_POD)
                                                 .setK8SClusterConfig(k8sClusterConfig)
                                                 .setCloudProviderId(cloudProviderId)
                                                 .build();
@@ -74,7 +69,6 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
-                                                .setK8SResourceKind(RESOURCE_KIND_NODE)
                                                 .setK8SClusterConfig(k8sClusterConfig)
                                                 .setCloudProviderId(cloudProviderId)
                                                 .build();
@@ -92,7 +86,6 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
-                                                .setK8SResourceKind(RESOURCE_KIND_POD)
                                                 .setK8SClusterConfig(k8sClusterConfig)
                                                 .setCloudProviderId(cloudProviderId)
                                                 .build();
@@ -110,7 +103,6 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig1 = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster1").namespace("namespace1").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams1 = K8sWatchTaskParams.newBuilder()
-                                                 .setK8SResourceKind(RESOURCE_KIND_POD)
                                                  .setK8SClusterConfig(k8sClusterConfig1)
                                                  .setCloudProviderId(cloudProviderId1)
                                                  .build();
@@ -118,7 +110,6 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig2 = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster2").namespace("namespace2").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams2 = K8sWatchTaskParams.newBuilder()
-                                                 .setK8SResourceKind(RESOURCE_KIND_POD)
                                                  .setK8SClusterConfig(k8sClusterConfig2)
                                                  .setCloudProviderId(cloudProviderId2)
                                                  .build();
@@ -137,7 +128,6 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
-                                                .setK8SResourceKind(RESOURCE_KIND_POD)
                                                 .setK8SClusterConfig(k8sClusterConfig)
                                                 .setCloudProviderId(cloudProviderId)
                                                 .build();
@@ -156,7 +146,6 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
         K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
     K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
-                                                .setK8SResourceKind(RESOURCE_KIND_NODE)
                                                 .setK8SClusterConfig(k8sClusterConfig)
                                                 .setCloudProviderId(cloudProviderId)
                                                 .build();
@@ -165,22 +154,5 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     k8sWatchServiceDelegate.delete(watchId);
     verify(nodeWatcher).onClose(null);
     assertThat(k8sWatchServiceDelegate.watchIds()).doesNotContain(watchId);
-  }
-
-  @Test
-  @Owner(developers = AVMOHAN)
-  @Category(UnitTests.class)
-  public void shouldThrowIaeIfUnknownResourceKind() throws Exception {
-    String cloudProviderId = UUID.randomUUID().toString();
-    ByteString k8sClusterConfig = ByteString.copyFrom(KryoUtils.asBytes(
-        K8sClusterConfig.builder().clusterName("test-cluster").namespace("namespace").cloudProvider(null).build()));
-    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
-                                                .setK8SResourceKind("Deployment")
-                                                .setK8SClusterConfig(k8sClusterConfig)
-                                                .setCloudProviderId(cloudProviderId)
-                                                .build();
-    assertThatIllegalArgumentException()
-        .isThrownBy(() -> k8sWatchServiceDelegate.create(k8sWatchTaskParams))
-        .withMessage("Resource kind %s is not watchable", "Deployment");
   }
 }

@@ -23,10 +23,11 @@ import java.util.Optional;
 public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @InjectMocks @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
 
+  private final String CLUSTER_ID = "clusterId";
+  private final String CLUSTER_NAME = "clusterName";
   private final String ACCOUNT_ID = "test-account-id";
   private final String DELEGATE_ID = "test-delegate-id1";
   private final String CLOUD_PROVIDER_ID = "cloudProviderId";
-  private final String K8_RESOURCE_KIND = "k8sResourceKind";
   private final long HEARTBEAT_MILLIS = Instant.now().toEpochMilli();
 
   @Test
@@ -96,12 +97,14 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
         perpetualTaskRecordDao.getExistingPerpetualTask(ACCOUNT_ID, PerpetualTaskType.K8S_WATCH, clientContext);
     PerpetualTaskRecord savedPerpetualTaskRecord = existingPerpetualTask.get();
     assertThat(savedPerpetualTaskRecord).isNotNull();
+    assertThat(savedPerpetualTaskRecord.getClientContext()).isEqualTo(getClientContext());
   }
 
   public PerpetualTaskClientContext getClientContext() {
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put(CLOUD_PROVIDER_ID, CLOUD_PROVIDER_ID);
-    clientParamMap.put(K8_RESOURCE_KIND, K8_RESOURCE_KIND);
+    clientParamMap.put(CLUSTER_ID, CLUSTER_ID);
+    clientParamMap.put(CLUSTER_NAME, CLUSTER_NAME);
     return new PerpetualTaskClientContext(clientParamMap);
   }
 

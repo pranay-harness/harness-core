@@ -36,7 +36,6 @@ import java.util.Map;
 public class PerpetualTaskWorkerTest extends CategoryTest {
   String accountId = "ACCOUNT_ID";
   String cloudProviderId = "CLOUD_PROVIDER_ID";
-  String k8sResourceKind = "Pod";
 
   String taskIdString1 = "TASK_ID_1";
   PerpetualTaskId taskId1 = PerpetualTaskId.newBuilder().setId(taskIdString1).build();
@@ -57,11 +56,8 @@ public class PerpetualTaskWorkerTest extends CategoryTest {
   public void setUp() {
     kubernetesClusterConfig = KubernetesClusterConfig.builder().accountId(accountId).build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(kubernetesClusterConfig));
-    K8sWatchTaskParams k8sWatchTaskParams = K8sWatchTaskParams.newBuilder()
-                                                .setCloudProviderId(cloudProviderId)
-                                                .setK8SClusterConfig(bytes)
-                                                .setK8SResourceKind(k8sResourceKind)
-                                                .build();
+    K8sWatchTaskParams k8sWatchTaskParams =
+        K8sWatchTaskParams.newBuilder().setCloudProviderId(cloudProviderId).setK8SClusterConfig(bytes).build();
 
     params = PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
 

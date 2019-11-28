@@ -34,7 +34,6 @@ public class K8sWatchPerpetualTaskServiceClient
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
 
   private static final String CLOUD_PROVIDER_ID = "cloudProviderId";
-  private static final String K8_RESOURCE_KIND = "k8sResourceKind";
   private static final String CLUSTER_ID = "clusterId";
   private static final String CLUSTER_NAME = "clusterName";
 
@@ -42,7 +41,6 @@ public class K8sWatchPerpetualTaskServiceClient
   public String create(String accountId, K8WatchPerpetualTaskClientParams clientParams) {
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put(CLOUD_PROVIDER_ID, clientParams.getCloudProviderId());
-    clientParamMap.put(K8_RESOURCE_KIND, clientParams.getK8sResourceKind());
     clientParamMap.put(CLUSTER_ID, clientParams.getClusterId());
     clientParamMap.put(CLUSTER_NAME, clientParams.getClusterName());
 
@@ -69,7 +67,6 @@ public class K8sWatchPerpetualTaskServiceClient
   public K8sWatchTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
     String cloudProviderId = clientParams.get(CLOUD_PROVIDER_ID);
-    String k8sResourceKind = clientParams.get(K8_RESOURCE_KIND);
     String clusterId = clientParams.get(CLUSTER_ID);
     String clusterName = clientParams.get(CLUSTER_NAME);
 
@@ -82,7 +79,6 @@ public class K8sWatchPerpetualTaskServiceClient
     return K8sWatchTaskParams.newBuilder()
         .setCloudProviderId(cloudProviderId)
         .setK8SClusterConfig(bytes)
-        .setK8SResourceKind(k8sResourceKind)
         .setClusterId(clusterId)
         .setClusterName(clusterName)
         .build();
@@ -108,8 +104,7 @@ public class K8sWatchPerpetualTaskServiceClient
         .build();
   }
 
-  public static K8WatchPerpetualTaskClientParams from(
-      Cluster cluster, String k8sResourceKind, String clusterId, String clusterName) {
-    return new K8WatchPerpetualTaskClientParams(cluster.getCloudProviderId(), k8sResourceKind, clusterId, clusterName);
+  public static K8WatchPerpetualTaskClientParams from(Cluster cluster, String clusterId, String clusterName) {
+    return new K8WatchPerpetualTaskClientParams(cluster.getCloudProviderId(), clusterId, clusterName);
   }
 }

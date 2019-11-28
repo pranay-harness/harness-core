@@ -81,12 +81,8 @@ public class CCMPerpetualTaskManager {
         client = clientRegistry.getClient(PerpetualTaskType.K8S_WATCH);
         String podWatcherTaskId = client.create(clusterRecord.getAccountId(),
             K8sWatchPerpetualTaskServiceClient.from(
-                cluster, "Pod", clusterRecord.getUuid(), ((DirectKubernetesCluster) cluster).getClusterName()));
+                cluster, clusterRecord.getUuid(), ((DirectKubernetesCluster) cluster).getClusterName()));
         clusterRecordService.attachPerpetualTaskId(clusterRecord, podWatcherTaskId);
-        String nodeWatcherTaskId = client.create(clusterRecord.getAccountId(),
-            K8sWatchPerpetualTaskServiceClient.from(
-                cluster, "Node", clusterRecord.getUuid(), ((DirectKubernetesCluster) cluster).getClusterName()));
-        clusterRecordService.attachPerpetualTaskId(clusterRecord, nodeWatcherTaskId);
         break;
       case AWS_ECS:
         EcsCluster ecsCluster = (EcsCluster) cluster;
