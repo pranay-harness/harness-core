@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.protobuf.Timestamp;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
@@ -15,7 +16,7 @@ import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.schedule.BatchJobRunner;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.grpc.utils.HTimestamps;
@@ -33,7 +34,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import software.wings.integration.BaseIntegrationTest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -42,7 +42,7 @@ import java.util.List;
 @SpringBootTest
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
-public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEventGenerator {
+public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGenerator {
   private final String TEST_ACCOUNT_ID = "EC2_INSTANCE_INFO_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "EC2_INSTANCE_INFO_INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "EC2_INSTANCE_INFO_CLUSTER_ARN_" + this.getClass().getSimpleName();
@@ -104,7 +104,7 @@ public class EcsJobIntegrationTest extends BaseIntegrationTest implements EcsEve
 
   @Test
   @Owner(developers = HITESH, intermittent = true)
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void shouldRunEcsJob() throws Exception {
     batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);
 

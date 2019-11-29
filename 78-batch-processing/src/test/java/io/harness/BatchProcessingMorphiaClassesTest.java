@@ -12,9 +12,8 @@ import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
 
-public class BatchProcessingMorphiaClassesTest extends WingsBaseTest {
+public class BatchProcessingMorphiaClassesTest extends CategoryTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)

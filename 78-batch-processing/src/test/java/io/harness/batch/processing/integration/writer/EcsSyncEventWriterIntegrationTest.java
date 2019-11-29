@@ -13,7 +13,7 @@ import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
@@ -92,7 +92,7 @@ public class EcsSyncEventWriterIntegrationTest extends CategoryTest implements E
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void shouldStopEc2Instance() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
