@@ -9,11 +9,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACTORY_URL;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -37,17 +39,23 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FeatureFlagService;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -57,6 +65,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
   private static final String ARTIFACT_STREAM_ID_3 = "ARTIFACT_STREAM_ID_3";
+  private static final String ARTIFACT_STREAM_ID_4 = "ARTIFACT_STREAM_ID_4";
 
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private ArtifactService artifactService;
@@ -96,6 +105,31 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
                                             .serviceId(SERVICE_ID)
                                             .build();
 
+  ArtifactoryArtifactStream artifactoryStream = ArtifactoryArtifactStream.builder()
+                                                    .uuid(ARTIFACT_STREAM_ID)
+                                                    .appId(APP_ID)
+                                                    .sourceName("ARTIFACT_SOURCE")
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+
+  private SettingAttribute artifactorySetting = aSettingAttribute()
+                                                    .withUuid(SETTING_ID)
+                                                    .withValue(ArtifactoryConfig.builder()
+                                                                   .artifactoryUrl(ARTIFACTORY_URL)
+                                                                   .username("admin")
+                                                                   .password("dummy123!".toCharArray())
+                                                                   .build())
+                                                    .build();
+
+  ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .metadataOnly(true)
+          .serverSetting(artifactorySetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID_4)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+
   Artifact artifact = Artifact.Builder.anArtifact()
                           .withUuid(ARTIFACT_ID)
                           .withArtifactStreamId(ARTIFACT_STREAM_ID)
@@ -108,8 +142,8 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   private static final Artifact ARTIFACT_1 = anArtifact().withMetadata(Maps.newHashMap("buildNo", "1")).build();
   private static final Artifact ARTIFACT_2 = anArtifact().withMetadata(Maps.newHashMap("buildNo", "2")).build();
 
-  private static final BuildDetails BUILD_DETAILS_1 = aBuildDetails().withNumber("1").build();
-  private static final BuildDetails BUILD_DETAILS_2 = aBuildDetails().withNumber("2").build();
+  private static final BuildDetails BUILD_DETAILS_1 = aBuildDetails().withNumber("1").withArtifactPath("a").build();
+  private static final BuildDetails BUILD_DETAILS_2 = aBuildDetails().withNumber("2").withArtifactPath("b").build();
 
   @Before
   public void setupMocks() {
@@ -117,15 +151,36 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_3)).thenReturn(amiArtifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_4)).thenReturn(artifactoryStream);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_2)).thenReturn(ARTIFACT_2);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM, BUILD_DETAILS_2)).thenReturn(ARTIFACT_2);
 
+    when(artifactCollectionUtils.getArtifactStreamAttributes(artifactoryStream, false))
+        .thenReturn(artifactStreamAttributesForArtifactory);
+
     when(artifactService.create(ARTIFACT_1)).thenReturn(ARTIFACT_1);
     when(artifactService.create(ARTIFACT_2)).thenReturn(ARTIFACT_2);
     when(featureFlagService.isEnabled(FeatureName.TRIGGER_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     buildSourceCleanupCallback.setAccountId(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotifyOnSuccessWithArtifactoryDeleteArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_4);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(artifactService.prepareCleanupQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(artifact);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), artifactoryStream);
+    verify(artifactService, times(1)).deleteArtifacts(any());
   }
 
   @Test

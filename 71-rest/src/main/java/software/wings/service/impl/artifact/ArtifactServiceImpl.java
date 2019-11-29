@@ -804,6 +804,33 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
+  public Query<Artifact> prepareCleanupQuery(ArtifactStream artifactStream) {
+    Query<Artifact> artifactQuery = wingsPersistence.createQuery(Artifact.class, excludeAuthority)
+                                        .project(ArtifactKeys.artifactFiles, true)
+                                        .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
+                                        .field(ArtifactKeys.status)
+                                        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
+                                        .disableValidation();
+
+    if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
+      artifactQuery.project(ArtifactKeys.revision, true);
+    } else {
+      artifactQuery.project(ArtifactKeys.metadata, true);
+      artifactQuery.project(ArtifactKeys.revision, true);
+    }
+
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+      artifactQuery.project(ArtifactKeys.artifactFiles, true);
+    }
+
+    if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      return artifactQuery;
+    }
+    artifactQuery.filter(ArtifactKeys.artifactSourceName, artifactStream.getSourceName());
+    return artifactQuery;
+  }
+
+  @Override
   public void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream) {
     deleteArtifactsByQuery(wingsPersistence.createQuery(Artifact.class, excludeAuthority)
                                .project(ArtifactKeys.artifactFiles, true)
