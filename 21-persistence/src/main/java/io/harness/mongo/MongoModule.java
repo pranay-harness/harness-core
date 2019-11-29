@@ -48,7 +48,12 @@ public class MongoModule extends DependencyProviderModule {
   }
 
   public MongoModule() {
-    registerLogger(MorphiaLoggerFactory.class);
+    try {
+      registerLogger(MorphiaLoggerFactory.class);
+    } catch (Exception e) {
+      // happens when MorphiaLoggerFactory.get has already been called.
+      logger.warn("Failed to register logger", e);
+    }
   }
 
   @Provides

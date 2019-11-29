@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 @Slf4j
-public class ClosingFactory {
+public class ClosingFactory implements AutoCloseable {
   private LinkedList<Closeable> servers = new LinkedList<>();
 
   public synchronized void addServer(Closeable server) {
@@ -24,5 +24,10 @@ public class ClosingFactory {
       }
     }
     servers.clear();
+  }
+
+  @Override
+  public void close() throws Exception {
+    stopServers();
   }
 }

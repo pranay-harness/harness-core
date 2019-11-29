@@ -7,7 +7,7 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.entities.BatchJobScheduledData;
 import io.harness.batch.processing.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
@@ -34,7 +34,7 @@ public class BatchJobScheduled {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   @Ignore("TODO: Not running it now, will run it in next iteration.")
   public void shouldCreateBatchJobScheduledData() {
     Instant firstStartAt = Instant.now().minus(2, ChronoUnit.DAYS);

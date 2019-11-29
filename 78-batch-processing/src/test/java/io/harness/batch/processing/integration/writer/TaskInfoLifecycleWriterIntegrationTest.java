@@ -14,7 +14,7 @@ import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
@@ -63,7 +63,7 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void shouldCreateTaskData() throws Exception {
     PublishedMessage ec2InstanceInfoMessage =
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
@@ -88,7 +88,7 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void shouldCreateEc2InstanceLifecycle() throws Exception {
     shouldCreateTaskData();
 

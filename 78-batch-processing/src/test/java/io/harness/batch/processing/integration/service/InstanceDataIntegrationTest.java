@@ -3,17 +3,17 @@ package io.harness.batch.processing.integration.service;
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.val;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import software.wings.integration.BaseIntegrationTest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -32,7 +31,7 @@ import java.util.List;
 @SpringBootTest
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
-public class InstanceDataIntegrationTest extends BaseIntegrationTest {
+public class InstanceDataIntegrationTest extends CategoryTest {
   private final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String TEST_INSTANCE_ID = "TEST_INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "TEST_CLUSTER_ARN_" + this.getClass().getSimpleName();
@@ -43,8 +42,7 @@ public class InstanceDataIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Owner(developers = HITESH)
-  @Category(IntegrationTests.class)
-  @Ignore("Under Investigation, as discussed with Owner")
+  @Category(UnitTests.class)
   public void shouldCreateInstanceData() {
     InstanceData instanceData = createInstanceData(TEST_INSTANCE_ID);
     boolean instanceCreated = instanceDataService.create(instanceData);
