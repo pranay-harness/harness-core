@@ -84,3 +84,12 @@ message NodeEvent {
   google.protobuf.Timestamp timestamp = 5;
   string node_name = 6;
 }
+
+message K8SClusterSyncEvent {
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  repeated string active_pod_uids = 4;
+  repeated string active_node_uids = 5;
+  google.protobuf.Timestamp last_processed_timestamp = 6;
+}

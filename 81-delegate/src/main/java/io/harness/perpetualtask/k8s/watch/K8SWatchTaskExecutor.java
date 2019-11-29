@@ -6,7 +6,12 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.Timestamp;
 
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.NodeMetric;
 import io.harness.event.payloads.PodMetric;
@@ -24,41 +29,77 @@ import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
 public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
-  @Inject private K8sWatchServiceDelegate k8sWatchServiceDelegate;
   private Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
 
   private final EventPublisher eventPublisher;
   private final KubernetesClientFactory kubernetesClientFactory;
+  private final K8sWatchServiceDelegate k8sWatchServiceDelegate;
 
   private K8sMetricsClient k8sMetricsClient;
 
   @Inject
-  public K8SWatchTaskExecutor(EventPublisher eventPublisher, KubernetesClientFactory kubernetesClientFactory) {
+  public K8SWatchTaskExecutor(EventPublisher eventPublisher, KubernetesClientFactory kubernetesClientFactory,
+      K8sWatchServiceDelegate k8sWatchServiceDelegate) {
     this.eventPublisher = eventPublisher;
     this.kubernetesClientFactory = kubernetesClientFactory;
+    this.k8sWatchServiceDelegate = k8sWatchServiceDelegate;
   }
 
   @Override
   public boolean runOnce(PerpetualTaskId taskId, PerpetualTaskParams params, Instant heartbeatTime) {
     K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
     String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
-    taskWatchIdMap.put(taskId.getId(), watchId);
     logger.info("Created a watch with id {}.", watchId);
     K8sClusterConfig k8sClusterConfig =
         (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
     if (k8sMetricsClient == null) {
       k8sMetricsClient = kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
     }
-
+    if (taskWatchIdMap.get(taskId.getId()) == null) {
+      publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, Instant.now());
+      taskWatchIdMap.put(taskId.getId(), watchId);
+    }
     publishNodeMetrics(k8sMetricsClient, eventPublisher, watchTaskParams.getCloudProviderId(), heartbeatTime);
     publishPodMetrics(k8sMetricsClient, eventPublisher, watchTaskParams.getCloudProviderId(), heartbeatTime);
     return true;
+  }
+
+  @VisibleForTesting
+  static void publishClusterSyncEvent(
+      KubernetesClient client, EventPublisher eventPublisher, K8sWatchTaskParams watchTaskParams, Instant pollTime) {
+    List<String> nodeUidList = client.nodes()
+                                   .list()
+                                   .getItems()
+                                   .stream()
+                                   .map(Node::getMetadata)
+                                   .map(ObjectMeta::getUid)
+                                   .collect(Collectors.toList());
+    List<String> podUidList = client.pods()
+                                  .inAnyNamespace()
+                                  .list()
+                                  .getItems()
+                                  .stream()
+                                  .map(Pod::getMetadata)
+                                  .map(ObjectMeta::getUid)
+                                  .collect(Collectors.toList());
+    Timestamp timestamp = HTimestamps.fromInstant(pollTime);
+    K8SClusterSyncEvent k8SClusterSyncEvent = K8SClusterSyncEvent.newBuilder()
+                                                  .setClusterId(watchTaskParams.getClusterId())
+                                                  .setCloudProviderId(watchTaskParams.getCloudProviderId())
+                                                  .setClusterName(watchTaskParams.getClusterName())
+                                                  .addAllActiveNodeUids(nodeUidList)
+                                                  .addAllActivePodUids(podUidList)
+                                                  .setLastProcessedTimestamp(timestamp)
+                                                  .build();
+    eventPublisher.publishMessage(k8SClusterSyncEvent, timestamp);
   }
 
   @VisibleForTesting
