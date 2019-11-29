@@ -1,6 +1,6 @@
 package io.harness.batch.processing.writer;
 
-import static io.harness.batch.processing.ccm.UtilizationJobType.K8S_POD;
+import static io.harness.batch.processing.ccm.UtilizationInstanceType.K8S_POD;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
-import io.harness.batch.processing.ccm.UtilizationJobType;
+import io.harness.batch.processing.ccm.UtilizationInstanceType;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
@@ -43,7 +43,7 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   private final String INVALID_METRIC = "invalid_metric";
   private final String METRIC = "MemoryUtilization";
   private final String INSTANCEID = TEST_SERVICE_ARN;
-  private final String INSTANCETYPE = UtilizationJobType.ECS_SERVICE;
+  private final String INSTANCETYPE = UtilizationInstanceType.ECS_SERVICE;
 
   @Test
   @Owner(developers = ROHIT)
@@ -134,7 +134,6 @@ public class EcsUtilizationMetricsWriterTest extends CategoryTest implements Ecs
                              .setMetricName(METRIC)
                              .addValues(1034.0)
                              .addValues(1500.0)
-
                              .build())
         .build();
   }

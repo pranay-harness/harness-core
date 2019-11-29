@@ -1,7 +1,7 @@
 package io.harness.batch.processing.writer;
 
-import static io.harness.batch.processing.ccm.UtilizationJobType.ECS_CLUSTER;
-import static io.harness.batch.processing.ccm.UtilizationJobType.ECS_SERVICE;
+import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_CLUSTER;
+import static io.harness.batch.processing.ccm.UtilizationInstanceType.ECS_SERVICE;
 
 import com.google.inject.Singleton;
 
