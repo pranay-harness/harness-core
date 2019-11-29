@@ -4,8 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -352,7 +352,7 @@ public class YamlHandlerFactory {
     if (yamlHandler == null) {
       String msg = "Yaml handler not found for yaml type: " + yamlType + " and subType: " + subType;
       logger.error(msg);
-      throw new WingsException(msg);
+      throw new GeneralException(msg);
     }
 
     return (T) yamlHandler;

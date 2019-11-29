@@ -15,9 +15,9 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnknownArtifactStreamTypeException;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.queue.QueueListener;
@@ -93,7 +93,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
       ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
       if (artifactStream == null) {
-        throw new WingsException("Artifact Stream does not exist", USER);
+        throw new InvalidRequestException("Artifact Stream does not exist", USER);
       }
 
       String waitId = generateUuid();
@@ -213,8 +213,8 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
                       .build())
             .build();
       }
-
-      default: { throw new WingsException(ErrorCode.UNKNOWN_ARTIFACT_TYPE); }
+      default:
+        throw new UnknownArtifactStreamTypeException(artifactStream.getArtifactStreamType());
     }
   }
 }

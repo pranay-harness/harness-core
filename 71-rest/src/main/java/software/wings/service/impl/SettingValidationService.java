@@ -22,7 +22,10 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnavailableFeatureException;
+import io.harness.exception.UnknownEnumTypeException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -201,9 +204,9 @@ public class SettingValidationService {
                               .filter(SettingAttributeKeys.category, settingAttribute.getCategory())
                               .get();
     if (sa != null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-          .addParam("args",
-              "The name " + settingAttribute.getName() + " already exists in " + settingAttribute.getCategory() + ".");
+      throw new InvalidArgumentsException(
+          "The name " + settingAttribute.getName() + " already exists in " + settingAttribute.getCategory() + ".",
+          USER);
     }
 
     SettingValue settingValue = settingAttribute.getValue();
@@ -276,8 +279,7 @@ public class SettingValidationService {
       validateHelmRepoConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof SpotInstConfig) {
       if (!featureFlagService.isEnabled(FeatureName.SPOTINST, settingAttribute.getAccountId())) {
-        throw new WingsException(
-            ErrorCode.FEATURE_UNAVAILABLE, "Enable Feature Spotinst to create Spotinst Cloud Provider", USER);
+        throw new UnavailableFeatureException("Enable Feature Spotinst to create Spotinst Cloud Provider", USER);
       }
       validateSpotInstConfig(settingAttribute, encryptedDataDetails);
     }
@@ -431,30 +433,29 @@ public class SettingValidationService {
       case HTTP_HELM_REPO:
         HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmRepoConfig;
         if (isBlank(httpHelmRepoConfig.getChartRepoUrl())) {
-          throw new WingsException("Helm repository URL cannot be empty", USER);
+          throw new InvalidRequestException("Helm repository URL cannot be empty", USER);
         }
 
         httpHelmRepoConfig.setChartRepoUrl(getTrimmedValue(httpHelmRepoConfig.getChartRepoUrl()));
         httpHelmRepoConfig.setUsername(getTrimmedValue(httpHelmRepoConfig.getUsername()));
 
         break;
-
       case AMAZON_S3_HELM_REPO:
         AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
         if (isBlank(amazonS3HelmRepoConfig.getConnectorId())) {
-          throw new WingsException("Cloud provider cannot be empty", USER);
+          throw new InvalidRequestException("Cloud provider cannot be empty", USER);
         }
 
         if (isBlank(amazonS3HelmRepoConfig.getBucketName())) {
-          throw new WingsException("S3 bucket cannot be empty", USER);
+          throw new InvalidRequestException("S3 bucket cannot be empty", USER);
         }
 
         if (isBlank(amazonS3HelmRepoConfig.getFolderPath())) {
-          throw new WingsException("Base path cannot be empty", USER);
+          throw new InvalidRequestException("Base path cannot be empty", USER);
         }
 
         if (isBlank(amazonS3HelmRepoConfig.getRegion())) {
-          throw new WingsException("Region cannot be empty", USER);
+          throw new InvalidRequestException("Region cannot be empty", USER);
         }
 
         amazonS3HelmRepoConfig.setConnectorId(getTrimmedValue(amazonS3HelmRepoConfig.getConnectorId()));
@@ -463,13 +464,12 @@ public class SettingValidationService {
         amazonS3HelmRepoConfig.setFolderPath(getTrimmedValue(amazonS3HelmRepoConfig.getFolderPath()));
 
         break;
-
       case GCS_HELM_REPO:
         break;
-
       default:
         unhandled(helmRepoConfig.getSettingType());
-        throw new WingsException("Unhandled type of helm repository. Type : " + helmRepoConfig.getSettingType(), USER);
+        throw new UnknownEnumTypeException("helm repository type",
+            helmRepoConfig.getSettingType() == null ? "null" : helmRepoConfig.getSettingType().name());
     }
   }
 

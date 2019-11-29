@@ -18,10 +18,11 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.UnknownEnumTypeException;
 import io.harness.exception.WingsException;
+import io.harness.exception.YamlException;
 import io.harness.persistence.UuidAccess;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -148,10 +149,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return YamlHelper.getYamlRestResponse(yamlGitSyncService, serviceCommand.getUuid(), accountId, commandYaml,
           serviceCommand.getName() + YAML_EXTENSION);
     } else {
-      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-          .addParam("message",
-              "The ServiceCommand with appId: '" + appId + "' and serviceCommandId: '" + serviceCommandId
-                  + "' was not found!");
+      throw new YamlException("The ServiceCommand with appId: '" + appId + "' and serviceCommandId: '"
+              + serviceCommandId + "' was not found!",
+          USER);
     }
   }
 
@@ -219,8 +219,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     if (artifactStream == null) {
       // handle missing artifactStream
-      throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-          .addParam("message", "The ArtifactStream artifactStreamId: '" + artifactStreamId + "' was not found!");
+      throw new YamlException("The ArtifactStream artifactStreamId: '" + artifactStreamId + "' was not found!", USER);
     }
 
     return getArtifactTrigger(appId, artifactStream);
@@ -238,8 +237,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       } else {
         service = artifactStreamServiceBindingService.getService(appId, artifactStreamId, false);
         if (service == null) {
-          throw new WingsException(ErrorCode.GENERAL_YAML_ERROR, USER)
-              .addParam("message", "The Service with artifactStreamId: '" + artifactStreamId + "' was not found!");
+          throw new YamlException("The Service with artifactStreamId: '" + artifactStreamId + "' was not found!", USER);
         }
       }
 
@@ -435,7 +433,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       yamlSubType = DeploymentType.KUBERNETES.name();
       yamlFileName = YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
     } else {
-      throw new WingsException("Unsupported deployment type: " + containerTask.getDeploymentType());
+      throw new InvalidRequestException("Unsupported deployment type: " + containerTask.getDeploymentType());
     }
 
     BaseYaml yaml =
@@ -750,7 +748,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     } else if (AppManifestKind.PCF_OVERRIDE.equals(applicationManifest.getKind())) {
       yamlType = APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
     } else {
-      throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
+      throw new UnknownEnumTypeException("ApplicationManifestKind",
+          applicationManifest.getKind() == null ? "null" : applicationManifest.getKind().name());
     }
     return yamlType;
   }

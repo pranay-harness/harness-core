@@ -49,8 +49,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -389,7 +389,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
 
         if (failFast) {
-          throw new WingsException(ErrorCode.GENERAL_ERROR, message, WingsException.USER).addParam("message", message);
+          throw new GeneralException(message, WingsException.USER);
         } else {
           listOfYamlErrors.ifPresent(strings -> strings.add(message));
         }
@@ -1974,14 +1974,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             .append(PATH_DELIMITER)
             .append(service.getName())
             .toString();
-
       case ENV:
         notNullCheck("Environment not found", environment);
         return new StringBuilder(getRootPathByEnvironment(environment, getRootPathByApp(application)))
             .append(PATH_DELIMITER)
             .append(isPcfOverrideAppManifest(applicationManifest) ? PCF_OVERRIDES_FOLDER : VALUES_FOLDER)
             .toString();
-
       case SERVICE:
         notNullCheck("Service not found", service);
         boolean valuesYaml = AppManifestKind.VALUES.equals(applicationManifest.getKind());
@@ -1995,10 +1993,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
 
         return builder.toString();
-
       default:
         unhandled(appManifestSource);
-        throw new WingsException("Invalid application manifest type");
+        throw new InvalidRequestException("Invalid application manifest type");
     }
   }
 
