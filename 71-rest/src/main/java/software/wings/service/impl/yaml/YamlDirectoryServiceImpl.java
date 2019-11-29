@@ -493,8 +493,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     futureList.add(executorService.submit(() -> doCollaborationProviders(accountId, directoryPath.clone())));
 
-    futureList.add(executorService.submit(() -> doLoadBalancers(accountId, directoryPath.clone())));
-
     futureList.add(executorService.submit(() -> doVerificationProviders(accountId, directoryPath.clone())));
 
     futureList.add(executorService.submit(() -> doNotificationGroups(accountId, directoryPath.clone())));
@@ -525,7 +523,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(map.get(CLOUD_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(ARTIFACT_SOURCES_FOLDER));
     configFolder.addChild(map.get(COLLABORATION_PROVIDERS_FOLDER));
-    configFolder.addChild(map.get(LOAD_BALANCERS_FOLDER));
     configFolder.addChild(map.get(VERIFICATION_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(NOTIFICATION_GROUPS_FOLDER));
     //--------------------------------------
@@ -1824,32 +1821,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         parentFolder.addChild(
             new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
                 yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName), yamlGitSyncService));
-      }
-    }
-  }
-
-  private FolderNode doLoadBalancers(String accountId, DirectoryPath directoryPath) {
-    // create load balancers
-    FolderNode loadBalancersFolder = new FolderNode(accountId, LOAD_BALANCERS_FOLDER, SettingAttribute.class,
-        directoryPath.add(YamlConstants.LOAD_BALANCERS_FOLDER), yamlGitSyncService);
-
-    doLoadBalancerType(accountId, loadBalancersFolder, SettingVariableTypes.ELB, directoryPath.clone());
-
-    return loadBalancersFolder;
-  }
-
-  private void doLoadBalancerType(
-      String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
-    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
-
-    if (settingAttributes != null) {
-      // iterate over providers
-      for (SettingAttribute settingAttribute : settingAttributes) {
-        DirectoryPath lbPath = directoryPath.clone();
-        String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-        parentFolder.addChild(
-            new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                yamlFileName, SettingAttribute.class, lbPath.add(yamlFileName), yamlGitSyncService));
       }
     }
   }
