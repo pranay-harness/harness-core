@@ -59,6 +59,10 @@ public final class K8SMessages {
       .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_NodeEvent_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_NodeEvent_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -122,7 +126,12 @@ public final class K8SMessages {
         + "\032.google.protobuf.Timestamp\022\021\n\tnode_name"
         + "\030\006 \001(\t\"N\n\tEventType\022\026\n\022EVENT_TYPE_INVALI"
         + "D\020\000\022\024\n\020EVENT_TYPE_START\020\001\022\023\n\017EVENT_TYPE_"
-        + "STOP\020\002B\002P\001b\006proto3"};
+        + "STOP\020\002\"\313\001\n\023K8SClusterSyncEvent\022\022\n\ncluste"
+        + "r_id\030\001 \001(\t\022\024\n\014cluster_name\030\002 \001(\t\022\031\n\021clou"
+        + "d_provider_id\030\003 \001(\t\022\027\n\017active_pod_uids\030\004"
+        + " \003(\t\022\030\n\020active_node_uids\030\005 \003(\t\022<\n\030last_p"
+        + "rocessed_timestamp\030\006 \001(\0132\032.google.protob"
+        + "uf.TimestampB\002P\001b\006proto3"};
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
           public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -265,6 +274,19 @@ public final class K8SMessages {
                 "Type",
                 "Timestamp",
                 "NodeName",
+            });
+    internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_descriptor =
+        getDescriptor().getMessageTypes().get(7);
+    internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_k8s_watch_K8SClusterSyncEvent_descriptor,
+            new java.lang.String[] {
+                "ClusterId",
+                "ClusterName",
+                "CloudProviderId",
+                "ActivePodUids",
+                "ActiveNodeUids",
+                "LastProcessedTimestamp",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
   }

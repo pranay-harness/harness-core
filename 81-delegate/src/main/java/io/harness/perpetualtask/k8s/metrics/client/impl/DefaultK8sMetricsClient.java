@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.k8s.metrics.client.impl;
 
-import io.fabric8.kubernetes.client.BaseClient;
 import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -14,7 +14,7 @@ import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 import okhttp3.OkHttpClient;
 
-public class DefaultK8sMetricsClient extends BaseClient implements K8sMetricsClient {
+public class DefaultK8sMetricsClient extends DefaultKubernetesClient implements K8sMetricsClient {
   public DefaultK8sMetricsClient(OkHttpClient httpClient, Config config) {
     super(httpClient, config);
   }

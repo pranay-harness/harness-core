@@ -1,13 +1,23 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.NodeList;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -16,6 +26,8 @@ import io.harness.event.payloads.NodeMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.grpc.utils.HDurations;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.perpetualtask.PerpetualTaskId;
+import io.harness.perpetualtask.PerpetualTaskParams;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsExtensionAdapter;
 import io.harness.perpetualtask.k8s.metrics.client.model.Usage;
@@ -24,6 +36,7 @@ import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetricsList;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.serializer.KryoUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,29 +46,40 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import java.time.Instant;
 
 @RunWith(MockitoJUnitRunner.class)
 public class K8SWatchTaskExecutorTest extends CategoryTest {
-  private static final String CLOUD_PROVIDER_ID = "cloud-provider-id";
-
   @Rule public final KubernetesServer server = new KubernetesServer();
 
   private K8sMetricsClient k8sMetricClient;
+  private KubernetesClient client;
+  private K8SWatchTaskExecutor k8SWatchTaskExecutor;
 
   @Mock EventPublisher eventPublisher;
   @Captor ArgumentCaptor<Message> messageArgumentCaptor;
+  @Mock KubernetesClientFactory kubernetesClientFactory;
+  @Mock K8sWatchServiceDelegate k8sWatchServiceDelegate;
+
+  private final String WATCH_ID = "watch-id";
+  private final String CLUSTER_ID = "cluster-id";
+  private final String POD_ONE_UID = "pod-1-uid";
+  private final String POD_TWO_UID = "pod-2-uid";
+  private final String NODE_ONE_UID = "node-1-uid";
+  private final String NODE_TWO_UID = "node-2-uid";
+  private final String CLUSTER_NAME = "cluster-name";
+  private final String CLOUD_PROVIDER_ID = "cloud-provider-id";
+  private final String PERPETUAL_TASK_ID = "perpetualTaskId";
 
   @Before
   public void setUp() throws Exception {
+    k8SWatchTaskExecutor = new K8SWatchTaskExecutor(eventPublisher, kubernetesClientFactory, k8sWatchServiceDelegate);
     k8sMetricClient = new K8sMetricsExtensionAdapter().adapt(server.getClient());
-  }
+    client = server.getClient();
 
-  @Test
-  @Owner(developers = AVMOHAN)
-  @Category(UnitTests.class)
-  public void shouldPublishNodeMetrics() throws Exception {
     server.expect()
         .withPath("/apis/metrics.k8s.io/v1beta1/nodes")
         .andReturn(200,
@@ -74,36 +98,10 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                         .build()))
                 .build())
         .once();
-    Instant heartbeatTime = Instant.now();
-    doNothing()
-        .when(eventPublisher)
-        .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)));
-    K8SWatchTaskExecutor.publishNodeMetrics(k8sMetricClient, eventPublisher, CLOUD_PROVIDER_ID, heartbeatTime);
-    assertThat(messageArgumentCaptor.getAllValues())
-        .hasSize(2)
-        .containsExactlyInAnyOrder(
-            NodeMetric.newBuilder()
-                .setCloudProviderId(CLOUD_PROVIDER_ID)
-                .setName("node1-name")
-                .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
-                .setWindow(HDurations.parse("30s"))
-                .setUsage(
-                    io.harness.event.payloads.Usage.newBuilder().setCpu("746640510n").setMemory("6825124Ki").build())
-                .build(),
-            NodeMetric.newBuilder()
-                .setCloudProviderId(CLOUD_PROVIDER_ID)
-                .setName("node2-name")
-                .setTimestamp(HTimestamps.parse("2019-11-26T07:00:28Z"))
-                .setWindow(HDurations.parse("30s"))
-                .setUsage(
-                    io.harness.event.payloads.Usage.newBuilder().setCpu("2938773795n").setMemory("18281752Ki").build())
-                .build());
-  }
 
-  @Test
-  @Owner(developers = AVMOHAN)
-  @Category(UnitTests.class)
-  public void shouldPublishPodMetrics() throws Exception {
+    server.expect().withPath("/api/v1/nodes").andReturn(200, getNodeList()).once();
+    server.expect().withPath("/api/v1/pods").andReturn(200, getPodList()).once();
+
     server.expect()
         .withPath("/apis/metrics.k8s.io/v1beta1/pods")
         .andReturn(200,
@@ -134,6 +132,124 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
                           .build())
                 .build())
         .once();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldRunK8sPerpetualTask() throws Exception {
+    Instant heartBeatTime = Instant.now();
+    K8sClusterConfig k8sClusterConfig = K8sClusterConfig.builder().build();
+    K8sWatchTaskParams k8sWatchTaskParams = getK8sWatchTaskParams();
+    when(k8sWatchServiceDelegate.create(k8sWatchTaskParams)).thenReturn(WATCH_ID);
+    when(kubernetesClientFactory.newKubernetesClient(k8sClusterConfig)).thenReturn(client);
+    when(kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class))
+        .thenReturn(k8sMetricClient);
+    PerpetualTaskParams params =
+        PerpetualTaskParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
+    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
+    boolean runOnce = k8SWatchTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
+    assertThat(runOnce).isTrue();
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldPublishNodeMetrics() throws Exception {
+    Instant heartbeatTime = Instant.now();
+    doNothing()
+        .when(eventPublisher)
+        .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(heartbeatTime)));
+    K8SWatchTaskExecutor.publishNodeMetrics(k8sMetricClient, eventPublisher, CLOUD_PROVIDER_ID, heartbeatTime);
+    assertThat(messageArgumentCaptor.getAllValues())
+        .hasSize(2)
+        .containsExactlyInAnyOrder(
+            NodeMetric.newBuilder()
+                .setCloudProviderId(CLOUD_PROVIDER_ID)
+                .setName("node1-name")
+                .setTimestamp(HTimestamps.parse("2019-11-26T07:00:32Z"))
+                .setWindow(HDurations.parse("30s"))
+                .setUsage(
+                    io.harness.event.payloads.Usage.newBuilder().setCpu("746640510n").setMemory("6825124Ki").build())
+                .build(),
+            NodeMetric.newBuilder()
+                .setCloudProviderId(CLOUD_PROVIDER_ID)
+                .setName("node2-name")
+                .setTimestamp(HTimestamps.parse("2019-11-26T07:00:28Z"))
+                .setWindow(HDurations.parse("30s"))
+                .setUsage(
+                    io.harness.event.payloads.Usage.newBuilder().setCpu("2938773795n").setMemory("18281752Ki").build())
+                .build());
+  }
+
+  private K8sWatchTaskParams getK8sWatchTaskParams() {
+    K8sClusterConfig config = K8sClusterConfig.builder().build();
+    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(config));
+
+    return K8sWatchTaskParams.newBuilder()
+        .setCloudProviderId(CLOUD_PROVIDER_ID)
+        .setClusterId(CLUSTER_ID)
+        .setClusterName(CLUSTER_NAME)
+        .setK8SClusterConfig(bytes)
+        .build();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldPublishClusterSyncEvent() throws Exception {
+    K8sWatchTaskParams k8sWatchTaskParams = getK8sWatchTaskParams();
+    Instant pollTime = Instant.now();
+    doNothing()
+        .when(eventPublisher)
+        .publishMessage(messageArgumentCaptor.capture(), eq(HTimestamps.fromInstant(pollTime)));
+    K8SWatchTaskExecutor.publishClusterSyncEvent(client, eventPublisher, k8sWatchTaskParams, pollTime);
+    assertThat(messageArgumentCaptor.getAllValues())
+        .hasSize(1)
+        .contains(K8SClusterSyncEvent.newBuilder()
+                      .setClusterId(CLUSTER_ID)
+                      .setClusterName(CLUSTER_NAME)
+                      .setCloudProviderId(CLOUD_PROVIDER_ID)
+                      .addAllActivePodUids(ImmutableList.of(POD_ONE_UID, POD_TWO_UID))
+                      .addAllActiveNodeUids(ImmutableList.of(NODE_ONE_UID, NODE_TWO_UID))
+                      .setLastProcessedTimestamp(HTimestamps.fromInstant(pollTime))
+                      .build());
+  }
+
+  private NodeList getNodeList() {
+    NodeList nodeList = new NodeList();
+    nodeList.setItems(ImmutableList.of(getNode(NODE_ONE_UID), getNode(NODE_TWO_UID)));
+    return nodeList;
+  }
+
+  private PodList getPodList() {
+    PodList podList = new PodList();
+    podList.setItems(ImmutableList.of(getPod(POD_ONE_UID), getPod(POD_TWO_UID)));
+    return podList;
+  }
+
+  private Node getNode(String nodeUid) {
+    Node firstNode = new Node();
+    firstNode.setMetadata(getObjectMeta(nodeUid));
+    return firstNode;
+  }
+
+  private ObjectMeta getObjectMeta(String uid) {
+    ObjectMeta objectMeta = new ObjectMeta();
+    objectMeta.setUid(uid);
+    return objectMeta;
+  }
+
+  private Pod getPod(String podUid) {
+    Pod firstPod = new Pod();
+    firstPod.setMetadata(getObjectMeta(podUid));
+    return firstPod;
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void shouldPublishPodMetrics() throws Exception {
     Instant heartbeatTime = Instant.now();
     doNothing()
         .when(eventPublisher)
