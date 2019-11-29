@@ -4,7 +4,7 @@ import static io.harness.beans.PageResponse.PageRequestBuilder;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
+import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
@@ -63,11 +63,15 @@ import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.FailureType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ReflectionException;
 import io.harness.exception.WingsException;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
@@ -126,6 +130,7 @@ import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
 import software.wings.infra.PcfInfraStructure;
+import software.wings.infra.PhysicalDataCenterInfra;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.infra.ProvisionerAware;
@@ -680,7 +685,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         declaredField.setAccessible(true);
         fieldValueMap.put(declaredField.getName(), declaredField.get(infrastructure));
       } catch (IllegalAccessException e) {
-        throw new WingsException(UNKNOWN_ERROR, e);
+        throw new ReflectionException("Illegal access for field", e, ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION,
+            Level.ERROR, ADMIN, EnumSet.of(FailureType.APPLICATION_ERROR));
       }
     }
     return fieldValueMap;
@@ -1119,8 +1125,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return emptyList();
     }
     List<String> hostDisplayNames = new ArrayList<>();
-    if (infrastructureDefinition.getInfrastructure() instanceof PhysicalInfra) {
-      PhysicalInfra physicalInfra = (PhysicalInfra) infrastructureDefinition.getInfrastructure();
+    if (infrastructureDefinition.getInfrastructure() instanceof PhysicalDataCenterInfra) {
+      PhysicalDataCenterInfra physicalInfra = (PhysicalDataCenterInfra) infrastructureDefinition.getInfrastructure();
       return physicalInfra.getHostNames();
     } else if (infrastructureDefinition.getInfrastructure() instanceof AwsInstanceInfrastructure) {
       AwsInstanceInfrastructure awsInfrastructureMapping =
