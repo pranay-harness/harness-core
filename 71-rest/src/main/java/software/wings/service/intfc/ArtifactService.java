@@ -212,6 +212,8 @@ public interface ArtifactService extends OwnedByArtifactStream {
 
   Query<Artifact> prepareArtifactWithMetadataQuery(ArtifactStream artifactStream);
 
+  Query<Artifact> prepareCleanupQuery(ArtifactStream artifactStream);
+
   void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream);
 
   List<Artifact> listByIds(String accountId, Collection<String> artifactIds);

@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.google.inject.Inject;
@@ -54,7 +55,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
         TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().async(true).appId(GLOBAL_APP_ID).waitId(waitId);
 
-    if (DOCKER.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)) {
+    if (DOCKER.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
+        || ARTIFACTORY.name().equals(artifactStreamType)) {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
         logger.warn("Artifact Server {} was deleted", artifactStream.getSettingId());

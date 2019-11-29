@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -20,19 +21,25 @@ import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
+import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Data
@@ -43,8 +50,10 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   private List<BuildDetails> builds;
 
   @Inject private transient ArtifactService artifactService;
+  @Inject FeatureFlagService featureFlagService;
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject @Named("BuildSourceCleanupCallbackExecutor") private ExecutorService executorService;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   public BuildSourceCleanupCallback() {}
 
@@ -140,8 +149,42 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       cleanupDockerArtifacts(artifactStream, deletedArtifacts);
     } else if (AMI.name().equals(artifactStreamType)) {
       cleanupAMIArtifacts(artifactStream, deletedArtifacts);
+    } else if (ARTIFACTORY.name().equals(artifactStreamType)) {
+      // This might not work for Nexus as we are also calling update nexus status
+      List<Artifact> deletedArtifactsNew = cleanupStaleArtifacts(artifactStream, builds);
+      deletedArtifacts.addAll(deletedArtifactsNew);
     }
+
     return deletedArtifacts;
+  }
+
+  private List<Artifact> cleanupStaleArtifacts(ArtifactStream artifactStream, List<BuildDetails> buildDetails) {
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactCollectionUtils.getArtifactStreamAttributes(artifactStream,
+            featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifactStream.getAccountId()));
+    Map<String, BuildDetails> buildDetailsMap;
+    if (isEmpty(buildDetails)) {
+      buildDetailsMap = Collections.emptyMap();
+    } else {
+      Function<BuildDetails, String> buildDetailsKeyFn = ArtifactCollectionUtils.getBuildDetailsKeyFn(
+          artifactStream.getArtifactStreamType(), artifactStreamAttributes);
+      buildDetailsMap = buildDetails.stream().collect(Collectors.toMap(buildDetailsKeyFn, Function.identity()));
+    }
+
+    Function<Artifact, String> artifactKeyFn =
+        ArtifactCollectionUtils.getArtifactKeyFn(artifactStream.getArtifactStreamType(), artifactStreamAttributes);
+    List<Artifact> toBeDeletedArtifacts = new ArrayList<>();
+    try (HIterator<Artifact> artifactHIterator =
+             new HIterator<>(artifactService.prepareCleanupQuery(artifactStream).fetch())) {
+      for (Artifact artifact : artifactHIterator) {
+        if (!buildDetailsMap.containsKey(artifactKeyFn.apply(artifact))) {
+          toBeDeletedArtifacts.add(artifact);
+        }
+      }
+    }
+
+    artifactService.deleteArtifacts(toBeDeletedArtifacts);
+    return toBeDeletedArtifacts;
   }
 
   private void cleanupDockerArtifacts(ArtifactStream artifactStream, List<Artifact> deletedArtifacts) {
