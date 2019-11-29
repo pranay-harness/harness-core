@@ -7,6 +7,8 @@ import io.harness.batch.processing.processor.K8sNodeInfoProcessor;
 import io.harness.batch.processing.processor.K8sPodEventProcessor;
 import io.harness.batch.processing.processor.K8sPodInfoProcessor;
 import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.reader.K8sGranularUtilizationMetricsReader;
+import io.harness.batch.processing.writer.K8sUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.NodeUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.PodUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
@@ -27,6 +29,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Slf4j
 @Configuration
 public class K8sBatchConfiguration {
@@ -37,6 +41,7 @@ public class K8sBatchConfiguration {
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired @Qualifier("instanceInfoWriter") private ItemWriter instanceInfoWriter;
   @Autowired @Qualifier("instanceEventWriter") private ItemWriter instanceEventWriter;
+  @Autowired private K8sGranularUtilizationMetricsReader k8sGranularUtilizationMetricsReader;
 
   @Bean
   @StepScope
@@ -68,6 +73,12 @@ public class K8sBatchConfiguration {
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
     String messageType = EventTypeConstants.NODE_UTILIZATION;
     return eventReaderFactory.getEventReader(messageType, startDate, endDate);
+  }
+
+  @Bean
+  @StepScope
+  public ItemReader<List<String>> k8sUtilizationAggregationReader() {
+    return new K8sGranularUtilizationMetricsReader();
   }
 
   @Bean
@@ -117,6 +128,11 @@ public class K8sBatchConfiguration {
   }
 
   @Bean
+  public ItemWriter<List<String>> k8sUtilizationAggregationWriter() {
+    return new K8sUtilizationMetricsWriter();
+  }
+
+  @Bean
   @Autowired
   @Qualifier(value = "k8sJob")
   public Job k8sJob(JobBuilderFactory jobBuilderFactory, Step k8sNodeInfoStep, Step k8sNodeEventStep,
@@ -133,12 +149,13 @@ public class K8sBatchConfiguration {
   @Bean
   @Autowired
   @Qualifier(value = "k8sUtilizationJob")
-  public Job k8sUtilizationJob(
-      JobBuilderFactory jobBuilderFactory, Step k8sPodUtilizationEventStep, Step k8sNodeUtilizationEventStep) {
+  public Job k8sUtilizationJob(JobBuilderFactory jobBuilderFactory, Step k8sPodUtilizationEventStep,
+      Step k8sNodeUtilizationEventStep, Step k8sUtilizationAggregationStep) {
     return jobBuilderFactory.get("k8sUtilizationJob")
         .incrementer(new RunIdIncrementer())
         .start(k8sPodUtilizationEventStep)
         .next(k8sNodeUtilizationEventStep)
+        .next(k8sUtilizationAggregationStep)
         .build();
   }
 
@@ -197,6 +214,15 @@ public class K8sBatchConfiguration {
         .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
         .reader(k8sNodeUtilizationEventMessageReader(null, null))
         .writer(nodeUtilizationMetricsWriter())
+        .build();
+  }
+
+  @Bean
+  public Step k8sUtilizationAggregationStep() {
+    return stepBuilderFactory.get("k8sUtilizationAggregationStep")
+        .<List<String>, List<String>>chunk(BATCH_SIZE)
+        .reader(k8sUtilizationAggregationReader())
+        .writer(k8sUtilizationAggregationWriter())
         .build();
   }
 }

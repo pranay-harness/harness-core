@@ -1,6 +1,6 @@
 package io.harness.batch.processing.writer;
 
-import static io.harness.batch.processing.ccm.UtilizationJobType.K8S_NODE;
+import static io.harness.batch.processing.ccm.UtilizationInstanceType.K8S_NODE;
 
 import com.google.inject.Singleton;
 
