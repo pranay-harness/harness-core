@@ -20,8 +20,9 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.serializer.JsonUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AccountPlugin;
@@ -439,8 +440,8 @@ public class PluginServiceImpl implements PluginService {
       URL url = this.getClass().getResource(file);
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
-    } catch (Exception exception) {
-      throw new WingsException("Error reading ui schema - " + file, exception);
+    } catch (Exception e) {
+      throw new InvalidArgumentsException(ImmutablePair.of("file", "Error reading ui schema - " + file), e);
     }
   }
 }

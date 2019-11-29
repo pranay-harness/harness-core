@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.UnknownArtifactStreamTypeException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.service.intfc.AcrBuildService;
@@ -64,7 +64,7 @@ public class ServiceClassLocator {
       case CUSTOM:
         return CustomBuildService.class;
       default:
-        throw new WingsException("Unsupported artifact stream type: " + artifactStreamType);
+        throw new UnknownArtifactStreamTypeException(artifactStreamTypeStr);
     }
   }
 

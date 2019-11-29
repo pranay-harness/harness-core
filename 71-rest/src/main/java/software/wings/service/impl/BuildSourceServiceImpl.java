@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -22,7 +21,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -106,8 +104,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public String getProject(String appId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "GCP Cloud provider Settings Attribute is null");
+      throw new InvalidRequestException("GCP Cloud provider Settings Attribute is null", USER);
     }
     SettingValue settingValue = settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
@@ -533,8 +530,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public String getProject(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "GCP Cloud provider Settings Attribute is null");
+      throw new InvalidRequestException("GCP Cloud provider Settings Attribute is null", USER);
     }
     SettingValue settingValue = settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);

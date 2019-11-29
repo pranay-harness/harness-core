@@ -55,10 +55,10 @@ import io.harness.ccm.CCMSettingService;
 import io.harness.ccm.CloudCostAware;
 import io.harness.data.parser.CsvParser;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
@@ -776,7 +776,7 @@ public class SettingsServiceImpl implements SettingsService {
     String accountId = settingAttribute.getAccountId();
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(
             accountId, settingAttribute.getUsageRestrictions())) {
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
+      throw new UnauthorizedUsageRestrictionsException(USER);
     }
 
     ensureSettingAttributeSafeToDelete(settingAttribute);
