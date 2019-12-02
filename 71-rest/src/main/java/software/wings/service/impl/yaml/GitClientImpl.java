@@ -3,12 +3,14 @@ package software.wings.service.impl.yaml;
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
@@ -29,9 +31,9 @@ import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -111,7 +113,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -125,8 +126,6 @@ import java.util.stream.Stream;
 @Singleton
 @Slf4j
 public class GitClientImpl implements GitClient {
-  private static final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
-
   @Inject GitClientHelper gitClientHelper;
 
   @Override
@@ -155,8 +154,7 @@ public class GitClientImpl implements GitClient {
     } catch (GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
       gitClientHelper.checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "Error in cloning repo")
-          .addParam("message", "Error in cloning repo");
+      throw new YamlException("Error in cloning repo", USER);
     }
   }
 
@@ -190,7 +188,7 @@ public class GitClientImpl implements GitClient {
       git.checkout().setName(gitConfig.getBranch()).call();
       ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
       Repository repository = git.getRepository();
-      ObjectId headCommitId = repository.resolve("HEAD");
+      ObjectId headCommitId = requireNonNull(repository.resolve("HEAD"));
       diffResult.setCommitId(headCommitId.getName());
 
       // Find oldest commit
@@ -218,7 +216,7 @@ public class GitClientImpl implements GitClient {
       }
     } catch (IOException | GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
+      throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
     return diffResult;
   }
@@ -306,10 +304,9 @@ public class GitClientImpl implements GitClient {
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, USER)
-          .addParam("message",
-              format("Unable to checkout given reference: %s",
-                  isEmpty(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()));
+      throw new YamlException(format("Unable to checkout given reference: %s",
+                                  isEmpty(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()),
+          USER);
     }
   }
 
@@ -322,8 +319,6 @@ public class GitClientImpl implements GitClient {
 
     // TODO:: pull latest remote branch??
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
-      String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
-
       String repoDirectory = gitClientHelper.getRepoDirectory(gitOperationContext);
       gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
         String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
@@ -343,8 +338,7 @@ public class GitClientImpl implements GitClient {
             } catch (IOException | GitAPIException ex) {
               logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
                   + "Exception in adding/modifying file to git " + ex);
-              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
-                  .addParam("message", "Error in ADD/MODIFY git operation");
+              throw new YamlException("Error in ADD/MODIFY git operation", USER_ADMIN);
             }
             break;
           //          case COPY:
@@ -374,8 +368,7 @@ public class GitClientImpl implements GitClient {
             } catch (IOException | GitAPIException ex) {
               logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in moving file", ex);
               // TODO:: check before moving and then uncomment this exception
-              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
-                  .addParam("message", "Error in RENAME git operation");
+              throw new YamlException("Error in RENAME git operation", USER_ADMIN);
             }
             break;
           case DELETE:
@@ -393,8 +386,7 @@ public class GitClientImpl implements GitClient {
               }
             } catch (GitAPIException ex) {
               logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in deleting file" + ex);
-              throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
-                  .addParam("message", "Error in DELETE git operation");
+              throw new YamlException("Error in DELETE git operation", USER_ADMIN);
             }
             break;
           default:
@@ -438,7 +430,7 @@ public class GitClientImpl implements GitClient {
 
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in writing commit");
+      throw new YamlException("Error in writing commit", ADMIN_SRE);
     }
   }
 
@@ -476,7 +468,7 @@ public class GitClientImpl implements GitClient {
             gitConfig.getRepoUrl(), remoteRefUpdate.getStatus(), remoteRefUpdate.getMessage(),
             remoteRefUpdate.isForceUpdate(), remoteRefUpdate.isFastForward());
         logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + errorMsg);
-        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, errorMsg).addParam("message", errorMsg);
+        throw new YamlException(errorMsg, ADMIN_SRE);
       }
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
@@ -486,7 +478,7 @@ public class GitClientImpl implements GitClient {
       }
 
       gitClientHelper.checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
+      throw new YamlException(errorMsg, USER);
     }
   }
 
@@ -543,7 +535,7 @@ public class GitClientImpl implements GitClient {
 
         } catch (IOException | GitAPIException ex) {
           logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-          throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
+          throw new YamlException("Error in getting commit diff", USER_ADMIN);
         }
 
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
@@ -556,19 +548,18 @@ public class GitClientImpl implements GitClient {
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
-        throw new WingsException(GENERAL_ERROR,
-            new StringBuilder()
-                .append("Failed while fetching files between commits ")
-                .append("Account: ")
-                .append(gitConfig.getAccountId())
-                .append(", newCommitId: ")
-                .append(gitRequest.getNewCommitId())
-                .append(", oldCommitId: ")
-                .append(gitRequest.getOldCommitId())
-                .append(", gitConnectorId: ")
-                .append(gitRequest.getGitConnectorId())
-                .toString(),
-            e);
+        throw new YamlException(new StringBuilder()
+                                    .append("Failed while fetching files between commits ")
+                                    .append("Account: ")
+                                    .append(gitConfig.getAccountId())
+                                    .append(", newCommitId: ")
+                                    .append(gitRequest.getNewCommitId())
+                                    .append(", oldCommitId: ")
+                                    .append(gitRequest.getOldCommitId())
+                                    .append(", gitConnectorId: ")
+                                    .append(gitRequest.getGitConnectorId())
+                                    .toString(),
+            ADMIN_SRE);
       }
     }
   }
@@ -587,13 +578,11 @@ public class GitClientImpl implements GitClient {
 
   private void validateRequiredArgsForFilesBetweenCommit(String oldCommitId, String newCommitId) {
     if (isEmpty(oldCommitId)) {
-      throw new WingsException(GENERAL_ERROR, "Old commit id can not be empty", USER)
-          .addParam("message", "Old commit id can not be empty");
+      throw new YamlException("Old commit id can not be empty", USER_ADMIN);
     }
 
     if (isEmpty(newCommitId)) {
-      throw new WingsException(GENERAL_ERROR, "New commit id can not be empty", USER)
-          .addParam("message", "New commit id can not be empty");
+      throw new YamlException("New commit id can not be empty", USER_ADMIN);
     }
   }
 
@@ -631,9 +620,7 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory) {
-    if (gitConfig.getGitRepoType() == null) {
-      gitConfig.setGitRepoType(GitRepositoryType.YAML);
-    }
+    defaultRepoTypeToYaml(gitConfig);
 
     validateRequiredArgs(gitRequest);
     String gitConnectorId = gitRequest.getGitConnectorId();
@@ -657,15 +644,15 @@ public class GitClientImpl implements GitClient {
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
-        throw new WingsException(GENERAL_ERROR, e)
-            .addParam("message",
-                new StringBuilder()
-                    .append("Failed while fetching files ")
-                    .append(gitRequest.isUseBranch() ? "for Branch: " : "for CommitId: ")
-                    .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
-                    .append(", FilePaths: ")
-                    .append(gitRequest.getFilePaths())
-                    .toString());
+        throw new YamlException(
+            new StringBuilder()
+                .append("Failed while fetching files ")
+                .append(gitRequest.isUseBranch() ? "for Branch: " : "for CommitId: ")
+                .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
+                .append(", FilePaths: ")
+                .append(gitRequest.getFilePaths())
+                .toString(),
+            USER);
       }
     }
   }
@@ -673,9 +660,7 @@ public class GitClientImpl implements GitClient {
   @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
     // Default it to yaml
-    if (gitConfig.getGitRepoType() == null) {
-      gitConfig.setGitRepoType(GitRepositoryType.YAML);
-    }
+    defaultRepoTypeToYaml(gitConfig);
 
     validateRequiredArgs(gitRequest);
 
@@ -700,14 +685,14 @@ public class GitClientImpl implements GitClient {
                 .forEach(path -> gitClientHelper.addFiles(gitFiles, path, repoPath));
           } catch (Exception e) {
             resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
-            throw new WingsException(GENERAL_ERROR, USER, e)
-                .addParam("message",
-                    new StringBuilder("Unable to checkout files for filePath [")
-                        .append(filePath)
-                        .append("]")
-                        .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
-                        .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
-                        .toString());
+            throw new YamlException(
+                new StringBuilder("Unable to checkout files for filePath [")
+                    .append(filePath)
+                    .append("]")
+                    .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
+                    .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
+                    .toString(),
+                USER);
           }
         });
 
@@ -726,24 +711,22 @@ public class GitClientImpl implements GitClient {
       } catch (WingsException e) {
         throw e;
       } catch (Exception e) {
-        throw new WingsException(GENERAL_ERROR, e)
-            .addParam("message",
-                new StringBuilder()
-                    .append("Failed while fetching files ")
-                    .append(gitRequest.isUseBranch() ? "for Branch: " : "for CommitId: ")
-                    .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
-                    .append(", FilePaths: ")
-                    .append(gitRequest.getFilePaths())
-                    .toString());
+        throw new YamlException(
+            new StringBuilder()
+                .append("Failed while fetching files ")
+                .append(gitRequest.isUseBranch() ? "for Branch: " : "for CommitId: ")
+                .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
+                .append(", FilePaths: ")
+                .append(gitRequest.getFilePaths())
+                .toString(),
+            USER);
       }
     }
   }
 
   @Override
   public void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
-    if (gitConfig.getGitRepoType() == null) {
-      gitConfig.setGitRepoType(GitRepositoryType.YAML);
-    }
+    defaultRepoTypeToYaml(gitConfig);
 
     validateRequiredArgs(gitRequest);
     checkoutFiles(gitConfig, gitRequest);
@@ -767,18 +750,15 @@ public class GitClientImpl implements GitClient {
   private void validateRequiredArgs(GitFetchFilesRequest gitRequest) {
     // FilePath cant empty as well as (Branch and commitId both cant be empty)
     if (isEmpty(gitRequest.getFilePaths())) {
-      throw new WingsException(GENERAL_ERROR, "FilePaths  can not be empty", USER)
-          .addParam("message", "FilePaths  can not be empty");
+      throw new InvalidRequestException("FilePaths  can not be empty", USER);
     }
 
     if (gitRequest.isUseBranch() && isEmpty(gitRequest.getBranch())) {
-      throw new WingsException(GENERAL_ERROR, "useBrach was set but branch is not provided", USER)
-          .addParam("message", "useBranch was set but branch is not provided");
+      throw new InvalidRequestException("useBranch was set but branch is not provided", USER);
     }
 
     if (!gitRequest.isUseBranch() && isEmpty(gitRequest.getCommitId())) {
-      throw new WingsException("useBranch was false but CommitId was not provided", USER)
-          .addParam("message", "useBranch was false but CommitId was not provided");
+      throw new InvalidRequestException("useBranch was false but CommitId was not provided", USER);
     }
   }
 
@@ -792,8 +772,7 @@ public class GitClientImpl implements GitClient {
     } catch (Exception ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
-          .addParam("message", "Error in checking out commit id " + commitId);
+      throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
   }
 
@@ -809,8 +788,7 @@ public class GitClientImpl implements GitClient {
     } catch (Exception ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
-          .addParam("message", "Error in checking out commit id " + commitId);
+      throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
   }
 
@@ -838,8 +816,7 @@ public class GitClientImpl implements GitClient {
     } catch (Exception ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
-          .addParam("message", "Error in checking out Branch " + branch);
+      throw new YamlException("Error in checking out Branch " + branch, USER);
     }
   }
 
@@ -853,7 +830,7 @@ public class GitClientImpl implements GitClient {
     } catch (Exception ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in resetting repo");
+      throw new YamlException("Error in resetting repo", USER);
     }
   }
 
@@ -1086,5 +1063,15 @@ public class GitClientImpl implements GitClient {
       @Override
       protected void configure(Host hc, Session session) {}
     };
+  }
+
+  /*
+    This method need not be thread safe because even if any one thread sets the repo type then it
+     is fine
+   */
+  private void defaultRepoTypeToYaml(GitConfig gitConfig) {
+    if (gitConfig.getGitRepoType() == null) {
+      gitConfig.setGitRepoType(GitRepositoryType.YAML);
+    }
   }
 }
