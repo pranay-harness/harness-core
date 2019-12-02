@@ -2,7 +2,6 @@ package software.wings.utils;
 
 import com.google.common.collect.ImmutableMap;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -11,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
 public class PowerShellScriptsLoader {
   public enum PsScript {
     DownloadArtifact(1, "Download Artifact"),

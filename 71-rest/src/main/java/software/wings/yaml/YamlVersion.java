@@ -5,7 +5,6 @@ import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.HarnessEntity;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -155,7 +154,6 @@ public class YamlVersion extends Base implements YamlHistory {
     TAGS
   }
 
-  @SuppressFBWarnings("CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE") // TODO
   public YamlVersion clone() {
     return aYamlVersion()
         .withUuid(getYamlVersionId())

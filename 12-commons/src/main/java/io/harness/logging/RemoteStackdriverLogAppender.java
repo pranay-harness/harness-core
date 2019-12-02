@@ -25,7 +25,6 @@ import com.google.common.collect.Queues;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -168,7 +167,6 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     }
   }
 
-  @SuppressFBWarnings("LI_LAZY_INIT_STATIC")
   private void ensureLoggingInitialized() {
     if (logging != null) {
       Date nineMinutesFromNow = new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(9));

@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -123,7 +122,6 @@ public class ScimUserServiceImpl implements ScimUserService {
   }
 
   @Override
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   public ScimListResponse<ScimUser> searchUser(String accountId, String filter, Integer count, Integer startIndex) {
     startIndex = startIndex == null ? 0 : startIndex;
     count = count == null ? MAX_RESULT_COUNT : count;

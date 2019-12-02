@@ -12,7 +12,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -179,7 +178,6 @@ public class JsonUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public void testGetBuildDetails() throws IOException {
     File file = new File(System.getProperty("java.io.tmpdir") + "/"
         + "mapped.json");

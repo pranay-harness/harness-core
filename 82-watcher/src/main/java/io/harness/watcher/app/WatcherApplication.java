@@ -14,7 +14,6 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.event.client.impl.tailer.TailerModule.Config;
@@ -95,7 +94,6 @@ public class WatcherApplication {
     watcherApplication.run(configuration, upgrade, previousWatcherProcess);
   }
 
-  @SuppressFBWarnings("DM_EXIT")
   private void run(WatcherConfiguration configuration, boolean upgrade, String previousWatcherProcess)
       throws Exception {
     int cores = Runtime.getRuntime().availableProcessors();

@@ -72,7 +72,6 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.sun.management.OperatingSystemMXBean;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateScripts;
@@ -286,7 +285,6 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateId;
   }
 
-  @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP", "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"})
   @Override
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
@@ -690,7 +688,6 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  @SuppressFBWarnings({"DM_EXIT"})
   private String registerDelegate(DelegateBuilder builder) {
     updateBuilderIfEcsDelegate(builder);
     AtomicInteger attempts = new AtomicInteger(0);

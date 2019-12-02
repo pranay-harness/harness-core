@@ -70,7 +70,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
@@ -166,7 +165,6 @@ public class WatcherServiceImpl implements WatcherService {
   private final Set<Integer> illegalVersions = new HashSet<>();
   private final Map<String, Long> delegateVersionMatchedAt = new HashMap<>();
 
-  @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   @Override
   public void run(boolean upgrade) {
     WatcherStackdriverLogAppender.setTimeLimiter(timeLimiter);
@@ -1044,7 +1042,6 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
-  @SuppressFBWarnings({"DM_EXIT", "DE_MIGHT_IGNORE"})
   private void selfDestruct() {
     logger.info("Self destructing now...");
 

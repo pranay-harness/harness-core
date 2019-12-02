@@ -8,7 +8,6 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -225,7 +224,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  @SuppressFBWarnings("DM_BOXED_PRIMITIVE_FOR_PARSING")
   public String getTierByName(String analysisServerConfigId, String applicationId, String tierName) {
     try {
       String tierId = null;

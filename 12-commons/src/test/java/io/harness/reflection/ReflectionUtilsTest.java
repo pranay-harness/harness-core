@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
@@ -23,10 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ReflectionUtilsTest extends CategoryTest {
-  @SuppressFBWarnings("UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD")
-  private static class FieldBase {
-    public String baseField;
-  }
+  private static class FieldBase { public String baseField; }
 
   private static class Field extends FieldBase {
     public String field;

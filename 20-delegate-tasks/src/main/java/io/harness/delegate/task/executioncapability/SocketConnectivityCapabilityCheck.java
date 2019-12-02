@@ -2,7 +2,6 @@ package io.harness.delegate.task.executioncapability;
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
@@ -16,7 +15,6 @@ import java.net.Socket;
 @Singleton
 public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
   @Override
-  @SuppressFBWarnings("DM_BOXED_PRIMITIVE_FOR_PARSING")
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SocketConnectivityExecutionCapability socketConnCapability =
         (SocketConnectivityExecutionCapability) delegateCapability;

@@ -11,7 +11,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import com.hazelcast.core.HazelcastInstance;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.harness.event.EventsModule;
@@ -70,7 +69,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
     dataGenApplication.run(args);
   }
 
-  @SuppressFBWarnings("DM_EXIT")
   @Override
   public void run(MainConfiguration configuration, Environment environment) throws Exception {
     logger.info("Starting app ...");

@@ -1,7 +1,5 @@
 package software.wings.verification;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,7 +85,6 @@ public final class Ansi {
   private final String[] codes;
   private final String codes_str;
 
-  @SuppressFBWarnings("SBSC_USE_STRINGBUFFER_CONCATENATION")
   public Ansi(String... codes) {
     this.codes = codes;
     String _codes_str = "";
