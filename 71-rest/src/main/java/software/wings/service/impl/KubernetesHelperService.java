@@ -27,7 +27,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.model.DoneableHorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerList;
@@ -238,7 +237,6 @@ public class KubernetesHelperService {
    * use DefaultKubernetesClient(config) constructor version as it internally call
    * super(createHttpClient(config), config)
    */
-  @SuppressFBWarnings({"NP_LOAD_OF_KNOWN_NULL_VALUE", "NP_ALWAYS_NULL"})
   private OkHttpClient createHttpClientWithProxySetting(final Config config) {
     try {
       OkHttpClient.Builder httpClientBuilder = getOkHttpClientBuilder();
@@ -462,7 +460,6 @@ public class KubernetesHelperService {
     }
   }
 
-  @SuppressFBWarnings("DMI_HARDCODED_ABSOLUTE_FILENAME")
   public static KubernetesConfig getKubernetesConfigFromServiceAccount(String namespace) {
     KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder().namespace(namespace);
 

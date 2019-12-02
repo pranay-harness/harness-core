@@ -1,6 +1,5 @@
 package io.harness.serializer.morphia;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.ClusterBudgetScope;
@@ -689,7 +688,6 @@ import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressFBWarnings("URF_UNREAD_FIELD")
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
   private String k8s = "helpers.ext.k8s.";

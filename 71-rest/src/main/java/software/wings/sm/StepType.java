@@ -105,7 +105,6 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonValue;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingType;
@@ -212,7 +211,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StepType {
   // Important: Do not change the order of StepTypes in the enum.

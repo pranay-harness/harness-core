@@ -23,7 +23,6 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateService;
@@ -113,7 +112,6 @@ public class DelegateApplication {
     delegateApplication.run(configuration, watcherProcess);
   }
 
-  @SuppressFBWarnings("DM_EXIT")
   private void run(DelegateConfiguration configuration, String watcherProcess) {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
