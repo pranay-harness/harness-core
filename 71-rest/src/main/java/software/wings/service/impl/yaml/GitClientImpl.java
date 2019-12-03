@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -22,6 +23,7 @@ import static software.wings.beans.yaml.YamlConstants.GIT_HELM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
@@ -48,6 +50,7 @@ import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -80,6 +83,7 @@ import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.FS;
 import org.eclipse.jgit.util.HttpSupport;
+import org.jetbrains.annotations.NotNull;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitOperationContext;
@@ -112,7 +116,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -315,107 +318,29 @@ public class GitClientImpl implements GitClient {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
     GitCommitRequest gitCommitRequest = gitOperationContext.getGitCommitRequest();
 
+    List<String> filesToAdd = new ArrayList<>();
+    List<String> filesToDelete = new ArrayList<>();
+
     ensureRepoLocallyClonedAndUpdated(gitOperationContext);
 
-    // TODO:: pull latest remote branch??
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
-      String repoDirectory = gitClientHelper.getRepoDirectory(gitOperationContext);
-      gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
-        String filePath = repoDirectory + "/" + gitFileChange.getFilePath();
-        File file = new File(filePath);
-        final ChangeType changeType = gitFileChange.getChangeType();
-        switch (changeType) {
-          case ADD:
-          case MODIFY:
-            try {
-              logger.info(
-                  getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Adding git file " + gitFileChange.toString());
-              FileUtils.forceMkdir(file.getParentFile());
-              FileUtils.writeStringToFile(file, gitFileChange.getFileContent(), UTF_8);
-              git.add().addFilepattern(".").call();
-              //              commitMessage.append(format("%s: %s\n", gitFileChange.getChangeType(),
-              //              gitFileChange.getFilePath()));
-            } catch (IOException | GitAPIException ex) {
-              logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
-                  + "Exception in adding/modifying file to git " + ex);
-              throw new YamlException("Error in ADD/MODIFY git operation", USER_ADMIN);
-            }
-            break;
-          //          case COPY:
-          //            throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, "message", "Unhandled git operation: " +
-          //            gitFileChange.getChangeType());
-          case RENAME:
-            try {
-              logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Old path:[{}], new path: [{}]",
-                  gitFileChange.getOldFilePath(), gitFileChange.getFilePath());
-              String oldFilePath = repoDirectory + "/" + gitFileChange.getOldFilePath();
-              String newFilePath = repoDirectory + "/" + gitFileChange.getFilePath();
+      applyChangeSetOnFileSystem(gitClientHelper.getRepoDirectory(gitOperationContext), gitConfig, gitCommitRequest,
+          filesToAdd, filesToDelete);
 
-              File oldFile = new File(oldFilePath);
-              File newFile = new File(newFilePath);
+      /* Removal of files should happen before addition of files. TODO:: Add test to ensure behaviour */
+      applyGitRmCommand(gitOperationContext, filesToDelete, git);
+      applyGitAddCommand(gitOperationContext, filesToAdd, git);
 
-              if (oldFile.exists()) {
-                Path path = Files.move(oldFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                git.add().addFilepattern(gitFileChange.getFilePath()).call();
-                git.rm().addFilepattern(gitFileChange.getOldFilePath()).call();
-                //                commitMessage.append(
-                //                    format("%s: %s -> %s\n", gitFileChange.getChangeType(),
-                //                    gitFileChange.getOldFilePath(), gitFileChange.getFilePath()));
-              } else {
-                logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File doesn't exist. path: [{}]",
-                    gitFileChange.getOldFilePath());
-              }
-            } catch (IOException | GitAPIException ex) {
-              logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in moving file", ex);
-              // TODO:: check before moving and then uncomment this exception
-              throw new YamlException("Error in RENAME git operation", USER_ADMIN);
-            }
-            break;
-          case DELETE:
-            try {
-              File fileToBeDeleted = new File(repoDirectory + "/" + gitFileChange.getFilePath());
-              if (fileToBeDeleted.exists()) {
-                logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Deleting git file "
-                    + gitFileChange.toString());
-                git.rm().addFilepattern(gitFileChange.getFilePath()).call();
-                //                commitMessage.append(format("%s: %s\n", gitFileChange.getChangeType(),
-                //                gitFileChange.getFilePath()));
-              } else {
-                logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File already deleted. path: [{}]",
-                    gitFileChange.getFilePath());
-              }
-            } catch (GitAPIException ex) {
-              logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in deleting file" + ex);
-              throw new YamlException("Error in DELETE git operation", USER_ADMIN);
-            }
-            break;
-          default:
-            unhandled(changeType);
-        }
-      });
       Status status = git.status().call();
 
-      StringBuilder commitMessage = new StringBuilder(48);
-
-      if (status.getAdded().isEmpty() && status.getChanged().isEmpty() && status.getRemoved().isEmpty()) {
+      if (status.isClean()) {
         logger.warn(
             getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "No git change to commit. GitCommitRequest: [{}]",
             gitCommitRequest);
         return GitCommitResult.builder().build(); // do nothing
-      } else {
-        if (isNotBlank(gitConfig.getCommitMessage())) {
-          commitMessage.append(gitConfig.getCommitMessage());
-        } else {
-          commitMessage.append("Harness IO Git Sync. \n");
-          status.getAdded().forEach(
-              filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
-          status.getChanged().forEach(
-              filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
-          status.getRemoved().forEach(
-              filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
-        }
       }
 
+      StringBuilder commitMessage = prepareCommitMessage(gitConfig, status);
       String authorName = isNotBlank(gitConfig.getAuthorName()) ? gitConfig.getAuthorName() : HARNESS_IO_KEY_;
       String authorEmailId =
           isNotBlank(gitConfig.getAuthorEmailId()) ? gitConfig.getAuthorEmailId() : HARNESS_SUPPORT_EMAIL_KEY;
@@ -432,6 +357,108 @@ public class GitClientImpl implements GitClient {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       throw new YamlException("Error in writing commit", ADMIN_SRE);
     }
+  }
+
+  @NotNull
+  private StringBuilder prepareCommitMessage(GitConfig gitConfig, Status status) {
+    StringBuilder commitMessage = new StringBuilder(48);
+    if (isNotBlank(gitConfig.getCommitMessage())) {
+      commitMessage.append(gitConfig.getCommitMessage());
+    } else {
+      commitMessage.append("Harness IO Git Sync. \n");
+      status.getAdded().forEach(
+          filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.ADD, filePath)));
+      status.getChanged().forEach(
+          filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.MODIFY, filePath)));
+      status.getRemoved().forEach(
+          filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
+    }
+    return commitMessage;
+  }
+
+  private void applyGitAddCommand(GitOperationContext gitOperationContext, List<String> filesToAdd, Git git) {
+    /*
+    We do not need to specifically git add every added/modified file. git add . will take care
+    of this
+     */
+    if (isNotEmpty(filesToAdd)) {
+      try {
+        git.add().addFilepattern(".").call();
+      } catch (GitAPIException ex) {
+        throw new YamlException(
+            format("Error in add/modify git operation connectorId:[%s]", gitOperationContext.getGitConnectorId()),
+            ADMIN_SRE);
+      }
+    }
+  }
+
+  private void applyGitRmCommand(GitOperationContext gitOperationContext, List<String> filesToDelete, Git git) {
+    if (isNotEmpty(filesToDelete)) {
+      try {
+        RmCommand rmCommand = git.rm();
+        filesToDelete.forEach(rmCommand::addFilepattern);
+        rmCommand.call();
+      } catch (GitAPIException ex) {
+        throw new YamlException(format("Error in delete git operation for files [%s] connectorId:[%s]",
+                                    String.join(",", filesToDelete), gitOperationContext.getGitConnectorId()),
+            ADMIN_SRE);
+      }
+    }
+  }
+
+  private void applyChangeSetOnFileSystem(String repoDirectory, GitConfig gitConfig, GitCommitRequest gitCommitRequest,
+      List<String> filesToAdd, List<String> filesToDelete) {
+    gitCommitRequest.getGitFileChanges().forEach(gitFileChange -> {
+      String filePath = repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath();
+      File file = new File(filePath);
+      final ChangeType changeType = gitFileChange.getChangeType();
+      switch (changeType) {
+        case ADD:
+        case MODIFY:
+          try {
+            logger.info(
+                getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Adding git file " + gitFileChange.toString());
+            FileUtils.forceMkdir(file.getParentFile());
+            FileUtils.writeStringToFile(file, gitFileChange.getFileContent(), UTF_8);
+            filesToAdd.add(gitFileChange.getFilePath());
+          } catch (IOException ex) {
+            logger.error(
+                getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception in adding/modifying file to git " + ex);
+            throw new YamlException("IOException in ADD/MODIFY git operation", ADMIN);
+          }
+          break;
+        case RENAME:
+          logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Old path:[{}], new path: [{}]",
+              gitFileChange.getOldFilePath(), gitFileChange.getFilePath());
+          String oldFilePath = repoDirectory + PATH_DELIMITER + gitFileChange.getOldFilePath();
+          String newFilePath = repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath();
+
+          File oldFile = new File(oldFilePath);
+          File newFile = new File(newFilePath);
+
+          if (oldFile.exists()) {
+            filesToAdd.add(gitFileChange.getFilePath());
+            filesToDelete.add(gitFileChange.getOldFilePath());
+          } else {
+            logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File doesn't exist. path: [{}]",
+                gitFileChange.getOldFilePath());
+          }
+          break;
+        case DELETE:
+          File fileToBeDeleted = new File(repoDirectory + PATH_DELIMITER + gitFileChange.getFilePath());
+          if (fileToBeDeleted.exists()) {
+            logger.info(
+                getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Deleting git file " + gitFileChange.toString());
+            filesToDelete.add(gitFileChange.getFilePath());
+          } else {
+            logger.warn(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "File already deleted. path: [{}]",
+                gitFileChange.getFilePath());
+          }
+          break;
+        default:
+          unhandled(changeType);
+      }
+    });
   }
 
   @Override
@@ -1065,10 +1092,6 @@ public class GitClientImpl implements GitClient {
     };
   }
 
-  /*
-    This method need not be thread safe because even if any one thread sets the repo type then it
-     is fine
-   */
   private void defaultRepoTypeToYaml(GitConfig gitConfig) {
     if (gitConfig.getGitRepoType() == null) {
       gitConfig.setGitRepoType(GitRepositoryType.YAML);
