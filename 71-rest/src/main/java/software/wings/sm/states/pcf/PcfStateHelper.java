@@ -91,11 +91,13 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.rollback.RollbackStateMachineGenerator;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
@@ -123,6 +125,7 @@ public class PcfStateHelper {
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient StateExecutionService stateExecutionService;
   @Inject private transient SweepingOutputService sweepingOutputService;
+  @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
@@ -660,13 +663,14 @@ public class PcfStateHelper {
         return SetupSweepingOutputPcf.builder().build();
       } else {
         if (checkSameServiceAndInfra(sweepingOutputInquiry, previousPhaseStateExecutionInstance)) {
+          String phaseName = getPhaseNameForQuery(sweepingOutputInquiry.getAppId(),
+              sweepingOutputInquiry.getWorkflowExecutionId(), previousPhaseStateExecutionInstance.getStateName());
           SweepingOutputInquiry newSweepingOutputInquiry =
               SweepingOutputInquiry.builder()
                   .appId(sweepingOutputInquiry.getAppId())
                   .workflowExecutionId(sweepingOutputInquiry.getWorkflowExecutionId())
                   .stateExecutionId(previousPhaseStateExecutionInstance.getUuid())
-                  .name(
-                      SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + previousPhaseStateExecutionInstance.getStateName())
+                  .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseName)
                   .build();
           return findSetupSweepingOutput(newSweepingOutputInquiry);
         } else {
@@ -701,6 +705,17 @@ public class PcfStateHelper {
                                      .name(InfoVariables.SWEEPING_OUTPUT_NAME)
                                      .value(setupSweepingOutputPcf.fetchPcfVariableInfo())
                                      .build());
+    }
+  }
+
+  @VisibleForTesting
+  String getPhaseNameForQuery(String appId, String workflowExecutionId, String name) {
+    boolean isOnDemand = workflowExecutionService.checkIfOnDemand(appId, workflowExecutionId);
+    if (!isOnDemand) {
+      return name;
+    } else {
+      return name.replace(
+          RollbackStateMachineGenerator.STAGING_PHASE_NAME + RollbackStateMachineGenerator.WHITE_SPACE, "");
     }
   }
 }
