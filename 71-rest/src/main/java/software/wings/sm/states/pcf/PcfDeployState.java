@@ -139,11 +139,8 @@ public class PcfDeployState extends State {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    SetupSweepingOutputPcf setupSweepingOutputPcf = (SetupSweepingOutputPcf) sweepingOutputService.findSweepingOutput(
-        context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build());
-    if (setupSweepingOutputPcf == null) {
-      setupSweepingOutputPcf = SetupSweepingOutputPcf.builder().build();
-    }
+    SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
+    pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
 
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
@@ -321,7 +318,7 @@ public class PcfDeployState extends State {
 
     if (!isRollback()) {
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-                                     .name(pcfStateHelper.obtainDeploySweepingOutputName(context, false, true))
+                                     .name(pcfStateHelper.obtainDeploySweepingOutputName(context, false))
                                      .value(DeploySweepingOutputPcf.builder()
                                                 .instanceData(stateExecutionData.getInstanceData())
                                                 .name(stateExecutionData.getReleaseName())

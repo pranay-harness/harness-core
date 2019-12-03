@@ -1,10 +1,12 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static io.harness.pcf.model.PcfConstants.LEGACY_NAME_PCF_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +20,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.COMMAND;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
@@ -29,10 +32,14 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
+import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
 
@@ -41,7 +48,6 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
@@ -55,10 +61,15 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement;
+import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.ServiceElement;
+import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
+import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -86,8 +97,15 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.Builder;
+import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Arrays;
@@ -139,6 +157,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private DelegateService delegateService;
+  @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks @Inject private PcfStateHelper pcfStateHelper;
   @Mock private ExecutionContext context;
 
@@ -313,7 +333,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetDelegateTask() throws Exception {
-    String waitId = UUIDGenerator.generateUuid();
+    String waitId = generateUuid();
     PcfDelegateTaskCreationData pcfDelegateTaskCreationData = PcfDelegateTaskCreationData.builder()
                                                                   .appId(APP_ID)
                                                                   .accountId(ACCOUNT_ID)
@@ -729,5 +749,194 @@ public class PcfStateHelperTest extends WingsBaseTest {
 
     appManifestMap.remove(K8sValuesLocation.Service);
     assertThat(pcfStateHelper.isManifestInGit(appManifestMap)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testFindSetupSweepingOutputForNewExecution() throws Exception {
+    final String infraDefinitionId = generateUuid();
+    final String setupSweepingOutputPcfId = generateUuid();
+    final String phaseName = "Phase 1";
+    PhaseElement phaseElement =
+        PhaseElement.builder().infraDefinitionId(infraDefinitionId).phaseName(phaseName).build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.prepareSweepingOutputInquiryBuilder())
+        .thenReturn(SweepingOutputInquiry.builder()
+                        .appId(APP_ID)
+                        .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                        .stateExecutionId(STATE_EXECUTION_ID));
+    SetupSweepingOutputPcf setupSweepingOutputPcf =
+        SetupSweepingOutputPcf.builder()
+            .uuid(setupSweepingOutputPcfId)
+            .name(PCF_SERVICE_NAME)
+            .maxInstanceCount(10)
+            .desiredActualFinalCount(10)
+            .pcfCommandRequest(PcfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
+            .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+                                          .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
+                                          .applicationGuid("1")
+                                          .build())
+            .infraMappingId(INFRA_MAPPING_ID)
+            .resizeStrategy(RESIZE_NEW_FIRST)
+            .routeMaps(Arrays.asList("R1", "R2"))
+            .build();
+
+    when(sweepingOutputService.findSweepingOutput(any())).thenReturn(setupSweepingOutputPcf);
+    SetupSweepingOutputPcf sweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, false);
+    assertThat(sweepingOutputPcf).isNotNull();
+    assertThat(sweepingOutputPcf.getUuid()).isEqualTo(setupSweepingOutputPcfId);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testFindSetupSweepingOutputSecondPhase() throws Exception {
+    final String infraDefinitionId = generateUuid();
+    final String phaseName = "Phase 1";
+    SweepingOutputInquiryBuilder sweepingOutputInquiryBuilder = SweepingOutputInquiry.builder()
+                                                                    .appId(APP_ID)
+                                                                    .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                                    .stateExecutionId(STATE_EXECUTION_ID);
+    PhaseElement phaseElement =
+        PhaseElement.builder().infraDefinitionId(infraDefinitionId).phaseName(phaseName).build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.prepareSweepingOutputInquiryBuilder()).thenReturn(sweepingOutputInquiryBuilder);
+    when(sweepingOutputService.findSweepingOutput(
+             sweepingOutputInquiryBuilder.name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseName).build()))
+        .thenReturn(null);
+    when(stateExecutionService.fetchPreviousPhaseStateExecutionInstance(
+             APP_ID, WORKFLOW_EXECUTION_ID, STATE_EXECUTION_ID))
+        .thenReturn(null);
+    SetupSweepingOutputPcf sweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, false);
+    assertThat(sweepingOutputPcf).isNotNull();
+    assertThat(sweepingOutputPcf.getUuid()).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testFindSetupSweepingOutputSecondPhaseServiceRepeat() throws Exception {
+    final String infraDefinitionId = generateUuid();
+    final String firstPhaseName = "Phase 1";
+    final String secondPhaseName = "Phase 2";
+    final String currentStateExecutionId = generateUuid();
+    final String previousStateExecutionId = generateUuid();
+    final String serviceId = generateUuid();
+    final String setupSweepingOutputPcfId = generateUuid();
+
+    SetupSweepingOutputPcf setupSweepingOutputPcf =
+        SetupSweepingOutputPcf.builder()
+            .uuid(setupSweepingOutputPcfId)
+            .name(PCF_SERVICE_NAME)
+            .maxInstanceCount(10)
+            .desiredActualFinalCount(10)
+            .pcfCommandRequest(PcfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
+            .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+                                          .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
+                                          .applicationGuid("1")
+                                          .build())
+            .infraMappingId(INFRA_MAPPING_ID)
+            .resizeStrategy(RESIZE_NEW_FIRST)
+            .routeMaps(Arrays.asList("R1", "R2"))
+            .build();
+
+    PhaseExecutionData phaseExecutionData = PhaseExecutionDataBuilder.aPhaseExecutionData()
+                                                .withInfraDefinitionId(INFRA_DEFINITION_ID)
+                                                .withServiceId(serviceId)
+                                                .build();
+    SweepingOutputInquiryBuilder sweepingOutputInquiryBuilder1 = SweepingOutputInquiry.builder()
+                                                                     .appId(APP_ID)
+                                                                     .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                                     .stateExecutionId(currentStateExecutionId);
+    SweepingOutputInquiryBuilder sweepingOutputInquiryBuilder2 = SweepingOutputInquiry.builder()
+                                                                     .appId(APP_ID)
+                                                                     .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+                                                                     .stateExecutionId(previousStateExecutionId);
+    PhaseElement phaseElement =
+        PhaseElement.builder().infraDefinitionId(infraDefinitionId).phaseName(secondPhaseName).build();
+
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.prepareSweepingOutputInquiryBuilder()).thenReturn(sweepingOutputInquiryBuilder1);
+    when(sweepingOutputService.findSweepingOutput(
+             sweepingOutputInquiryBuilder1.name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + secondPhaseName).build()))
+        .thenReturn(null);
+
+    when(sweepingOutputService.findSweepingOutput(
+             sweepingOutputInquiryBuilder2.name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + firstPhaseName).build()))
+        .thenReturn(setupSweepingOutputPcf);
+
+    StateExecutionInstance currentStateExecutionInstance = Builder.aStateExecutionInstance()
+                                                               .uuid(currentStateExecutionId)
+                                                               .displayName(secondPhaseName)
+                                                               .stateName(secondPhaseName)
+                                                               .appId(APP_ID)
+                                                               .executionUuid(WORKFLOW_EXECUTION_ID)
+                                                               .stateType(StateType.PHASE.name())
+                                                               .addContextElement(phaseElement)
+                                                               .build();
+
+    StateExecutionInstance previousStateExecutionInstance = Builder.aStateExecutionInstance()
+                                                                .uuid(previousStateExecutionId)
+                                                                .displayName(firstPhaseName)
+                                                                .stateName(firstPhaseName)
+                                                                .appId(APP_ID)
+                                                                .executionUuid(WORKFLOW_EXECUTION_ID)
+                                                                .stateType(StateType.PHASE.name())
+                                                                .addContextElement(phaseElement)
+                                                                .build();
+
+    when(stateExecutionService.fetchPreviousPhaseStateExecutionInstance(
+             APP_ID, WORKFLOW_EXECUTION_ID, currentStateExecutionId))
+        .thenReturn(previousStateExecutionInstance);
+    when(stateExecutionService.fetchCurrentPhaseStateExecutionInstance(
+             APP_ID, WORKFLOW_EXECUTION_ID, currentStateExecutionId))
+        .thenReturn(currentStateExecutionInstance);
+
+    when(stateExecutionService.fetchPhaseExecutionDataSweepingOutput(currentStateExecutionInstance))
+        .thenReturn(phaseExecutionData);
+    when(stateExecutionService.fetchPhaseExecutionDataSweepingOutput(previousStateExecutionInstance))
+        .thenReturn(phaseExecutionData);
+
+    SetupSweepingOutputPcf sweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, false);
+    assertThat(sweepingOutputPcf).isNotNull();
+    assertThat(sweepingOutputPcf.getUuid()).isEqualTo(setupSweepingOutputPcf.getUuid());
+    assertThat(sweepingOutputPcf.getName()).isEqualTo(setupSweepingOutputPcf.getName());
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testObtainDeploySweepingOutputName() {
+    PhaseElement phaseElement =
+        PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName("Phase 1").build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    String outputName = pcfStateHelper.obtainDeploySweepingOutputName(context, false);
+    assertThat(outputName).isNotNull();
+    assertThat(outputName).isEqualTo(DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + "Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testObtainSetupSweepingOutputName() {
+    PhaseElement phaseElement =
+        PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName("Phase 1").build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    String outputName = pcfStateHelper.obtainSetupSweepingOutputName(context, false);
+    assertThat(outputName).isNotNull();
+    assertThat(outputName).isEqualTo(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + "Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testObtainSwapRouteRollbackSweepingOutputName() {
+    PhaseElement phaseElement =
+        PhaseElement.builder().phaseNameForRollback("Rollback Phase 1").phaseName("Phase 1").build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    String outputName = pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false);
+    assertThat(outputName).isNotNull();
+    assertThat(outputName).isEqualTo(SwapRouteRollbackSweepingOutputPcf.SWEEPING_OUTPUT_NAME + "Phase 1");
   }
 }

@@ -15,8 +15,4 @@ import java.util.List;
 public class PcfDeployExecutionSummary extends StepExecutionSummary {
   private String releaseName;
   private List<PcfServiceData> instaceData;
-
-  public DeploySweepingOutputPcf getDeploySweepingOutputPcf() {
-    return DeploySweepingOutputPcf.builder().instanceData(instaceData).name(releaseName).build();
-  }
 }
