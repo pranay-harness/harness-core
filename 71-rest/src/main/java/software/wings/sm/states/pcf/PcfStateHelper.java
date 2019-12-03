@@ -33,6 +33,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -47,8 +48,10 @@ import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
+import software.wings.api.pcf.InfoVariables;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -86,6 +89,8 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.SweepingOutputService;
+import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -117,6 +122,7 @@ public class PcfStateHelper {
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient StateExecutionService stateExecutionService;
+  @Inject private transient SweepingOutputService sweepingOutputService;
 
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
@@ -617,36 +623,84 @@ public class PcfStateHelper {
   }
 
   @NotNull
-  public String obtainSetupSweepingOutputName(ExecutionContext context, boolean isRollback) {
+  String obtainDeploySweepingOutputName(ExecutionContext context, boolean isRollback) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    return isRollback ? DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback()
+                      : DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName();
+  }
+
+  @NotNull
+  String obtainSetupSweepingOutputName(ExecutionContext context, boolean isRollback) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     return isRollback ? SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback()
                       : SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName();
   }
 
   @NotNull
-  public String obtainSwapRouteSweepingOutputName(ExecutionContext context, boolean isRollback) {
+  String obtainSwapRouteSweepingOutputName(ExecutionContext context, boolean isRollback) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     return isRollback ? SwapRouteRollbackSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback()
                       : SwapRouteRollbackSweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName();
   }
 
-  @NotNull
-  String obtainDeploySweepingOutputName(ExecutionContext context, boolean isRollback, boolean forSave) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
-    if (isRollback) {
-      return DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseNameForRollback();
-    } else {
-      if (forSave) {
-        return DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + phaseElement.getPhaseName();
+  SetupSweepingOutputPcf findSetupSweepingOutputPcf(ExecutionContext context, boolean isRollback) {
+    SweepingOutputInquiry sweepingOutputInquiry =
+        context.prepareSweepingOutputInquiryBuilder().name(obtainSetupSweepingOutputName(context, isRollback)).build();
+    return findSetupSweepingOutput(sweepingOutputInquiry);
+  }
+
+  private SetupSweepingOutputPcf findSetupSweepingOutput(SweepingOutputInquiry sweepingOutputInquiry) {
+    SetupSweepingOutputPcf setupSweepingOutputPcf =
+        (SetupSweepingOutputPcf) sweepingOutputService.findSweepingOutput(sweepingOutputInquiry);
+    if (setupSweepingOutputPcf == null) {
+      StateExecutionInstance previousPhaseStateExecutionInstance =
+          stateExecutionService.fetchPreviousPhaseStateExecutionInstance(sweepingOutputInquiry.getAppId(),
+              sweepingOutputInquiry.getWorkflowExecutionId(), sweepingOutputInquiry.getStateExecutionId());
+      if (previousPhaseStateExecutionInstance == null) {
+        return SetupSweepingOutputPcf.builder().build();
       } else {
-        StateExecutionInstance previousPhaseStateExecutionInstance =
-            stateExecutionService.fetchPreviousPhaseStateExecutionInstance(
-                context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId());
-        String suffix = previousPhaseStateExecutionInstance == null
-            ? phaseElement.getPhaseName()
-            : previousPhaseStateExecutionInstance.getStateName();
-        return DeploySweepingOutputPcf.SWEEPING_OUTPUT_NAME + suffix;
+        if (checkSameServiceAndInfra(sweepingOutputInquiry, previousPhaseStateExecutionInstance)) {
+          SweepingOutputInquiry newSweepingOutputInquiry =
+              SweepingOutputInquiry.builder()
+                  .appId(sweepingOutputInquiry.getAppId())
+                  .workflowExecutionId(sweepingOutputInquiry.getWorkflowExecutionId())
+                  .stateExecutionId(previousPhaseStateExecutionInstance.getUuid())
+                  .name(
+                      SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + previousPhaseStateExecutionInstance.getStateName())
+                  .build();
+          return findSetupSweepingOutput(newSweepingOutputInquiry);
+        } else {
+          return SetupSweepingOutputPcf.builder().build();
+        }
       }
+    } else {
+      return setupSweepingOutputPcf;
+    }
+  }
+
+  private boolean checkSameServiceAndInfra(
+      SweepingOutputInquiry sweepingOutputInquiry, StateExecutionInstance previousPhaseStateExecutionInstance) {
+    StateExecutionInstance stateExecutionInstance =
+        stateExecutionService.fetchCurrentPhaseStateExecutionInstance(sweepingOutputInquiry.getAppId(),
+            sweepingOutputInquiry.getWorkflowExecutionId(), sweepingOutputInquiry.getStateExecutionId());
+
+    PhaseExecutionData currentPhaseExecutionData =
+        stateExecutionService.fetchPhaseExecutionDataSweepingOutput(stateExecutionInstance);
+    PhaseExecutionData previousPhaseExecutionData =
+        stateExecutionService.fetchPhaseExecutionDataSweepingOutput(previousPhaseStateExecutionInstance);
+
+    return previousPhaseExecutionData.getInfraDefinitionId().equals(currentPhaseExecutionData.getInfraDefinitionId())
+        && previousPhaseExecutionData.getServiceId().equals(currentPhaseExecutionData.getServiceId());
+  }
+
+  void populatePcfVariables(ExecutionContext context, SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    InfoVariables infoVariables = (InfoVariables) sweepingOutputService.findSweepingOutput(
+        context.prepareSweepingOutputInquiryBuilder().name(InfoVariables.SWEEPING_OUTPUT_NAME).build());
+    if (infoVariables == null) {
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
+                                     .name(InfoVariables.SWEEPING_OUTPUT_NAME)
+                                     .value(setupSweepingOutputPcf.fetchPcfVariableInfo())
+                                     .build());
     }
   }
 }

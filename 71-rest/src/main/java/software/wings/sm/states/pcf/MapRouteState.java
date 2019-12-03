@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -117,14 +116,7 @@ public class MapRouteState extends State {
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
         application.getUuid(), context.fetchInfraMappingId());
 
-    SetupSweepingOutputPcf setupSweepingOutputPcf;
-    SweepingOutputInstance instance = sweepingOutputService.find(
-        context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build());
-    if (instance == null) {
-      setupSweepingOutputPcf = SetupSweepingOutputPcf.builder().build();
-    } else {
-      setupSweepingOutputPcf = (SetupSweepingOutputPcf) instance.getValue();
-    }
+    SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
 
     Activity activity = createActivity(context);
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -135,12 +127,11 @@ public class MapRouteState extends State {
 
     PcfRouteUpdateRequestConfigData requestConfigData = null;
     if (isRollback()) {
-      SweepingOutputInstance sweepingOutputInstance =
-          sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
-                                         .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
-                                         .build());
       SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf =
-          (SwapRouteRollbackSweepingOutputPcf) sweepingOutputInstance.getValue();
+          (SwapRouteRollbackSweepingOutputPcf) sweepingOutputService.findSweepingOutput(
+              context.prepareSweepingOutputInquiryBuilder()
+                  .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
+                  .build());
       requestConfigData = swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData();
       requestConfigData.setRollback(true);
       requestConfigData.setMapRoutesOperation(!requestConfigData.isMapRoutesOperation());

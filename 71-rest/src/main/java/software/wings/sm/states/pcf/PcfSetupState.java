@@ -516,11 +516,11 @@ public class PcfSetupState extends State {
 
     SetupSweepingOutputPcf setupSweepingOutputPcf = setupSweepingOutputPcfBuilder.build();
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-                                   .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME)
+                                   .name(pcfStateHelper.obtainSetupSweepingOutputName(context, isRollback()))
                                    .value(setupSweepingOutputPcf)
                                    .build());
 
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.PHASE)
                                    .name(InfoVariables.SWEEPING_OUTPUT_NAME)
                                    .value(setupSweepingOutputPcf.fetchPcfVariableInfo())
                                    .build());

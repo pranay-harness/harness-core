@@ -25,6 +25,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
+import static software.wings.sm.states.pcf.PcfStateTestHelper.PHASE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -170,8 +171,10 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Before
   public void setup() throws IllegalAccessException {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    PcfStateHelper pcfStateHelper = new PcfStateHelper();
+    on(pcfStateHelper).set("sweepingOutputService", sweepingOutputService);
     FieldUtils.writeField(pcfDeployState, "secretManager", secretManager, true);
-    FieldUtils.writeField(pcfDeployState, "pcfStateHelper", new PcfStateHelper(), true);
+    FieldUtils.writeField(pcfDeployState, "pcfStateHelper", pcfStateHelper, true);
 
     EmbeddedUser currentUser = EmbeddedUser.builder().name("test").email("test@harness.io").build();
     workflowStandardParams.setCurrentUser(currentUser);
@@ -217,8 +220,9 @@ public class PcfDeployStateTest extends WingsBaseTest {
     doReturn(null).when(encryptionService).decrypt(any(), any());
     when(sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(outputName).build()))
         .thenReturn(sweepingOutputInstance);
-    when(sweepingOutputService.findSweepingOutput(
-             context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build()))
+    when(sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder()
+                                                      .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + PHASE_NAME)
+                                                      .build()))
         .thenReturn(setupSweepingOutputPcf);
   }
 

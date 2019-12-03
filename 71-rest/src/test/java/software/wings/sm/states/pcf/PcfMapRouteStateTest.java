@@ -314,9 +314,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(outputName).build()))
         .thenReturn(sweepingOutputInstance);
-    when(sweepingOutputService.find(
-             context.prepareSweepingOutputInquiryBuilder().name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME).build()))
-        .thenReturn(pcfSweepingOutputInstance);
+    when(sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder().name(any()).build()))
+        .thenReturn(setupSweepingOutputPcf);
   }
 
   @Test

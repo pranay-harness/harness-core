@@ -48,7 +48,7 @@ public class PcfRollbackState extends PcfDeployState {
     DeploySweepingOutputPcf deploySweepingOutputPcf =
         (DeploySweepingOutputPcf) sweepingOutputService.findSweepingOutput(
             context.prepareSweepingOutputInquiryBuilder()
-                .name(pcfStateHelper.obtainDeploySweepingOutputName(context, isRollback(), false))
+                .name(pcfStateHelper.obtainDeploySweepingOutputName(context, true))
                 .build());
 
     // Just revert previousCount and desiredCount values for Rollback
