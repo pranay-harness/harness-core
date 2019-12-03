@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseExecutionData;
 import software.wings.beans.ServiceInstance;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.StateExecutionData;
@@ -34,12 +35,17 @@ public interface StateExecutionService {
 
   StateExecutionData phaseStateExecutionData(String appId, String executionUuid, String phaseName);
 
+  PhaseExecutionData fetchPhaseExecutionDataSweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance);
+
   PhaseExecutionSummary fetchPhaseExecutionSummarySweepingOutput(
       @NotNull StateExecutionInstance stateExecutionInstance);
 
   StateMachine obtainStateMachine(StateExecutionInstance stateExecutionInstance);
 
   StateExecutionInstance fetchPreviousPhaseStateExecutionInstance(
+      String appId, String executionUuid, String currentStateExecutionId);
+
+  StateExecutionInstance fetchCurrentPhaseStateExecutionInstance(
       String appId, String executionUuid, String currentStateExecutionId);
 
   StateExecutionInstance getStateExecutionInstance(String appId, String executionUuid, String currentStateExecutionId);

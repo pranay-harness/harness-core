@@ -239,6 +239,11 @@ public class StateExecutionServiceImpl implements StateExecutionService {
     return getPhaseExecutionSummarySweepingOutput(stateExecutionInstance);
   }
 
+  @Override
+  public PhaseExecutionData fetchPhaseExecutionDataSweepingOutput(StateExecutionInstance stateExecutionInstance) {
+    return getPhaseExecutionDataSweepingOutput(stateExecutionInstance);
+  }
+
   @VisibleForTesting
   PhaseExecutionSummary getPhaseExecutionSummarySweepingOutput(@NotNull StateExecutionInstance stateExecutionInstance) {
     return (PhaseExecutionSummary) sweepingOutputService.findSweepingOutput(
@@ -342,6 +347,23 @@ public class StateExecutionServiceImpl implements StateExecutionService {
           appId, executionUuid, stateExecutionInstance.getParentInstanceId());
     }
     return null;
+  }
+
+  @Override
+  public StateExecutionInstance fetchCurrentPhaseStateExecutionInstance(
+      String appId, String executionUuid, String currentStateExecutionId) {
+    StateExecutionInstance stateExecutionInstance =
+        getStateExecutionInstance(appId, executionUuid, currentStateExecutionId);
+
+    if (stateExecutionInstance == null) {
+      return null;
+    }
+    if (stateExecutionInstance.getStateType().equals(PHASE.name())) {
+      return stateExecutionInstance;
+    } else {
+      return fetchCurrentPhaseStateExecutionInstance(
+          appId, executionUuid, stateExecutionInstance.getParentInstanceId());
+    }
   }
 
   @Override
