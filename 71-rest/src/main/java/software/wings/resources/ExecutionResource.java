@@ -230,6 +230,7 @@ public class ExecutionResource {
     notNullCheck("No Workflow Execution exist for Id: " + workflowExecutionId, workflowExecution);
     WorkflowExecution rollbackWorkflowExecution =
         workflowExecutionService.triggerRollbackExecutionWorkflow(appId, workflowExecution);
+    rollbackWorkflowExecution.setStateMachine(null);
     return new RestResponse<>(rollbackWorkflowExecution);
   }
 
