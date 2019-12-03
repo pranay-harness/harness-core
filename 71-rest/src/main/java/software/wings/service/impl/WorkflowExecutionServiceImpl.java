@@ -1731,6 +1731,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       authorizeOnDemandRollback(appId, workflowExecution);
 
+      if (alreadyRolledBack(workflowExecution)) {
+        throw new InvalidRequestException("Rollback Execution is not available as already Rolled back");
+      }
+
       if (!getOnDemandRollbackAvailable(appId, workflowExecution)) {
         throw new InvalidRequestException("On demand rollback should not be available for this execution");
       }
@@ -1769,6 +1773,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       return RollbackConfirmation.builder().artifacts(previousArtifacts).workflowId(workflowId).valid(true).build();
     }
+  }
+
+  private boolean alreadyRolledBack(WorkflowExecution workflowExecution) {
+    WorkflowExecution execution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                      .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+                                      .filter(WorkflowExecutionKeys.status, SUCCESS)
+                                      .filter(WorkflowExecutionKeys.onDemandRollback, true)
+                                      .filter("originalExecution.executionId", workflowExecution.getUuid())
+                                      .get();
+    return execution != null;
   }
 
   private WorkflowExecution getRunningExecutions(WorkflowExecution workflowExecution) {
