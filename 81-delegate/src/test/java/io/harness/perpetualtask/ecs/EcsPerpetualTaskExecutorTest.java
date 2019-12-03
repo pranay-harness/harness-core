@@ -163,7 +163,7 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = AVMOHAN)
+  @Owner(developers = AVMOHAN, intermittent = true)
   @Category(UnitTests.class)
   public void shouldQuerySingleHourWindowInNormalCase() throws Exception {
     final Instant now = Instant.now();
