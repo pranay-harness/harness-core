@@ -1228,8 +1228,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       return Delegate.builder().uuid(SELF_DESTRUCT).build();
     }
 
-    logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
-        delegate.getHostName(), delegate.getIp());
+    logger.info("Registering delegate for Hostname: {} IP: {}", delegate.getHostName(), delegate.getIp());
 
     if (ECS.equals(delegate.getDelegateType())) {
       return handleEcsDelegateRequest(delegate);

@@ -752,8 +752,6 @@ public class AuditYamlHelperForFailedChanges {
         .append(type)
         .append(" for YamlPath: ")
         .append(yamlFilePath)
-        .append(", for account: ")
-        .append(accountId)
         .append(" during Auditing (Git Path). EntityMay not exist")
         .toString();
   }

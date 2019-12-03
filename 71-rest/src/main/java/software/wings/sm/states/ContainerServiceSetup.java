@@ -131,7 +131,7 @@ public abstract class ContainerServiceSetup extends State {
 
       Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
-      logger.info("Setting up container service for account {}, service {}", app.getAccountId(), service.getName());
+      logger.info("Setting up container service for service {}", service.getName());
       ContainerTask containerTask =
           serviceResourceService.getContainerTaskByDeploymentType(app.getUuid(), serviceId, getDeploymentType());
 

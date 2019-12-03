@@ -57,7 +57,7 @@ public class DeploymentFreezeChecker implements PreDeploymentChecker {
   public boolean matches(DeploymentCtx deploymentCtx, GovernanceConfig freezeConfig) {
     boolean itsAMatch = freezeConfig.getTimeRangeBasedFreezeConfigs().stream().anyMatch(
         (TimeRangeBasedFreezeConfig it) -> this.matches(deploymentCtx, it));
-    logger.info("DeploymentCtx: {}, governanceConfig: {}. Match: {}", deploymentCtx, freezeConfig, itsAMatch);
+    logger.info("DeploymentCtx: {}, governanceConfig: {}. Match: {}", deploymentCtx, freezeConfig.getUuid(), itsAMatch);
     return itsAMatch;
   }
 

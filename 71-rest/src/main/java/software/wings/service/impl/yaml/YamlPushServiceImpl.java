@@ -49,19 +49,19 @@ public class YamlPushServiceImpl implements YamlPushService {
         switch (type) {
           case CREATE:
             validateCreate(oldEntity, newEntity);
-            logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
+            logYamlPushRequestInfo(oldEntity, newEntity, type);
             pushYamlChangeSetOnCreate(accountId, newEntity);
             break;
 
           case UPDATE:
             validateUpdate(oldEntity, newEntity);
-            logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
+            logYamlPushRequestInfo(oldEntity, newEntity, type);
             pushYamlChangeSetOnUpdate(accountId, oldEntity, newEntity, isRename);
             break;
 
           case DELETE:
             validateDelete(oldEntity, newEntity);
-            logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
+            logYamlPushRequestInfo(oldEntity, newEntity, type);
             pushYamlChangeSetOnDelete(accountId, oldEntity);
             break;
 
@@ -69,8 +69,8 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
-        logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
+        logYamlPushRequestInfo(oldEntity, newEntity, type);
+        logger.error("Exception in pushing yaml change set", e);
       }
     });
   }
@@ -209,9 +209,9 @@ public class YamlPushServiceImpl implements YamlPushService {
         entity.getClass().getSimpleName(), ((UuidAware) entity).getUuid(), ((UuidAware) helperEntity).getUuid()));
   }
 
-  private <T> void logYamlPushRequestInfo(String accountId, T oldEntity, T newEntity, Type type) {
+  private <T> void logYamlPushRequestInfo(T oldEntity, T newEntity, Type type) {
     StringBuilder builder = new StringBuilder(50);
-    builder.append(YAML_PUSH_SERVICE_LOG + " accountId " + accountId);
+    builder.append(YAML_PUSH_SERVICE_LOG);
 
     switch (type) {
       case CREATE:
