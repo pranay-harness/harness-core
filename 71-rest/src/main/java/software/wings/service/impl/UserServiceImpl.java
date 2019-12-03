@@ -465,6 +465,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setTwoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled());
     userSummary.setUserLocked(user.isUserLocked());
     userSummary.setPasswordExpired(user.isPasswordExpired());
+    userSummary.setImported(user.isImported());
     return userSummary;
   }
 
