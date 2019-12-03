@@ -1735,6 +1735,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         throw new InvalidRequestException("On demand rollback should not be available for this execution");
       }
 
+      if (isEmpty(workflowExecution.getServiceIds()) || workflowExecution.getServiceIds().size() != 1) {
+        throw new InvalidRequestException("Rollback Execution is not available for multi Service workflow");
+      }
+
       if (workflowExecution.isOnDemandRollback()) {
         return RollbackConfirmation.builder()
             .valid(false)
@@ -3694,19 +3698,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return new ArrayList<>(cloudProviderIds);
   }
 
-  public boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastSuccessfulWE) {
-    if (lastSuccessfulWE.getWorkflowType().equals(PIPELINE)) {
-      logger.info("On demand rollback not available for pipeline executions {}", lastSuccessfulWE);
+  public boolean getOnDemandRollbackAvailable(String appId, WorkflowExecution lastWE) {
+    if (!lastWE.getStatus().equals(SUCCESS)) {
+      logger.info("On demand rollback not available for non successful executions {}", lastWE);
       return false;
     }
-    if (!lastSuccessfulWE.getEnvType().equals(EnvironmentType.PROD)) {
-      logger.info("On demand rollback not available for Non prod environments {}", lastSuccessfulWE);
+    if (lastWE.getWorkflowType().equals(PIPELINE)) {
+      logger.info("On demand rollback not available for pipeline executions {}", lastWE);
       return false;
     }
-    List<String> infraDefId = lastSuccessfulWE.getInfraDefinitionIds();
+    if (!lastWE.getEnvType().equals(EnvironmentType.PROD)) {
+      logger.info("On demand rollback not available for Non prod environments {}", lastWE);
+      return false;
+    }
+    List<String> infraDefId = lastWE.getInfraDefinitionIds();
     if (isEmpty(infraDefId) || infraDefId.size() != 1) {
       // Only allowing on demand rollback for workflow deploying single infra definition.
-      logger.info("On demand rollback not available {}", lastSuccessfulWE);
+      logger.info("On demand rollback not available, Infra definition size not equal to 1 {}", lastWE);
       return false;
     } else {
       InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefId.get(0));
