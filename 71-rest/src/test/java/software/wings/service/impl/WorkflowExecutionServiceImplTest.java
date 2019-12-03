@@ -6,7 +6,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -245,7 +244,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerComplexWorkflow() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
@@ -589,7 +588,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerWorkflowWithRelease() throws InterruptedException {
     String appId = app.getUuid();
@@ -636,7 +635,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
@@ -656,7 +655,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldUpdateFailedCount() throws InterruptedException {
@@ -891,7 +890,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldPauseAndResumeState() throws InterruptedException {
     Graph graph = getAbortedGraph();
@@ -975,7 +974,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO - Fix this, it's failing in Jenkins - almost all the time
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
@@ -1115,7 +1114,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * Should throw invalid argument for invalid workflow id.
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentForInvalidWorkflowId() {
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -1144,7 +1143,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO: fix this. It seems there is production issues
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldAbortState() throws InterruptedException {
     Graph graph = getAbortedGraph();
@@ -1237,7 +1236,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE, intermittent = true)
+  @Owner(developers = SRINIVAS, intermittent = true)
   @Category(UnitTests.class)
   public void shouldAbortAllStates() {
     Service service1 = addService("svc1");
@@ -1304,7 +1303,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldWaitOnError() throws InterruptedException {
@@ -1496,7 +1495,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRetryOnError() throws InterruptedException {
@@ -1670,7 +1669,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
     Service service1 = addService("svc1");
@@ -1981,7 +1980,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldObtainLastGoodDeployedArtifacts() throws InterruptedException {
     String appId = app.getUuid();
@@ -2386,7 +2385,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private static Random random = new Random();
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testFetchWorkflowExecutionsForResourceConstraint() {
     List<String> ids = new ArrayList<>();
