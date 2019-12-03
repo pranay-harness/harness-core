@@ -10,7 +10,20 @@
         <Bug pattern="SE_BAD_FIELD" />
     </Match>
     <Match>
+        <!-- Does not always make sense -->
         <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
+    </Match>
+    <Match>
+        <!-- covert from sonar scan -->
+        <Bug pattern="CC_CYCLOMATIC_COMPLEXITY" />
+    </Match>
+    <Match>
+        <!-- a lot of false pasitives -->
+        <Bug pattern="UNNC_UNNECESSARY_NEW_NULL_CHECK" />
+    </Match>
+    <Match>
+        <!-- not sure that I follow this one. A runtime exception or error can be thrown from virtually anything -->
+        <Bug pattern="AFBR_ABNORMAL_FINALLY_BLOCK_RETURN" />
     </Match>
     <Match>
         <Method name="maybeForceBuilderInitialization" />

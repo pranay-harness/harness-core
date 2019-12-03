@@ -2,10 +2,12 @@ package io.harness.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Inject;
@@ -13,6 +15,9 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
+import io.harness.mongo.DelayLogContext;
+import io.harness.mongo.MessageLogContext;
+import io.harness.mongo.ProcessTimeLogContext;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -101,21 +106,20 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
   @SuppressWarnings({"PMD", "squid:S1181"})
   private void processMessage(T message) {
-    if (logger.isTraceEnabled()) {
-      logger.trace("got message {}", message);
-    }
+    long startTime = currentTimeMillis();
 
-    long timerInterval = queue.heartbeat().toMillis() - 500;
-    if (logger.isDebugEnabled()) {
-      logger.debug("Started timer thread for message {} every {} ms", message, timerInterval);
-    }
-
-    try {
+    try (MessageLogContext ignore = new MessageLogContext(message, OVERRIDE_ERROR)) {
+      long timerInterval = queue.heartbeat().toMillis() - 500;
       final T finalizedMessage = message;
-
       ScheduledFuture<?> future = timer.scheduleAtFixedRate(
           () -> queue.updateHeartbeat(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
+
       try (GlobalContextGuard guard = initGlobalContextGuard(message.getGlobalContext())) {
+        long delay = startTime - message.getEarliestGet().toInstant().toEpochMilli();
+        try (DelayLogContext ignore2 = new DelayLogContext(delay, OVERRIDE_ERROR)) {
+          logger.info("Working on message");
+        }
+
         onMessage(message);
       } finally {
         future.cancel(true);
@@ -127,6 +131,13 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
       queue.ack(message);
     } catch (Throwable exception) {
       onException(exception, message);
+    } finally {
+      long processTime = currentTimeMillis() - startTime;
+      try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(processTime, OVERRIDE_ERROR)) {
+        logger.info("Done working on message");
+      } catch (Throwable exception) {
+        logger.error("Exception while recording the processing of message", exception);
+      }
     }
   }
 
