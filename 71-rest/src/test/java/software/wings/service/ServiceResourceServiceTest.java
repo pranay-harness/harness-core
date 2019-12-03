@@ -2178,34 +2178,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH_CHAUHAN)
-  @Category(UnitTests.class)
-  public void shouldThrowWingsExceptionIfNullCommand() {
-    Command oldCommand = commandBuilder.build();
-    oldCommand.setVersion(1L);
-    ServiceCommand serviceCommand_1 = aServiceCommand()
-                                          .withAppId(APP_ID)
-                                          .withServiceId(SERVICE_ID)
-                                          .withTargetToAllEnv(false)
-                                          .withName("START")
-                                          .withDefaultVersion(1)
-                                          .withCommand(null)
-                                          .build();
-    prepareServiceCommandMocks();
-    when(mockWingsPersistence.getWithAppId(any(), any(), any())).thenReturn(Service.builder().build());
-    Assertions.assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(
-            () -> srs.addCommand(serviceCommand_1.getAppId(), serviceCommand_1.getServiceId(), serviceCommand_1, false))
-        .withMessageContaining("command is null");
-
-    when(commandService.getServiceCommand(any(), any())).thenReturn(serviceCommand_1);
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(
-            () -> srs.updateCommand(serviceCommand_1.getAppId(), serviceCommand_1.getServiceId(), serviceCommand_1))
-        .withMessageContaining("command is null");
-  }
-
-  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCreatePCFSpecCreatesManifestFile() {
