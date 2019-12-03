@@ -50,7 +50,7 @@ public class KmsEncryptDecryptClientIntegrationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = MARK, intermittent = true)
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {

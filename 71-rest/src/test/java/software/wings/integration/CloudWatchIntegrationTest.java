@@ -147,7 +147,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
+  @Owner(developers = RAGHU, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetLoadBalancersTest() throws Exception {
@@ -159,7 +159,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = PRANJAL)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetMetricsWithDataForNode() throws Exception {
@@ -187,7 +187,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = PRANJAL)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetECSClusternNames() throws Exception {
@@ -202,7 +202,7 @@ public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = PRANJAL)
+  @Owner(developers = PRANJAL, intermittent = true)
   @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   @Category(IntegrationTests.class)
   public void testGetEC2InstancesNames() throws Exception {
