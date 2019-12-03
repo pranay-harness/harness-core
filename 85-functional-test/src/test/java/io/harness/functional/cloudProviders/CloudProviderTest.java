@@ -55,7 +55,7 @@ public class CloudProviderTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = SUNIL)
+  @Owner(developers = SUNIL, intermittent = true)
   @Category(FunctionalTests.class)
   public void runAWSCloudProviderCRUDTests() {
     retry.executeWithRetry(this ::createAWSCloudProvider, booleanMatcher, true);
