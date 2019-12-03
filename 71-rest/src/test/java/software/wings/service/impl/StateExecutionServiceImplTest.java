@@ -154,8 +154,32 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     String uuid2 = generateUuid();
     String uuid3 = generateUuid();
     String uuid4 = generateUuid();
-    StateExecutionInstance.Builder instance =
-        Builder.aStateExecutionInstance().appId(APP_ID).executionUuid(WORKFLOW_EXECUTION_ID);
+    setupStateExecutionInstanceData(uuid1, uuid2, uuid3, uuid4);
+    StateExecutionInstance previousInstance =
+        stateExecutionService.fetchPreviousPhaseStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid1);
+    assertThat(previousInstance).isNotNull();
+    assertThat(previousInstance.getUuid()).isEqualTo(uuid4);
+    assertThat(previousInstance.getStateName()).isEqualTo("Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void fetchCurrentPhaseStateExecutionInstance() {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    String uuid3 = generateUuid();
+    String uuid4 = generateUuid();
+    setupStateExecutionInstanceData(uuid1, uuid2, uuid3, uuid4);
+    StateExecutionInstance previousInstance =
+        stateExecutionService.fetchCurrentPhaseStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid1);
+    assertThat(previousInstance).isNotNull();
+    assertThat(previousInstance.getUuid()).isEqualTo(uuid3);
+    assertThat(previousInstance.getStateName()).isEqualTo("Phase 2");
+  }
+
+  private void setupStateExecutionInstanceData(String uuid1, String uuid2, String uuid3, String uuid4) {
+    Builder instance = Builder.aStateExecutionInstance().appId(APP_ID).executionUuid(WORKFLOW_EXECUTION_ID);
 
     StateExecutionInstance executionInstance1 = instance.uuid(uuid1)
                                                     .displayName("App Resize")
@@ -192,17 +216,12 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     doReturn(executionInstance4)
         .when(stateExecutionService)
         .getStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid4);
-    StateExecutionInstance previousInstance =
-        stateExecutionService.fetchPreviousPhaseStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid1);
-    assertThat(previousInstance).isNotNull();
-    assertThat(previousInstance.getUuid()).isEqualTo(uuid4);
-    assertThat(previousInstance.getStateName()).isEqualTo("Phase 1");
   }
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldFetchPhaseExecutionSummary() {
+  public void shouldFetchPhaseExecutionSummarySweepingOutput() {
     String workflowExecutionId = generateUuid();
     String stateExecutionId = generateUuid();
     String phaseExecutionId = generateUuid();
