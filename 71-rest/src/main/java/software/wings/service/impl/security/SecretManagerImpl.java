@@ -407,8 +407,8 @@ public class SecretManagerImpl implements SecretManager {
           final EncryptedRecordData encryptedRecordData;
           if (encryptionConfig.isGlobalKms()
               && featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, object.getAccountId())) {
-            logger.info(
-                "Pre-processing the encrypted secret by global KMS secret manager for secret {}", encryptedData);
+            logger.info("Pre-processing the encrypted secret by global KMS secret manager for secret {}",
+                encryptedData.getUuid());
 
             encryptedRecordData = kmsEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
                 encryptedData, (KmsConfig) encryptionConfig);
@@ -418,7 +418,7 @@ public class SecretManagerImpl implements SecretManager {
             // fail.
             if (encryptedRecordData.getEncryptionType().equals(LOCAL)) {
               encryptionConfig = localEncryptionService.getEncryptionConfig(accountId);
-              logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData);
+              logger.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
             }
           } else {
             encryptedRecordData = SecretManager.buildRecordData(encryptedData);

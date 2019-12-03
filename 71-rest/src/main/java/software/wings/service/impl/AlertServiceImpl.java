@@ -157,7 +157,7 @@ public class AlertServiceImpl implements AlertService {
                     .triggerCount(0)
                     .build();
         wingsPersistence.save(alert);
-        logger.info("Alert created: {}", alert);
+        logger.info("Alert created: {}", alert.getUuid());
       }
       AlertStatus status = alert.getTriggerCount() >= alertType.getPendingCount() ? Open : Pending;
       boolean alertOpened = false;
@@ -172,15 +172,15 @@ public class AlertServiceImpl implements AlertService {
       alert.setTriggerCount(alert.getTriggerCount() + 1);
       alert.setStatus(status);
       if (alertOpened) {
-        logger.info("Alert opened: {}", alert);
+        logger.info("Alert opened: {}", alert.getUuid());
 
         if (notificationStatusService.get(accountId).isEnabled()) {
           publishEvent(alert);
         } else {
-          logger.info("No alert event will be published. accountId={}", accountId);
+          logger.info("No alert event will be published.");
         }
       } else if (status == Pending) {
-        logger.info("Alert pending: {}", alert);
+        logger.info("Alert pending: {}", alert.getUuid());
       }
     }
   }

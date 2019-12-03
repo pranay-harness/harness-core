@@ -36,7 +36,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @Override
   public boolean delete(final String accountId, final String uuid) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting pipeline governance standard  with uuid: {} for accountId: {}", uuid, accountId);
+      logger.info("Deleting pipeline governance standard  with uuid: {}", uuid);
       return persistence.delete(PipelineGovernanceConfig.class, uuid);
     }
   }
@@ -44,7 +44,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @Override
   public List<PipelineGovernanceConfig> list(final String accountId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Fetching all pipeline governance standards for accountId: {}", accountId);
+      logger.info("Fetching all pipeline governance standards");
       return persistence.createQuery(PipelineGovernanceConfig.class, HQuery.excludeCount)
           .field(PipelineGovernanceConfigKeys.accountId)
           .equal(accountId)
@@ -56,7 +56,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @RestrictedApi(PipelineGovernanceFeature.class)
   public PipelineGovernanceConfig update(
       @AccountId final String accountId, final String uuid, final PipelineGovernanceConfig config) {
-    logger.info("Updating pipeline governance standard  with uuid: {} for accountId: {}", uuid, accountId);
+    logger.info("Updating pipeline governance standard  with uuid: {}", uuid);
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       Query<PipelineGovernanceConfig> query =
           persistence.createQuery(PipelineGovernanceConfig.class).field(PipelineGovernanceConfigKeys.uuid).equal(uuid);
@@ -76,7 +76,7 @@ public class PipelineGovernanceServiceImpl implements PipelineGovernanceService 
   @RestrictedApi(PipelineGovernanceFeature.class)
   public PipelineGovernanceConfig add(@AccountId final String accountId, final PipelineGovernanceConfig config) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding pipeline governance standard for accountId: {}", accountId);
+      logger.info("Adding pipeline governance standard");
       persistence.save(config);
       return config;
     }

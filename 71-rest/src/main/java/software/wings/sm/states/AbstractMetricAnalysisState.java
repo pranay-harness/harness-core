@@ -113,7 +113,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info("Executing {} state", getStateType());
       cleanUpForRetry(context);
       AnalysisContext analysisContext = getAnalysisContext(context, corelationId);
-      getLogger().info("context: {}", analysisContext);
+      getLogger().info("context: {}", analysisContext.getUuid());
 
       if (!checkLicense(appService.getAccountIdByAppId(context.getAppId()), StateType.valueOf(getStateType()),
               context.getStateExecutionInstanceId())) {
