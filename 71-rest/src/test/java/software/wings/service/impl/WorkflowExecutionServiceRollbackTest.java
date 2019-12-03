@@ -29,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
@@ -36,6 +37,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -115,16 +117,17 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
   public void testOnDemandRollbackConfirmationAlreadyRunningExecution() {
-    WorkflowExecution workflowExecution = createNewWorkflowExecution(false);
-    workflowExecution.setStatus(PAUSED);
-    wingsPersistence.save(workflowExecution);
-    RollbackConfirmation rollbackConfirmation =
-        workflowExecutionService.getOnDemandRollbackConfirmation(APP_ID, workflowExecution);
+    WorkflowExecution pausedWE = createNewWorkflowExecution(false);
+    pausedWE.setStatus(PAUSED);
+    wingsPersistence.save(pausedWE);
+
+    WorkflowExecution newWe = createNewWorkflowExecution(false);
+    RollbackConfirmation rollbackConfirmation = workflowExecutionService.getOnDemandRollbackConfirmation(APP_ID, newWe);
     assertThat(rollbackConfirmation).isNotNull();
     assertThat(rollbackConfirmation.isValid()).isFalse();
     assertThat(rollbackConfirmation.getValidationMessage())
         .isEqualTo("Cannot trigger Rollback, active execution found");
-    assertThat(rollbackConfirmation.getActiveWorkflowExecution().getUuid()).isEqualTo(workflowExecution.getUuid());
+    assertThat(rollbackConfirmation.getActiveWorkflowExecution().getUuid()).isEqualTo(pausedWE.getUuid());
   }
 
   private WorkflowExecution createNewWorkflowExecution(boolean rollback) {
@@ -134,6 +137,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
             .appName(APP_NAME)
             .envType(PROD)
             .status(SUCCESS)
+            .serviceIds(Collections.singletonList(SERVICE_ID))
             .workflowType(WorkflowType.ORCHESTRATION)
             .workflowId(WORKFLOW_ID)
             .infraMappingIds(Collections.singletonList(INFRA_MAPPING_ID))
@@ -196,7 +200,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Test
   @Owner(developers = POOJA)
   @Category(UnitTests.class)
-  public void testOnDemandRollbackConfirmationNoPrviousArtifact() {
+  public void testOnDemandRollbackConfirmationNoPreviousArtifact() {
     WorkflowExecution previousWE = createNewWorkflowExecution(false);
     previousWE.setArtifacts(Collections.emptyList());
     previousWE.setName("test");
@@ -211,6 +215,26 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
       failBecauseExceptionWasNotThrown(InvalidRequestException.class);
     } catch (Exception e) {
       assertThat(e).hasMessage("No artifact found in previous execution");
+    }
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testOnDemandRollbackConfirmationMultiService() {
+    WorkflowExecution previousWE = createNewWorkflowExecution(false);
+    previousWE.setName("test");
+    wingsPersistence.save(previousWE);
+
+    WorkflowExecution newWE = createNewWorkflowExecution(false);
+    newWE.setServiceIds(asList(SERVICE_ID, SERVICE_ID + "_1"));
+    wingsPersistence.save(newWE);
+
+    try {
+      workflowExecutionService.getOnDemandRollbackConfirmation(APP_ID, newWE);
+      failBecauseExceptionWasNotThrown(InvalidRequestException.class);
+    } catch (Exception e) {
+      assertThat(e).hasMessage("Rollback Execution is not available for multi Service workflow");
     }
   }
 
@@ -240,9 +264,15 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetOnDemandRollbackAvailable() {
     WorkflowExecution lastSuccessfulWE = createNewWorkflowExecution(false);
-    lastSuccessfulWE.setWorkflowType(WorkflowType.PIPELINE);
+    lastSuccessfulWE.setStatus(ExecutionStatus.ABORTED);
 
     boolean result = workflowExecutionService.getOnDemandRollbackAvailable(APP_ID, lastSuccessfulWE);
+    assertThat(result).isFalse();
+
+    lastSuccessfulWE.setStatus(SUCCESS);
+    lastSuccessfulWE.setWorkflowType(WorkflowType.PIPELINE);
+
+    result = workflowExecutionService.getOnDemandRollbackAvailable(APP_ID, lastSuccessfulWE);
     assertThat(result).isFalse();
 
     lastSuccessfulWE.setWorkflowType(WorkflowType.ORCHESTRATION);

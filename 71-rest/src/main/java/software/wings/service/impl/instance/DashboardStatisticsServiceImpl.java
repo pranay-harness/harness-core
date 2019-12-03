@@ -1,6 +1,5 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -789,7 +788,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             grouping("artifactInfo",
                 grouping("$first", projection("id", "lastArtifactId"), projection("name", "lastArtifactName"),
                     projection("buildNo", "lastArtifactBuildNum"), projection("streamId", "lastArtifactStreamId"),
-                    projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"))))
+                    projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"),
+                    projection("lastWorkflowExecutionId", "lastWorkflowExecutionId"))))
         .sort(descending("count"))
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfoList::add);
@@ -819,17 +819,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
       long deployedAt = aggregationInfo.getArtifactInfo().getDeployedAt();
 
+      String lastWorkflowExecutionId = aggregationInfo.getArtifactInfo().getLastWorkflowExecutionId();
       // To fetch last execution
-      final WorkflowExecution lastSuccessfulWE =
-          wingsPersistence.createQuery(WorkflowExecution.class)
-              .filter(WorkflowExecutionKeys.appId, appId)
-              .filter(WorkflowExecutionKeys.status, SUCCESS)
-              .filter(WorkflowExecutionKeys.infraMappingIds, infraMappingInfo.getId())
-              .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-              .get();
+      final WorkflowExecution lastWE = wingsPersistence.createQuery(WorkflowExecution.class)
+                                           .filter(WorkflowExecutionKeys.uuid, lastWorkflowExecutionId)
+                                           .get();
 
       CurrentActiveInstances currentActiveInstances;
-      if (lastSuccessfulWE == null) {
+      if (lastWE == null) {
+        logger.info("Last workflow execution is null, Execution Id {}", lastWorkflowExecutionId);
         currentActiveInstances = CurrentActiveInstances.builder()
                                      .artifact(artifactSummary)
                                      .deployedAt(new Date(deployedAt))
@@ -839,18 +837,17 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                      .onDemandRollbackAvailable(false)
                                      .build();
       } else {
-        Workflow workflow = workflowService.readWorkflowWithoutOrchestration(appId, lastSuccessfulWE.getWorkflowId());
+        Workflow workflow = workflowService.readWorkflowWithoutOrchestration(appId, lastWE.getWorkflowId());
         String workflowName;
         if (workflow != null) {
           workflowName = workflow.getName();
         } else {
           // if workflow is deleted setting workflowExecution name so UI does not break.
-          workflowName = lastSuccessfulWE.getName();
+          workflowName = lastWE.getName();
         }
-        boolean rollbackAvailable = workflowExecutionService.getOnDemandRollbackAvailable(appId, lastSuccessfulWE);
-
+        boolean rollbackAvailable = workflowExecutionService.getOnDemandRollbackAvailable(appId, lastWE);
         EntitySummary workflowExecutionSummary =
-            getEntitySummary(workflowName, lastSuccessfulWE.getUuid(), EntityType.WORKFLOW_EXECUTION.name());
+            getEntitySummary(workflowName, lastWE.getUuid(), EntityType.WORKFLOW_EXECUTION.name());
 
         currentActiveInstances = CurrentActiveInstances.builder()
                                      .artifact(artifactSummary)
@@ -858,7 +855,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                      .environment(environmentSummary)
                                      .instanceCount(count)
                                      .serviceInfra(serviceInfraSummary)
-                                     .lastSuccessfulWorkflowExecution(workflowExecutionSummary)
+                                     .lastWorkflowExecution(workflowExecutionSummary)
                                      .onDemandRollbackAvailable(rollbackAvailable)
                                      .build();
       }
@@ -1208,6 +1205,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     private String streamName;
     private long deployedAt;
     private String sourceName;
+    private String lastWorkflowExecutionId;
   }
 
   @Data

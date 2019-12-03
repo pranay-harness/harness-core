@@ -19,6 +19,6 @@ public class CurrentActiveInstances {
   private EntitySummary serviceInfra;
   private EntitySummary workflow;
   private Date deployedAt;
-  private EntitySummary lastSuccessfulWorkflowExecution;
+  private EntitySummary lastWorkflowExecution;
   private boolean onDemandRollbackAvailable;
 }
