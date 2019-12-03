@@ -101,6 +101,7 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry;
 import software.wings.service.intfc.SweepingOutputService.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -159,6 +160,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
   @InjectMocks @Inject private PcfStateHelper pcfStateHelper;
   @Mock private ExecutionContext context;
 
@@ -897,6 +899,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
         .thenReturn(phaseExecutionData);
     when(stateExecutionService.fetchPhaseExecutionDataSweepingOutput(previousStateExecutionInstance))
         .thenReturn(phaseExecutionData);
+    when(workflowExecutionService.checkIfOnDemand(anyString(), anyString())).thenReturn(false);
 
     SetupSweepingOutputPcf sweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, false);
     assertThat(sweepingOutputPcf).isNotNull();
@@ -938,5 +941,27 @@ public class PcfStateHelperTest extends WingsBaseTest {
     String outputName = pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false);
     assertThat(outputName).isNotNull();
     assertThat(outputName).isEqualTo(SwapRouteRollbackSweepingOutputPcf.SWEEPING_OUTPUT_NAME + "Phase 1");
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testGetPhaseNameForQuery() {
+    final String phaseName = "Phase 1";
+    when(workflowExecutionService.checkIfOnDemand(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(false);
+    String queryPhaseName = pcfStateHelper.getPhaseNameForQuery(APP_ID, WORKFLOW_EXECUTION_ID, phaseName);
+    assertThat(queryPhaseName).isNotNull();
+    assertThat(queryPhaseName).isEqualTo(phaseName);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testGetPhaseNameForQueryRollback() {
+    final String phaseName = "Staging Execution Phase 1";
+    when(workflowExecutionService.checkIfOnDemand(APP_ID, WORKFLOW_EXECUTION_ID)).thenReturn(true);
+    String queryPhaseName = pcfStateHelper.getPhaseNameForQuery(APP_ID, WORKFLOW_EXECUTION_ID, phaseName);
+    assertThat(queryPhaseName).isNotNull();
+    assertThat(queryPhaseName).isEqualTo("Phase 1");
   }
 }
