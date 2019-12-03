@@ -406,8 +406,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(service.getAppId());
 
     if (isEmpty(service.getName()) || isEmpty(service.getName().trim())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Service Name can not be empty", USER)
-          .addParam("message", "Service Name can not be empty");
+      throw new InvalidRequestException("Service Name can not be empty", USER);
     }
 
     StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
@@ -1524,7 +1523,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       validateCommandName(serviceCommand.getCommand());
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, fromTemplate);
     } else {
-      throw new InvalidRequestException(format("Underlying command is null for service command "
+      logger.info(format("Underlying command is null for service command "
               + "%s[%s]",
           serviceCommand.getName(), serviceCommand.getUuid()));
     }
