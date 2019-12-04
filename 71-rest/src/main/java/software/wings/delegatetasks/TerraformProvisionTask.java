@@ -22,7 +22,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -84,6 +84,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs-%s";
   private static final String TERRAFORM_INTERNAL_FOLDER = ".terraform";
   private static final long RESOURCE_READY_WAIT_TIME_SECONDS = 15;
+  private static final String VAR_FILE_FORMAT = " -var-file=\"%s\" ";
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
@@ -133,7 +134,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     if (isNotEmpty(tfVarFiles)) {
       tfVarFiles.forEach(file -> {
         String pathForFile = Paths.get(userDir, gitDir, file).toString();
-        buffer.append(String.format(" -var-file=\"%s\" ", pathForFile));
+        buffer.append(String.format(VAR_FILE_FORMAT, pathForFile));
       });
     }
     return buffer.toString();
@@ -184,28 +185,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       downloadTfStateFile(parameters, scriptDirectory);
 
-      boolean entityIdTfVarFileCreated = false;
       logger.info(format("Text Variables found in task params: [%s]", parameters.getVariables()));
-      if (isNotEmpty(parameters.getVariables()) || isNotEmpty(parameters.getEncryptedVariables())) {
-        try (BufferedWriter writer =
-                 new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tfVariablesFile), "UTF-8"))) {
-          if (isNotEmpty(parameters.getVariables())) {
-            for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
-              saveVariable(writer, entry.getKey(), entry.getValue());
-            }
-          }
-
-          if (isNotEmpty(parameters.getEncryptedVariables())) {
-            for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
-              String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
-              saveVariable(writer, entry.getKey(), value);
-            }
-          }
-        }
-        entityIdTfVarFileCreated = true;
-      } else {
-        FileUtils.deleteQuietly(tfVariablesFile);
-      }
+      StringBuilder inlineCommandBuffer = new StringBuilder();
+      StringBuilder inlineUILogBuffer = new StringBuilder();
+      getCommandLineVariableParams(parameters, tfVariablesFile, inlineCommandBuffer, inlineUILogBuffer);
+      String varParams = inlineCommandBuffer.toString();
+      String uiLogs = inlineUILogBuffer.toString();
 
       if (isNotEmpty(parameters.getBackendConfigs()) || isNotEmpty(parameters.getEncryptedBackendConfigs())) {
         try (BufferedWriter writer =
@@ -229,9 +214,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       String targetArgs = getTargetArgs(parameters.getTargets());
       String tfVarFiles = getAllTfVarFilesArgument(System.getProperty(USER_DIR_KEY),
           gitClientHelper.getRepoDirectory(gitOperationContext), parameters.getTfVarFiles());
-      if (entityIdTfVarFileCreated) {
-        tfVarFiles = format("%s -var-file=\"%s\"", tfVarFiles, tfVariablesFile.toString());
-      }
+      varParams = format("%s %s", tfVarFiles, varParams);
+      uiLogs = format("%s %s", tfVarFiles, uiLogs);
 
       int code;
       switch (parameters.getCommand()) {
@@ -239,12 +223,13 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           String command = format("terraform init %s",
               tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
                                             : "");
+          String commandToLog = command;
           /**
            * echo "no" is to prevent copying of state from local to remote by suppressing the
            * copy prompt. As of tf version 0.12.3
            * there is no way to provide this as a command line argument
            */
-          saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+          saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
           code = executeShellCommand(
               format("echo \"no\" | %s", command), scriptDirectory, parameters, activityLogOutputStream);
 
@@ -252,27 +237,32 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             WorkspaceCommand workspaceCommand =
                 getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
             command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            commandToLog = command;
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
-            command = format("terraform refresh -input=false %s %s ", targetArgs, tfVarFiles);
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            command = format("terraform refresh -input=false %s %s ", targetArgs, varParams);
+            commandToLog = format("terraform refresh -input=false %s %s ", targetArgs, uiLogs);
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
-            command = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, tfVarFiles);
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            command = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, varParams);
+            commandToLog = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, uiLogs);
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             command = "terraform apply -input=false tfplan";
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            commandToLog = command;
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             command = format("terraform output --json > %s", tfOutputsFile.toString());
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            commandToLog = command;
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           break;
@@ -281,25 +271,29 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           String command = format("terraform init -input=false %s",
               tfBackendConfigsFile.exists() ? format("-backend-config=%s", tfBackendConfigsFile.getAbsolutePath())
                                             : "");
-          saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+          String commandToLog = command;
+          saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
           code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
 
           if (isNotEmpty(parameters.getWorkspace())) {
             WorkspaceCommand workspaceCommand =
                 getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
             command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            commandToLog = command;
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
 
           if (code == 0) {
-            command = format("terraform refresh -input=false %s %s", targetArgs, tfVarFiles);
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            command = format("terraform refresh -input=false %s %s", targetArgs, varParams);
+            commandToLog = format("terraform refresh -input=false %s %s", targetArgs, uiLogs);
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           if (code == 0) {
-            command = format("terraform destroy -force %s %s", targetArgs, tfVarFiles);
-            saveExecutionLog(parameters, command, CommandExecutionStatus.RUNNING);
+            command = format("terraform destroy -force %s %s", targetArgs, varParams);
+            commandToLog = format("terraform destroy -force %s %s", targetArgs, uiLogs);
+            saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
           break;
@@ -423,6 +417,51 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
   }
 
+  @VisibleForTesting
+  public void getCommandLineVariableParams(TerraformProvisionParameters parameters, File tfVariablesFile,
+      StringBuilder executeParams, StringBuilder uiLogParams) throws IOException {
+    if (isEmpty(parameters.getVariables()) && isEmpty(parameters.getEncryptedVariables())) {
+      FileUtils.deleteQuietly(tfVariablesFile);
+      return;
+    }
+    if (parameters.isUseVarForInlineVariables()) {
+      String variableFormatString = " -var='%s=%s' ";
+      if (isNotEmpty(parameters.getVariables())) {
+        for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
+          executeParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
+          uiLogParams.append(format(variableFormatString, entry.getKey(), entry.getValue()));
+        }
+      }
+
+      if (isNotEmpty(parameters.getEncryptedVariables())) {
+        for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
+          executeParams.append(format(variableFormatString, entry.getKey(),
+              String.valueOf(encryptionService.getDecryptedValue(entry.getValue()))));
+          uiLogParams.append(
+              format(variableFormatString, entry.getKey(), format("HarnessSecret:[%s]", entry.getKey())));
+        }
+      }
+    } else {
+      try (BufferedWriter writer = new BufferedWriter(
+               new OutputStreamWriter(new FileOutputStream(tfVariablesFile), StandardCharsets.UTF_8))) {
+        if (isNotEmpty(parameters.getVariables())) {
+          for (Entry<String, String> entry : parameters.getVariables().entrySet()) {
+            saveVariable(writer, entry.getKey(), entry.getValue());
+          }
+        }
+
+        if (isNotEmpty(parameters.getEncryptedVariables())) {
+          for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
+            String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
+            saveVariable(writer, entry.getKey(), value);
+          }
+        }
+      }
+      executeParams.append(format(VAR_FILE_FORMAT, tfVariablesFile.toString()));
+      uiLogParams.append(format(VAR_FILE_FORMAT, tfVariablesFile.toString()));
+    }
+  }
+
   private void downloadTfStateFile(TerraformProvisionParameters parameters, String scriptDirectory) throws IOException {
     File tfStateFile = (isEmpty(parameters.getWorkspace()))
         ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
@@ -456,7 +495,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     ProcessResult processResult = processExecutor.execute();
     String output = processResult.outputString();
     if (processResult.getExitValue() != 0) {
-      throw new WingsException("Failed to list workspaces. " + output);
+      throw new InvalidRequestException("Failed to list workspaces. " + output);
     }
     return parseOutput(output);
   }
