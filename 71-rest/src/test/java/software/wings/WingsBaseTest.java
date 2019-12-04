@@ -22,6 +22,8 @@ import software.wings.beans.Account.Builder;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsSecretsManagerConfig;
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureFlag.FeatureFlagKeys;
@@ -202,6 +204,31 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     cyberArkConfig.setAppId(generateUuid());
     cyberArkConfig.setClientCertificate(clientCertificate);
     return cyberArkConfig;
+  }
+
+  protected AzureVaultConfig getAzureVaultConfig() {
+    AzureVaultConfig azureVaultConfig = new AzureVaultConfig();
+    azureVaultConfig.setName("myAzureVault");
+    azureVaultConfig.setSecretKey(generateUuid());
+    azureVaultConfig.setDefault(true);
+    azureVaultConfig.setVaultName(generateUuid());
+    azureVaultConfig.setClientId(generateUuid());
+    azureVaultConfig.setSubscription(generateUuid());
+    azureVaultConfig.setTenantId(generateUuid());
+    return azureVaultConfig;
+  }
+
+  protected AwsSecretsManagerConfig getAwsSecretManagerConfig() {
+    AwsSecretsManagerConfig secretsManagerConfig = AwsSecretsManagerConfig.builder()
+                                                       .name("myAwsSecretManager")
+                                                       .accessKey(generateUuid())
+                                                       .secretKey(generateUuid())
+                                                       .region("us-east-1")
+                                                       .secretNamePrefix(generateUuid())
+                                                       .build();
+    secretsManagerConfig.setDefault(true);
+
+    return secretsManagerConfig;
   }
 
   protected Account getAccount(String accountType) {

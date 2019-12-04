@@ -11,7 +11,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
@@ -149,11 +148,6 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     return wingsPersistence.get(AzureVaultConfig.class, id);
   }
 
-  private KeyVaultClient getAzureVaultClient(AzureVaultConfig azureVaultConfig) {
-    decryptAzureConfigSecrets(azureVaultConfig, false);
-    return KeyVaultADALAuthenticator.getClient(azureVaultConfig.getClientId(), azureVaultConfig.getSecretKey());
-  }
-
   @Override
   public AzureVaultConfig getEncryptionConfig(String accountId, String id) {
     AzureVaultConfig secretsManagerConfig = wingsPersistence.get(AzureVaultConfig.class, id);
@@ -163,6 +157,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     return secretsManagerConfig;
   }
 
+  @Override
   public boolean deleteConfig(String accountId, String configId) {
     final long count = wingsPersistence.createQuery(EncryptedData.class)
                            .filter(ACCOUNT_ID_KEY, accountId)
