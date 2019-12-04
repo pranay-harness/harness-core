@@ -31,12 +31,12 @@ public class K8sUtilizationGranularDataServiceImpl {
 
   private static final int MAX_RETRY_COUNT = 5;
   static final String INSERT_STATEMENT =
-      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, SETTINGID ) VALUES (?,?,?,?,?,?,?)";
+      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, INSTANCEID, INSTANCETYPE, SETTINGID, ACCOUNTID) VALUES (?,?,?,?,?,?,?,?)";
   static final String SELECT_DISTINCT_INSTANCEID =
       "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE STARTTIME >= '%s' AND ENDTIME <= '%s'";
   static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(CPU) as CPUUTILIZATIONMAX, MAX(MEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
-      + " SETTINGID, INSTANCEID,  INSTANCETYPE FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY INSTANCEID";
+      + " SETTINGID, INSTANCEID,  INSTANCETYPE, ACCOUNTID FROM UTILIZATION_DATA WHERE INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND ENDTIME <= '%s' GROUP BY INSTANCEID";
 
   public boolean create(K8sGranularUtilizationData k8sGranularUtilizationData) {
     boolean successfulInsert = false;
@@ -74,6 +74,7 @@ public class K8sUtilizationGranularDataServiceImpl {
     statement.setString(5, k8sGranularUtilizationData.getInstanceId());
     statement.setString(6, k8sGranularUtilizationData.getInstanceType());
     statement.setString(7, k8sGranularUtilizationData.getSettingId());
+    statement.setString(8, k8sGranularUtilizationData.getAccountId());
   }
 
   public List<String> getDistinctInstantIds(long startDate, long endDate) {
@@ -110,6 +111,7 @@ public class K8sUtilizationGranularDataServiceImpl {
         String instanceType = resultSet.getString("INSTANCETYPE");
         String instanceId = resultSet.getString("INSTANCEID");
         String settingId = resultSet.getString("SETTINGID");
+        String accountId = resultSet.getString("ACCOUNTID");
         double cpuMax = resultSet.getDouble("CPUUTILIZATIONMAX");
         double memMax = resultSet.getDouble("MEMORYUTILIZATIONMAX");
         double cpuAvg = resultSet.getDouble("CPUUTILIZATIONAVG");
@@ -117,6 +119,7 @@ public class K8sUtilizationGranularDataServiceImpl {
 
         instanceUtilizationDataMap.put(instanceId,
             InstanceUtilizationData.builder()
+                .accountId(accountId)
                 .settingId(settingId)
                 .instanceType(instanceType)
                 .instanceId(instanceId)

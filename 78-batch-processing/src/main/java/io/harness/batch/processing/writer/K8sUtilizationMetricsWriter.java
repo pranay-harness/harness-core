@@ -7,6 +7,7 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationDa
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.entities.InstanceData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
@@ -40,8 +41,35 @@ public class K8sUtilizationMetricsWriter extends EventWriter implements ItemWrit
           k8sUtilizationGranularDataService.getAggregatedUtilizationData(instanceIdsBatch, startDate, endDate);
 
       for (Map.Entry<String, InstanceUtilizationData> entry : aggregatedUtilizationData.entrySet()) {
-        String instanceId = entry.getKey();
         InstanceUtilizationData instanceUtilizationData = entry.getValue();
+        String accountId = instanceUtilizationData.getAccountId();
+        String instanceId = entry.getKey();
+
+        InstanceData instanceData = instanceDataService.fetchInstanceData(accountId, instanceId);
+        Double totalCpuResource = instanceData.getTotalResource().getCpuUnits();
+        Double totalMemoryResource = instanceData.getTotalResource().getMemoryMb();
+
+        // Initialisation to 100% Utilisation
+        double cpuAvgPercentage = 1;
+        double cpuMaxPercentage = 1;
+        double memoryAvgPercentage = 1;
+        double memoryMaxPercentage = 1;
+
+        if (totalCpuResource != null && totalCpuResource != 0) {
+          cpuAvgPercentage = instanceUtilizationData.getCpuUtilizationAvg() / totalCpuResource;
+          cpuMaxPercentage = instanceUtilizationData.getCpuUtilizationMax() / totalCpuResource;
+        }
+
+        if (totalMemoryResource != null && totalMemoryResource != 0) {
+          memoryAvgPercentage = instanceUtilizationData.getMemoryUtilizationAvg() / totalMemoryResource;
+          memoryMaxPercentage = instanceUtilizationData.getMemoryUtilizationMax() / totalMemoryResource;
+        }
+
+        instanceUtilizationData.setCpuUtilizationAvg(cpuAvgPercentage);
+        instanceUtilizationData.setCpuUtilizationMax(cpuMaxPercentage);
+        instanceUtilizationData.setMemoryUtilizationAvg(memoryAvgPercentage);
+        instanceUtilizationData.setMemoryUtilizationMax(memoryMaxPercentage);
+
         utilizationDataService.create(instanceUtilizationData);
       }
     }));

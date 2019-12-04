@@ -13,6 +13,9 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationDa
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.entities.InstanceData;
+import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
@@ -39,15 +42,19 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
   @Inject @InjectMocks K8sUtilizationMetricsWriter k8sUtilizationMetricsWriter;
   @Mock K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Mock private UtilizationDataServiceImpl utilizationDataService;
+  @Mock private InstanceDataService instanceDataService;
   @Mock private JobParameters parameters;
 
   private final String SETTINGID = "SETTING_ID_" + this.getClass().getSimpleName();
   private final String INSTANCEID = "INSTANCEID" + this.getClass().getSimpleName();
+  private final String ACCOUNTID = "ACCOUNTID" + this.getClass().getSimpleName();
   private final String INSTANCETYPE = K8S_POD;
   private final double CPUMAX = 2;
   private final double MEMORYMAX = 1024;
   private final double CPUAVG = 2;
   private final double MEMORYAVG = 1024;
+  private final double MEMORYTOTAL = 2048;
+  private final double CPUTOTAL = 8;
   private final Instant NOW = Instant.now();
   private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
   private final long END_TIME_MILLIS = NOW.toEpochMilli();
@@ -57,6 +64,10 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
+    when(instanceDataService.fetchInstanceData(ACCOUNTID, INSTANCEID))
+        .thenReturn(InstanceData.builder()
+                        .totalResource(Resource.builder().cpuUnits(CPUTOTAL).memoryMb(MEMORYTOTAL).build())
+                        .build());
   }
 
   @Test
@@ -64,8 +75,9 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldWriteK8sUtilizationMetrics() {
     Map<String, InstanceUtilizationData> aggregatedDataMap = new HashMap<>();
-    aggregatedDataMap.put("instance1",
+    aggregatedDataMap.put(INSTANCEID,
         InstanceUtilizationData.builder()
+            .accountId(ACCOUNTID)
             .settingId(SETTINGID)
             .instanceType(INSTANCETYPE)
             .instanceId(INSTANCEID)
@@ -86,9 +98,9 @@ public class K8sUtilizationMetricsWriterTest extends CategoryTest {
     assertThat(instanceUtilizationData.getInstanceId()).isEqualTo(INSTANCEID);
     assertThat(instanceUtilizationData.getInstanceType()).isEqualTo(INSTANCETYPE);
     assertThat(instanceUtilizationData.getSettingId()).isEqualTo(SETTINGID);
-    assertThat(instanceUtilizationData.getCpuUtilizationAvg()).isEqualTo(CPUAVG);
-    assertThat(instanceUtilizationData.getCpuUtilizationMax()).isEqualTo(CPUMAX);
-    assertThat(instanceUtilizationData.getMemoryUtilizationAvg()).isEqualTo(MEMORYAVG);
-    assertThat(instanceUtilizationData.getMemoryUtilizationMax()).isEqualTo(MEMORYMAX);
+    assertThat(instanceUtilizationData.getCpuUtilizationAvg()).isEqualTo(CPUAVG / CPUTOTAL);
+    assertThat(instanceUtilizationData.getCpuUtilizationMax()).isEqualTo(CPUMAX / CPUTOTAL);
+    assertThat(instanceUtilizationData.getMemoryUtilizationAvg()).isEqualTo(MEMORYAVG / MEMORYTOTAL);
+    assertThat(instanceUtilizationData.getMemoryUtilizationMax()).isEqualTo(MEMORYMAX / MEMORYTOTAL);
   }
 }

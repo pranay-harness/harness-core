@@ -30,6 +30,7 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.ECS_UTILIZATION))
         .forEach(publishedMessage -> {
+          String accountId = publishedMessage.getAccountId();
           EcsUtilization ecsUtilization = (EcsUtilization) publishedMessage.getMessage();
           logger.info("Ecs Utilization {} ", ecsUtilization);
 
@@ -98,6 +99,7 @@ public class EcsUtilizationMetricsWriter extends EventWriter implements ItemWrit
           }
 
           InstanceUtilizationData utilizationData = InstanceUtilizationData.builder()
+                                                        .accountId(accountId)
                                                         .clusterArn(clusterArn)
                                                         .clusterName(clusterName)
                                                         .serviceArn(serviceArn)

@@ -26,6 +26,7 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.NODE_UTILIZATION))
         .forEach(publishedMessage -> {
+          String accountId = publishedMessage.getAccountId();
           NodeMetric nodeUtilizationMetric = (NodeMetric) publishedMessage.getMessage();
           logger.info("Node Utilization {} ", nodeUtilizationMetric);
 
@@ -37,6 +38,7 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
 
           K8sGranularUtilizationData k8sGranularUtilizationData =
               K8sGranularUtilizationData.builder()
+                  .accountId(accountId)
                   .instanceId(nodeUtilizationMetric.getName())
                   .instanceType(K8S_NODE)
                   .settingId(nodeUtilizationMetric.getCloudProviderId())
