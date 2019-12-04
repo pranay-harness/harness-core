@@ -95,6 +95,8 @@ import javax.validation.constraints.NotNull;
             @Field(WorkflowExecutionKeys.pipelineExecutionId)
       }), @Index(options = @IndexOptions(name = "workflowExecutionMonitor", background = true), fields = {
         @Field(WorkflowExecutionKeys.status), @Field(WorkflowExecutionKeys.nextIteration)
+      }), @Index(options = @IndexOptions(name = "accountId_pipelineExecutionId"), fields = {
+        @Field(WorkflowExecutionKeys.accountId), @Field(WorkflowExecutionKeys.pipelineExecutionId)
       })
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
