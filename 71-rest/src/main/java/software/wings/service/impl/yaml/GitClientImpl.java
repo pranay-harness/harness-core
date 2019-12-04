@@ -105,6 +105,7 @@ import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
 import software.wings.core.ssh.executors.SshSessionConfig;
+import software.wings.exception.GitClientException;
 import software.wings.service.intfc.yaml.GitClient;
 
 import java.io.File;
@@ -615,6 +616,8 @@ public class GitClientImpl implements GitClient {
 
   private void checkoutFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
     synchronized (gitClientHelper.getLockObject(gitRequest.getGitConnectorId())) {
+      defaultRepoTypeToYaml(gitConfig);
+
       logger.info(new StringBuilder(128)
                       .append(" Processing Git command: FETCH_FILES ")
                       .append("Account: ")
@@ -647,8 +650,6 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory) {
-    defaultRepoTypeToYaml(gitConfig);
-
     validateRequiredArgs(gitRequest);
     String gitConnectorId = gitRequest.getGitConnectorId();
 
@@ -686,9 +687,6 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
-    // Default it to yaml
-    defaultRepoTypeToYaml(gitConfig);
-
     validateRequiredArgs(gitRequest);
 
     String gitConnectorId = gitRequest.getGitConnectorId();
@@ -712,14 +710,14 @@ public class GitClientImpl implements GitClient {
                 .forEach(path -> gitClientHelper.addFiles(gitFiles, path, repoPath));
           } catch (Exception e) {
             resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
-            throw new YamlException(
+            throw new GitClientException(
                 new StringBuilder("Unable to checkout files for filePath [")
                     .append(filePath)
                     .append("]")
                     .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
                     .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                     .toString(),
-                USER);
+                USER, e);
           }
         });
 
@@ -753,8 +751,6 @@ public class GitClientImpl implements GitClient {
 
   @Override
   public void checkoutFilesByPathForHelmSourceRepo(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
-    defaultRepoTypeToYaml(gitConfig);
-
     validateRequiredArgs(gitRequest);
     checkoutFiles(gitConfig, gitRequest);
   }

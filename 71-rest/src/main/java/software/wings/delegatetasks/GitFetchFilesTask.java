@@ -20,7 +20,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -90,18 +89,18 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         gitFetchFilesResult = fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(),
             gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails(), executionLogCallback);
       } catch (Exception ex) {
-        String exceptionMsg = ExceptionUtils.getMessage(ex);
+        String exceptionMsg = ex.getMessage();
 
         // Values.yaml in service spec is optional.
         if (AppManifestKind.VALUES.equals(appManifestKind)
             && K8sValuesLocation.Service.toString().equals(k8ValuesLocation)
             && ex.getCause() instanceof NoSuchFileException) {
-          logger.info(exceptionMsg, ex);
+          logger.info("Values.yaml file not found. " + exceptionMsg, ex);
           executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
           continue;
         }
 
-        String msg = "Exception in processing GitFetchFilesTask. " + ExceptionUtils.getMessage(ex);
+        String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
         logger.error(msg, ex);
         executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
         return GitCommandExecutionResponse.builder()
