@@ -43,9 +43,6 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     this.primaryOnly = primaryOnly;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Runnable#run()
-   */
   @Override
   public void run() {
     String threadName = queue.getName() + "-handler-" + generateUuid();
@@ -134,7 +131,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
     } finally {
       long processTime = currentTimeMillis() - startTime;
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(processTime, OVERRIDE_ERROR)) {
-        logger.info("Done working on message");
+        logger.info("Done with message");
       } catch (Throwable exception) {
         logger.error("Exception while recording the processing of message", exception);
       }

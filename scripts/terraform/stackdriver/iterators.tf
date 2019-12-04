@@ -28,7 +28,7 @@ resource "google_logging_metric" "iterators_delays" {
     labels {
       key = "thread_pool"
       value_type = "STRING"
-      description = "The class of the entity to operate over"
+      description = "The thread pool the entity is processed in"
     }
   }
   value_extractor = "EXTRACT(jsonPayload.harness.delay)"
@@ -46,7 +46,7 @@ resource "google_logging_metric" "iterators_process_time" {
   name = join("_", [local.name_prefix, "iterators_process_time"])
   filter = join("\n", [
     local.filter_prefix,
-    "\"Done working on entity\""])
+    "\"Done with entity\""])
   metric_descriptor {
     metric_kind = "DELTA"
     value_type = "DISTRIBUTION"
@@ -54,7 +54,7 @@ resource "google_logging_metric" "iterators_process_time" {
     labels {
       key = "thread_pool"
       value_type = "STRING"
-      description = "The class of the entity to operate over"
+      description = "The thread pool the entity is processed in"
     }
   }
   value_extractor = "EXTRACT(jsonPayload.harness.processTime)"
@@ -80,7 +80,7 @@ resource "google_logging_metric" "iterators_issues" {
     labels {
       key = "thread_pool"
       value_type = "STRING"
-      description = "The class of the entity to operate over"
+      description = "The thread pool the entity is processed in"
     }
   }
   label_extractors = {
