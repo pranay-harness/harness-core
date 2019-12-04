@@ -1,7 +1,7 @@
 package io.harness.rule;
 
-import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -24,14 +24,13 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.queue.TestUnversionedQueuableObject;
-import io.harness.queue.TestUnversionedQueuableObjectListener;
-import io.harness.queue.TestVersionedQueuableObject;
-import io.harness.queue.TestVersionedQueuableObjectListener;
+import io.harness.queue.TestNoTopicQueuableObject;
+import io.harness.queue.TestNoTopicQueuableObjectListener;
+import io.harness.queue.TestTopicQueuableObject;
+import io.harness.queue.TestTopicQueuableObjectListener;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
-import io.harness.version.VersionModule;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
@@ -66,8 +65,8 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     }
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(TestVersionedQueuableObjectListener.class), 1);
-    queueListenerController.register(injector.getInstance(TestUnversionedQueuableObjectListener.class), 1);
+    queueListenerController.register(injector.getInstance(TestTopicQueuableObjectListener.class), 1);
+    queueListenerController.register(injector.getInstance(TestNoTopicQueuableObjectListener.class), 1);
 
     closingFactory.addServer(new Closeable() {
       @Override
@@ -92,7 +91,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(objectFactory);
-    morphia.map(TestVersionedQueuableObject.class);
+    morphia.map(TestTopicQueuableObject.class);
     morphia.map(TestRegularIterableEntity.class);
     morphia.map(TestIrregularIterableEntity.class);
 
@@ -114,14 +113,16 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(new TypeLiteral<QueuePublisher<TestVersionedQueuableObject>>() {})
-            .toInstance(new MongoQueuePublisher<>(TestVersionedQueuableObject.class.getSimpleName(), VERSIONED));
-        bind(new TypeLiteral<QueueConsumer<TestVersionedQueuableObject>>() {})
-            .toInstance(new MongoQueueConsumer<>(TestVersionedQueuableObject.class, VERSIONED, ofSeconds(5)));
-        bind(new TypeLiteral<QueuePublisher<TestUnversionedQueuableObject>>() {})
-            .toInstance(new MongoQueuePublisher<>(TestUnversionedQueuableObject.class.getSimpleName(), VERSIONED));
-        bind(new TypeLiteral<QueueConsumer<TestUnversionedQueuableObject>>() {})
-            .toInstance(new MongoQueueConsumer<>(TestUnversionedQueuableObject.class, VERSIONED, ofSeconds(5)));
+        final List<String> topic = asList("topic");
+        bind(new TypeLiteral<QueuePublisher<TestTopicQueuableObject>>() {})
+            .toInstance(new MongoQueuePublisher<>(TestTopicQueuableObject.class.getSimpleName(), topic));
+        final List<List<String>> topicExpression = asList(topic);
+        bind(new TypeLiteral<QueueConsumer<TestTopicQueuableObject>>() {})
+            .toInstance(new MongoQueueConsumer<>(TestTopicQueuableObject.class, ofSeconds(5), topicExpression));
+        bind(new TypeLiteral<QueuePublisher<TestNoTopicQueuableObject>>() {})
+            .toInstance(new MongoQueuePublisher<>(TestNoTopicQueuableObject.class.getSimpleName(), topic));
+        bind(new TypeLiteral<QueueConsumer<TestNoTopicQueuableObject>>() {})
+            .toInstance(new MongoQueueConsumer<>(TestNoTopicQueuableObject.class, ofSeconds(5), topicExpression));
 
         bind(QueueController.class).toInstance(new QueueController() {
           @Override
@@ -137,7 +138,6 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
       }
     });
 
-    modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
     modules.addAll(new TestMongoModule(datastore, distributedLockSvc).cumulativeDependencies());
 

@@ -1,15 +1,11 @@
 package io.harness.queue;
 
-import static io.harness.queue.Queue.VersionType.UNVERSIONED;
-import static io.harness.queue.Queue.VersionType.VERSIONED;
-import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.PUNEET;
-import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
@@ -24,7 +20,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.QueueConsumer.Filter;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,23 +33,22 @@ public class MongoQueueTest extends PersistenceTest {
   private final Duration DEFAULT_POLL = ofSeconds(1);
 
   @Inject private HPersistence persistence;
-  @Inject private VersionInfoManager versionInfoManager;
 
-  @Inject private QueuePublisher<TestVersionedQueuableObject> versionedProducer;
-  @Inject private QueueConsumer<TestVersionedQueuableObject> versionedConsumer;
+  @Inject private QueuePublisher<TestTopicQueuableObject> topicProducer;
+  @Inject private QueueConsumer<TestTopicQueuableObject> topicConsumer;
 
-  private MongoQueueConsumer<TestVersionedQueuableObject> queue;
+  private MongoQueueConsumer<TestTopicQueuableObject> queue;
 
   @Before
   public void setup() throws UnknownHostException {
-    queue = (MongoQueueConsumer<TestVersionedQueuableObject>) versionedConsumer;
+    queue = (MongoQueueConsumer<TestTopicQueuableObject>) topicConsumer;
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotGetMessageOnceAcquired() {
-    versionedProducer.send(new TestVersionedQueuableObject(1));
+    topicProducer.send(new TestTopicQueuableObject(1));
 
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
 
@@ -66,13 +60,13 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldReturnMessageInTimeOrder() {
-    TestVersionedQueuableObject messageOne = new TestVersionedQueuableObject(1);
-    TestVersionedQueuableObject messageTwo = new TestVersionedQueuableObject(2);
-    TestVersionedQueuableObject messageThree = new TestVersionedQueuableObject(3);
+    TestTopicQueuableObject messageOne = new TestTopicQueuableObject(1);
+    TestTopicQueuableObject messageTwo = new TestTopicQueuableObject(2);
+    TestTopicQueuableObject messageThree = new TestTopicQueuableObject(3);
 
-    versionedProducer.send(messageOne);
-    versionedProducer.send(messageTwo);
-    versionedProducer.send(messageThree);
+    topicProducer.send(messageOne);
+    topicProducer.send(messageTwo);
+    topicProducer.send(messageThree);
 
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageOne);
     assertThat(queue.get(DEFAULT_WAIT, DEFAULT_POLL)).isEqualTo(messageTwo);
@@ -96,7 +90,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldGetMessageWhenAvailableWithinWaitPeriod() {
     Date start = new Date();
 
-    versionedProducer.send(new TestVersionedQueuableObject(1));
+    topicProducer.send(new TestTopicQueuableObject(1));
 
     queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
@@ -107,9 +101,9 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
-    TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
+    TestTopicQueuableObject message = new TestTopicQueuableObject(1);
     message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
-    versionedProducer.send(message);
+    topicProducer.send(message);
 
     assertThat(queue.get(Duration.ZERO, Duration.ZERO)).isNull();
 
@@ -122,7 +116,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldObtainStuckMessageWhenEarliestGetHasExpired() {
-    versionedProducer.send(new TestVersionedQueuableObject(1));
+    topicProducer.send(new TestTopicQueuableObject(1));
 
     queue.setHeartbeat(ZERO);
 
@@ -141,12 +135,12 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotUpdateHeartbeatOfAlreadyExpiredMessage() {
-    versionedProducer.send(new TestVersionedQueuableObject(1));
-    TestVersionedQueuableObject message = queue.get(Duration.ZERO, Duration.ZERO);
+    topicProducer.send(new TestTopicQueuableObject(1));
+    TestTopicQueuableObject message = queue.get(Duration.ZERO, Duration.ZERO);
 
     queue.updateHeartbeat(message);
 
-    TestVersionedQueuableObject actual = getDatastore().get(TestVersionedQueuableObject.class, message.getId());
+    TestTopicQueuableObject actual = getDatastore().get(TestTopicQueuableObject.class, message.getId());
 
     assertThat(actual.getEarliestGet()).isEqualTo(message.getEarliestGet());
   }
@@ -155,13 +149,13 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotUpdateHeartbeatOfMessageWhichIsNotRunning() {
-    TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
+    TestTopicQueuableObject message = new TestTopicQueuableObject(1);
 
-    versionedProducer.send(message);
+    topicProducer.send(message);
 
     queue.updateHeartbeat(message);
 
-    TestVersionedQueuableObject actual = getDatastore().get(TestVersionedQueuableObject.class, message.getId());
+    TestTopicQueuableObject actual = getDatastore().get(TestTopicQueuableObject.class, message.getId());
 
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
@@ -171,10 +165,10 @@ public class MongoQueueTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldUpdateHeartbeatOfMessageWhileRunning() {
     queue.setHeartbeat(ofSeconds(10));
-    versionedProducer.send(new TestVersionedQueuableObject(1));
+    topicProducer.send(new TestTopicQueuableObject(1));
 
     Date beforeGet = new Date();
-    TestVersionedQueuableObject message = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
+    TestTopicQueuableObject message = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     Date messageEarliestGet = message.getEarliestGet();
 
@@ -182,7 +176,7 @@ public class MongoQueueTest extends PersistenceTest {
     queue.setHeartbeat(ofSeconds(20));
     queue.updateHeartbeat(message);
 
-    TestVersionedQueuableObject actual = getDatastore().get(TestVersionedQueuableObject.class, message.getId());
+    TestTopicQueuableObject actual = getDatastore().get(TestTopicQueuableObject.class, message.getId());
     log().info("Actual Timestamp of message = {}", actual.getEarliestGet());
 
     assertThat(actual.getEarliestGet()).isAfter(messageEarliestGet);
@@ -198,7 +192,7 @@ public class MongoQueueTest extends PersistenceTest {
     assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(0);
     assertThat(queue.count(Filter.ALL)).isEqualTo(0);
 
-    versionedProducer.send(new TestVersionedQueuableObject(1));
+    topicProducer.send(new TestTopicQueuableObject(1));
 
     assertThat(queue.count(Filter.RUNNING)).isEqualTo(0);
     assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(1);
@@ -215,23 +209,23 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldAckMessage() {
-    versionedProducer.send(new TestVersionedQueuableObject(0));
-    versionedProducer.send(new TestVersionedQueuableObject(1));
+    topicProducer.send(new TestTopicQueuableObject(0));
+    topicProducer.send(new TestTopicQueuableObject(1));
 
-    TestVersionedQueuableObject result = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
+    TestTopicQueuableObject result = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
-    assertThat(getDatastore().getCount(TestVersionedQueuableObject.class)).isEqualTo(2);
+    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(2);
 
     getDatastore()
-        .getCollection(TestVersionedQueuableObject.class)
+        .getCollection(TestTopicQueuableObject.class)
         .find()
         .forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
     queue.ack(result);
-    assertThat(getDatastore().getCount(TestVersionedQueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(1);
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenAckingNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ack(null));
@@ -241,58 +235,58 @@ public class MongoQueueTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldRequeueMessage() {
-    TestVersionedQueuableObject message = new TestVersionedQueuableObject(0);
+    TestTopicQueuableObject message = new TestTopicQueuableObject(0);
 
-    versionedProducer.send(message);
+    topicProducer.send(message);
 
-    TestVersionedQueuableObject resultOne = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
+    TestTopicQueuableObject resultOne = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
     Date expectedEarliestGet = new Date();
     Date timeBeforeRequeue = new Date();
     queue.requeue(resultOne.getId(), 0, expectedEarliestGet);
 
-    assertThat(getDatastore().getCount(TestVersionedQueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(1);
 
-    TestVersionedQueuableObject actual = getDatastore().find(TestVersionedQueuableObject.class).get();
+    TestTopicQueuableObject actual = getDatastore().find(TestTopicQueuableObject.class).get();
 
-    TestVersionedQueuableObject expected = new TestVersionedQueuableObject(0);
-    expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
+    TestTopicQueuableObject expected = new TestTopicQueuableObject(0);
+    expected.setTopic("topic");
     expected.setEarliestGet(expectedEarliestGet);
 
     assertThat(actual).isEqualToIgnoringGivenFields(expected, QueuableKeys.id, QueuableKeys.earliestGet);
   }
 
   @Test
-  @Owner(developers = BRETT)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(QueuableKeys.id, 0, null));
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldThrowNpeWhenSendIsCalledWithNullMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> versionedProducer.send(null));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> topicProducer.send(null));
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSendMessage() {
-    TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
+    TestTopicQueuableObject message = new TestTopicQueuableObject(1);
 
     Date expectedEarliestGet = new Date();
     Date timeBeforeSend = new Date();
     message.setEarliestGet(expectedEarliestGet);
-    versionedProducer.send(message);
+    topicProducer.send(message);
 
-    assertThat(getDatastore().getCount(TestVersionedQueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestTopicQueuableObject.class)).isEqualTo(1);
 
-    TestVersionedQueuableObject actual = getDatastore().find(TestVersionedQueuableObject.class).get();
+    TestTopicQueuableObject actual = getDatastore().find(TestTopicQueuableObject.class).get();
 
-    TestVersionedQueuableObject expected = new TestVersionedQueuableObject(1);
-    expected.setVersion(versionInfoManager.getVersionInfo().getVersion());
+    TestTopicQueuableObject expected = new TestTopicQueuableObject(1);
+    expected.setTopic("topic");
     expected.setEarliestGet(expectedEarliestGet);
 
     assertThat(actual).isEqualToIgnoringGivenFields(expected, QueuableKeys.id);
@@ -303,14 +297,12 @@ public class MongoQueueTest extends PersistenceTest {
   @Category(UnitTests.class)
   public void shouldSendAndGetMessageWithEntityReference() {
     MongoQueuePublisher<TestQueuableWithEntity> entityProducer =
-        new MongoQueuePublisher<>(TestQueuableWithEntity.class.getSimpleName(), UNVERSIONED);
+        new MongoQueuePublisher<>(TestQueuableWithEntity.class.getSimpleName(), null);
     on(entityProducer).set("persistence", persistence);
-    on(entityProducer).set("versionInfoManager", versionInfoManager);
 
     MongoQueueConsumer<TestQueuableWithEntity> entityConsumer =
-        new MongoQueueConsumer<>(TestQueuableWithEntity.class, UNVERSIONED, ofSeconds(5));
+        new MongoQueueConsumer<>(TestQueuableWithEntity.class, ofSeconds(5), null);
     on(entityConsumer).set("persistence", persistence);
-    on(entityConsumer).set("versionInfoManager", versionInfoManager);
 
     TestInternalEntity testEntity = TestInternalEntity.builder().id("1").build();
     getDatastore().save(testEntity);
@@ -327,42 +319,19 @@ public class MongoQueueTest extends PersistenceTest {
   }
 
   @Test
-  @Owner(developers = PUNEET)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void shouldFilterWithVersion() {
-    MongoQueuePublisher<TestVersionedQueuableObject> versionProducer =
-        new MongoQueuePublisher<>(TestVersionedQueuableObject.class.getSimpleName(), VERSIONED);
-    on(versionProducer).set("persistence", persistence);
-    on(versionProducer).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
+  public void shouldFilterWithTopic() {
+    MongoQueuePublisher<TestTopicQueuableObject> topicPublisher =
+        new MongoQueuePublisher<>(TestTopicQueuableObject.class.getSimpleName(), asList("topic1"));
+    on(topicPublisher).set("persistence", persistence);
 
-    MongoQueueConsumer<TestVersionedQueuableObject> versionConsumer =
-        new MongoQueueConsumer<>(TestVersionedQueuableObject.class, VERSIONED, ofSeconds(5));
-    on(versionConsumer).set("persistence", persistence);
-    on(versionConsumer).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
+    MongoQueueConsumer<TestTopicQueuableObject> topicConsumer =
+        new MongoQueueConsumer<>(TestTopicQueuableObject.class, ofSeconds(5), asList(asList("topic2")));
+    on(topicConsumer).set("persistence", persistence);
 
-    TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
-    versionProducer.send(message);
-    on(versionConsumer).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
-    assertThat(versionConsumer.get(DEFAULT_WAIT, DEFAULT_POLL)).isNull();
-  }
-
-  @Test
-  @Owner(developers = PUNEET)
-  @Category(UnitTests.class)
-  public void shouldNotFilterWithVersion() {
-    MongoQueuePublisher<TestVersionedQueuableObject> versionProducer =
-        new MongoQueuePublisher<>(TestVersionedQueuableObject.class.getSimpleName(), UNVERSIONED);
-    on(versionProducer).set("persistence", persistence);
-    on(versionProducer).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
-
-    MongoQueueConsumer<TestVersionedQueuableObject> versionConsumer =
-        new MongoQueueConsumer<>(TestVersionedQueuableObject.class, UNVERSIONED, ofSeconds(5));
-    on(versionConsumer).set("persistence", persistence);
-    on(versionConsumer).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
-
-    TestVersionedQueuableObject message = new TestVersionedQueuableObject(1);
-    versionProducer.send(message);
-    on(versionConsumer).set("versionInfoManager", new VersionInfoManager("version   : 2.0.0"));
-    assertThat(versionConsumer.get(DEFAULT_WAIT, DEFAULT_POLL)).isNotNull();
+    TestTopicQueuableObject message = new TestTopicQueuableObject(1);
+    topicPublisher.send(message);
+    assertThat(topicConsumer.get(DEFAULT_WAIT, DEFAULT_POLL)).isNull();
   }
 }

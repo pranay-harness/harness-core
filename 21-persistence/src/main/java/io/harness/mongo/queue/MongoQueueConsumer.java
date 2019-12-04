@@ -1,8 +1,8 @@
 package io.harness.mongo.queue;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -12,7 +12,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queuable.QueuableKeys;
 import io.harness.queue.QueueConsumer;
-import io.harness.version.VersionInfoManager;
+import io.harness.queue.TopicUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -22,6 +22,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -30,17 +31,16 @@ import java.util.concurrent.TimeUnit;
 public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> {
   private final Class<T> klass;
   @Setter private Duration heartbeat;
-  private final VersionType versionType;
+  List<String> topics;
 
   private Semaphore semaphore = new Semaphore(1);
   @Inject private HPersistence persistence;
-  @Inject private VersionInfoManager versionInfoManager;
 
-  public MongoQueueConsumer(Class<T> klass, VersionType versionType, Duration heartbeat) {
+  public MongoQueueConsumer(Class<T> klass, Duration heartbeat, List<List<String>> topicExpression) {
     Objects.requireNonNull(klass);
     this.klass = klass;
     this.heartbeat = heartbeat;
-    this.versionType = versionType;
+    this.topics = TopicUtils.resolveExpressionIntoListOfTopics(topicExpression);
   }
 
   @Override
@@ -165,7 +165,12 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
   }
 
   private Query<T> createQuery() {
-    return persistence.createQuery(klass).filter(
-        QueuableKeys.version, versionType == VERSIONED ? versionInfoManager.getVersionInfo().getVersion() : null);
+    final Query<T> query = persistence.createQuery(klass);
+    if (isNotEmpty(topics)) {
+      query.field(QueuableKeys.topic).in(topics);
+    } else {
+      query.field(QueuableKeys.topic).doesNotExist();
+    }
+    return query;
   }
 }
