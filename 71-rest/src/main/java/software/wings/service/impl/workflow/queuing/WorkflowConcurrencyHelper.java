@@ -135,6 +135,7 @@ public class WorkflowConcurrencyHelper {
             .put(ResourceConstraintStateKeys.holdingScope, concurrencyStrategy.getHoldingScope().name())
             .put(ResourceConstraintStateKeys.resourceUnit, concurrencyStrategy.getResourceUnit())
             .put(ResourceConstraintStateKeys.acquireMode, AcquireMode.ENSURE)
+            .put(ResourceConstraintStateKeys.harnessOwned, resourceConstraint.isHarnessOwned())
             .put(STATE_TIMEOUT_KEY_NAME, WEEK_TIMEOUT);
     if (EmptyPredicate.isNotEmpty(concurrencyStrategy.getNotificationGroups())) {
       mapBuilder.put(ResourceConstraintStateKeys.notificationGroups, concurrencyStrategy.getNotificationGroups());

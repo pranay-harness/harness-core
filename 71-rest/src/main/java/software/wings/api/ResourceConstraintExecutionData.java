@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
+
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.sm.StateExecutionData;
@@ -13,18 +15,24 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
   @Getter @Setter private String unit;
   @Getter @Setter private int usage;
   @Getter @Setter private int alreadyAcquiredPermits;
+  @Getter @Setter private boolean harnessOwned;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "Name",
         ExecutionDataValue.builder().displayName("Name").value(resourceConstraintName).build());
-    putNotNull(executionDetails, "Capacity",
-        ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
     putNotNull(executionDetails, "Unit", ExecutionDataValue.builder().displayName("Unit").value(unit).build());
-    putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
-    putNotNull(executionDetails, "alreadyAcquiredPermits",
-        ExecutionDataValue.builder().displayName("Already Acquired Permits").value(alreadyAcquiredPermits).build());
+    putNotNull(executionDetails, "Harness Owned",
+        ExecutionDataValue.builder().displayName("Harness Owned").value(harnessOwned).build());
+
+    if (!QUEUING_RC_NAME.equals(resourceConstraintName)) {
+      putNotNull(executionDetails, "Capacity",
+          ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
+      putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
+      putNotNull(executionDetails, "alreadyAcquiredPermits",
+          ExecutionDataValue.builder().displayName("Already Acquired Permits").value(alreadyAcquiredPermits).build());
+    }
     return executionDetails;
   }
 
@@ -33,12 +41,17 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "Name",
         ExecutionDataValue.builder().displayName("Name").value(resourceConstraintName).build());
-    putNotNull(executionDetails, "Capacity",
-        ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
     putNotNull(executionDetails, "Unit", ExecutionDataValue.builder().displayName("Unit").value(unit).build());
-    putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
-    putNotNull(executionDetails, "alreadyAcquiredPermits",
-        ExecutionDataValue.builder().displayName("Already Acquired Permits").value(alreadyAcquiredPermits).build());
+    putNotNull(executionDetails, "Harness Owned",
+        ExecutionDataValue.builder().displayName("Harness Owned").value(harnessOwned).build());
+
+    if (!QUEUING_RC_NAME.equals(resourceConstraintName)) {
+      putNotNull(executionDetails, "Capacity",
+          ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
+      putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
+      putNotNull(executionDetails, "alreadyAcquiredPermits",
+          ExecutionDataValue.builder().displayName("Already Acquired Permits").value(alreadyAcquiredPermits).build());
+    }
     return executionDetails;
   }
 

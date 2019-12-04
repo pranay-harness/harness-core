@@ -6,6 +6,7 @@ import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAnalysisStatusMigration;
 import migrations.all.AddArtifactIdentityMigration;
+import migrations.all.AddHarnessOwnedToResourceConstraint;
 import migrations.all.AddInfraMappingNameToInstanceData;
 import migrations.all.AddIsDefaultFlagToUserGroup;
 import migrations.all.AddOrchestrationToWorkflows;
@@ -139,6 +140,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(80, BaseMigration.class))
         .add(Pair.of(81, AmendCorruptedEncryptedServiceVariable.class))
         .add(Pair.of(82, AddArtifactIdentityMigration.class))
+        .add(Pair.of(83, AddHarnessOwnedToResourceConstraint.class))
         .build();
   }
 }
