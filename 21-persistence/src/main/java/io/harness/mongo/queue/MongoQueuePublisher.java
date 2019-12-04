@@ -26,11 +26,21 @@ public class MongoQueuePublisher<T extends Queuable> implements QueuePublisher<T
     topicPrefix = TopicUtils.combineElements(topicPrefixElements);
   }
 
-  @Override
+  private void store(T payload) {
+    payload.setGlobalContext(obtainGlobalContext());
+    persistence.insertIgnoringDuplicateKeys(payload);
+  }
+
   public void send(final T payload) {
     Objects.requireNonNull(payload);
-    payload.setGlobalContext(obtainGlobalContext());
     payload.setTopic(topicPrefix);
-    persistence.insertIgnoringDuplicateKeys(payload);
+    store(payload);
+  }
+
+  @Override
+  public void send(List<String> additionalTopicElements, final T payload) {
+    Objects.requireNonNull(payload);
+    payload.setTopic(TopicUtils.appendElements(topicPrefix, additionalTopicElements));
+    store(payload);
   }
 }
