@@ -57,7 +57,6 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.eraro.ErrorCode;
@@ -1297,8 +1296,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
-      if (EmptyPredicate.isNotEmpty(pyInfraMapping.hosts())) {
-        return pyInfraMapping.hosts();
+      if (isNotEmpty(pyInfraMapping.getProvisionerId())) {
+        if (isNotEmpty(pyInfraMapping.hosts())) {
+          return pyInfraMapping.hosts();
+        } else {
+          throw new InvalidRequestException(
+              "Hosts are not present in infra. Make sure to add provisioner step in the Workflow/Pipeline.");
+        }
       }
       List<String> hostNames = pyInfraMapping.getHostNames()
                                    .stream()
@@ -1913,7 +1917,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    notNullCheck("Infra Mapping was deleted", infrastructureMapping, USER);
+    if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
+      notNullCheck(
+          "Infra Mapping not found. Make sure to run provisioner step if Infra Definition is dynamic provisioned.",
+          infrastructureMapping, USER);
+    } else {
+      notNullCheck("Infra Mapping was deleted", infrastructureMapping, USER);
+    }
     return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, workflowExecutionId);
   }
 
