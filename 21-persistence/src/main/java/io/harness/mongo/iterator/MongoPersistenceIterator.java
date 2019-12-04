@@ -277,9 +277,9 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
         long processTime = currentTimeMillis() - startTime;
         try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(processTime, OVERRIDE_ERROR)) {
           if (acceptableExecutionTime == null || processTime <= acceptableExecutionTime.toMillis()) {
-            logger.info("Done working on entity");
+            logger.info("Done with entity");
           } else {
-            logger.error("Done working on entity but took too long acceptable {}", acceptableExecutionTime.toMillis());
+            logger.error("Done with entity but took too long acceptable {}", acceptableExecutionTime.toMillis());
           }
         } catch (Throwable exception) {
           logger.error("Exception while recording the processing of entity", exception);
