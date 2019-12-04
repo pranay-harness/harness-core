@@ -157,6 +157,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
 
   private void aggregatedUtilizationDataMockResultSet() throws SQLException {
     when(aggregatedDataResultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> "INSTANCEID");
+    when(aggregatedDataResultSet.getString("ACCOUNTID")).thenAnswer((Answer<String>) invocation -> "ACCOUNTID");
     when(aggregatedDataResultSet.getString("INSTANCETYPE")).thenAnswer((Answer<String>) invocation -> "INSTANCETYPE");
     when(aggregatedDataResultSet.getString("SETTINGID")).thenAnswer((Answer<String>) invocation -> "SETTINGID");
     when(aggregatedDataResultSet.getString("CPUUTILIZATIONMAX"))

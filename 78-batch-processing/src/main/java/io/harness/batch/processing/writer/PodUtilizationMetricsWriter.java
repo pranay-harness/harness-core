@@ -27,6 +27,7 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
     publishedMessages.stream()
         .filter(publishedMessage -> publishedMessage.getType().equals(EventTypeConstants.POD_UTILIZATION))
         .forEach(publishedMessage -> {
+          String accountId = publishedMessage.getAccountId();
           PodMetric podUtilizationMetric = (PodMetric) publishedMessage.getMessage();
           logger.info("Pod Utilization {} ", podUtilizationMetric);
 
@@ -44,6 +45,7 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
 
           K8sGranularUtilizationData k8sGranularUtilizationData =
               K8sGranularUtilizationData.builder()
+                  .accountId(accountId)
                   .instanceId(podUtilizationMetric.getName())
                   .instanceType(K8S_POD)
                   .settingId(podUtilizationMetric.getCloudProviderId())

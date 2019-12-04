@@ -6,6 +6,7 @@ import lombok.Value;
 @Value
 @Builder
 public class K8sGranularUtilizationData {
+  private String accountId;
   private String instanceId;
   private String instanceType;
   private String settingId;
