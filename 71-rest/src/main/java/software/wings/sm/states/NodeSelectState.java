@@ -21,8 +21,6 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -96,117 +94,110 @@ public abstract class NodeSelectState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    try {
-      String appId = requireNonNull(context.getApp()).getUuid();
+    String appId = requireNonNull(context.getApp()).getUuid();
 
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
-      String serviceId = phaseElement.getServiceElement().getUuid();
-      String infraMappingId = context.fetchInfraMappingId();
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    String infraMappingId = context.fetchInfraMappingId();
 
-      List<ServiceInstance> hostExclusionList = stateExecutionService.getHostExclusionList(
-          ((ExecutionContextImpl) context).getStateExecutionInstance(), phaseElement, context.fetchInfraMappingId());
+    List<ServiceInstance> hostExclusionList = stateExecutionService.getHostExclusionList(
+        ((ExecutionContextImpl) context).getStateExecutionInstance(), phaseElement, context.fetchInfraMappingId());
 
-      List<String> excludedServiceInstanceIds =
-          hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
+    List<String> excludedServiceInstanceIds =
+        hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList());
 
-      InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-      ServiceInstanceSelectionParams.Builder selectionParams =
-          aServiceInstanceSelectionParams()
-              .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
-              .withSelectSpecificHosts(specificHosts);
-      int totalAvailableInstances =
-          infrastructureMappingService.listHostDisplayNames(appId, infraMappingId, context.getWorkflowExecutionId())
-              .size();
-      int instancesToAdd;
-      if (specificHosts) {
-        if (infrastructureMapping instanceof AwsInfrastructureMapping
-            && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-              .addParam("args", "Cannot specify hosts when using an auto scale group");
-        }
-        selectionParams.withHostNames(hostNames);
-        instancesToAdd = hostNames.size();
-        logger.info("Selecting specific hosts: {}", hostNames);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+    ServiceInstanceSelectionParams.Builder selectionParams =
+        aServiceInstanceSelectionParams()
+            .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
+            .withSelectSpecificHosts(specificHosts);
+    int totalAvailableInstances =
+        infrastructureMappingService.listHostDisplayNames(appId, infraMappingId, context.getWorkflowExecutionId())
+            .size();
+    int instancesToAdd;
+    if (specificHosts) {
+      if (infrastructureMapping instanceof AwsInfrastructureMapping
+          && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Cannot specify hosts when using an auto scale group");
+      }
+      selectionParams.withHostNames(hostNames);
+      instancesToAdd = hostNames.size();
+      logger.info("Selecting specific hosts: {}", hostNames);
+    } else {
+      int instanceCountTotal = getCount(totalAvailableInstances);
+      if (((ExecutionContextImpl) context).getStateExecutionInstance().getOrchestrationWorkflowType()
+          == OrchestrationWorkflowType.ROLLING) {
+        instancesToAdd = instanceCountTotal;
       } else {
-        int instanceCountTotal = getCount(totalAvailableInstances);
-        if (((ExecutionContextImpl) context).getStateExecutionInstance().getOrchestrationWorkflowType()
-            == OrchestrationWorkflowType.ROLLING) {
-          instancesToAdd = instanceCountTotal;
-        } else {
-          instancesToAdd = Math.max(0, instanceCountTotal - hostExclusionList.size());
-        }
+        instancesToAdd = Math.max(0, instanceCountTotal - hostExclusionList.size());
       }
-      selectionParams.withCount(instancesToAdd);
-
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
-      StringBuilder message = new StringBuilder();
-      boolean nodesOverriddenFromExecutionHosts = processExecutionHosts(
-          appId, selectionParams, workflowStandardParams, message, context.getWorkflowExecutionId());
-
-      logger.info(
-          "Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
-      List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
-          appId, infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
-
-      String errorMessage = buildServiceInstancesErrorMessage(
-          serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
-
-      if (isNotEmpty(errorMessage) && !nodesOverriddenFromExecutionHosts) {
-        return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
-      }
-
-      boolean excludeHostsWithSameArtifact = false;
-      if (workflowStandardParams != null) {
-        excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact()
-            && !ROLLING.equals(context.getOrchestrationWorkflowType());
-        if (InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
-            || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
-                   infrastructureMapping.getInfraMappingType())
-            || InfrastructureMappingType.AZURE_INFRA.name().equals(infrastructureMapping.getInfraMappingType())
-            || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name().equals(
-                   infrastructureMapping.getInfraMappingType())) {
-          if (excludeHostsWithSameArtifact && !nodesOverriddenFromExecutionHosts) {
-            serviceInstances =
-                excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
-          }
-        }
-      }
-      SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
-      selectedNodeExecutionData.setServiceInstanceList(serviceInstances.stream()
-                                                           .map(serviceInstance
-                                                               -> aServiceInstance()
-                                                                      .withUuid(serviceInstance.getUuid())
-                                                                      .withHostId(serviceInstance.getHostId())
-                                                                      .withHostName(serviceInstance.getHostName())
-                                                                      .withPublicDns(serviceInstance.getPublicDns())
-                                                                      .build())
-                                                           .collect(toList()));
-      selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
-      List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
-      ContextElement serviceIdParamElement =
-          aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
-      ExecutionResponseBuilder executionResponse = ExecutionResponse.builder()
-                                                       .contextElement(serviceIdParamElement)
-                                                       .notifyElement(serviceIdParamElement)
-                                                       .stateExecutionData(selectedNodeExecutionData);
-      if (isEmpty(serviceInstances)) {
-        if (!excludeHostsWithSameArtifact) {
-          executionResponse.errorMessage("No nodes selected");
-        } else {
-          executionResponse.errorMessage("No nodes selected (Nodes already deployed with the same artifact)");
-        }
-      }
-      if (nodesOverriddenFromExecutionHosts) {
-        executionResponse.errorMessage(message.toString());
-      }
-
-      return executionResponse.build();
-    } catch (WingsException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+    selectionParams.withCount(instancesToAdd);
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+    StringBuilder message = new StringBuilder();
+    boolean nodesOverriddenFromExecutionHosts = processExecutionHosts(
+        appId, selectionParams, workflowStandardParams, message, context.getWorkflowExecutionId());
+
+    logger.info("Selected {} instances - serviceId: {}, infraMappingId: {}", instancesToAdd, serviceId, infraMappingId);
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
+        appId, infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
+
+    String errorMessage = buildServiceInstancesErrorMessage(
+        serviceInstances, hostExclusionList, infrastructureMapping, totalAvailableInstances, context);
+
+    if (isNotEmpty(errorMessage) && !nodesOverriddenFromExecutionHosts) {
+      return ExecutionResponse.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+    }
+
+    boolean excludeHostsWithSameArtifact = false;
+    if (workflowStandardParams != null) {
+      excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact()
+          && !ROLLING.equals(context.getOrchestrationWorkflowType());
+      if (InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
+          || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
+                 infrastructureMapping.getInfraMappingType())
+          || InfrastructureMappingType.AZURE_INFRA.name().equals(infrastructureMapping.getInfraMappingType())
+          || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name().equals(
+                 infrastructureMapping.getInfraMappingType())) {
+        if (excludeHostsWithSameArtifact && !nodesOverriddenFromExecutionHosts) {
+          serviceInstances =
+              excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
+        }
+      }
+    }
+    SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
+    selectedNodeExecutionData.setServiceInstanceList(serviceInstances.stream()
+                                                         .map(serviceInstance
+                                                             -> aServiceInstance()
+                                                                    .withUuid(serviceInstance.getUuid())
+                                                                    .withHostId(serviceInstance.getHostId())
+                                                                    .withHostName(serviceInstance.getHostName())
+                                                                    .withPublicDns(serviceInstance.getPublicDns())
+                                                                    .build())
+                                                         .collect(toList()));
+    selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
+    List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
+    ContextElement serviceIdParamElement =
+        aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
+    ExecutionResponseBuilder executionResponse = ExecutionResponse.builder()
+                                                     .contextElement(serviceIdParamElement)
+                                                     .notifyElement(serviceIdParamElement)
+                                                     .stateExecutionData(selectedNodeExecutionData);
+    if (isEmpty(serviceInstances)) {
+      if (!excludeHostsWithSameArtifact) {
+        executionResponse.errorMessage("No nodes selected");
+      } else {
+        executionResponse.errorMessage("No nodes selected (Nodes already deployed with the same artifact)");
+      }
+    }
+    if (nodesOverriddenFromExecutionHosts) {
+      executionResponse.errorMessage(message.toString());
+    }
+
+    return executionResponse.build();
   }
 
   boolean processExecutionHosts(String appId, Builder selectionParams, WorkflowStandardParams workflowStandardParams,
