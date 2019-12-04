@@ -13,4 +13,6 @@ public interface AzureSecretsManagerService {
   void decryptAzureConfigSecrets(AzureVaultConfig secretManagerConfig, boolean maskSecret);
 
   AzureVaultConfig getEncryptionConfig(String accountId, String id);
+
+  boolean deleteConfig(String accountId, String configId);
 }
