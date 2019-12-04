@@ -1,9 +1,8 @@
 package software.wings.app;
 
-import static io.harness.queue.Queue.VersionType.UNVERSIONED;
-import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -17,6 +16,7 @@ import io.harness.mongo.queue.QueueFactory;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueuePublisher;
+import io.harness.version.VersionInfoManager;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.api.InstanceEvent;
@@ -41,123 +41,145 @@ public class ManagerQueueModule extends AbstractModule {
   @Provides
   @Singleton
   QueuePublisher<PruneEvent> pruneQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, PruneEvent.class, UNVERSIONED, config);
+    return QueueFactory.createQueuePublisher(injector, PruneEvent.class, null, config);
   }
 
   @Provides
   @Singleton
   QueueConsumer<PruneEvent> pruneQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, PruneEvent.class, UNVERSIONED, ofSeconds(5), config);
+    return QueueFactory.createQueueConsumer(injector, PruneEvent.class, ofSeconds(5), null, config);
   }
 
   @Provides
   @Singleton
   QueuePublisher<EmailData> emailQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, EmailData.class, UNVERSIONED, config);
+    return QueueFactory.createQueuePublisher(injector, EmailData.class, null, config);
   }
 
   @Provides
   @Singleton
   QueueConsumer<EmailData> emailQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, EmailData.class, UNVERSIONED, ofSeconds(5), config);
+    return QueueFactory.createQueueConsumer(injector, EmailData.class, ofSeconds(5), null, config);
   }
 
   @Provides
   @Singleton
   QueuePublisher<CollectEvent> collectQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, CollectEvent.class, UNVERSIONED, config);
+    return QueueFactory.createQueuePublisher(injector, CollectEvent.class, null, config);
   }
 
   @Provides
   @Singleton
   QueueConsumer<CollectEvent> collectQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, CollectEvent.class, UNVERSIONED, ofSeconds(5), config);
+    return QueueFactory.createQueueConsumer(injector, CollectEvent.class, ofSeconds(5), null, config);
   }
 
   @Provides
   @Singleton
   QueuePublisher<KmsTransitionEvent> kmsTransitionQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, KmsTransitionEvent.class, UNVERSIONED, config);
+    return QueueFactory.createQueuePublisher(injector, KmsTransitionEvent.class, null, config);
   }
 
   @Provides
   @Singleton
   QueueConsumer<KmsTransitionEvent> kmsTransitionQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, KmsTransitionEvent.class, UNVERSIONED, ofSeconds(30), config);
+    return QueueFactory.createQueueConsumer(injector, KmsTransitionEvent.class, ofSeconds(30), null, config);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<DeploymentEvent> deploymentQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, DeploymentEvent.class, VERSIONED, config);
+  QueuePublisher<DeploymentEvent> deploymentQueuePublisher(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(
+        injector, DeploymentEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<DeploymentEvent> deploymentQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, DeploymentEvent.class, VERSIONED, ofMinutes(1), config);
+  QueueConsumer<DeploymentEvent> deploymentQueueConsumer(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, DeploymentEvent.class, ofMinutes(1),
+        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<ExecutionEvent> executionQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, ExecutionEvent.class, VERSIONED, config);
+  QueuePublisher<ExecutionEvent> executionQueuePublisher(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(
+        injector, ExecutionEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<ExecutionEvent> executionQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, ExecutionEvent.class, VERSIONED, ofSeconds(30), config);
+  QueueConsumer<ExecutionEvent> executionQueueConsumer(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, ExecutionEvent.class, ofSeconds(30),
+        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<DelayEvent> delayQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, DelayEvent.class, VERSIONED, config);
+  QueuePublisher<DelayEvent> delayQueuePublisher(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(
+        injector, DelayEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<DelayEvent> delayQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, DelayEvent.class, VERSIONED, ofSeconds(5), config);
+  QueueConsumer<DelayEvent> delayQueueConsumer(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, DelayEvent.class, ofSeconds(5),
+        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<GenericEvent> genericQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, GenericEvent.class, VERSIONED, config);
+  QueuePublisher<GenericEvent> genericQueuePublisher(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(
+        injector, GenericEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<GenericEvent> genericQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, GenericEvent.class, VERSIONED, ofMinutes(1), config);
+  QueueConsumer<GenericEvent> genericQueueConsumer(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, GenericEvent.class, ofMinutes(1),
+        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<InstanceEvent> instanceQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, InstanceEvent.class, VERSIONED, config);
+  QueuePublisher<InstanceEvent> instanceQueuePublisher(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(
+        injector, InstanceEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<InstanceEvent> instanceQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, InstanceEvent.class, VERSIONED, ofMinutes(1), config);
+  QueueConsumer<InstanceEvent> instanceQueueConsumer(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, InstanceEvent.class, ofMinutes(1),
+        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
   }
 
   @Provides
   @Singleton
   QueuePublisher<DeploymentTimeSeriesEvent> deploymentTimeSeriesQueuePublisher(
-      Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, DeploymentTimeSeriesEvent.class, VERSIONED, config);
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(
+        injector, DeploymentTimeSeriesEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
   QueueConsumer<DeploymentTimeSeriesEvent> deploymentTimeSeriesQueueConsumer(
-      Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, DeploymentTimeSeriesEvent.class, VERSIONED, ofMinutes(1), config);
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, DeploymentTimeSeriesEvent.class, ofMinutes(1),
+        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
   }
 
   @Override

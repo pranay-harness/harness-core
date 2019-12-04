@@ -4,11 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;
 
-@Entity(value = "!!!testUnversionedQueue", noClassnameStored = true)
-public class TestUnversionedQueuableObject extends Queuable {
+@Entity(value = "!!!testNoTopicQueue", noClassnameStored = true)
+public class TestNoTopicQueuableObject extends Queuable {
   @Getter @Setter private int data;
 
-  public TestUnversionedQueuableObject(int data) {
+  public TestNoTopicQueuableObject(int data) {
     this.data = data;
   }
 }

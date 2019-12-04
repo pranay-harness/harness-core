@@ -9,15 +9,12 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.category.element.StressTests;
-import io.harness.category.element.UnitTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import io.harness.threading.Poller;
-import io.harness.version.VersionInfoManager;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -28,42 +25,41 @@ import java.time.Duration;
 public class StressTest extends PersistenceTest {
   private static final int COUNT = 1000000;
   @Inject private HPersistence persistence;
-  @Inject private VersionInfoManager versionInfoManager;
-  @Inject private QueueConsumer<TestVersionedQueuableObject> versionedConsumer;
-  @Inject private QueuePublisher<TestVersionedQueuableObject> versionedPublisher;
-  @Inject private QueueConsumer<TestUnversionedQueuableObject> unversionedConsumer;
-  @Inject private QueuePublisher<TestUnversionedQueuableObject> unversionedPublisher;
+  @Inject private QueueConsumer<TestTopicQueuableObject> topicConsumer;
+  @Inject private QueuePublisher<TestTopicQueuableObject> topicPublisher;
+  @Inject private QueueConsumer<TestNoTopicQueuableObject> noTopicConsumer;
+  @Inject private QueuePublisher<TestNoTopicQueuableObject> noToipcPublisher;
 
   @Test
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   @RealMongo
-  public void versionedPerformance() throws IOException {
+  public void topicPerformance() throws IOException {
     assertThatCode(() -> {
-      persistence.ensureIndex(TestVersionedQueuableObject.class);
+      persistence.ensureIndex(TestTopicQueuableObject.class);
 
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 1; i <= COUNT; ++i) {
-          final TestVersionedQueuableObject queuableObject = new TestVersionedQueuableObject(i);
-          queuableObject.setVersion("dummy");
+          final TestTopicQueuableObject queuableObject = new TestTopicQueuableObject(i);
+          queuableObject.setTopic("dummy");
 
           persistence.save(queuableObject);
 
           if (i % 10000 == 0) {
-            logger.info("Previous version records added: {}, still in queue {}", i, versionedConsumer.count(ALL));
+            logger.info("Previous topic records added: {}, still in queue {}", i, topicConsumer.count(ALL));
           }
         }
         for (int i = 1; i <= COUNT; ++i) {
-          versionedPublisher.send(new TestVersionedQueuableObject(i));
+          topicPublisher.send(new TestTopicQueuableObject(i));
           if (i % 10000 == 0) {
-            logger.info("Correct version records added: {} , still in the queue {}", i, versionedConsumer.count(ALL));
+            logger.info("Correct topic records added: {} , still in the queue {}", i, topicConsumer.count(ALL));
           }
         }
 
-        final long start = versionedConsumer.count(ALL);
+        final long start = topicConsumer.count(ALL);
         try {
           Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
-            final long count = versionedConsumer.count(ALL);
+            final long count = topicConsumer.count(ALL);
             // logger.info("Intermittent queue count: {}", count);
             return count == 0;
           });
@@ -71,7 +67,7 @@ public class StressTest extends PersistenceTest {
           // do nothing
         }
 
-        final long diff = start - versionedConsumer.count(ALL);
+        final long diff = start - topicConsumer.count(ALL);
         logger.info("Items handled for 10s: {}", diff);
       }
     })
@@ -80,34 +76,33 @@ public class StressTest extends PersistenceTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
+  @Category(StressTests.class)
   @RealMongo
-  @Ignore("Bypass this test, it is not for running regularly")
-  public void unversionedPerformance() throws IOException {
+  public void noTopicPerformance() throws IOException {
     assertThatCode(() -> {
-      persistence.ensureIndex(TestUnversionedQueuableObject.class);
+      persistence.ensureIndex(TestNoTopicQueuableObject.class);
 
       try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
         for (int i = 1; i <= COUNT; ++i) {
-          final TestUnversionedQueuableObject queuableObject = new TestUnversionedQueuableObject(i);
-          queuableObject.setVersion("dummy");
-          unversionedPublisher.send(queuableObject);
+          final TestNoTopicQueuableObject queuableObject = new TestNoTopicQueuableObject(i);
+          queuableObject.setTopic("dummy");
+          noToipcPublisher.send(queuableObject);
 
           if (i % 10000 == 0) {
-            logger.info("Previous version records added: {}, still in queue {}", i, unversionedConsumer.count(ALL));
+            logger.info("Previous records added: {}, still in queue {}", i, noTopicConsumer.count(ALL));
           }
         }
         for (int i = 1; i <= COUNT; ++i) {
-          unversionedPublisher.send(new TestUnversionedQueuableObject(i));
+          noToipcPublisher.send(new TestNoTopicQueuableObject(i));
           if (i % 10000 == 0) {
-            logger.info("Correct version records added: {} , still in the queue {}", i, unversionedConsumer.count(ALL));
+            logger.info("Correct records added: {} , still in the queue {}", i, noTopicConsumer.count(ALL));
           }
         }
 
-        final long start = unversionedConsumer.count(ALL);
+        final long start = noTopicConsumer.count(ALL);
         try {
           Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> {
-            final long count = unversionedConsumer.count(ALL);
+            final long count = noTopicConsumer.count(ALL);
             // logger.info("Intermittent queue count: {}", count);
             return count == 0;
           });
@@ -115,7 +110,7 @@ public class StressTest extends PersistenceTest {
           // do nothing
         }
 
-        final long diff = start - unversionedConsumer.count(ALL);
+        final long diff = start - noTopicConsumer.count(ALL);
         logger.info("Items handled for 10s: {}", diff);
       }
     })

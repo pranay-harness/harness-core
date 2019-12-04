@@ -1,7 +1,7 @@
 package io.harness.waiter;
 
-import static io.harness.queue.Queue.VersionType.VERSIONED;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
@@ -16,6 +16,7 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueModule;
 import io.harness.queue.QueuePublisher;
+import io.harness.version.VersionInfoManager;
 
 import java.util.Set;
 
@@ -31,14 +32,18 @@ public class WaiterModule extends DependencyModule {
 
   @Provides
   @Singleton
-  QueuePublisher<NotifyEvent> notifyQueuePublisher(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(injector, NotifyEvent.class, VERSIONED, config);
+  QueuePublisher<NotifyEvent> notifyQueuePublisher(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueuePublisher(
+        injector, NotifyEvent.class, asList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<NotifyEvent> notifyQueueConsumer(Injector injector, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, VERSIONED, ofSeconds(5), config);
+  QueueConsumer<NotifyEvent> notifyQueueConsumer(
+      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+    return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
+        asList(asList(versionInfoManager.getVersionInfo().getVersion())), config);
   }
 
   @Override
