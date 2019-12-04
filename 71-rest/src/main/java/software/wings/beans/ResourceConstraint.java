@@ -54,4 +54,5 @@ public class ResourceConstraint
   @NotEmpty @Trimmed private String name;
   @Min(value = 1) @Max(value = 1000) private int capacity;
   private Constraint.Strategy strategy;
+  private boolean harnessOwned;
 }

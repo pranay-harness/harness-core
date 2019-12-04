@@ -91,6 +91,8 @@ public class ResourceConstraintState extends State {
 
   @Getter @Setter private List<String> notificationGroups;
 
+  @Getter @Setter private boolean harnessOwned;
+
   public ResourceConstraintState(String name) {
     super(name, StateType.RESOURCE_CONSTRAINT.name());
   }
@@ -270,6 +272,7 @@ public class ResourceConstraintState extends State {
   ExecutionResponseBuilder executionResponseBuilder(ResourceConstraint resourceConstraint, String resourceUnit) {
     ResourceConstraintExecutionData stateExecutionData = new ResourceConstraintExecutionData();
     stateExecutionData.setResourceConstraintName(resourceConstraint.getName());
+    stateExecutionData.setHarnessOwned(resourceConstraint.isHarnessOwned());
     stateExecutionData.setResourceConstraintCapacity(resourceConstraint.getCapacity());
     stateExecutionData.setUnit(resourceUnit);
     stateExecutionData.setUsage(permits);

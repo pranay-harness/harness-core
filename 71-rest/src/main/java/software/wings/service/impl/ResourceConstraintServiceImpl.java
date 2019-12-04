@@ -125,8 +125,13 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public ResourceConstraint ensureResourceConstraintForConcurrency(String accountId, String name) {
     try {
-      ResourceConstraint resourceConstraint =
-          ResourceConstraint.builder().name(name).accountId(accountId).capacity(1).strategy(Strategy.FIFO).build();
+      ResourceConstraint resourceConstraint = ResourceConstraint.builder()
+                                                  .name(name)
+                                                  .accountId(accountId)
+                                                  .capacity(1)
+                                                  .harnessOwned(true)
+                                                  .strategy(Strategy.FIFO)
+                                                  .build();
       wingsPersistence.save(resourceConstraint);
       return resourceConstraint;
     } catch (DuplicateKeyException ex) {
