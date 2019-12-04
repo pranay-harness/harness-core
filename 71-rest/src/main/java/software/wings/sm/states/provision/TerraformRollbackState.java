@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.FeatureName.TF_USE_VAR_CL;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
@@ -107,6 +108,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
       }
 
       final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+      notNullCheck("TerraformConfig cannot be null", configParameter);
       final GitConfig gitConfig = gitUtilsManager.getGitConfig(configParameter.getSourceRepoSettingId());
       if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
         gitConfig.setReference(configParameter.getSourceRepoReference());
