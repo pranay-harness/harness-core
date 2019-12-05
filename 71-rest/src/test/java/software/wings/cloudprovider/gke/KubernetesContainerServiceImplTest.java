@@ -1,8 +1,10 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
@@ -199,5 +201,19 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
     assertThat(count.isPresent()).isTrue();
     assertThat(count.get()).isEqualTo(8);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetControllerPodCountUnhandledResource() {
+    Service service = new Service();
+
+    try {
+      kubernetesContainerService.getControllerPodCount(service);
+      fail("Should not reach here.");
+    } catch (Exception ex) {
+      assertThat(ex.getMessage()).isEqualTo("Unhandled kubernetes resource type [Service] for getting the pod count");
+    }
   }
 }
