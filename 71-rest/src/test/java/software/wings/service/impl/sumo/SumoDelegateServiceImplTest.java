@@ -10,6 +10,7 @@ import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -57,10 +58,10 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
     String exceptionMsg = "";
     try {
       sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());
-    } catch (WingsException e) {
-      exceptionMsg = e.getMessage();
+    } catch (VerificationOperationException e) {
+      exceptionMsg = (String) e.getParams().get("reason");
     }
-    assertThat(exceptionMsg).contains("Error from Sumo xxxxxxxx Unable to create SumoLogic Client");
+    assertThat(exceptionMsg).contains("Unable to create SumoLogic Client");
   }
 
   @Test(expected = SumoClientException.class)

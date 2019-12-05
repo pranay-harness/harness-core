@@ -386,7 +386,9 @@ public enum ErrorCode {
 
   USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS("User not authorized due to usage restrictions"),
 
-  INVALID_ROLLBACK;
+  INVALID_ROLLBACK,
+
+  SUMO_DATA_COLLECTION_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

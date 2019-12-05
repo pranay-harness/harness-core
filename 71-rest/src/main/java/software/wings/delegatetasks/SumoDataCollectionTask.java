@@ -9,6 +9,7 @@ import com.sumologic.client.SumoLogicClient;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
@@ -165,9 +166,11 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           break;
         } catch (Throwable ex) {
           ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-          apiCallLog.addFieldToResponse(
-              HttpStatus.SC_INTERNAL_SERVER_ERROR, ExceptionUtils.getStackTrace(ex), FieldType.TEXT);
-          delegateLogService.save(getAccountId(), apiCallLog);
+          sumoDelegateService.saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(),
+              dataCollectionInfo.getQuery(), String.valueOf(dataCollectionInfo.getStartTime()),
+              String.valueOf(dataCollectionInfo.getStartTime()), ex, Timestamp.currentMinuteBoundary(),
+              Timestamp.currentMinuteBoundary(), HttpStatus.SC_INTERNAL_SERVER_ERROR, FieldType.TEXT);
+
           if (!(ex instanceof Exception) || ++retry >= RETRIES) {
             logger.error("error fetching logs for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
                 logCollectionMinute, ex);
