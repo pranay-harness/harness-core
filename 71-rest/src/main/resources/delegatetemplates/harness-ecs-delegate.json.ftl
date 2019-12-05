@@ -83,6 +83,10 @@
         {
           "name": "WATCHER_STORAGE_URL",
           "value": "${watcherStorageUrl}"
+        },
+        {
+          "name": "CF_PLUGIN_HOME",
+          "value": ""
         }
       ],
       "memory": 6144,
