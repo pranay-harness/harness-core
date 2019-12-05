@@ -1,6 +1,5 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -20,8 +19,7 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
-import software.wings.api.pcf.PcfDeployExecutionSummary;
-import software.wings.api.pcf.PcfServiceData;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -59,7 +57,8 @@ public class PcfInstanceHandler extends InstanceHandler {
   @Override
   public void syncInstances(String appId, String infraMappingId) throws WingsException {
     Multimap<String, Instance> pcfAppNameInstanceMap = ArrayListMultimap.create();
-    syncInstancesInternal(appId, infraMappingId, pcfAppNameInstanceMap, null, false);
+    syncInstancesInternal(appId, infraMappingId, pcfAppNameInstanceMap, null, false,
+        OnDemandRollbackInfo.builder().onDemandRollback(false).build());
   }
 
   /**
@@ -71,7 +70,7 @@ public class PcfInstanceHandler extends InstanceHandler {
    */
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<String, Instance> pcfAppNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
-      boolean rollback) throws WingsException {
+      boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
     logger.info("# Performing PCF Instance sync");
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
@@ -140,6 +139,11 @@ public class PcfInstanceHandler extends InstanceHandler {
           SetView<String> instancesToBeDeleted =
               Sets.difference(instancesInDBMap.keySet(), latestPcfInstanceInfoMap.keySet());
 
+          if (onDemandRollbackInfo.isOnDemandRollback()) {
+            handleOnDemandRollbackDeployment(
+                instancesInDBMap, latestPcfInstanceInfoMap, onDemandRollbackInfo.getRollbackExecutionId());
+          }
+
           Set<String> instanceIdsToBeDeleted = new HashSet<>();
           instancesToBeDeleted.forEach(id -> {
             Instance instance = instancesInDBMap.get(id);
@@ -192,6 +196,20 @@ public class PcfInstanceHandler extends InstanceHandler {
     }
   }
 
+  private void handleOnDemandRollbackDeployment(Map<String, Instance> instancesInDBMap,
+      Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap, String rollbackExecutionId) {
+    SetView<String> instancesToBeUpdated =
+        Sets.intersection(instancesInDBMap.keySet(), latestPcfInstanceInfoMap.keySet());
+    instancesToBeUpdated.forEach(id -> {
+      Instance instance = instancesInDBMap.get(id);
+      if (instance != null && rollbackExecutionId != null) {
+        instance.setLastWorkflowExecutionId(rollbackExecutionId);
+        instance.setLastDeployedAt(System.currentTimeMillis());
+        instanceService.saveOrUpdate(instance);
+      }
+    });
+  }
+
   private Map<String, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries) {
     if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
       return Collections.emptyMap();
@@ -238,7 +256,8 @@ public class PcfInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
     Multimap<String, Instance> pcfApplicationNameInstanceMap = ArrayListMultimap.create();
     deploymentSummaries.forEach(deploymentSummary -> {
       PcfDeploymentInfo pcfDeploymentInfo = (PcfDeploymentInfo) deploymentSummary.getDeploymentInfo();
@@ -247,7 +266,7 @@ public class PcfInstanceHandler extends InstanceHandler {
 
     syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
         deploymentSummaries.iterator().next().getInfraMappingId(), pcfApplicationNameInstanceMap, deploymentSummaries,
-        rollback);
+        rollback, onDemandRollbackInfo);
   }
 
   @Override
@@ -274,25 +293,8 @@ public class PcfInstanceHandler extends InstanceHandler {
     }
 
     for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-      if (stepExecutionSummary instanceof PcfDeployExecutionSummary) {
-        PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) stepExecutionSummary;
-
-        List<PcfServiceData> pcfServiceDatas = pcfDeployExecutionSummary.getInstaceData();
-
-        if (isEmpty(pcfServiceDatas)) {
-          logger.warn(
-              "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance: {}",
-              stateExecutionInstanceId);
-          return Optional.empty();
-        }
-
-        List<DeploymentInfo> pcfDeploymentInfo = new ArrayList<>();
-        pcfServiceDatas.forEach(pcfServiceData
-            -> pcfDeploymentInfo.add(PcfDeploymentInfo.builder()
-                                         .applicationName(pcfServiceData.getName())
-                                         .applicationGuild(pcfServiceData.getId())
-                                         .build()));
-        return Optional.of(pcfDeploymentInfo);
+      if (stepExecutionSummary instanceof DeploymentInfoExtractor) {
+        return ((DeploymentInfoExtractor) stepExecutionSummary).extractDeploymentInfo();
       }
     }
     return Optional.empty();

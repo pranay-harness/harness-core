@@ -1801,7 +1801,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.createQuery(WorkflowExecution.class)
             .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
             .filter(WorkflowExecutionKeys.status, SUCCESS)
-            .filter(WorkflowExecutionKeys.onDemandRollback, false)
             .filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds())
             .order(Sort.descending(WorkflowExecutionKeys.createdAt));
     final List<WorkflowExecution> workflowExecutionList = query.asList(new FindOptions().limit(2));

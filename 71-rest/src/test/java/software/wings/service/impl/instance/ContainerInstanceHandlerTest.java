@@ -45,6 +45,7 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -280,6 +281,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     doReturn(ContainerSyncResponse.builder().containerInfoList(Collections.EMPTY_LIST).build())
         .when(containerSync)
         .getInstances(any(), anyList());
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
@@ -292,7 +294,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                           .workflowExecutionId("workfloeExecution_1")
                           .stateExecutionInstanceId("stateExecutionInstanceId")
                           .build()),
-        false);
+        false, onDemandRollbackInfo);
     assertionsForDelete(INSTANCE_1_ID);
   }
 
@@ -319,6 +321,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                  .build())
         .when(containerSync)
         .getInstances(any(), anyList());
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
@@ -331,7 +334,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                           .workflowExecutionId("workfloeExecution_1")
                           .stateExecutionInstanceId("stateExecutionInstanceId")
                           .build()),
-        false);
+        false, onDemandRollbackInfo);
 
     assertionsForSave("taskARN:0", InstanceType.ECS_CONTAINER_INSTANCE);
   }
@@ -507,6 +510,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
         .when(containerSync)
         .getInstances(any(), anyList());
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
@@ -520,7 +524,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                           .workflowExecutionId("workfloeExecution_1")
                           .stateExecutionInstanceId("stateExecutionInstanceId")
                           .build()),
-        false);
+        false, onDemandRollbackInfo);
 
     assertionsForDelete(INSTANCE_1_ID);
   }
@@ -548,6 +552,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                  .build())
         .when(containerSync)
         .getInstances(any(), anyList());
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
@@ -561,7 +566,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                           .workflowExecutionId("workfloeExecution_1")
                           .stateExecutionInstanceId("stateExecutionInstanceId")
                           .build()),
-        false);
+        false, onDemandRollbackInfo);
 
     assertionsForSave("pod:1", KUBERNETES_CONTAINER_INSTANCE);
   }
@@ -624,6 +629,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                       .build())
         .when(containerSync)
         .getInstances(any(), anyList());
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
@@ -646,7 +652,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                 .workflowExecutionId("workfloeExecution_1")
                 .stateExecutionInstanceId("stateExecutionInstanceId")
                 .build()),
-        true);
+        true, onDemandRollbackInfo);
 
     assertions_rollback("pod:1", KUBERNETES_CONTAINER_INSTANCE, true);
   }

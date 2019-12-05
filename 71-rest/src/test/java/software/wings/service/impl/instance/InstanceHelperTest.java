@@ -51,6 +51,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
@@ -836,8 +837,8 @@ public class InstanceHelperTest extends WingsBaseTest {
       public void syncInstances(String appId, String infraMappingId) throws WingsException {}
 
       @Override
-      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-          throws WingsException {}
+      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+          OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {}
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
@@ -895,8 +896,8 @@ public class InstanceHelperTest extends WingsBaseTest {
       }
 
       @Override
-      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-          throws WingsException {}
+      public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+          OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {}
 
       @Override
       public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,

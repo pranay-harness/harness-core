@@ -22,6 +22,7 @@ import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.InfrastructureMapping;
@@ -101,7 +102,8 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
     if (!(deploymentSummaries.iterator().next().getDeploymentInfo() instanceof AwsAutoScalingGroupDeploymentInfo)) {
       throw WingsException.builder().message("Incompatible deployment type.").build();
     }

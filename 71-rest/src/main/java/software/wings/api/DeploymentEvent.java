@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 
 import java.util.List;
 
@@ -24,4 +25,5 @@ import java.util.List;
 public class DeploymentEvent extends Queuable {
   private boolean isRollback;
   private List<DeploymentSummary> deploymentSummaries;
+  private OnDemandRollbackInfo onDemandRollbackInfo;
 }

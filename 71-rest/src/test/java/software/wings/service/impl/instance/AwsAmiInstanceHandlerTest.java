@@ -61,6 +61,7 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -340,7 +341,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     doReturn(asList(ec2Instance1, ec2Instance2))
         .when(mockAwsAsgHelperServiceManager)
         .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString(), anyString());
-
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
     awsAmiInstanceHandler.handleNewDeployment(
         Arrays.asList(
             DeploymentSummary.builder()
@@ -354,7 +355,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
                 .workflowExecutionId("workflowExecutionId")
                 .workflowId("workflowId")
                 .build()),
-        true);
+        true, onDemandRollbackInfo);
 
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
