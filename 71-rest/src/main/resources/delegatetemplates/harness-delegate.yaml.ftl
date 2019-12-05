@@ -124,4 +124,6 @@ spec:
           value: "false"
         - name: HELM_DESIRED_VERSION
           value: ""
+        - name: CF_PLUGIN_HOME
+          value: ""
       restartPolicy: Always

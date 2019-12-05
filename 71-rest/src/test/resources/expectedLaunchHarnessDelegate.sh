@@ -20,6 +20,7 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e PROXY_MANAGER=true \
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
+-e CF_PLUGIN_HOME= \
 -e MANAGER_TARGET=localhost:9090 \
 -e MANAGER_AUTHORITY=manager-grpc-localhost:9090 \
 harness/delegate:latest
