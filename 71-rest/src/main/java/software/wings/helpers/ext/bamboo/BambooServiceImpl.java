@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -30,6 +31,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BambooConfig;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -70,11 +72,10 @@ public class BambooServiceImpl implements BambooService {
                               .client(Http.getUnsafeOkHttpClient(bambooUrl))
                               .build();
       return retrofit.create(BambooRestClient.class);
+    } catch (InvalidArtifactServerException e) {
+      throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message",
-              "Could not reach Bamboo Server at :" + bambooConfig.getBambooUrl()
-                  + "Reason: " + ExceptionUtils.getRootCauseMessage(e));
+      throw new InvalidArtifactServerException("Could not reach Bamboo Server at :" + bambooConfig.getBambooUrl(), e);
     }
   }
 
@@ -91,12 +92,13 @@ public class BambooServiceImpl implements BambooService {
       response = getHttpRequestExecutionResponse(request);
       logger.info("Reading job keys for plan key {} success", planKey);
       return extractJobKeyFromNestedProjectResponseJson(response);
+    } catch (ArtifactServerException e) {
+      throw e;
     } catch (Exception ex) {
-      logger.error("Job keys fetch failed with exception", ex);
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ExceptionUtils.getMessage(ex));
+      throw new ArtifactServerException(ExceptionUtils.getMessage(ex), ex);
     }
   }
 
@@ -116,19 +118,24 @@ public class BambooServiceImpl implements BambooService {
         if (next.get("link") != null) {
           buildUrl = next.get("link").get("href").asText();
         }
+        JsonNode buildNumber = next.get("buildNumber");
+        if (buildNumber == null) {
+          return null;
+        }
         return aBuildDetails()
-            .withNumber(next.get("buildNumber").asText())
+            .withNumber(buildNumber.asText())
             .withRevision(next.get("vcsRevisionKey") != null ? next.get("vcsRevisionKey").asText() : null)
             .withBuildUrl(buildUrl)
-            .withUiDisplayName("Build# " + next.get("buildNumber").asText())
+            .withUiDisplayName("Build# " + buildNumber.asText())
             .build();
       }
+    } catch (ArtifactServerException e) {
+      throw e;
     } catch (Exception e) {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error(format("Failed to get the last successful build for plan key %s", planKey), e);
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ExceptionUtils.getRootCauseMessage(e));
+      throw new ArtifactServerException(ExceptionUtils.getRootCauseMessage(e), e);
     }
     return null;
   }
@@ -146,23 +153,26 @@ public class BambooServiceImpl implements BambooService {
 
   @Override
   public Map<String, String> getPlanKeys(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return getPlanKeys(bambooConfig, encryptionDetails, 10000);
+    return getPlanKeys(bambooConfig, encryptionDetails, 1000);
   }
 
   private Map<String, String> getPlanKeys(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int maxResults) {
     try {
       return timeLimiter.callWithTimeout(() -> {
+        BambooRestClient bambooRestClient = getBambooClient(bambooConfig, encryptionDetails);
         logger.info("Retrieving plan keys for bamboo server {}", bambooConfig);
-        Call<JsonNode> request =
-            getBambooClient(bambooConfig, encryptionDetails)
-                .listProjectPlans(
-                    Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults);
+        logger.info(format("Fetching plans starting at index: [0] from bamboo server %s", bambooConfig.getBambooUrl()));
+        Call<JsonNode> request = bambooRestClient.listProjectPlans(
+            Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults);
         Map<String, String> planNameMap = new HashMap<>();
         Response<JsonNode> response = null;
+        int size = 0;
         try {
           response = getHttpRequestExecutionResponse(request);
           if (response.body() != null) {
+            JsonNode plansJsonNode = response.body().at("/plans");
+            size = plansJsonNode.get("size").intValue();
             JsonNode planJsonNode = response.body().at("/plans/plan");
             planJsonNode.elements().forEachRemaining(jsonNode -> {
               String planKey = jsonNode.get("key").asText();
@@ -170,21 +180,40 @@ public class BambooServiceImpl implements BambooService {
               planNameMap.put(planKey, planName);
             });
           }
+          if (maxResults != 1 && size > maxResults) {
+            int maxPlansToFetch = Math.min(size, 10000);
+            logger.info(format("Total no. of plans to fetch: [%d]", maxPlansToFetch));
+            for (int startIndex = maxResults; startIndex < maxPlansToFetch; startIndex += maxResults) {
+              logger.info(format("Fetching plans starting at index: [%d] from bamboo server %s", startIndex,
+                  bambooConfig.getBambooUrl()));
+              request = bambooRestClient.listProjectPlansWithPagination(
+                  Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults,
+                  startIndex);
+
+              response = getHttpRequestExecutionResponse(request);
+              if (response.body() != null) {
+                JsonNode planJsonNode = response.body().at("/plans/plan");
+                planJsonNode.elements().forEachRemaining(jsonNode -> {
+                  String planKey = jsonNode.get("key").asText();
+                  String planName = jsonNode.get("shortName").asText();
+                  planNameMap.put(planKey, planName);
+                });
+              }
+            }
+          }
+        } catch (ArtifactServerException e) {
+          throw e;
         } catch (Exception e) {
           if (response != null && !response.isSuccessful()) {
             IOUtils.closeQuietly(response.errorBody());
           }
-          logger.error(format("Failed to fetch project plans from bamboo server %s", bambooConfig.getBambooUrl()), e);
-          throw new WingsException(ARTIFACT_SERVER_ERROR, USER)
-              .addParam("message", "Failed to load plans:" + ExceptionUtils.getRootCauseMessage(e));
+          throw new ArtifactServerException("Failed to load plans:" + ExceptionUtils.getRootCauseMessage(e), e);
         }
         logger.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
         return planNameMap;
-      }, 20L, TimeUnit.SECONDS, true);
+      }, 110L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.warn("Bamboo server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Bamboo server took too long to respond");
+      throw new InvalidArtifactServerException("Bamboo server took too long to respond", e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -203,12 +232,12 @@ public class BambooServiceImpl implements BambooService {
       return;
     }
     if (response.code() == 401) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Invalid Bamboo credentials");
+      throw new InvalidArtifactServerException("Invalid Bamboo credentials", USER);
     }
     if (response.errorBody() == null) {
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", response.message());
+      throw new ArtifactServerException(response.message());
     }
-    throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", response.errorBody().string());
+    throw new ArtifactServerException(response.errorBody().string());
   }
 
   @Override
