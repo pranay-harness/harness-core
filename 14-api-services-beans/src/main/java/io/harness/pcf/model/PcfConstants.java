@@ -53,16 +53,16 @@ public interface PcfConstants {
 
   String LEGACY_NAME_PCF_MANIFEST = "${APPLICATION_NAME}";
 
-  String CONTEXT_NEW_APP_NAME = "newAppName";
-  String CONTEXT_NEW_APP_GUID = "newAppGuid";
-  String CONTEXT_NEW_APP_ROUTES = "newAppRoutes";
+  String CONTEXT_NEW_APP_NAME_EXPR = "pcf.newAppName";
+  String CONTEXT_NEW_APP_GUID_EXPR = "pcf.newAppGuid";
+  String CONTEXT_NEW_APP_ROUTES_EXPR = "pcf.newAppRoutes";
 
-  String CONTEXT_OLD_APP_NAME = "oldAppName";
-  String CONTEXT_OLD_APP_GUID = "oldAppGuid";
-  String CONTEXT_OLD_APP_ROUTES = "oldAppRoutes";
+  String CONTEXT_OLD_APP_NAME_EXPR = "pcf.oldAppName";
+  String CONTEXT_OLD_APP_GUID_EXPR = "pcf.oldAppGuid";
+  String CONTEXT_OLD_APP_ROUTES_EXPR = "pcf.oldAppRoutes";
 
-  String CONTEXT_APP_FINAL_ROUTES = "finalRoutes";
-  String CONTEXT_APP_TEMP_ROUTES = "tempRoutes";
+  String CONTEXT_APP_FINAL_ROUTES_EXPR = "pcf.finalRoutes";
+  String CONTEXT_APP_TEMP_ROUTES_EXPR = "pcf.tempRoutes";
   String PCF_CONFIG_FILE_EXTENSION = ".yml";
   String PCF_ROUTE_PATH_SEPARATOR = "/";
 

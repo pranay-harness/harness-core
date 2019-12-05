@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
@@ -146,6 +147,7 @@ public class PcfSetupState extends State {
   @Getter @Setter private boolean blueGreen;
   @Getter @Setter private boolean isWorkflowV2;
   @Getter @Setter private String[] tempRouteMap;
+  @Getter @Setter private String[] finalRouteMap;
   @Getter @Setter private boolean useAppAutoscalar;
   @Getter @Setter private boolean enforceSslValidation;
 
@@ -348,6 +350,8 @@ public class PcfSetupState extends State {
     enforceSslValidation = pcfSetupStateExecutionData.isEnforceSslValidation();
     useAppAutoscalar = pcfSetupStateExecutionData.isUseAppAutoscalar();
     resizeStrategy = pcfSetupStateExecutionData.getResizeStrategy();
+    tempRouteMap = pcfSetupStateExecutionData.getTempRoutesOnSetupState();
+    finalRouteMap = pcfSetupStateExecutionData.getFinalRoutesOnSetupState();
   }
 
   @VisibleForTesting
@@ -366,19 +370,28 @@ public class PcfSetupState extends State {
     List<String> routeMaps =
         pcfStateHelper.getRouteMaps(pcfManifestsPackage.getManifestYml(), pcfInfrastructureMapping);
 
-    // In BlueGreen, we can not rely on cf push to perform variable substitution,
-    // as temp routes will be used while creating app, and
-    // routes mentioned in manifest will we swapped in the end after verification.
-    // So, we need to resolve these values manually if they are referencing vars.yml
     if (blueGreen) {
-      if (isEmpty(routeMaps)) {
+      if (isEmpty(routeMaps) && isEmpty(finalRouteMap)) {
         throw new InvalidRequestException(
             "Final Routes can not be empty for BG deployment. Make sure manifest contains routes. no-route or random-route cant be used for BG as well.");
       }
+      // In BlueGreen, we can not rely on cf push to perform variable substitution,
+      // as temp routes will be used while creating app, and
+      // routes mentioned in manifest will we swapped in the end after verification.
+      // So, we need to resolve these values manually if they are referencing vars.yml
       routeMaps = pcfStateHelper.applyVarsYmlSubstitutionIfApplicable(routeMaps, pcfManifestsPackage);
     }
-    routeMaps = routeMaps.stream().map(routeMap -> context.renderExpression(routeMap)).collect(toList());
-    return routeMaps;
+
+    // Add extra routes mentioned on SetupState
+    List<String> finalRoutes = new ArrayList<>();
+    if (isNotEmpty(routeMaps)) {
+      finalRoutes.addAll(routeMaps);
+    }
+    if (isNotEmpty(finalRouteMap)) {
+      finalRoutes.addAll(Arrays.asList(finalRouteMap));
+    }
+
+    return finalRoutes.stream().map(context::renderExpression).collect(toList());
   }
 
   @VisibleForTesting
@@ -651,6 +664,8 @@ public class PcfSetupState extends State {
                                 .maxInstanceCount(maxInstances)
                                 .resizeStrategy(resizeStrategy)
                                 .useCurrentRunningInstanceCount(useCurrentRunningCount)
+                                .tempRoutesOnSetupState(tempRouteMap)
+                                .finalRoutesOnSetupState(finalRouteMap)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

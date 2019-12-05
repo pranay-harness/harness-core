@@ -646,7 +646,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRestoreStateDataAfterGitFetchIfNeeded() {
     PcfSetupState state = new PcfSetupState("");
-
+    String[] tempRoutes = {"r1"};
+    String[] finalRoutes = {"r2"};
     PcfSetupStateExecutionData pcfSetupStateExecutionData = PcfSetupStateExecutionData.builder()
                                                                 .useAppAutoscalar(true)
                                                                 .useCurrentRunningInstanceCount(true)
@@ -655,6 +656,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
                                                                 .activeVersionsToKeep(4)
                                                                 .pcfAppNameFromLegacyWorkflow(APP_NAME)
                                                                 .resizeStrategy(RESIZE_NEW_FIRST)
+                                                                .tempRoutesOnSetupState(tempRoutes)
+                                                                .finalRoutesOnSetupState(finalRoutes)
                                                                 .timeout(6)
                                                                 .build();
 
@@ -666,6 +669,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(state.getResizeStrategy()).isNull();
     assertThat(state.getTimeoutIntervalInMinutes()).isEqualTo(5);
     assertThat(state.getPcfAppName()).isNull();
+    assertThat(state.getTempRouteMap()).isNull();
+    assertThat(state.getFinalRouteMap()).isNull();
 
     state.restoreStateDataAfterGitFetchIfNeeded(pcfSetupStateExecutionData);
 
@@ -677,6 +682,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(state.getResizeStrategy()).isEqualTo(RESIZE_NEW_FIRST);
     assertThat(state.getTimeoutIntervalInMinutes()).isEqualTo(6);
     assertThat(state.getPcfAppName()).isEqualTo(APP_NAME);
+    assertThat(state.getTempRouteMap()).isEqualTo(tempRoutes);
+    assertThat(state.getFinalRouteMap()).isEqualTo(finalRoutes);
 
     // test for NPE
     state.restoreStateDataAfterGitFetchIfNeeded(null);
@@ -688,6 +695,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   public void testFetchRouteMas() {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
     String r1 = "myRoute4";
+    String r2 = "myRoute01";
     doReturn(Arrays.asList(r1)).when(pcfStateHelper).getRouteMaps(anyString(), any());
     pcfSetupState.setBlueGreen(false);
     assertThat(pcfSetupState.fetchRouteMaps(
@@ -701,6 +709,21 @@ public class PcfSetupStateTest extends WingsBaseTest {
         .containsExactly(r1);
 
     pcfSetupState.setBlueGreen(true);
+    pcfSetupState.setFinalRouteMap(new String[] {r2});
+    doReturn(Arrays.asList(r1)).when(pcfStateHelper).applyVarsYmlSubstitutionIfApplicable(anyList(), any());
+    assertThat(pcfSetupState.fetchRouteMaps(
+                   context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
+        .containsExactly(r1, r2);
+
+    pcfSetupState.setBlueGreen(true);
+    doReturn(emptyList()).when(pcfStateHelper).getRouteMaps(anyString(), any());
+    doReturn(emptyList()).when(pcfStateHelper).applyVarsYmlSubstitutionIfApplicable(anyList(), any());
+    assertThat(pcfSetupState.fetchRouteMaps(
+                   context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
+        .containsExactly(r2);
+
+    pcfSetupState.setBlueGreen(true);
+    pcfSetupState.setFinalRouteMap(null);
     doReturn(emptyList()).when(pcfStateHelper).getRouteMaps(anyString(), any());
     doReturn(emptyList()).when(pcfStateHelper).applyVarsYmlSubstitutionIfApplicable(anyList(), any());
     try {

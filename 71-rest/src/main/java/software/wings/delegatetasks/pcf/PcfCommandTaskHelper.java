@@ -128,10 +128,12 @@ public class PcfCommandTaskHelper {
         continue;
       }
 
+      List<String> urls = new ArrayList<>();
+      urls.addAll(applicationSummary.getUrls());
       downSizeUpdate.add(PcfAppSetupTimeDetails.builder()
                              .applicationGuid(applicationSummary.getId())
                              .applicationName(applicationSummary.getName())
-                             .urls(applicationSummary.getUrls())
+                             .urls(urls)
                              .initialInstanceCount(applicationSummary.getInstances())
                              .build());
     }

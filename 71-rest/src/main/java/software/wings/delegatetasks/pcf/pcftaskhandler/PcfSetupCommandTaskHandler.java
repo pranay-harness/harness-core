@@ -186,6 +186,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       List<PcfAppSetupTimeDetails> downsizeAppDetails =
           pcfCommandTaskHelper.generateDownsizeDetails(pcfRequestConfig, newReleaseName);
 
+      List<String> urls = new ArrayList<>();
+      urls.addAll(newApplication.getUrls());
       PcfSetupCommandResponse pcfSetupCommandResponse =
           PcfSetupCommandResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -193,7 +195,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .newApplicationDetails(PcfAppSetupTimeDetails.builder()
                                          .applicationGuid(newApplication.getId())
                                          .applicationName(newApplication.getName())
-                                         .urls(newApplication.getUrls())
+                                         .urls(urls)
                                          .initialInstanceCount(0)
                                          .build())
               .totalPreviousInstanceCount(totalPreviousInstanceCount)
