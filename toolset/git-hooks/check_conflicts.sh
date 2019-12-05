@@ -16,7 +16,7 @@ for file in $FILES
 do
     if [ -e "${file}" ]
     then
-        grep -nr "^<\{7\} \|^=\{7\}\|^>\{7\} " "${file}"
+        grep -nr "^<\{7\} \|^=\{7\}$\|^>\{7\} " "${file}"
     fi
 done`
 

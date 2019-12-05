@@ -85,13 +85,26 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 1. Setup your harness email to the git config. You can do it globally or just for the portal repo:
 
+    `git config --global user.email "email@harness.io"`
+
+    or just for portal with
+
+    `git config user.email "email@harness.io"`
+
+2. Setup your name to the git config. We are using First and Last name. Please make sure you use the same spelling as you did for your github account.
+
     `git config --global user.name "FirstName LastName"`
 
     or just for portal with
 
     `git config user.name "FirstName LastName"`
 
-2. Setup your name to the git config. We are using First and Last name. Please make sure you use the same spelling as you did for your github account.
+3. Install git hooks. Portal comes with a set of convenient productivity booster set of hooks. For security reasons they cannot be enabled automatically.
+   To do so execute the following command from the root of already cloned locally repo:
+
+    `toolset/git-hooks/install.sh`
+
+    NOTE: if you clone the repo to another location you will have to do this again. On the other side you will be getting fixes and updates with no extra effort.
 
 ### Build
 
