@@ -1,15 +1,19 @@
 package software.wings.helpers.ext.docker;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DockerPublicImageTagResponse {
   @Getter
+  @JsonIgnoreProperties(ignoreUnknown = true)
   static class Result {
     @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     static class Image {
       private long size;
       private String architecture;
