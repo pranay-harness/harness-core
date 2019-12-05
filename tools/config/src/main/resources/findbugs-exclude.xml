@@ -26,6 +26,10 @@
         <Bug pattern="AFBR_ABNORMAL_FINALLY_BLOCK_RETURN" />
     </Match>
     <Match>
+        <!-- reports too many false negative  -->
+        <Bug pattern="OCP_OVERLY_CONCRETE_PARAMETER" />
+    </Match>
+    <Match>
         <Method name="maybeForceBuilderInitialization" />
         <Bug pattern="UCF_USELESS_CONTROL_FLOW" />
     </Match>

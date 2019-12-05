@@ -1,14 +1,21 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -17,6 +24,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.filesystem.FileIo;
 import io.harness.rule.OwnerRule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
@@ -35,17 +43,27 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.core.ssh.executors.SshSessionConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 @Slf4j
 public class GitClientImplTest extends WingsBaseTest {
   public static final String oldObjectIdString = "0000000000000000000000000000000000000000";
@@ -53,6 +71,8 @@ public class GitClientImplTest extends WingsBaseTest {
   public static final String content = "this is mock yaml content";
   public static final String oldPath = "root/dir/file_old_path";
   public static final String newPath = "root/dir/file_new_path";
+
+  private static final String GIT_CONNECTOR_ID = "gitConnectorId";
 
   // Git sync credentials (Keeping it here for now)
   private static final String GIT_REPO_URL = "git@github.com:wings-software/yaml-test.git";
@@ -244,7 +264,8 @@ public class GitClientImplTest extends WingsBaseTest {
 
     Git result = null;
     File localPath = File.createTempFile("TestGitRepository", "");
-    String PATH = "/Users/rathna/tmp";
+
+    String PATH = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
     // localPath.delete();
     result = Git.cloneRepository()
                  .setURI(GIT_REPO_URL)
@@ -266,6 +287,93 @@ public class GitClientImplTest extends WingsBaseTest {
       Git gitResult = gitSyncCloneRepository();
     } catch (Exception gae) {
       logger.error("Git Clone with SSH failed for repository: " + gae.getMessage());
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetFilteredGitFilesNoFileFoundException() throws IOException {
+    GitFetchFilesRequest gitFetchFilesRequest = GitFetchFilesRequest.builder()
+                                                    .gitConnectorId(GIT_CONNECTOR_ID)
+                                                    .filePaths(asList("filePath"))
+                                                    .useBranch(true)
+                                                    .branch("master")
+                                                    .build();
+    GitConfig gitConfig = GitConfig.builder().accountId(ACCOUNT_ID).build();
+    String repoPath = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
+
+    when(gitClientHelper.getLockObject(GIT_CONNECTOR_ID)).thenReturn("lockObject");
+    when(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, GIT_CONNECTOR_ID)).thenReturn(repoPath);
+
+    createLocalRepo(repoPath);
+
+    try {
+      gitClient.getFilteredGitFiles(gitConfig, gitFetchFilesRequest, repoPath);
+      fail("Should not reach here.");
+    } catch (Exception ex) {
+      assertThat(ex.getCause()).isNotNull();
+      FileIo.deleteDirectoryAndItsContentIfExists(repoPath);
+    }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetFilteredGitFile() throws Exception {
+    String filePath = "filePath";
+    GitFetchFilesRequest gitFetchFilesRequest = GitFetchFilesRequest.builder()
+                                                    .gitConnectorId(GIT_CONNECTOR_ID)
+                                                    .filePaths(asList(filePath))
+                                                    .useBranch(true)
+                                                    .branch("master")
+                                                    .recursive(true)
+                                                    .build();
+    GitConfig gitConfig = GitConfig.builder().accountId(ACCOUNT_ID).build();
+    String repoPath = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
+
+    when(gitClientHelper.getLockObject(GIT_CONNECTOR_ID)).thenReturn("lockObject");
+    when(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, GIT_CONNECTOR_ID)).thenReturn(repoPath);
+
+    createLocalRepo(repoPath);
+
+    String folderPath = Paths.get(repoPath, filePath).toString();
+    FileIo.createDirectoryIfDoesNotExist(folderPath);
+    FileIo.writeUtf8StringToFile(Paths.get(folderPath, "file1").toString(), "file1Content");
+
+    gitClient.getFilteredGitFiles(gitConfig, gitFetchFilesRequest, repoPath);
+    verify(gitClientHelper, times(1)).addFiles(anyList(), any(), any());
+    FileIo.deleteDirectoryAndItsContentIfExists(repoPath);
+  }
+
+  private void createLocalRepo(String repoPath) {
+    String command = new StringBuilder(128)
+                         .append("mkdir -p " + repoPath + ";")
+                         .append("cd " + repoPath + ";")
+                         .append("git init;")
+                         .toString();
+
+    executeCommand(command);
+  }
+
+  private void executeCommand(String command) {
+    try {
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(30, TimeUnit.SECONDS)
+                                            .command("/bin/sh", "-c", command)
+                                            .readOutput(true)
+                                            .redirectOutput(new LogOutputStream() {
+                                              @Override
+                                              protected void processLine(String line) {
+                                                logger.info(line);
+                                              }
+                                            });
+
+      ProcessResult processResult = processExecutor.execute();
+      assertThat(processResult.getExitValue()).isEqualTo(0);
+
+    } catch (InterruptedException | TimeoutException | IOException ex) {
+      fail("Should not reach here.");
     }
   }
 }

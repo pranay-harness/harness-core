@@ -697,29 +697,8 @@ public class GitClientImpl implements GitClient {
       try {
         checkoutFiles(gitConfig, gitRequest);
 
-        List<GitFile> gitFiles = new ArrayList<>();
         String repoPath = gitClientHelper.getRepoPathForFileDownload(gitConfig, gitRequest.getGitConnectorId());
-
-        gitRequest.getFilePaths().forEach(filePath -> {
-          try {
-            Path repoFilePath = Paths.get(repoPath + "/" + filePath);
-            Stream<Path> paths = gitRequest.isRecursive() ? Files.walk(repoFilePath) : Files.walk(repoFilePath, 1);
-            paths.filter(Files::isRegularFile)
-                .filter(path -> !path.toString().contains(".git"))
-                .filter(matchingFilesExtensions(gitRequest))
-                .forEach(path -> gitClientHelper.addFiles(gitFiles, path, repoPath));
-          } catch (Exception e) {
-            resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
-            throw new GitClientException(
-                new StringBuilder("Unable to checkout files for filePath [")
-                    .append(filePath)
-                    .append("]")
-                    .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
-                    .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
-                    .toString(),
-                USER, e);
-          }
-        });
+        List<GitFile> gitFiles = getFilteredGitFiles(gitConfig, gitRequest, repoPath);
 
         resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
 
@@ -747,6 +726,38 @@ public class GitClientImpl implements GitClient {
             USER);
       }
     }
+  }
+
+  @VisibleForTesting
+  public List<GitFile> getFilteredGitFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String repoPath) {
+    List<GitFile> gitFiles = new ArrayList<>();
+
+    gitRequest.getFilePaths().forEach(filePath -> {
+      try {
+        Path repoFilePath = Paths.get(repoPath + "/" + filePath);
+        Stream<Path> paths = gitRequest.isRecursive() ? Files.walk(repoFilePath) : Files.walk(repoFilePath, 1);
+        paths.filter(Files::isRegularFile)
+            .filter(path -> !path.toString().contains(".git"))
+            .filter(matchingFilesExtensions(gitRequest))
+            .forEach(path -> gitClientHelper.addFiles(gitFiles, path, repoPath));
+      } catch (Exception e) {
+        resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
+
+        // GitFetchFilesTask relies on the exception cause whether to fail the deployment or not.
+        // If the exception is being changed, make sure that the throwable cause is added to the new exception
+        // Unit test testGetFilteredGitFilesNoFileFoundException makes sure that the original exception is not swallowed
+        throw new GitClientException(
+            new StringBuilder("Unable to checkout files for filePath [")
+                .append(filePath)
+                .append("]")
+                .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
+                .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
+                .toString(),
+            USER, e);
+      }
+    });
+
+    return gitFiles;
   }
 
   @Override
