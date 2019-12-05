@@ -55,6 +55,9 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   private ResizeStrategy resizeStrategy;
   private Integer desireActualFinalCount;
   private PcfManifestsPackage pcfManifestsPackage;
+  // This is just to preserve setupState data.
+  private String[] tempRoutesOnSetupState;
+  private String[] finalRoutesOnSetupState;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

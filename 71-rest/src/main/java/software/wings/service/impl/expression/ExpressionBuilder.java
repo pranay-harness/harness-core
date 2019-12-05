@@ -9,6 +9,14 @@ import static io.harness.k8s.model.K8sExpressions.canaryDestination;
 import static io.harness.k8s.model.K8sExpressions.canaryWorkload;
 import static io.harness.k8s.model.K8sExpressions.stableDestination;
 import static io.harness.k8s.model.K8sExpressions.virtualServiceName;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_APP_FINAL_ROUTES_EXPR;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_APP_TEMP_ROUTES_EXPR;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_GUID_EXPR;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_NAME_EXPR;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_NEW_APP_ROUTES_EXPR;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_GUID_EXPR;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_NAME_EXPR;
+import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_ROUTES_EXPR;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -19,8 +27,6 @@ import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_REP
 import static software.wings.beans.config.ArtifactSourceable.ARTIFACT_SOURCE_USER_NAME_KEY;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
-import static software.wings.common.Constants.PCF_APP_NAME;
-import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.common.PathConstants.WINGS_BACKUP_PATH;
 import static software.wings.common.PathConstants.WINGS_RUNTIME_PATH;
 import static software.wings.common.PathConstants.WINGS_STAGING_PATH;
@@ -245,15 +251,19 @@ public abstract class ExpressionBuilder {
         break;
       case PCF_PLUGIN:
         expressions.addAll(getPcfWorkflowExpressions());
+        expressions.addAll(getPcfWorkflowExprAfterSetupState());
         expressions.add(PCF_PLUGIN_SERVICE_MANIFEST);
         expressions.add(PCF_PLUGIN_SERVICE_MANIFEST_REPO_ROOT);
         break;
       case PCF_SETUP:
+        expressions.addAll(getPcfWorkflowExpressions());
+        break;
       case PCF_RESIZE:
       case PCF_ROLLBACK:
       case PCF_MAP_ROUTE:
       case PCF_UNMAP_ROUTE:
         expressions.addAll(getPcfWorkflowExpressions());
+        expressions.addAll(getPcfWorkflowExprAfterSetupState());
         break;
       case HELM_DEPLOY:
       case HELM_ROLLBACK:
@@ -280,7 +290,13 @@ public abstract class ExpressionBuilder {
   }
 
   private static Collection<String> getPcfWorkflowExpressions() {
-    return asList(INFRA_PCF_ORG, INFRA_PCF_SPACE, INFRA_PCF_CLOUDPROVIDER_NAME, PCF_APP_NAME, PCF_OLD_APP_NAME);
+    return asList(INFRA_PCF_ORG, INFRA_PCF_SPACE, INFRA_PCF_CLOUDPROVIDER_NAME);
+  }
+
+  private static Collection<String> getPcfWorkflowExprAfterSetupState() {
+    return asList(CONTEXT_NEW_APP_GUID_EXPR, CONTEXT_NEW_APP_NAME_EXPR, CONTEXT_NEW_APP_ROUTES_EXPR,
+        CONTEXT_OLD_APP_GUID_EXPR, CONTEXT_OLD_APP_NAME_EXPR, CONTEXT_OLD_APP_ROUTES_EXPR,
+        CONTEXT_APP_FINAL_ROUTES_EXPR, CONTEXT_APP_TEMP_ROUTES_EXPR);
   }
 
   protected Set<String> getServiceVariables(String appId, List<String> entityIds) {
