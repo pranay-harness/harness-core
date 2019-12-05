@@ -1,0 +1,30 @@
+{
+    "expand": "plans",
+    "link": {
+        "href": "http://localhost:8085/rest/api/latest/plan",
+        "rel": "self"
+    },
+    "plans": {
+        "size": 5,
+        "expand": "plan",
+        "start-index": 0,
+        "max-result": 1,
+        "plan": [
+            {
+                "shortName": "plan-1",
+                "shortKey": "PLAN",
+                "type": "chain",
+                "enabled": false,
+                "link": {
+                    "href": "http://localhost:8085/rest/api/latest/plan/TES-PLAN",
+                    "rel": "self"
+                },
+                "key": "TES-PLAN",
+                "name": "test-1 - plan-1",
+                "planKey": {
+                    "key": "TES-PLAN"
+                }
+            }
+        ]
+    }
+}

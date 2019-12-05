@@ -357,6 +357,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
             .accountId(settingAttribute.getAccountId())
             .appId(appId)
             .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
+                        || settingAttribute.getValue().getType().equals(SettingVariableTypes.BAMBOO.name())
                     ? 120 * 1000
                     : DEFAULT_SYNC_CALL_TIMEOUT)
             .build();

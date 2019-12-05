@@ -38,6 +38,16 @@ public interface BambooRestClient {
   Call<JsonNode> listProjectPlans(@Header("Authorization") String authorization, @Query("max-results") int maxResults);
 
   /**
+   * List project plans call with pagination.
+   *
+   * @param authorization the authorization
+   * @return the call
+   */
+  @GET("rest/api/latest/plan.json?authType=basic")
+  Call<JsonNode> listProjectPlansWithPagination(@Header("Authorization") String authorization,
+      @Query("max-results") int maxResults, @Query("start-index") int startIndex);
+
+  /**
    * Last successful build call.
    *
    * @param authorization the authorization

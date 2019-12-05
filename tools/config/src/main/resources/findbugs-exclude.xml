@@ -14,6 +14,10 @@
         <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS" />
     </Match>
     <Match>
+        <!-- Does not always make sense -->
+        <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CHECKED" />
+    </Match>
+    <Match>
         <!-- covert from sonar scan -->
         <Bug pattern="CC_CYCLOMATIC_COMPLEXITY" />
     </Match>
