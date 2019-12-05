@@ -170,6 +170,9 @@ public class MongoQueueTest extends PersistenceTest {
     Date beforeGet = new Date();
     TestTopicQueuableObject message = queue.get(DEFAULT_WAIT, DEFAULT_POLL);
 
+    // queue get returns the old timestamp. Update the message with the current values
+    message = persistence.get(TestTopicQueuableObject.class, message.getId());
+
     Date messageEarliestGet = message.getEarliestGet();
 
     assertThat(messageEarliestGet).isAfter(beforeGet);
