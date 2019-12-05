@@ -1,6 +1,6 @@
 package io.harness.limits.checker.rate;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 
@@ -80,7 +80,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(IntegrationTests.class)
   public void testCheckAndConsume() throws Exception {
     int maxReq = 10;
@@ -100,7 +100,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(IntegrationTests.class)
   public void testVicinity() throws Exception {
     int maxReq = 10;
@@ -119,7 +119,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(IntegrationTests.class)
   public void testCheckAndConsumeConcurrent() throws Exception {
     int maxAllowedReq = 40;

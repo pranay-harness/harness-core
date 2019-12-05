@@ -1,7 +1,7 @@
 package io.harness.governance.pipeline.service;
 
 import static graphql.Assert.assertNotEmpty;
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -60,7 +60,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testList() {
     List<PipelineGovernanceConfig> initialList = pipelineGovernanceService.list(SOME_ACCOUNT_ID);
@@ -75,7 +75,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testUpdate() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(
@@ -101,7 +101,7 @@ public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testAdd() {
     PipelineGovernanceConfig config = new PipelineGovernanceConfig(

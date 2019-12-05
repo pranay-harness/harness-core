@@ -2,8 +2,8 @@ package software.wings.security.authentication;
 
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.rule.OwnerRule.AMAN;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -151,7 +151,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testGetLoginType_emailUnverified_shouldFail() throws MaxLoginAttemptExceededException {
     User mockUser = mock(User.class);

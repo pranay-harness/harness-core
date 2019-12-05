@@ -1,8 +1,8 @@
 package software.wings.security.authentication;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -298,7 +298,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
    * @throws SamlException
    */
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testAuthenticationWithSamlNotEnabled() throws IOException, SamlException {
     User user = new User();

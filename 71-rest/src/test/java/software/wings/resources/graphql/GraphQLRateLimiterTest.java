@@ -1,6 +1,6 @@
 package software.wings.resources.graphql;
 
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
@@ -66,7 +66,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testAccountLevelRateLimiter() {
     String accountId = UUIDGenerator.generateUuid();
@@ -107,7 +107,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK, intermittent = true)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(UnitTests.class)
   public void testGlobalRateLimiter() {
     // Global rate limiter should check against cross-account overall requests on global limit.
@@ -124,7 +124,7 @@ public class GraphQLRateLimiterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testMixedCustDashExternalRateLimiterCallsForSameAccount() {
     boolean overExternalRateLimit = false;

@@ -1,7 +1,7 @@
 package io.harness.functional.identity;
 
-import static io.harness.rule.OwnerRule.MARK;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -53,7 +53,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientLoginUser() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -66,7 +66,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListUsers() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -79,7 +79,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientListAccounts() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -92,7 +92,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientGetAccountSettings() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -107,7 +107,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientGetPublicUserInfo() {
     String identityServiceToken = generateIdentityServiceToken();
@@ -118,7 +118,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   public void testIdentityServiceClientSignupOauthUser() {
     String userEmail = "oauth_trial_user_" + System.currentTimeMillis() + "@harness.io";

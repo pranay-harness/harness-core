@@ -1,7 +1,7 @@
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -100,7 +100,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldTriggerUserGroupDispatcher() {
     String accountId = "some-account-id";

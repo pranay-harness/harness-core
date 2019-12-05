@@ -1,8 +1,8 @@
 package software.wings.integration;
 
 import static io.harness.rule.OwnerRule.HANTANG;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,7 +43,7 @@ public class AccountResourceIntegrationTest extends BaseIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testAccountMigration() {
     disableAccount(accountId, true);

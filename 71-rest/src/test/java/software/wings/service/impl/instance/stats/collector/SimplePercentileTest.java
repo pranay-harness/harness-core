@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 
 public class SimplePercentileTest extends CategoryTest {
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testPercentile() {
     List<Integer> numbers = new ArrayList<>(100);

@@ -5,14 +5,14 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HANTANG;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.UNKNOWN;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -245,7 +245,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testRegisterNewUser_invalidAccountName_shouldFail() {
     Account account = anAccount()
@@ -282,7 +282,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldUpdateCompanyName() {
     Account account = wingsPersistence.saveAndGet(Account.class,
@@ -589,7 +589,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void test_updateWhitelistedDomains_shouldTrimStringsAndIgnoreWhiteSpace() {
     Account account = accountService.save(anAccount()
@@ -607,7 +607,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void test_updateAccountName() {
     String companyName = "CompanyName 1";

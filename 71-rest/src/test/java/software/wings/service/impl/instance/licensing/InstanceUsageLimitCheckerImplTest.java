@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.licensing;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
@@ -11,7 +11,7 @@ import org.junit.experimental.categories.Category;
 
 public class InstanceUsageLimitCheckerImplTest extends CategoryTest {
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testIsWithinLimit() {
     double actualUsage = 90;

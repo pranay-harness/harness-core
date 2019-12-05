@@ -1,7 +1,7 @@
 package software.wings.integration;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -52,7 +52,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testAccountExportImport() throws Exception {
     byte[] exportedAccountData = exportAccountData(accountId);
@@ -77,7 +77,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testImportQEAccountDataFromZipFile() {
     String qaHarnessAccountId = "eWZFoTkESDSkPfnGwAp0lQ";
@@ -111,7 +111,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testSpecificExport() throws Exception {
     byte[] exportedAccountData =
@@ -135,7 +135,7 @@ public class AccountExportImportIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testSpecificExport_noEntityTypes_shouldFail() {
     assertThatExceptionOfType(Exception.class).isThrownBy(() -> {

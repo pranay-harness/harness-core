@@ -1,6 +1,6 @@
 package io.harness.functional.secrets;
 
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -42,7 +42,7 @@ public class CyberArkServiceFunctionalTest extends AbstractFunctionalTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   @Ignore("This test is depending on a ephemeral CyberArk installation in skytap.com which need manually brought up")
   public void testCRUDSecretsWithCyberArkSecretManager() throws Exception {

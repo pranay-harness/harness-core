@@ -1,9 +1,9 @@
 package software.wings.integration;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -84,7 +84,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testDisableEnableUser() {
     User user = userService.getUserByEmail(defaultEmail);
@@ -189,7 +189,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testSwitchAccount() {
     WebTarget target = client.target(API_BASE + "/users/switch-account?accountId=" + accountId);
@@ -211,7 +211,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testGetLoginTypeWithAccountId() {
     WebTarget target =
@@ -225,7 +225,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testDefaultLoginWithAccountId() {
     WebTarget target = client.target(API_BASE + "/users/login?accountId=" + defaultAccountId);
@@ -240,7 +240,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testSetDefaultAccount() {
     WebTarget target = client.target(API_BASE + "/users/set-default-account/" + accountId);
@@ -253,7 +253,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testLoginUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user/login?email=" + adminUserEmail);
@@ -274,7 +274,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testGetUserUsingIdentityServiceAuth() throws IllegalAccessException {
     WebTarget target = client.target(API_BASE + "/users/user");
@@ -304,7 +304,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testTrialSignupSuccess() {
     final String name = "Mark Lu";
@@ -413,7 +413,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK, intermittent = true)
+  @Owner(developers = UTKARSH, intermittent = true)
   @Category(IntegrationTests.class)
   public void testUserInviteSignupAndSignInSuccess() {
     final String name = "Mark Lu";
@@ -438,7 +438,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testInvalidUserInviteShouldFail() {
     String invalidInviteId = UUIDGenerator.generateUuid();
@@ -629,7 +629,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void testResendInvitationAndCompleteInvitation() {
     Account adminAccount =

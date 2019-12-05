@@ -6,7 +6,6 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -377,7 +376,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void saveAndEditConfig_withMaskedSecrets_changeNameDefaultOnly() {
     String name = UUID.randomUUID().toString();
@@ -750,7 +749,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testNoOnDemandMigrationOnSecretUpdate() {
     if (isKmsEnabled) {
@@ -1037,7 +1036,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void vaultEncryptionDeleteSettingAttribute() {
     VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
@@ -1474,7 +1473,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void vaultSecretManager_Crud_shouldGenerate_Audit() {
     if (isKmsEnabled) {
@@ -1502,7 +1501,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void secretText_createdBeforeLocalEncryption_shouldBeReturned() throws Exception {
     VaultConfig vaultConfig = getVaultConfig();
@@ -1544,7 +1543,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void WinRmConnections_shouldBeReturned_in_listSettingAttributes() {
     VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);

@@ -1,6 +1,6 @@
 package io.harness.notifications.conditions;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 
 public class ManualInterventionFilterMatcherTest extends WingsBaseTest {
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testMatch() {
     AlertFilter filter = new AlertFilter(AlertType.ApprovalNeeded, new Conditions(Operator.MATCHING, null, null));

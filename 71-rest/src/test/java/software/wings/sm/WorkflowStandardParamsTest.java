@@ -2,8 +2,8 @@ package software.wings.sm;
 
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
-import static io.harness.rule.OwnerRule.JATIN;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -105,7 +105,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
    * Should get app.
    */
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldGetApp() {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());

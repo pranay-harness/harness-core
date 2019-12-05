@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,7 +62,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testServiceLevelConfigFileCrud() {
@@ -99,7 +99,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testMultipleConfigFileUpdate_shouldNot_OverwriteEachOther() {
@@ -143,7 +143,7 @@ public class ConfigResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testEnvironmentLevelConfigFileOverrideCrud() {

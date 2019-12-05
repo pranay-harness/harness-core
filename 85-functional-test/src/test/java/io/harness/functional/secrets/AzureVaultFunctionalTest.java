@@ -1,6 +1,6 @@
 package io.harness.functional.secrets;
 
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class AzureVaultFunctionalTest extends AbstractFunctionalTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   @Ignore("Marked as ignore as this test is flaky and failing intermittently")
   public void testCRUDSecretsWithAzureVaultSecretManager() throws Exception {

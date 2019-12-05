@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -47,7 +47,7 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testCyberArkConfigValidation() {
     String url = mockWebServer.url("/").url().toString();
