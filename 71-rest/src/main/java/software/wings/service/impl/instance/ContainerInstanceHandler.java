@@ -40,6 +40,7 @@ import software.wings.api.KubernetesSteadyStateCheckExecutionSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
@@ -408,7 +409,8 @@ public class ContainerInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
     Multimap<ContainerMetadata, Instance> containerSvcNameInstanceMap = ArrayListMultimap.create();
 
     if (isEmpty(deploymentSummaries)) {

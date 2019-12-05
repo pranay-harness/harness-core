@@ -35,6 +35,7 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.HostElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -227,10 +228,15 @@ public class InstanceHelper {
             phaseStepExecutionData, workflowExecution, infrastructureMapping, stateExecutionInstanceId, artifact);
 
         if (isNotEmpty(deploymentSummaries)) {
-          deploymentEventQueue.send(DeploymentEvent.builder()
-                                        .deploymentSummaries(deploymentSummaries)
-                                        .isRollback(phaseStepSubWorkflow.isRollback())
-                                        .build());
+          deploymentEventQueue.send(
+              DeploymentEvent.builder()
+                  .deploymentSummaries(deploymentSummaries)
+                  .isRollback(phaseStepSubWorkflow.isRollback())
+                  .onDemandRollbackInfo(OnDemandRollbackInfo.builder()
+                                            .onDemandRollback(workflowExecution.isOnDemandRollback())
+                                            .rollbackExecutionId(workflowExecution.getUuid())
+                                            .build())
+                  .build());
         }
       }
     } catch (Exception ex) {
@@ -435,7 +441,8 @@ public class InstanceHelper {
 
       deploymentSummaries.forEach(deploymentSummary -> saveDeploymentSummary(deploymentSummary, false));
 
-      processDeploymentSummaries(deploymentSummaries, deploymentEvent.isRollback());
+      processDeploymentSummaries(
+          deploymentSummaries, deploymentEvent.isRollback(), deploymentEvent.getOnDemandRollbackInfo());
     } catch (Exception ex) {
       logger.error(
           "Error while processing deployment event {}. Skipping the deployment event", deploymentEvent.getId());
@@ -471,7 +478,8 @@ public class InstanceHelper {
         || deploymentSummary.getAwsLambdaDeploymentKey() != null;
   }
 
-  private void processDeploymentSummaries(List<DeploymentSummary> deploymentSummaries, boolean isRollback) {
+  private void processDeploymentSummaries(
+      List<DeploymentSummary> deploymentSummaries, boolean isRollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     if (isEmpty(deploymentSummaries)) {
       return;
     }
@@ -490,7 +498,7 @@ public class InstanceHelper {
           Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
-        instanceHandler.handleNewDeployment(deploymentSummaries, isRollback);
+        instanceHandler.handleNewDeployment(deploymentSummaries, isRollback, onDemandRollbackInfo);
         logger.info("Handled deployment event for infraMappingId [{}] successfully", infraMappingId);
       } else {
         logger.info("Skipping deployment event for infraMappingId [{}]", infraMappingId);
@@ -527,6 +535,7 @@ public class InstanceHelper {
       case CONTAINER_DEPLOY:
       case CONTAINER_SETUP:
       case PCF_RESIZE:
+      case PCF_SWICH_ROUTES:
       case DEPLOY_AWSCODEDEPLOY:
       case DEPLOY_AWS_LAMBDA:
       case AMI_DEPLOY_AUTOSCALING_GROUP:

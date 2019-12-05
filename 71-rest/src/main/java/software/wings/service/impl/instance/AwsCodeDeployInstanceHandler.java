@@ -19,6 +19,7 @@ import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -214,7 +215,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
     syncInstancesInternal(deploymentSummaries.iterator().next().getAppId(),
         deploymentSummaries.iterator().next().getInfraMappingId(), deploymentSummaries, rollback);
   }

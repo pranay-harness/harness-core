@@ -19,6 +19,7 @@ import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -71,8 +72,8 @@ public abstract class InstanceHandler {
   public static final String AUTO_SCALE = "AUTO_SCALE";
 
   public abstract void syncInstances(String appId, String infraMappingId) throws WingsException;
-  public abstract void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback)
-      throws WingsException;
+  public abstract void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException;
 
   public abstract Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,

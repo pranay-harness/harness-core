@@ -22,6 +22,7 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -100,7 +101,8 @@ public class AwsInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) throws WingsException {
+  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback,
+      OnDemandRollbackInfo onDemandRollbackInfo) throws WingsException {
     // All the new deployments are either handled at ASGInstanceHandler(for Aws ssh with asg) or InstanceHelper (for Aws
     // ssh with or without filter)
     throw WingsException.builder()

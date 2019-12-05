@@ -48,6 +48,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -256,6 +257,8 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         .when(pcfHelperService)
         .getApplicationDetails(anyString(), anyString(), anyString(), any());
 
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
+
     pcfInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
                           .deploymentInfo(
@@ -267,7 +270,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
                           .artifactName("new")
                           .artifactBuildNum("1")
                           .build()),
-        false);
+        false, onDemandRollbackInfo);
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(3)).save(captorInstance.capture());
@@ -345,6 +348,8 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         .when(deploymentService)
         .get(any(DeploymentSummary.class));
 
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
+
     pcfInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
                           .deploymentInfo(
@@ -356,7 +361,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
                           .artifactBuildNum("2")
                           .artifactName("new")
                           .build()),
-        true);
+        true, onDemandRollbackInfo);
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(3)).save(captorInstance.capture());

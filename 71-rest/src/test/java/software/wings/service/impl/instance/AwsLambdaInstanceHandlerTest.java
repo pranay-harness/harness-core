@@ -42,6 +42,7 @@ import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder;
 import software.wings.api.lambda.AwsLambdaDeploymentInfo;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -696,10 +697,11 @@ public class AwsLambdaInstanceHandlerTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void handle_handleNewDeployment() {
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
     doNothing()
         .when(awsLambdaInstanceHandler)
         .syncInstancesInternal(anyString(), anyString(), anyListOf(DeploymentSummary.class));
-    awsLambdaInstanceHandler.handleNewDeployment(getDeploymentSummarList(), false);
+    awsLambdaInstanceHandler.handleNewDeployment(getDeploymentSummarList(), false, onDemandRollbackInfo);
     verify(awsLambdaInstanceHandler, times(1))
         .syncInstancesInternal(anyString(), anyString(), eq(getDeploymentSummarList()));
   }

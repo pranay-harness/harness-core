@@ -42,6 +42,7 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.lambda.AwsLambdaDeploymentInfo;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -361,7 +362,8 @@ public class AwsLambdaInstanceHandler extends InstanceHandler {
   }
 
   @Override
-  public void handleNewDeployment(List<DeploymentSummary> deploymentSummaries, boolean rollback) {
+  public void handleNewDeployment(
+      List<DeploymentSummary> deploymentSummaries, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {
     logger.info(" Handling  new deployment. New Deployment Summary Size =[{}], rollback =[{}]",
         emptyIfNull(deploymentSummaries).size(), rollback);
     if (!isNullOrEmpty(deploymentSummaries)) {

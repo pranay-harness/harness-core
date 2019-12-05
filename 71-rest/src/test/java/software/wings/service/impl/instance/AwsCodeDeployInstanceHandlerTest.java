@@ -59,6 +59,7 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
 import software.wings.api.DeploymentSummary;
+import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
@@ -285,13 +286,13 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     doReturn(asList(instance1, instance3))
         .when(mockAwsEc2HelperServiceManager)
         .listEc2Instances(any(), any(), any(), any(), anyString());
-
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
     awsCodeDeployInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
                           .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())
                           .infraMappingId(INFRA_MAPPING_ID)
                           .build()),
-        false);
+        false, onDemandRollbackInfo);
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
@@ -385,7 +386,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     doReturn(asList(instance1, instance3))
         .when(mockAwsEc2HelperServiceManager)
         .listEc2Instances(any(), any(), any(), any(), anyString());
-
+    OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
     awsCodeDeployInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
                           .deploymentInfo(AwsCodeDeployDeploymentInfo.builder().deploymentId(DEPLOYMENT_ID).build())
@@ -393,7 +394,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
                           .artifactBuildNum("2")
                           .artifactName("new")
                           .build()),
-        true);
+        true, onDemandRollbackInfo);
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
     verify(instanceService).delete(captor.capture());
     Set idTobeDeleted = captor.getValue();
