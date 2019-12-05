@@ -78,6 +78,7 @@ import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -745,8 +746,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return ((StatefulSet) controller).getSpec().getReplicas();
     } else if (controller instanceof DaemonSet) {
       return ((DaemonSet) controller).getStatus().getDesiredNumberScheduled();
+    } else {
+      throw new InvalidRequestException(
+          format("Unhandled kubernetes resource type [%s] for getting the pod count", controller.getKind()));
     }
-    return null;
   }
 
   public PodTemplateSpec getPodTemplateSpec(HasMetadata controller) {
@@ -820,13 +823,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public Service createOrReplaceService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition) {
-    String name = definition.getMetadata().getName();
-    Service service = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-                          .services()
-                          .inNamespace(kubernetesConfig.getNamespace())
-                          .withName(name)
-                          .get();
-    logger.info("{} service [{}]", service == null ? "Creating" : "Replacing", name);
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())

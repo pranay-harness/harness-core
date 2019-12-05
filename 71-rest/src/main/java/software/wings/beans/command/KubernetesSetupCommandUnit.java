@@ -778,6 +778,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     }
 
+    service = kubernetesContainerService.getService(
+        kubernetesConfig, encryptedDataDetails, serviceToCreate.getMetadata().getName());
+    logger.info("{} service [{}]", service == null ? "Creating" : "Replacing", serviceToCreate.getMetadata().getName());
     service =
         kubernetesContainerService.createOrReplaceService(kubernetesConfig, encryptedDataDetails, serviceToCreate);
     serviceClusterIP = service.getSpec().getClusterIP();
