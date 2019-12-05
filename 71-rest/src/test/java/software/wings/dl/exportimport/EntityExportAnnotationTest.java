@@ -1,6 +1,6 @@
 package software.wings.dl.exportimport;
 
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class EntityExportAnnotationTest extends CategoryTest {
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void findExportableEntityTypes() {
     Set<Class> morphiaClasses = collectMorphiaClasses();

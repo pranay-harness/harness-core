@@ -1,9 +1,9 @@
 package software.wings.security;
 
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -148,7 +148,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testIdentityServiceRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("IdentityService token");

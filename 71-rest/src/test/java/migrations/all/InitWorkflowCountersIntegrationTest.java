@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -35,7 +35,7 @@ public class InitWorkflowCountersIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = JATIN, intermittent = true)
+  @Owner(developers = UJJAWAL, intermittent = true)
   @Category(IntegrationTests.class)
   public void testMigrate() {
     long totalWorkflows = wingsPersistence.createQuery(Workflow.class).count();

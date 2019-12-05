@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -50,7 +50,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testValidationWithNullEncryptionType() {
     validation.setParameters(new Object[] {});
@@ -73,7 +73,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testValidationWithEncryptedDataDetails() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -87,7 +87,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testValidationWithEncryptedDataDetailsList() {
     EncryptionConfig encryptionConfig = mock(EncryptionConfig.class);
@@ -101,7 +101,7 @@ public class SecretManagerValidationTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testValidationWithListOfNonEncryptedObjects() {
     validation.setParameters(new Object[] {Arrays.asList(new Object(), new Object())});

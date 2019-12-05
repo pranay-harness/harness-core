@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -212,7 +212,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testHasAllEnvAccessOfType() {
     UsageRestrictions usageRestrictions = null;
@@ -671,7 +671,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldRemoveEnvReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -691,7 +691,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldRemoveAppReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -711,7 +711,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldRemoveAppReferencesWithNullAppEnvRestrictions() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -724,7 +724,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldPurgeDanglingReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
@@ -738,7 +738,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void shouldReturnReferenceSummaries() {
     setupUsageRestrictionsForAppEnvReferenceTesting();

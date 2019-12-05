@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance.licensing;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -26,7 +26,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   @InjectMocks @Inject private InstanceUsageLimitExcessHandler usageLimitExcessHandler;
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testAlertRaised() {
     String accountId = "some-account-id";
@@ -40,7 +40,7 @@ public class InstanceUsageLimitExcessHandlerImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testAlertIsClosedWhenWithinLimit() {
     String accountId = "some-account-id";

@@ -1,6 +1,6 @@
 package io.harness.marketplace.gcp.events;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -45,7 +45,7 @@ public class GcpMarketplaceEventServiceImplTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(IntegrationTests.class)
   public void testSave() {
     String messageId = "message-id-" + NAMESPACE;

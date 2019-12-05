@@ -39,10 +39,8 @@ public class OwnerRule implements TestRule {
   public static final String HANTANG = "hannah.tang";
   public static final String HARSH = "harsh.jain";
   public static final String HITESH = "hitesh.aringa";
-  public static final String JATIN = "jatin";
   public static final String JUHI = "juhi.agrawal";
   public static final String KAMAL = "kamal.joshi";
-  public static final String MARK = "mark.lu";
   public static final String MEENAKSHI = "meenakshi.raikwar";
   public static final String NATARAJA = "nataraja";
   public static final String PARNIAN = "parnian";
@@ -97,10 +95,8 @@ public class OwnerRule implements TestRule {
           .put(HANTANG, DevInfo.builder().email("hannah.tang@harness.io").slack("UK8AQJSCS").build())
           .put(HARSH, DevInfo.builder().email("harsh.jain@harness.io").slack("UJ1CDM3FY").build())
           .put(HITESH, DevInfo.builder().email("hitesh.aringa@harness.io").slack("UK41C9QJH").build())
-          .put(JATIN, DevInfo.builder().email("jatin@harness.io").build())
           .put(JUHI, DevInfo.builder().email("juhi.agrawal@harness.io").slack("UL1KX4K1S").build())
           .put(KAMAL, DevInfo.builder().email("kamal.joshi@harness.io").slack("UKFQ1PQBH").build())
-          .put(MARK, DevInfo.builder().email("mark.lu@harness.io").build())
           .put(MEENAKSHI, DevInfo.builder().email("meenakshi.raikwar@harness.io").slack("UKP2AEUNA").build())
           .put(NATARAJA, DevInfo.builder().email("nataraja@harness.io").slack("UDQAS9J5C").build())
           .put(PARNIAN, DevInfo.builder().email("parnian@harness.io").slack("U89A5MLQK").build())

@@ -1,7 +1,7 @@
 package software.wings.yaml.handler.workflow;
 
-import static io.harness.rule.OwnerRule.JATIN;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -57,7 +57,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws HarnessException, IOException {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))

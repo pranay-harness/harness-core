@@ -1,7 +1,7 @@
 package software.wings.dl.exportimport;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -47,7 +47,7 @@ public class WingsMongoExportImportTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testCollectionExportImport() {
     String collectionName = Application.class.getAnnotation(Entity.class).value();

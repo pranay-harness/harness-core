@@ -1,8 +1,8 @@
 package software.wings.integration.service;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
@@ -55,7 +55,7 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(IntegrationTests.class)
   public void shouldSaveFileWithMetadata() throws Exception {
     FileMetadata fileMetadata = FileMetadata.builder()

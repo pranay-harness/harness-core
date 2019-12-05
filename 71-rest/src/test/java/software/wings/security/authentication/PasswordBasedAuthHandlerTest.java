@@ -1,7 +1,7 @@
 package software.wings.security.authentication;
 
-import static io.harness.rule.OwnerRule.JATIN;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -137,7 +137,7 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testFailedAttemptLimitExceeded() throws MaxLoginAttemptExceededException {
     try {

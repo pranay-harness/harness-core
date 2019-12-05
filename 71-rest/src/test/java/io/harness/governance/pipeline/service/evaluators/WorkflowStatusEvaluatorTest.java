@@ -1,6 +1,6 @@
 package io.harness.governance.pipeline.service.evaluators;
 
-import static io.harness.rule.OwnerRule.JATIN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -34,7 +34,7 @@ public class WorkflowStatusEvaluatorTest extends WingsBaseTest {
   private static final String SOME_ACCOUNT_ID = "some-account-id-" + WorkflowStatusEvaluatorTest.class.getSimpleName();
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testStatus() {
     PageResponse<HarnessTagLink> pageResponse = new PageResponse<>();

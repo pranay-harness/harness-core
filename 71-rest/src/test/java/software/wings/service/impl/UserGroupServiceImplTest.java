@@ -4,9 +4,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.JATIN;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -223,7 +223,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testListByName() {
     UserGroup userGroup1 = builder()
@@ -360,7 +360,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldUpdateNotificationSettings() {
     UserGroup ug = builder().accountId(accountId).name("some-name").build();
@@ -379,7 +379,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = JATIN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldUpdateOverview() {
     UserGroup ug = builder().accountId(accountId).name("some-name").build();

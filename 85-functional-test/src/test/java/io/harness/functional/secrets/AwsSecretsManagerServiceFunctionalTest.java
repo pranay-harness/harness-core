@@ -1,6 +1,6 @@
 package io.harness.functional.secrets;
 
-import static io.harness.rule.OwnerRule.MARK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -40,7 +40,7 @@ public class AwsSecretsManagerServiceFunctionalTest extends AbstractFunctionalTe
   @Inject private AwsSecretsManagerService secretsManagerService;
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testCRUDSecretsWithAwsSecretsManager() {

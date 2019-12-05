@@ -1,7 +1,6 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.MARK;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -132,7 +131,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testListSecrets_withEmptyResponse() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -154,7 +153,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testListSecrets_withLargePageSize_multipleBatches() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -181,7 +180,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testListSecrets_withFullResponse_singleBatch() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -206,7 +205,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testListSecrets_withFullResponse_multiBatches() throws Exception {
     String accountId = UUIDGenerator.generateUuid();
@@ -233,7 +232,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void test_Yaml_VaultPath_conversion() throws Exception {
     String encryptedDataId = UUIDGenerator.generateUuid();
@@ -291,7 +290,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testGetSecretManager() {
     when(localEncryptionService.getEncryptionConfig(anyString()))
@@ -323,7 +322,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void encryptedDataDetails() {
     EncryptedData mockEncryptedData = mock(EncryptedData.class);
@@ -343,7 +342,7 @@ public class SecretManagerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = MARK)
+  @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void getEncryptionDetails() {
     when(featureFlagService.isEnabled(FeatureName.GLOBAL_KMS_PRE_PROCESSING, ACCOUNT_ID)).thenReturn(true);

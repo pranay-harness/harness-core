@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.RAMA;
-import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.doNothing;
@@ -45,7 +45,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   @Inject private SSOSettingService ssoSettingService;
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void test_OauthAndUserPasswordCoexistence() {
     Account account = Account.Builder.anAccount()
@@ -91,7 +91,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void test_UserPasswordToSAMLAuthMechanismUpdate() {
     Account account = Account.Builder.anAccount()
@@ -112,7 +112,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void test_UserPasswordToLDAPAuthMechanismUpdate() {
     Account account = Account.Builder.anAccount()
@@ -160,7 +160,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VAIBHAV_TULSYAN)
+  @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void test_uploadOauthSetting_thenSetAuthMechanismAsOauth() {
     Account account = Account.Builder.anAccount()
