@@ -2,6 +2,7 @@ package io.harness.mongo.queue;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.persistence.HPersistence.returnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 
@@ -64,8 +65,6 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
   }
 
   private T getUnderLock(long endTime, Duration poll) {
-    final AdvancedDatastore datastore = persistence.getDatastore(klass);
-
     while (true) {
       final Date now = new Date();
 
@@ -74,10 +73,10 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
                            .lessThanOrEq(now)
                            .order(Sort.ascending(QueuableKeys.earliestGet));
 
-      UpdateOperations<T> updateOperations = datastore.createUpdateOperations(klass).set(
+      UpdateOperations<T> updateOperations = persistence.createUpdateOperations(klass).set(
           QueuableKeys.earliestGet, new Date(now.getTime() + heartbeat().toMillis()));
 
-      T message = HPersistence.retry(() -> datastore.findAndModify(query, updateOperations));
+      T message = HPersistence.retry(() -> persistence.findAndModify(query, updateOperations, returnOldOptions));
       if (message != null) {
         return message;
       }
@@ -105,7 +104,7 @@ public class MongoQueueConsumer<T extends Queuable> implements QueueConsumer<T> 
     UpdateOperations<T> updateOperations =
         persistence.createUpdateOperations(klass).set(QueuableKeys.earliestGet, earliestGet);
 
-    if (persistence.findAndModify(query, updateOperations, HPersistence.returnOldOptions) != null) {
+    if (persistence.findAndModify(query, updateOperations, returnOldOptions) != null) {
       message.setEarliestGet(earliestGet);
       return;
     }

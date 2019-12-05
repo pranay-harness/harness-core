@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 
 import com.mongodb.WriteConcern;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -32,7 +31,6 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
   @Inject private Injector injector;
   @Inject private HPersistence persistence;
-  @Inject private PersistentLocker persistentLocker;
 
   public NotifyEventListener() {
     super(false);
