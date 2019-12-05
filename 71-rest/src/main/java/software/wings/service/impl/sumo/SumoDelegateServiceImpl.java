@@ -1,8 +1,6 @@
 package software.wings.service.impl.sumo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.SUMO_CONFIGURATION_ERROR;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.URL_STRING;
@@ -19,7 +17,8 @@ import com.sumologic.client.SumoServerException;
 import com.sumologic.client.model.LogMessage;
 import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
 import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
-import io.harness.exception.WingsException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.VerificationOperationException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
@@ -72,8 +71,11 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           .createSearchJob(query, startTime, endTime, TimeZone.getDefault().getID());
       logger.info("Valid config provided");
       return true;
+    } catch (VerificationOperationException ex) {
+      throw ex;
     } catch (Exception exception) {
-      throw new WingsException("Error from Sumo xxxxxxxx " + exception.getMessage(), exception);
+      throw new VerificationOperationException(
+          ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Error from Sumo xxxxxxxx " + exception.getMessage(), exception);
     }
   }
 
@@ -181,10 +183,11 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       return getMessagesForSearchJob(dataCollectionInfo, messageCount, sumoClient, searchJobId, 0, 0,
           Math.min(messageCount, 5), logCollectionMinute, is247Task);
     } catch (InterruptedException e) {
-      throw new WingsException("Unable to get client for given config");
+      throw new VerificationOperationException(
+          ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Unable to get client for given config");
     } catch (SumoServerException sumoServerException) {
-      saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
-          String.valueOf(endTime), sumoServerException.getErrorMessage(), requestTimeStamp,
+      saveThirdPartyCallLogs(apiCallLog.copy(), dataCollectionInfo.getSumoConfig(), searchQuery,
+          String.valueOf(startTime), String.valueOf(endTime), sumoServerException.getErrorMessage(), requestTimeStamp,
           OffsetDateTime.now().toInstant().toEpochMilli(), sumoServerException.getHTTPStatus(), FieldType.TEXT);
       if (sumoServerException.getHTTPStatus() == RATE_LIMIT_STATUS) {
         int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
@@ -192,14 +195,15 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
             logCollectionMinute);
         sleep(RETRY_SLEEP.plus(Duration.ofSeconds(randomNum)));
       }
-      throw new WingsException(SUMO_CONFIGURATION_ERROR, sumoServerException.getErrorMessage(), USER)
-          .addParam("reason", sumoServerException.getErrorMessage());
+      throw new VerificationOperationException(
+          ErrorCode.SUMO_DATA_COLLECTION_ERROR, sumoServerException.getErrorMessage());
+
     } catch (Exception e) {
-      saveThirdPartyCallLogs(apiCallLog, dataCollectionInfo.getSumoConfig(), searchQuery, String.valueOf(startTime),
-          String.valueOf(endTime), ExceptionUtils.getStackTrace(e), requestTimeStamp,
+      saveThirdPartyCallLogs(apiCallLog.copy(), dataCollectionInfo.getSumoConfig(), searchQuery,
+          String.valueOf(startTime), String.valueOf(endTime), ExceptionUtils.getStackTrace(e), requestTimeStamp,
           OffsetDateTime.now().toInstant().toEpochMilli(), HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
-      throw new WingsException(SUMO_CONFIGURATION_ERROR, e)
-          .addParam("reason", e.getMessage() == null ? e.toString() : e.getMessage());
+      throw new VerificationOperationException(
+          ErrorCode.SUMO_DATA_COLLECTION_ERROR, e.getMessage() == null ? e.toString() : e.getMessage());
     }
   }
 
@@ -226,7 +230,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     try {
       sumoLogicClient.setURL(sumoConfig.getSumoUrl());
     } catch (MalformedURLException e) {
-      throw new WingsException("Unable to create SumoLogic Client");
+      throw new VerificationOperationException(
+          ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Unable to create SumoLogic Client");
     }
     return sumoLogicClient;
   }
@@ -272,7 +277,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       case SOURCE_NAME:
         return logMessage.getSourceName();
       default:
-        throw new WingsException("Invalid host name field " + dataCollectionInfo.getHostnameField(), USER);
+        throw new VerificationOperationException(
+            ErrorCode.SUMO_DATA_COLLECTION_ERROR, "Invalid host name field " + dataCollectionInfo.getHostnameField());
     }
   }
 
@@ -313,7 +319,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
    * @param collectionEndTime
    * @param searchJobStatusResponse
    */
-  private void saveThirdPartyCallLogs(ThirdPartyApiCallLog apiCallLog, SumoConfig config, String query,
+  public void saveThirdPartyCallLogs(ThirdPartyApiCallLog apiCallLog, SumoConfig config, String query,
       String collectionStartTime, String collectionEndTime, Object searchJobStatusResponse, Long requestTimeStamp,
       Long responseTimeStamp, int httpStatus, FieldType responseFieldType) {
     if (apiCallLog == null) {
