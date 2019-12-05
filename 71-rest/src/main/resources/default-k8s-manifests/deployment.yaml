@@ -18,7 +18,7 @@ stringData:
 ---
 {{- end}}
 
-{{- if .Values.createImagePullSecret}}
+{{- if .Values.dockercfg}}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -45,7 +45,7 @@ spec:
       labels:
         app: {{.Values.name}}
     spec:
-      {{- if .Values.createImagePullSecret}}
+      {{- if .Values.dockercfg}}
       imagePullSecrets:
       - name: {{.Values.name}}-dockercfg
       {{- end}}
