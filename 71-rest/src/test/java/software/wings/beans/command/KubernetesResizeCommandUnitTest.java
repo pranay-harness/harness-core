@@ -1,8 +1,10 @@
 package software.wings.beans.command;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyMap;
@@ -32,6 +34,7 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ContainerResizeCommandUnit.ContextData;
 import software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
@@ -295,5 +298,26 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
     return executionData;
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testMissingVirtualServiceInResizeCommand() {
+    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
+                                              .withContainerServiceName("rc-name-0")
+                                              .withUseFixedInstances(true)
+                                              .withUseIstioRouteRule(true)
+                                              .withInstanceCount(1)
+                                              .build();
+
+    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
+    ContextData contextData = new ContextData(context);
+    try {
+      kubernetesResizeCommandUnit.postExecution(contextData, null, null);
+      fail("Should not reach here.");
+    } catch (Exception e) {
+      assertThat(e.getMessage()).isEqualTo("Virtual Service [rc-name] not found");
+    }
   }
 }
