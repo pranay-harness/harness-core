@@ -150,6 +150,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       IstioResource existingVirtualService = kubernetesContainerService.getIstioVirtualService(
           kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
 
+      if (existingVirtualService == null) {
+        throw new InvalidRequestException(format("Virtual Service [%s] not found", kubernetesServiceName));
+      }
+
       IstioResource virtualServiceDefinition =
           createVirtualServiceDefinition(contextData, allData, existingVirtualService, kubernetesServiceName);
 
