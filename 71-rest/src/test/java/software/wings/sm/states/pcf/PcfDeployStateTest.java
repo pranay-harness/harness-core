@@ -50,7 +50,6 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +67,7 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -140,15 +140,16 @@ public class PcfDeployStateTest extends WingsBaseTest {
   private ExecutionContextImpl context;
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
-                                                              .appId(APP_ID)
-                                                              .name(outputName)
-                                                              .uuid(generateUuid())
-                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                                              .stateExecutionId(null)
-                                                              .pipelineExecutionId(null)
-                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance =
+      SweepingOutputInstance.builder()
+          .appId(APP_ID)
+          .name(outputName)
+          .uuid(generateUuid())
+          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+          .stateExecutionId(null)
+          .pipelineExecutionId(null)
+          .value(InfraMappingSweepingOutput.builder().infraMappingId(INFRA_MAPPING_ID).build())
+          .build();
   private SetupSweepingOutputPcf setupSweepingOutputPcf =
       SetupSweepingOutputPcf.builder()
           .uuid(serviceElement.getUuid())

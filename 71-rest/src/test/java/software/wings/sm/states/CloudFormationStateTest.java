@@ -56,7 +56,6 @@ import io.harness.beans.TriggeredBy;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,6 +79,7 @@ import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
@@ -235,15 +235,16 @@ public class CloudFormationStateTest extends WingsBaseTest {
           ServiceVariable.builder().type(Type.ENCRYPTED_TEXT).name("VAR_2").value("*******".toCharArray()).build());
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
-                                                              .appId(APP_ID)
-                                                              .name(outputName)
-                                                              .uuid(generateUuid())
-                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                                              .stateExecutionId(null)
-                                                              .pipelineExecutionId(null)
-                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance =
+      SweepingOutputInstance.builder()
+          .appId(APP_ID)
+          .name(outputName)
+          .uuid(generateUuid())
+          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+          .stateExecutionId(null)
+          .pipelineExecutionId(null)
+          .value(InfraMappingSweepingOutput.builder().infraMappingId(INFRA_MAPPING_ID).build())
+          .build();
 
   @Before
   public void setup() throws IllegalAccessException {

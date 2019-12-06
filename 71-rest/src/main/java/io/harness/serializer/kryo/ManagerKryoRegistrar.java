@@ -170,6 +170,7 @@ import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
@@ -1431,5 +1432,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InfoVariables.class, 7279);
     kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7280);
     kryo.register(DeploySweepingOutputPcf.class, 7281);
+    kryo.register(InfraMappingSweepingOutput.class, 7282);
   }
 }

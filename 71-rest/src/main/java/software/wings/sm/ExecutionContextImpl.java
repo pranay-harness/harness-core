@@ -64,6 +64,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -1207,7 +1208,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid())
             .build();
     SweepingOutputInstance sweepingOutputInstance = sweepingOutputService.find(sweepingOutputInquiry);
-    return sweepingOutputInstance == null ? null
-                                          : (String) KryoUtils.asInflatedObject(sweepingOutputInstance.getOutput());
+    return sweepingOutputInstance == null
+        ? null
+        : ((InfraMappingSweepingOutput) sweepingOutputInstance.getValue()).getInfraMappingId();
   }
 }

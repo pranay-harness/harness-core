@@ -96,7 +96,7 @@ public class ServiceNowCrudTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = POOJA, intermittent = true)
+  @Owner(developers = POOJA)
   @Category(FunctionalTests.class)
   public void shouldCreateSnowTicket() throws Exception {
     Workflow snowFTWorkflow =

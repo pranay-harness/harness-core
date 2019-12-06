@@ -73,7 +73,6 @@ import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,6 +93,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitFetchFilesTaskParams;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -231,15 +231,16 @@ public class PcfSetupStateTest extends WingsBaseTest {
           .build();
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
-                                                              .appId(APP_ID)
-                                                              .name(outputName)
-                                                              .uuid(generateUuid())
-                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                                              .stateExecutionId(null)
-                                                              .pipelineExecutionId(null)
-                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance =
+      SweepingOutputInstance.builder()
+          .appId(APP_ID)
+          .name(outputName)
+          .uuid(generateUuid())
+          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+          .stateExecutionId(null)
+          .pipelineExecutionId(null)
+          .value(InfraMappingSweepingOutput.builder().infraMappingId(INFRA_MAPPING_ID).build())
+          .build();
 
   private List<ServiceVariable> serviceVariableList =
       asList(ServiceVariable.builder().type(Type.TEXT).name("VAR_1").value("value1".toCharArray()).build(),
