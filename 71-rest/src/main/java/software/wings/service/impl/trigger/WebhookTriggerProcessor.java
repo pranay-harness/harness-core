@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_BRANCH_NAME_KEY;
 import static software.wings.beans.trigger.TriggerExecution.WEBHOOK_EVENT_DETAILS_GIT_CONNECTOR_ID_KEY;
@@ -146,7 +147,8 @@ public class WebhookTriggerProcessor {
                                     .waitId(waitId)
                                     .build();
 
-    waitNotifyEngine.waitForAll(new TriggerCallback(accountId, appId, savedTriggerExecution.getUuid()), waitId);
+    waitNotifyEngine.waitForAllOn(
+        GENERAL, new TriggerCallback(accountId, appId, savedTriggerExecution.getUuid()), waitId);
     delegateService.queueTask(delegateTask);
     logger.info("Issued file content change delegate task request for trigger execution id {}",
         savedTriggerExecution.getUuid());

@@ -3,6 +3,7 @@ package io.harness.waiter;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OrchestrationRule.TEST_PUBLISHER;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
@@ -36,14 +37,10 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   private static Map<String, ResponseData> responseMap;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
-
   @Inject private HPersistence persistence;
-
   @Inject private QueueConsumer<NotifyEvent> notifyConsumer;
-
   @Inject private NotifyResponseCleaner notifyResponseCleaner;
   @Inject private NotifyEventListener notifyEventListener;
-
   @Inject private QueueListenerController queueListenerController;
 
   /**
@@ -65,7 +62,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   public void shouldWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
+      String waitInstanceId = waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
@@ -90,7 +87,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   public void stressWaitForCorrelationId() throws IOException {
     String uuid = generateUuid();
     try (MaintenanceGuard guard = new MaintenanceGuard(true)) {
-      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
+      String waitInstanceId = waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
@@ -120,7 +117,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
 
-      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
+      String waitInstanceId = waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
@@ -150,7 +147,8 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
     String uuid3 = generateUuid();
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid1, uuid2, uuid3);
+      String waitInstanceId =
+          waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid1, uuid2, uuid3);
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
@@ -204,9 +202,9 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
     String uuid = generateUuid();
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      String waitInstanceId1 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
-      String waitInstanceId2 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
-      String waitInstanceId3 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), uuid);
+      String waitInstanceId1 = waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid);
+      String waitInstanceId2 = waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid);
+      String waitInstanceId3 = waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, new TestNotifyCallback(), uuid);
 
       assertThat(persistence.createQuery(WaitInstance.class, excludeAuthority).asList())
           .hasSize(3)

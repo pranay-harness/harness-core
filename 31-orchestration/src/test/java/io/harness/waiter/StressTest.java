@@ -1,6 +1,7 @@
 package io.harness.waiter;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OrchestrationRule.TEST_PUBLISHER;
 import static io.harness.rule.OwnerRule.GEORGE;
 
 import com.google.inject.Inject;
@@ -46,7 +47,7 @@ public class StressTest extends OrchestrationTest {
         List<String> vector = new ArrayList<>();
 
         long time = 0;
-        while (i < 100000) {
+        while (i < 10000) {
           final int ids = random.nextInt(5) + 1;
           if (i / 100 != (i + ids) / 100) {
             final long waits = persistence.createQuery(WaitInstance.class).count();
@@ -61,7 +62,7 @@ public class StressTest extends OrchestrationTest {
             correlationIds[id] = uuid;
             vector.add(uuid);
           }
-          waitNotifyEngine.waitForAll(null, correlationIds);
+          waitNotifyEngine.waitForAllOn(TEST_PUBLISHER, null, correlationIds);
 
           while (vector.size() > 0) {
             int index = random.nextInt(vector.size());

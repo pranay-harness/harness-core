@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -194,7 +195,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
     delegateTaskBuilder.accountId(accountId);
     delegateTaskBuilder.data(dataBuilder.build());
 
-    waitNotifyEngine.waitForAll(
+    waitNotifyEngine.waitForAllOn(GENERAL,
         new BuildSourceCallback(accountId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()), waitId);
     logger.info("Queuing delegate task for artifactStream with waitId {}", waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());

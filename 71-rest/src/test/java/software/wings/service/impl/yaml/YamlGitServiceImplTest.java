@@ -174,7 +174,7 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
     String response =
         yamlGitService.processWebhookPost(ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
     assertThat(response).isEqualTo("Successfully queued webhook request for processing");
-    verify(waitNotifyEngine, times(1)).waitForAll(any(), any());
+    verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
     verify(delegateService, times(1)).queueTask(any(DelegateTask.class));
   }
 

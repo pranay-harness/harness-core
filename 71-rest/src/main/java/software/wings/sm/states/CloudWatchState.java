@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static java.util.Collections.singletonList;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
@@ -244,14 +245,15 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .stateExecutionId(context.getStateExecutionInstanceId())
-                                    .dataCollectionStartTime(dataCollectionStartTimeStamp)
-                                    .dataCollectionEndTime(dataCollectionStartTimeStamp
-                                        + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
-                                    .executionData(executionData)
-                                    .build(),
+    waitNotifyEngine.waitForAllOn(GENERAL,
+        DataCollectionCallback.builder()
+            .appId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .dataCollectionStartTime(dataCollectionStartTimeStamp)
+            .dataCollectionEndTime(
+                dataCollectionStartTimeStamp + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
+            .executionData(executionData)
+            .build(),
         waitId);
     return delegateService.queueTask(delegateTask);
   }

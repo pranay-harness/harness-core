@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.DD_ECS_HOST_NAME;
 import static software.wings.common.VerificationConstants.DD_HOST_NAME_EXPRESSION;
@@ -72,6 +73,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
 @Slf4j
 public class DatadogState extends AbstractMetricAnalysisState {
   private static final int DATA_COLLECTION_RATE_MINS = 5;
@@ -236,7 +238,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(
+    waitNotifyEngine.waitForAllOn(GENERAL,
         DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
 
     return delegateService.queueTask(delegateTask);

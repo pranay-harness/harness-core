@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
@@ -219,14 +220,15 @@ public class StackDriverState extends AbstractMetricAnalysisState {
                                     .envId(envId)
                                     .infrastructureMappingId(infrastructureMappingId)
                                     .build();
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .stateExecutionId(context.getStateExecutionInstanceId())
-                                    .dataCollectionStartTime(dataCollectionStartTimeStamp)
-                                    .dataCollectionEndTime(dataCollectionStartTimeStamp
-                                        + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
-                                    .executionData(executionData)
-                                    .build(),
+    waitNotifyEngine.waitForAllOn(GENERAL,
+        DataCollectionCallback.builder()
+            .appId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .dataCollectionStartTime(dataCollectionStartTimeStamp)
+            .dataCollectionEndTime(
+                dataCollectionStartTimeStamp + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
+            .executionData(executionData)
+            .build(),
         waitId);
     return delegateService.queueTask(delegateTask);
   }

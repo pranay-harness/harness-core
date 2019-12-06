@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -40,26 +41,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class EmailNotificationServiceImpl implements EmailNotificationService {
   @Inject private Mailer mailer;
-
   @Inject private QueuePublisher<EmailData> emailEventQueue;
-
   @Inject private MainConfiguration mainConfiguration;
-
   @Inject private SecretManager secretManager;
-
   @Inject private DelegateService delegateService;
-
   @Inject private WaitNotifyEngine waitNotifyEngine;
-
   @Inject private EmailHelperUtils emailHelperUtils;
-
   @Inject private EmailUtils emailUtils;
-
   @Inject private AlertService alertService;
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.EmailNotificationService#send(java.lang.Object)
-   */
   @Override
   public boolean send(EmailData emailData) {
     SmtpConfig defaultSMTPConfig;
@@ -141,7 +131,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                                                 .build())
                                       .async(true)
                                       .build();
-      waitNotifyEngine.waitForAll(new EmailNotificationCallBack(), waitId);
+      waitNotifyEngine.waitForAllOn(GENERAL, new EmailNotificationCallBack(), waitId);
       delegateService.queueTask(delegateTask);
       return true;
     } catch (Exception e) {

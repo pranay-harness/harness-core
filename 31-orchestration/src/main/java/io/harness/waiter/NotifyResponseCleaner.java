@@ -5,18 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
-import io.harness.queue.QueuePublisher;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +29,6 @@ import java.util.List;
 @Slf4j
 public class NotifyResponseCleaner implements Runnable {
   @Inject private HPersistence persistence;
-  @Inject private PersistentLocker persistentLocker;
-  @Inject private QueuePublisher<NotifyEvent> notifyPublisher;
   @Inject private QueueController queueController;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -91,13 +86,14 @@ public class NotifyResponseCleaner implements Runnable {
           for (WaitInstance waitInstance : waitInstances) {
             if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
               if (waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
-                notifyPublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+                waitNotifyEngine.sendNotification(waitInstance);
               }
             } else if (waitInstance.getWaitingOnCorrelationIds().contains(uuid)) {
               needHandling = true;
             }
           }
         }
+
         if (needHandling) {
           waitNotifyEngine.handleNotifyResponse(uuid);
         }
