@@ -23,6 +23,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -34,6 +35,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.event.AccountEntityEvent;
@@ -57,6 +59,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
   @Mock private MainConfiguration mainConfiguration;
   @Mock private InstanceStatService instanceStatService;
   @Mock private SecretManagerConfigService secretManagerConfigService;
+  @Inject private HPersistence hPersistence;
   @Inject private TestUtils eventTestHelper;
 
   private User user;
@@ -77,11 +80,16 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(accountChangeHandler, "segmentHelper", segmentHelper, true);
     FieldUtils.writeField(accountChangeHandler, "instanceStatService", instanceStatService, true);
     FieldUtils.writeField(accountChangeHandler, "secretManagerConfigService", secretManagerConfigService, true);
+    FieldUtils.writeField(accountChangeHandler, "hPersistence", hPersistence, true);
     when(accountService.get(anyString())).thenReturn(account);
     when(mainConfiguration.getSegmentConfig()).thenReturn(segmentConfig);
     when(accountService.save(any(), eq(false))).thenReturn(account);
     account = eventTestHelper.createAccount();
     user = eventTestHelper.createUser(account);
+
+    Service service = new Service();
+    service.setAccountId(account.getUuid());
+    wingsPersistence.save(service);
   }
 
   private SegmentConfig initializeSegmentConfig() {
