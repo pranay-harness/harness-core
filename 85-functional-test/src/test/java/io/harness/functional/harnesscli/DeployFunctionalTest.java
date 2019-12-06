@@ -15,8 +15,7 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.InfrastructureDefinitionGenerator;
-import io.harness.generator.InfrastructureMappingGenerator;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -36,7 +35,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
@@ -62,7 +60,6 @@ import java.util.concurrent.TimeUnit;
 public class DeployFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private WorkflowUtils workflowUtils;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -80,7 +77,6 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   private String artifactId;
   private Service service;
   private InfrastructureDefinition infrastructureDefinition;
-  private InfrastructureMapping infrastructureMapping;
   private List<String> artifactStreamIds;
   private ArtifactStream artifactStream;
   private Environment environment;
@@ -104,8 +100,8 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
     // TODO: Uncomment this along with the Removing Ignore when InfraDefs FF is turned ON
     //        infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(seed, owners,
     //        "GCP_KUBERNETES", bearerToken);
-    infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.K8S_ROLLING_TEST);
+    infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.K8S_ROLLING_TEST);
     Runtime.getRuntime().exec("harness login -u admin@harness.io -p admin -d localhost:9090");
   }
 
@@ -113,8 +109,8 @@ public class DeployFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = ROHIT)
   @Category(CliFunctionalTests.class)
   public void deployWorkflowWithInfraMapping() throws IOException {
-    Workflow rollingWorkflow =
-        workflowUtils.createRollingWorkflowInfraMapping("Test-Rolling-CLI-Deployment", service, infrastructureMapping);
+    Workflow rollingWorkflow = workflowUtils.createRollingWorkflowInfraDefinition(
+        "Test-Rolling-CLI-Deployment", service, infrastructureDefinition);
 
     String workflowId = createWorkflowAndReturnId(rollingWorkflow);
 

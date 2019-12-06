@@ -34,14 +34,14 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class K8SUtils {
   @Inject private WorkflowExecutionServiceImpl workflowExecutionService;
-  public static Workflow createK8sV2Workflow(String appId, String envId, String serviceId, String infraMappingId,
+  public static Workflow createK8sV2Workflow(String appId, String envId, String serviceId, String infraDefinitionId,
       String name, OrchestrationWorkflowType orchestrationWorkflowType, String bearerToken, String accountId) {
     Workflow workflow = aWorkflow()
                             .name(name)
                             .appId(appId)
                             .envId(envId)
                             .serviceId(serviceId)
-                            .infraMappingId(infraMappingId)
+                            .infraDefinitionId(infraDefinitionId)
                             .workflowType(WorkflowType.ORCHESTRATION)
                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
@@ -78,10 +78,10 @@ public class K8SUtils {
     return cleanupWorkflow;
   }
 
-  public static Workflow createWorkflow(String appId, String envId, String svcId, String infraMappingId,
+  public static Workflow createWorkflow(String appId, String envId, String svcId, String infradefinitionId,
       String workflowName, OrchestrationWorkflowType workflowType, String bearerToken, String accountId) {
     Workflow savedWorkflow = K8SUtils.createK8sV2Workflow(
-        appId, envId, svcId, infraMappingId, workflowName, workflowType, bearerToken, accountId);
+        appId, envId, svcId, infradefinitionId, workflowName, workflowType, bearerToken, accountId);
 
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();

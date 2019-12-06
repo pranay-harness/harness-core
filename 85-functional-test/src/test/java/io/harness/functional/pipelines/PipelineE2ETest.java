@@ -19,8 +19,8 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -45,7 +45,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
@@ -54,6 +53,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.ArrayList;
@@ -68,14 +68,14 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactStreamManager artifactStreamManager;
 
   private Application application;
   private Service service;
   private Environment environment;
-  private InfrastructureMapping infrastructureMapping;
+  private InfrastructureDefinition infrastructureDefinition;
   private Workflow savedWorkflow;
   final Seed seed = new Seed(0);
   final String dummyWorkflow = "Dummy HTTP Workflow";
@@ -101,16 +101,16 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
     assertThat(environment).isNotNull();
 
-    infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.AWS_SSH_FUNCTIONAL_TEST);
-    assertThat(infrastructureMapping).isNotNull();
+    infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
+        seed, owners, InfrastructureDefinitions.AWS_SSH_FUNCTIONAL_TEST);
+    assertThat(infrastructureDefinition).isNotNull();
 
     ArtifactStream artifactStream =
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.ARTIFACTORY_ECHO_WAR);
     assertThat(artifactStream).isNotNull();
 
     WorkflowPhase phase1 =
-        aWorkflowPhase().serviceId(service.getUuid()).infraMappingId(infrastructureMapping.getUuid()).build();
+        aWorkflowPhase().serviceId(service.getUuid()).infraDefinitionId(infrastructureDefinition.getUuid()).build();
 
     logger.info("Creating workflow with canary orchestration : " + dummyWorkflow);
     Workflow workflow =
@@ -119,7 +119,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
             .description(dummyWorkflow)
             .serviceId(service.getUuid())
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .envId(environment.getUuid())
             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1)).build())
             .build();
@@ -162,7 +162,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     logger.info("Creating pipeline stages now");
     List<PipelineStage> pipelineStages = new ArrayList<>();
     PipelineStage executionStage = PipelineUtils.prepareExecutionStage(
-        infrastructureMapping.getEnvId(), savedWorkflow.getUuid(), Collections.emptyMap());
+        infrastructureDefinition.getEnvId(), savedWorkflow.getUuid(), Collections.emptyMap());
     pipelineStages.add(executionStage);
     verifyCreatedPipeline.setPipelineStages(pipelineStages);
 

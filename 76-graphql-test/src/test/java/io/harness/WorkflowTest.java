@@ -1,7 +1,6 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.WorkflowGenerator.Workflows.BASIC_SIMPLE;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +20,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.ApplicationGenerator;
-import io.harness.generator.InfrastructureMappingGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -33,13 +33,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.HarnessTagLink;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.graphql.schema.type.QLTag.QLTagKeys;
 import software.wings.graphql.schema.type.QLUser.QLUserKeys;
 import software.wings.graphql.schema.type.QLWorkflow.QLWorkflowKeys;
 import software.wings.graphql.schema.type.QLWorkflowConnection;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.HarnessTagService;
 
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ public class WorkflowTest extends GraphQLTest {
 
   @Inject ApplicationGenerator applicationGenerator;
   @Inject WorkflowGenerator workflowGenerator;
-  @Inject InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private HarnessTagService harnessTagService;
 
   @Test
@@ -138,12 +138,12 @@ public class WorkflowTest extends GraphQLTest {
     owners.add(application);
 
     String accountId = application.getAccountId();
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     final WorkflowBuilder builder =
         aWorkflow()
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(aBasicOrchestrationWorkflow()
                                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())

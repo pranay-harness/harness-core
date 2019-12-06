@@ -1,6 +1,5 @@
 package io.harness.generator;
 
-import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.PipelineGenerator.Pipelines.BARRIER;
 import static io.harness.generator.PipelineGenerator.Pipelines.BUILD;
 import static io.harness.generator.PipelineGenerator.Pipelines.RESOURCE_CONSTRAINT_WORKFLOW;
@@ -25,18 +24,19 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.WorkflowType;
 import io.harness.distribution.constraint.Constraint.Strategy;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.WorkflowGenerator.PostProcessInfo;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import software.wings.beans.Application;
 import software.wings.beans.GraphNode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Workflow;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.states.HoldingScope;
 
@@ -45,7 +45,6 @@ public class PipelineGenerator {
   @Inject private PipelineService pipelineService;
 
   @Inject private WorkflowGenerator workflowGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ServiceGenerator serviceGenerator;
@@ -68,8 +67,8 @@ public class PipelineGenerator {
   }
 
   public Pipeline ensureBarrier(Randomizer.Seed seed, Owners owners) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     Workflow[][] workflows = new Workflow[2][2];
 
@@ -79,7 +78,7 @@ public class PipelineGenerator {
             aWorkflow()
                 .name(format("Barrier Parallel Section %d-%d", i + 1, j + 1))
                 .workflowType(WorkflowType.ORCHESTRATION)
-                .infraMappingId(infrastructureMapping.getUuid())
+                .infraDefinitionId(infrastructureDefinition.getUuid())
                 .orchestrationWorkflow(aBasicOrchestrationWorkflow()
                                            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
@@ -136,8 +135,8 @@ public class PipelineGenerator {
   }
 
   public Pipeline ensureResourceConstraintWorkflow(Randomizer.Seed seed, Owners owners) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     final ResourceConstraint asapResourceConstraint = resourceConstraintGenerator.ensureResourceConstraint(seed, owners,
         ResourceConstraint.builder()
@@ -155,7 +154,7 @@ public class PipelineGenerator {
           aWorkflow()
               .name(format("Resource Constraint %d", i + 1))
               .workflowType(WorkflowType.ORCHESTRATION)
-              .infraMappingId(infrastructureMapping.getUuid())
+              .infraDefinitionId(infrastructureDefinition.getUuid())
               .orchestrationWorkflow(
                   aBasicOrchestrationWorkflow()
                       .withPreDeploymentSteps(

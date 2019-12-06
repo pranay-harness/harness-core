@@ -6,7 +6,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.AccountGenerator.Accounts;
-import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -37,7 +36,6 @@ import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator;
 import io.harness.generator.InfrastructureProvisionerGenerator;
 import io.harness.generator.LicenseGenerator;
 import io.harness.generator.OwnerManager;
@@ -155,7 +153,6 @@ public class DataGenService {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private ServiceGuardGenerator serviceGuardGenerator;
   @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private LicenseGenerator licenseGenerator;
@@ -349,8 +346,6 @@ public class DataGenService {
     workflowGenerator.ensurePredefined(seed, owners, Workflows.PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT);
 
     Workflow workflow1 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_SIMPLE);
-
-    infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
 
     serviceGuardGenerator.ensurePredefined(seed, owners, STACK_DRIVER_LOG);
 

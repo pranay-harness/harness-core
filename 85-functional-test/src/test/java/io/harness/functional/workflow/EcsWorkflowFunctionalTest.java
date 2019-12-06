@@ -30,8 +30,8 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -55,7 +55,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.GraphNode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SSHExecutionCredential;
@@ -65,6 +64,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -80,7 +80,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceGenerator serviceGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private SettingGenerator settingGenerator;
   @Inject private WorkflowService workflowService;
   @Inject private ArtifactStreamManager artifactStreamManager;
@@ -102,7 +102,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   private Application application;
   private Service service;
   private Environment environment;
-  private InfrastructureMapping infrastructureMapping;
+  private InfrastructureDefinition infrastructureDefinition;
   private SettingAttribute awsSettingAttribute;
   private Artifact artifact;
   private ArtifactStream artifactStream;
@@ -120,9 +120,9 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
     assertThat(environment).isNotNull();
 
-    infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.ECS_EC2_TEST);
-    assertThat(infrastructureMapping).isNotNull();
+    infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.ECS_EC2_TEST);
+    assertThat(infrastructureDefinition).isNotNull();
 
     awsSettingAttribute = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
@@ -198,8 +198,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
         .name("Daemon ECS" + System.currentTimeMillis())
         .workflowType(WorkflowType.ORCHESTRATION)
         .appId(service.getAppId())
-        .envId(infrastructureMapping.getEnvId())
-        .infraMappingId(infrastructureMapping.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
         .serviceId(service.getUuid())
         .orchestrationWorkflow(
             aBuildOrchestrationWorkflow()
@@ -209,8 +209,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
                                       .serviceId(service.getUuid())
                                       .deploymentType(DeploymentType.ECS)
                                       .daemonSet(true)
-                                      .infraMappingId(infrastructureMapping.getUuid())
-                                      .infraMappingName(infrastructureMapping.getName())
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .infraDefinitionName(infrastructureDefinition.getName())
                                       .computeProviderId(awsSettingAttribute.getUuid())
                                       .phaseSteps(phaseSteps)
                                       .build())
@@ -248,8 +248,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
         .name("Canary ECS" + System.currentTimeMillis())
         .workflowType(WorkflowType.ORCHESTRATION)
         .appId(service.getAppId())
-        .envId(infrastructureMapping.getEnvId())
-        .infraMappingId(infrastructureMapping.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
         .serviceId(service.getUuid())
         .orchestrationWorkflow(
             aBuildOrchestrationWorkflow()
@@ -260,8 +260,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
                                       .serviceId(service.getUuid())
                                       .deploymentType(DeploymentType.ECS)
                                       .daemonSet(false)
-                                      .infraMappingId(infrastructureMapping.getUuid())
-                                      .infraMappingName(infrastructureMapping.getName())
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .infraDefinitionName(infrastructureDefinition.getName())
                                       .computeProviderId(awsSettingAttribute.getUuid())
                                       .phaseSteps(phaseSteps1)
                                       .build())
@@ -270,8 +270,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
                                       .serviceId(service.getUuid())
                                       .deploymentType(DeploymentType.ECS)
                                       .daemonSet(false)
-                                      .infraMappingId(infrastructureMapping.getUuid())
-                                      .infraMappingName(infrastructureMapping.getName())
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .infraDefinitionName(infrastructureDefinition.getName())
                                       .computeProviderId(awsSettingAttribute.getUuid())
                                       .phaseSteps(phaseSteps2)
                                       .build())
@@ -317,8 +317,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
         .name("Basic ECS" + System.currentTimeMillis())
         .workflowType(WorkflowType.ORCHESTRATION)
         .appId(service.getAppId())
-        .envId(infrastructureMapping.getEnvId())
-        .infraMappingId(infrastructureMapping.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
         .serviceId(service.getUuid())
         .orchestrationWorkflow(
             aBuildOrchestrationWorkflow()
@@ -328,8 +328,8 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
                                       .serviceId(service.getUuid())
                                       .deploymentType(DeploymentType.ECS)
                                       .daemonSet(false)
-                                      .infraMappingId(infrastructureMapping.getUuid())
-                                      .infraMappingName(infrastructureMapping.getName())
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .infraDefinitionName(infrastructureDefinition.getName())
                                       .computeProviderId(awsSettingAttribute.getUuid())
                                       .phaseSteps(phaseSteps)
                                       .build())

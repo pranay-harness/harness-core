@@ -31,8 +31,8 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
@@ -43,6 +43,7 @@ import io.harness.testframework.framework.Setup;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import io.restassured.http.ContentType;
 import org.awaitility.Awaitility;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -52,7 +53,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.GraphNode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.SSHExecutionCredential;
@@ -60,6 +60,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 
@@ -77,11 +78,12 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   @Inject private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
   Application application;
+  Workflow workflow;
 
   @Before
   public void setUp() {
@@ -97,23 +99,24 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   public void shouldDeployIISAppWithPhysicalInfra() throws Exception {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.PHYSICAL_WINRM_TEST);
 
-    Workflow savedWorkflow = saveAndGetWorkflow(application.getUuid(), savedEnvironment.getUuid(),
-        savedService.getUuid(), infrastructureMapping.getUuid(), TestConstants.INSTALL_IIS_APPLICATION, false);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AZURE_WINRM_TEST);
 
-    assertThat(savedWorkflow).isNotNull();
-    assertThat(savedWorkflow.getUuid()).isNotEmpty();
-    assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
+    workflow = saveAndGetWorkflow(application.getUuid(), savedEnvironment.getUuid(), savedService.getUuid(),
+        infrastructureDefinition.getUuid(), TestConstants.INSTALL_IIS_APPLICATION, false);
+
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotEmpty();
+    assertThat(workflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
 
     Artifact artifact = collectArtifact(application.getUuid(), savedEnvironment.getUuid(), savedService.getUuid());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
+    executionArgs.setWorkflowType(workflow.getWorkflowType());
     executionArgs.setExecutionCredential(
         SSHExecutionCredential.Builder.aSSHExecutionCredential().withExecutionType(ExecutionType.SSH).build());
-    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
+    executionArgs.setOrchestrationId(workflow.getUuid());
     executionArgs.setServiceId(savedService.getUuid());
     executionArgs.setCommandName("START");
     executionArgs.setArtifacts(Collections.singletonList(artifact));
@@ -132,7 +135,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
                           .equals(ExecutionStatus.SUCCESS));
 
     // Clean up workflow
-    cleanUpWorkflow(application.getUuid(), savedWorkflow.getUuid());
+    cleanUpWorkflow(application.getUuid(), workflow.getUuid());
   }
 
   @Test
@@ -142,11 +145,11 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
   public void shouldDeployIISAppWithAzureCloudProvider() throws Exception {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.AZURE_WINRM_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.PHYSICAL_WINRM_TEST);
 
     Workflow savedWorkflow = saveAndGetWorkflow(application.getUuid(), savedEnvironment.getUuid(),
-        savedService.getUuid(), infrastructureMapping.getUuid(), TestConstants.INSTALL_IIS_APPLICATION, false);
+        savedService.getUuid(), infrastructureDefinition.getUuid(), TestConstants.INSTALL_IIS_APPLICATION, false);
 
     assertThat(savedWorkflow).isNotNull();
     assertThat(savedWorkflow.getUuid()).isNotEmpty();
@@ -175,9 +178,6 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
                    -> workflowExecutionService.getWorkflowExecution(application.getUuid(), workflowExecution.getUuid())
                           .getStatus()
                           .equals(ExecutionStatus.SUCCESS));
-
-    // Clean up workflow
-    cleanUpWorkflow(application.getUuid(), savedWorkflow.getUuid());
   }
 
   private void cleanUpWorkflow(String appId, String workflowId) {
@@ -218,7 +218,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
         : null;
   }
 
-  private Workflow saveAndGetWorkflow(String appId, String envId, String serviceId, String infraMappingId,
+  private Workflow saveAndGetWorkflow(String appId, String envId, String serviceId, String infraDefinitionId,
       String commandName, boolean specificHosts) throws Exception {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     Map<String, Object> selectNodeProperties = new HashMap<>();
@@ -268,7 +268,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
             .description("To Test " + commandName)
             .serviceId(serviceId)
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infraMappingId)
+            .infraDefinitionId(infraDefinitionId)
             .envId(envId)
             .orchestrationWorkflow(aBasicOrchestrationWorkflow()
                                        .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
@@ -276,7 +276,7 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
                                                              .name("Phase1")
                                                              .serviceId(serviceId)
                                                              .deploymentType(WINRM)
-                                                             .infraMappingId(infraMappingId)
+                                                             .infraDefinitionId(infraDefinitionId)
                                                              .phaseSteps(phaseSteps)
                                                              .build())
                                        .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
@@ -284,5 +284,12 @@ public class WinRmFunctionalTest extends AbstractFunctionalTest {
             .build();
 
     return WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), appId, iisAppWorkflow);
+  }
+
+  @After
+  public void tearDown() {
+    if (workflow != null && application != null && workflow.getUuid() != null && application != null) {
+      cleanUpWorkflow(application.getUuid(), workflow.getUuid());
+    }
   }
 }
