@@ -32,9 +32,10 @@ public class EcsSyncEventWriter extends EventWriter implements ItemWriter<Publis
           logger.debug("ECS sync event {} ", ecsSyncEvent);
           String accountId = publishedMessage.getAccountId();
           String clusterId = getIdFromArn(ecsSyncEvent.getClusterArn());
+          String settingId = ecsSyncEvent.getSettingId();
           Timestamp lastProcessedTimestamp = ecsSyncEvent.getLastProcessedTimestamp();
           Set<String> activeInstanceIds =
-              fetchActiveInstanceAtTime(accountId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
+              fetchActiveInstanceAtTime(accountId, settingId, clusterId, HTimestamps.toInstant(lastProcessedTimestamp));
           logger.debug("Active instances before {} time {}", lastProcessedTimestamp, activeInstanceIds);
 
           Set<String> activeInstanceArns = new HashSet<>();

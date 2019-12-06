@@ -88,12 +88,14 @@ public interface EcsEventGenerator {
   }
 
   default PublishedMessage getContainerInstanceInfoMessage(
-      String containerInstanceArn, String instanceId, String clusterArn, String accountId) {
+      String containerInstanceArn, String instanceId, String settingId, String clusterArn, String accountId) {
     EcsContainerInstanceDescription containerInstanceDescription = EcsContainerInstanceDescription.newBuilder()
                                                                        .setRegion(DEFAULT_AWS_REGION)
                                                                        .setOperatingSystem(OPERATING_SYSTEM)
                                                                        .setClusterArn(clusterArn)
+                                                                       .setClusterId(clusterArn)
                                                                        .setEc2InstanceId(instanceId)
+                                                                       .setSettingId(settingId)
                                                                        .setContainerInstanceArn(containerInstanceArn)
                                                                        .build();
     EcsContainerInstanceInfo ecsContainerInstanceInfo =
@@ -122,10 +124,12 @@ public interface EcsEventGenerator {
     return getPublishedMessage(accountId, ecsTaskInfo);
   }
 
-  default PublishedMessage getEcsSyncEventMessage(String accountId, String clusterArn, List<String> activeTaskArns,
-      List<String> activeEc2InstanceArns, List<String> activeContainerInstanceArns, Timestamp lastProcessedTimestamp) {
+  default PublishedMessage getEcsSyncEventMessage(String accountId, String settingId, String clusterArn,
+      List<String> activeTaskArns, List<String> activeEc2InstanceArns, List<String> activeContainerInstanceArns,
+      Timestamp lastProcessedTimestamp) {
     EcsSyncEvent ecsSyncEvent = EcsSyncEvent.newBuilder()
                                     .setClusterArn(clusterArn)
+                                    .setSettingId(settingId)
                                     .addAllActiveTaskArns(activeTaskArns)
                                     .addAllActiveEc2InstanceArns(activeEc2InstanceArns)
                                     .addAllActiveContainerInstanceArns(activeContainerInstanceArns)

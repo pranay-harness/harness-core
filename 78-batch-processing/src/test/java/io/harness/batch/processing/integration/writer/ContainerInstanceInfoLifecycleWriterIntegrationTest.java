@@ -42,6 +42,7 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
   private final String TEST_INSTANCE_ID = "INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_CONTAINER_ARN = "CONTAINER_ARN_" + this.getClass().getSimpleName();
+  private final String TEST_CLOUD_PROVIDER_ID = "CLOUD_PROVIDER_" + this.getClass().getSimpleName();
 
   @Autowired @Qualifier("ec2InstanceInfoWriter") private ItemWriter<PublishedMessage> ec2InstanceInfoWriter;
   @Autowired
@@ -66,8 +67,8 @@ public class ContainerInstanceInfoLifecycleWriterIntegrationTest extends Categor
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
-    PublishedMessage containerInstanceInfoMessage =
-        getContainerInstanceInfoMessage(TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage containerInstanceInfoMessage = getContainerInstanceInfoMessage(
+        TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
     ecsContainerInstanceInfoWriter.write(getMessageList(containerInstanceInfoMessage));
 
     List<InstanceState> activeInstanceState = getActiveInstanceState();

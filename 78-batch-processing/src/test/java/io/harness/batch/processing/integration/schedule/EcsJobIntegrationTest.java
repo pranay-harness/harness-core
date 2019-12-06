@@ -103,7 +103,7 @@ public class EcsJobIntegrationTest extends CategoryTest implements EcsEventGener
   }
 
   @Test
-  @Owner(developers = HITESH, intermittent = true)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void shouldRunEcsJob() throws Exception {
     batchJobRunner.runJob(ecsJob, BatchJobType.ECS_EVENT, 1, ChronoUnit.DAYS);

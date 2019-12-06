@@ -47,6 +47,7 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_SERVICE_NAME = "SERVICE_NAME_" + this.getClass().getSimpleName();
   private final String TEST_CONTAINER_ARN = "CONTAINER_ARN_" + this.getClass().getSimpleName();
+  private final String TEST_CLOUD_PROVIDER_ID = "CLOUD_PROVIDER_" + this.getClass().getSimpleName();
 
   private final Instant NOW = Instant.now();
   private final Timestamp INSTANCE_STOP_TIMESTAMP = HTimestamps.fromInstant(NOW);
@@ -69,8 +70,8 @@ public class TaskInfoLifecycleWriterIntegrationTest extends CategoryTest impleme
         getEc2InstanceInfoMessage(TEST_INSTANCE_ID, TEST_ACCOUNT_ID, TEST_CLUSTER_ARN);
     ec2InstanceInfoWriter.write(getMessageList(ec2InstanceInfoMessage));
 
-    PublishedMessage containerInstanceInfoMessage =
-        getContainerInstanceInfoMessage(TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage containerInstanceInfoMessage = getContainerInstanceInfoMessage(
+        TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
     ecsContainerInstanceInfoWriter.write(getMessageList(containerInstanceInfoMessage));
 
     PublishedMessage taskInfoMessage = getTaskInfoMessage(
