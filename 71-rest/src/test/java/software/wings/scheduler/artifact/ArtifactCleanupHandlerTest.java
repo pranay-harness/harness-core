@@ -1,6 +1,7 @@
 package software.wings.scheduler.artifact;
 
 import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -23,6 +24,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
+import software.wings.beans.artifact.ArtifactStreamType;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +41,13 @@ public class ArtifactCleanupHandlerTest extends WingsBaseTest {
   public void testRegisterIterators() {
     // setup mock
     when(persistenceIteratorFactory.createIterator(any(), any()))
-        .thenReturn(MongoPersistenceIterator.<ArtifactStream>builder().build());
+        .thenReturn(MongoPersistenceIterator.<ArtifactStream>builder()
+                        .filterExpander(query
+                            -> query.field(ArtifactStreamKeys.artifactStreamType)
+                                   .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),
+                                       ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ECR.name(),
+                                       ArtifactStreamType.GCR.name())))
+                        .build());
 
     ScheduledThreadPoolExecutor executor = mock(ScheduledThreadPoolExecutor.class);
     artifactCleanupHandler.registerIterators(executor);

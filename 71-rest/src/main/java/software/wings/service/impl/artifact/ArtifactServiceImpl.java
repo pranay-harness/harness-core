@@ -819,10 +819,6 @@ public class ArtifactServiceImpl implements ArtifactService {
       artifactQuery.project(ArtifactKeys.revision, true);
     }
 
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-      artifactQuery.project(ArtifactKeys.artifactFiles, true);
-    }
-
     if (CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       return artifactQuery;
     }

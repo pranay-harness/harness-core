@@ -48,6 +48,8 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.EcrArtifactStream;
+import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -66,6 +68,8 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
   private static final String ARTIFACT_STREAM_ID_3 = "ARTIFACT_STREAM_ID_3";
   private static final String ARTIFACT_STREAM_ID_4 = "ARTIFACT_STREAM_ID_4";
+  private static final String ARTIFACT_STREAM_ID_5 = "ARTIFACT_STREAM_ID_5";
+  private static final String ARTIFACT_STREAM_ID_6 = "ARTIFACT_STREAM_ID_6";
 
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private ArtifactService artifactService;
@@ -112,6 +116,21 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
                                                     .serviceId(SERVICE_ID)
                                                     .build();
 
+  GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
+                                            .uuid(ARTIFACT_STREAM_ID_5)
+                                            .appId(APP_ID)
+                                            .sourceName("ARTIFACT_SOURCE")
+                                            .serviceId(SERVICE_ID)
+                                            .build();
+
+  EcrArtifactStream ecrArtifactStream = EcrArtifactStream.builder()
+                                            .uuid(ARTIFACT_STREAM_ID_6)
+                                            .appId(APP_ID)
+                                            .sourceName("ARTIFACT_SOURCE")
+                                            .serviceId(SERVICE_ID)
+                                            .settingId(SETTING_ID)
+                                            .build();
+
   private SettingAttribute artifactorySetting = aSettingAttribute()
                                                     .withUuid(SETTING_ID)
                                                     .withValue(ArtifactoryConfig.builder()
@@ -152,6 +171,8 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_1)).thenReturn(ARTIFACT_STREAM);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_3)).thenReturn(amiArtifactStream);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID_4)).thenReturn(artifactoryStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_5)).thenReturn(gcrArtifactStream);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID_6)).thenReturn(ecrArtifactStream);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM_UNSTABLE, BUILD_DETAILS_2)).thenReturn(ARTIFACT_2);
     when(artifactCollectionUtils.getArtifact(ARTIFACT_STREAM, BUILD_DETAILS_1)).thenReturn(ARTIFACT_1);
@@ -180,6 +201,40 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
 
     buildSourceCleanupCallback.handleResponseForSuccessInternal(
         prepareBuildSourceExecutionResponse(true), artifactoryStream);
+    verify(artifactService, times(1)).deleteArtifacts(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotifyOnSuccessWithGCRDeleteArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_5);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(artifactService.prepareCleanupQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(artifact);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), gcrArtifactStream);
+    verify(artifactService, times(1)).deleteArtifacts(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotifyOnSuccessWithECRDeleteArtifacts() {
+    buildSourceCleanupCallback.setArtifactStreamId(ARTIFACT_STREAM_ID_6);
+    when(artifactService.prepareArtifactWithMetadataQuery(any())).thenReturn(query);
+    when(artifactService.prepareCleanupQuery(any())).thenReturn(query);
+    when(query.fetch()).thenReturn(artifactIterator);
+
+    when(artifactIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(artifactIterator.next()).thenReturn(artifact);
+
+    buildSourceCleanupCallback.handleResponseForSuccessInternal(
+        prepareBuildSourceExecutionResponse(true), ecrArtifactStream);
     verify(artifactService, times(1)).deleteArtifacts(any());
   }
 

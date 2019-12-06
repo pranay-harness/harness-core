@@ -7,6 +7,8 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -149,7 +151,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
       cleanupDockerArtifacts(artifactStream, deletedArtifacts);
     } else if (AMI.name().equals(artifactStreamType)) {
       cleanupAMIArtifacts(artifactStream, deletedArtifacts);
-    } else if (ARTIFACTORY.name().equals(artifactStreamType)) {
+    } else if (ARTIFACTORY.name().equals(artifactStreamType) || GCR.name().equals(artifactStreamType)
+        || ECR.name().equals(artifactStreamType)) {
       // This might not work for Nexus as we are also calling update nexus status
       List<Artifact> deletedArtifactsNew = cleanupStaleArtifacts(artifactStream, builds);
       deletedArtifacts.addAll(deletedArtifactsNew);
@@ -159,6 +162,8 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
   }
 
   private List<Artifact> cleanupStaleArtifacts(ArtifactStream artifactStream, List<BuildDetails> buildDetails) {
+    logger.info(
+        "Artifact Stream {} cleanup started with type {}", artifactStreamId, artifactStream.getArtifactStreamType());
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactCollectionUtils.getArtifactStreamAttributes(artifactStream,
             featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, artifactStream.getAccountId()));
@@ -184,6 +189,9 @@ public class BuildSourceCleanupCallback implements NotifyCallback {
     }
 
     artifactService.deleteArtifacts(toBeDeletedArtifacts);
+
+    logger.info("Artifact Stream {} cleanup complete with type {}, count {}", artifactStreamId,
+        artifactStream.getArtifactStreamType(), toBeDeletedArtifacts.size());
     return toBeDeletedArtifacts;
   }
 
