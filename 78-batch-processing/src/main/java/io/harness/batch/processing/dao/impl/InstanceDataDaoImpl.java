@@ -16,7 +16,6 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -47,9 +46,11 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
       switch (instanceEvent.getType()) {
         case STOP:
           updateOperations.set(InstanceDataKeys.usageStopTime, instant);
+          updateOperations.set(InstanceDataKeys.instanceState, InstanceState.STOPPED);
           break;
         case START:
           updateOperations.set(InstanceDataKeys.usageStartTime, instant);
+          updateOperations.set(InstanceDataKeys.instanceState, InstanceState.RUNNING);
           break;
         default:
           break;
@@ -78,7 +79,8 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
               .set(InstanceDataKeys.instanceName, instanceInfo.getInstanceName())
               .set(InstanceDataKeys.instanceType, instanceInfo.getInstanceType())
               .set(InstanceDataKeys.clusterId, instanceInfo.getClusterId())
-              .set(InstanceDataKeys.clusterName, instanceInfo.getClusterName());
+              .set(InstanceDataKeys.clusterName, instanceInfo.getClusterName())
+              .set(InstanceDataKeys.instanceState, instanceInfo.getInstanceState());
 
       if (!isNull(instanceInfo.getResource())) {
         updateOperations.set(InstanceDataKeys.totalResource, instanceInfo.getResource());
@@ -113,9 +115,13 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
             .set(instantField, instant)
             .set(InstanceDataKeys.instanceState, instanceState);
 
-    UpdateResults updateResults = hPersistence.update(instanceData, instanceDataUpdateOperations);
-    logger.debug("Updated instance state results {} ", updateResults);
-    return updateResults.getUpdatedCount() > 0;
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+                                    .filter(InstanceDataKeys.accountId, instanceData.getAccountId())
+                                    .filter(InstanceDataKeys.instanceId, instanceData.getInstanceId())
+                                    .filter(InstanceDataKeys.settingId, instanceData.getSettingId());
+
+    FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(false);
+    return hPersistence.upsert(query, instanceDataUpdateOperations, findAndModifyOptions) != null;
   }
 
   @Override
@@ -150,10 +156,11 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
    */
   @Override
   public List<InstanceData> fetchClusterActiveInstanceData(
-      String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime) {
+      String accountId, String settingId, String clusterName, List<InstanceState> instanceState, Instant startTime) {
     return hPersistence.createQuery(InstanceData.class)
         .filter(InstanceDataKeys.accountId, accountId)
-        .filter(InstanceDataKeys.clusterName, clusterName)
+        .filter(InstanceDataKeys.settingId, settingId)
+        .filter(InstanceDataKeys.clusterId, clusterName)
         .field(InstanceDataKeys.instanceState)
         .in(instanceState)
         .field(InstanceDataKeys.usageStartTime)

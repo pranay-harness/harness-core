@@ -45,6 +45,7 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
   private final String TEST_INSTANCE_ID = "INSTANCE_ID_" + this.getClass().getSimpleName();
   private final String TEST_CLUSTER_ARN = "CLUSTER_ARN_" + this.getClass().getSimpleName();
   private final String TEST_CONTAINER_ARN = "CONTAINER_ARN_" + this.getClass().getSimpleName();
+  private final String TEST_CLOUD_PROVIDER_ID = "CLOUD_PROVIDER_" + this.getClass().getSimpleName();
 
   private final Timestamp INSTANCE_START_TIMESTAMP = HTimestamps.fromInstant(Instant.now().minus(2, ChronoUnit.DAYS));
 
@@ -59,8 +60,8 @@ public class ContainerInstanceInfoLifecycleWriterTest extends CategoryTest imple
   public void shouldWriteContainerInstanceInfo() throws Exception {
     when(instanceDataService.fetchInstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID))
         .thenReturn(createEc2InstanceData(TEST_ACCOUNT_ID, TEST_INSTANCE_ID, InstanceState.RUNNING));
-    PublishedMessage ec2InstanceInfoMessage =
-        getContainerInstanceInfoMessage(TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
+    PublishedMessage ec2InstanceInfoMessage = getContainerInstanceInfoMessage(
+        TEST_CONTAINER_ARN, TEST_INSTANCE_ID, TEST_CLOUD_PROVIDER_ID, TEST_CLUSTER_ARN, TEST_ACCOUNT_ID);
     ecsContainerInstanceInfoWriter.write(Arrays.asList(ec2InstanceInfoMessage));
     ArgumentCaptor<InstanceData> instanceDataArgumentCaptor = ArgumentCaptor.forClass(InstanceData.class);
     verify(instanceDataService).create(instanceDataArgumentCaptor.capture());

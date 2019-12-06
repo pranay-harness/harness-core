@@ -17,6 +17,7 @@ public class InstanceInfo {
   String clusterName;
   String instanceName;
   InstanceType instanceType;
+  InstanceState instanceState;
   Resource resource;
   List<Container> containerList;
   Map<String, String> labels;

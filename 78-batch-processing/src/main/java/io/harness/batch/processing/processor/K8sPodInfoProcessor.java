@@ -2,6 +2,7 @@ package io.harness.batch.processing.processor;
 
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
+import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
@@ -67,6 +68,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         .clusterName(podInfo.getClusterName())
         .instanceName(podInfo.getPodName())
         .instanceType(InstanceType.K8S_POD)
+        .instanceState(InstanceState.INITIALIZING)
         .resource(K8sResourceUtils.getResource(podInfo.getTotalResource()))
         .metaData(metaData)
         //.containerList(podInfo.getContainersList())

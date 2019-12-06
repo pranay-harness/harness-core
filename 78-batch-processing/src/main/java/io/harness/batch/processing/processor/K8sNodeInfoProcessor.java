@@ -2,6 +2,7 @@ package io.harness.batch.processing.processor;
 
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
+import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
@@ -39,6 +40,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
         .clusterName(nodeInfo.getClusterName())
         .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)
+        .instanceState(InstanceState.INITIALIZING)
         .resource(K8sResourceUtils.getResource(nodeInfo.getAllocatableResource()))
         .labels(nodeInfo.getLabelsMap())
         .metaData(metaData)

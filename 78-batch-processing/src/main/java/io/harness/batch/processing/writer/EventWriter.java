@@ -71,9 +71,10 @@ public abstract class EventWriter {
     updateInstanceDataLifecycle(accountId, instanceId, lifecycle);
   }
 
-  protected Set<String> fetchActiveInstanceAtTime(String accountId, String clusterId, Instant startTime) {
+  protected Set<String> fetchActiveInstanceAtTime(
+      String accountId, String settingId, String clusterId, Instant startTime) {
     List<InstanceData> activeInstances =
-        instanceDataService.fetchClusterActiveInstanceData(accountId, clusterId, startTime);
+        instanceDataService.fetchClusterActiveInstanceData(accountId, settingId, clusterId, startTime);
     return activeInstances.stream().map(InstanceData::getInstanceId).collect(Collectors.toSet());
   }
 
