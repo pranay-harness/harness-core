@@ -175,6 +175,9 @@ public class VerificationConstants {
 
   public static final String IGNORED_ERRORS_METRIC_NAME = "ignored_errors";
 
+  public static final String VERIFICATION_PROVIDER_TYPE_LOG = "LOGS";
+  public static final String VERIFICATION_PROVIDER_TYPE_METRIC = "METRICS";
+
   public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
   public static final String DUMMY_HOST_NAME = "dummy";
 
@@ -204,6 +207,7 @@ public class VerificationConstants {
   public static final String VERIFICATION_DEPLOYMENTS = "verification_deployments";
 
   public static final int TIMESCALEDB_STRING_DATATYPE = 12;
+  public static final int TIMESCALEDB_BOOLEAN_DATATYPE = 16;
 
   // Add to this list whenever we add more states to this type of collection
   public static final List<StateType> PER_MINUTE_CV_STATES = Arrays.asList(StateType.SUMO, StateType.ELK);
@@ -219,6 +223,14 @@ public class VerificationConstants {
   public static final long GB = MB * MB;
 
   private VerificationConstants() {}
+
+  public static String getProviderTypeFromStateType(StateType stateType) {
+    if (getMetricAnalysisStates().contains(stateType)) {
+      return VERIFICATION_PROVIDER_TYPE_METRIC;
+    } else {
+      return VERIFICATION_PROVIDER_TYPE_LOG;
+    }
+  }
 
   public static List<StateType> getMetricAnalysisStates() {
     return Arrays.asList(StateType.APM_VERIFICATION, StateType.APP_DYNAMICS, StateType.DATA_DOG, StateType.DYNA_TRACE,

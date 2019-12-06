@@ -18,9 +18,13 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.metrics.HarnessMetricRegistry;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
@@ -57,32 +61,34 @@ public class UsageMetricsService {
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
   @Inject private EventPublishHelper eventPublishHelper;
 
+  @Getter
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  private class SetupEventGroupByKey {
+    String verificationProviderType;
+    EnvironmentType environmentType;
+    boolean enabled24x7;
+  }
+
   public void createSetupEventsForTimescaleDB(Account account) {
     List<CVConfiguration> cvConfigurationList = cvConfigurationService.listConfigurations(account.getUuid());
+    List<Environment> environments = environmentService.getEnvByAccountId(account.getUuid());
+    Map<String, Environment> environmentMap =
+        environments.stream().collect(Collectors.toMap(Environment::getUuid, env -> env));
 
-    List<CVConfiguration> logConfigs =
+    Map<SetupEventGroupByKey, List<CVConfiguration>> groupConfigMap =
         cvConfigurationList.stream()
-            .filter(config
-                -> config.isEnabled24x7()
-                    && VerificationConstants.getLogAnalysisStates().contains(config.getStateType()))
-            .collect(Collectors.toList());
+            .filter(config -> environmentMap.containsKey(config.getEnvId()))
+            .collect(Collectors.groupingBy(config
+                -> new SetupEventGroupByKey(VerificationConstants.getProviderTypeFromStateType(config.getStateType()),
+                    environmentMap.get(config.getEnvId()).getEnvironmentType(), config.isEnabled24x7())));
 
-    List<CVConfiguration> metricConfigs =
-        cvConfigurationList.stream()
-            .filter(config
-                -> config.isEnabled24x7()
-                    && VerificationConstants.getMetricAnalysisStates().contains(config.getStateType()))
-            .collect(Collectors.toList());
-
-    if (isNotEmpty(logConfigs)) {
-      long alertsSetup = logConfigs.stream().filter(CVConfiguration::isAlertEnabled).count();
-      eventPublishHelper.publishServiceGuardSetupEvent(account.getUuid(), "LOGS", logConfigs.size(), alertsSetup);
-    }
-
-    if (isNotEmpty(metricConfigs)) {
-      long alertsSetup = metricConfigs.stream().filter(CVConfiguration::isAlertEnabled).count();
-      eventPublishHelper.publishServiceGuardSetupEvent(account.getUuid(), "METRICS", metricConfigs.size(), alertsSetup);
-    }
+    groupConfigMap.forEach((key, value) -> {
+      long alertsSetup = value.stream().filter(CVConfiguration::isAlertEnabled).count();
+      List<String> configIds = value.stream().map(CVConfiguration::getUuid).collect(Collectors.toList());
+      eventPublishHelper.publishServiceGuardSetupEvent(account, key.getVerificationProviderType(), configIds,
+          alertsSetup, key.getEnvironmentType(), key.isEnabled24x7());
+    });
   }
 
   public void createVerificationUsageEvents(Account account) {

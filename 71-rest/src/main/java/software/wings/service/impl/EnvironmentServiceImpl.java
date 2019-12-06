@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
@@ -443,7 +444,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
     if (!serviceIds.isEmpty()) {
       PageRequest<Service> pageRequest = aPageRequest()
-                                             .withLimit(PageRequest.UNLIMITED)
+                                             .withLimit(UNLIMITED)
                                              .addFilter("appId", EQ, environment.getAppId())
                                              .addFilter("uuid", IN, serviceIds.toArray())
                                              .addFieldsExcluded("appContainer")
@@ -541,6 +542,13 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   }
 
   @Override
+  public List<Environment> getEnvByAccountId(String accountId) {
+    PageRequest<Environment> pageRequest =
+        aPageRequest().addFilter(EnvironmentKeys.accountId, EQ, accountId).withLimit(UNLIMITED).build();
+    return wingsPersistence.query(Environment.class, pageRequest).getResponse();
+  }
+
+  @Override
   public List<String> getEnvIdsByApp(String appId) {
     List<Key<Environment>> environmentKeyList =
         wingsPersistence.createQuery(Environment.class).filter("appId", appId).asKeyList();
@@ -591,7 +599,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           // Verify if the service template already exists in the target app
           PageRequest<ServiceTemplate> serviceTemplatePageRequest =
               aPageRequest()
-                  .withLimit(PageRequest.UNLIMITED)
+                  .withLimit(UNLIMITED)
                   .addFilter("appId", EQ, appId)
                   .addFilter("envId", EQ, savedClonedEnv.getUuid())
                   .addFilter("serviceId", EQ, serviceTemplate.getServiceId())
@@ -639,11 +647,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         }
       }
       // Clone ALL service variable overrides
-      PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
-                                                                    .withLimit(PageRequest.UNLIMITED)
-                                                                    .addFilter("appId", EQ, appId)
-                                                                    .addFilter("entityId", EQ, envId)
-                                                                    .build();
+      PageRequest<ServiceVariable> serviceVariablePageRequest =
+          aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("entityId", EQ, envId).build();
       List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
       cloneServiceVariables(savedClonedEnv, serviceVariables, null, null, null);
       cloneAppManifests(savedClonedEnv.getAppId(), savedClonedEnv.getUuid(), envId);
@@ -697,7 +702,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
           // Verify if the service template already exists in the target app
           PageRequest<ServiceTemplate> serviceTemplatePageRequest = aPageRequest()
-                                                                        .withLimit(PageRequest.UNLIMITED)
+                                                                        .withLimit(UNLIMITED)
                                                                         .addFilter("appId", EQ, targetAppId)
                                                                         .addFilter("envId", EQ, clonedEnvironmentUuid)
                                                                         .addFilter("serviceId", EQ, targetServiceId)
@@ -730,11 +735,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           }
         }
         // Clone ALL service variable overrides
-        PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
-                                                                      .withLimit(PageRequest.UNLIMITED)
-                                                                      .addFilter("appId", EQ, appId)
-                                                                      .addFilter("entityId", EQ, envId)
-                                                                      .build();
+        PageRequest<ServiceVariable> serviceVariablePageRequest =
+            aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("entityId", EQ, envId).build();
         List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
         cloneServiceVariables(clonedEnvironment, serviceVariables, null, targetAppId, null);
         // ToDo anshul why do we have same thing in two places

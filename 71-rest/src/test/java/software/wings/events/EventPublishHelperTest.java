@@ -61,9 +61,12 @@ import software.wings.beans.security.access.Whitelist;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -79,6 +82,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author rktummala on 12/05/18
@@ -97,6 +101,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
   @Mock private WhitelistService whitelistService;
   @Inject private TestUtils eventTestHelper;
   @Mock private ContinuousVerificationService continuousVerificationService;
+  @Mock private LearningEngineService learningEngineService;
 
   private User user;
   private Account account;
@@ -108,6 +113,7 @@ public class EventPublishHelperTest extends WingsBaseTest {
     account = eventTestHelper.createAccount();
     MarketoConfig marketoConfig = eventTestHelper.initializeMarketoConfig();
     FieldUtils.writeField(eventPublishHelper, "marketoConfig", marketoConfig, true);
+    FieldUtils.writeField(eventPublishHelper, "learningEngineService", learningEngineService, true);
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(accountService.getFromCache(ACCOUNT_ID)).thenReturn(account);
     when(accountService.save(any(), eq(false))).thenReturn(account);
@@ -514,5 +520,153 @@ public class EventPublishHelperTest extends WingsBaseTest {
     assertThat(properties).containsKey("accountName");
     assertThat(properties.get("accountName")).isEqualTo(account.getAccountName());
     assertThat(properties).doesNotContainKey("licenseType");
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPublishServiceGuardSetupEvent_LastTaskNull() {
+    String verificationProviderType = "LOGS";
+    List<String> configIds = Lists.newArrayList("configId1", "configId2");
+    long alerts = 2;
+    EnvironmentType environmentType = EnvironmentType.PROD;
+    boolean enabled = true;
+
+    doReturn(Optional.empty()).when(learningEngineService).getLatestTaskForCvConfigIds(configIds);
+
+    eventPublishHelper.publishServiceGuardSetupEvent(
+        account, verificationProviderType, configIds, alerts, environmentType, enabled);
+    ArgumentCaptor<Event> taskCaptorValue = ArgumentCaptor.forClass(Event.class);
+
+    verify(eventPublisher, times(1)).publishEvent(taskCaptorValue.capture());
+
+    Event event = taskCaptorValue.getValue();
+
+    assertThat(event).isNotNull();
+    assertThat(event.getEventType()).isEqualByComparingTo(EventType.SERVICE_GUARD_SETUP);
+    assertThat(event.getEventData()).isNotNull();
+
+    Map<String, String> properties = event.getEventData().getProperties();
+
+    assertThat(properties).containsKey("alerts");
+    assertThat(properties.get("alerts")).isEqualTo(String.valueOf(alerts));
+    assertThat(properties).containsKey("accountId");
+    assertThat(properties.get("accountId")).isEqualTo(account.getUuid());
+    assertThat(properties).containsKey("verificationProviderType");
+    assertThat(properties.get("verificationProviderType")).isEqualTo(verificationProviderType);
+    assertThat(properties).containsKey("configs");
+    assertThat(properties.get("configs")).isEqualTo(String.valueOf(configIds.size()));
+    assertThat(properties).containsKey("licenseType");
+    assertThat(properties.get("licenseType")).isEqualTo(account.getLicenseInfo().getAccountType());
+    assertThat(properties).containsKey("accountName");
+    assertThat(properties.get("accountName")).isEqualTo(account.getAccountName());
+    assertThat(properties).containsKey("environmentType");
+    assertThat(properties.get("environmentType")).isEqualTo(environmentType.name());
+    assertThat(properties).containsKey("enabled");
+    assertThat(properties.get("enabled")).isEqualTo(String.valueOf(enabled));
+    assertThat(properties).doesNotContainKey("lastExecutionTime");
+    assertThat(properties).doesNotContainKey("hasData");
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPublishServiceGuardSetupEvent_LastTaskNull_LicenseInfoNull() {
+    String verificationProviderType = "LOGS";
+    List<String> configIds = Lists.newArrayList("configId1", "configId2");
+    long alerts = 2;
+    EnvironmentType environmentType = EnvironmentType.PROD;
+    boolean enabled = true;
+
+    doReturn(Optional.empty()).when(learningEngineService).getLatestTaskForCvConfigIds(configIds);
+    account.setLicenseInfo(null);
+
+    eventPublishHelper.publishServiceGuardSetupEvent(
+        account, verificationProviderType, configIds, alerts, environmentType, enabled);
+    ArgumentCaptor<Event> taskCaptorValue = ArgumentCaptor.forClass(Event.class);
+
+    verify(eventPublisher, times(1)).publishEvent(taskCaptorValue.capture());
+
+    Event event = taskCaptorValue.getValue();
+
+    assertThat(event).isNotNull();
+    assertThat(event.getEventType()).isEqualByComparingTo(EventType.SERVICE_GUARD_SETUP);
+    assertThat(event.getEventData()).isNotNull();
+
+    Map<String, String> properties = event.getEventData().getProperties();
+
+    assertThat(properties).containsKey("alerts");
+    assertThat(properties.get("alerts")).isEqualTo(String.valueOf(alerts));
+    assertThat(properties).containsKey("accountId");
+    assertThat(properties.get("accountId")).isEqualTo(account.getUuid());
+    assertThat(properties).containsKey("verificationProviderType");
+    assertThat(properties.get("verificationProviderType")).isEqualTo(verificationProviderType);
+    assertThat(properties).containsKey("configs");
+    assertThat(properties.get("configs")).isEqualTo(String.valueOf(configIds.size()));
+    assertThat(properties).doesNotContainKey("licenseType");
+    assertThat(properties).containsKey("accountName");
+    assertThat(properties.get("accountName")).isEqualTo(account.getAccountName());
+    assertThat(properties).containsKey("environmentType");
+    assertThat(properties.get("environmentType")).isEqualTo(environmentType.name());
+    assertThat(properties).containsKey("enabled");
+    assertThat(properties.get("enabled")).isEqualTo(String.valueOf(enabled));
+    assertThat(properties).doesNotContainKey("lastExecutionTime");
+    assertThat(properties).doesNotContainKey("hasData");
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPublishServiceGuardSetupEvent_LastTaskNotNull() {
+    String verificationProviderType = "LOGS";
+    List<String> configIds = Lists.newArrayList("configId1", "configId2");
+    long alerts = 2;
+    EnvironmentType environmentType = EnvironmentType.PROD;
+
+    long lastUpdatedAt = System.currentTimeMillis();
+    LearningEngineAnalysisTask task = LearningEngineAnalysisTask.builder()
+                                          .cvConfigId(configIds.get(0))
+                                          .analysis_minute(1)
+                                          .ml_analysis_type(MLAnalysisType.LOG_ML)
+                                          .build();
+    task.setLastUpdatedAt(lastUpdatedAt);
+    doReturn(Optional.of(task)).when(learningEngineService).getLatestTaskForCvConfigIds(configIds);
+
+    doReturn(false).when(learningEngineService).checkIfAnalysisHasData(configIds.get(0), MLAnalysisType.LOG_ML, 1);
+
+    eventPublishHelper.publishServiceGuardSetupEvent(
+        account, verificationProviderType, configIds, alerts, environmentType, true);
+    ArgumentCaptor<Event> taskCaptorValue = ArgumentCaptor.forClass(Event.class);
+
+    verify(eventPublisher, times(1)).publishEvent(taskCaptorValue.capture());
+
+    Event event = taskCaptorValue.getValue();
+
+    assertThat(event).isNotNull();
+    assertThat(event.getEventType()).isEqualByComparingTo(EventType.SERVICE_GUARD_SETUP);
+    assertThat(event.getEventData()).isNotNull();
+
+    Map<String, String> properties = event.getEventData().getProperties();
+
+    assertThat(properties).containsKey("alerts");
+    assertThat(properties.get("alerts")).isEqualTo(String.valueOf(alerts));
+    assertThat(properties).containsKey("accountId");
+    assertThat(properties.get("accountId")).isEqualTo(account.getUuid());
+    assertThat(properties).containsKey("verificationProviderType");
+    assertThat(properties.get("verificationProviderType")).isEqualTo(verificationProviderType);
+    assertThat(properties).containsKey("configs");
+    assertThat(properties.get("configs")).isEqualTo(String.valueOf(configIds.size()));
+    assertThat(properties).containsKey("licenseType");
+    assertThat(properties.get("licenseType")).isEqualTo(account.getLicenseInfo().getAccountType());
+    assertThat(properties).containsKey("accountName");
+    assertThat(properties.get("accountName")).isEqualTo(account.getAccountName());
+    assertThat(properties).containsKey("environmentType");
+    assertThat(properties.get("environmentType")).isEqualTo(environmentType.name());
+    assertThat(properties).containsKey("enabled");
+    assertThat(properties.get("enabled")).isEqualTo(String.valueOf(true));
+    assertThat(properties).containsKey("lastExecutionTime");
+    assertThat(properties.get("lastExecutionTime")).isEqualTo(String.valueOf(lastUpdatedAt));
+    assertThat(properties).containsKey("hasData");
+    assertThat(properties.get("hasData")).isEqualTo(String.valueOf(false));
   }
 }
