@@ -177,7 +177,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -843,13 +842,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
    */
   private void setAutoPopulatedName(InfrastructureMapping infraMapping) {
     String name = EntityNameValidator.getMappedString(infraMapping.getDefaultName());
-    String escapedString = Pattern.quote(name);
 
     // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.
     PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
                                                          .addFilter("appId", Operator.EQ, infraMapping.getAppId())
                                                          .addFilter("envId", Operator.EQ, infraMapping.getEnvId())
-                                                         .addFilter("name", Operator.STARTS_WITH, escapedString)
+                                                         .addFilter("name", Operator.STARTS_WITH, name)
                                                          .build();
     PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
