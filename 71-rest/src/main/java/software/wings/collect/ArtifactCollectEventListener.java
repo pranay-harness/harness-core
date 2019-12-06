@@ -5,7 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.lang.String.format;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
@@ -77,18 +77,18 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
   public void onMessage(CollectEvent message) {
     Artifact artifact = message.getArtifact();
     String accountId = artifact.getAccountId();
-    try {
-      try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-           AutoLogContext ignore2 = new ArtifactStreamLogContext(
-               artifact.getArtifactStreamId(), artifact.getArtifactStreamType(), OVERRIDE_ERROR)) {
-        logger.info("Received artifact collection event for artifactId {}", artifact.getUuid());
-      }
+    final String uuid = artifact.getUuid();
 
-      artifactService.updateStatus(artifact.getUuid(), accountId, Status.RUNNING, ContentStatus.DOWNLOADING);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ArtifactStreamLogContext(
+             artifact.getArtifactStreamId(), artifact.getArtifactStreamType(), OVERRIDE_ERROR)) {
+      logger.info("Received artifact collection event");
+
+      artifactService.updateStatus(uuid, accountId, Status.RUNNING, ContentStatus.DOWNLOADING);
 
       if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
-        eventEmitter.send(Channel.ARTIFACTS,
-            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.fetchAppId()).build());
+        eventEmitter.send(
+            Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(uuid).withAppId(artifact.fetchAppId()).build());
       }
 
       ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
@@ -98,17 +98,16 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
       String waitId = generateUuid();
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
-      logger.info("Registering callback for the artifact artifactId {} with waitId {}", artifact.getUuid(), waitId);
-      waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getUuid()), waitId);
-      logger.info("Queuing delegate task for artifactId {} of artifactSourceName {} ", artifact.getUuid(),
-          artifact.getArtifactSourceName());
+      logger.info("Registering callback for the artifact with waitId {}", waitId);
+      waitNotifyEngine.waitForAllOn(GENERAL, new ArtifactCollectionCallback(uuid), waitId);
+      logger.info("Queuing delegate task of artifactSourceName {} ", artifact.getArtifactSourceName());
       delegateService.queueTask(delegateTask);
     } catch (Exception ex) {
-      logger.error(format("Failed to collect artifact. Reason %s", ExceptionUtils.getMessage(ex)), ex);
-      artifactService.updateStatus(artifact.getUuid(), accountId, Status.FAILED, ContentStatus.FAILED);
+      logger.error("Failed to collect artifact. Reason {}", ExceptionUtils.getMessage(ex), ex);
+      artifactService.updateStatus(uuid, accountId, Status.FAILED, ContentStatus.FAILED);
       if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
-        eventEmitter.send(Channel.ARTIFACTS,
-            anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.fetchAppId()).build());
+        eventEmitter.send(
+            Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(uuid).withAppId(artifact.fetchAppId()).build());
       }
     }
   }

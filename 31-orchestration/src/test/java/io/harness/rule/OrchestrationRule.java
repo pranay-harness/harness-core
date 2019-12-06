@@ -2,7 +2,9 @@ package io.harness.rule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.OrchestrationModule;
@@ -15,11 +17,14 @@ import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.QueuePublisher;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
+import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyEventListener;
+import io.harness.waiter.NotifyQueuePublisherRegister;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -34,6 +39,8 @@ import java.util.List;
 
 @Slf4j
 public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
+  public static final String TEST_PUBLISHER = "test";
+
   ClosingFactory closingFactory;
   private AdvancedDatastore datastore;
 
@@ -99,6 +106,12 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NotifyEventListener.class), 1);
+
+    final QueuePublisher<NotifyEvent> publisher =
+        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+        injector.getInstance(NotifyQueuePublisherRegister.class);
+    notifyQueuePublisherRegister.register(TEST_PUBLISHER, publisher::send);
   }
 
   @Override

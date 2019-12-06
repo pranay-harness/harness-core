@@ -19,7 +19,6 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.QueuePublisher;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
@@ -42,16 +41,17 @@ import java.util.Set;
 @Slf4j
 public class WaitNotifyEngine {
   @Inject private HPersistence persistence;
-  @Inject private QueuePublisher<NotifyEvent> notifyPublisher;
+  @Inject private NotifyQueuePublisherRegister publisherRegister;
 
-  public String waitForAll(NotifyCallback callback, String... correlationIds) {
+  public String waitForAllOn(String publisherName, NotifyCallback callback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
     if (logger.isDebugEnabled()) {
       logger.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
     }
 
-    final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder().uuid(generateUuid()).callback(callback);
+    final WaitInstanceBuilder waitInstanceBuilder =
+        WaitInstance.builder().uuid(generateUuid()).callback(callback).publisher(publisherName);
 
     final List<String> list;
     if (correlationIds.length == 1) {
@@ -88,9 +88,7 @@ public class WaitNotifyEngine {
       if ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
         if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
             && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
-          try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
-            notifyPublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
-          }
+          sendNotification(waitInstance);
         }
       }
     }
@@ -126,6 +124,13 @@ public class WaitNotifyEngine {
     return null;
   }
 
+  public void sendNotification(WaitInstance waitInstance) {
+    try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
+      final NotifyQueuePublisher notifyQueuePublisher = publisherRegister.obtain(waitInstance.getPublisher());
+      notifyQueuePublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+    }
+  }
+
   public void handleNotifyResponse(String uuid) {
     final Query<WaitInstance> query = persistence.createQuery(WaitInstance.class, excludeAuthority)
                                           .filter(WaitInstanceKeys.waitingOnCorrelationIds, uuid);
@@ -136,9 +141,7 @@ public class WaitNotifyEngine {
     WaitInstance waitInstance;
     while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
-        try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
-          notifyPublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
-        }
+        sendNotification(waitInstance);
       }
     }
   }

@@ -10,6 +10,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
@@ -545,8 +546,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                               .build())
                                     .build();
 
-    waitNotifyEngine.waitForAll(
-        new GitCommandCallback(accountId, mostRecentYamlChangesetId, GitCommandType.COMMIT_AND_PUSH), waitId);
+    waitNotifyEngine.waitForAllOn(
+        GENERAL, new GitCommandCallback(accountId, mostRecentYamlChangesetId, GitCommandType.COMMIT_AND_PUSH), waitId);
     delegateService.queueTask(delegateTask);
     return true;
   }
@@ -699,7 +700,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                 .build())
                                       .build();
 
-      waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
+      waitNotifyEngine.waitForAllOn(GENERAL, new GitCommandCallback(accountId, null, GitCommandType.DIFF), waitId);
       delegateService.queueTask(delegateTask);
 
       logger.info(

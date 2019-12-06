@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.resources.PrometheusResource.renderFetchQueries;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
@@ -146,14 +147,15 @@ public class PrometheusState extends AbstractMetricAnalysisState {
             .envId(envId)
             .infrastructureMappingId(infrastructureMappingId)
             .build();
-    waitNotifyEngine.waitForAll(DataCollectionCallback.builder()
-                                    .appId(context.getAppId())
-                                    .stateExecutionId(context.getStateExecutionInstanceId())
-                                    .executionData(executionData)
-                                    .dataCollectionStartTime(dataCollectionStartTimeStamp)
-                                    .dataCollectionEndTime(dataCollectionStartTimeStamp
-                                        + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
-                                    .build(),
+    waitNotifyEngine.waitForAllOn(GENERAL,
+        DataCollectionCallback.builder()
+            .appId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .executionData(executionData)
+            .dataCollectionStartTime(dataCollectionStartTimeStamp)
+            .dataCollectionEndTime(
+                dataCollectionStartTimeStamp + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
+            .build(),
         waitId);
     return delegateService.queueTask(delegateTask);
   }

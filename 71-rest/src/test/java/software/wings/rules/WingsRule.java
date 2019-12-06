@@ -3,6 +3,7 @@ package software.wings.rules;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -12,9 +13,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -41,11 +44,15 @@ import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
+import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.NotifyEventListener;
+import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -332,6 +339,13 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
   private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
     if (listenerOptional.isPresent()) {
       for (Class<? extends QueueListener> queueListenerClass : ((Listeners) listenerOptional.get()).value()) {
+        if (queueListenerClass.equals(NotifyEventListener.class)) {
+          final QueuePublisher<NotifyEvent> publisher =
+              injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+          final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+              injector.getInstance(NotifyQueuePublisherRegister.class);
+          notifyQueuePublisherRegister.register(GENERAL, publisher::send);
+        }
         injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListenerClass), 1);
       }
     }

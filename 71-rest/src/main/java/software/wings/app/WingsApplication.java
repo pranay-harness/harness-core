@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static software.wings.beans.FeatureName.PERPETUAL_TASK_SERVICE;
@@ -78,6 +79,7 @@ import io.harness.perpetualtask.internal.RecentlyDisconnectedDelegateHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
@@ -86,7 +88,9 @@ import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.NotifierScheduledExecutorService;
+import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyEventListener;
+import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import io.harness.workers.background.critical.iterator.ResourceConstraintBackupHandler;
@@ -551,8 +555,18 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
   }
 
+  private void registerWaitEnginePublishers(Injector injector) {
+    final QueuePublisher<NotifyEvent> publisher =
+        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+        injector.getInstance(NotifyQueuePublisherRegister.class);
+    notifyQueuePublisherRegister.register(GENERAL, publisher::send);
+  }
+
   private void registerQueueListeners(Injector injector) {
     logger.info("Initializing queue listeners...");
+
+    registerWaitEnginePublishers(injector);
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     EventListener genericEventListener =
@@ -597,8 +611,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     AuditServiceImpl auditService = (AuditServiceImpl) injector.getInstance(Key.get(AuditService.class));
     yamlPushService.getEntityCrudSubject().register(auditService);
 
-    AuditServiceHelper auditServiceHelper =
-        (AuditServiceHelper) injector.getInstance(Key.get(AuditServiceHelper.class));
+    AuditServiceHelper auditServiceHelper = injector.getInstance(Key.get(AuditServiceHelper.class));
     auditServiceHelper.getEntityCrudSubject().register(auditService);
 
     ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));

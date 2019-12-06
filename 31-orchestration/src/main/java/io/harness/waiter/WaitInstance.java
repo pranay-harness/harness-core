@@ -33,6 +33,7 @@ public class WaitInstance implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   @Indexed private List<String> correlationIds;
   @Indexed private List<String> waitingOnCorrelationIds;
+  private String publisher;
   private NotifyCallback callback;
   private long callbackProcessingAt;
 
