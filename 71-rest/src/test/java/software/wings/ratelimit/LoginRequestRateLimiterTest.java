@@ -58,9 +58,11 @@ public class LoginRequestRateLimiterTest extends WingsBaseTest {
   public void TC1_testOverGlobalRateLimiter() {
     boolean overRateLimit = false;
     int count = 400;
-    String remoteHost = "remote_host";
+    String remoteHost = "remote_host1";
+
+    when(limitConfigurationService.getOrDefault(anyString(), eq(ActionType.LOGIN_REQUEST_TASK))).thenReturn(null);
+
     for (int i = 0; i < count; i++) {
-      when(limitConfigurationService.getOrDefault(anyString(), eq(ActionType.LOGIN_REQUEST_TASK))).thenReturn(null);
       overRateLimit = loginRequestRateLimiter.isOverRateLimit(remoteHost);
     }
     assertThat(overRateLimit).isTrue();
@@ -72,12 +74,13 @@ public class LoginRequestRateLimiterTest extends WingsBaseTest {
   public void TC2_testGlobalRateLimiter() {
     boolean overRateLimit = false;
     int globalRateLimit = 300;
-    String remoteHost = "remote_host";
+    String remoteHost = "remote_host2";
     int count = 400;
 
+    when(limitConfigurationService.getOrDefault(anyString(), eq(ActionType.LOGIN_REQUEST_TASK)))
+        .thenReturn(getConfiguredLimit(remoteHost, globalRateLimit));
+
     for (int i = 0; i < count; i++) {
-      when(limitConfigurationService.getOrDefault(anyString(), eq(ActionType.LOGIN_REQUEST_TASK)))
-          .thenReturn(getConfiguredLimit(remoteHost, globalRateLimit));
       overRateLimit = loginRequestRateLimiter.isOverRateLimit(remoteHost);
     }
     assertThat(overRateLimit).isTrue();

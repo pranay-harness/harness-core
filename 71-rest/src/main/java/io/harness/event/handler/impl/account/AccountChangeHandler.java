@@ -18,6 +18,7 @@ import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
+import io.harness.persistence.HPersistence;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,8 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.User;
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.impl.AuthServiceImpl.Keys;
@@ -46,6 +49,7 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private UserService userService;
+  @Inject private HPersistence hPersistence;
 
   public AccountChangeHandler(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
@@ -70,7 +74,6 @@ public class AccountChangeHandler implements EventHandler {
           "No accountId present in account entity event. account={} eventType={}", account, event.getEventType());
       return;
     }
-
     if (mainConfiguration.getSegmentConfig().isEnabled()) {
       publishAccountEventToSegment(account);
     } else {
@@ -93,6 +96,10 @@ public class AccountChangeHandler implements EventHandler {
             .userId(user.getId())
             .traits(identityTraits.put("name", user.getUserName()).put("email", user.getEmail()).build());
     segmentHelper.enqueue(identity);
+  }
+
+  private long getCountOfServicesInAccount(Account account) {
+    return hPersistence.createQuery(Service.class).filter(ServiceKeys.accountId, account.getUuid()).count();
   }
 
   private void enqueueGroup(Account account) {
@@ -135,6 +142,7 @@ public class AccountChangeHandler implements EventHandler {
                 defaultSecretManager != null ? defaultSecretManager.getEncryptionType().name() : "LOCAL")
             .put("is_global", isGlobal)
             .put("user_count", count)
+            .put("service_count", getCountOfServicesInAccount(account))
             .build();
     logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
     // group
