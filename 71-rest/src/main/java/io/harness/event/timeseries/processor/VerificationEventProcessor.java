@@ -44,12 +44,15 @@ public class VerificationEventProcessor {
    STATUS VARCHAR(20),
    IS_247 BOOL,
    HAS_DATA BOOL,
-   IS_ROLLED_BACK
+   IS_ROLLED_BACK,
+   ACCOUNT_NAME TEXT NOT NULL,
+   LICENSE_TYPE VARCHAR(20) NOT NULL
    */
   String insert_prepared_statement_sql =
       "INSERT INTO VERIFICATION_WORKFLOW_STATS (ACCOUNT_ID, APP_ID, SERVICE_ID, WORKFLOW_ID, WORKFLOW_EXECUTION_ID,"
       + "STATE_EXECUTION_ID, CV_CONFIG_ID, STATE_TYPE, START_TIME, END_TIME, STATUS, IS_247, HAS_DATA, IS_ROLLED_BACK,"
-      + "ENVIRONMENT_TYPE, WORKFLOW_STATUS, ROLLBACK_TYPE, VERIFICATION_PROVIDER_TYPE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      + "ENVIRONMENT_TYPE, WORKFLOW_STATUS, ROLLBACK_TYPE, VERIFICATION_PROVIDER_TYPE, ACCOUNT_NAME, LICENSE_TYPE) "
+      + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
 
@@ -58,6 +61,7 @@ public class VerificationEventProcessor {
       Preconditions.checkNotNull(properties.get("accountId"));
       Preconditions.checkNotNull(properties.get("workflowExecutionId"));
       Preconditions.checkNotNull(properties.get("rollback"));
+      Preconditions.checkNotNull(properties.get("accountName"));
 
       PageRequest<ContinuousVerificationExecutionMetaData> cvPageRequest =
           aPageRequest()
@@ -72,6 +76,8 @@ public class VerificationEventProcessor {
         String workflowStatus = properties.get("workflowStatus");
         String rollbackType = properties.get("rollbackType");
         String envType = properties.get("envType");
+        String accountName = properties.get("accountName");
+        String licenseType = properties.get("licenseType");
         boolean successfulInsert = false;
         int retryCount = 0;
         long startTime = System.currentTimeMillis();
@@ -101,6 +107,12 @@ public class VerificationEventProcessor {
                   VerificationConstants.getLogAnalysisStates().contains(cvExecutionMetaData.getStateType())
                       ? "LOGS"
                       : "METRICS");
+              insertPreparedStatement.setString(19, accountName);
+              if (licenseType != null) {
+                insertPreparedStatement.setString(20, licenseType);
+              } else {
+                insertPreparedStatement.setNull(20, VerificationConstants.TIMESCALEDB_STRING_DATATYPE);
+              }
               insertPreparedStatement.addBatch();
             }
             insertPreparedStatement.executeBatch();

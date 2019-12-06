@@ -203,6 +203,8 @@ public class VerificationConstants {
 
   public static final String VERIFICATION_DEPLOYMENTS = "verification_deployments";
 
+  public static final int TIMESCALEDB_STRING_DATATYPE = 12;
+
   // Add to this list whenever we add more states to this type of collection
   public static final List<StateType> PER_MINUTE_CV_STATES = Arrays.asList(StateType.SUMO, StateType.ELK);
 

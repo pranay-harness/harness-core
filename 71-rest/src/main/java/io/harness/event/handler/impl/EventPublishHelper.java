@@ -684,6 +684,7 @@ public class EventPublishHelper {
         continuousVerificationService.getCVDeploymentData(cvPageRequest);
 
     if (!isEmpty(cvExecutionMetaDataList)) {
+      Account account = accountService.get(accountId);
       Map<String, String> properties = new HashMap<>();
       properties.put("accountId", accountId);
       properties.put("workflowExecutionId", workflowExecution.getUuid());
@@ -691,6 +692,11 @@ public class EventPublishHelper {
       properties.put("envType", workflowExecution.getEnvType().name());
       properties.put("workflowStatus", workflowExecution.getStatus().name());
       properties.put("rollbackType", "MANUAL");
+      properties.put("accountName", account.getAccountName());
+      if (account.getLicenseInfo() != null) {
+        properties.put("licenseType", account.getLicenseInfo().getAccountType());
+      }
+
       publishEvent(EventType.DEPLOYMENT_VERIFIED, properties);
       return true;
     }

@@ -1,11 +1,15 @@
 package software.wings.events;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.SRIRAM;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -23,6 +27,7 @@ import static software.wings.utils.WingsTestConstants.WHITELIST_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
@@ -33,12 +38,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.model.Event;
+import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -69,6 +76,9 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.apm.APMCVServiceConfiguration;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author rktummala on 12/05/18
@@ -410,5 +420,99 @@ public class EventPublishHelperTest extends WingsBaseTest {
     } finally {
       UserThreadLocal.unset();
     }
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPublishVerificationWorkflowMetrics() {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .uuid(generateUuid())
+                                              .envType(EnvironmentType.NON_PROD)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .build();
+    List<String> appIds = Lists.newArrayList("app1", "app2");
+
+    ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
+                                                           .applicationId(appIds.get(0))
+                                                           .workflowExecutionId(workflowExecution.getUuid())
+                                                           .build();
+    doReturn(Collections.singletonList(metaData)).when(continuousVerificationService).getCVDeploymentData(any());
+
+    eventPublishHelper.publishVerificationWorkflowMetrics(workflowExecution, appIds, account.getUuid(), false);
+    ArgumentCaptor<Event> taskCaptorValue = ArgumentCaptor.forClass(Event.class);
+
+    verify(eventPublisher, times(1)).publishEvent(taskCaptorValue.capture());
+
+    Event event = taskCaptorValue.getValue();
+
+    assertThat(event).isNotNull();
+    assertThat(event.getEventType()).isEqualByComparingTo(EventType.DEPLOYMENT_VERIFIED);
+    assertThat(event.getEventData()).isNotNull();
+
+    Map<String, String> properties = event.getEventData().getProperties();
+    assertThat(properties).containsKey("accountId");
+    assertThat(properties.get("accountId")).isEqualTo(account.getUuid());
+    assertThat(properties).containsKey("workflowExecutionId");
+    assertThat(properties.get("workflowExecutionId")).isEqualTo(workflowExecution.getUuid());
+    assertThat(properties).containsKey("rollback");
+    assertThat(properties.get("rollback")).isEqualTo(String.valueOf(false));
+    assertThat(properties).containsKey("envType");
+    assertThat(properties.get("envType")).isEqualTo(EnvironmentType.NON_PROD.name());
+    assertThat(properties).containsKey("workflowStatus");
+    assertThat(properties.get("workflowStatus")).isEqualTo(ExecutionStatus.SUCCESS.name());
+    assertThat(properties).containsKey("rollbackType");
+    assertThat(properties.get("rollbackType")).isEqualTo("MANUAL");
+    assertThat(properties).containsKey("accountName");
+    assertThat(properties.get("accountName")).isEqualTo(account.getAccountName());
+    assertThat(properties).containsKey("licenseType");
+    assertThat(properties.get("licenseType")).isEqualTo(account.getLicenseInfo().getAccountType());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testPublishVerificationWorkflowMetrics_NullLicenseInfo() {
+    account.setLicenseInfo(null);
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .uuid(generateUuid())
+                                              .envType(EnvironmentType.NON_PROD)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .build();
+    List<String> appIds = Lists.newArrayList("app1", "app2");
+
+    ContinuousVerificationExecutionMetaData metaData = ContinuousVerificationExecutionMetaData.builder()
+                                                           .applicationId(appIds.get(0))
+                                                           .workflowExecutionId(workflowExecution.getUuid())
+                                                           .build();
+    doReturn(Collections.singletonList(metaData)).when(continuousVerificationService).getCVDeploymentData(any());
+
+    eventPublishHelper.publishVerificationWorkflowMetrics(workflowExecution, appIds, account.getUuid(), false);
+    ArgumentCaptor<Event> taskCaptorValue = ArgumentCaptor.forClass(Event.class);
+
+    verify(eventPublisher, times(1)).publishEvent(taskCaptorValue.capture());
+
+    Event event = taskCaptorValue.getValue();
+
+    assertThat(event).isNotNull();
+    assertThat(event.getEventType()).isEqualByComparingTo(EventType.DEPLOYMENT_VERIFIED);
+    assertThat(event.getEventData()).isNotNull();
+
+    Map<String, String> properties = event.getEventData().getProperties();
+    assertThat(properties).containsKey("accountId");
+    assertThat(properties.get("accountId")).isEqualTo(account.getUuid());
+    assertThat(properties).containsKey("workflowExecutionId");
+    assertThat(properties.get("workflowExecutionId")).isEqualTo(workflowExecution.getUuid());
+    assertThat(properties).containsKey("rollback");
+    assertThat(properties.get("rollback")).isEqualTo(String.valueOf(false));
+    assertThat(properties).containsKey("envType");
+    assertThat(properties.get("envType")).isEqualTo(EnvironmentType.NON_PROD.name());
+    assertThat(properties).containsKey("workflowStatus");
+    assertThat(properties.get("workflowStatus")).isEqualTo(ExecutionStatus.SUCCESS.name());
+    assertThat(properties).containsKey("rollbackType");
+    assertThat(properties.get("rollbackType")).isEqualTo("MANUAL");
+    assertThat(properties).containsKey("accountName");
+    assertThat(properties.get("accountName")).isEqualTo(account.getAccountName());
+    assertThat(properties).doesNotContainKey("licenseType");
   }
 }
