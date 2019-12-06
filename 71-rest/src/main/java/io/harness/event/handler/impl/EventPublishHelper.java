@@ -31,6 +31,7 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
@@ -39,6 +40,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
@@ -53,9 +55,11 @@ import software.wings.common.VerificationConstants;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.StateExecutionService;
@@ -99,6 +103,7 @@ public class EventPublishHelper {
   @Inject private SegmentConfig segmentConfig;
   @Inject private StateExecutionService stateExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private LearningEngineService learningEngineService;
 
   private List<StateType> analysisStates = VerificationConstants.getAnalysisStates();
 
@@ -704,14 +709,27 @@ public class EventPublishHelper {
     return false;
   }
 
-  public void publishServiceGuardSetupEvent(
-      String accountId, String verificationProviderType, long configs, long alerts) {
+  public void publishServiceGuardSetupEvent(@NonNull Account account, String verificationProviderType,
+      List<String> configIds, long alerts, EnvironmentType environmentType, boolean enabled) {
+    Optional<LearningEngineAnalysisTask> lastTask = learningEngineService.getLatestTaskForCvConfigIds(configIds);
     executorService.submit(() -> {
       Map<String, String> properties = new HashMap<>();
-      properties.put("accountId", accountId);
+      properties.put("accountId", account.getUuid());
       properties.put("verificationProviderType", verificationProviderType);
-      properties.put("configs", String.valueOf(configs));
+      properties.put("configs", String.valueOf(configIds.size()));
       properties.put("alerts", String.valueOf(alerts));
+      if (account.getLicenseInfo() != null) {
+        properties.put("licenseType", account.getLicenseInfo().getAccountType());
+      }
+      properties.put("accountName", account.getAccountName());
+      properties.put("environmentType", environmentType.name());
+      properties.put("enabled", String.valueOf(enabled));
+      lastTask.ifPresent(task -> {
+        boolean hasData = learningEngineService.checkIfAnalysisHasData(
+            task.getCvConfigId(), task.getMl_analysis_type(), task.getAnalysis_minute());
+        properties.put("lastExecutionTime", String.valueOf(task.getLastUpdatedAt()));
+        properties.put("hasData", String.valueOf(hasData));
+      });
       publishEvent(EventType.SERVICE_GUARD_SETUP, properties);
     });
   }

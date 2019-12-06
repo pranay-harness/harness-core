@@ -138,6 +138,8 @@ public interface EnvironmentService extends OwnedByApplication {
    */
   List<Environment> getEnvByApp(@NotEmpty String appId);
 
+  List<Environment> getEnvByAccountId(String accountId);
+
   /**
    * Gets env ids by app.
    * @param appId

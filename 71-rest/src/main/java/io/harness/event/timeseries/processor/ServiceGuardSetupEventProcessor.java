@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.common.VerificationConstants;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,9 +25,15 @@ public class ServiceGuardSetupEventProcessor {
    NUM_OF_CONFIGS INTEGER NOT NULL,
    NUM_OF_ALERTS INTEGER NOT NULL,
    CREATION_TIME TIMESTAMP NOT NULL,
+   LICENSE_TYPE VARCHAR(20),
+   ACCOUNT_NAME TEXT,
+   ENVIRONMENT_TYPE VARCHAR(20),
+   ENABLED BOOLEAN,
+   LAST_EXECUTION_TIME TIMESTAMP,
+   HAS_DATA BOOLEAN
    */
   private String insertSQLStatement = "INSERT INTO CV_CONFIGURATIONS (ACCOUNT_ID, VERIFICATION_PROVIDER_TYPE, "
-      + "NUM_OF_CONFIGS, NUM_OF_ALERTS, CREATION_TIME) VALUES (?,?,?,?,?)";
+      + "NUM_OF_CONFIGS, NUM_OF_ALERTS, CREATION_TIME, LICENSE_TYPE, ACCOUNT_NAME, ENVIRONMENT_TYPE, ENABLED, LAST_EXECUTION_TIME, HAS_DATA) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
   @Inject private TimeScaleDBService timeScaleDBService;
 
@@ -36,10 +43,28 @@ public class ServiceGuardSetupEventProcessor {
       String verificationProviderType = properties.get("verificationProviderType");
       String numOfConfigsString = properties.get("configs");
       String numOfAlertsString = properties.get("alerts");
+      String licenseType = properties.get("licenseType");
+      String accountName = properties.get("accountName");
+      String environmentType = properties.get("environmentType");
+      String enabledString = properties.get("enabled");
+      String lastExecutionTimeString = properties.get("lastExecutionTime");
+
       Preconditions.checkNotNull(accountId);
       Preconditions.checkNotNull(verificationProviderType);
       Preconditions.checkNotNull(numOfConfigsString);
       Preconditions.checkNotNull(numOfAlertsString);
+      Preconditions.checkNotNull(accountName);
+      Preconditions.checkNotNull(environmentType);
+      Preconditions.checkNotNull(enabledString);
+
+      boolean enabled = Boolean.parseBoolean(enabledString);
+      Boolean hasData = null;
+
+      if (lastExecutionTimeString != null) {
+        String hasDataString = properties.get("hasData");
+        Preconditions.checkNotNull(hasDataString);
+        hasData = Boolean.valueOf(hasDataString);
+      }
 
       int retryCount = 0;
       long startTime = System.currentTimeMillis();
@@ -52,6 +77,22 @@ public class ServiceGuardSetupEventProcessor {
           insertPreparedStatement.setInt(3, Integer.parseInt(numOfConfigsString));
           insertPreparedStatement.setInt(4, Integer.parseInt(numOfAlertsString));
           insertPreparedStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+          if (licenseType != null) {
+            insertPreparedStatement.setString(6, licenseType);
+          } else {
+            insertPreparedStatement.setNull(6, VerificationConstants.TIMESCALEDB_STRING_DATATYPE);
+          }
+          insertPreparedStatement.setString(7, accountName);
+          insertPreparedStatement.setString(8, environmentType);
+          insertPreparedStatement.setBoolean(9, enabled);
+          insertPreparedStatement.setTimestamp(
+              10, lastExecutionTimeString != null ? new Timestamp(Long.parseLong(lastExecutionTimeString)) : null);
+          if (hasData == null) {
+            insertPreparedStatement.setNull(11, VerificationConstants.TIMESCALEDB_BOOLEAN_DATATYPE);
+          } else {
+            insertPreparedStatement.setBoolean(11, hasData);
+          }
+
           insertPreparedStatement.execute();
           successfulInsert = true;
         } catch (SQLException e) {
