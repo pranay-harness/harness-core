@@ -12,7 +12,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.message.MessageConstants.MIGRATE;
 import static io.harness.delegate.message.MessageConstants.SELF_DESTRUCT;
-import static io.harness.eraro.ErrorCode.REQUEST_TIMEOUT;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -91,6 +90,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.LimitsExceededException;
+import io.harness.exception.TimeoutException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.lock.AcquiredLock;
@@ -1493,9 +1493,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       responseData = completedTask.getNotifyResponse();
       if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
-        throw new InvalidRequestException("Harness delegate", REQUEST_TIMEOUT, USER_ADMIN);
+        final String delegateName =
+            Optional.ofNullable(get(completedTask.getAccountId(), completedTask.getDelegateId(), false))
+                .map(Delegate::getHostName)
+                .orElse(completedTask.getDelegateId());
+        throw new TimeoutException("Harness delegate", "Delegate (" + delegateName + ")", USER_ADMIN);
       }
-
       logger.info("Returning response to calling function for delegate task");
     }
     return (T) responseData;
