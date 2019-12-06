@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -269,36 +268,33 @@ public class AccountServiceImpl implements AccountService {
     String companyName = account.getCompanyName();
     String accountName = account.getAccountName();
     if (isBlank(companyName)) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Company Name can't be empty.");
+      throw new InvalidRequestException("Company Name can't be empty.", USER);
     } else if (companyName.length() > MAX_ACCOUNT_NAME_LENGTH) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Company Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.");
+      throw new InvalidRequestException(
+          "Company Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.", USER);
     } else {
       String[] parts = companyName.split(ILLEGAL_ACCOUNT_NAME_CHARACTERS, 2);
       if (parts.length > 1) {
-        throw new WingsException(GENERAL_ERROR, USER)
-            .addParam("message", "Company Name '" + companyName + "' contains illegal characters.");
+        throw new InvalidRequestException("Company Name '" + companyName + "' contains illegal characters.", USER);
       }
     }
 
     if (isBlank(accountName)) {
-      throw new WingsException(GENERAL_ERROR).addParam("message", "Account Name can't be empty.");
+      throw new InvalidRequestException("Account Name can't be empty.", USER);
     } else if (accountName.length() > MAX_ACCOUNT_NAME_LENGTH) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Account Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.");
+      throw new InvalidRequestException(
+          "Account Name exceeds " + MAX_ACCOUNT_NAME_LENGTH + " max-allowed characters.", USER);
     } else {
       String[] parts = accountName.split(ILLEGAL_ACCOUNT_NAME_CHARACTERS, 2);
       if (parts.length > 1) {
-        throw new WingsException(GENERAL_ERROR, USER)
-            .addParam("message", "Account Name '" + accountName + "' contains illegal characters");
+        throw new InvalidRequestException("Account Name '" + accountName + "' contains illegal characters", USER);
       }
     }
 
     if (checkDuplicateAccountName(accountName)) {
       String suggestedAccountName = suggestAccountName(accountName);
       if (suggestedAccountName == null) {
-        throw new WingsException(GENERAL_ERROR, USER)
-            .addParam("message", "Account Name '" + accountName + "' already exists");
+        throw new InvalidRequestException("Account Name '" + accountName + "' already exists", USER);
       } else {
         account.setAccountName(suggestedAccountName);
       }
@@ -323,8 +319,8 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
+    featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, account.getUuid());
     if (!fromDataGen) {
-      featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, account.getUuid());
       featureFlagService.enableAccount(FeatureName.USE_PCF_CLI, account.getUuid());
       featureFlagService.enableAccount(FeatureName.PCF_MANIFEST_REDESIGN, account.getUuid());
       featureFlagService.enableAccount(FeatureName.PCF_CUSTOM_PLUGIN_SUPPORT, account.getUuid());

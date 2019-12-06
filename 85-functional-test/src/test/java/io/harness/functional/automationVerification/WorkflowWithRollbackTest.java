@@ -22,8 +22,8 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -46,7 +46,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.GraphNode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.SSHExecutionCredential;
@@ -56,6 +55,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.states.HttpState.HttpStateKeys;
 
@@ -68,13 +68,13 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private ArtifactStreamManager artifactStreamManager;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   private Application application;
   private Service service;
   private Environment environment;
-  private InfrastructureMapping infrastructureMapping;
+  private InfrastructureDefinition infrastructureDefinition;
   private ArtifactStream artifactStream;
 
   final Seed seed = new Seed(0);
@@ -90,9 +90,9 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
     assertThat(environment).isNotNull();
 
-    infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.AWS_SSH_FUNCTIONAL_TEST);
-    assertThat(infrastructureMapping).isNotNull();
+    infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
+        seed, owners, InfrastructureDefinitions.AWS_SSH_FUNCTIONAL_TEST);
+    assertThat(infrastructureDefinition).isNotNull();
 
     service = serviceGenerator.ensurePredefined(seed, owners, Services.FUNCTIONAL_TEST);
     assertThat(service).isNotNull();
@@ -171,9 +171,9 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
 
   private Workflow addWorkflow() throws Exception {
     WorkflowPhase phase1 =
-        aWorkflowPhase().serviceId(service.getUuid()).infraMappingId(infrastructureMapping.getUuid()).build();
+        aWorkflowPhase().serviceId(service.getUuid()).infraDefinitionId(infrastructureDefinition.getUuid()).build();
     WorkflowPhase phase2 =
-        aWorkflowPhase().serviceId(service.getUuid()).infraMappingId(infrastructureMapping.getUuid()).build();
+        aWorkflowPhase().serviceId(service.getUuid()).infraDefinitionId(infrastructureDefinition.getUuid()).build();
 
     Workflow variableTestWorkflow =
         aWorkflow()
@@ -181,7 +181,7 @@ public class WorkflowWithRollbackTest extends AbstractFunctionalTest {
             .description("Echo deployment with Rollback")
             .serviceId(service.getUuid())
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .envId(environment.getUuid())
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow().withWorkflowPhases(ImmutableList.of(phase1, phase2)).build())

@@ -8,6 +8,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.PipelineGenerator;
@@ -89,7 +90,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
 
     final String appId = service.getAppId();
     infrastructureDefinition =
-        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_INSTANCE, bearerToken);
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     checkScopedService(infrastructureDefinition.getDeploymentType(), service);
     checkListInfraDefinitionByService(service, infrastructureDefinition);

@@ -13,8 +13,8 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
@@ -28,11 +28,11 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
 import java.util.Collections;
@@ -43,7 +43,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   @Inject private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private K8SUtils k8SUtils;
 
   private static final long TIMEOUT = 1200000; // 20 minutes
@@ -84,21 +84,21 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
 
-    InfrastructureMappings infrastructureMappingTestType = null;
+    InfrastructureDefinitions infrastructureDefinitionTestType = null;
     String workflowName = "k8s";
     switch (workflowType) {
       case ROLLING:
-        infrastructureMappingTestType = InfrastructureMappings.K8S_ROLLING_TEST;
+        infrastructureDefinitionTestType = InfrastructureDefinitions.K8S_ROLLING_TEST;
         workflowName = "k8s-rolling";
         break;
 
       case CANARY:
-        infrastructureMappingTestType = InfrastructureMappings.K8S_CANARY_TEST;
+        infrastructureDefinitionTestType = InfrastructureDefinitions.K8S_CANARY_TEST;
         workflowName = "k8s-canary";
         break;
 
       case BLUE_GREEN:
-        infrastructureMappingTestType = InfrastructureMappings.K8S_BLUE_GREEN_TEST;
+        infrastructureDefinitionTestType = InfrastructureDefinitions.K8S_BLUE_GREEN_TEST;
         workflowName = "k8s-bg";
         break;
 
@@ -108,13 +108,13 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
 
     workflowName = workflowName + '-' + System.currentTimeMillis();
 
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, infrastructureMappingTestType);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, infrastructureDefinitionTestType);
 
     // create workflow
     Workflow savedWorkflow =
         K8SUtils.createWorkflow(application.getUuid(), savedEnvironment.getUuid(), savedService.getUuid(),
-            infrastructureMapping.getUuid(), workflowName, workflowType, bearerToken, application.getAccountId());
+            infrastructureDefinition.getUuid(), workflowName, workflowType, bearerToken, application.getAccountId());
 
     // Deploy the workflow
     WorkflowExecution workflowExecution =
@@ -125,8 +125,9 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
     k8SUtils.waitForWorkflowExecution(workflowExecution, 10, application.getUuid());
 
     // create clean up workflow
-    Workflow cleanupWorkflow = K8SUtils.createK8sCleanupWorkflow(application.getUuid(), savedEnvironment.getUuid(),
-        savedService.getUuid(), infrastructureMapping.getUuid(), workflowName, bearerToken, application.getAccountId());
+    Workflow cleanupWorkflow =
+        K8SUtils.createK8sCleanupWorkflow(application.getUuid(), savedEnvironment.getUuid(), savedService.getUuid(),
+            infrastructureDefinition.getUuid(), workflowName, bearerToken, application.getAccountId());
 
     // Deploy the workflow
     WorkflowExecution cleanupWorkflowExecution =

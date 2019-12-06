@@ -26,8 +26,8 @@ import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
@@ -49,7 +49,6 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
@@ -63,6 +62,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -79,7 +79,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private SettingGenerator settingGenerator;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
@@ -91,7 +91,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
   private Artifact artifact;
   private ArtifactStream artifactStream;
   private Environment environment;
-  private InfrastructureMapping infrastructureMapping;
+  private InfrastructureDefinition infrastructureDefinition;
   private SettingAttribute awsSettingAttribute;
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
@@ -111,9 +111,9 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
     assertThat(environment).isNotNull();
 
-    infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.AWS_SSH_TEST);
-    assertThat(infrastructureMapping).isNotNull();
+    infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
+    assertThat(infrastructureDefinition).isNotNull();
 
     awsSettingAttribute = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
@@ -138,7 +138,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
                             .appId(application.getUuid())
                             .envId(environment.getUuid())
                             .serviceId(service.getUuid())
-                            .infraMappingId(infrastructureMapping.getUuid())
+                            .infraDefinitionId(infrastructureDefinition.getUuid())
                             .workflowType(ORCHESTRATION)
                             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                             .build();
@@ -153,7 +153,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
         aWorkflowPhase()
             .phaseSteps(phaseSteps)
             .serviceId(service.getUuid())
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .build());
 
     workflowService.updateWorkflowPhase(application.getUuid(), savedWorkflow.getUuid(), workflowPhase);
@@ -213,7 +213,7 @@ public class PipelineExecutionTest extends AbstractFunctionalTest {
   private void executePipelineAndCheckStatus(Pipeline pipeline) {
     ExecutionArgs executionArgs = setExecutionArgs(pipeline, asList(artifact),
         ImmutableMap.of("Environment", environment.getUuid(), "Service", service.getUuid(), "ServiceInfra_Ssh",
-            infrastructureMapping.getUuid()));
+            infrastructureDefinition.getUuid()));
 
     executionArgs.setOrchestrationId(pipeline.getUuid());
 

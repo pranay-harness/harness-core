@@ -5,7 +5,6 @@ import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.ResourceConstraintGenerator.ResourceConstraints.GENERIC_ASAP_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static io.harness.govern.Switch.unhandled;
@@ -34,12 +33,12 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_NODE_NAME;
-import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.TERRAFORM_DESTROY;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
+import static software.wings.sm.StepType.COMMAND;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -49,7 +48,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator.Environments;
-import io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -66,7 +65,6 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -81,6 +79,7 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.dl.WingsPersistence;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -102,7 +101,7 @@ public class WorkflowGenerator {
 
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ArtifactStreamManager artifactStreamManager;
@@ -159,14 +158,14 @@ public class WorkflowGenerator {
   }
 
   private Workflow ensureBasicSimple(Randomizer.Seed seed, Owners owners) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
             .name("Basic - simple")
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .orchestrationWorkflow(aBasicOrchestrationWorkflow()
                                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
@@ -175,14 +174,14 @@ public class WorkflowGenerator {
   }
 
   private Workflow ensureBasic10Nodes(Randomizer.Seed seed, Owners owners) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     Workflow workflow = ensureWorkflow(seed, owners,
         aWorkflow()
             .name("Basic - 10 nodes")
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .orchestrationWorkflow(aBasicOrchestrationWorkflow()
                                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
@@ -194,14 +193,14 @@ public class WorkflowGenerator {
   }
 
   private Workflow ensureRolling10Nodes(Randomizer.Seed seed, Owners owners) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     Workflow workflow = ensureWorkflow(seed, owners,
         aWorkflow()
             .name("Rolling - 10 nodes")
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .orchestrationWorkflow(aRollingOrchestrationWorkflow()
                                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
                                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
@@ -222,8 +221,6 @@ public class WorkflowGenerator {
                              -> serviceResourceService.getWithDetails(infrastructureProvisioner.getAppId(),
                                  infrastructureProvisioner.getMappingBlueprints().iterator().next().getServiceId()));
 
-    infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.TERRAFORM_AWS_SSH_TEST);
-
     final SecretName awsPlaygroundAccessKeyName = SecretName.builder().value("aws_playground_access_key").build();
     final String awsPlaygroundAccessKey = scmSecret.decryptToString(awsPlaygroundAccessKeyName);
     final SecretName awsPlaygroundSecretKeyName = SecretName.builder().value("aws_playground_secret_key").build();
@@ -233,14 +230,14 @@ public class WorkflowGenerator {
     final SecretName terraformPasswordName = SecretName.builder().value("terraform_password").build();
     secretGenerator.ensureStored(owners, terraformPasswordName);
 
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     return workflowGenerator.ensureWorkflow(seed, owners,
         aWorkflow()
             .name("Terraform provision")
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(
@@ -275,8 +272,8 @@ public class WorkflowGenerator {
   }
 
   private Workflow ensurePermanentlyBlockedResourceConstraint(Randomizer.Seed seed, Owners owners) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureDefinitions.AWS_SSH_TEST);
 
     final ResourceConstraint asapResourceConstraint =
         resourceConstraintGenerator.ensurePredefined(seed, owners, GENERIC_ASAP_TEST);
@@ -285,7 +282,7 @@ public class WorkflowGenerator {
         aWorkflow()
             .name("Resource constraint")
             .workflowType(WorkflowType.ORCHESTRATION)
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .orchestrationWorkflow(
                 aBasicOrchestrationWorkflow()
                     .withPreDeploymentSteps(
@@ -449,8 +446,8 @@ public class WorkflowGenerator {
 
     Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.MULTI_ARTIFACT_FUNCTIONAL_TEST);
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
-    InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.ensurePredefined(
-        seed, owners, InfrastructureMappings.MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST);
+    InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionGenerator.ensurePredefined(
+        seed, owners, InfrastructureDefinitions.MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST);
 
     Map<String, Object> selectNodeProperties = new HashMap<>();
     selectNodeProperties.put("specificHosts", false);
@@ -459,7 +456,7 @@ public class WorkflowGenerator {
     List<PhaseStep> phaseSteps = new ArrayList<>();
 
     phaseSteps.add(aPhaseStep(INFRASTRUCTURE_NODE, WorkflowServiceHelper.INFRASTRUCTURE_NODE_NAME)
-                       .withPhaseStepType(PhaseStepType.INFRASTRUCTURE_NODE)
+                       .withPhaseStepType(INFRASTRUCTURE_NODE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .name(SELECT_NODE_NAME)
@@ -467,9 +464,8 @@ public class WorkflowGenerator {
                                     .properties(selectNodeProperties)
                                     .build())
                        .build());
-    phaseSteps.add(aPhaseStep(DISABLE_SERVICE, WorkflowServiceHelper.DISABLE_SERVICE)
-                       .withPhaseStepType(PhaseStepType.DISABLE_SERVICE)
-                       .build());
+    phaseSteps.add(
+        aPhaseStep(DISABLE_SERVICE, WorkflowServiceHelper.DISABLE_SERVICE).withPhaseStepType(DISABLE_SERVICE).build());
 
     Map<String, Variable> variableMap1 = new HashMap<>();
     variableMap1.put("t_artifact1", aVariable().name("m_artifact1").type(ARTIFACT).build());
@@ -485,7 +481,7 @@ public class WorkflowGenerator {
     commandProperties.put("executeOnDelegate", "true");
     phaseSteps.add(
         aPhaseStep(DEPLOY_SERVICE, WorkflowServiceHelper.DEPLOY_SERVICE)
-            .withPhaseStepType(PhaseStepType.DEPLOY_SERVICE)
+            .withPhaseStepType(DEPLOY_SERVICE)
             .addStep(GraphNode.builder()
                          .id(generateUuid())
                          .name("MyCommand")
@@ -500,19 +496,18 @@ public class WorkflowGenerator {
                              aVariable().type(TEXT).name("var2").value("Another John Doe").build()))
                          .build())
             .build());
-    phaseSteps.add(aPhaseStep(ENABLE_SERVICE, WorkflowServiceHelper.ENABLE_SERVICE)
-                       .withPhaseStepType(PhaseStepType.ENABLE_SERVICE)
-                       .build());
-    phaseSteps.add(aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE)
-                       .withPhaseStepType(PhaseStepType.VERIFY_SERVICE)
-                       .build());
+    phaseSteps.add(
+        aPhaseStep(ENABLE_SERVICE, WorkflowServiceHelper.ENABLE_SERVICE).withPhaseStepType(ENABLE_SERVICE).build());
+    phaseSteps.add(
+        aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE).withPhaseStepType(VERIFY_SERVICE).build());
     phaseSteps.add(aPhaseStep(WRAP_UP, WorkflowServiceHelper.WRAP_UP).withPhaseStepType(PhaseStepType.WRAP_UP).build());
+
     return ensureWorkflow(seed, owners,
         aWorkflow()
             .name("MultiArtifact - Basic - simple")
             .serviceId(savedService.getUuid())
             .envId(savedEnvironment.getUuid())
-            .infraMappingId(infrastructureMapping.getUuid())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(aBasicOrchestrationWorkflow()
                                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT)
@@ -527,7 +522,7 @@ public class WorkflowGenerator {
                                                              .name("Phase1")
                                                              .serviceId(savedService.getUuid())
                                                              .deploymentType(SSH)
-                                                             .infraMappingId(infrastructureMapping.getUuid())
+                                                             .infraDefinitionId(infrastructureDefinition.getUuid())
                                                              .phaseSteps(phaseSteps)
                                                              .build())
                                        .build())

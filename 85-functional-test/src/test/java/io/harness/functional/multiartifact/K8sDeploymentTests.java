@@ -1,6 +1,9 @@
 package io.harness.functional.multiartifact;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_BLUE_GREEN_TEST;
+import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_CANARY_TEST;
+import static io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions.K8S_ROLLING_TEST;
 import static io.harness.rule.OwnerRule.AADITI;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +17,8 @@ import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ArtifactStreamBindingGenerator;
 import io.harness.generator.EnvironmentGenerator;
-import io.harness.generator.InfrastructureMappingGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator;
+import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.ServiceGenerator;
@@ -31,13 +35,13 @@ import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
 import java.util.List;
@@ -48,7 +52,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
   @Inject private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
-  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private ArtifactStreamBindingGenerator artifactStreamBindingGenerator;
@@ -102,7 +106,7 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
     Environment savedEnvironment =
         environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST);
 
-    InfrastructureMappingGenerator.InfrastructureMappings infrastructureMappingTestType = null;
+    InfrastructureDefinitions infraDefinitionType = null;
 
     // create jenkins artifact stream at connector level
     ArtifactStream artifactStream = artifactStreamManager.ensurePredefined(
@@ -117,17 +121,17 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
     String workflowName = "k8s";
     switch (workflowType) {
       case ROLLING:
-        infrastructureMappingTestType = InfrastructureMappingGenerator.InfrastructureMappings.K8S_ROLLING_TEST;
+        infraDefinitionType = K8S_ROLLING_TEST;
         workflowName = "k8s-rolling-multi-artifact";
         break;
 
       case CANARY:
-        infrastructureMappingTestType = InfrastructureMappingGenerator.InfrastructureMappings.K8S_CANARY_TEST;
+        infraDefinitionType = K8S_CANARY_TEST;
         workflowName = "k8s-canary-multi-artifact";
         break;
 
       case BLUE_GREEN:
-        infrastructureMappingTestType = InfrastructureMappingGenerator.InfrastructureMappings.K8S_BLUE_GREEN_TEST;
+        infraDefinitionType = K8S_BLUE_GREEN_TEST;
         workflowName = "k8s-bg-multi-artifact";
         break;
 
@@ -137,13 +141,13 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
 
     workflowName = workflowName + '-' + System.currentTimeMillis();
 
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingGenerator.ensurePredefined(seed, owners, infrastructureMappingTestType);
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, infraDefinitionType);
 
     // create workflow
     Workflow savedWorkflow =
         K8SUtils.createWorkflow(application.getUuid(), savedEnvironment.getUuid(), savedService.getUuid(),
-            infrastructureMapping.getUuid(), workflowName, workflowType, bearerToken, application.getAccountId());
+            infrastructureDefinition.getUuid(), workflowName, workflowType, bearerToken, application.getAccountId());
 
     resetCache(application.getAccountId());
 
@@ -155,8 +159,9 @@ public class K8sDeploymentTests extends AbstractFunctionalTest {
 
     k8SUtils.waitForWorkflowExecution(workflowExecution, 10, application.getUuid());
 
-    Workflow cleanupWorkflow = K8SUtils.createK8sCleanupWorkflow(application.getUuid(), savedEnvironment.getUuid(),
-        savedService.getUuid(), infrastructureMapping.getUuid(), workflowName, bearerToken, application.getAccountId());
+    Workflow cleanupWorkflow =
+        K8SUtils.createK8sCleanupWorkflow(application.getUuid(), savedEnvironment.getUuid(), savedService.getUuid(),
+            infrastructureDefinition.getUuid(), workflowName, bearerToken, application.getAccountId());
 
     // Deploy the workflow
     WorkflowExecution cleanupWorkflowExecution =

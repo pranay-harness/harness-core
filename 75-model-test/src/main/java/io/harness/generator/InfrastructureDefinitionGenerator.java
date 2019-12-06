@@ -1,8 +1,19 @@
 package io.harness.generator;
 
+import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
+import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
+import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
+import static io.harness.govern.Switch.unhandled;
+import static java.util.Arrays.asList;
+import static software.wings.beans.InfrastructureType.AWS_AMI;
+import static software.wings.beans.InfrastructureType.AWS_ECS;
+import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
+import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
+import static software.wings.beans.InfrastructureType.AZURE_SSH;
+import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,9 +22,10 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator.Environments;
+import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.generator.SettingGenerator.Settings;
+import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.constants.InfraDefinitionGeneratorConstants;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -22,9 +34,15 @@ import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsInstanceFilter;
+import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureType;
+import software.wings.beans.HostConnectionType;
+import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
@@ -34,37 +52,350 @@ import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
+import software.wings.infra.PhysicalInfraWinrm;
+import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 
+import java.util.Collections;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 public class InfrastructureDefinitionGenerator {
   @Inject private EnvironmentGenerator environmentGenerator;
+  @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
 
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private ApplicationManifestService applicationManifestService;
   @Inject private WingsPersistence wingsPersistence;
-
-  private static final String GCP_CLUSTER = "us-central1-a/harness-test";
 
   public InfrastructureDefinition ensurePredefined(
       Randomizer.Seed seed, Owners owners, String predefined, String bearerToken) {
     switch (predefined) {
-      case InfrastructureType.GCP_KUBERNETES_ENGINE:
+      case GCP_KUBERNETES_ENGINE:
         return ensureGcpK8s(seed, owners, "gcp-k8s", bearerToken);
-      case InfrastructureType.AWS_AMI:
+      case AWS_AMI:
         return ensureAwsAmi(seed, owners, bearerToken);
-      case InfrastructureType.AWS_INSTANCE:
-        return ensureAwsSsh(seed, owners, bearerToken);
-      case InfrastructureType.AWS_ECS:
+      case AWS_INSTANCE:
+        return ensureAwsSsh(seed, owners);
+      case AWS_ECS:
         return ensureAwsEcs(seed, owners, bearerToken);
-      case InfrastructureType.AZURE_SSH:
+      case AZURE_SSH:
         return ensureAzureInstance(seed, owners, bearerToken);
-      case InfrastructureType.AWS_LAMBDA:
+      case AWS_LAMBDA:
         return ensureAwsLambda(seed, owners, bearerToken);
       default:
         return null;
     }
+  }
+
+  public enum InfrastructureDefinitions {
+    AWS_SSH_TEST,
+    TERRAFORM_AWS_SSH_TEST,
+    AWS_SSH_FUNCTIONAL_TEST,
+    PHYSICAL_WINRM_TEST,
+    AZURE_WINRM_TEST,
+    ECS_EC2_TEST,
+    ECS_FARGATE_TEST,
+    K8S_ROLLING_TEST,
+    K8S_CANARY_TEST,
+    K8S_BLUE_GREEN_TEST,
+    MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST
+  }
+
+  public InfrastructureDefinition ensurePredefined(
+      Randomizer.Seed seed, Owners owners, InfrastructureDefinitions infraType) {
+    switch (infraType) {
+      case AWS_SSH_TEST:
+        return ensureAwsSsh(seed, owners);
+      case AWS_SSH_FUNCTIONAL_TEST:
+        return ensureAwsSshFunctionalTest(seed, owners);
+      case TERRAFORM_AWS_SSH_TEST:
+        return ensureTerraformAwsSshTest(seed, owners);
+      case PHYSICAL_WINRM_TEST:
+        return ensurePhysicalWinRMTest(seed, owners);
+      case AZURE_WINRM_TEST:
+        return ensureAzureWinRMTest(seed, owners);
+      case ECS_EC2_TEST:
+        return ensureEcsEc2Test(seed, owners);
+      case K8S_ROLLING_TEST:
+        return ensureK8sTest(seed, owners, "fn-test-rolling");
+      case K8S_BLUE_GREEN_TEST:
+        return ensureK8sTest(seed, owners, "fn-test-bg");
+      case K8S_CANARY_TEST:
+        return ensureK8sTest(seed, owners, "fn-test-canary");
+      case MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST:
+        return ensureMultiArtifactAwsSshFunctionalTest(seed, owners);
+      default:
+        unhandled(infraType);
+    }
+    return null;
+  }
+
+  private InfrastructureDefinition ensureAzureWinRMTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute azureCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
+    final SettingAttribute winRmSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
+
+    return ensureInfrastructureDefinition(
+        InfrastructureDefinition.builder()
+            .name("Windows non prod - winrm azure workflow test")
+            .envId(environment.getUuid())
+            .appId(environment.getAppId())
+            .infrastructure(AzureInstanceInfrastructure.builder()
+                                .cloudProviderId(azureCloudProvider.getUuid())
+                                .winRmConnectionAttributes(winRmSettingAttribute.getUuid())
+                                .subscriptionId(InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID)
+                                .resourceGroup(InfraDefinitionGeneratorConstants.AZURE_RESOURCE_GROUP)
+                                .usePublicDns(true)
+                                .build())
+            .deploymentType(DeploymentType.WINRM)
+            .cloudProviderType(CloudProviderType.AZURE)
+            .scopedToServices(Collections.singletonList(service.getUuid()))
+            .build());
+  }
+
+  private InfrastructureDefinition ensureEcsEc2Test(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.ECS_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute ecsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("Ecs Ec2 type deployment Functional test" + System.currentTimeMillis())
+            .infrastructure(AwsEcsInfrastructure.builder()
+                                .cloudProviderId(ecsCloudProvider.getUuid())
+                                .clusterName("SdkTesting")
+                                .region("us-east-1")
+                                .launchType("EC2")
+                                .assignPublicIp(false)
+                                .build())
+            .deploymentType(DeploymentType.ECS)
+            .cloudProviderType(CloudProviderType.AWS)
+            .scopedToServices(Collections.singletonList(service.getUuid()))
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensureK8sTest(Randomizer.Seed seed, Owners owners, String namespace) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getByEnvId(environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
+
+    if (applicationManifest == null) {
+      environmentService.createValues(environment.getAppId(), environment.getUuid(), null,
+          ManifestFile.builder().fileName("values.yaml").fileContent("serviceType: ClusterIP\n").build(),
+          AppManifestKind.VALUES);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
+
+    String namespaceUnique = namespace + '-' + System.currentTimeMillis();
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("exploration-harness-test-" + namespaceUnique)
+            .infrastructure(GoogleKubernetesEngine.builder()
+                                .cloudProviderId(gcpCloudProvider.getUuid())
+                                .clusterName("us-central1-a/harness-test")
+                                .namespace(namespaceUnique)
+                                .build())
+            .deploymentType(DeploymentType.KUBERNETES)
+            .cloudProviderType(CloudProviderType.GCP)
+            .scopedToServices(Collections.singletonList(service.getUuid()))
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensurePhysicalWinRMTest(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.WINDOWS_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute physicalInfraSettingAttr =
+        settingGenerator.ensurePredefined(seed, owners, PHYSICAL_DATA_CENTER);
+    final SettingAttribute winRmSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, WINRM_TEST_CONNECTOR);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("Windows - winrm physical-infra workflow test")
+            .infrastructure(
+                PhysicalInfraWinrm.builder()
+                    .cloudProviderId(physicalInfraSettingAttr.getUuid())
+                    .winRmConnectionAttributes(winRmSettingAttribute.getUuid())
+                    .hostNames(Collections.singletonList(InfraDefinitionGeneratorConstants.AZURE_DEPLOY_HOST))
+                    .build())
+            .deploymentType(DeploymentType.WINRM)
+            .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
+            .scopedToServices(Collections.singletonList(service.getUuid()))
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensureAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
+    return ensureAwsSshInfraDefinition(
+        seed, owners, Environments.FUNCTIONAL_TEST, Services.FUNCTIONAL_TEST, "Aws non prod - ssh workflow test");
+  }
+
+  private InfrastructureDefinition ensureMultiArtifactAwsSshFunctionalTest(Randomizer.Seed seed, Owners owners) {
+    return ensureAwsSshInfraDefinition(seed, owners, Environments.FUNCTIONAL_TEST,
+        Services.MULTI_ARTIFACT_FUNCTIONAL_TEST, "Aws non prod - ssh workflow test-multi-artifact");
+  }
+
+  private InfrastructureDefinition ensureAwsSshInfraDefinition(
+      Randomizer.Seed seed, Owners owners, Environments environments, Services services, String name) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, environments);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, services);
+      owners.add(service);
+    }
+
+    final List<Tag> tags = asList(Tag.builder().key("Purpose").value("test").build(),
+        Tag.builder().key("User").value(System.getProperty("user.name")).build());
+
+    final SettingAttribute awsTestSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
+
+    return ensureInfrastructureDefinition(
+        createInfraDefinition(tags, awsTestSettingAttribute.getUuid(), devKeySettingAttribute.getUuid(), name));
+  }
+
+  @NotNull
+  private InfrastructureDefinition createInfraDefinition(
+      List<Tag> tags, String awsTestSettingAttributeId, String devKeySettingAttributeId, String name) {
+    AwsInstanceInfrastructure awsInstanceInfrastructure =
+        AwsInstanceInfrastructure.builder()
+            .cloudProviderId(awsTestSettingAttributeId)
+            .hostConnectionAttrs(devKeySettingAttributeId)
+            .region("us-east-1")
+            .awsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
+            .usePublicDns(true)
+            .hostConnectionType(HostConnectionType.PUBLIC_DNS.name())
+            .build();
+
+    return InfrastructureDefinition.builder()
+        .name(name)
+        .deploymentType(DeploymentType.SSH)
+        .cloudProviderType(CloudProviderType.AWS)
+        .infrastructure(awsInstanceInfrastructure)
+        .build();
+  }
+
+  private InfrastructureDefinition ensureTerraformAwsSshTest(Randomizer.Seed seed, Owners owners) {
+    InfrastructureProvisioner infrastructureProvisioner = owners.obtainInfrastructureProvisioner();
+    if (infrastructureProvisioner == null) {
+      infrastructureProvisioner =
+          infrastructureProvisionerGenerator.ensurePredefined(seed, owners, InfrastructureProvisioners.TERRAFORM_TEST);
+      owners.add(infrastructureProvisioner);
+    }
+
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
+      owners.add(environment);
+    }
+
+    Service service = owners.obtainService();
+    if (service == null) {
+      service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
+      owners.add(service);
+    }
+
+    final SettingAttribute awsTestSettingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
+
+    AwsInstanceInfrastructure awsInstanceInfrastructure = AwsInstanceInfrastructure.builder()
+                                                              .cloudProviderId(awsTestSettingAttribute.getUuid())
+                                                              .hostConnectionAttrs(devKeySettingAttribute.getUuid())
+                                                              .region("us-east-1")
+                                                              .awsInstanceFilter(AwsInstanceFilter.builder().build())
+                                                              .usePublicDns(true)
+                                                              .hostConnectionType(HostConnectionType.PUBLIC_DNS.name())
+                                                              .build();
+
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name("Aws non prod - ssh terraform provisioner test")
+                                                            .deploymentType(DeploymentType.SSH)
+                                                            .cloudProviderType(CloudProviderType.AWS)
+                                                            .infrastructure(awsInstanceInfrastructure)
+                                                            .provisionerId(infrastructureProvisioner.getUuid())
+                                                            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  public InfrastructureDefinition ensureInfrastructureDefinition(InfrastructureDefinition infrastructureDefinition) {
+    InfrastructureDefinition existing = exists(infrastructureDefinition);
+    if (existing != null) {
+      return existing;
+    }
+
+    return infrastructureDefinitionService.save(infrastructureDefinition, false, true);
   }
 
   private Environment ensureEnv(Randomizer.Seed seed, Owners owners) {
@@ -81,8 +412,7 @@ public class InfrastructureDefinitionGenerator {
 
   private InfrastructureDefinition ensureAwsEcs(Randomizer.Seed seed, Owners owners, String bearerToken) {
     Environment environment = ensureEnv(seed, owners);
-    final SettingAttribute awsCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
     AwsEcsInfrastructure awsEcsInfrastructure = AwsEcsInfrastructure.builder()
                                                     .region("us-east-1")
@@ -106,10 +436,9 @@ public class InfrastructureDefinitionGenerator {
         () -> exists(infrastructureDefinition));
   }
 
-  private InfrastructureDefinition ensureAwsSsh(Seed seed, Owners owners, String bearerToken) {
+  private InfrastructureDefinition ensureAwsSsh(Seed seed, Owners owners) {
     Environment environment = ensureEnv(seed, owners);
-    final SettingAttribute awsCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
     final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
 
@@ -120,7 +449,7 @@ public class InfrastructureDefinitionGenerator {
                                                               .awsInstanceFilter(AwsInstanceFilter.builder().build())
                                                               .build();
 
-    String name = HarnessStringUtils.join(StringUtils.EMPTY, "aws-ssh-", Long.toString(System.currentTimeMillis()));
+    String name = "aws-ssh";
 
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(name)
@@ -130,18 +459,15 @@ public class InfrastructureDefinitionGenerator {
                                                             .appId(environment.getAppId())
                                                             .envId(environment.getUuid())
                                                             .build();
-    return GeneratorUtils.suppressDuplicateException(
-        ()
-            -> InfrastructureDefinitionRestUtils.save(bearerToken, infrastructureDefinition),
-        () -> exists(infrastructureDefinition));
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
   private InfrastructureDefinition ensureGcpK8s(
       Randomizer.Seed seed, Owners owners, String namespace, String bearerToken) {
     Environment environment = ensureEnv(seed, owners);
 
-    final SettingAttribute gcpK8sCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, Settings.GCP_PLAYGROUND);
+    final SettingAttribute gcpK8sCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
 
     final String nameSpaceUnique =
         HarnessStringUtils.join(StringUtils.EMPTY, namespace, Long.toString(System.currentTimeMillis()));
@@ -151,7 +477,7 @@ public class InfrastructureDefinitionGenerator {
     GoogleKubernetesEngine gcpK8sInfra = GoogleKubernetesEngine.builder()
                                              .cloudProviderId(gcpK8sCloudProvider.getUuid())
                                              .namespace(nameSpaceUnique)
-                                             .clusterName(GCP_CLUSTER)
+                                             .clusterName(InfraDefinitionGeneratorConstants.GCP_CLUSTER)
                                              .releaseName("release-${infra.kubernetes.infraId}")
                                              .build();
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
@@ -174,8 +500,7 @@ public class InfrastructureDefinitionGenerator {
     final String accountId = environment.getAccountId();
     final String appId = environment.getAppId();
 
-    final SettingAttribute awsCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
     List<String> autoScalingGroups = InfrastructureDefinitionRestUtils.listAutoScalingGroups(
         bearerToken, accountId, appId, awsCloudProvider.getUuid(), region);
@@ -207,8 +532,7 @@ public class InfrastructureDefinitionGenerator {
     Environment environment = ensureEnv(seed, owners);
     final String region = "us-east-1";
 
-    final SettingAttribute awsCloudProvider =
-        settingGenerator.ensurePredefined(seed, owners, Settings.AWS_TEST_CLOUD_PROVIDER);
+    final SettingAttribute awsCloudProvider = settingGenerator.ensurePredefined(seed, owners, AWS_TEST_CLOUD_PROVIDER);
 
     AwsLambdaInfrastructure awsLambdaInfrastructure = AwsLambdaInfrastructure.builder()
                                                           .cloudProviderId(awsCloudProvider.getUuid())
