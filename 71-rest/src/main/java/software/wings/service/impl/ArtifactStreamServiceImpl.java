@@ -123,7 +123,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
@@ -472,7 +471,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void setAutoPopulatedName(ArtifactStream artifactStream) {
     if (artifactStream.isAutoPopulate()) {
       String name = EntityNameValidator.getMappedString(artifactStream.generateName());
-      String escapedString = Pattern.quote(name);
 
       // TODO: ASR: IMP: update this
       // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the
@@ -480,7 +478,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       PageRequest<ArtifactStream> pageRequest = aPageRequest()
                                                     .addFilter("appId", EQ, artifactStream.fetchAppId())
                                                     .addFilter("serviceId", EQ, artifactStream.getServiceId())
-                                                    .addFilter("name", STARTS_WITH, escapedString)
+                                                    .addFilter("name", STARTS_WITH, name)
                                                     .build();
       PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 

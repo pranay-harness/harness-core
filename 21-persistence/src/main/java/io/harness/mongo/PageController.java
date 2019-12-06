@@ -11,6 +11,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.Preconditions;
@@ -224,11 +225,11 @@ public class PageController {
 
       case CONTAINS:
         assertOne(filter.getFieldValues());
-        return fieldEnd.containsIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
+        return fieldEnd.containsIgnoreCase(quote(String.valueOf(filter.getFieldValues()[0])));
 
       case STARTS_WITH:
         assertOne(filter.getFieldValues());
-        return fieldEnd.startsWithIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
+        return fieldEnd.startsWithIgnoreCase(quote(String.valueOf(filter.getFieldValues()[0])));
 
       case HAS:
         return fieldEnd.hasAnyOf(asList(filter.getFieldValues()));
