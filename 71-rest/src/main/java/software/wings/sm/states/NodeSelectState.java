@@ -20,7 +20,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.context.ContextElementType;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -118,8 +118,7 @@ public abstract class NodeSelectState extends State {
     if (specificHosts) {
       if (infrastructureMapping instanceof AwsInfrastructureMapping
           && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Cannot specify hosts when using an auto scale group");
+        throw new InvalidRequestException("Cannot specify hosts when using an auto scale group", WingsException.USER);
       }
       selectionParams.withHostNames(hostNames);
       instancesToAdd = hostNames.size();

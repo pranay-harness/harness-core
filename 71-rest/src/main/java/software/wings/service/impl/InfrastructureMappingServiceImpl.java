@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.validation.Validator.notNullCheck;
@@ -59,19 +58,16 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.delegate.task.aws.AwsElbListener;
-import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.observer.Subject;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
 import io.harness.validation.Create;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -106,6 +102,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
 import software.wings.beans.InfrastructureMappingType;
@@ -833,7 +830,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                  .distinct()
                                  .collect(toList());
     if (hostNames.isEmpty()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "Host names must not be empty");
+      throw new InvalidRequestException("Host names must not be empty", USER);
     }
     return hostNames;
   }
@@ -893,16 +890,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void validateAwsInfraMapping(AwsInfrastructureMapping infraMapping) {
     if (infraMapping.isProvisionInstances()) {
       if (isEmpty(infraMapping.getAutoScalingGroupName())) {
-        throw new WingsException(INVALID_ARGUMENT)
-            .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
+        throw new InvalidRequestException(
+            "Auto Scaling group must not be empty when provision instances is true.", USER);
       }
       if (infraMapping.isSetDesiredCapacity() && infraMapping.getDesiredCapacity() <= 0) {
-        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
+        throw new InvalidRequestException("Desired count must be greater than zero.", USER);
       }
     } else {
       if (infraMapping.getAwsInstanceFilter() == null) {
-        throw new WingsException(INVALID_ARGUMENT)
-            .addParam("args", "Instance filter must not be null when provision instances is false.");
+        throw new InvalidRequestException("Instance filter must not be null when provision instances is false.", USER);
       }
     }
   }
@@ -952,25 +948,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validateAzureInfraMapping(AzureInfrastructureMapping infraMapping) {
     if (isEmpty(infraMapping.getComputeProviderType()) || !infraMapping.getComputeProviderType().equals(AZURE.name())) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "Compute Provider type is empty or not correct for Azure Infra mapping.");
+      throw new InvalidRequestException("Compute Provider type is empty or not correct for Azure Infra mapping.", USER);
     }
 
     if (isEmpty(infraMapping.getSubscriptionId())) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "Subscription Id must not be empty for Azure Infra mapping.");
+      throw new InvalidRequestException("Subscription Id must not be empty for Azure Infra mapping.", USER);
     }
 
     DeploymentType deploymentType =
         serviceResourceService.getDeploymentType(infraMapping, null, infraMapping.getServiceId());
     if (!(SSH.equals(deploymentType) || WINRM.equals(deploymentType))) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "Deployment type must not be empty and must be one of SSH/WINRM for Azure Infra mapping.");
+      throw new InvalidRequestException(
+          "Deployment type must not be empty and must be one of SSH/WINRM for Azure Infra mapping.", USER);
     }
 
     if (isEmpty(infraMapping.getInfraMappingType())) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "Infra mapping type must not be empty for Azure Infra mapping.");
+      throw new InvalidRequestException("Infra mapping type must not be empty for Azure Infra mapping.", USER);
     }
   }
 
@@ -1111,7 +1104,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private void validatePcfInfrastructureMapping(PcfInfrastructureMapping infraMapping) {
     if (StringUtils.isBlank(infraMapping.getOrganization()) || StringUtils.isBlank(infraMapping.getSpace())) {
       logger.error("For PCFInfraMapping, Org and Space value cant be null");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "Host names must be unique");
+      throw new InvalidRequestException("Host names must be unique", USER);
     }
 
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
@@ -1384,14 +1377,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+      throw new InvalidRequestException("InvalidConfiguration", USER);
     }
     return (AwsConfig) computeProviderSetting.getValue();
   }
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AzureConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "No cloud provider exist or not of type Azure");
+      throw new InvalidRequestException("No cloud provider exist or not of type Azure", USER);
     }
     return (AzureConfig) computeProviderSetting.getValue();
   }
@@ -1583,7 +1576,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
+      throw new InvalidRequestException("InvalidConfiguration", USER);
     }
     return pcfHelperService.listOrganizations((PcfConfig) computeProviderSetting.getValue());
   }
@@ -1594,7 +1587,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
+      throw new InvalidRequestException("InvalidConfiguration", USER);
     }
     return pcfHelperService.listSpaces((PcfConfig) computeProviderSetting.getValue(), organization);
   }
@@ -1605,7 +1598,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
+      throw new InvalidRequestException("InvalidConfiguration", USER);
     }
 
     return pcfHelperService.listRoutes((PcfConfig) computeProviderSetting.getValue(), organization, spaces);
@@ -1618,7 +1611,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
+      throw new InvalidRequestException("InvalidConfiguration", USER);
     }
 
     Integer portNum = StringUtils.isBlank(port) ? null : Integer.parseInt(port);
@@ -2148,8 +2141,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider Doesnt Exist", computeProviderSetting);
 
     if (!(computeProviderSetting.getValue() instanceof PcfConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "InvalidConfiguration, Needs Instance of PcfConfig");
+      throw new InvalidRequestException("InvalidConfiguration, Needs Instance of PcfConfig", USER);
     }
 
     appNameExpression = StringUtils.isNotBlank(appNameExpression)
@@ -2201,7 +2193,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
           appId, workflowExecutionId, awsInfrastructureMapping, computeProviderSetting);
     } else {
-      throw new InvalidRequestException("Auto Scale groups are only supported for AWS infrastructure mapping");
+      throw new InvalidRequestException("Auto Scale groups are only supported for AWS infrastructure mapping", USER);
     }
   }
 
@@ -2337,11 +2329,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public void saveInfrastructureMappingToSweepingOutput(
       String appId, String workflowExecutionId, PhaseElement phaseElement, String infrastructureMappingId) {
     String phaseExecutionId = phaseElement.getPhaseExecutionIdForSweepingOutput();
-    sweepingOutputService.save(SweepingOutputServiceImpl
-                                   .prepareSweepingOutputBuilder(appId, null, workflowExecutionId, phaseExecutionId,
-                                       null, SweepingOutputInstance.Scope.PHASE)
-                                   .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid())
-                                   .output(KryoUtils.asDeflatedBytes(infrastructureMappingId))
-                                   .build());
+    sweepingOutputService.save(
+        SweepingOutputServiceImpl
+            .prepareSweepingOutputBuilder(
+                appId, null, workflowExecutionId, phaseExecutionId, null, SweepingOutputInstance.Scope.PHASE)
+            .name(InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid())
+            .value(InfraMappingSweepingOutput.builder().infraMappingId(infrastructureMappingId).build())
+            .build());
   }
 }

@@ -61,7 +61,6 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.serializer.KryoUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,6 +81,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -195,15 +195,16 @@ public class KubernetesDeployTest extends WingsBaseTest {
           .build();
 
   private String outputName = InfrastructureConstants.PHASE_INFRA_MAPPING_KEY_NAME + phaseElement.getUuid();
-  private SweepingOutputInstance sweepingOutputInstance = SweepingOutputInstance.builder()
-                                                              .appId(APP_ID)
-                                                              .name(outputName)
-                                                              .uuid(generateUuid())
-                                                              .workflowExecutionId(WORKFLOW_EXECUTION_ID)
-                                                              .stateExecutionId(null)
-                                                              .pipelineExecutionId(null)
-                                                              .output(KryoUtils.asDeflatedBytes(INFRA_MAPPING_ID))
-                                                              .build();
+  private SweepingOutputInstance sweepingOutputInstance =
+      SweepingOutputInstance.builder()
+          .appId(APP_ID)
+          .name(outputName)
+          .uuid(generateUuid())
+          .workflowExecutionId(WORKFLOW_EXECUTION_ID)
+          .stateExecutionId(null)
+          .pipelineExecutionId(null)
+          .value(InfraMappingSweepingOutput.builder().infraMappingId(INFRA_MAPPING_ID).build())
+          .build();
 
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
