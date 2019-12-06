@@ -187,9 +187,8 @@ class ServiceViewBuilder {
     serviceView.setPipelines(pipelines);
   }
 
-  private void setApplicationName(Service service, ServiceView serviceView) {
+  private void setApplicationName(Application application, Service service, ServiceView serviceView) {
     if (service.getAppId() != null) {
-      Application application = wingsPersistence.get(Application.class, service.getAppId());
       if (application.getName() != null) {
         serviceView.setAppName(application.getName());
       }
@@ -197,11 +196,12 @@ class ServiceViewBuilder {
   }
 
   ServiceView createServiceView(Service service) {
-    if (wingsPersistence.get(Application.class, service.getAppId()) != null) {
+    Application application = wingsPersistence.get(Application.class, service.getAppId());
+    if (application != null) {
       ServiceView serviceView = createBaseView(service);
       setAuditsAndAuditTimestamps(service, serviceView);
       setDeploymentsAndDeploymentTimestamps(service, serviceView);
-      setApplicationName(service, serviceView);
+      setApplicationName(application, service, serviceView);
       setWorkflowsAndPipelines(service, serviceView);
       return serviceView;
     }
@@ -209,10 +209,11 @@ class ServiceViewBuilder {
   }
 
   ServiceView createServiceView(Service service, DBObject changeDocument) {
-    if (wingsPersistence.get(Application.class, service.getAppId()) != null) {
+    Application application = wingsPersistence.get(Application.class, service.getAppId());
+    if (application != null) {
       ServiceView serviceView = createBaseView(service);
       if (changeDocument.containsField(ServiceViewKeys.appId)) {
-        setApplicationName(service, serviceView);
+        setApplicationName(application, service, serviceView);
       }
       return serviceView;
     }

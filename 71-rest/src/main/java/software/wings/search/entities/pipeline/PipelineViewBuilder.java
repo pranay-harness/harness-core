@@ -129,17 +129,11 @@ class PipelineViewBuilder {
     pipelineView.setDeployments(deployments);
   }
 
-  private Application getApplication(Pipeline pipeline) {
+  private void setApplicationName(Application application, Pipeline pipeline, PipelineView pipelineView) {
     if (pipeline.getAppId() != null) {
-      return wingsPersistence.get(Application.class, pipeline.getAppId());
-    }
-    return null;
-  }
-
-  private void setApplicationName(Pipeline pipeline, PipelineView pipelineView) {
-    Application application = getApplication(pipeline);
-    if (application != null) {
-      pipelineView.setAppName(application.getName());
+      if (application.getName() != null) {
+        pipelineView.setAppName(application.getName());
+      }
     }
   }
 
@@ -173,9 +167,10 @@ class PipelineViewBuilder {
   }
 
   PipelineView createPipelineView(Pipeline pipeline) {
-    if (getApplication(pipeline) != null) {
+    Application application = wingsPersistence.get(Application.class, pipeline.getAppId());
+    if (application != null) {
       PipelineView pipelineView = createBaseView(pipeline);
-      setApplicationName(pipeline, pipelineView);
+      setApplicationName(application, pipeline, pipelineView);
       setServicesAndWorkflows(pipeline, pipelineView);
       setDeploymentsAndDeploymentTimestamps(pipeline, pipelineView);
       setAuditsAndAuditTimestamps(pipeline, pipelineView);
@@ -185,10 +180,11 @@ class PipelineViewBuilder {
   }
 
   PipelineView createPipelineView(Pipeline pipeline, DBObject changeDocument) {
-    if (getApplication(pipeline) != null) {
+    Application application = wingsPersistence.get(Application.class, pipeline.getAppId());
+    if (application != null) {
       PipelineView pipelineView = createBaseView(pipeline);
       if (changeDocument.containsField(PipelineKeys.appId)) {
-        setApplicationName(pipeline, pipelineView);
+        setApplicationName(application, pipeline, pipelineView);
       }
       if (changeDocument.containsField(PipelineKeys.pipelineStages)) {
         setServicesAndWorkflows(pipeline, pipelineView);

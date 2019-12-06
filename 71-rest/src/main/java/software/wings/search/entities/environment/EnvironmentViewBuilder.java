@@ -159,9 +159,8 @@ class EnvironmentViewBuilder {
     environmentView.setPipelines(pipelines);
   }
 
-  private void setApplicationName(Environment environment, EnvironmentView environmentView) {
+  private void setApplicationName(Application application, Environment environment, EnvironmentView environmentView) {
     if (environment.getAppId() != null) {
-      Application application = wingsPersistence.get(Application.class, environment.getAppId());
       if (application.getName() != null) {
         environmentView.setAppName(application.getName());
       }
@@ -186,23 +185,26 @@ class EnvironmentViewBuilder {
   }
 
   EnvironmentView createEnvironmentView(Environment environment) {
-    if (wingsPersistence.get(Application.class, environment.getAppId()) != null) {
+    Application application = wingsPersistence.get(Application.class, environment.getAppId());
+
+    if (application != null) {
       EnvironmentView environmentView = createBaseView(environment);
       setAuditsAndTimestamps(environment, environmentView);
       setDeploymentsAndDeploymentTimestamps(environment, environmentView);
       setWorkflows(environment, environmentView);
       setPipelines(environment, environmentView);
-      setApplicationName(environment, environmentView);
+      setApplicationName(application, environment, environmentView);
       return environmentView;
     }
     return null;
   }
 
   EnvironmentView createEnvironmentView(Environment environment, DBObject changeDocument) {
-    if (wingsPersistence.get(Application.class, environment.getAppId()) != null) {
+    Application application = wingsPersistence.get(Application.class, environment.getAppId());
+    if (application != null) {
       EnvironmentView environmentView = createBaseView(environment);
       if (changeDocument.containsField(WorkflowKeys.appId)) {
-        setApplicationName(environment, environmentView);
+        setApplicationName(application, environment, environmentView);
       }
       return environmentView;
     }
