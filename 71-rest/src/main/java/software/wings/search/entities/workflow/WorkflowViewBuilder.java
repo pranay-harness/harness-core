@@ -101,9 +101,8 @@ class WorkflowViewBuilder {
         workflow.getLastUpdatedBy(), workflow.getAppId(), orchestrationWorkflowType);
   }
 
-  private void setApplicationName(Workflow workflow, WorkflowView workflowView) {
+  private void setApplicationName(Application application, Workflow workflow, WorkflowView workflowView) {
     if (workflow.getAppId() != null) {
-      Application application = wingsPersistence.get(Application.class, workflow.getAppId());
       if (application.getName() != null) {
         workflowView.setAppName(application.getName());
       }
@@ -222,9 +221,10 @@ class WorkflowViewBuilder {
   }
 
   WorkflowView createWorkflowView(Workflow workflow) {
-    if (wingsPersistence.get(Application.class, workflow.getAppId()) != null) {
+    Application application = wingsPersistence.get(Application.class, workflow.getAppId());
+    if (application != null) {
       WorkflowView workflowView = createBaseView(workflow);
-      setApplicationName(workflow, workflowView);
+      setApplicationName(application, workflow, workflowView);
       setEnvironment(workflow, workflowView);
       setServices(workflow, workflowView);
       setPipelines(workflow, workflowView);
@@ -236,10 +236,11 @@ class WorkflowViewBuilder {
   }
 
   WorkflowView createWorkflowView(Workflow workflow, DBObject changeDocument) {
-    if (wingsPersistence.get(Application.class, workflow.getAppId()) != null) {
+    Application application = wingsPersistence.get(Application.class, workflow.getAppId());
+    if (application != null) {
       WorkflowView workflowView = createBaseView(workflow);
       if (changeDocument.containsField(WorkflowKeys.appId)) {
-        setApplicationName(workflow, workflowView);
+        setApplicationName(application, workflow, workflowView);
       }
       if (changeDocument.containsField(WorkflowKeys.envId)
           || changeDocument.containsField(WorkflowKeys.templateExpressions)) {
