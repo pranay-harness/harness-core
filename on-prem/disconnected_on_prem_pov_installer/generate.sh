@@ -17,6 +17,7 @@ LEARNING_ENGINE_IMAGE="harness/learning-engine-onprem:${LEARNING_ENGINE_VERSION}
 UI_IMAGE="harness/ui:${UI_VERSION}"
 PROXY_IMAGE="harness/proxy:${PROXY_VERSION}"
 MONGO_IMAGE="mongo:${MONGO_VERSION}"
+TIMESCALE_IMAGE="timescale/timescaledb:${TIMESCALE_VERSION}"
 
 MANAGER_IMAGE_TAR="${IMAGES_DIR}/manager.tar"
 VERIFICATION_SERVICE_IMAGE_TAR="${IMAGES_DIR}/verification_service.tar"
@@ -24,6 +25,7 @@ LEARNING_ENGINE_IMAGE_TAR="${IMAGES_DIR}/learning_engine.tar"
 UI_IMAGE_TAR="${IMAGES_DIR}/ui.tar"
 PROXY_IMAGE_TAR="${IMAGES_DIR}/proxy.tar"
 MONGO_IMAGE_TAR="${IMAGES_DIR}/mongo.tar"
+TIMESCALE_IMAGE_TAR="${IMAGES_DIR}/timescale.tar"
 
 JRE_SOURCE_URL_1=https://app.harness.io/storage/wingsdelegates/jre/8u131
 JRE_SOLARIS_1=jre-8u131-solaris-x64.tar.gz
@@ -56,6 +58,7 @@ cp README.txt "${INSTALLER_DIR}"
 
 echo "Manager version is ${MANAGER_VERSION}"
 echo "Mongo version is ${MONGO_VERSION}"
+echo "Timescale version is ${TIMESCALE_VERSION}"
 echo "Verification Service version is ${VERIFICATION_SERVICE_VERSION}"
 echo "Delegate version is ${DELEGATE_VERSION}"
 echo "Watcher version is ${WATCHER_VERSION}"
@@ -84,6 +87,7 @@ docker pull "${LEARNING_ENGINE_IMAGE}"
 docker pull "${UI_IMAGE}"
 docker pull "${PROXY_IMAGE}"
 docker pull "${MONGO_IMAGE}"
+docker pull "${TIMESCALE_IMAGE}"
 
 docker save "${MANAGER_IMAGE}" > "${MANAGER_IMAGE_TAR}"
 docker save "${VERIFICATION_SERVICE_IMAGE}" > "${VERIFICATION_SERVICE_IMAGE_TAR}"
@@ -91,6 +95,7 @@ docker save "${LEARNING_ENGINE_IMAGE}" > "${LEARNING_ENGINE_IMAGE_TAR}"
 docker save "${UI_IMAGE}" > "${UI_IMAGE_TAR}"
 docker save "${PROXY_IMAGE}" > "${PROXY_IMAGE_TAR}"
 docker save "${MONGO_IMAGE}" > "${MONGO_IMAGE_TAR}"
+docker save "${TIMESCALE_IMAGE}" > "${TIMESCALE_IMAGE_TAR}"
 
 curl "${JRE_SOURCE_URL_1}/${JRE_SOLARIS_1}" > "${JRE_SOLARIS_1}"
 curl "${JRE_SOURCE_URL_1}/${JRE_MACOSX_1}" > "${JRE_MACOSX_1}"

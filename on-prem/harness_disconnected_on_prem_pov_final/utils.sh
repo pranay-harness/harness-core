@@ -41,6 +41,7 @@ function stopContainers(){
     stopDockerContainer "harnessManager"
     stopDockerContainer "harness_ui"
     stopDockerContainer "learningEngine"
+    stopDockerContainer "harness-timescaledb"
 }
 
 function checkDockerImageRunning(){
