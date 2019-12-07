@@ -112,6 +112,12 @@ echo "#######MongoDB details end #############"
 printf "\n"
 
 
+timescaledb_username=$(getProperty "config_template/timescale/timescale.properties" "TIMESCALE_USER")
+timescale_db=$(getProperty "config_template/timescale/timescale.properties" "TIMESCALE_DB")
+timescaledb_password=$(getProperty "config_template/timescale/timescale.properties" "TIMESCALE_PASSWORD")
+timescaledb_port=$(getProperty "config_template/timescale/timescale.properties" "TIMESCALE_PORT")
+
+
 echo "Created config folder from config_template"
 
 $(replace "COMPANYNAME" "$companyName")
@@ -134,8 +140,10 @@ WWW_DIR_LOCATION=$runtime_dir/data/proxy/www
 STORAGE_DIR_LOCATION=$WWW_DIR_LOCATION/data/storage
 PROXY_VERSION=$(getProperty "version.properties" "PROXY_VERSION")
 MONGO_VERSION=$(getProperty "version.properties" "MONGO_VERSION")
+TIMESCALE_VERSION=$(getProperty "version.properties" "TIMESCALE_VERSION")
 LOAD_BALANCER_URL=http://$host1:$proxyPort
 MONGO_URI=mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/harness?authSource=admin
+TIMESCALEDB_URI=jdbc:postgresql://$host1:$timescaledb_port/harness
 mkdir -p $STORAGE_DIR_LOCATION
 
 
@@ -173,6 +181,17 @@ function checkAndCreateMongoFiles() {
             createMongoFiles
        fi
    fi
+}
+
+function setUpTimeScaleDB(){
+  echo "#############################Setting up TimeScale DB ##########################################"
+  printf "\n\n\n\n"
+  docker run -d --name harness-timescaledb -v $runtime_dir/timescaledb/data:/var/lib/postgresql/data -p $timescaledb_port:5432 --rm -e POSTGRES_USER=$timescaledb_username -e POSTGRES_DB=$timescale_db -e POSTGRES_PASSWORD=$timescaledb_password timescale/timescaledb:$TIMESCALE_VERSION
+
+  if [[ $(checkDockerImageRunning "harness-timescaledb") -eq 1 ]]; then
+      echo "TimescaleDB is not running"
+  fi
+
 }
 
 
@@ -315,7 +334,7 @@ function setupManager(){
   mkdir -p $runtime_dir/manager/logs
   chmod -R 777 $runtime_dir/manager
 
- docker run -d --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager:$managerVersion
+ docker run -d --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -e TIMESCALEDB_URI=$TIMESCALEDB_URI -e TIMESCALEDB_USERNAME=$timescaledb_username -e TIMESCALEDB_PASSWORD=$timescaledb_password -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager:$managerVersion
 
  sleep 10
 
@@ -490,6 +509,7 @@ function loadDockerImages(){
     docker load --input images/ui.tar
     docker load --input images/mongo.tar
     docker load --input images/learning_engine.tar
+    docker load --input images/timescale.tar
 }
 
 function startUp(){
@@ -502,6 +522,7 @@ function startUp(){
     fi
 
     setUpMongoDB
+    setUpTimeScaleDB
     setUpProxy
     setupManager
 
