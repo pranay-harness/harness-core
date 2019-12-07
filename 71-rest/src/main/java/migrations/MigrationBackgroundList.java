@@ -141,6 +141,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(81, AmendCorruptedEncryptedServiceVariable.class))
         .add(Pair.of(82, AddArtifactIdentityMigration.class))
         .add(Pair.of(83, AddHarnessOwnedToResourceConstraint.class))
+        .add(Pair.of(84, BaseMigration.class))
         .build();
   }
 }
