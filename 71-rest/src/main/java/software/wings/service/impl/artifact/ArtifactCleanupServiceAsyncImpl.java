@@ -80,8 +80,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
     }
 
     waitNotifyEngine.waitForAllOn(GENERAL, new BuildSourceCleanupCallback(accountId, artifactStream.getUuid()), waitId);
-    logger.info("Queuing delegate task for artifactStreamId {} with waitId {}", artifactStream.getUuid(), waitId);
+    logger.info("Queuing delegate task with waitId {}", waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
-    logger.info("Queued delegate taskId {} for artifactStreamId {}", taskId, artifactStream.getUuid());
+    logger.info("Queued delegate taskId {}", taskId);
   }
 }
