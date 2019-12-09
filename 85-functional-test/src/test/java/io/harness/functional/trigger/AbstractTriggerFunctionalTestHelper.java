@@ -67,10 +67,6 @@ public class AbstractTriggerFunctionalTestHelper extends AbstractFunctionalTest 
                                 .filter(FeatureFlagKeys.name, FeatureName.TRIGGER_REFACTOR),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).set("enabled", true));
 
-    wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority)
-                                .filter(FeatureFlagKeys.name, FeatureName.DEPLOYMENT_MODAL_REFACTOR),
-        wingsPersistence.createUpdateOperations(FeatureFlag.class).set("enabled", true));
-
     service = owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
     assertThat(service).isNotNull();
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);

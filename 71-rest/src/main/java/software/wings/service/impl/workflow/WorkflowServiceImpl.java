@@ -1971,8 +1971,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             appId, workflow, workflowVariables, artifactRequiredServiceIds, artifactVariables);
       } else {
         fetchArtifactNeededServiceIds(appId, workflow, workflowVariables, artifactRequiredServiceIds);
-        if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, accountId)
-            && isNotEmpty(artifactRequiredServiceIds)) {
+        if (isNotEmpty(artifactRequiredServiceIds)) {
           for (String serviceId : artifactRequiredServiceIds) {
             artifactVariables.add(
                 ArtifactVariable.builder()

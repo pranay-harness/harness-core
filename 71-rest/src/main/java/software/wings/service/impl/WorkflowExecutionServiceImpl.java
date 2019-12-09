@@ -1878,8 +1878,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     checkDeploymentRateLimit(accountId, appId);
 
-    if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, accountId)
-        && isEmpty(executionArgs.getArtifacts()) && isNotEmpty(executionArgs.getArtifactVariables())) {
+    if (isEmpty(executionArgs.getArtifacts()) && isNotEmpty(executionArgs.getArtifactVariables())) {
       // Artifact Variables are passed but not artifacts. For backwards compatibility, set artifacts in executionArgs.
       List<Artifact> artifacts = executionArgs.getArtifactVariables()
                                      .stream()
@@ -2137,14 +2136,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (finalDeploymentMetadata != null) {
-      String accountId = appService.getAccountIdByAppId(appId);
-      // Set services only when feature-flags are off.
-      if (!featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, accountId)
-          && !featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
-        finalDeploymentMetadata.setArtifactRequiredServices(serviceResourceService.fetchServicesByUuids(
-            appId, finalDeploymentMetadata.getArtifactRequiredServiceIds()));
-      }
-
       // Set environments.
       finalDeploymentMetadata.setEnvSummaries(
           environmentService.obtainEnvironmentSummaries(appId, finalDeploymentMetadata.getEnvIds()));

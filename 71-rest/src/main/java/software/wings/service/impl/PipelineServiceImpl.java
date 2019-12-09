@@ -815,10 +815,8 @@ public class PipelineServiceImpl implements PipelineService {
               } else {
                 cloneRelatedFieldName(pseWorkflowVariables, pipelineVariable);
               }
-              if (featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, workflow.getAccountId())) {
-                populateParentFields(
-                    pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables);
-              }
+              populateParentFields(
+                  pipelineVariable, entityType, workflowVariables, variable.getName(), pseWorkflowVariables);
               if (withFinalValuesOnly) {
                 // If only final concrete values are needed, set value as null as the used has not entered them yet.
                 pipelineVariable.setValue(null);
