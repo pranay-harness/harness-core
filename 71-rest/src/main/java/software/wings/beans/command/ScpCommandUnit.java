@@ -1,7 +1,10 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Log.Builder.aLog;
@@ -28,15 +31,20 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.ArtifactType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,6 +58,8 @@ import java.util.stream.Stream;
 @Slf4j
 public class ScpCommandUnit extends SshCommandUnit {
   @Inject @Transient private transient DelegateLogService delegateLogService;
+  @Inject @Transient private AzureArtifactsService azureArtifactsService;
+
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
@@ -113,6 +123,32 @@ public class ScpCommandUnit extends SshCommandUnit {
                   + " and artifact type: " + artifactStreamAttributes.getArtifactType());
               return CommandExecutionStatus.SUCCESS;
             }
+          } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.AZURE_ARTIFACTS.name())) {
+            List<AzureArtifactsPackageFileInfo> fileInfos = azureArtifactsService.listFiles(
+                (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue(),
+                artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes,
+                artifactStreamAttributes.getMetadata(), false);
+            if (isEmpty(fileInfos)) {
+              return SUCCESS;
+            }
+
+            Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+            if (metadata == null) {
+              metadata = new HashMap<>();
+            }
+
+            for (AzureArtifactsPackageFileInfo fileInfo : fileInfos) {
+              metadata.put(ArtifactMetadataKeys.artifactFileName, fileInfo.getName());
+              metadata.put(ArtifactMetadataKeys.artifactFileSize, Long.toString(fileInfo.getSize()));
+              artifactStreamAttributes.setMetadata(metadata);
+              CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
+                  artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
+                  getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
+              if (FAILURE.equals(executionStatus)) {
+                return executionStatus;
+              }
+            }
+            return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.CUSTOM.name())) {
             saveExecutionLog(context, ERROR, "Copy Artifact is not supported for Custom Repository artifacts");
             throw new InvalidRequestException("Copy Artifact is not supported for Custom Repository artifacts");

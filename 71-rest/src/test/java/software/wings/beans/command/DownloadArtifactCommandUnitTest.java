@@ -6,7 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -44,10 +46,15 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
@@ -62,6 +69,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @Mock private BaseScriptExecutor executor;
   @Mock private EncryptionService encryptionService;
   @Mock private AwsHelperService awsHelperService;
+  @Mock private AzureArtifactsService azureArtifactsService;
   @Mock DelegateLogService logService;
   private SettingAttribute awsSetting =
       aSettingAttribute()
@@ -92,6 +100,15 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                                                    .password("dummy123!".toCharArray())
                                                                    .build())
                                                     .build();
+  private SettingAttribute azureArtifactsConfig =
+      aSettingAttribute()
+          .withUuid(SETTING_ID)
+          .withValue(AzureArtifactsPATConfig.builder()
+                         .azureDevopsUrl(WingsTestConstants.AZURE_DEVOPS_URL)
+                         .pat("dummy123!".toCharArray())
+                         .build())
+          .build();
+
   private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
       ArtifactStreamAttributes.builder()
           .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
@@ -101,19 +118,33 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .artifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
-  SettingAttribute artifactoryAnonSetting =
+  private SettingAttribute artifactoryAnonSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
           .withValue(ArtifactoryConfig.builder().artifactoryUrl(WingsTestConstants.ARTIFACTORY_URL).build())
           .build();
-  ArtifactStreamAttributes streamAttributesAnon = ArtifactStreamAttributes.builder()
-                                                      .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-                                                      .metadataOnly(true)
-                                                      .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-                                                      .serverSetting(artifactoryAnonSetting)
-                                                      .artifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
-                                                      .artifactServerEncryptedDataDetails(Collections.emptyList())
-                                                      .build();
+  private ArtifactStreamAttributes streamAttributesAnon =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+          .serverSetting(artifactoryAnonSetting)
+          .artifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+  private ArtifactStreamAttributes artifactStreamAttributesForAzureArtifacts =
+      ArtifactStreamAttributes.builder()
+          .artifactStreamType(ArtifactStreamType.AZURE_ARTIFACTS.name())
+          .metadataOnly(true)
+          .metadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
+          .serverSetting(azureArtifactsConfig)
+          .artifactServerEncryptedDataDetails(Collections.emptyList())
+          .protocolType(ProtocolType.maven.name())
+          .project("PROJECT")
+          .feed("FEED")
+          .packageId("PACKAGE_ID")
+          .packageName("GROUP_ID:ARTIFACT_ID")
+          .build();
 
   @InjectMocks
   private ShellCommandExecutionContext amazonS3Context =
@@ -148,6 +179,17 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
                                            .withHost(host)
                                            .build());
 
+  @InjectMocks
+  ShellCommandExecutionContext azureArtifactsContext =
+      new ShellCommandExecutionContext(aCommandExecutionContext()
+                                           .withArtifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
+                                           .withMetadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
+                                           .withHostConnectionAttributes(hostConnectionAttributes)
+                                           .withAppId(WingsTestConstants.APP_ID)
+                                           .withActivityId(ACTIVITY_ID)
+                                           .withHost(host)
+                                           .build());
+
   @Test
   @Owner(developers = UNKNOWN)
   @Category(UnitTests.class)
@@ -160,6 +202,9 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         break;
       case ARTIFACTORY:
         context = artifactoryContext;
+        break;
+      case AZURE_ARTIFACTS:
+        context = azureArtifactsContext;
         break;
       default:
         break;
@@ -174,6 +219,9 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     when(awsHelperService.getBucketRegion(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString()))
         .thenReturn("us-west-1");
+    when(azureArtifactsService.listFiles(
+             any(AzureArtifactsConfig.class), anyListOf(EncryptedDataDetail.class), any(), anyMap(), eq(true)))
+        .thenReturn(Collections.singletonList(new AzureArtifactsPackageFileInfo(ARTIFACT_FILE_NAME, -1)));
     when(executor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = downloadArtifactCommandUnit.executeInternal(context);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -193,6 +241,9 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         break;
       case ARTIFACTORY:
         context = artifactoryContext;
+        break;
+      case AZURE_ARTIFACTS:
+        context = azureArtifactsContext;
         break;
       default:
         break;
@@ -241,6 +292,10 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
         map.put(ArtifactMetadataKeys.artifactPath, ARTIFACT_PATH);
         map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
         break;
+      case AZURE_ARTIFACTS:
+        map.put(ArtifactMetadataKeys.version, BUILD_NO);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        break;
       default:
         break;
     }
@@ -250,12 +305,15 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getData() {
     amazonS3Context.setExecutor(executor);
     artifactoryContext.setExecutor(executor);
-    return new Object[][] {{ArtifactStreamType.AMAZON_S3}, {ArtifactStreamType.ARTIFACTORY}};
+    azureArtifactsContext.setExecutor(executor);
+    return new Object[][] {
+        {ArtifactStreamType.AMAZON_S3}, {ArtifactStreamType.ARTIFACTORY}, {ArtifactStreamType.AZURE_ARTIFACTS}};
   }
 
   private Object[][] getScriptType() {
     amazonS3Context.setExecutor(executor);
     artifactoryContext.setExecutor(executor);
+    azureArtifactsContext.setExecutor(executor);
     return new Object[][] {{ScriptType.BASH}, {ScriptType.POWERSHELL}};
   }
 }

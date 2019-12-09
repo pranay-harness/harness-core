@@ -596,7 +596,7 @@ public class SecretManagerImpl implements SecretManager {
   public Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId) {
     return listEncryptedSettingAttributes(accountId,
         Sets.newHashSet(SettingCategory.CLOUD_PROVIDER.name(), SettingCategory.CONNECTOR.name(),
-            SettingCategory.SETTING.name(), SettingCategory.HELM_REPO.name()));
+            SettingCategory.SETTING.name(), SettingCategory.HELM_REPO.name(), SettingCategory.AZURE_ARTIFACTS.name()));
   }
 
   @Override

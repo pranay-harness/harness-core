@@ -296,6 +296,8 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
 
     SPOT_INST("Spotinst"),
 
+    AZURE_ARTIFACTS_PAT("Azure Artifacts"),
+
     CUSTOM("Custom Artifact Source");
 
     @Getter private String displayName;

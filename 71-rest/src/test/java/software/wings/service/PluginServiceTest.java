@@ -9,8 +9,10 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.FeatureName.ARTIFACT_STREAM_REFACTOR;
+import static software.wings.beans.FeatureName.AZURE_ARTIFACTS;
 import static software.wings.beans.FeatureName.SPOTINST;
 import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.AzureArtifacts;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
@@ -58,6 +60,7 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
@@ -78,6 +81,7 @@ public class PluginServiceTest extends CategoryTest {
 
   private String accountId = "ACCOUNT_ID";
   private String multiArtifactEnabledAccountId = "MULTI_ARTIFACT_ENABLED_ACCOUNT_ID";
+  private String azureArtifactsEnabledAccountId = "AZURE_ARTIFACTS_ENABLED_ACCOUNT_ID";
 
   //  @Inject private FeatureFlagService featureFlagService;
   @Mock private FeatureFlagService mockFeatureFlagService;
@@ -88,8 +92,13 @@ public class PluginServiceTest extends CategoryTest {
     FieldUtils.writeField(pluginService, "featureFlagService", mockFeatureFlagService, true);
     when(mockFeatureFlagService.isEnabled(ARTIFACT_STREAM_REFACTOR, accountId)).thenReturn(false);
     when(mockFeatureFlagService.isEnabled(ARTIFACT_STREAM_REFACTOR, multiArtifactEnabledAccountId)).thenReturn(true);
+    when(mockFeatureFlagService.isEnabled(ARTIFACT_STREAM_REFACTOR, azureArtifactsEnabledAccountId)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(AZURE_ARTIFACTS, accountId)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(AZURE_ARTIFACTS, multiArtifactEnabledAccountId)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(AZURE_ARTIFACTS, azureArtifactsEnabledAccountId)).thenReturn(true);
     when(mockFeatureFlagService.isEnabled(SPOTINST, accountId)).thenReturn(true);
     when(mockFeatureFlagService.isEnabled(SPOTINST, multiArtifactEnabledAccountId)).thenReturn(true);
+    when(mockFeatureFlagService.isEnabled(SPOTINST, azureArtifactsEnabledAccountId)).thenReturn(true);
   }
 
   @Test
@@ -381,6 +390,17 @@ public class PluginServiceTest extends CategoryTest {
                       .withType(SettingVariableTypes.CUSTOM.name())
                       .withPluginCategories(asList(Artifact))
                       .build());
+
+    assertThat(pluginService.getInstalledPlugins(azureArtifactsEnabledAccountId))
+        .hasSize(35)
+        .contains(anAccountPlugin()
+                      .withSettingClass(AzureArtifactsPATConfig.class)
+                      .withAccountId(azureArtifactsEnabledAccountId)
+                      .withIsEnabled(true)
+                      .withDisplayName(SettingVariableTypes.AZURE_ARTIFACTS_PAT.getDisplayName())
+                      .withType(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name())
+                      .withPluginCategories(asList(AzureArtifacts))
+                      .build());
   }
 
   @Test
@@ -401,5 +421,12 @@ public class PluginServiceTest extends CategoryTest {
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
             "GCS_HELM_REPO", "SERVICENOW", "CUSTOM", "SPOT_INST");
+    assertThat(pluginService.getPluginSettingSchema(azureArtifactsEnabledAccountId))
+        .hasSize(35)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
+            "JENKINS", "BAMBOO", "SMTP", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
+            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB", "SFTP", "HTTP_HELM_REPO", "AMAZON_S3_HELM_REPO",
+            "GCS_HELM_REPO", "SERVICENOW", "SPOT_INST", "AZURE_ARTIFACTS_PAT");
   }
 }

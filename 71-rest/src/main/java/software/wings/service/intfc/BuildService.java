@@ -10,6 +10,10 @@ import com.google.common.collect.Lists;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -230,6 +234,7 @@ public interface BuildService<T> {
   default JobDetails getJob(String jobName, T config, List<EncryptedDataDetail> encryptionDetails) {
     throw new UnsupportedOperationException();
   }
+
   /**
    * Validates Artifact Stream
    *
@@ -260,6 +265,21 @@ public interface BuildService<T> {
 
   default List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
       T config, List<EncryptedDataDetail> encryptionDetails, long deadline) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureDevopsProject> getProjects(
+      AzureArtifactsConfig azureArtifactsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureArtifactsFeed> getFeeds(
+      AzureArtifactsConfig azureArtifactsConfig, List<EncryptedDataDetail> encryptionDetails, String project) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureArtifactsPackage> getPackages(AzureArtifactsConfig azureArtifactsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String project, String feed, String protocolType) {
     throw new UnsupportedOperationException();
   }
 

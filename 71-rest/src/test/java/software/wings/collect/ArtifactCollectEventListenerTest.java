@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.TaskType.AZURE_ARTIFACTS_COLLECTION;
 import static software.wings.beans.TaskType.BAMBOO_COLLECTION;
 import static software.wings.beans.TaskType.JENKINS_COLLECTION;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -21,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
+import static software.wings.utils.WingsTestConstants.AZURE_DEVOPS_URL;
 import static software.wings.utils.WingsTestConstants.JENKINS_URL;
 import static software.wings.utils.WingsTestConstants.JOB_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -45,8 +47,11 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -127,6 +132,34 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
         .hasFieldOrPropertyWithValue("data.taskType", BAMBOO_COLLECTION.name());
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldSendAzureArtifactsTask() {
+    SettingAttribute SETTING_ATTRIBUTE =
+        aSettingAttribute()
+            .withValue(AzureArtifactsPATConfig.builder().azureDevopsUrl(AZURE_DEVOPS_URL).pat(PASSWORD).build())
+            .build();
+    when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
+
+    sendTaskHelper(AzureArtifactsArtifactStream.builder()
+                       .sourceName(ARTIFACT_STREAM_NAME)
+                       .appId(APP_ID)
+                       .settingId(SETTING_ID)
+                       .protocolType(ProtocolType.maven.name())
+                       .project(null)
+                       .feed("FEED")
+                       .packageId("PKG_ID")
+                       .packageName("GROUP_ID:ARTIFACT_ID")
+                       .build());
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("data.taskType", AZURE_ARTIFACTS_COLLECTION.name());
   }
 
   private void sendTaskHelper(ArtifactStream artifactStream) {

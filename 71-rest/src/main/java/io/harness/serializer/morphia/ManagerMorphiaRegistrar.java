@@ -282,6 +282,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -370,6 +371,7 @@ import software.wings.beans.peronalization.Personalization;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
@@ -948,6 +950,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ClusterRecord.class);
     set.add(CustomLogCVServiceConfiguration.class);
     set.add(Budget.class);
+    set.add(AzureArtifactsArtifactStream.class);
   }
 
   @Override
@@ -1164,6 +1167,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.settings.helm.AmazonS3HelmRepoConfig", AmazonS3HelmRepoConfig.class);
     w.put("beans.settings.helm.GCSHelmRepoConfig", GCSHelmRepoConfig.class);
     w.put("beans.settings.helm.HttpHelmRepoConfig", HttpHelmRepoConfig.class);
+    w.put("beans.settings.azureartifacts.AzureArtifactsPATConfig", AzureArtifactsPATConfig.class);
     w.put("beans.SftpConfig", SftpConfig.class);
     w.put("beans.SlackConfig", SlackConfig.class);
     w.put("beans.SmbConfig", SmbConfig.class);

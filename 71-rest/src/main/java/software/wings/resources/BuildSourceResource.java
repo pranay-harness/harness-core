@@ -14,6 +14,9 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.BuildDetailsComparator;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -235,5 +238,33 @@ public class BuildSourceResource {
   public RestResponse<Artifact> collectArtifact(@QueryParam("appId") String appId,
       @QueryParam("artifactStreamId") String artifactStreamId, BuildDetails buildDetails) {
     return new RestResponse<>(buildSourceService.collectArtifact(appId, artifactStreamId, buildDetails));
+  }
+
+  @GET
+  @Path("projects")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureDevopsProject>> listProjects(
+      @QueryParam("accountId") String accountId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getProjects(settingId));
+  }
+
+  @GET
+  @Path("feeds")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureArtifactsFeed>> listFeeds(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") String settingId, @QueryParam("project") String project) {
+    return new RestResponse<>(buildSourceService.getFeeds(settingId, project));
+  }
+
+  @GET
+  @Path("feeds/{feed}/packages")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureArtifactsPackage>> listPackages(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") String settingId, @QueryParam("project") String project, @PathParam("feed") String feed,
+      @QueryParam("protocolType") String protocolType) {
+    return new RestResponse<>(buildSourceService.getPackages(settingId, project, feed, protocolType));
   }
 }

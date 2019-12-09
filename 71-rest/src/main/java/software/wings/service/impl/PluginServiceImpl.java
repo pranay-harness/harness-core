@@ -5,6 +5,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.AzureArtifacts;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
@@ -57,6 +58,7 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
@@ -411,6 +413,18 @@ public class PluginServiceImpl implements PluginService {
                          .withType(SettingVariableTypes.CUSTOM.name())
                          .withPluginCategories(asList(Artifact))
                          .withUiSchema(readUiSchema(SettingVariableTypes.CUSTOM.name()))
+                         .build());
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, accountId)) {
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(AzureArtifactsPATConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName(SettingVariableTypes.AZURE_ARTIFACTS_PAT.getDisplayName())
+                         .withType(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name())
+                         .withPluginCategories(asList(AzureArtifacts))
+                         .withUiSchema(readUiSchema(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name()))
                          .build());
     }
     return pluginList;

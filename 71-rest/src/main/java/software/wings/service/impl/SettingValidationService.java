@@ -67,6 +67,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
@@ -227,7 +228,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
         || settingValue instanceof ArtifactoryConfig || settingValue instanceof SmbConfig
-        || settingValue instanceof SftpConfig) {
+        || settingValue instanceof SftpConfig || settingValue instanceof AzureArtifactsConfig) {
       buildSourceService.getBuildService(settingAttribute, GLOBAL_APP_ID)
           .validateArtifactServer(settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AppDynamicsConfig) {

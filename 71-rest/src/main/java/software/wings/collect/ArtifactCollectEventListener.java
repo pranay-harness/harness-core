@@ -36,12 +36,15 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
+import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTaskParameters;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
@@ -212,6 +215,30 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
                       .build())
             .build();
       }
+      case AZURE_ARTIFACTS:
+        AzureArtifactsArtifactStream azureArtifactsArtifactStream = (AzureArtifactsArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(azureArtifactsArtifactStream.getSettingId());
+        AzureArtifactsConfig azureArtifactsConfig = (AzureArtifactsConfig) settingAttribute.getValue();
+
+        return DelegateTask.builder()
+            .async(true)
+            .accountId(accountId)
+            .appId(GLOBAL_APP_ID)
+            .waitId(waitId)
+            .data(
+                TaskData.builder()
+                    .taskType(TaskType.AZURE_ARTIFACTS_COLLECTION.name())
+                    .parameters(new Object[] {
+                        AzureArtifactsCollectionTaskParameters.builder()
+                            .accountId(accountId)
+                            .azureArtifactsConfig(azureArtifactsConfig)
+                            .encryptedDataDetails(secretManager.getEncryptionDetails(azureArtifactsConfig, null, null))
+                            .artifactStreamAttributes(azureArtifactsArtifactStream.fetchArtifactStreamAttributes())
+                            .artifactMetadata(artifact.getMetadata())
+                            .build()})
+                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                    .build())
+            .build();
       default:
         throw new UnknownArtifactStreamTypeException(artifactStream.getArtifactStreamType());
     }

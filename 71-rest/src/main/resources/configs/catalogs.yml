@@ -75,6 +75,8 @@ ARTIFACT_STREAM_TYPE:
       value: Samba Server
     - name: SFTP
       value: SFTP Server
+    - name: AZURE_ARTIFACTS
+      value: Azure Artifacts
     - name: CUSTOM
       value: Custom Repository
 
@@ -309,6 +311,8 @@ PLUGIN_CATEGORY:
       value: SourceRepo
     - name: Helm Repository
       value: HelmRepo
+    - name: Azure Artifacts
+      value: AzureArtifacts
 
 CLOUD_PROVIDERS:
     - name: Google Cloud Platform
@@ -530,3 +534,7 @@ HELM_REPO:
       value: HTTP_HELM_REPO
     - name: Amazon S3 Helm Repository
       value: AMAZON_S3_HELM_REPO
+
+AZURE_ARTIFACTS:
+  - name: Personal Access Token
+    value: AZURE_ARTIFACTS_PAT

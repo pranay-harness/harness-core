@@ -32,7 +32,11 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -584,5 +588,40 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(getBuildService(settingAttribute)
                                .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
+  }
+
+  @Override
+  public List<AzureDevopsProject> getProjects(String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureArtifactsConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute).getProjects((AzureArtifactsConfig) settingValue, encryptedDataDetails);
+  }
+
+  @Override
+  public List<AzureArtifactsFeed> getFeeds(String settingId, String project) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureArtifactsConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .getFeeds((AzureArtifactsConfig) settingValue, encryptedDataDetails, project);
+  }
+
+  @Override
+  public List<AzureArtifactsPackage> getPackages(String settingId, String project, String feed, String protocolType) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureArtifactsConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .getPackages((AzureArtifactsConfig) settingValue, encryptedDataDetails, project, feed, protocolType);
   }
 }

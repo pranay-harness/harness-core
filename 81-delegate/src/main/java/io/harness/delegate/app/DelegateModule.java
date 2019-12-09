@@ -41,6 +41,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -94,6 +95,8 @@ import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
 import software.wings.helpers.ext.azure.AcrService;
 import software.wings.helpers.ext.azure.AcrServiceImpl;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsServiceImpl;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
@@ -140,6 +143,7 @@ import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.AmiBuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
+import software.wings.service.impl.AzureArtifactsBuildServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.CodeDeployCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.ContainerCommandUnitExecutorServiceImpl;
@@ -199,6 +203,7 @@ import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.AmiBuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
+import software.wings.service.intfc.AzureArtifactsBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
@@ -387,6 +392,7 @@ public class DelegateModule extends DependencyModule {
     bind(CustomBuildService.class).to(CustomBuildServiceImpl.class);
     bind(CustomRepositoryService.class).to(CustomRepositoryServiceImpl.class);
     bind(AmiService.class).to(AmiServiceImpl.class);
+    bind(AzureArtifactsBuildService.class).to(AzureArtifactsBuildServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(ContainerService.class).to(ContainerServiceImpl.class);
     bind(GitClient.class).to(GitClientImpl.class).asEagerSingleton();
@@ -432,6 +438,7 @@ public class DelegateModule extends DependencyModule {
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 
     bind(AwsCloudWatchHelperServiceDelegate.class).to(AwsCloudWatchHelperServiceDelegateImpl.class);
+    bind(AzureArtifactsService.class).to(AzureArtifactsServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
@@ -477,6 +484,7 @@ public class DelegateModule extends DependencyModule {
     buildServiceMapBinder.addBinding(AzureConfig.class).toInstance(AcrBuildService.class);
     buildServiceMapBinder.addBinding(NexusConfig.class).toInstance(NexusBuildService.class);
     buildServiceMapBinder.addBinding(ArtifactoryConfig.class).toInstance(ArtifactoryBuildService.class);
+    buildServiceMapBinder.addBinding(AzureArtifactsPATConfig.class).toInstance(AzureArtifactsBuildService.class);
 
     // ECS Command Tasks
     MapBinder<String, EcsCommandTaskHandler> ecsCommandTaskTypeToTaskHandlerMap =

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import io.harness.beans.DelegateTask;
@@ -13,6 +14,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.settings.SettingValue;
 
@@ -61,6 +63,8 @@ public class BuildSourceTaskValidation extends AbstractDelegateValidateTask {
       return asList(((ArtifactoryConfig) settingValue).getArtifactoryUrl());
     } else if (artifactStreamType.equals(GCR.name())) {
       return asList(getUrl(artifactStreamAttributes.getRegistryHostName()));
+    } else if (artifactStreamType.equals(AZURE_ARTIFACTS.name())) {
+      return asList(((AzureArtifactsConfig) settingValue).getAzureDevopsUrl());
     } else if (artifactStreamType.equals(ACR.name())) {
       final String default_server = "azure.microsoft.com";
       String loginServer = isNotEmpty(artifactStreamAttributes.getRegistryHostName())

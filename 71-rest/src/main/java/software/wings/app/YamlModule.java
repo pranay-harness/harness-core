@@ -28,6 +28,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -97,6 +98,7 @@ import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactS
 import software.wings.service.impl.yaml.handler.artifactstream.AmiArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryArtifactStreamYamlHandler;
+import software.wings.service.impl.yaml.handler.artifactstream.AzureArtifactsArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.BambooArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.CustomArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.DockerArtifactStreamYamlHandler;
@@ -155,6 +157,8 @@ import software.wings.service.impl.yaml.handler.infraprovisioner.TerraformInfras
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3HelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.AzureArtifactsPATConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.AzureArtifactsYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.CustomArtifactServerConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
@@ -282,6 +286,8 @@ public class YamlModule extends AbstractModule {
     artifactStreamYamlHelperMapBinder.addBinding(SMB.name()).to(SmbArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(SFTP.name()).to(SftpArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(CUSTOM.name()).to(CustomArtifactStreamYamlHandler.class);
+    artifactStreamYamlHelperMapBinder.addBinding(AZURE_ARTIFACTS.name())
+        .to(AzureArtifactsArtifactStreamYamlHandler.class);
 
     MapBinder<String, InfraMappingYamlHandler> infraMappingYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfraMappingYamlHandler.class);
@@ -367,6 +373,11 @@ public class YamlModule extends AbstractModule {
         .to(AmazonS3HelmRepoConfigYamlHandler.class);
     helmRepoYamlHandlerMapBinder.addBinding(SettingVariableTypes.GCS_HELM_REPO.name())
         .to(GcsHelmRepoConfigYamlHandler.class);
+
+    MapBinder<String, AzureArtifactsYamlHandler> azureArtifactsYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, AzureArtifactsYamlHandler.class);
+    azureArtifactsYamlHandlerMapBinder.addBinding(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name())
+        .to(AzureArtifactsPATConfigYamlHandler.class);
 
     MapBinder<String, VerificationProviderYamlHandler> verificationProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VerificationProviderYamlHandler.class);

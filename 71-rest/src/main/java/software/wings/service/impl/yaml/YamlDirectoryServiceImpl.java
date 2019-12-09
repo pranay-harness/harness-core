@@ -1732,6 +1732,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doArtifactServerType(
         accountId, artifactServersFolder, SettingVariableTypes.AMAZON_S3_HELM_REPO, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.GCS_HELM_REPO, directoryPath.clone());
+    doArtifactServerType(
+        accountId, artifactServersFolder, SettingVariableTypes.AZURE_ARTIFACTS_PAT, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.SMB, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.SFTP, directoryPath.clone());
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
@@ -2143,6 +2145,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case HTTP_HELM_REPO:
       case AMAZON_S3_HELM_REPO:
       case GCS_HELM_REPO:
+      case AZURE_ARTIFACTS_PAT:
       case SMB:
       case SFTP:
       case CUSTOM:

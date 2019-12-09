@@ -121,6 +121,8 @@ public interface WingsTestConstants {
 
   String JENKINS_URL = "JENKINS_URL";
 
+  String AZURE_DEVOPS_URL = "https://dev.azure.com/ORG";
+
   String JOB_NAME = "JOB_NAME";
 
   String ARTIFACT_PATH = "ARTIFACT_PATH";

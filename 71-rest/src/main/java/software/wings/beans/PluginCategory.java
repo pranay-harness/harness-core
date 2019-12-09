@@ -11,5 +11,6 @@ public enum PluginCategory {
   ConnectionAttributes,
   LoadBalancer,
   SourceRepo,
-  HelmRepo
+  HelmRepo,
+  AzureArtifacts
 }

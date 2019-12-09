@@ -17,5 +17,6 @@ public enum ArtifactStreamType {
   GCS,
   SMB,
   SFTP,
+  AZURE_ARTIFACTS,
   CUSTOM
 }

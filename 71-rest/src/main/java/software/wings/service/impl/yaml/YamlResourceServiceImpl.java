@@ -561,6 +561,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case HTTP_HELM_REPO:
       case AMAZON_S3_HELM_REPO:
       case GCS_HELM_REPO:
+      case AZURE_ARTIFACTS_PAT:
       case SMB:
       case SFTP:
       case CUSTOM:

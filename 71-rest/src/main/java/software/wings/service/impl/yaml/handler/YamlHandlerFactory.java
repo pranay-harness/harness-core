@@ -62,6 +62,7 @@ import software.wings.service.impl.yaml.handler.service.ApplicationManifestYamlH
 import software.wings.service.impl.yaml.handler.service.ManifestFileYamlHandler;
 import software.wings.service.impl.yaml.handler.service.ServiceYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.artifactserver.AzureArtifactsYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.HelmRepoYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
@@ -127,6 +128,7 @@ public class YamlHandlerFactory {
   @Inject private Map<String, CollaborationProviderYamlHandler> collaborationProviderYamlHelperMap;
   @Inject private Map<String, CloudProviderYamlHandler> cloudProviderYamlHelperMap;
   @Inject private Map<String, HelmRepoYamlHandler> helmRepoYamlHelperMap;
+  @Inject private Map<String, AzureArtifactsYamlHandler> azureArtifactsYamlHandlerMap;
   @Inject private Map<String, CloudProviderInfrastructureYamlHandler> cloudProviderInfrastructureYamlHandlerMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
@@ -178,10 +180,16 @@ public class YamlHandlerFactory {
       case ARTIFACT_SERVER:
         if (SettingCategory.HELM_REPO.getSettingVariableTypes()
                 .stream()
-                .map(settingVariableTypes -> settingVariableTypes.name())
+                .map(Enum::name)
                 .collect(Collectors.toList())
                 .contains(subType)) {
           yamlHandler = helmRepoYamlHelperMap.get(subType);
+        } else if (SettingCategory.AZURE_ARTIFACTS.getSettingVariableTypes()
+                       .stream()
+                       .map(Enum::name)
+                       .collect(Collectors.toList())
+                       .contains(subType)) {
+          yamlHandler = azureArtifactsYamlHandlerMap.get(subType);
         } else {
           yamlHandler = artifactServerYamlHelperMap.get(subType);
         }

@@ -28,6 +28,8 @@ import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.amazons3.AmazonS3ServiceImpl;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsServiceImpl;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClientImpl;
 import software.wings.helpers.ext.docker.DockerRegistryService;
@@ -50,6 +52,7 @@ import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntity;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
+import software.wings.service.impl.AzureArtifactsBuildServiceImpl;
 import software.wings.service.impl.ContainerServiceImpl;
 import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
@@ -73,6 +76,7 @@ import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
+import software.wings.service.intfc.AzureArtifactsBuildService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.EcrBuildService;
@@ -139,6 +143,8 @@ public class WingsTestModule extends AbstractModule {
     bind(PcfDeploymentManagerImpl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);
+    bind(AzureArtifactsService.class).to(AzureArtifactsServiceImpl.class);
+    bind(AzureArtifactsBuildService.class).to(AzureArtifactsBuildServiceImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))
