@@ -22,25 +22,14 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
-import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SettingsService;
 
-public class ArtifactCleanupServiceAsyncImplTest extends WingsBaseTest {
-  @Mock private SettingsService settingsService;
+public class ArtifactCollectionServiceAsyncImplTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
+
   @Mock private WaitNotifyEngine mockWaitNotifyEngine;
 
-  @Inject @InjectMocks private ArtifactCleanupServiceAsyncImpl artifactCleanupServiceAsync;
-
-  private static final String ARTIFACT_STREAM_ID_5 = "ARTIFACT_STREAM_ID_5";
-
-  GcrArtifactStream gcrArtifactStream = GcrArtifactStream.builder()
-                                            .uuid(ARTIFACT_STREAM_ID_5)
-                                            .appId(APP_ID)
-                                            .sourceName("ARTIFACT_SOURCE")
-                                            .serviceId(SERVICE_ID)
-                                            .build();
+  @Inject @InjectMocks private ArtifactCollectionServiceAsyncImpl artifactCollectionServiceAsync;
 
   CustomArtifactStream customArtifactStream =
       CustomArtifactStream.builder()
@@ -58,18 +47,9 @@ public class ArtifactCleanupServiceAsyncImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void verifyGCRCleanup() {
-    artifactCleanupServiceAsync.cleanupArtifactsAsync(gcrArtifactStream);
-    verify(settingsService, times(1)).get(any());
-  }
-
-  @Test
-  @Owner(developers = HARSH)
-  @Category(UnitTests.class)
-  public void verifyCustomCleanup() {
+  public void verifyCustomCollection() {
     when(delegateService.queueTask(any())).thenReturn("ID");
-
-    artifactCleanupServiceAsync.cleanupArtifactsAsync(customArtifactStream);
+    artifactCollectionServiceAsync.collectNewArtifactsAsync(customArtifactStream, "permitId");
 
     verify(mockWaitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
   }
