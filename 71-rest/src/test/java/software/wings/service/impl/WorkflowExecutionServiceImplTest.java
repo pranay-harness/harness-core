@@ -429,8 +429,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Service service = addService("svc1");
 
     Pipeline pipeline = constructPipeline(service);
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, pipeline.getAccountId())).thenReturn(true);
-
     Artifact artifact =
         Artifact.Builder.anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build();
     List<ArtifactVariable> variables = singletonList(ArtifactVariable.builder()

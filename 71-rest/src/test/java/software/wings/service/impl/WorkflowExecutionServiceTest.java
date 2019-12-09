@@ -555,12 +555,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void shouldFetchDeploymentMetadata() {
-    validateFetchDeploymentMetadata(false, false);
-  }
-  @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testInstancesDeployedFromExecution() {
@@ -579,19 +573,11 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldFetchDeploymentMetadataPipeline() {
-    validateFetchDeploymentMetadata(true, false);
-  }
-
-  @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
   public void shouldFetchDeploymentMetadataPipelineFFOn() {
     validateFetchDeploymentMetadata(true, true);
   }
 
   private void validateFetchDeploymentMetadata(boolean isPipeline, boolean ffOn) {
-    when(featureFlagService.isEnabled(eq(FeatureName.DEPLOYMENT_MODAL_REFACTOR), any())).thenReturn(ffOn);
     when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_STREAM_REFACTOR), any())).thenReturn(ffOn);
     ExecutionArgs executionArgs = new ExecutionArgs();
     if (isPipeline) {

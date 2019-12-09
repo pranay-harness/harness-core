@@ -3629,7 +3629,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow = createLinkedWorkflow(TemplateType.SSH);
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
-    when(featureFlagService.isEnabled(FeatureName.DEPLOYMENT_MODAL_REFACTOR, null)).thenReturn(true);
     assertThat(workflowService.fetchDeploymentMetadata(APP_ID, workflow, null, null, null).getArtifactVariables())
         .isNotNull();
   }
