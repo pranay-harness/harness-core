@@ -1,4 +1,4 @@
-package software.wings.yaml.handler.workflow;
+package software.wings.service.impl.yaml.handler.workflow;
 
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
@@ -45,11 +45,6 @@ import software.wings.service.impl.yaml.handler.notification.NotificationRulesYa
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
-import software.wings.service.impl.yaml.handler.workflow.FailureStrategyYamlHandler;
-import software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler;
-import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
-import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
-import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
