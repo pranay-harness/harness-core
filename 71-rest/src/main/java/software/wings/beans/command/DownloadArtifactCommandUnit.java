@@ -3,9 +3,12 @@ package software.wings.beans.command;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -35,7 +38,11 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
@@ -67,6 +74,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Inject private AwsHelperService awsHelperService;
   @Inject private SmbHelperService smbHelperService;
   @Inject private SftpHelperService sftpHelperService;
+  @Inject private AzureArtifactsService azureArtifactsService;
   private static Map<String, String> bucketRegions = new HashMap<>();
 
   private String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
@@ -159,7 +167,26 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
+      case AZURE_ARTIFACTS:
+        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        List<AzureArtifactsPackageFileInfo> fileInfos = azureArtifactsService.listFiles(
+            (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue(), encryptionDetails,
+            artifactStreamAttributes, metadata, true);
+        if (isEmpty(fileInfos)) {
+          return SUCCESS;
+        }
 
+        for (AzureArtifactsPackageFileInfo fileInfo : fileInfos) {
+          metadata.put(ArtifactMetadataKeys.artifactFileName, fileInfo.getName());
+          command = constructCommandStringForAzureArtifacts(artifactStreamAttributes, encryptionDetails, metadata);
+          CommandExecutionStatus executionStatus = context.executeCommandString(command, false);
+          if (FAILURE.equals(executionStatus)) {
+            return executionStatus;
+          }
+        }
+        return SUCCESS;
       default:
         saveExecutionLog(context, ERROR,
             format("Download Artifact not supported for Artifact Stream Type %s", artifactStreamType.name()));
@@ -465,6 +492,49 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
   private String getArtifactoryUrl(ArtifactoryConfig config, String artifactPath) {
     return config.fetchRegistryUrl() + "/" + artifactPath;
+  }
+
+  private String constructCommandStringForAzureArtifacts(ArtifactStreamAttributes artifactStreamAttributes,
+      List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
+    String artifactFileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
+    int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
+    if (lastIndexOfSlash > 0) {
+      artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
+      logger.info("Got filename: " + artifactFileName);
+    }
+
+    AzureArtifactsConfig azureArtifactsConfig =
+        (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue();
+    encryptionService.decrypt(azureArtifactsConfig, encryptionDetails);
+    String authHeader = AzureArtifactsServiceHelper.getAuthHeader(azureArtifactsConfig);
+    String version = metadata.getOrDefault(ArtifactMetadataKeys.version, null);
+    if (isBlank(version)) {
+      throw new InvalidRequestException("Invalid version", USER);
+    }
+
+    String url = AzureArtifactsServiceHelper.getDownloadUrl(
+        azureArtifactsConfig.getAzureDevopsUrl(), artifactStreamAttributes, version, artifactFileName);
+    if (isBlank(url)) {
+      throw new InvalidRequestException("Unable to generate download URL", USER);
+    }
+
+    String command;
+    switch (this.getScriptType()) {
+      case BASH:
+        command = "curl --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \"" + url + "\" -o \""
+            + getCommandPath() + "/" + artifactFileName + "\"";
+        break;
+      case POWERSHELL:
+        command = "$Headers = @{\n"
+            + "    Authorization = \"" + authHeader + "\"\n"
+            + "}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
+            + "\n Invoke-WebRequest -Uri \"" + url + "\" -Headers $Headers -OutFile \"" + getCommandPath() + "\\"
+            + artifactFileName + "\"";
+        break;
+      default:
+        throw new InvalidRequestException("Invalid Script type", USER);
+    }
+    return command;
   }
 
   /**

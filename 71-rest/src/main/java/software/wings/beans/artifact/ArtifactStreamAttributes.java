@@ -30,8 +30,8 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String repositoryName;
   private String artifactStreamType;
   private SettingAttribute serverSetting;
-  // TODO : Refactoring has to be done
-  private String groupId; // For nexus integration
+  private String groupId;
+  private String artifactId;
   private String artifactStreamId;
   private String artifactName;
   private ArtifactType artifactType;
@@ -59,6 +59,11 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private boolean customAttributeMappingNeeded;
   private String extension;
   private String classifier;
+  private String protocolType;
+  private String project;
+  private String feed;
+  private String packageId;
+  private String packageName;
 
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;

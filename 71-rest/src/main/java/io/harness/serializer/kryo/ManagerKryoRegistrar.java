@@ -301,6 +301,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
@@ -347,9 +348,14 @@ import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
+import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTaskParameters;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.exception.InvalidArtifactServerException;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageVersion;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
@@ -1434,5 +1440,12 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DeploySweepingOutputPcf.class, 7281);
     kryo.register(InfraMappingSweepingOutput.class, 7282);
     kryo.register(ElkDataCollectionInfoV2.class, 7283);
+
+    kryo.register(AzureArtifactsPATConfig.class, 7284);
+    kryo.register(AzureDevopsProject.class, 7285);
+    kryo.register(AzureArtifactsFeed.class, 7286);
+    kryo.register(AzureArtifactsPackage.class, 7287);
+    kryo.register(AzureArtifactsPackageVersion.class, 7288);
+    kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
   }
 }

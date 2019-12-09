@@ -6,6 +6,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.utils.RepositoryFormat;
@@ -437,6 +440,18 @@ public interface BuildSourceService {
    * @return the paths
    */
   default List<String> getArtifactPathsByStreamType(String settingId, String streamType) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureDevopsProject> getProjects(String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureArtifactsFeed> getFeeds(String settingId, String project) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureArtifactsPackage> getPackages(String settingId, String project, String feed, String protocolType) {
     throw new UnsupportedOperationException();
   }
 }

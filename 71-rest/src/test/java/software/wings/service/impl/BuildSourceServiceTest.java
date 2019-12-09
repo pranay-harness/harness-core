@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -44,12 +45,17 @@ import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -57,6 +63,7 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AzureArtifactsBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
@@ -71,6 +78,7 @@ import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +98,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock GcsService gcsService;
   @Mock NexusService nexusService;
   @Mock AmazonS3BuildService amazonS3BuildService;
+  @Mock AzureArtifactsBuildService azureArtifactsBuildService;
   @Mock ServiceResourceService serviceResourceService;
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
@@ -899,5 +908,119 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(customBuildSourceService);
     when(customBuildSourceService.validateArtifactSource(any())).thenReturn(true);
     assertThat(buildSourceService.validateArtifactSource(customArtifactStream)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldGetProjects() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(AzureArtifactsPATConfig.builder().build())
+                                            .build();
+
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(azureArtifactsBuildService);
+
+    AzureDevopsProject project = new AzureDevopsProject();
+    project.setId("id1");
+    project.setName("name1");
+    when(azureArtifactsBuildService.getProjects(any(), any())).thenReturn(Collections.singletonList(project));
+    List<AzureDevopsProject> projects = buildSourceService.getProjects(SETTING_ID);
+    assertThat(projects).isNotEmpty();
+    assertThat(projects).hasSize(1).extracting(AzureDevopsProject::getId).containsExactly("id1");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldNotGetProjectsForNonAzureArtifacts() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(BambooConfig.builder().build())
+                                            .build();
+
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(bambooBuildService);
+
+    List<AzureDevopsProject> projects = buildSourceService.getProjects(SETTING_ID);
+    assertThat(projects).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldGetFeeds() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(AzureArtifactsPATConfig.builder().build())
+                                            .build();
+
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(azureArtifactsBuildService);
+
+    AzureArtifactsFeed feed = new AzureArtifactsFeed();
+    feed.setId("id1");
+    feed.setName("name1");
+    when(azureArtifactsBuildService.getFeeds(any(), any(), any())).thenReturn(Collections.singletonList(feed));
+    List<AzureArtifactsFeed> feeds = buildSourceService.getFeeds(SETTING_ID, null);
+    assertThat(feeds).isNotEmpty();
+    assertThat(feeds).hasSize(1).extracting(AzureArtifactsFeed::getId).containsExactly("id1");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldNotGetFeedsForNonAzureArtifacts() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(BambooConfig.builder().build())
+                                            .build();
+
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(bambooBuildService);
+
+    List<AzureArtifactsFeed> feeds = buildSourceService.getFeeds(SETTING_ID, null);
+    assertThat(feeds).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldGetPackages() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(AzureArtifactsPATConfig.builder().build())
+                                            .build();
+
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(azureArtifactsBuildService);
+
+    AzureArtifactsPackage aPackage = new AzureArtifactsPackage();
+    aPackage.setId("id1");
+    aPackage.setName("name1");
+    when(azureArtifactsBuildService.getPackages(any(), any(), any(), any(), any()))
+        .thenReturn(Collections.singletonList(aPackage));
+    List<AzureArtifactsPackage> packages =
+        buildSourceService.getPackages(SETTING_ID, null, "FEED", ProtocolType.maven.name());
+    assertThat(packages).isNotEmpty();
+    assertThat(packages).hasSize(1).extracting(AzureArtifactsPackage::getId).containsExactly("id1");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldNotGetPackagesForNonAzureArtifacts() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(BambooConfig.builder().build())
+                                            .build();
+
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(bambooBuildService);
+
+    List<AzureArtifactsPackage> packages =
+        buildSourceService.getPackages(SETTING_ID, null, "FEED", ProtocolType.maven.name());
+    assertThat(packages).isEmpty();
   }
 }

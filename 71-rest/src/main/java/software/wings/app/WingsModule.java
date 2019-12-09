@@ -75,6 +75,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.LoginSettingsServiceImpl;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.trigger.Condition.Type;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -382,6 +383,7 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.AwsMarketPlaceApiHandler;
+import software.wings.service.intfc.AzureArtifactsBuildService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BarrierService;
@@ -790,6 +792,7 @@ public class WingsModule extends DependencyModule {
     buildServiceMapBinder.addBinding(ArtifactoryConfig.class).toInstance(ArtifactoryBuildService.class);
     buildServiceMapBinder.addBinding(SmbConfig.class).toInstance(SmbBuildService.class);
     buildServiceMapBinder.addBinding(SftpConfig.class).toInstance(SftpBuildService.class);
+    buildServiceMapBinder.addBinding(AzureArtifactsPATConfig.class).toInstance(AzureArtifactsBuildService.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 

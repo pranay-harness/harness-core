@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,7 @@ import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTA
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -78,6 +80,8 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
@@ -116,6 +120,11 @@ import javax.ws.rs.NotFoundException;
 public class ArtifactStreamServiceTest extends WingsBaseTest {
   private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   private static final String ANOTHER_SETTING_ID = "ANOTHER_SETTING_ID";
+  private static final String FEED = "FEED";
+  private static final String PACKAGE_ID = "PACKAGE_ID";
+  private static final String PACKAGE_NAME_MAVEN = "GROUP_ID:ARTIFACT_ID";
+  private static final String PACKAGE_NAME_NUGET = "PACKAGE_NAME";
+
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
   @Mock private YamlPushService yamlPushService;
   @Mock private AppService appService;
@@ -2114,6 +2123,137 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedAcrArtifactStream.getRegistryHostName()).isEqualTo("harnessprod.azurecr.io");
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldAddAzureArtifactsArtifactStream() {
+    AzureArtifactsArtifactStream azureArtifactsArtifactStream =
+        prepareAzureArtifactsArtifactStream(APP_ID, ProtocolType.maven);
+    ArtifactStream savedArtifactSteam = createAzureArtifactsArtifactStream(azureArtifactsArtifactStream, APP_ID);
+    AzureArtifactsArtifactStream savedAzureArtifactsArtifactStream = (AzureArtifactsArtifactStream) savedArtifactSteam;
+    assertThat(savedAzureArtifactsArtifactStream.getPackageName()).isEqualTo(PACKAGE_NAME_MAVEN);
+    verify(appService).getAccountIdByAppId(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldAddAzureArtifactsArtifactStreamAtConnectorLevel() {
+    AzureArtifactsArtifactStream azureArtifactsArtifactStream =
+        prepareAzureArtifactsArtifactStream(GLOBAL_APP_ID, ProtocolType.maven);
+    ArtifactStream savedArtifactSteam = createAzureArtifactsArtifactStream(azureArtifactsArtifactStream, GLOBAL_APP_ID);
+    AzureArtifactsArtifactStream savedAzureArtifactsArtifactStream = (AzureArtifactsArtifactStream) savedArtifactSteam;
+    assertThat(savedAzureArtifactsArtifactStream.getPackageName()).isEqualTo(PACKAGE_NAME_MAVEN);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldUpdateAzureArtifactsArtifactStream() {
+    AzureArtifactsArtifactStream azureArtifactsArtifactStream =
+        prepareAzureArtifactsArtifactStream(APP_ID, ProtocolType.maven);
+    ArtifactStream savedArtifactSteam = createAzureArtifactsArtifactStream(azureArtifactsArtifactStream, APP_ID);
+    updateAndValidateAzureArtifactsArtifactStream((AzureArtifactsArtifactStream) savedArtifactSteam, APP_ID);
+    verify(appService, times(2)).getAccountIdByAppId(APP_ID);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(azureArtifactsArtifactStream);
+    verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldUpdateAzureArtifactsArtifactStreamAtConnectorLevel() {
+    AzureArtifactsArtifactStream azureArtifactsArtifactStream =
+        prepareAzureArtifactsArtifactStream(GLOBAL_APP_ID, ProtocolType.maven);
+    ArtifactStream savedArtifactSteam = createAzureArtifactsArtifactStream(azureArtifactsArtifactStream, GLOBAL_APP_ID);
+    updateAndValidateAzureArtifactsArtifactStream((AzureArtifactsArtifactStream) savedArtifactSteam, GLOBAL_APP_ID);
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
+    verify(artifactService).deleteWhenArtifactSourceNameChanged(azureArtifactsArtifactStream);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateProtocolTypeAzureArtifactsArtifactStream() {
+    AzureArtifactsArtifactStream azureArtifactsArtifactStream =
+        prepareAzureArtifactsArtifactStream(APP_ID, ProtocolType.maven);
+    ArtifactStream savedArtifactSteam = createAzureArtifactsArtifactStream(azureArtifactsArtifactStream, APP_ID);
+    AzureArtifactsArtifactStream savedAzureArtifactsArtifactStream = (AzureArtifactsArtifactStream) savedArtifactSteam;
+    savedAzureArtifactsArtifactStream.setProtocolType(ProtocolType.nuget.name());
+    savedAzureArtifactsArtifactStream.setPackageName(PACKAGE_NAME_NUGET);
+    artifactStreamService.update(savedAzureArtifactsArtifactStream);
+  }
+
+  private AzureArtifactsArtifactStream prepareAzureArtifactsArtifactStream(String appId, ProtocolType protocolType) {
+    AzureArtifactsArtifactStream azureArtifactsArtifactStream = AzureArtifactsArtifactStream.builder()
+                                                                    .accountId(ACCOUNT_ID)
+                                                                    .appId(appId)
+                                                                    .settingId(SETTING_ID)
+                                                                    .autoPopulate(true)
+                                                                    .serviceId(SERVICE_ID)
+                                                                    .protocolType(protocolType.name())
+                                                                    .project(null)
+                                                                    .feed(FEED)
+                                                                    .packageId(PACKAGE_ID)
+                                                                    .build();
+    if (ProtocolType.maven.equals(protocolType)) {
+      azureArtifactsArtifactStream.setPackageName(PACKAGE_NAME_MAVEN);
+    } else if (ProtocolType.nuget.equals(protocolType)) {
+      azureArtifactsArtifactStream.setPackageName(PACKAGE_NAME_NUGET);
+    }
+    return azureArtifactsArtifactStream;
+  }
+
+  private ArtifactStream createAzureArtifactsArtifactStream(
+      AzureArtifactsArtifactStream azureArtifactsArtifactStream, String appId) {
+    ArtifactStream savedArtifactSteam = createArtifactStream(azureArtifactsArtifactStream);
+    return validateAzureArtifactsArtifactStream(savedArtifactSteam, appId);
+  }
+
+  private void updateAndValidateAzureArtifactsArtifactStream(
+      AzureArtifactsArtifactStream savedAzureArtifactsArtifactStream, String appId) {
+    String protocolType = savedAzureArtifactsArtifactStream.getProtocolType();
+    if (ProtocolType.maven.name().equals(protocolType) || ProtocolType.nuget.name().equals(protocolType)) {
+      savedAzureArtifactsArtifactStream.setPackageName(savedAzureArtifactsArtifactStream.getPackageName() + "_tmp");
+    }
+    ArtifactStream updatedArtifactStream = artifactStreamService.update(savedAzureArtifactsArtifactStream);
+    validateUpdatedAzureArtifactsArtifactStream(updatedArtifactStream, appId);
+  }
+
+  private ArtifactStream validateAzureArtifactsArtifactStream(ArtifactStream savedArtifactStream, String appId) {
+    assertThat(savedArtifactStream.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(savedArtifactStream.getUuid()).isNotEmpty();
+    assertThat(savedArtifactStream.getName()).isNotEmpty();
+    assertThat(savedArtifactStream.getArtifactStreamType()).isEqualTo(AZURE_ARTIFACTS.name());
+    assertThat(savedArtifactStream.getAppId()).isEqualTo(appId);
+    assertThat(savedArtifactStream).isInstanceOf(AzureArtifactsArtifactStream.class);
+    ArtifactStreamAttributes artifactStreamAttributes = savedArtifactStream.fetchArtifactStreamAttributes();
+    assertThat(artifactStreamAttributes.getArtifactStreamType()).isEqualTo(AZURE_ARTIFACTS.name());
+    assertThat(artifactStreamAttributes.getProtocolType()).isIn(ProtocolType.maven.name(), ProtocolType.nuget.name());
+    assertThat(artifactStreamAttributes.getFeed()).isNotBlank();
+    assertThat(artifactStreamAttributes.getPackageId()).isNotBlank();
+    if (ProtocolType.maven.name().equals(artifactStreamAttributes.getProtocolType())
+        || ProtocolType.nuget.name().equals(artifactStreamAttributes.getProtocolType())) {
+      assertThat(artifactStreamAttributes.getPackageName()).isNotBlank();
+    }
+    assertThat(savedArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
+    return savedArtifactStream;
+  }
+
+  private void validateUpdatedAzureArtifactsArtifactStream(ArtifactStream updatedArtifactStream, String appId) {
+    validateAzureArtifactsArtifactStream(updatedArtifactStream, appId);
+    ArtifactStreamAttributes artifactStreamAttributes = updatedArtifactStream.fetchArtifactStreamAttributes();
+    String protocolType = artifactStreamAttributes.getProtocolType();
+    if (ProtocolType.maven.name().equals(protocolType) || ProtocolType.nuget.name().equals(protocolType)) {
+      assertThat(artifactStreamAttributes.getPackageName()).endsWith("_tmp");
+    }
   }
 
   @Test

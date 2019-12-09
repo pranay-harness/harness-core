@@ -384,7 +384,6 @@ public class SettingsServiceImpl implements SettingsService {
 
       helmRepoSettingAttributes.forEach(settingAttribute -> {
         String cloudProviderId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
-
         if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)) {
           UsageRestrictions usageRestrictionsFromEntity = cloudProvidersMap.get(cloudProviderId).getUsageRestrictions();
 
@@ -423,15 +422,12 @@ public class SettingsServiceImpl implements SettingsService {
 
   private UsageRestrictions getUsageRestriction(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
-
     if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
       String cloudProviderId = ((HelmRepoConfig) settingValue).getConnectorId();
-
       SettingAttribute cloudProvider = get(settingAttribute.getAppId(), cloudProviderId);
       if (cloudProvider == null) {
         throw new InvalidRequestException("Cloud provider doesn't exist", USER);
       }
-
       return cloudProvider.getUsageRestrictions();
     } else {
       return settingAttribute.getUsageRestrictions();
@@ -488,6 +484,7 @@ public class SettingsServiceImpl implements SettingsService {
       case AMAZON_S3_HELM_REPO:
       case GCS_HELM_REPO:
       case HTTP_HELM_REPO:
+      case AZURE_ARTIFACTS_PAT:
         return true;
       default:
         return false;
@@ -831,6 +828,8 @@ public class SettingsServiceImpl implements SettingsService {
       ensureConnectorSafeToDelete(settingAttribute);
     } else if (settingAttribute.getCategory().equals(SettingCategory.SETTING)) {
       ensureSettingSafeToDelete(settingAttribute);
+    } else if (settingAttribute.getCategory().equals(SettingCategory.AZURE_ARTIFACTS)) {
+      ensureAzureArtifactsConnectorSafeToDelete(settingAttribute);
     }
   }
 
@@ -937,6 +936,26 @@ public class SettingsServiceImpl implements SettingsService {
       }
     }
     // TODO:: workflow scan for finding out usage in Steps ???
+  }
+
+  private void ensureAzureArtifactsConnectorSafeToDelete(SettingAttribute connectorSetting) {
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, connectorSetting.getAccountId())) {
+      return;
+    }
+
+    List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(connectorSetting.getUuid());
+    if (isEmpty(artifactStreams)) {
+      return;
+    }
+
+    List<String> artifactStreamNames = artifactStreams.stream()
+                                           .map(ArtifactStream::getSourceName)
+                                           .filter(java.util.Objects::nonNull)
+                                           .collect(toList());
+    throw new InvalidRequestException(
+        format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
+            artifactStreamNames.size(), plural("Source", artifactStreamNames.size()), join(", ", artifactStreamNames)),
+        USER);
   }
 
   /* (non-Javadoc)

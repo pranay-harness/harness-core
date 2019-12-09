@@ -56,6 +56,7 @@ import software.wings.delegatetasks.aws.ecs.EcsCommandTask;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
+import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
@@ -76,6 +77,7 @@ import software.wings.delegatetasks.validation.AlwaysTrueValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.AwsConnectionValidation;
+import software.wings.delegatetasks.validation.AzureArtifactsValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
 import software.wings.delegatetasks.validation.BuildSourceTaskValidation;
 import software.wings.delegatetasks.validation.CollaborationProviderTaskValidation;
@@ -186,6 +188,18 @@ public enum TaskType {
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
+  AZURE_ARTIFACTS_VALIDATE_ARTIFACT_SERVER(
+      TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
+  AZURE_ARTIFACTS_VALIDATE_ARTIFACT_STREAM(
+      TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
+  AZURE_ARTIFACTS_GET_BUILDS(TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
+  AZURE_ARTIFACTS_GET_PROJECTS(
+      TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
+  AZURE_ARTIFACTS_GET_FEEDS(TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
+  AZURE_ARTIFACTS_GET_PACKAGES(
+      TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
+  AZURE_ARTIFACTS_COLLECTION(
+      TaskGroup.AZURE_ARTIFACTS, AzureArtifactsCollectionTask.class, AzureArtifactsValidation.class),
   LDAP_TEST_CONN_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
   LDAP_TEST_USER_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
   LDAP_TEST_GROUP_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),

@@ -1,7 +1,9 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
@@ -9,10 +11,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.UnknownArtifactStreamTypeException;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
@@ -21,16 +24,21 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Helper class that has common collection logic that's used by all the artifact collection tasks.
@@ -43,6 +51,7 @@ public class ArtifactCollectionTaskHelper {
   @Inject private AmazonS3Service amazonS3Service;
   @Inject private DelegateLogService logService;
   @Inject private ArtifactoryService artifactoryService;
+  @Inject private AzureArtifactsService azureArtifactsService;
 
   public void addDataToResponse(Pair<String, InputStream> fileInfo, String artifactPath, ListNotifyResponseData res,
       String delegateId, String taskId, String accountId) throws FileNotFoundException {
@@ -78,7 +87,9 @@ public class ArtifactCollectionTaskHelper {
       String accountId, String appId, String activityId, String commandUnitName, String hostName) {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
     Pair<String, InputStream> pair;
-    switch (ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType())) {
+    ArtifactStreamType artifactStreamType =
+        ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType());
+    switch (artifactStreamType) {
       case AMAZON_S3:
         logger.info("Downloading artifact [{}] from bucket :[{}]", metadata.get(ArtifactMetadataKeys.artifactFileName),
             metadata.get(ArtifactMetadataKeys.bucketName));
@@ -124,13 +135,35 @@ public class ArtifactCollectionTaskHelper {
               FAILURE, accountId, appId, activityId, commandUnitName, hostName);
         }
         return pair;
-      default: { throw new WingsException(ErrorCode.UNKNOWN_ARTIFACT_TYPE); }
+      case AZURE_ARTIFACTS:
+        logger.info("Downloading artifact [{}] from azure artifacts with version: [{}]",
+            metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.version));
+        saveExecutionLog("Metadata only option set for AZURE ARTIFACTS. Starting download of artifact: "
+                + metadata.get(ArtifactMetadataKeys.artifactFileName),
+            RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+        pair = azureArtifactsService.downloadArtifact(
+            (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue(),
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes, metadata);
+        if (pair != null) {
+          saveExecutionLog(
+              "AZURE ARTIFACTS: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName),
+              RUNNING, accountId, appId, activityId, commandUnitName, hostName);
+        } else {
+          saveExecutionLog(
+              "AZURE ARTIFACTS: Download failed for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName),
+              FAILURE, accountId, appId, activityId, commandUnitName, hostName);
+        }
+        return pair;
+      default:
+        throw new UnknownArtifactStreamTypeException(artifactStreamType.name());
     }
   }
 
   public Long getArtifactFileSize(ArtifactStreamAttributes artifactStreamAttributes) {
     Map<String, String> metadata = artifactStreamAttributes.getMetadata();
-    switch (ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType())) {
+    ArtifactStreamType artifactStreamType =
+        ArtifactStreamType.valueOf(artifactStreamAttributes.getArtifactStreamType());
+    switch (artifactStreamType) {
       case AMAZON_S3:
         logger.info("Getting artifact file size for artifact " + metadata.get(ArtifactMetadataKeys.artifactFileName)
             + " in bucket: " + metadata.get(ArtifactMetadataKeys.bucketName)
@@ -143,7 +176,33 @@ public class ArtifactCollectionTaskHelper {
         return artifactoryService.getFileSize(
             (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
             artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getMetadata());
-      default: { throw new WingsException(ErrorCode.UNKNOWN_ARTIFACT_TYPE); }
+      case AZURE_ARTIFACTS:
+        logger.info("Getting artifact file size for artifact: " + metadata.get(ArtifactMetadataKeys.version));
+        if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileName)
+            || isBlank(metadata.get(ArtifactMetadataKeys.artifactFileName))) {
+          throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
+        }
+
+        List<AzureArtifactsPackageFileInfo> fileInfos = azureArtifactsService.listFiles(
+            (AzureArtifactsConfig) artifactStreamAttributes.getServerSetting().getValue(),
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes,
+            artifactStreamAttributes.getMetadata(), false);
+        if (isEmpty(fileInfos)) {
+          throw new InvalidArgumentsException(ImmutablePair.of(
+              ArtifactMetadataKeys.version, metadata.getOrDefault(ArtifactMetadataKeys.version, "unknown")));
+        }
+
+        String fileName = metadata.get(ArtifactMetadataKeys.artifactFileName);
+        Optional<AzureArtifactsPackageFileInfo> optional =
+            fileInfos.stream().filter(fileInfo -> fileName.equals(fileInfo.getName())).findFirst();
+        if (!optional.isPresent()) {
+          throw new InvalidArgumentsException(ImmutablePair.of(
+              ArtifactMetadataKeys.version, metadata.getOrDefault(ArtifactMetadataKeys.version, "unknown")));
+        }
+
+        return optional.get().getSize();
+      default:
+        throw new UnknownArtifactStreamTypeException(artifactStreamType.name());
     }
   }
 

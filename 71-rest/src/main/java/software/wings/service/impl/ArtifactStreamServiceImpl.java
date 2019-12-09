@@ -19,6 +19,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -81,6 +82,7 @@ import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactSummary;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactSourceable;
@@ -296,7 +298,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         artifactStreamQuery.and(
             artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
                 .in(asList(JENKINS.name(), BAMBOO.name(), GCS.name(), NEXUS.name(), ARTIFACTORY.name(),
-                    AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(), CUSTOM.name())),
+                    AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(), AZURE_ARTIFACTS.name(), CUSTOM.name())),
             artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryFormat).notEqual(RepositoryFormat.docker.name()),
             artifactStreamQuery.criteria(ArtifactStreamKeys.repositoryType)
                 .notEqual(RepositoryType.docker.name())); // TODO: verify this
@@ -305,7 +307,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         artifactStreamQuery.criteria(ArtifactStreamKeys.artifactStreamType)
             .in(asList(ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), JENKINS.name(),
                 BAMBOO.name(), GCS.name(), NEXUS.name(), ARTIFACTORY.name(), AMAZON_S3.name(), SMB.name(), AMI.name(),
-                SFTP.name(), CUSTOM.name()));
+                SFTP.name(), AZURE_ARTIFACTS.name(), CUSTOM.name()));
         break;
       default:
         throw new InvalidRequestException(format("Unsupported artifact type: [%s]", artifactType.name()));
@@ -345,7 +347,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         artifactStreamPageRequest.addFilter("", Operator.AND,
             createSearchFilter(ArtifactStreamKeys.artifactStreamType, Operator.IN, JENKINS.name(), BAMBOO.name(),
                 GCS.name(), NEXUS.name(), ARTIFACTORY.name(), AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(),
-                CUSTOM.name()),
+                AZURE_ARTIFACTS.name(), CUSTOM.name()),
             createSearchFilter(ArtifactStreamKeys.repositoryFormat, Operator.NOT_EQ, RepositoryFormat.docker.name()),
             createSearchFilter(
                 ArtifactStreamKeys.repositoryType, Operator.NOT_EQ, RepositoryType.docker.name())); // TODO: verify this
@@ -354,7 +356,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         artifactStreamPageRequest.addFilter(ArtifactStreamKeys.artifactStreamType, Operator.IN,
             ArtifactStreamType.DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), JENKINS.name(), BAMBOO.name(),
             GCS.name(), NEXUS.name(), ARTIFACTORY.name(), AMAZON_S3.name(), SMB.name(), AMI.name(), SFTP.name(),
-            CUSTOM.name());
+            AZURE_ARTIFACTS.name(), CUSTOM.name());
         break;
       default:
         throw new InvalidRequestException(format("Unsupported artifact type: [%s]", artifactType.name()));
@@ -435,7 +437,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     addAcrHostNameIfNeeded(artifactStream);
 
-    // Set metadata-only field for nexus.
+    // Set metadata-only field for nexus and azure artifacts.
     setMetadataOnly(artifactStream);
     // Add keywords.
     artifactStream.setKeywords(trimmedLowercaseSet(artifactStream.generateKeywords()));
@@ -535,18 +537,20 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       artifactStream.setAccountId(existingArtifactStream.getAccountId());
     }
 
+    setMetadataOnly(artifactStream);
     if (artifactStream.isMetadataOnly() != existingArtifactStream.isMetadataOnly()) {
       throw new InvalidRequestException("Artifact Stream's metadata-only property cannot be changed", USER);
     }
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
 
-    // for artifactory
+    // For artifactory.
     validateRepositoryType(artifactStream, existingArtifactStream);
-    // for nexus
+    // For nexus.
     validateRepositoryFormat(artifactStream, existingArtifactStream);
     validateExtensionAndClassifier(artifactStream, existingArtifactStream);
-    setMetadataOnly(artifactStream);
+    // For azure artifacts.
+    validateProtocolType(artifactStream, existingArtifactStream);
 
     boolean versionChanged = false;
     List<Variable> oldTemplateVariables = existingArtifactStream.getTemplateVariables();
@@ -679,12 +683,27 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
   }
 
-  // TODO: move this to NexusArtifactStream instead of handling here
+  private void validateProtocolType(ArtifactStream artifactStream, ArtifactStream existingArtifactStream) {
+    if (artifactStream != null && existingArtifactStream != null) {
+      if (artifactStream.getArtifactStreamType().equals(AZURE_ARTIFACTS.name())) {
+        if (!((AzureArtifactsArtifactStream) artifactStream)
+                 .getProtocolType()
+                 .equals(((AzureArtifactsArtifactStream) existingArtifactStream).getProtocolType())) {
+          throw new InvalidRequestException("Protocol type cannot be updated", USER);
+        }
+      }
+    }
+  }
+
+  // TODO: move this to individual ArtifactStream classes instead of handling here
   private void setMetadataOnly(ArtifactStream artifactStream) {
     if (artifactStream != null && artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
       if (RepositoryFormat.docker.name().equals(((NexusArtifactStream) artifactStream).getRepositoryFormat())) {
         artifactStream.setMetadataOnly(true);
       }
+    }
+    if (artifactStream != null && AZURE_ARTIFACTS.name().equals(artifactStream.getArtifactStreamType())) {
+      artifactStream.setMetadataOnly(true);
     }
   }
 
@@ -721,6 +740,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case SFTP:
       case JENKINS:
       case BAMBOO:
+      case AZURE_ARTIFACTS:
         return oldArtifactStream.artifactSourceChanged(updatedArtifactStream);
 
       default:
@@ -733,7 +753,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String artifactStreamType = artifactStream.getArtifactStreamType();
     if (DOCKER.name().equals(artifactStreamType) || ECR.name().equals(artifactStreamType)
         || GCR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
-        || ARTIFACTORY.name().equals(artifactStreamType) || NEXUS.name().equals(artifactStreamType)) {
+        || ARTIFACTORY.name().equals(artifactStreamType) || NEXUS.name().equals(artifactStreamType)
+        || AZURE_ARTIFACTS.name().equals(artifactStreamType)) {
       if (artifactStream.shouldValidate()) {
         buildSourceService.validateArtifactSource(
             artifactStream.fetchAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
@@ -950,6 +971,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
               .put(AMI.name(), AMI.name())
               .put(SFTP.name(), SFTP.name())
               .put(CUSTOM.name(), CUSTOM.name());
+      if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, appService.getAccountIdByAppId(appId))) {
+        builder.put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name());
+      }
       return builder.build();
     }
 
@@ -965,6 +989,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .put(AMI.name(), AMI.name())
             .put(SFTP.name(), SFTP.name())
             .put(CUSTOM.name(), CUSTOM.name());
+    if (featureFlagService.isEnabled(FeatureName.AZURE_ARTIFACTS, appService.getAccountIdByAppId(appId))) {
+      builder.put(AZURE_ARTIFACTS.name(), AZURE_ARTIFACTS.name());
+    }
     return builder.build();
   }
 

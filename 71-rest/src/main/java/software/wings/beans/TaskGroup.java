@@ -25,6 +25,7 @@ public enum TaskGroup {
   ACR,
   NEXUS,
   S3,
+  AZURE_ARTIFACTS,
   ELK,
   LOGZ,
   SUMO,

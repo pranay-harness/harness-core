@@ -10,6 +10,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNA
 import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE_ARTIFACTS_PAT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BUG_SNAG;
@@ -129,7 +130,9 @@ public class SettingAttribute extends Base implements NameAccess {
     SETTING(Lists.newArrayList(
         HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING, WINRM_CONNECTION_ATTRIBUTES)),
 
-    HELM_REPO(Lists.newArrayList(HTTP_HELM_REPO, AMAZON_S3_HELM_REPO, GCS_HELM_REPO));
+    HELM_REPO(Lists.newArrayList(HTTP_HELM_REPO, AMAZON_S3_HELM_REPO, GCS_HELM_REPO)),
+
+    AZURE_ARTIFACTS(Lists.newArrayList(AZURE_ARTIFACTS_PAT));
 
     @Getter private List<SettingVariableTypes> settingVariableTypes;
 
