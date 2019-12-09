@@ -113,6 +113,7 @@ public class AccountChangeHandler implements EventHandler {
     DummySystemUser user = new DummySystemUser(accountId, account.getAccountName());
 
     double usage = InstanceStatsUtils.actualUsage(accountId, instanceStatService);
+    double currentUsage = InstanceStatsUtils.currentActualUsage(accountId, instanceStatService);
     String env = System.getenv("ENV");
     LicenseInfo licenseInfo = account.getLicenseInfo();
     String accountType = licenseInfo != null ? licenseInfo.getAccountType() : null;
@@ -148,8 +149,10 @@ public class AccountChangeHandler implements EventHandler {
             .put("is_global", isGlobal)
             .put("user_count", count)
             .put("service_count", getCountOfServicesInAccount(account))
+            .put("usage_service_instances_current", currentUsage)
             .build();
     logger.info("Enqueuing group event. accountId={} traits={}", accountId, groupTraits);
+
     // group
     segmentHelper.enqueue(GroupMessage.builder(accountId).userId(user.getId()).traits(groupTraits));
   }

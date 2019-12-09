@@ -16,4 +16,8 @@ public class InstanceStatsUtils {
     Instant from = now.minus(30, ChronoUnit.DAYS);
     return instanceStatService.percentile(accountId, from, now, DashboardStatisticsResource.DEFAULT_PERCENTILE);
   }
+
+  public static double currentActualUsage(String accountId, InstanceStatService instanceStatService) {
+    return instanceStatService.currentCount(accountId);
+  }
 }

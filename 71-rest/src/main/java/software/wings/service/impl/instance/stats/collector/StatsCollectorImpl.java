@@ -115,17 +115,17 @@ public class StatsCollectorImpl implements StatsCollector {
     return value;
   }
 
-  boolean createStats(String accountId, Instant timesamp) {
+  boolean createStats(String accountId, Instant timestamp) {
     List<Instance> instances = null;
     try {
-      instances = dashboardStatisticsService.getAppInstancesForAccount(accountId, timesamp.toEpochMilli());
-      log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timesamp);
+      instances = dashboardStatisticsService.getAppInstancesForAccount(accountId, timestamp.toEpochMilli());
+      log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timestamp);
 
-      Mapper<Collection<Instance>, InstanceStatsSnapshot> instanceMapper = new InstanceMapper(timesamp, accountId);
+      Mapper<Collection<Instance>, InstanceStatsSnapshot> instanceMapper = new InstanceMapper(timestamp, accountId);
       InstanceStatsSnapshot stats = instanceMapper.map(instances);
       boolean saved = statService.save(stats);
       if (!saved) {
-        log.error("Error saving instance usage stats. AccountId: {}, Timestamp: {}", accountId, timesamp);
+        log.error("Error saving instance usage stats. AccountId: {}, Timestamp: {}", accountId, timestamp);
       }
 
       return saved;
@@ -135,9 +135,10 @@ public class StatsCollectorImpl implements StatsCollector {
       return false;
     } finally {
       try {
-        usageMetricsEventPublisher.publishInstanceTimeSeries(accountId, timesamp.toEpochMilli(), instances);
+        usageMetricsEventPublisher.publishInstanceTimeSeries(accountId, timestamp.toEpochMilli(), instances);
       } catch (Exception e) {
-        log.error("Error while publishing metrics for account {}, timestamp {}", accountId, timesamp.toEpochMilli(), e);
+        log.error(
+            "Error while publishing metrics for account {}, timestamp {}", accountId, timestamp.toEpochMilli(), e);
       }
     }
   }
