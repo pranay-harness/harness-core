@@ -84,6 +84,206 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail1() {
+    setup();
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId@!#)(*@!", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail2() {
+    setup();
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name)(*&@!#^)", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail3() {
+    setup();
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId", "region!@#*(&$!@", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail4() {
+    setup();
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId", "region", "keyRingOP@#!I#!@UO", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail5() {
+    setup();
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig =
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName)_@!#(*", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail6() {
+    setup();
+    char[] credentials = "{\"credentials\":".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+      logger.error(e.getMessage(), e);
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail7() {
+    setup();
+    char[] credentials = "".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+      logger.error(e.getMessage(), e);
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testSaveGcpKmsConfig_ShouldFail8() {
+    setup();
+    char[] credentials = "".toCharArray();
+
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String result = null;
+    try {
+      result = gcpSecretsManagerService.saveGcpKmsConfig(UUIDGenerator.generateUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+      logger.error(e.getMessage(), e);
+    }
+    assertThat(result).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
   public void testUpdateGcpKmsConfig() {
     setup();
     String credentialsString = "{\"credentials\":\"abc\"}";
@@ -133,6 +333,57 @@ public class GcpSecretManagerServiceTest extends WingsBaseTest {
     assertThat(updatedGcpKmsConfig.isDefault()).isEqualTo(updateGcpKmsConfig.isDefault());
     assertThat(updatedGcpKmsConfig.getProjectId()).isEqualTo(gcpKmsConfig.getProjectId());
     assertThat(String.valueOf(updatedGcpKmsConfig.getCredentials())).isEqualTo(newCredentialsString);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testUpdateGcpKmsConfig_ShouldFail1() {
+    setup();
+    String credentialsString = "{\"credentials\":\"abc\"}";
+    char[] credentials = credentialsString.toCharArray();
+
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String configId = null;
+    try {
+      configId = gcpSecretsManagerService.updateGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(configId).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testUpdateGcpKmsConfig_ShouldFail2() {
+    setup();
+    String credentialsString = "{\"credentials\":\"abc\"}";
+    char[] credentials = credentialsString.toCharArray();
+
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig("name1", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(account.getUuid());
+    gcpKmsConfig.setDefault(true);
+    gcpKmsConfig.setUuid(UUIDGenerator.generateUuid());
+
+    when(accountService.get(account.getUuid())).thenReturn(account);
+    when(gcpKmsService.encrypt(any(), eq(account.getUuid()), eq(gcpKmsConfig), eq(null))).thenReturn(null);
+
+    String configId = null;
+    try {
+      configId = gcpSecretsManagerService.updateGcpKmsConfig(account.getUuid(), gcpKmsConfig);
+    } catch (SecretManagementException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(configId).isNull();
   }
 
   @Test

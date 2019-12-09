@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.cloud.kms.v1.CryptoKeyName;
@@ -20,6 +22,7 @@ import com.google.protobuf.ByteString;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -32,8 +35,11 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import software.wings.WingsBaseTest;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.SecretManagementDelegateException;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.nio.charset.StandardCharsets;
 
@@ -41,7 +47,7 @@ import java.nio.charset.StandardCharsets;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({GcpKmsEncryptDecryptClient.class, KeyManagementServiceClient.class})
 @PowerMockIgnore({"org.apache.http.conn.ssl.", "javax.net.ssl.", "javax.crypto.*"})
-public class GcpKmsEncryptDecryptClientTest {
+public class GcpKmsEncryptDecryptClientTest extends WingsBaseTest {
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
   private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
   private GcpKmsConfig gcpKmsConfig;
@@ -51,7 +57,8 @@ public class GcpKmsEncryptDecryptClientTest {
   @Category(UnitTests.class)
   public void testEncryptDecrypt() {
     gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
-    gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", "credentials".toCharArray());
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+    gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
     gcpKmsConfig.setUuid(UUIDGenerator.generateUuid());
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
@@ -67,7 +74,7 @@ public class GcpKmsEncryptDecryptClientTest {
             .build();
     String resourceName = CryptoKeyName.format(
         gcpKmsConfig.getProjectId(), gcpKmsConfig.getRegion(), gcpKmsConfig.getKeyRing(), gcpKmsConfig.getKeyName());
-    doReturn(keyManagementServiceClient).when(gcpKmsEncryptDecryptClient).getClient(gcpKmsConfig);
+    doReturn(keyManagementServiceClient).when(gcpKmsEncryptDecryptClient).getClientInternal(any());
 
     // Encryption Test
     PowerMockito.when(keyManagementServiceClient.encrypt(eq(resourceName), any(ByteString.class)))
@@ -90,5 +97,121 @@ public class GcpKmsEncryptDecryptClientTest {
     PowerMockito.when(keyManagementServiceClient.decrypt(eq(resourceName), any())).thenReturn(decryptResponse);
     char[] decryptedValue = gcpKmsEncryptDecryptClient.decrypt(encryptedData, gcpKmsConfig);
     assertThat(String.valueOf(decryptedValue)).isEqualTo(plainTextValue);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testEncrypt_ShouldFail1() {
+    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
+
+    String plainTextValue = "value";
+
+    EncryptedRecord encryptedRecord = null;
+    try {
+      encryptedRecord = gcpKmsEncryptDecryptClient.encrypt(plainTextValue, GLOBAL_ACCOUNT_ID, null, null);
+    } catch (SecretManagementDelegateException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(encryptedRecord).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testEncrypt_ShouldFail2() {
+    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+    gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setUuid(UUIDGenerator.generateUuid());
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
+    gcpKmsConfig.setDefault(true);
+
+    String plainTextValue = "value";
+
+    KeyManagementServiceClient keyManagementServiceClient = PowerMockito.mock(KeyManagementServiceClient.class);
+    String resourceName = CryptoKeyName.format(
+        gcpKmsConfig.getProjectId(), gcpKmsConfig.getRegion(), gcpKmsConfig.getKeyRing(), gcpKmsConfig.getKeyName());
+    doReturn(keyManagementServiceClient).when(gcpKmsEncryptDecryptClient).getClientInternal(any());
+
+    // Encryption Test
+    PowerMockito.when(keyManagementServiceClient.encrypt(eq(resourceName), any(ByteString.class)))
+        .thenThrow(new RuntimeException());
+    EncryptedRecord encryptedRecord = null;
+    try {
+      encryptedRecord = gcpKmsEncryptDecryptClient.encrypt(plainTextValue, GLOBAL_ACCOUNT_ID, gcpKmsConfig, null);
+    } catch (DelegateRetryableException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(encryptedRecord).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testDecrypt_ShouldFail1() {
+    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
+
+    EncryptedData encryptedData = mock(EncryptedData.class);
+    when(encryptedData.getEncryptedValue()).thenReturn(null);
+    char[] plainText = gcpKmsEncryptDecryptClient.decrypt(encryptedData, gcpKmsConfig);
+    assertThat(plainText).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testDecrypt_ShouldFail2() {
+    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
+
+    EncryptedData encryptedData = mock(EncryptedData.class);
+    when(encryptedData.getEncryptedValue()).thenReturn("encryptedValue".toCharArray());
+    char[] plainText = null;
+    try {
+      plainText = gcpKmsEncryptDecryptClient.decrypt(encryptedData, null);
+    } catch (SecretManagementDelegateException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(plainText).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void testDecrypt_ShoudFail3() {
+    gcpKmsEncryptDecryptClient = spy(new GcpKmsEncryptDecryptClient(timeLimiter));
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+    gcpKmsConfig = new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+    gcpKmsConfig.setUuid(UUIDGenerator.generateUuid());
+    gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
+    gcpKmsConfig.setAccountId(GLOBAL_ACCOUNT_ID);
+    gcpKmsConfig.setDefault(true);
+
+    EncryptedData encryptedData = EncryptedData.builder()
+                                      .accountId(GLOBAL_ACCOUNT_ID)
+                                      .enabled(true)
+                                      .kmsId(gcpKmsConfig.getUuid())
+                                      .encryptionType(EncryptionType.GCP_KMS)
+                                      .encryptionKey("Dummy Key")
+                                      .encryptedValue("Dummy Value".toCharArray())
+                                      .base64Encoded(false)
+                                      .name("Dummy record")
+                                      .type(SettingVariableTypes.GCP_KMS)
+                                      .build();
+    encryptedData.setUuid(UUIDGenerator.generateUuid());
+
+    KeyManagementServiceClient keyManagementServiceClient = PowerMockito.mock(KeyManagementServiceClient.class);
+    doReturn(keyManagementServiceClient).when(gcpKmsEncryptDecryptClient).getClientInternal(any());
+    String resourceName = CryptoKeyName.format(
+        gcpKmsConfig.getProjectId(), gcpKmsConfig.getRegion(), gcpKmsConfig.getKeyRing(), gcpKmsConfig.getKeyName());
+    PowerMockito.when(keyManagementServiceClient.decrypt(eq(resourceName), any())).thenThrow(new RuntimeException());
+    char[] decryptedValue = null;
+    try {
+      decryptedValue = gcpKmsEncryptDecryptClient.decrypt(encryptedData, gcpKmsConfig);
+    } catch (DelegateRetryableException e) {
+      assertThat(e).isNotNull();
+    }
+    assertThat(decryptedValue).isNullOrEmpty();
   }
 }

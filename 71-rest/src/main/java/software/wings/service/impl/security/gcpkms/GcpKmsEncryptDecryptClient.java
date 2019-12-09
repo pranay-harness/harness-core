@@ -251,8 +251,7 @@ public class GcpKmsEncryptDecryptClient {
     return simpleEncryption.decrypt(encryptedPlainTextKey);
   }
 
-  @VisibleForTesting
-  KeyManagementServiceClient getClient(GcpKmsConfig gcpKmsConfig) {
+  private KeyManagementServiceClient getClient(GcpKmsConfig gcpKmsConfig) {
     Preconditions.checkNotNull(gcpKmsConfig.getCredentials(), "credentials are not provided");
     Preconditions.checkNotNull(gcpKmsConfig.getRegion(), "region is not present");
     Preconditions.checkNotNull(gcpKmsConfig.getProjectId(), "projectId is not present");
@@ -260,6 +259,11 @@ public class GcpKmsEncryptDecryptClient {
     Preconditions.checkNotNull(gcpKmsConfig.getKeyName(), "keyName is not provided");
     InputStream credentialsStream =
         new ByteArrayInputStream(String.copyValueOf(gcpKmsConfig.getCredentials()).getBytes(StandardCharsets.UTF_8));
+    return getClientInternal(credentialsStream);
+  }
+
+  @VisibleForTesting
+  KeyManagementServiceClient getClientInternal(InputStream credentialsStream) {
     try {
       GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsStream);
       FixedCredentialsProvider credentialsProvider = FixedCredentialsProvider.create(credentials);
