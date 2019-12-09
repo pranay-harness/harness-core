@@ -12,7 +12,6 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.regex.Pattern.compile;
@@ -211,8 +210,8 @@ public class ArtifactServiceImpl implements ArtifactService {
           artifactCollectionUtils.getArtifactStreamAttributes(artifactStream, isMultiArtifact);
       Artifact savedArtifact = getArtifactByUniqueKey(artifactStream, artifactStreamAttributes, artifact);
       if (savedArtifact != null) {
-        logger.info(format("Skipping creation of duplicate artifact for artifact stream: [%s], saved artifact: [%s]",
-            artifactStream.getUuid(), savedArtifact.getUuid()));
+        logger.info("Skipping creation of duplicate artifact for artifact stream: [{}], saved artifact: [{}]",
+            artifactStream.getUuid(), savedArtifact.getUuid());
         return savedArtifact;
       }
       updateArtifactIdentity(artifactStream, artifactStreamAttributes, artifact);
@@ -735,9 +734,8 @@ public class ArtifactServiceImpl implements ArtifactService {
         deleteArtifacts(artifactIds, artifactFileIds);
       }
     } catch (Exception ex) {
-      logger.warn(format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
-                      toBeDeletedArtifacts.size()),
-          ex);
+      logger.warn("Failed to delete artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
+          toBeDeletedArtifacts.size(), ex);
       return;
     }
     logger.info("Successfully deleted artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
@@ -748,9 +746,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     try {
       deleteArtifactFiles(getArtifactFileIds(toBeDeletedArtifacts));
     } catch (Exception ex) {
-      logger.warn(format("Failed to delete artifacts for artifactStreamId: [%s] of size: [%s]", artifactStreamId,
-                      toBeDeletedArtifacts.size()),
-          ex);
+      logger.warn("Failed to delete artifacts for artifactStreamId: [{}] of size: [{}]", artifactStreamId,
+          toBeDeletedArtifacts.size(), ex);
       return;
     }
     logger.info("Successfully deleted artifact files for artifactStreamId: [{}] of size: [{}]", artifactStreamId,

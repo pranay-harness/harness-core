@@ -165,10 +165,10 @@ public class SshSessionFactory {
   private static boolean isValidKeyTabFile(String keyTabFilePath) {
     if (!StringUtils.isEmpty(keyTabFilePath)) {
       if (new File(keyTabFilePath).exists()) {
-        logger.info(format("Found keytab file at path: [%s]", keyTabFilePath));
+        logger.info("Found keytab file at path: [{}]", keyTabFilePath);
         return true;
       } else {
-        logger.error(format("Invalid keytab file path: [%s].", keyTabFilePath));
+        logger.error("Invalid keytab file path: [{}].", keyTabFilePath);
         return false;
       }
     }

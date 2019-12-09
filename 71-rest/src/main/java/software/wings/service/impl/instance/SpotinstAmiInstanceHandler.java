@@ -140,8 +140,8 @@ public class SpotinstAmiInstanceHandler extends InstanceHandler {
       if (deploymentSummary == null && isNotEmpty(currentInstancesInDb)) {
         Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
         if (!instanceWithExecutionInfoOptional.isPresent()) {
-          logger.warn(format("Couldn't find an instance from a previous deployment for inframapping: [%s]",
-              infrastructureMapping.getUuid()));
+          logger.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
+              infrastructureMapping.getUuid());
           return;
         }
         DeploymentSummary deploymentSummaryFromPrevious =

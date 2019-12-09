@@ -6,7 +6,6 @@ import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
-import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -59,7 +58,7 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         return k8sCommandTaskTypeToTaskHandlerMap.get(k8sTaskParameters.getCommandType().name())
             .executeTask(k8sTaskParameters, null);
       } catch (Exception ex) {
-        logger.error(format("Exception in processing k8s task [%s]", k8sTaskParameters.toString()), ex);
+        logger.error("Exception in processing k8s task [{}]", k8sTaskParameters.toString(), ex);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
@@ -93,7 +92,7 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         return k8sCommandTaskTypeToTaskHandlerMap.get(k8sTaskParameters.getCommandType().name())
             .executeTask(k8sTaskParameters, k8SDelegateTaskParams);
       } catch (Exception ex) {
-        logger.error(format("Exception in processing k8s task [%s]", k8sTaskParameters.toString()), ex);
+        logger.error("Exception in processing k8s task [{}]", k8sTaskParameters.toString(), ex);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))

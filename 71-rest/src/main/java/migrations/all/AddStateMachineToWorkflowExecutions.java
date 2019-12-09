@@ -53,8 +53,7 @@ public class AddStateMachineToWorkflowExecutions implements Migration {
           }
 
         } catch (Throwable exception) {
-          logger.error(String.format("Exception while migrating workflowExecution for %s", workflowExecution.getUuid()),
-              exception);
+          logger.error("Exception while migrating workflowExecution for {}", workflowExecution.getUuid(), exception);
         }
 
         Morpheus.sleep(Duration.ofMillis(10));

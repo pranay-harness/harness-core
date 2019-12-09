@@ -1523,9 +1523,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       validateCommandName(serviceCommand.getCommand());
       updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false, fromTemplate);
     } else {
-      logger.info(format("Underlying command is null for service command "
-              + "%s[%s]",
-          serviceCommand.getName(), serviceCommand.getUuid()));
+      logger.info(
+          "Underlying command is null for service command {}[{}]", serviceCommand.getName(), serviceCommand.getUuid());
     }
 
     setUnset(updateOperation, "envIdVersionMap", serviceCommand.getEnvIdVersionMap());

@@ -103,7 +103,7 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
       socket.close();
       valid = true;
     } catch (Exception ex) {
-      logger.error(format("Exception: [%s] while validating basic socket connectivity", ex.getMessage()), ex);
+      logger.error("Exception: [{}] while validating basic socket connectivity", ex.getMessage(), ex);
       valid = false;
     }
     return singletonList(DelegateConnectionResult.builder().criteria(criteria).validated(valid).build());

@@ -2,7 +2,6 @@ package software.wings.service.impl.aws.delegate;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -99,10 +98,10 @@ class AwsHelperServiceDelegateBase {
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
       if (amazonServiceException.getMessage().contains(
               "Trying to remove Target Groups that are not part of the group")) {
-        logger.info(format("Target Group already not attached: [%s]", amazonServiceException.getMessage()));
+        logger.info("Target Group already not attached: [{}]", amazonServiceException.getMessage());
       } else if (amazonServiceException.getMessage().contains(
                      "Trying to remove Load Balancers that are not part of the group")) {
-        logger.info(format("Classic load balancer already not attached: [%s]", amazonServiceException.getMessage()));
+        logger.info("Classic load balancer already not attached: [{}]", amazonServiceException.getMessage());
       } else {
         logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
         throw amazonServiceException;

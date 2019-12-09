@@ -2,7 +2,6 @@ package io.harness.delegate.message;
 
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.releaseLock;
-import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
@@ -308,7 +307,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       FileUtils.forceMkdir(channelDirectory);
     } catch (Exception e) {
-      logger.error(format("Error creating channel directory: %s", channelDirectory.getAbsolutePath()), e);
+      logger.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
       return null;
     }
     return FileUtils.listFiles(channelDirectory, FILE, null).stream().map(File::getName).collect(toList());
@@ -427,7 +426,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       FileUtils.forceMkdir(dataDirectory);
     } catch (Exception e) {
-      logger.error(format("Error creating data directory: %s", dataDirectory.getAbsolutePath()), e);
+      logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
       return null;
     }
     return FileUtils
@@ -478,7 +477,7 @@ public class MessageServiceImpl implements MessageService {
         FileUtils.forceDelete(file);
       }
     } catch (Exception e) {
-      logger.error(format("Error closing data: %s", name), e);
+      logger.error("Error closing data: {}", name, e);
     }
   }
 

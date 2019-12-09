@@ -190,10 +190,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (WingsException e) {
       throw e;
     } catch (UncheckedTimeoutException e) {
-      logger.error(format("Timed out getting controller %s", name), e);
       throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Timed out while getting controller");
     } catch (Exception e) {
-      logger.error(format("Error while getting controller %s", name), e);
       throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Error while getting controller");
     }
   }
@@ -1117,7 +1115,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                         .build());
       }
     } catch (Exception e) {
-      logger.error(format("Couldn't get or create namespace %s", kubernetesConfig.getNamespace()), e);
+      logger.error("Couldn't get or create namespace {}", kubernetesConfig.getNamespace(), e);
     }
   }
 

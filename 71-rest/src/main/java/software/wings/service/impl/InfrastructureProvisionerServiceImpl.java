@@ -366,7 +366,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     startTime = System.currentTimeMillis();
 
     Map<String, Service> idToServiceMapping = getIdToServiceMapping(appId, servicesIds);
-    logger.info(format("Time taken in idToServiceMapping : [%s] ms", System.currentTimeMillis() - startTime));
+    logger.info("Time taken in idToServiceMapping : [{}] ms", System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
 
     PageResponse<InfrastructureProvisionerDetails> infrastructureProvisionerDetails = new PageResponse<>();
@@ -375,8 +375,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .stream()
             .map(item -> details(item, idToSettingAttributeMapping, idToServiceMapping))
             .collect(toList()));
-    logger.info(format("Time taken in setting details : [%s] ms", System.currentTimeMillis() - startTime));
-    logger.info(format("Time taken by details api : [%s] ms", System.currentTimeMillis() - apiStartTime));
+    logger.info("Time taken in setting details : [{}] ms", System.currentTimeMillis() - startTime);
+    logger.info("Time taken by details api : [{}] ms", System.currentTimeMillis() - apiStartTime);
     return infrastructureProvisionerDetails;
   }
 
@@ -557,7 +557,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         if (!infraRefactor || property.getValue().contains(format("${%s.", infrastructureProvisionerTypeKey))) {
           throw new InvalidRequestException(format("Unable to resolve \"%s\" ", property.getValue()), USER);
         }
-        logger.info(String.format("Unresolved expression \"%s\" ", property.getValue()));
+        logger.info("Unresolved expression \"{}\" ", property.getValue());
         evaluated = property.getValue();
       }
       propertyNameEvaluatedMap.put(property.getName(), evaluated);

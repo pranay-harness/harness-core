@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.nullCheck;
-import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -133,7 +132,7 @@ public class YamlPushServiceImpl implements YamlPushService {
         }
       } catch (Exception e) {
         logYamlPushRequestInfo(accountId, helperEntity, entity);
-        logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
+        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
       }
     });
   }
@@ -199,14 +198,14 @@ public class YamlPushServiceImpl implements YamlPushService {
       try {
         yamlChangeSetHelper.defaultVariableChangeSet(accountId, appId, changeType);
       } catch (Exception e) {
-        logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
+        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
       }
     });
   }
 
   private <R, T> void logYamlPushRequestInfo(String accountId, R helperEntity, T entity) {
-    logger.info(format("%s accountId %s, entity %s, entityId %s, helperEntityId %s", YAML_PUSH_SERVICE_LOG, accountId,
-        entity.getClass().getSimpleName(), ((UuidAware) entity).getUuid(), ((UuidAware) helperEntity).getUuid()));
+    logger.info("{} accountId {}, entity {}, entityId {}, helperEntityId {}", YAML_PUSH_SERVICE_LOG, accountId,
+        entity.getClass().getSimpleName(), ((UuidAware) entity).getUuid(), ((UuidAware) helperEntity).getUuid());
   }
 
   private <T> void logYamlPushRequestInfo(T oldEntity, T newEntity, Type type) {

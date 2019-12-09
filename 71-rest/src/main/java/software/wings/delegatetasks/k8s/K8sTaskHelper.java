@@ -659,7 +659,7 @@ public class K8sTaskHelper {
                               .fileContent(new String(fileData.getFileBytes(), StandardCharsets.UTF_8))
                               .build());
       } else {
-        logger.info(format("Found file [%s] with unsupported extension", fileData.getFilePath()));
+        logger.info("Found file [{}] with unsupported extension", fileData.getFilePath());
       }
     }
 

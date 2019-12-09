@@ -41,7 +41,7 @@ public class ElasticsearchIndexManager {
       if (createIndexResponse != null && createIndexResponse.isAcknowledged()) {
         return true;
       }
-      logger.error(String.format("Could not create index %s", indexName));
+      logger.error("Could not create index {}", indexName);
     } catch (IOException e) {
       logger.error("Failed to create index", e);
     }

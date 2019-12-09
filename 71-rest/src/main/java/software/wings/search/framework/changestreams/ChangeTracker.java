@@ -74,7 +74,7 @@ public class ChangeTracker {
       clientSession = mongoClient.startSession(ClientSessionOptions.builder().build());
     }
     final String databaseName = uri.getDatabase();
-    logger.info(String.format("Database is %s", databaseName));
+    logger.info("Database is {}", databaseName);
     mongoDatabase =
         mongoClient.getDatabase(databaseName).withReadConcern(ReadConcern.MAJORITY).withReadPreference(readPreference);
   }

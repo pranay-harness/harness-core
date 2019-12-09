@@ -3,7 +3,6 @@ package migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
 import static software.wings.beans.InfrastructureMapping.SERVICE_ID_KEY;
 
 import com.google.inject.Inject;
@@ -55,7 +54,7 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
       return;
     }
 
-    logger.info(format("Found %d services", services.size()));
+    logger.info("Found {} services", services.size());
     int migratedServices = 0;
 
     for (Service service : services) {
@@ -78,7 +77,7 @@ public class ServiceHelmValuesToManifestFileMigration implements Migration {
       }
     }
 
-    logger.info(format("Migrated %d services", migratedServices));
+    logger.info("Migrated {} services", migratedServices);
     logger.info("Completed migrating service helm values");
   }
 

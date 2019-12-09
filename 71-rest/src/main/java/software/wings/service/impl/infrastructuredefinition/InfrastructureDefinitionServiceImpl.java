@@ -820,7 +820,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       return workflowExecutionService.getLatestExecutionsFor(appId, infraMappingId, limit, fieldList, true);
 
     } catch (Exception e) {
-      logger.error(format("Failed to fetch recent executions for inframapping [%s]", infraMappingId), e);
+      logger.error("Failed to fetch recent executions for inframapping [{}]", infraMappingId, e);
     }
     return Collections.emptyList();
   }

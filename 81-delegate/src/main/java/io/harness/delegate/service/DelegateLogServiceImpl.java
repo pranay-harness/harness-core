@@ -7,7 +7,6 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.delegate.service.DelegateServiceImpl.getDelegateId;
 import static io.harness.network.SafeHttpCall.execute;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -191,7 +190,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
         logger.info("{} log lines dispatched for accountId: {}",
             restResponse.getResource() != null ? logBatch.size() : 0, accountId);
       } catch (Exception e) {
-        logger.error(format("Dispatch log failed. printing lost logs[%d]", logBatch.size()), e);
+        logger.error("Dispatch log failed. printing lost logs[{}]", logBatch.size(), e);
         logBatch.forEach(log -> logger.error(log.toString()));
         logger.error("Finished printing lost logs");
       }

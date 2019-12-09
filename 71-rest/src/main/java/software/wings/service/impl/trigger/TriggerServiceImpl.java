@@ -14,7 +14,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.equalCheck;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.regex.Pattern.compile;
@@ -601,7 +600,7 @@ public class TriggerServiceImpl implements TriggerService {
       logger.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
       idempotent.succeeded(TriggerIdempotentResult.builder().triggerUuid(trigger.getUuid()).build());
     } catch (UnableToRegisterIdempotentOperationException e) {
-      logger.error(format("Failed to trigger scheduled trigger %s", trigger.getName()), e);
+      logger.error("Failed to trigger scheduled trigger {}", trigger.getName(), e);
     }
   }
 

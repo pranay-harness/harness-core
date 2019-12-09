@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
-import static java.lang.String.format;
-
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -20,9 +18,8 @@ public abstract class K8sTaskHandler {
     try {
       return executeTaskInternal(k8STaskParameters, k8SDelegateTaskParams);
     } catch (Exception ex) {
-      logger.error(format("Exception in processing K8s task [%s]",
-                       k8STaskParameters.getCommandName() + ":" + k8STaskParameters.getCommandType()),
-          ex);
+      logger.error("Exception in processing K8s task [{}]",
+          k8STaskParameters.getCommandName() + ":" + k8STaskParameters.getCommandType(), ex);
       return K8sTaskExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

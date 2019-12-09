@@ -55,9 +55,8 @@ public class KryoMessageBodyProvider implements MessageBodyWriter<Object>, Messa
       entityStream.write(bytes);
       entityStream.flush();
     } catch (Exception e) {
-      logger.error(String.format("Failed to write %s to stream. %d bytes deserialized.",
-                       object.getClass().getCanonicalName(), bytes == null ? 0 : bytes.length),
-          e);
+      logger.error("Failed to write {} to stream. {} bytes deserialized.", object.getClass().getCanonicalName(),
+          bytes == null ? 0 : bytes.length, e);
     }
   }
 

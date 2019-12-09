@@ -1,7 +1,5 @@
 package software.wings.service.impl.trigger;
 
-import static java.lang.String.format;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
@@ -33,7 +31,7 @@ public class TriggerCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    logger.info(format("Trigger command response %s for account %s", response, accountId));
+    logger.info("Trigger command response {} for account {}", response, accountId);
 
     ResponseData notifyResponseData = response.values().iterator().next();
     TriggerResponse triggerResponse = new TriggerResponse();
@@ -53,8 +51,8 @@ public class TriggerCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    logger.info(format("Trigger command request failed for account %s and for trigger executionId %s with response %s",
-        accountId, triggerExecutionId, response));
+    logger.info("Trigger command request failed for account {} and for trigger executionId {} with response {}",
+        accountId, triggerExecutionId, response);
     ResponseData notifyResponseData = response.values().iterator().next();
     TriggerResponse triggerResponse = new TriggerResponse();
     triggerResponse.setExecutionStatus(ExecutionStatus.FAILED);

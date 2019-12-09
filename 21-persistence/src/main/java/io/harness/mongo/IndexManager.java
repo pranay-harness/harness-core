@@ -3,7 +3,6 @@ package io.harness.mongo;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -143,7 +142,7 @@ public class IndexManager {
         .forEach(entry -> {
           Duration passed = Duration.between(entry.getValue().getSince().toInstant(), ZonedDateTime.now().toInstant());
           try (AutoLogContext ignore = new IndexLogContext(entry.getKey(), OVERRIDE_ERROR)) {
-            logger.error(format("Index is not used at for %d days", passed.toDays()));
+            logger.error("Index is not used at for {} days", passed.toDays());
           }
         });
   }

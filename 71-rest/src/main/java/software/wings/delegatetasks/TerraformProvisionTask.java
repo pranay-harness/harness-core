@@ -185,7 +185,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       downloadTfStateFile(parameters, scriptDirectory);
 
-      logger.info(format("Text Variables found in task params: [%s]", parameters.getVariables()));
+      logger.info("Text Variables found in task params: [{}]", parameters.getVariables());
       StringBuilder inlineCommandBuffer = new StringBuilder();
       StringBuilder inlineUILogBuffer = new StringBuilder();
       getCommandLineVariableParams(parameters, tfVariablesFile, inlineCommandBuffer, inlineUILogBuffer);

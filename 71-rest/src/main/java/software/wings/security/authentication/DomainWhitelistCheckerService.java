@@ -52,7 +52,7 @@ public class DomainWhitelistCheckerService {
     String domain = email.substring(email.indexOf('@') + 1);
 
     if (!filter.contains(domain)) {
-      logger.info(String.format("Domain filter was: [%s] while the email was: [%s]", filter, email));
+      logger.info("Domain filter was: [{}] while the email was: [{}]", filter, email);
       return false;
     }
     return true;

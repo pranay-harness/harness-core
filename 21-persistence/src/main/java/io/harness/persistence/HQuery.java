@@ -4,7 +4,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.QueryChecks.AUTHORITY;
 import static io.harness.persistence.HQuery.QueryChecks.COUNT;
 import static io.harness.persistence.HQuery.QueryChecks.VALIDATE;
-import static java.lang.String.format;
 
 import com.google.common.collect.Sets;
 
@@ -73,7 +72,7 @@ public class HQuery<T> extends QueryImpl<T> {
 
     if (list.size() > 5000) {
       if (logger.isErrorEnabled()) {
-        logger.error(format("Key list query returns %d items.", list.size()), new Exception(""));
+        logger.error("Key list query returns {} items.", list.size(), new Exception(""));
       }
     }
   }
@@ -85,7 +84,7 @@ public class HQuery<T> extends QueryImpl<T> {
 
     if (list.size() > 1000) {
       if (logger.isErrorEnabled()) {
-        logger.error(format("List query returns %d items.", list.size()), new Exception(""));
+        logger.error("List query returns {} items.", list.size(), new Exception(""));
       }
     }
   }

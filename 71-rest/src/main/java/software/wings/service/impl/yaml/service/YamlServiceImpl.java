@@ -6,7 +6,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.PCF_CONFIG_FILE_EXTENSION;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -268,7 +267,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           metaDataMap.put("yamlFilesProcessed", changeSets.size());
           return Builder.aRestResponse().withMetaData(metaDataMap).build();
         } catch (YamlProcessingException ex) {
-          logger.warn(format("Unable to process zip upload for account %s. ", accountId), ex);
+          logger.warn("Unable to process zip upload for account {}.", accountId, ex);
           // gitToHarness is false, as this is not initiated from git
           yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
         }
@@ -411,8 +410,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
           if (ignoreIfFeatureFlagEnabled(
                   change.getAccountId(), FeatureName.INFRA_MAPPING_REFACTOR, INFRA_MAPPING, yamlType)) {
-            logger.warn(format("Skipping %s because feature flag %s is enabled", change.getFilePath(),
-                FeatureName.INFRA_MAPPING_REFACTOR));
+            logger.warn("Skipping {} because feature flag {} is enabled", change.getFilePath(),
+                FeatureName.INFRA_MAPPING_REFACTOR);
             continue;
           }
 
@@ -541,7 +540,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
           logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
         } catch (Exception ex) {
-          logger.warn(format("Exception while processing yaml file %s", yamlFilePath), ex);
+          logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
           ChangeWithErrorMsg changeWithErrorMsg = ChangeWithErrorMsg.builder()
                                                       .change(changeContext.getChange())
                                                       .errorMsg(ExceptionUtils.getMessage(ex))

@@ -163,7 +163,7 @@ public class JenkinsImpl implements Jenkins {
             jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
           } catch (HttpResponseException e) {
             if (e.getStatusCode() == 500 || ExceptionUtils.getMessage(e).contains("Server Error")) {
-              logger.warn(format("Error occurred while retrieving job %s. Retrying ", jobname), e);
+              logger.warn("Error occurred while retrieving job {}. Retrying ", jobname, e);
               sleep(ofSeconds(1L));
               continue;
             } else {

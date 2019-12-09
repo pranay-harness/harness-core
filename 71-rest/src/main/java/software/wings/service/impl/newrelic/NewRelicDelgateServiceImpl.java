@@ -423,9 +423,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         return newRelicMetrics;
       } catch (RuntimeException e) {
         failedAttempts++;
-        logger.warn(format("txn name fetch failed. trial num: %d", failedAttempts), e);
+        logger.warn("txn name fetch failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          logger.error(format("txn name fetch failed after %d retries ", failedAttempts), e);
+          logger.error("txn name fetch failed after {} retries", failedAttempts, e);
           throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
         }
         sleep(ofMillis(1000));
@@ -600,7 +600,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
           apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
           delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-          logger.error(format("txn name fetch failed after %d retries ", failedAttempts), e);
+          logger.error("txn name fetch failed after {} retries", failedAttempts, e);
           throw new WingsException("Unsuccessful response while fetching data from NewRelic failed after "
               + NUM_OF_RETRIES + " retries. Error message: " + e.getMessage()
               + " Request: " + request.request().url().toString());

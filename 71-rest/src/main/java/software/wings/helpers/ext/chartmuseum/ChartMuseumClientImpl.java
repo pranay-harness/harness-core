@@ -119,7 +119,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     while (retries < CHART_MUSEUM_SERVER_START_RETRIES) {
       port = getNextRandomPort(rand);
       command = command.replace("${PORT}", Integer.toString(port));
-      logger.info(format("Starting server at port %d. Retry #%s", port, retries));
+      logger.info("Starting server at port {}. Retry #{}", port, retries);
 
       stringBuffer = new StringBuffer();
       process = startProcess(command, environment, stringBuffer);

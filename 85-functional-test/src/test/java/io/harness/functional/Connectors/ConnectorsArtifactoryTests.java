@@ -66,11 +66,11 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runNexusConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC1_createNexusConnector, booleanMatcher, true);
-    logger.info(String.format("Created  Nexus Connector with id %s", NexusConnectorId));
+    logger.info("Created  Nexus Connector with id {}", NexusConnectorId);
     TC2_updateNexusConnector();
-    logger.info(String.format("Updated  Nexus Connector with id %s", NexusConnectorId));
+    logger.info("Updated  Nexus Connector with id {}", NexusConnectorId);
     TC3_deleteNexusConnector();
-    logger.info(String.format("Deleted  Nexus Connector with id %s", NexusConnectorId));
+    logger.info("Deleted  Nexus Connector with id {}", NexusConnectorId);
   }
 
   @Test
@@ -78,11 +78,11 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runJenkinsConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC4_createJenkinsConnector, booleanMatcher, true);
-    logger.info(String.format("Created Jenkins Connector with id %s", JenkinsConnectorId));
+    logger.info("Created Jenkins Connector with id {}", JenkinsConnectorId);
     TC5_updateJenkinsConnector();
-    logger.info(String.format("Updated  Jenkins Connector with id %s", JenkinsConnectorId));
+    logger.info("Updated  Jenkins Connector with id {}", JenkinsConnectorId);
     TC6_deleteJenkinsConnector();
-    logger.info(String.format("Deleted Jenkins Connector with id %s", JenkinsConnectorId));
+    logger.info("Deleted Jenkins Connector with id {}", JenkinsConnectorId);
   }
 
   @Test
@@ -90,11 +90,11 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runDockerConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC7_createDockerConnector, booleanMatcher, true);
-    logger.info(String.format("Created Docker Connector with id %s", DockerConnectorId));
+    logger.info("Created Docker Connector with id {}", DockerConnectorId);
     TC8_updateDockerConnector();
-    logger.info(String.format("Updated Docker Connector with id %s", DockerConnectorId));
+    logger.info("Updated Docker Connector with id {}", DockerConnectorId);
     TC9_deleteDockerConnector();
-    logger.info(String.format("Deleted  Docker Connector with id %s", DockerConnectorId));
+    logger.info("Deleted  Docker Connector with id {}", DockerConnectorId);
   }
 
   @Test
@@ -102,11 +102,11 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runBambooConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC10_createBambooConnector, booleanMatcher, true);
-    logger.info(String.format("Created  Bamboo Connector with id %s", BambooConnectorId));
+    logger.info("Created  Bamboo Connector with id {}", BambooConnectorId);
     TC11_updateBambooConnector();
-    logger.info(String.format("Updated  Bamboo Connector with id %s", BambooConnectorId));
+    logger.info("Updated  Bamboo Connector with id {}", BambooConnectorId);
     TC12_deleteBambooConnector();
-    logger.info(String.format("Deleted  Bamboo Connector with id %s", BambooConnectorId));
+    logger.info("Deleted  Bamboo Connector with id {}", BambooConnectorId);
   }
 
   @Test
@@ -114,11 +114,11 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void runArtifactoryConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC13_createArtifactoryConnector, booleanMatcher, true);
-    logger.info(String.format("Created Artifactory Connector with id %s", ArtifactoryConnectorId));
+    logger.info("Created Artifactory Connector with id {}", ArtifactoryConnectorId);
     // TC14_updateArtifactoryConnector();
-    // logger.info(String.format("Updated  Artifactory Connector with id %s", ArtifactoryConnectorId));
+    // logger.info("Updated  Artifactory Connector with id {}", ArtifactoryConnectorId);
     TC15_deleteArtifactoryConnector();
-    logger.info(String.format("Deleted Artifactory Connector with id %s", ArtifactoryConnectorId));
+    logger.info("Deleted Artifactory Connector with id {}", ArtifactoryConnectorId);
   }
 
   @Test

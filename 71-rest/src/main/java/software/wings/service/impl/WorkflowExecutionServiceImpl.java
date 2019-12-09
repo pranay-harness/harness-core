@@ -402,7 +402,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         try {
           populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, false, emptySet());
         } catch (Exception e) {
-          logger.error(format("Failed to populate node hierarchy for the workflow execution %s", res.toString()), e);
+          logger.error("Failed to populate node hierarchy for the workflow execution {}", res.toString(), e);
         }
       }
     }
@@ -2045,9 +2045,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
-      logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
-                       workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),
-          exception);
+      logger.error("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
+          workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType(), exception);
     }
 
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
@@ -2074,9 +2073,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       } catch (WingsException exception) {
         ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (RuntimeException exception) {
-        logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
-                         workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),
-            exception);
+        logger.error("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
+            workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType(), exception);
       }
     }
 
@@ -3390,7 +3388,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getStateMachine() != null) {
       return workflowExecution.getStateMachine();
     }
-    logger.warn(String.format("Workflow execution %s do not have inline state machine", workflowExecution.getUuid()));
+    logger.warn("Workflow execution {} do not have inline state machine", workflowExecution.getUuid());
     return wingsPersistence.getWithAppId(
         StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
   }

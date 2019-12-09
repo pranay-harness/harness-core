@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -48,8 +47,8 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     HelmRepoConfigValidationTaskParams taskParams = (HelmRepoConfigValidationTaskParams) parameters;
 
     try {
-      logger.info(format("Running HelmRepoConfigValidationTask for account %s app %s", taskParams.getAccountId(),
-          taskParams.getAppId()));
+      logger.info("Running HelmRepoConfigValidationTask for account {} app {}", taskParams.getAccountId(),
+          taskParams.getAppId());
 
       tryAddingHelmRepo(taskParams);
 

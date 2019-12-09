@@ -4,7 +4,6 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOpti
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJarConfig;
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
-import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -124,7 +123,7 @@ public class ManagerExecutor {
       if (exception.getMessage().equals(previous.getMessage())) {
         logger.info("not healthy");
       } else {
-        logger.info(format("not healthy - %s", exception.getMessage()));
+        logger.info("not healthy - {}", exception.getMessage());
         previous = exception;
       }
       return false;

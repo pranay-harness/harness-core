@@ -1,7 +1,5 @@
 package io.harness.context;
 
-import static java.lang.String.format;
-
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -21,7 +19,7 @@ public class GlobalContext {
 
   public void setGlobalContextRecord(GlobalContextData data) {
     if (map.containsKey(data.getKey())) {
-      logger.error(format("Global data %s is already set. Something is wrong!!!", data.getKey()), new Exception());
+      logger.error("Global data {} is already set. Something is wrong!!!", data.getKey(), new Exception());
     }
     map.put(data.getKey(), data);
   }

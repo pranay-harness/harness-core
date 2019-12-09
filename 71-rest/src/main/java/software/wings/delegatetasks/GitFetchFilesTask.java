@@ -65,8 +65,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   public GitCommandExecutionResponse run(TaskParameters parameters) {
     GitFetchFilesTaskParams taskParams = (GitFetchFilesTaskParams) parameters;
 
-    logger.info(format("Running GitFetchFilesTask for account %s, app %s, activityId %s", taskParams.getAccountId(),
-        taskParams.getAppId(), taskParams.getActivityId()));
+    logger.info("Running GitFetchFilesTask for account {}, app {}, activityId {}", taskParams.getAccountId(),
+        taskParams.getAppId(), taskParams.getActivityId());
 
     String executionLogName = isEmpty(taskParams.getExecutionLogName()) ? FetchFiles : taskParams.getExecutionLogName();
 

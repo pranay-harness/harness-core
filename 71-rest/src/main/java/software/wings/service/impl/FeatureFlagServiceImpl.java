@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -57,7 +56,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public void enableAccount(FeatureName featureName, String accountId) {
-    logger.info(format("Enabling feature name :[%s] for account id: [%s]", featureName.name(), accountId));
+    logger.info("Enabling feature name :[{}] for account id: [{}]", featureName.name(), accountId);
     Query<FeatureFlag> query =
         wingsPersistence.createQuery(FeatureFlag.class).filter(FeatureFlagKeys.name, featureName.name());
     UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class)
@@ -71,13 +70,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
-    logger.info(format("Enabled feature name :[%s] for account id: [%s]", featureName.name(), accountId));
+    logger.info("Enabled feature name :[{}] for account id: [{}]", featureName.name(), accountId);
   }
 
   @Override
   public boolean isGlobalEnabled(FeatureName featureName) {
     if (featureName.getScope() != Scope.GLOBAL) {
-      logger.error(format("FeatureFlag %s is not global", featureName.name()), new Exception(""));
+      logger.error("FeatureFlag {} is not global", featureName.name(), new Exception(""));
     }
     return isEnabled(featureName, null);
   }

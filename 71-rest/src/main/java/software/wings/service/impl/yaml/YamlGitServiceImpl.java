@@ -288,12 +288,11 @@ public class YamlGitServiceImpl implements YamlGitService {
         discardGitSyncErrorForFullSync(accountId, appId);
 
         yamlChangeSetService.save(yamlChangeSet);
-        logger.info(format(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account %s and entity %s successfully",
-            accountId, entityId));
+        logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} and entity {} successfully",
+            accountId, entityId);
       } catch (Exception ex) {
-        logger.error(format(GIT_YAML_LOG_PREFIX + "Failed to perform git full-sync for account %s and entity %s",
-                         yamlGitConfig.getAccountId(), entityId),
-            ex);
+        logger.error(GIT_YAML_LOG_PREFIX + "Failed to perform git full-sync for account {} and entity {}",
+            yamlGitConfig.getAccountId(), entityId, ex);
       }
     }
   }
@@ -418,7 +417,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Performed full-sync dry-run for account {}", accountId);
       return yamlChangeSets;
     } catch (Exception ex) {
-      logger.error(format("Failed to perform full-sync dry-run for account %s", accountId), ex);
+      logger.error("Failed to perform full-sync dry-run for account {}", accountId, ex);
     }
 
     return new ArrayList<>();
@@ -445,7 +444,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Got all Yaml errors for account {}", accountId);
       return errorLog;
     } catch (Exception ex) {
-      logger.error(format("Failed to get all Yaml errors for account %s", accountId), ex);
+      logger.error("Failed to get all Yaml errors for account {}", accountId, ex);
     }
     return new ArrayList<>();
   }
@@ -498,8 +497,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     checkForValidNameSyntax(gitFileChanges);
 
     // @TODO_GITLOG add accountId here
-    logger.info(format(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for account %s and entity %s",
-        accountId, appId));
+    logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for account {} and entity {}",
+        accountId, appId);
 
     StringBuilder builder = new StringBuilder();
     yamlChangeSets.forEach(yamlChangeSet -> builder.append(yamlChangeSet.getUuid()).append("  "));
@@ -508,8 +507,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     String waitId = generateUuid();
     GitConfig gitConfig = getGitConfig(yamlGitConfig);
     if (gitConfig == null) {
-      logger.warn(format(GIT_YAML_LOG_PREFIX + "GitConfig is null for accountId %s, entity %s, connectorId %s",
-          accountId, appId, yamlGitConfig.getGitConnectorId()));
+      logger.warn(GIT_YAML_LOG_PREFIX + "GitConfig is null for accountId {}, entity {}, connectorId {}", accountId,
+          appId, yamlGitConfig.getGitConnectorId());
       String yamlChangeSetId = yamlChangeSets.get(0).getUuid();
       yamlChangeSetService.updateStatus(accountId, yamlChangeSetId, Status.FAILED);
       return true;
@@ -669,9 +668,9 @@ public class YamlGitServiceImpl implements YamlGitService {
                                                .filter(BRANCH_NAME_KEY, branchName)
                                                .asList();
       if (isEmpty(yamlGitConfigs)) {
-        logger.info(format(GIT_YAML_LOG_PREFIX
-                + "Git sync configuration not found with branch %s, gitConnectorId %s, webhookToken %s, webhookPayload %s",
-            branchName, gitConnectorId, webhookToken, yamlWebHookPayload));
+        logger.info(GIT_YAML_LOG_PREFIX + "Git sync configuration not found with "
+                + "branch {}, gitConnectorId {}, webhookToken {}, webhookPayload {}",
+            branchName, gitConnectorId, webhookToken, yamlWebHookPayload);
         throw new InvalidRequestException("Git sync configuration not found with branch " + branchName, USER);
       }
 
@@ -998,14 +997,14 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   @SuppressWarnings("PMD.AvoidCatchingThrowable")
   public void asyncFullSyncForEntireAccount(String accountId) {
-    logger.info(format(GIT_YAML_LOG_PREFIX + "Triggered async full git sync for account %s", accountId));
+    logger.info(GIT_YAML_LOG_PREFIX + "Triggered async full git sync for account {}", accountId);
     executorService.submit(() -> {
       try {
         fullSyncForEntireAccount(accountId);
       } catch (WingsException ex) {
         ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
       } catch (Throwable e) {
-        logger.error(format("Exception while performing async full git sync for account %s", accountId), e);
+        logger.error("Exception while performing async full git sync for account {}", accountId, e);
       }
     });
   }
@@ -1014,7 +1013,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @SuppressWarnings("PMD.AvoidCatchingThrowable")
   public void fullSyncForEntireAccount(String accountId) {
     try {
-      logger.info(format(GIT_YAML_LOG_PREFIX + "Performing full sync for account %s", accountId));
+      logger.info(GIT_YAML_LOG_PREFIX + "Performing full sync for account {}", accountId);
 
       // Perform fullsync for account level entities
       fullSync(accountId, accountId, EntityType.ACCOUNT, false);
@@ -1025,11 +1024,11 @@ public class YamlGitServiceImpl implements YamlGitService {
           fullSync(accountId, application.getUuid(), EntityType.APPLICATION, false);
         }
       }
-      logger.info(format(GIT_YAML_LOG_PREFIX + "Performed full sync for account %s", accountId));
+      logger.info(GIT_YAML_LOG_PREFIX + "Performed full sync for account {}", accountId);
     } catch (Throwable t) {
       // any thread that faces an error should continue to perform full sync for other accountIds
       // if possible.
-      logger.error(format("Error occured in full sync for account %s", accountId), t);
+      logger.error("Error occured in full sync for account {}", accountId, t);
     }
   }
 

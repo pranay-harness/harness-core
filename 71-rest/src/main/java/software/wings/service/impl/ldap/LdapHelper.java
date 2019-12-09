@@ -96,7 +96,7 @@ public class LdapHelper {
       connection.open();
       return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.CONNECTION_SUCCESS).build();
     } catch (LdapException e) {
-      logger.error(String.format("Ldap connection validation failed for url: [%s]", connectionConfig.generateUrl()), e);
+      logger.error("Ldap connection validation failed for url: [{}]", connectionConfig.generateUrl(), e);
       return LdapResponse.builder().status(Status.FAILURE).message(e.getResultCode().toString()).build();
     }
   }
@@ -157,7 +157,7 @@ public class LdapHelper {
     try {
       ldapListGroupsResponses = listGroups(Arrays.asList(config), null, LdapConstants.MIN_GROUP_QUERY_SIZE).get(0);
     } catch (LdapException e) {
-      logger.error(String.format("Ldap validate group config failed for: [%s] ", config.getNameAttr()), e);
+      logger.error("Ldap validate group config failed for: [{}]", config.getNameAttr(), e);
       message = e.getResultCode().toString();
     }
 

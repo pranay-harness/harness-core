@@ -71,7 +71,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
          AccountLogContext ignore2 = new AccountLogContext(this.accountId, OVERRIDE_ERROR)) {
       runDelegateTask();
     } catch (Throwable e) {
-      logger.error(format("Unexpected error executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId), e);
+      logger.error("Unexpected error executing delegate taskId: [{}] in accountId: [{}]", taskId, accountId, e);
     }
   }
 

@@ -2,7 +2,6 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -88,7 +87,6 @@ public abstract class AbstractTemplateProcessor {
     try {
       return loadAndSaveTemplate(templatePath, accountId, accountName);
     } catch (IOException e) {
-      logger.warn(format("Failed to load Yaml from path %s", templatePath), e);
       throw new WingsException("Failed to load template from path " + templatePath, WingsException.SRE);
     }
   }
@@ -167,7 +165,7 @@ public abstract class AbstractTemplateProcessor {
             }
           }
         } catch (Exception e) {
-          logger.warn(format("Error occurred while updating linked workflow %s", workflow.getUuid()), e);
+          logger.warn("Error occurred while updating linked workflow {}", workflow.getUuid(), e);
         }
       }
     }

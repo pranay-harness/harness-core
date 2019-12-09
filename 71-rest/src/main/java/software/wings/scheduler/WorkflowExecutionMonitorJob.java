@@ -1,7 +1,5 @@
 package software.wings.scheduler;
 
-import static java.lang.String.format;
-
 import io.harness.scheduler.PersistentScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -40,7 +38,7 @@ public class WorkflowExecutionMonitorJob implements Job {
     try {
       jobExecutionContext.getScheduler().deleteJob(new JobKey(NAME, GROUP));
     } catch (Exception e) {
-      logger.warn(format("Exception while deleting job %s-%s", NAME, GROUP));
+      logger.warn("Exception while deleting job {}-{}", NAME, GROUP);
     }
   }
 }

@@ -299,7 +299,6 @@ public class AuthenticationManager {
       }
       throw e;
     } catch (Exception e) {
-      logger.warn(String.format("Failed to login via default mechanism for username: [%s]", userName), e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }

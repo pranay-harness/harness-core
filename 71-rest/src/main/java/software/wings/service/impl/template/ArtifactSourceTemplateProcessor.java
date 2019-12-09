@@ -2,7 +2,6 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.template.TemplateType.ARTIFACT_SOURCE;
@@ -95,16 +94,16 @@ public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
         try {
           String templateVersion = artifactStream.getTemplateVersion();
           if (templateVersion == null || templateVersion.equalsIgnoreCase(LATEST_TAG)) {
-            logger.info(format("Updating the linked artifact stream with id %s", artifactStream.getUuid()));
+            logger.info("Updating the linked artifact stream with id {}", artifactStream.getUuid());
             ArtifactStream entityFromTemplate = constructEntityFromTemplate(template, EntityType.ARTIFACT_STREAM);
             updateEntity(entityFromTemplate, artifactStream);
             artifactStreamService.update(artifactStream);
-            logger.info("Linked artifact stream with id %s updated", artifactStream.getUuid());
+            logger.info("Linked artifact stream with id {} updated", artifactStream.getUuid());
           } else {
             logger.info("The linked template is not the latest. So, not updating it");
           }
         } catch (Exception e) {
-          logger.warn(format("Failed to update the linked Artifact Stream %s", artifactStream.getUuid()), e);
+          logger.warn("Failed to update the linked Artifact Stream {}", artifactStream.getUuid(), e);
         }
       }
     }

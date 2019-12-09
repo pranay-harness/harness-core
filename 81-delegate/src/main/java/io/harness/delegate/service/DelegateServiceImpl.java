@@ -46,7 +46,6 @@ import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
@@ -825,7 +824,7 @@ public class DelegateServiceImpl implements DelegateService {
           uploadProfileResult(exitCode);
           logger.info("Profile applied");
         } catch (IOException e) {
-          logger.error(format("Error applying profile [%s]", profile.getName()), e);
+          logger.error("Error applying profile [{}]", profile.getName(), e);
         } catch (InterruptedException e) {
           logger.info("Interrupted", e);
         } catch (TimeoutException e) {
@@ -861,7 +860,7 @@ public class DelegateServiceImpl implements DelegateService {
       FileUtils.touch(resultFile);
       FileUtils.writeLines(resultFile, result);
     } catch (IOException e) {
-      logger.error(format("Error writing profile [%s]", profile.getName()), e);
+      logger.error("Error writing profile [{}]", profile.getName(), e);
     }
   }
 
@@ -1163,7 +1162,7 @@ public class DelegateServiceImpl implements DelegateService {
             restartNeeded.set(true);
           }
         } catch (Exception e) {
-          logger.error(format("Error restarting watcher %s", watcherProcess), e);
+          logger.error("Error restarting watcher {}", watcherProcess, e);
         }
       });
     }
@@ -1453,12 +1452,12 @@ public class DelegateServiceImpl implements DelegateService {
               execute(
                   managerClient.failIfAllDelegatesFailed(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
             } catch (IOException e) {
-              logger.error(format("Unable to tell manager to check whether to fail for task %s", taskId), e);
+              logger.error("Unable to tell manager to check whether to fail for task {}", taskId, e);
             }
           }
         }
       } catch (IOException e) {
-        logger.error(format("Unable to report validation results. Task %s", taskId), e);
+        logger.error("Unable to report validation results. Task {}", taskId, e);
       }
     };
   }
@@ -1682,7 +1681,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       cleanup(new File(System.getProperty("user.dir")), getVersion(), upgradeVersion, "backup.");
     } catch (Exception ex) {
-      logger.error(format("Failed to clean delegate version [%s] from Backup", upgradeVersion), ex);
+      logger.error("Failed to clean delegate version [{}] from Backup", upgradeVersion, ex);
     }
   }
 
@@ -1690,7 +1689,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
     } catch (Exception ex) {
-      logger.error(format("Failed to clean delegate version [%s] from Capsule", upgradeVersion), ex);
+      logger.error("Failed to clean delegate version [{}] from Capsule", upgradeVersion, ex);
     }
   }
 

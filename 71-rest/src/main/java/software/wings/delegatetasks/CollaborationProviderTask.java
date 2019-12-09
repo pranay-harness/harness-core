@@ -1,7 +1,5 @@
 package software.wings.delegatetasks;
 
-import static java.lang.String.format;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -44,7 +42,7 @@ public class CollaborationProviderTask extends AbstractDelegateRunnableTask {
           throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
       }
     } catch (Exception e) {
-      logger.error(format("Exception in processing externalCommunicationTask task [%s]", request.toString()), e);
+      logger.error("Exception in processing externalCommunicationTask task [{}]", request.toString(), e);
       return CollaborationProviderResponse.builder()
           .status(CommandExecutionStatus.FAILURE)
           .accountId(getAccountId())

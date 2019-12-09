@@ -310,7 +310,6 @@ public class SSOResource {
       builder.SSORequest(samlClientService.generateTestSamlRequest(accountId));
       return new RestResponse<>(builder.authenticationMechanism(AuthenticationMechanism.SAML).build());
     } catch (Exception e) {
-      logger.warn(String.format("Failed to create SAML redirect response for accountId=[%s]", accountId), e);
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION);
     }
   }

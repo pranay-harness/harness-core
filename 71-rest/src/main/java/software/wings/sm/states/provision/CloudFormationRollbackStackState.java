@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.context.ContextElementType.CLOUD_FORMATION_ROLLBACK;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -242,8 +241,8 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
       return executionResponse;
     }
 
-    logger.warn(format("Cloud Formation Rollback. Reverting to pre saved element method for execution: [%s]",
-        context.getWorkflowExecutionId()));
+    logger.warn("Cloud Formation Rollback. Reverting to pre saved element method for execution: [{}]",
+        context.getWorkflowExecutionId());
 
     Optional<CloudFormationRollbackInfoElement> stackElementOptional = getRollbackElement(context);
     if (!stackElementOptional.isPresent()) {
