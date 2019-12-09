@@ -2,7 +2,6 @@ package io.harness.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static software.wings.beans.FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON;
 import static software.wings.common.VerificationConstants.CV_CONFIGURATION_VALID_LIMIT_IN_DAYS;
 import static software.wings.common.VerificationConstants.DEFAULT_DATA_COLLECTION_INTERVAL_IN_SECONDS;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
@@ -16,7 +15,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.jobs.workflow.collection.WorkflowDataCollectionJob;
 import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
@@ -99,13 +97,6 @@ public class WorkflowVerificationTaskPoller {
                 break;
               default:
                 throw new IllegalStateException("invalid analysis type " + verificationAnalysisTask.getAnalysisType());
-            }
-
-            if (!verificationManagerClientHelper
-                     .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(
-                         WORKFLOW_VERIFICATION_REMOVE_CRON, verificationAnalysisTask.getAccountId()))
-                     .getResource()) {
-              learningEngineService.markJobStatus(verificationAnalysisTask, ExecutionStatus.SUCCESS);
             }
           }
         } catch (Throwable e) {
