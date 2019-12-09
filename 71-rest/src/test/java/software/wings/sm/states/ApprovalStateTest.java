@@ -1,7 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.ABORTED;
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
+import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -54,6 +56,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.UnexpectedException;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.junit.Before;
@@ -67,7 +70,9 @@ import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ApprovalStateExecutionData.ApprovalStateExecutionDataKeys;
+import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.WorkflowElement;
+import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
@@ -81,17 +86,23 @@ import software.wings.beans.User.Builder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
+import software.wings.beans.approval.ApprovalStateParams;
+import software.wings.beans.approval.JiraApprovalParams;
+import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.security.SecretManager;
+import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -130,6 +141,9 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private WorkflowExecution workflowExecution;
   @Mock private SecretManager secretManager;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private JiraHelperService jiraHelperService;
+  @Mock private ServiceNowService serviceNowService;
+  @Mock private ApprovalPolingService approvalPolingService;
 
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
@@ -522,6 +536,208 @@ public class ApprovalStateTest extends WingsBaseTest {
     verifyUserGroupSweepingOutput();
     verifyJiraSweepingOutput();
     verifySnowSweepingOutput();
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteJiraApprovalFailure() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setIssueId("${a}");
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.JIRA).build();
+
+    ExecutionResponse executionResponse = approvalState.executeJiraApproval(context, executionData, "id");
+
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+        .thenReturn(JiraExecutionData.builder().executionStatus(FAILED).build());
+
+    approvalStateParams.getJiraApprovalParams().setIssueId("issueId");
+    executionResponse = approvalState.executeJiraApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteJiraApprovalIfAlreadyApproved() {
+    String approvalValue = "DONE";
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+        .thenReturn(JiraExecutionData.builder().currentStatus(approvalValue).build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setIssueId("issueId");
+    jiraApprovalParams.setApprovalValue(approvalValue);
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.JIRA).build();
+
+    ExecutionResponse executionResponse = approvalState.executeJiraApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteJiraApprovalIfAlreadyRejected() {
+    String rejectionValue = "REJECTED";
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+        .thenReturn(JiraExecutionData.builder().currentStatus(rejectionValue).build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setIssueId("issueId");
+    jiraApprovalParams.setRejectionValue(rejectionValue);
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.JIRA).build();
+
+    ExecutionResponse executionResponse = approvalState.executeJiraApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteJiraApprovalWithPollingService() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+        .thenReturn(JiraExecutionData.builder().currentStatus("TODO").build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setIssueId("issueId");
+    jiraApprovalParams.setApprovalValue("DONE");
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.JIRA).build();
+
+    ExecutionResponse executionResponse = approvalState.executeJiraApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    when(approvalPolingService.save(any())).thenThrow(new UnexpectedException());
+    executionResponse = approvalState.executeJiraApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalFailure() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("${a}");
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.SERVICENOW).build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalIfAlreadyApproved() {
+    String approvalValue = "DONE";
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), anyString(), anyString()))
+        .thenReturn(ServiceNowExecutionData.builder().currentState(approvalValue).build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    serviceNowApprovalParams.setApprovalValue(approvalValue);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.SERVICENOW).build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalIfAlreadyRejected() {
+    String rejectionValue = "REJECTED";
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), anyString(), anyString()))
+        .thenReturn(ServiceNowExecutionData.builder().currentState(rejectionValue).build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    serviceNowApprovalParams.setRejectionValue(rejectionValue);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.SERVICENOW).build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(REJECTED);
+  }
+
+  @Test
+  @Owner(developers = YOGESH_CHAUHAN)
+  @Category(UnitTests.class)
+  public void testExecuteSnowApprovalWithPollingService() {
+    when(context.renderExpression(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), anyString(), anyString()))
+        .thenReturn(ServiceNowExecutionData.builder().currentState("TODO").build());
+
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber("issueNumber");
+    serviceNowApprovalParams.setApprovalValue("DONE");
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ApprovalStateExecutionData executionData =
+        ApprovalStateExecutionData.builder().approvalStateType(ApprovalStateType.SERVICENOW).build();
+
+    ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    when(approvalPolingService.save(any())).thenThrow(new UnexpectedException());
+    executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
   }
 
   private void verifyJiraSweepingOutput() {
