@@ -49,11 +49,16 @@ public abstract class WorkflowYaml extends BaseEntityYaml {
   private List<Variable.Yaml> userVariables = new ArrayList<>();
   private String concurrencyStrategy;
 
+  private List<FailureStrategy.Yaml> preDeploymentFailureStrategy = new ArrayList<>();
+  private List<FailureStrategy.Yaml> postDeploymentFailureStrategy = new ArrayList<>();
+
   public WorkflowYaml(String type, String harnessApiVersion, String description, List<Yaml> templateExpressions,
       String envName, boolean templatized, List<StepYaml> preDeploymentSteps, List<WorkflowPhase.Yaml> phases,
       List<WorkflowPhase.Yaml> rollbackPhases, List<StepYaml> postDeploymentSteps,
       List<NotificationRule.Yaml> notificationRules, List<FailureStrategy.Yaml> failureStrategies,
-      List<Variable.Yaml> userVariables, String concurrencyStrategy) {
+      List<Variable.Yaml> userVariables, String concurrencyStrategy,
+      List<FailureStrategy.Yaml> preDeploymentFailureStrategy,
+      List<FailureStrategy.Yaml> postDeploymentFailureStrategy) {
     super(type, harnessApiVersion);
     this.description = description;
     this.templateExpressions = templateExpressions;
@@ -67,5 +72,7 @@ public abstract class WorkflowYaml extends BaseEntityYaml {
     this.failureStrategies = failureStrategies;
     this.userVariables = userVariables;
     this.concurrencyStrategy = concurrencyStrategy;
+    this.preDeploymentFailureStrategy = preDeploymentFailureStrategy;
+    this.postDeploymentFailureStrategy = postDeploymentFailureStrategy;
   }
 }
