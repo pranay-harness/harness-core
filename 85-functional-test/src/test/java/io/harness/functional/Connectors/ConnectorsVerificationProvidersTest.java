@@ -140,7 +140,7 @@ public class ConnectorsVerificationProvidersTest extends AbstractFunctionalTest 
   }
 
   @Test
-  @Owner(developers = SHASWAT)
+  @Owner(developers = SHASWAT, intermittent = true)
   @Category(FunctionalTests.class)
   public void TC6_createAndDeleteDatadogConnector() {
     String connectorName = CONNECTOR_DATADOG_PREFIX + System.currentTimeMillis();

@@ -19,7 +19,6 @@ import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.InprocIdempotentRegistry;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.OwnerRule.Owner;
-import io.harness.rule.Repeat;
 import io.harness.threading.Concurrent;
 import lombok.Builder;
 import lombok.Value;
@@ -142,10 +141,11 @@ public class IdempotentTest extends CategoryTest {
 
   @Test
   @Owner(developers = GEORGE)
-  @Repeat(times = 10, successes = 10)
   @Category(UnitTests.class)
-  public void testInprocRegistryConcurrency() throws InterruptedException {
-    final IdempotentRegistry idempotentRegistry = new InprocIdempotentRegistry();
-    concurrencyTest(idempotentRegistry);
+  public void testInprocRegistryConcurrency() {
+    for (int i = 0; i < 10; i++) {
+      final IdempotentRegistry idempotentRegistry = new InprocIdempotentRegistry();
+      concurrencyTest(idempotentRegistry);
+    }
   }
 }
