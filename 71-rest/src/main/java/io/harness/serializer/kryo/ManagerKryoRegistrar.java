@@ -159,6 +159,7 @@ import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
@@ -1447,5 +1448,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureArtifactsPackage.class, 7287);
     kryo.register(AzureArtifactsPackageVersion.class, 7288);
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
+
+    kryo.register(GcpKmsConfig.class, 7290);
   }
 }

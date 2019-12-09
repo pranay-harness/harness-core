@@ -2,6 +2,7 @@ package software.wings.sm.states.collaboration;
 
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.TaskType.SERVICENOW_ASYNC;
+import static software.wings.utils.Utils.isJSONValid;
 
 import com.google.inject.Inject;
 
@@ -16,9 +17,6 @@ import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.ServiceNowConfig;
@@ -189,18 +187,5 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
     }
 
     return (ServiceNowConfig) snowSettingAttribute.getValue();
-  }
-
-  public boolean isJSONValid(String test) {
-    try {
-      new JSONObject(test);
-    } catch (JSONException ex) {
-      try {
-        new JSONArray(test);
-      } catch (JSONException ex1) {
-        return false;
-      }
-    }
-    return true;
   }
 }

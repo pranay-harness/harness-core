@@ -292,6 +292,8 @@ public enum TaskType {
   AZURE_VAULT_DELETE(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
+  GCP_KMS_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
+  GCP_KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   VAULT_DELETE_SECRET(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),

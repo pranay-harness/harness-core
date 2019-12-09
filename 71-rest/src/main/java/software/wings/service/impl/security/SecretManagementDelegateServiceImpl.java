@@ -54,6 +54,7 @@ import retrofit2.Response;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.helpers.ext.cyberark.CyberArkRestClient;
@@ -63,6 +64,7 @@ import software.wings.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.cyberark.CyberArkReadResponse;
+import software.wings.service.impl.security.gcpkms.GcpKmsEncryptDecryptClient;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.SysMount;
@@ -94,11 +96,14 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   private TimeLimiter timeLimiter;
   private KmsEncryptDecryptClient kmsEncryptDecryptClient;
+  private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
 
   @Inject
-  public SecretManagementDelegateServiceImpl(TimeLimiter timeLimiter, KmsEncryptDecryptClient kmsEncryptDecryptClient) {
+  public SecretManagementDelegateServiceImpl(TimeLimiter timeLimiter, KmsEncryptDecryptClient kmsEncryptDecryptClient,
+      GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient) {
     this.timeLimiter = timeLimiter;
     this.kmsEncryptDecryptClient = kmsEncryptDecryptClient;
+    this.gcpKmsEncryptDecryptClient = gcpKmsEncryptDecryptClient;
   }
 
   public static boolean isRetryable(Exception e) {
@@ -126,6 +131,17 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public char[] decrypt(EncryptedRecord data, KmsConfig kmsConfig) {
     return kmsEncryptDecryptClient.decrypt(data, kmsConfig);
+  }
+
+  @Override
+  public EncryptedRecord encrypt(
+      String value, String accountId, GcpKmsConfig gcpKmsConfig, EncryptedRecord savedEncryptedData) {
+    return gcpKmsEncryptDecryptClient.encrypt(value, accountId, gcpKmsConfig, savedEncryptedData);
+  }
+
+  @Override
+  public char[] decrypt(EncryptedRecord encryptedRecord, GcpKmsConfig gcpKmsConfig) {
+    return gcpKmsEncryptDecryptClient.decrypt(encryptedRecord, gcpKmsConfig);
   }
 
   @Override

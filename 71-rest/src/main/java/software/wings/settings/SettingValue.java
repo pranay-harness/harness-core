@@ -264,6 +264,11 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
     KMS,
 
     /**
+     * GCP KMS setting variable types
+     */
+    GCP_KMS,
+
+    /**
      * Jira setting variable types.
      */
     JIRA("JIRA"),

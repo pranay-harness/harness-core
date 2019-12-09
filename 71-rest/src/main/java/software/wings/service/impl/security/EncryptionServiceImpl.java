@@ -24,6 +24,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.EncryptionService;
@@ -125,6 +126,10 @@ public class EncryptionServiceImpl implements EncryptionService {
       case KMS:
         return secretManagementDelegateService.decrypt(
             encryptedDataDetail.getEncryptedData(), (KmsConfig) encryptedDataDetail.getEncryptionConfig());
+
+      case GCP_KMS:
+        return secretManagementDelegateService.decrypt(
+            encryptedDataDetail.getEncryptedData(), (GcpKmsConfig) encryptedDataDetail.getEncryptionConfig());
 
       case VAULT:
         return secretManagementDelegateService.decrypt(

@@ -7,7 +7,7 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 
 import io.harness.CategoryTest;
-import io.harness.category.element.UnitTests;
+import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.Repeat;
@@ -52,7 +52,7 @@ public class KmsEncryptDecryptClientIntegrationTest extends CategoryTest {
   @Test
   @Owner(developers = UTKARSH, intermittent = true)
   @Repeat(times = 3, successes = 1)
-  @Category(UnitTests.class)
+  @Category(IntegrationTests.class)
   public void test_EncryptDecryptKmsSecret_ShouldSucceed() {
     String secret = "TopSecret";
     EncryptedRecord encryptedRecord = kmsEncryptDecryptClient.encrypt(accountId, secret.toCharArray(), kmsConfig);

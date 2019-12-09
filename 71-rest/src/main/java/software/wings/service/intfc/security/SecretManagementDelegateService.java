@@ -4,6 +4,7 @@ import io.harness.security.encryption.EncryptedRecord;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
@@ -122,4 +123,18 @@ public interface SecretManagementDelegateService {
    * Validate the CyberArk configuration, including the connectivity to CyberArk service, client certificate etc.
    */
   @DelegateTaskType(TaskType.CYBERARK_VALIDATE_CONFIG) boolean validateCyberArkConfig(CyberArkConfig cyberArkConfig);
+
+  /**
+   *
+   * @param value The value to be encrypted
+   * @param accountId The accountId of the user requesting this encryption
+   * @param gcpKmsConfig The decrypted gcpKmsConfig required to encrypt the value
+   * @param savedEncryptedData Previously saved encrypted data that is being overridden.
+   * @return EncryptedRecord with the encrypted value.
+   */
+  @DelegateTaskType(TaskType.GCP_KMS_ENCRYPT)
+  EncryptedRecord encrypt(
+      String value, String accountId, GcpKmsConfig gcpKmsConfig, EncryptedRecord savedEncryptedData);
+
+  @DelegateTaskType(TaskType.GCP_KMS_DECRYPT) char[] decrypt(EncryptedRecord data, GcpKmsConfig gcpKmsConfig);
 }
