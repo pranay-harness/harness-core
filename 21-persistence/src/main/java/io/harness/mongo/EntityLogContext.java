@@ -10,9 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class EntityLogContext extends AutoLogContext {
+  public static final String ENTITY_CLASS = "entityClass";
+
   public EntityLogContext(PersistentEntity entity, OverrideBehavior behavior) {
     super(NullSafeImmutableMap.<String, String>builder()
-              .put("class", entity.getClass().getName())
+              .put(ENTITY_CLASS, entity.getClass().getName())
               .putIfNotNull(entity instanceof UuidAccess ? ((UuidAccess) entity).logKeyForId() : "",
                   entity instanceof UuidAccess ? ((UuidAccess) entity).getUuid() : null)
               .putIfNotNull(AccountLogContext.ID,

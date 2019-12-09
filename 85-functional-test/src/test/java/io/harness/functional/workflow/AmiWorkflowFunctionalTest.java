@@ -1,5 +1,7 @@
 package io.harness.functional.workflow;
 
+import static io.harness.rule.OwnerRule.YOGESH_CHAUHAN;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -12,7 +14,6 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.WorkflowGenerator;
-import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
@@ -54,7 +55,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH_CHAUHAN)
+  @Owner(developers = YOGESH_CHAUHAN)
   @Category(FunctionalTests.class)
   @Ignore("Enable once feature flag is enabled for infra refactor")
   public void shouldRunAwsAmiWorkflow() {

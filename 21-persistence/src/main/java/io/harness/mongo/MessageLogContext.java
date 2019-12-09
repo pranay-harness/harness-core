@@ -7,10 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MessageLogContext extends AutoLogContext {
+  public static final String MESSAGE_CLASS = "messageClass";
+  public static final String MESSAGE_ID = "messageId";
+
   public MessageLogContext(Queuable message, OverrideBehavior behavior) {
     super(NullSafeImmutableMap.<String, String>builder()
-              .put("class", message.getClass().getName())
-              .putIfNotNull("messageId", message.getId())
+              .put(MESSAGE_CLASS, message.getClass().getName())
+              .putIfNotNull(MESSAGE_ID, message.getId())
               .build(),
         behavior);
   }
