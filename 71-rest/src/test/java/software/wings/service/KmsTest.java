@@ -2112,7 +2112,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = ANKIT, intermittent = true)
   @Category(UnitTests.class)
   @RealMongo
   public void transitionKmsForConfigFile() throws IOException, InterruptedException, IllegalAccessException {
