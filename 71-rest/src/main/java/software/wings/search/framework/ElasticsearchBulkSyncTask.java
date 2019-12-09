@@ -94,9 +94,9 @@ public class ElasticsearchBulkSyncTask {
       SearchEntityIndexState searchEntityIndexState =
           wingsPersistence.get(SearchEntityIndexState.class, searchEntity.getClass().getCanonicalName());
       if (searchEntityIndexState != null && !searchEntityIndexState.shouldBulkSync()) {
-        logger.info(String.format("Entity %s is already migrated to elasticsearch", searchEntity.getClass()));
+        logger.info("Entity {} is already migrated to elasticsearch", searchEntity.getClass());
       } else {
-        logger.info(String.format("Entity %s is to be migrated to elasticsearch", searchEntity.getClass()));
+        logger.info("Entity {} is to be migrated to elasticsearch", searchEntity.getClass());
         entitiesToBulkSync.add(searchEntity);
       }
     }

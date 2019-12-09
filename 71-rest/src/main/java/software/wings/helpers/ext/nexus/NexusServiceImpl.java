@@ -338,10 +338,8 @@ public class NexusServiceImpl implements NexusService {
         return nexusThreeService.getDockerTags(nexusConfig, encryptionDetails, artifactStreamAttributes);
       }
     } catch (IOException e) {
-      logger.error(format("Error occurred while retrieving tags from Nexus server %s for repository %s under image %s",
-                       nexusConfig.getNexusUrl(), artifactStreamAttributes.getJobName(),
-                       artifactStreamAttributes.getImageName()),
-          e);
+      logger.error("Error occurred while retrieving tags from Nexus server {} for repository {} under image {}",
+          nexusConfig.getNexusUrl(), artifactStreamAttributes.getJobName(), artifactStreamAttributes.getImageName(), e);
       handleException(e);
     }
     return new ArrayList<>();

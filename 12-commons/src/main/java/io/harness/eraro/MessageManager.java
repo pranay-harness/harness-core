@@ -7,7 +7,6 @@ import org.apache.commons.text.StrSubstitutor;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Properties;
 
@@ -43,8 +42,7 @@ public class MessageManager {
       message = StrSubstitutor.replace(message, ImmutableMap.of("exception_message", exceptionMessage));
     }
     if (message.matches(".*(\\$\\$)*\\$\\{.*")) {
-      logger.info(MessageFormat.format(
-          "Insufficient parameter from [{0}] in message \"{1}\"", String.join(", ", params.keySet()), message));
+      logger.info("Insufficient parameter from [{}] in message \"{}\"", String.join(", ", params.keySet()), message);
     }
     return message;
   }

@@ -174,7 +174,7 @@ public class WebHookServiceImpl implements WebHookService {
       return prepareResponse(
           WebHookResponse.builder().error(ExceptionUtils.getMessage(ex)).build(), Response.Status.BAD_REQUEST);
     } catch (Exception ex) {
-      logger.warn(format("Webhook Request call failed"), ex);
+      logger.warn("Webhook Request call failed", ex);
       return prepareResponse(WebHookResponse.builder().error(ExceptionUtils.getMessage(ex)).build(),
           Response.Status.INTERNAL_SERVER_ERROR);
     }
@@ -261,7 +261,7 @@ public class WebHookServiceImpl implements WebHookService {
 
       return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
     } catch (Exception ex) {
-      logger.error(format("Webhook Request call failed "), ex);
+      logger.error("Webhook Request call failed", ex);
       triggerExecution.setStatus(Status.FAILED);
       triggerExecution.setMessage(ExceptionUtils.getMessage(ex));
       triggerExecutionService.save(triggerExecution);

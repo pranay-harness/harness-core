@@ -1308,7 +1308,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User signUpUserUsingOauth(OauthUserInfo userInfo, String oauthProviderName) {
-    logger.info(String.format("User not found in db. Creating an account for: [%s]", userInfo.getEmail()));
+    logger.info("User not found in db. Creating an account for: [{}]", userInfo.getEmail());
     checkForFreemiumCluster();
     User user = createUser(userInfo, oauthProviderName);
     notNullOrEmptyCheck(user.getAccountName(), "Account/Company name");
@@ -1703,9 +1703,6 @@ public class UserServiceImpl implements UserService {
     Preconditions.checkNotNull(user, "User cannot be null");
     Preconditions.checkNotNull(user.getDefaultAccountId(), "Default account can't be null for any user");
     if (!user.getDefaultAccountId().equals(accountId)) {
-      logger.error(String.format("Unlocking user: [%s] in account: [%s] failed because of insufficient permission",
-                       email, accountId),
-          USER);
       throw new UnauthorizedException("User not authorized", USER);
     }
     UpdateOperations<User> operations = wingsPersistence.createUpdateOperations(User.class);
@@ -2479,7 +2476,7 @@ public class UserServiceImpl implements UserService {
       return loginSettingsService.getPasswordStrengthCheckViolations(
           account, EncodingUtils.decodeBase64ToString(password).toCharArray());
     } catch (Exception ex) {
-      logger.warn(String.format("Password violation polling failed for token: [%s]", token), ex);
+      logger.warn("Password violation polling failed for token: [{}]", token, ex);
       throw new InvalidRequestException("Password violation polling failed", USER);
     }
   }

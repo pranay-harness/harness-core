@@ -58,8 +58,7 @@ public abstract class SpotInstTaskHandler {
       return response;
     } catch (Exception ex) {
       if (spotInstTaskParameters.isSyncTask()) {
-        logger.error(format("Exception: [%s] while processing Spotinst sync task", ex.getMessage()), ex);
-        throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+        throw new InvalidRequestException(ex.getMessage(), ex);
       } else {
         String message = ex.getMessage();
         ExecutionLogCallback logCallback = getLogCallBack(spotInstTaskParameters, DEPLOYMENT_ERROR);

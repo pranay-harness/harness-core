@@ -1,6 +1,5 @@
 package software.wings.security.authentication.oauth;
 
-import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.common.collect.Sets;
@@ -104,8 +103,7 @@ public class OauthBasedAuthHandler implements AuthHandler {
         }
       }
     } catch (Exception ex) {
-      logger.error(String.format("Failed to login via OauthBasedAuthHandler, email was %s", userInfo.getEmail()), ex);
-      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+      throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED);
     }
   }
 

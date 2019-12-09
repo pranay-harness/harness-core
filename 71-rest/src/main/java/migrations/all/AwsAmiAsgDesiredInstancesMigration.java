@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
 import static jersey.repackaged.com.google.common.collect.Maps.newHashMap;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 
@@ -54,7 +53,7 @@ public class AwsAmiAsgDesiredInstancesMigration implements Migration {
             try {
               updateWorkflow(workflow);
             } catch (Exception ex) {
-              logger.error(format("Error updating workflow: [%s]", workflow.getUuid()), ex);
+              logger.error("Error updating workflow: [{}]", workflow.getUuid(), ex);
             }
           }
         }

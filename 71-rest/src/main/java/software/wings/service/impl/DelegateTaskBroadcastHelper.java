@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -51,7 +50,7 @@ public class DelegateTaskBroadcastHelper {
       try {
         broadcastNewDelegateTask(task);
       } catch (Exception e) {
-        logger.error(format("Failed to broadcast task %s for account %s", task.getUuid(), task.getAccountId()), e);
+        logger.error("Failed to broadcast task {} for account {}", task.getUuid(), task.getAccountId(), e);
       }
     });
   }

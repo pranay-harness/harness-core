@@ -3,7 +3,6 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -80,7 +79,7 @@ public class NexusThreeServiceImpl {
 
     if (isSuccessful(response)) {
       if (isNotEmpty(response.body())) {
-        logger.info(format("Retrieving %s repositories success", repositoryFormat));
+        logger.info("Retrieving {} repositories success", repositoryFormat);
         final Map<String, String> repositories;
         if (repositoryFormat == null) {
           repositories =
@@ -105,7 +104,7 @@ public class NexusThreeServiceImpl {
 
   public List<String> getPackageNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repository, String repositoryFormat, List<String> images) throws IOException {
-    logger.info(format("Retrieving packageNames for repositoryFormat %s", repository));
+    logger.info("Retrieving packageNames for repositoryFormat {}", repository);
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -155,7 +154,7 @@ public class NexusThreeServiceImpl {
 
   public List<String> getGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repository, String repositoryFormat, List<String> images) throws IOException {
-    logger.info(format("Retrieving groups for repositoryFormat %s", repository));
+    logger.info("Retrieving groups for repositoryFormat {}", repository);
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
@@ -499,7 +498,7 @@ public class NexusThreeServiceImpl {
       String repoId, String path) throws IOException {
     logger.info("Retrieving Artifact Names");
     List<String> artifactNames = new ArrayList<>();
-    logger.info(format("Retrieving artifact names for repository %s", repoId));
+    logger.info("Retrieving artifact names for repository {}", repoId);
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;

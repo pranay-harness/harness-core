@@ -156,7 +156,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "encryption failed after " + NUM_OF_RETRIES + " retries";
@@ -183,7 +183,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, vaultConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
         } else if (isRetryable(e)) {
@@ -278,7 +278,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         }
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("renewal failed. trial num: %d", failedAttempts), e);
+        logger.warn("renewal failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String message = "renewal failed after " + NUM_OF_RETRIES + " retries";
           throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -378,7 +378,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Encryption failed after " + NUM_OF_RETRIES + " retries";
@@ -406,7 +406,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             () -> decryptInternal(data, secretsManagerConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
@@ -670,7 +670,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("encryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Encryption failed after " + NUM_OF_RETRIES + " retries";
@@ -697,7 +697,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, azureConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String message = "Decryption failed after " + NUM_OF_RETRIES + " retries";
@@ -799,7 +799,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return timeLimiter.callWithTimeout(() -> decryptInternal(data, cyberArkConfig), 5, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("decryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (e instanceof SecretManagementDelegateException) {
           throw(SecretManagementDelegateException) e;
         } else if (isRetryable(e)) {

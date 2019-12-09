@@ -2,7 +2,6 @@ package migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -75,7 +74,7 @@ public class AddInfraMappingNameToInstanceData implements Migration {
                     -> wingsPersistence.updateField(
                         Instance.class, instance.getUuid(), "infraMappingName", infraMapping.getName()));
               } catch (Exception ex) {
-                logger.warn(format("Adding infraMappingName failed for infraMappingId [%s]", infraMappingId), ex);
+                logger.warn("Adding infraMappingName failed for infraMappingId [{}]", infraMappingId, ex);
               }
             } catch (Exception e) {
               logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);

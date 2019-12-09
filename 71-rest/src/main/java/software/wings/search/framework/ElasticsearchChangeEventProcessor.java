@@ -87,8 +87,8 @@ class ElasticsearchChangeEventProcessor {
 
     boolean isSaved = saveSearchSourceEntitySyncStateToken(sourceClass, changeEvent.getToken());
     if (!isSaved) {
-      logger.error(String.format("Could not save token. ChangeEvent %s could not be processed for entity %s",
-          changeEvent.toString(), sourceClass.getCanonicalName()));
+      logger.error("Could not save token. ChangeEvent {} could not be processed for entity {}", changeEvent.toString(),
+          sourceClass.getCanonicalName());
     }
 
     double timeTaken = Duration.between(start, Instant.now()).toMillis();

@@ -1,7 +1,5 @@
 package migrations.all;
 
-import static java.lang.String.format;
-
 import com.google.inject.Inject;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -125,7 +123,7 @@ public class MigrateArtifactStreamBindingsToServiceVariable implements Migration
             artifactStreamServiceBindingService.create(service.getAppId(), service.getUuid(), artifactStreamBinding);
           }
         } catch (Exception e) {
-          logger.error(format("Migration Error - could not migrate service: [%s]", serviceId), e);
+          logger.error("Migration Error - could not migrate service: [{}]", serviceId, e);
         }
       }
     }

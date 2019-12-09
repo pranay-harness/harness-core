@@ -36,7 +36,6 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.threading.Morpheus.sleep;
 import static io.harness.watcher.app.WatcherApplication.getProcessId;
-import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -517,7 +516,7 @@ public class WatcherServiceImpl implements WatcherService {
               startDelegateProcess(version, version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
               break;
             } catch (Exception e) {
-              logger.error(format("Error downloading or starting delegate version %s", version), e);
+              logger.error("Error downloading or starting delegate version {}", version, e);
               working.set(false);
             }
           }
@@ -535,7 +534,7 @@ public class WatcherServiceImpl implements WatcherService {
         }
       }
     } catch (Exception e) {
-      logger.error(format("Error processing delegate stream: %s", e.getMessage()), e);
+      logger.error("Error processing delegate stream: {}", e.getMessage(), e);
     }
   }
 
@@ -756,7 +755,7 @@ public class WatcherServiceImpl implements WatcherService {
         sleep(ofSeconds(15));
         new ProcessExecutor().command("kill", "-9", delegateProcess).start();
       } catch (Exception e) {
-        logger.error(format("Error killing delegate %s", delegateProcess), e);
+        logger.error("Error killing delegate {}", delegateProcess, e);
       }
       messageService.closeData(DELEGATE_DASH + delegateProcess);
       messageService.closeChannel(DELEGATE, delegateProcess);
@@ -774,7 +773,7 @@ public class WatcherServiceImpl implements WatcherService {
         try {
           new ProcessExecutor().command("kill", "-9", watcherProcess).start();
         } catch (Exception e) {
-          logger.error(format("Error killing watcher %s", watcherProcess), e);
+          logger.error("Error killing watcher {}", watcherProcess, e);
         }
         messageService.closeChannel(WATCHER, watcherProcess);
         messageService.removeData(WATCHER_DATA, EXTRA_WATCHER);

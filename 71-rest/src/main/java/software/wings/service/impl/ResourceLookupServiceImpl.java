@@ -377,8 +377,8 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
         request.addFilter("_id", IN, resourceIds.toArray());
       }
     }
-    logger.info(format("Time taken for entity type [%s] in resource lookup : [%s] ms", entityType,
-        System.currentTimeMillis() - startTime));
+    logger.info("Time taken for entity type [{}] in resource lookup : [{}] ms", entityType,
+        System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
 
     PageResponse<T> pageResponse;
@@ -421,15 +421,15 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
       default:
         throw new InvalidRequestException(format("Unhandled entity type %s while getting list", entityType));
     }
-    logger.info(format("Time taken for entity type [%s] in listing entity: [%s] ms", entityType,
-        System.currentTimeMillis() - startTime));
+    logger.info("Time taken for entity type [{}] in listing entity: [{}] ms", entityType,
+        System.currentTimeMillis() - startTime);
     startTime = System.currentTimeMillis();
 
     if (withTags) {
       setTagLinks(request, pageResponse, entityType);
     }
-    logger.info(format("Time taken for entity type [%s] in setting tags: [%s] ms", entityType,
-        System.currentTimeMillis() - startTime));
+    logger.info(
+        "Time taken for entity type [{}] in setting tags: [{}] ms", entityType, System.currentTimeMillis() - startTime);
 
     return pageResponse;
   }

@@ -88,7 +88,7 @@ public class AccountPasswordExpirationJob implements Job {
                 account.getUuid());
           }
         } catch (Exception ex) {
-          logger.error(String.format("CheckAccountPasswordExpiration failed for User: %s", user.getEmail()), ex);
+          logger.error("CheckAccountPasswordExpiration failed for User: {}", user.getEmail(), ex);
         }
       }
     } catch (Exception ex) {
@@ -97,7 +97,7 @@ public class AccountPasswordExpirationJob implements Job {
   }
 
   private void checkForPasswordExpiration(PasswordExpirationPolicy passwordExpirationPolicy, User user) {
-    logger.info(String.format("AccountPasswordExpirationJob: processing user: %s", user.getEmail()));
+    logger.info("AccountPasswordExpirationJob: processing user: {}", user.getEmail());
     long passwordChangedAt = user.getPasswordChangedAt();
 
     // for someone who has never changed his password, this value will be 0.

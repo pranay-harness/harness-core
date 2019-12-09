@@ -88,7 +88,7 @@ public class KmsEncryptDecryptClient {
             () -> encryptInternal(accountId, value, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("Encryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("Encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
@@ -148,7 +148,7 @@ public class KmsEncryptDecryptClient {
         }
       } catch (Exception e) {
         failedAttempts++;
-        logger.warn(format("Decryption failed. trial num: %d", failedAttempts), e);
+        logger.warn("Decryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason =

@@ -9,7 +9,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
@@ -613,13 +612,13 @@ public abstract class TerraformProvisionState extends State {
       }
 
     } else {
-      logger.info(format("Variables before filtering: %s", getAllVariables()));
+      logger.info("Variables before filtering: {}", getAllVariables());
       final List<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
-      logger.info(format("Variables after filtering: %s", validVariables));
+      logger.info("Variables after filtering: {}", validVariables);
 
       variables = infrastructureProvisionerService.extractTextVariables(validVariables, context);
-      logger.info(format("Variables after extracting text type: %s", variables));
+      logger.info("Variables after extracting text type: {}", variables);
       encryptedVariables =
           infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
 

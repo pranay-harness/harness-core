@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.pcf;
 
-import static java.lang.String.format;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -54,7 +52,7 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
       return commandTaskTypeToTaskHandlerMap.get(pcfCommandRequest.getPcfCommandType().name())
           .executeTask(pcfCommandRequest, encryptedDataDetails);
     } catch (Exception ex) {
-      logger.error(format("Exception in processing PCF task [%s]", pcfCommandRequest.toString()), ex);
+      logger.error("Exception in processing PCF task [{}]", pcfCommandRequest.toString(), ex);
       return PcfCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

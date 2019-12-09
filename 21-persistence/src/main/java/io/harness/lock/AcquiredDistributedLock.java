@@ -51,9 +51,8 @@ public class AcquiredDistributedLock implements AcquiredLock {
     final long elapsed = monotonicTimestamp() - startTimestamp;
     final int timeout = lock.getOptions().getInactiveLockTimeout();
     if (elapsed > timeout) {
-      logger.error(String.format("The distributed lock %s was not released on time. "
-              + "THIS IS VERY BAD!!!, elapsed: %d, timeout %d",
-          lock.getName(), elapsed, timeout));
+      logger.error("The distributed lock {} was not released on time. THIS IS VERY BAD!!!, elapsed: {}, timeout {}",
+          lock.getName(), elapsed, timeout);
 
       // At this point the situation is already troublesome. After the timeout expired the current
       // process potentially overlapped with some other process working at the same time.

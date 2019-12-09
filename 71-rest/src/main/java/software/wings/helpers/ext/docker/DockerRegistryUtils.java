@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.exception.WingsException.USER;
-import static java.lang.String.format;
 import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSuccessful;
 
 import com.google.inject.Inject;
@@ -73,7 +72,7 @@ public class DockerRegistryUtils {
               labelsMap.put(index, newLabels);
               return true;
             } catch (Exception e) {
-              logger.error(format("Could not fetch docker labels for %s:%s", imageName, tagInternal), e);
+              logger.error("Could not fetch docker labels for {}:{}", imageName, tagInternal, e);
               return false;
             }
           });

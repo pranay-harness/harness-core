@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
-import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -347,7 +346,7 @@ public class InstallUtils {
       String helmDirectory = helmBaseDir + helmVersion;
       if (validateHelmExists(helmDirectory)) {
         helmPath = Paths.get(helmDirectory + "/helm").toAbsolutePath().normalize().toString();
-        logger.info(format("helm version %s already installed", helmVersion));
+        logger.info("helm version %s already installed", helmVersion);
 
         return initHelmClient();
       }
@@ -435,7 +434,7 @@ public class InstallUtils {
       String chartMuseumDirectory = chartMuseumBaseDir + chartMuseumVersion;
       if (validateChartMuseumExists(chartMuseumDirectory)) {
         chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
-        logger.info(format("chartmuseum version %s already installed", chartMuseumVersion));
+        logger.info("chartmuseum version %s already installed", chartMuseumVersion);
         return true;
       }
 

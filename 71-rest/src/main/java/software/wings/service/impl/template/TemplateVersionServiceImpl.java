@@ -59,7 +59,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
         templateVersion = wingsPersistence.saveAndGet(TemplateVersion.class, templateVersion);
         done = true;
       } catch (Exception e) {
-        logger.warn(String.format("TemplateVersion save failed templateUuid: %s- attemptNo: %s", templateUuid, i), e);
+        logger.warn("TemplateVersion save failed templateUuid: {} - attemptNo: {}", templateUuid, i, e);
         i++;
       }
     } while (!done && i < 3);

@@ -2,7 +2,6 @@ package migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
@@ -43,13 +42,13 @@ public class AmiDeploymentTypeMigration implements Migration {
         }
         appIds.forEach(appId -> {
           try {
-            logger.info(format("Starting to perform Ami Deployment Type migration for app: [%s]", appId));
+            logger.info("Starting to perform Ami Deployment Type migration for app: [{}]", appId);
             PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
             pageRequest.addFilter("appId", Operator.EQ, appId);
             PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
             List<InfrastructureMapping> infraMappingList = response.getResponse();
             if (isEmpty(infraMappingList)) {
-              logger.info(format("Done with Ami Deployment Type migration for app: [%s]", appId));
+              logger.info("Done with Ami Deployment Type migration for app: [{}]", appId);
               return;
             }
             List<InfrastructureMapping> aminfraMappingList =
@@ -57,7 +56,7 @@ public class AmiDeploymentTypeMigration implements Migration {
                     .filter(mapping -> mapping instanceof AwsAmiInfrastructureMapping)
                     .collect(toList());
             if (isEmpty(aminfraMappingList)) {
-              logger.info(format("Done with Ami Deployment Type migration for app: [%s]", appId));
+              logger.info("Done with Ami Deployment Type migration for app: [{}]", appId);
               return;
             }
             aminfraMappingList.forEach(amiMapping -> {
@@ -66,17 +65,17 @@ public class AmiDeploymentTypeMigration implements Migration {
               try {
                 infraMappingService.update(awsAmiInfrastructureMapping);
               } catch (Exception ex) {
-                logger.warn("Error while updating Ami Deployment Types for Aws Ami Infra Mapping: [%s]",
+                logger.warn("Error while updating Ami Deployment Types for Aws Ami Infra Mapping: [{}]",
                     awsAmiInfrastructureMapping.getUuid(), ex);
               }
             });
-            logger.info(format("Done with Ami Deployment Type migration for app: [%s]", appId));
+            logger.info("Done with Ami Deployment Type migration for app: [{}]", appId);
           } catch (Exception ex) {
-            logger.warn("Error while updating Ami Deployment Types for app: [%s]", appId, ex);
+            logger.warn("Error while updating Ami Deployment Types for app: [{}]", appId, ex);
           }
         });
       } catch (Exception ex) {
-        logger.warn("Error while updating Ami Deployment Types for account: [%s]", account.getUuid(), ex);
+        logger.warn("Error while updating Ami Deployment Types for account: [{}]", account.getUuid(), ex);
       }
     });
   }

@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.aws.ecs;
 
-import static java.lang.String.format;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -43,7 +41,7 @@ public class EcsCommandTask extends AbstractDelegateRunnableTask {
       return commandTaskTypeToTaskHandlerMap.get(ecsCommandRequest.getEcsCommandType().name())
           .executeTask(ecsCommandRequest, (List) parameters[1]);
     } catch (WingsException ex) {
-      logger.error(format("Exception in processing ECS task [%s]", ecsCommandRequest.toString()), ex);
+      logger.error("Exception in processing ECS task [{}]", ecsCommandRequest.toString(), ex);
       return EcsCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

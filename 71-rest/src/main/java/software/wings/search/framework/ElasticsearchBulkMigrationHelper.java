@@ -117,11 +117,11 @@ class ElasticsearchBulkMigrationHelper {
   boolean doBulkSync(Set<SearchEntity<?>> entitiesToBulkSync) {
     boolean hasMigrationSucceeded = true;
     for (SearchEntity<?> searchEntity : entitiesToBulkSync) {
-      logger.info(String.format("Migrating %s to elasticsearch", searchEntity.getClass().getCanonicalName()));
+      logger.info("Migrating {} to elasticsearch", searchEntity.getClass().getCanonicalName());
       hasMigrationSucceeded = runBulkMigration(searchEntity);
 
       if (hasMigrationSucceeded) {
-        logger.info(String.format("%s migrated to elasticsearch", searchEntity.getClass().getCanonicalName()));
+        logger.info("{} migrated to elasticsearch", searchEntity.getClass().getCanonicalName());
       } else {
         logger.error(
             String.format("Failed to migrate %s to elasticsearch", searchEntity.getClass().getCanonicalName()));

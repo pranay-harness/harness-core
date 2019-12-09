@@ -500,7 +500,7 @@ public class EntityHelper {
       affectedResourceType = ResourceType.SECRET_MANAGER.name();
       affectedResourceOperation = type.name();
     } else {
-      logger.error(format("Unhandled class for auditing: [%s]", entity.getClass().getSimpleName()));
+      logger.error("Unhandled class for auditing: [{}]", entity.getClass().getSimpleName());
       entityType = format("Object of class: [%s]", entity.getClass().getSimpleName());
       entityName = format("Name of class: [%s]", entity.getClass().getSimpleName());
     }
@@ -728,8 +728,8 @@ public class EntityHelper {
       }
       return finalYaml;
     } catch (InvalidRequestException ex) {
-      logger.error(format("Exception while getting Yaml path for entity id: [%s] of class: [%s]",
-          ((UuidAccess) entity).getUuid(), entity.getClass().getSimpleName()));
+      logger.error("Exception while getting Yaml path for entity id: [{}] of class: [{}]",
+          ((UuidAccess) entity).getUuid(), entity.getClass().getSimpleName());
       return EMPTY;
     }
   }

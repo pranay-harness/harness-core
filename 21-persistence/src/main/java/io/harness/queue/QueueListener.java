@@ -6,7 +6,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.threading.Morpheus.sleep;
-import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
 
@@ -71,7 +70,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
         logger.info("Thread interrupted, shutting down for queue {}", queue.getName());
         return false;
       }
-      logger.error(format("Exception happened while fetching message from queue %s", queue.getName()), exception);
+      logger.error("Exception happened while fetching message from queue {}", queue.getName(), exception);
     }
 
     if (message != null) {
@@ -91,7 +90,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
           logger.info("Thread interrupted, shutting down for queue {}", queue.getName());
           return;
         }
-        logger.error(format("Exception happened while fetching message from queue %s", queue.getName()), exception);
+        logger.error("Exception happened while fetching message from queue {}", queue.getName(), exception);
       }
 
       if (message == null) {
@@ -124,7 +123,7 @@ public abstract class QueueListener<T extends Queuable> implements Runnable {
 
       queue.ack(message);
     } catch (InstantiationError exception) {
-      logger.error(format("Critical exception happened in onMessage %s", queue.getName()), exception);
+      logger.error("Critical exception happened in onMessage {}", queue.getName(), exception);
       queue.ack(message);
     } catch (Throwable exception) {
       onException(exception, message);

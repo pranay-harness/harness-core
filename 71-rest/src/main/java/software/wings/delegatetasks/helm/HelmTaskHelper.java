@@ -9,7 +9,6 @@ import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
@@ -434,7 +433,7 @@ public class HelmTaskHelper {
 
       ProcessResult processResult = executeCommand(repoRemoveCommand, null);
       if (processResult.getExitValue() != 0) {
-        logger.warn(format("Failed to remove helm repo %s. %s", repoName, processResult.getOutput().getUTF8()));
+        logger.warn("Failed to remove helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
     } catch (Exception ex) {
       logger.warn(ExceptionUtils.getMessage(ex));

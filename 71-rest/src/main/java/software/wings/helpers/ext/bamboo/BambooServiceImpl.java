@@ -162,7 +162,7 @@ public class BambooServiceImpl implements BambooService {
       return timeLimiter.callWithTimeout(() -> {
         BambooRestClient bambooRestClient = getBambooClient(bambooConfig, encryptionDetails);
         logger.info("Retrieving plan keys for bamboo server {}", bambooConfig);
-        logger.info(format("Fetching plans starting at index: [0] from bamboo server %s", bambooConfig.getBambooUrl()));
+        logger.info("Fetching plans starting at index: [0] from bamboo server {}", bambooConfig.getBambooUrl());
         Call<JsonNode> request = bambooRestClient.listProjectPlans(
             Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults);
         Map<String, String> planNameMap = new HashMap<>();
@@ -182,10 +182,10 @@ public class BambooServiceImpl implements BambooService {
           }
           if (maxResults != 1 && size > maxResults) {
             int maxPlansToFetch = Math.min(size, 10000);
-            logger.info(format("Total no. of plans to fetch: [%d]", maxPlansToFetch));
+            logger.info("Total no. of plans to fetch: [{}]", maxPlansToFetch);
             for (int startIndex = maxResults; startIndex < maxPlansToFetch; startIndex += maxResults) {
-              logger.info(format("Fetching plans starting at index: [%d] from bamboo server %s", startIndex,
-                  bambooConfig.getBambooUrl()));
+              logger.info("Fetching plans starting at index: [{}] from bamboo server {}", startIndex,
+                  bambooConfig.getBambooUrl());
               request = bambooRestClient.listProjectPlansWithPagination(
                   Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults,
                   startIndex);
@@ -494,7 +494,6 @@ public class BambooServiceImpl implements BambooService {
           }
           return ImmutablePair.of(artifactSourcePath, uc.getInputStream());
         } catch (IOException e) {
-          logger.error(format("Failed to download the artifact from url %s", artifactUrl), e);
           throw new WingsException(ARTIFACT_SERVER_ERROR, USER, e)
               .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }

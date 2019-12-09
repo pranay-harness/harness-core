@@ -221,8 +221,8 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       return groupResponse;
     } catch (LdapException e) {
       if (e.getResultCode().equals(ResultCode.NO_SUCH_OBJECT)) {
-        logger.error(String.format("Ldap [%s] received while fetching group by dn: [%s] for Ldap Name: [%s]",
-            e.getResultCode().toString(), dn, settings.getPublicSSOSettings().getDisplayName()));
+        logger.error("Ldap [{}] received while fetching group by dn: [{}] for Ldap Name: [{}]",
+            e.getResultCode().toString(), dn, settings.getPublicSSOSettings().getDisplayName());
         return null;
       }
       throw new LdapDelegateException(e.getResultCode().toString(), e);

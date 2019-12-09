@@ -4,7 +4,6 @@ import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.flowingStatuses;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static java.lang.String.format;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.MARK_EXPIRED;
 
@@ -95,7 +94,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
       } catch (WingsException exception) {
         ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (Exception e) {
-        logger.error(format("Error in cleaning up the workflow execution %s", entity.getUuid()), e);
+        logger.error("Error in cleaning up the workflow execution {}", entity.getUuid(), e);
       }
 
       if (!hasActiveStates) {
@@ -139,7 +138,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
-      logger.error(format("Error in monitoring the workflow execution %s", entity.getUuid()));
+      logger.error("Error in monitoring the workflow execution {}", entity.getUuid());
     }
   }
 }

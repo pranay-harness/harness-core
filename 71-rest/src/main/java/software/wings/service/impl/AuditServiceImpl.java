@@ -374,7 +374,7 @@ public class AuditServiceImpl implements AuditService {
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
             }
           } catch (Exception ex) {
-            logger.warn(format("Failed to delete %d audit audit records", auditHeaders.size()), ex);
+            logger.warn("Failed to delete {} audit records", auditHeaders.size(), ex);
           }
           logger.info("Successfully deleted {} audit records", auditHeaders.size());
           if (auditHeaders.size() < limit) {
@@ -384,7 +384,7 @@ public class AuditServiceImpl implements AuditService {
         }
       }, 10L, TimeUnit.MINUTES, true);
     } catch (Exception ex) {
-      logger.warn(format("Failed to delete audit records older than last %d days within 10 minutes.", days), ex);
+      logger.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
     }
     logger.info("Deleted audit records older than {} days", days);
   }
@@ -471,7 +471,7 @@ public class AuditServiceImpl implements AuditService {
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, ExecutionContext.MANAGER, logger);
     } catch (Exception ex) {
-      logger.error(format("Exception while auditing records for account [%s]", accountId), ex);
+      logger.error("Exception while auditing records for account [{}]", accountId, ex);
     }
   }
 

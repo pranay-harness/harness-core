@@ -577,7 +577,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         try {
           loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
         } catch (Exception e) {
-          logger.error(format("Failed to load Orchestration workflow %s", workflow.getUuid()), e);
+          logger.error("Failed to load Orchestration workflow {}", workflow.getUuid(), e);
         }
       }
     }
@@ -598,7 +598,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowExecutions.forEach(we -> we.setStateMachine(null));
           workflow.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
-          logger.error(format("Failed to fetch recent executions for workflow %s", workflow.getUuid()), e);
+          logger.error("Failed to fetch recent executions for workflow {}", workflow.getUuid(), e);
         }
       }
     }

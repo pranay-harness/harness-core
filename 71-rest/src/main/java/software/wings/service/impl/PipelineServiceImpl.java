@@ -186,7 +186,7 @@ public class PipelineServiceImpl implements PipelineService {
                   .getResponse();
           pipeline.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
-          logger.error(format("Failed to fetch recent executions for pipeline %s", pipeline), e);
+          logger.error("Failed to fetch recent executions for pipeline {}", pipeline, e);
         }
       }
     }

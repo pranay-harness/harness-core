@@ -79,15 +79,15 @@ class ChangeTrackingTask implements Runnable {
 
   public void run() {
     try {
-      logger.info(String.format("changeStream opened on %s", collection.getNamespace()));
+      logger.info("changeStream opened on {}", collection.getNamespace());
       openChangeStream(this ::handleChange);
     } catch (MongoInterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.warn(String.format("Changestream on %s interrupted", collection.getNamespace()), e);
+      logger.warn("Changestream on {} interrupted", collection.getNamespace(), e);
     } catch (RuntimeException e) {
-      logger.error(String.format("Unexpectedly %s changeStream shutting down", collection.getNamespace()), e);
+      logger.error("Unexpectedly {} changeStream shutting down", collection.getNamespace(), e);
     } finally {
-      logger.warn(String.format("%s changeStream shutting down.", collection.getNamespace()));
+      logger.warn("{} changeStream shutting down.", collection.getNamespace());
       latch.countDown();
     }
   }

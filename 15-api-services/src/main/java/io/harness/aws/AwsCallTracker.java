@@ -1,7 +1,5 @@
 package io.harness.aws;
 
-import static java.lang.String.format;
-
 import com.google.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +24,7 @@ public class AwsCallTracker {
   private static final String CLASSIC_ELB_MARKER = "CLASSIC_ELB";
 
   private void trackAWSCall(String marker, String callType) {
-    logger.info(format("AWS CALL:[%s] %s", marker, callType));
+    logger.info("AWS CALL:[{}] {}", marker, callType);
   }
 
   public void trackS3Call(String callType) {

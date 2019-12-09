@@ -31,7 +31,7 @@ public class AddOrchestrationToWorkflows implements Migration {
           Workflow readWorkflow = workflowService.readWorkflow(workflow.getAppId(), workflow.getUuid());
           workflowService.updateWorkflow(readWorkflow, false);
         } catch (Throwable exception) {
-          logger.error(String.format("Exception while migrating orchestration for %s", workflow.getUuid()), exception);
+          logger.error("Exception while migrating orchestration for {}", workflow.getUuid(), exception);
         }
       }
     }

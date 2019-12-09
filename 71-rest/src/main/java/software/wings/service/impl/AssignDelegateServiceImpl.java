@@ -4,7 +4,6 @@ import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.CapabilityUtils.isTaskTypeMigratedToCapabilityFramework;
-import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -222,7 +221,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         }
       }
     } catch (Exception e) {
-      logger.error(format("Error checking whether delegate is whitelisted for task %s", task.getUuid()), e);
+      logger.error("Error checking whether delegate is whitelisted for task {}", task.getUuid(), e);
     }
     return false;
   }
@@ -244,7 +243,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         }
       }
     } catch (Exception e) {
-      logger.error(format("Error checking whether delegate should validate task %s", task.getUuid()), e);
+      logger.error("Error checking whether delegate should validate task {}", task.getUuid(), e);
     }
     return false;
   }
@@ -330,7 +329,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         }
       }
     } catch (Exception e) {
-      logger.error(format("Error refreshing whitelist entry for task %s", task.getUuid()), e);
+      logger.error("Error refreshing whitelist entry for task {}", task.getUuid(), e);
     }
   }
 

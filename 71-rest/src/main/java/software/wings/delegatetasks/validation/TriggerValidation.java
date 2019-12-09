@@ -2,7 +2,6 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
-import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
@@ -32,7 +31,7 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    logger.info(format("Running validation for task %s", delegateTaskId));
+    logger.info("Running validation for task {}", delegateTaskId);
 
     TriggerRequest triggerRequest = (TriggerRequest) (getParameters()[0]);
     TriggerCommandType triggerCommandType = triggerRequest.getTriggerCommandType();
@@ -48,8 +47,8 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
           unhandled(triggerCommandType);
       }
     } catch (Exception ex) {
-      logger.error(format("Exception occurred while validating trigger task for account %s, triggerCommandType %s",
-          triggerRequest.getAccountId(), triggerCommandType));
+      logger.error("Exception occurred while validating trigger task for account {}, triggerCommandType {}",
+          triggerRequest.getAccountId(), triggerCommandType);
     }
 
     DelegateConnectionResult delegateConnectionResult =

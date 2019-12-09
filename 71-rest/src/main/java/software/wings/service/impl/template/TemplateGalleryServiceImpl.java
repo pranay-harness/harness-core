@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -312,7 +311,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
           logger.info("Template gallery does not exist for account [{}]. Do nothing", account.getUuid());
         }
       } catch (Exception ex) {
-        logger.error(format("Copy Harness template failed for account [%s]", account.getUuid()), ex);
+        logger.error("Copy Harness template failed for account [{}]", account.getUuid(), ex);
       }
     }
   }
@@ -349,7 +348,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
         logger.info("Template gallery does not exist for account [{}]. Do nothing", accountId);
       }
     } catch (Exception ex) {
-      logger.error(format("Copy Harness template failed for account [%s]", accountId), ex);
+      logger.error("Copy Harness template failed for account [{}]", accountId, ex);
     }
   }
 
@@ -412,7 +411,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
           logger.info("Template gallery does not exist for account [{}]. Do nothing.", account.getUuid());
         }
       } catch (Exception ex) {
-        logger.error(format("Copy Harness template failed for account [%s]", account.getUuid()), ex);
+        logger.error("Copy Harness template failed for account [{}]", account.getUuid(), ex);
       }
     }
   }

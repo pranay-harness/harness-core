@@ -1,7 +1,5 @@
 package io.harness.utils;
 
-import static java.lang.String.format;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -61,7 +59,7 @@ public class AccountCache {
     try {
       return (T) cache.get(makeCacheKey(cls, objKey));
     } catch (Exception ex) {
-      logger.warn(format("Exception occurred in fetching key %s, %s", cls.getSimpleName(), objKey), ex);
+      logger.warn("Exception occurred in fetching key {}, {}", cls.getSimpleName(), objKey, ex);
     }
     return null;
   }

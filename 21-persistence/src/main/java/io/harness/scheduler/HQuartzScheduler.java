@@ -1,7 +1,6 @@
 package io.harness.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.lang.String.format;
 
 import com.google.inject.Injector;
 
@@ -214,7 +213,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       scheduler.deleteJob(jobDetail.getKey());
       scheduler.scheduleJob(jobDetail, trigger);
     } catch (SchedulerException ex) {
-      logger.error(format("Couldn't ensure cron job [%s] ", jobDetail.getKey()), ex);
+      logger.error("Couldn't ensure cron job [{}]", jobDetail.getKey(), ex);
     }
   }
 
@@ -260,7 +259,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       try {
         return scheduler.deleteJob(new JobKey(jobName, groupName));
       } catch (SchedulerException ex) {
-        logger.error(format("Couldn't delete cron job [%s %s] ", groupName, jobName), ex);
+        logger.error("Couldn't delete cron job [{} {}] ", groupName, jobName, ex);
       }
     }
     return false;

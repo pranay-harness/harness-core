@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.cloudformation;
 
-import static java.lang.String.format;
-
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
@@ -69,7 +67,7 @@ public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
     try {
       return handler.execute(request, details);
     } catch (Exception ex) {
-      logger.error(format("Exception in processing cloud formation task [%s]", request.toString()), ex);
+      logger.error("Exception in processing cloud formation task [{}]", request.toString(), ex);
       return CloudFormationCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))

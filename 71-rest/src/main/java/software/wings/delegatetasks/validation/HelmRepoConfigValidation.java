@@ -3,7 +3,6 @@ package software.wings.delegatetasks.validation;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.network.Http.connectableHttpUrl;
-import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -56,7 +55,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    logger.info(format("Running validation for task %s", delegateTaskId));
+    logger.info("Running validation for task {}", delegateTaskId);
 
     HelmRepoConfig helmRepoConfig = getHelmRepoConfig();
 
@@ -133,7 +132,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
 
   private boolean isConnectableHttpUrl(String url) {
     if (!connectableHttpUrl(url)) {
-      logger.info(format("Unreachable URL %s for task %s from delegate", url, delegateTaskId));
+      logger.info("Unreachable URL {} for task {} from delegate", url, delegateTaskId);
       return false;
     }
 
@@ -143,7 +142,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private boolean isChartMuseumInstalled() {
     String chartMuseumPath = k8sGlobalConfigService.getChartMuseumPath();
     if (isBlank(chartMuseumPath)) {
-      logger.info(format("chartmuseum not installed in delegate for task %s", delegateTaskId));
+      logger.info("chartmuseum not installed in delegate for task {}", delegateTaskId);
       return false;
     }
 
@@ -156,7 +155,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
   private boolean isHelmInstalled() {
     String helmPath = k8sGlobalConfigService.getHelmPath();
     if (isBlank(helmPath)) {
-      logger.info(format("Helm not installed in delegate for task %s", delegateTaskId));
+      logger.info("Helm not installed in delegate for task {}", delegateTaskId);
       return false;
     }
 

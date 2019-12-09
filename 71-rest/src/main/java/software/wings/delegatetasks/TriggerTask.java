@@ -1,7 +1,6 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -53,8 +52,8 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
     TriggerCommandType triggerCommandType = triggerRequest.getTriggerCommandType();
     TriggerResponse triggerResponse;
 
-    logger.info(format(
-        "Executing trigger task for account %s and type is %s", triggerRequest.getAccountId(), triggerCommandType));
+    logger.info(
+        "Executing trigger task for account {} and type is {}", triggerRequest.getAccountId(), triggerCommandType);
 
     try {
       switch (triggerCommandType) {
@@ -70,9 +69,8 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
 
       return triggerResponse;
     } catch (Exception ex) {
-      logger.error(format("Exception in processing trigger task for account %s, triggerCommandType %s",
-                       triggerRequest.getAccountId(), triggerCommandType),
-          ex);
+      logger.error("Exception in processing trigger task for account {}, triggerCommandType {}",
+          triggerRequest.getAccountId(), triggerCommandType, ex);
       return new TriggerResponse(null, ExecutionStatus.FAILED, ExceptionUtils.getMessage(ex));
     }
   }
@@ -85,8 +83,8 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
     List<String> filePaths = triggerRequest.getFilePaths();
     List<EncryptedDataDetail> encryptionDetails = triggerRequest.getEncryptionDetails();
 
-    logger.info(format("Checking if deployment needed - gitConnectorId %s, currentCommitId %s, oldCommitId %s",
-        gitConnectorId, currentCommitId, oldCommitId));
+    logger.info("Checking if deployment needed - gitConnectorId {}, currentCommitId {}, oldCommitId {}", gitConnectorId,
+        currentCommitId, oldCommitId);
 
     try {
       encryptionService.decrypt(gitConfig, encryptionDetails);

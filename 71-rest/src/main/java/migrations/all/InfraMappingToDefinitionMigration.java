@@ -200,9 +200,9 @@ public class InfraMappingToDefinitionMigration implements Migration {
 
       logger.info(StringUtils.join(DEBUG_LINE, "Finished Infra mapping migration for accountId ", accountId));
 
-      logger.info(format("Enabling feature flag for accountId : [%s]", accountId));
+      logger.info("Enabling feature flag for accountId : [{}]", accountId);
       featureFlagService.enableAccount(FeatureName.INFRA_MAPPING_REFACTOR, accountId);
-      logger.info(format("Enabled feature flag for accountId : [%s]", accountId));
+      logger.info("Enabled feature flag for accountId : [{}]", accountId);
 
       yamlGitService.asyncFullSyncForEntireAccount(accountId);
     }

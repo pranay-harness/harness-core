@@ -5,7 +5,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectionUtils.getFieldByName;
-import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -60,7 +59,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             try {
               f.set(object, decryptChars);
             } catch (IllegalAccessException e) {
-              logger.error(format("Decryption failed for %s", encryptedDataDetail.toString()), e);
+              logger.error("Decryption failed for {}", encryptedDataDetail.toString(), e);
             }
           }
         });

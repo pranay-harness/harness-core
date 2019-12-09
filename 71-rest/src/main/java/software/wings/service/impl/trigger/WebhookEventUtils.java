@@ -274,7 +274,7 @@ public class WebhookEventUtils {
           throw new InvalidRequestException(format("Unhandled webhook source %s", webhookSource));
       }
     } catch (Exception ex) {
-      logger.warn(format("Failed to validate push event for %s with headers %s", webhookSource, httpHeaders));
+      logger.warn("Failed to validate push event for {} with headers {}", webhookSource, httpHeaders);
       throw ex;
     }
   }
