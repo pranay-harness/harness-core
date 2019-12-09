@@ -367,7 +367,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
   }
 
-  private ExecutionResponse executeJiraApproval(
+  @VisibleForTesting
+  ExecutionResponse executeJiraApproval(
       ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
     JiraApprovalParams jiraApprovalParams = approvalStateParams.getJiraApprovalParams();
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
@@ -454,7 +455,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
   }
 
-  private ExecutionResponse executeServiceNowApproval(
+  @VisibleForTesting
+  ExecutionResponse executeServiceNowApproval(
       ExecutionContext context, ApprovalStateExecutionData executionData, String approvalId) {
     ServiceNowApprovalParams servicenowApprovalParams = approvalStateParams.getServiceNowApprovalParams();
     servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
