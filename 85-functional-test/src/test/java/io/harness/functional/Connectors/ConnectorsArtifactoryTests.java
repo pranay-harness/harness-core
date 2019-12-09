@@ -1,5 +1,6 @@
 package io.harness.functional.Connectors;
 
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.SUNIL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +27,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -33,10 +35,13 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   // Test Constants
   private static String CONNECTOR_NAME_NEXUS = "Automation-Nexus-Connector-" + System.currentTimeMillis();
   private static String CATEGORY = "CONNECTOR";
+  private static String AZURE_ARTIFACTS_CATEGORY = "AZURE_ARTIFACTS";
   private static String CONNECTOR_NAME_JENKINS = "Automation-Jenkins-Connector-" + System.currentTimeMillis();
   private static String CONNECTOR_NAME_DOCKER = "Automation-Docker-Connector-" + System.currentTimeMillis();
   private static String CONNECTOR_NAME_BAMBOO = "Automation-Bamboo-Connector-" + System.currentTimeMillis();
   private static String CONNECTOR_NAME_ARTIFACTORY = "Automation-Artifactory-Connector-" + System.currentTimeMillis();
+  private static String CONNECTOR_NAME_AZURE_ARTIFACTS =
+      "Automation-AzureArtifacts-Connector-" + System.currentTimeMillis();
   private static final Retry retry = new Retry(10, 1000);
   private static final BooleanMatcher booleanMatcher = new BooleanMatcher();
   // Test Entities
@@ -46,6 +51,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   private static String DockerConnectorId;
   private static String BambooConnectorId;
   private static String ArtifactoryConnectorId;
+  private static String AzureArtifactsConnectorId;
 
   @Test
   @Owner(developers = SUNIL)
@@ -92,7 +98,7 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = MEENAKSHI, intermittent = false)
+  @Owner(developers = MEENAKSHI)
   @Category(FunctionalTests.class)
   public void runBambooConnectorCRUDTests() {
     retry.executeWithRetry(this ::TC10_createBambooConnector, booleanMatcher, true);
@@ -113,6 +119,18 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // logger.info(String.format("Updated  Artifactory Connector with id %s", ArtifactoryConnectorId));
     TC15_deleteArtifactoryConnector();
     logger.info(String.format("Deleted Artifactory Connector with id %s", ArtifactoryConnectorId));
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(FunctionalTests.class)
+  public void runAzureArtifactsConnectorCRUDTests() {
+    retry.executeWithRetry(this ::TC16_createAzureArtifactsConnector, booleanMatcher, true);
+    logger.info(String.format("Created Azure Artifacts Connector with id %s", AzureArtifactsConnectorId));
+    TC17_updateAzureArtifactsConnector();
+    logger.info(String.format("Updated Azure Artifacts Connector with id %s", AzureArtifactsConnectorId));
+    TC18_deleteAzureArtifactsConnector();
+    logger.info(String.format("Deleted Azure Artifacts Connector with id %s", AzureArtifactsConnectorId));
   }
 
   public boolean TC1_createNexusConnector() {
@@ -448,6 +466,64 @@ public class ConnectorsArtifactoryTests extends AbstractFunctionalTest {
     // Verify connector is deleted i.e connector with specific name doesn't exist
     boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
         bearerToken, getAccount().getUuid(), CATEGORY, CONNECTOR_NAME_ARTIFACTORY);
+    assertThat(connectorFound).isFalse();
+  }
+
+  private boolean TC16_createAzureArtifactsConnector() {
+    String azureDevopsUrl = "https://dev.azure.com/garvit-test";
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.AZURE_ARTIFACTS)
+            .withName(CONNECTOR_NAME_AZURE_ARTIFACTS)
+            .withAccountId(getAccount().getUuid())
+            .withValue(AzureArtifactsPATConfig.builder()
+                           .azureDevopsUrl(azureDevopsUrl)
+                           .pat(new ScmSecret().decryptToCharArray(new SecretName("harness_azure_devops_pat")))
+                           .accountId(getAccount().getUuid())
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse = SettingsUtils.create(bearerToken, getAccount().getUuid(), settingAttribute);
+    assertThat(setAttrResponse).isNotNull();
+    AzureArtifactsConnectorId = setAttrResponse.getString("resource.uuid").trim();
+
+    // Verify connector is created i.e connector with specific name exist
+    boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
+        bearerToken, getAccount().getUuid(), AZURE_ARTIFACTS_CATEGORY, CONNECTOR_NAME_AZURE_ARTIFACTS);
+    return connectorFound;
+  }
+
+  private void TC17_updateAzureArtifactsConnector() {
+    CONNECTOR_NAME_AZURE_ARTIFACTS = CONNECTOR_NAME_AZURE_ARTIFACTS + "update";
+    String azureDevopsUrl = "https://dev.azure.com/garvit-test";
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(SettingCategory.AZURE_ARTIFACTS)
+            .withName(CONNECTOR_NAME_AZURE_ARTIFACTS)
+            .withAccountId(getAccount().getUuid())
+            .withValue(AzureArtifactsPATConfig.builder()
+                           .azureDevopsUrl(azureDevopsUrl)
+                           .pat(new ScmSecret().decryptToCharArray(new SecretName("harness_azure_devops_pat")))
+                           .accountId(getAccount().getUuid())
+                           .build())
+            .build();
+
+    JsonPath setAttrResponse =
+        SettingsUtils.updateConnector(bearerToken, getAccount().getUuid(), AzureArtifactsConnectorId, settingAttribute);
+    assertThat(setAttrResponse).isNotNull();
+
+    // Verify connector is created i.e connector with specific name exist
+    boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
+        bearerToken, getAccount().getUuid(), AZURE_ARTIFACTS_CATEGORY, CONNECTOR_NAME_AZURE_ARTIFACTS);
+    assertThat(connectorFound).isTrue();
+  }
+
+  private void TC18_deleteAzureArtifactsConnector() {
+    SettingsUtils.delete(bearerToken, getAccount().getUuid(), AzureArtifactsConnectorId);
+
+    // Verify connector is deleted i.e connector with specific name doesn't exist
+    boolean connectorFound = SettingsUtils.checkCloudproviderConnectorExist(
+        bearerToken, getAccount().getUuid(), AZURE_ARTIFACTS_CATEGORY, CONNECTOR_NAME_AZURE_ARTIFACTS);
     assertThat(connectorFound).isFalse();
   }
 }

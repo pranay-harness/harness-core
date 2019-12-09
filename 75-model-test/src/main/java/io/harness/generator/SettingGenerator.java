@@ -17,6 +17,7 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
@@ -48,6 +49,7 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -68,6 +70,7 @@ public class SettingGenerator {
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   private static final String GCP_PLAYGROUND = "playground-gke-gcs-gcr";
   private static final String PCF_CONNECTOR = "Harness PCF";
+  private static final String HARNESS_AZURE_ARTIFACTS = "Harness Azure Artifacts";
 
   private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
@@ -101,7 +104,8 @@ public class SettingGenerator {
     PAID_EMAIL_SMTP_CONNECTOR,
     HELM_CHART_REPO_CONNECTOR,
     HELM_SOURCE_REPO_CONNECTOR,
-    PCF_CONNECTOR
+    PCF_CONNECTOR,
+    AZURE_ARTIFACTS_CONNECTOR
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -152,6 +156,8 @@ public class SettingGenerator {
         return ensureHelmSourceRepoSetting(seed, owners);
       case PCF_CONNECTOR:
         return ensurePcfConnector(seed, owners);
+      case AZURE_ARTIFACTS_CONNECTOR:
+        return ensureAzureArtifactsSetting(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -505,6 +511,24 @@ public class SettingGenerator {
                                             .withValue(gitConfig)
                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureAzureArtifactsSetting(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_AZURE_ARTIFACTS)
+            .withCategory(AZURE_ARTIFACTS)
+            .withAccountId(account.getUuid())
+            .withValue(AzureArtifactsPATConfig.builder()
+                           .accountId(account.getUuid())
+                           .azureDevopsUrl("https://dev.azure.com/garvit-test")
+                           .pat(scmSecret.decryptToCharArray(new SecretName("harness_azure_devops_pat")))
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
