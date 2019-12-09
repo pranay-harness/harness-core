@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -16,7 +17,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -117,18 +117,15 @@ public abstract class ContainerServiceSetup extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
       if (artifact == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, WingsException.USER)
-            .addParam("args",
-                "Artifact is required. "
-                    + " Please ensure that artifact provided as part of execution either Manual or through Trigger");
+        throw new IllegalArgumentException(
+            "Artifact is required. Please ensure that artifact provided as part of execution either Manual or through Trigger");
       }
 
       ImageDetails imageDetails =
           artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
 
-      Application app = workflowStandardParams.getApp();
+      Application app = workflowStandardParams.fetchRequiredApp();
       Environment env = workflowStandardParams.getEnv();
-
       Service service = serviceResourceService.getWithDetails(app.getUuid(), serviceId);
 
       logger.info("Setting up container service for service {}", service.getName());
@@ -183,6 +180,16 @@ public abstract class ContainerServiceSetup extends State {
       }
 
       DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
+
+      // Check is added to prevent deployment of a K8 V2 service with a V1 workflow.
+      if (deploymentType == DeploymentType.KUBERNETES) {
+        if (context.getOrchestrationWorkflowType() != null && context.getOrchestrationWorkflowType() == BASIC
+            && service.isK8sV2()) {
+          throw new InvalidRequestException(
+              "Kubernetes V2 service is not allowed to be deployed by 'Basic' workflow type. "
+              + "Please recreate appropriate workflow type for the selected service");
+        }
+      }
 
       CommandExecutionContext commandExecutionContext =
           aCommandExecutionContext()
@@ -271,7 +278,7 @@ public abstract class ContainerServiceSetup extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
     Artifact artifact = ((DeploymentExecutionContext) context).getDefaultArtifactForService(serviceId);
     if (artifact == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Artifact is null");
+      throw new IllegalArgumentException("Artifact is null");
     }
 
     ImageDetails imageDetails =
