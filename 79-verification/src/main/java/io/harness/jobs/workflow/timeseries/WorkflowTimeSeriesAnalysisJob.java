@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
@@ -58,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Cron to schedule time series processing for workflow verification.
@@ -115,6 +115,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
     }
     if (ExecutionStatus.QUEUED.equals(analysisContext.getExecutionStatus())) {
       learningEngineService.markJobStatus(analysisContext, ExecutionStatus.RUNNING);
+      analysisContext.replaceUnicodeInControlNodesAndTestNodes();
     }
 
     new WorkflowTimeSeriesAnalysisJob
@@ -258,14 +259,14 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
     }
 
     private boolean timeSeriesML(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType)
-        throws IOException {
+        throws IOException, TimeoutException {
       logger.info("Running timeSeriesML with analysisMinute : {} groupName: {} mlAnalysisType : {}", analysisMinute,
           groupName, mlAnalysisType);
       if (learningEngineService.hasAnalysisTimedOut(
               context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionId())) {
         learningEngineService.markStatus(
             context.getWorkflowExecutionId(), context.getStateExecutionId(), analysisMinute, ExecutionStatus.FAILED);
-        throw new WingsException("Error running time series analysis. Finished all retries. stateExecutionId: "
+        throw new TimeoutException("Error running time series analysis. Finished all retries. stateExecutionId: "
             + context.getStateExecutionId() + ". Please contact the Harness support team. ");
       }
       int analysisStartMin = getAnalysisStartMinute(analysisMinute, mlAnalysisType);
@@ -462,7 +463,7 @@ public class WorkflowTimeSeriesAnalysisJob implements Job, Handler<AnalysisConte
                 context.getStateExecutionId(), ex);
           }
         }
-      } catch (RuntimeException | IOException ex) {
+      } catch (RuntimeException | TimeoutException | IOException ex) {
         completeCron = true;
         error = true;
         errMsg = ExceptionUtils.getMessage(ex);
