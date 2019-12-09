@@ -37,7 +37,6 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sPod;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
-import io.harness.waiter.NotifyQueuePublisher;
 import io.harness.waiter.WaitNotifyEngine;
 import org.slf4j.Logger;
 import software.wings.api.AmiServiceSetupElement;
@@ -150,7 +149,6 @@ public abstract class AbstractAnalysisState extends State {
 
   @Inject protected WorkflowExecutionService workflowExecutionService;
   @Inject protected WaitNotifyEngine waitNotifyEngine;
-  @Inject protected NotifyQueuePublisher notifyQueuePublisher;
   @Inject protected SettingsService settingsService;
   @Inject protected WingsPersistence wingsPersistence;
   @Inject protected AppService appService;
