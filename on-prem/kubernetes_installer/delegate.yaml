@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: proxy-creds
+  namespace: harness
+type: Opaque
+data:
+  # Enter base64 encoded username and password, if needed
+  PROXY_USER: ""
+  PROXY_PASSWORD: ""
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: setup-docker
+  namespace: harness
+data:
+  setup-docker.sh: |
+    DOCKERVERSION=18.03.1-ce
+    curl -fsSLO https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKERVERSION}.tgz && tar xzvf docker-${DOCKERVERSION}.tgz --strip 1 -C /usr/local/bin docker/docker && rm docker-${DOCKERVERSION}.tgz
+    USER_NAME=$(kubectl get secret -n harness docker-credentials -o jsonpath='{.data.username}' 2> /dev/null | base64 -d)
+    PASSWORD=$(kubectl get secret -n harness docker-credentials -o jsonpath='{.data.password}' 2> /dev/null | base64 -d)
+    echo $PASSWORD | docker login -u $USER_NAME --password-stdin
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    harness.io/app: harness-delegate
+    harness.io/account: uttatn
+    harness.io/name: customer-name
+  name: customer-name-uttatn
+  namespace: harness
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      harness.io/app: harness-delegate
+      harness.io/account: uttatn
+      harness.io/name: customer-name
+  serviceName: ""
+  template:
+    metadata:
+      labels:
+        harness.io/app: harness-delegate
+        harness.io/account: uttatn
+        harness.io/name: customer-name
+    spec:
+      serviceAccountName: harness-namespace-admin
+      containers:
+        - image: harness/delegate:latest
+          imagePullPolicy: Always
+          name: harness-delegate-instance
+          resources:
+            limits:
+              cpu: "1"
+              memory: "8Gi"
+          env:
+            - name: ACCOUNT_ID
+              value: UtTa95tnQqWxGByLkXlp6Q
+            - name: ACCOUNT_SECRET
+              value: <account-secret-masked>
+            - name: MANAGER_HOST_AND_PORT
+              value: https://app.harness.io
+            - name: WATCHER_STORAGE_URL
+              value: https://app.harness.io/storage/wingswatchers
+            - name: WATCHER_CHECK_LOCATION
+              value: watcherprod.txt
+            - name: DELEGATE_STORAGE_URL
+              value: https://app.harness.io/storage/wingsdelegates
+            - name: DELEGATE_CHECK_LOCATION
+              value: delegateprod.txt
+            - name: DEPLOY_MODE
+              value: KUBERNETES
+            - name: DELEGATE_NAME
+              value: customer-name
+            - name: DELEGATE_PROFILE
+              value: ""
+            - name: MANAGER_TARGET
+              value: "app.harness.io"
+            - name: MANAGER_AUTHORITY
+              value: "manager-grpc-app.harness.io"
+            - name: PROXY_HOST
+              value: ""
+            - name: PROXY_PORT
+              value: ""
+            - name: PROXY_SCHEME
+              value: ""
+            - name: NO_PROXY
+              value: ""
+            - name: PROXY_MANAGER
+              value: "true"
+            - name: PROXY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: proxy-creds
+                  key: PROXY_USER
+            - name: PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: proxy-creds
+                  key: PROXY_PASSWORD
+            - name: POLL_FOR_TASKS
+              value: "false"
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", /etc/config/setup-docker.sh]
+          volumeMounts:
+            - name: dockersock
+              mountPath: /var/run/docker.sock
+            - name: config-volume
+              mountPath: /etc/config
+      volumes:
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+        - name: config-volume
+          configMap:
+            defaultMode: 0755
+            name: setup-docker
+      restartPolicy: Always
