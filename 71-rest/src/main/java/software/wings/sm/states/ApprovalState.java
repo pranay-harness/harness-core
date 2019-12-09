@@ -105,6 +105,7 @@ import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateType;
@@ -182,11 +183,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                                                    .variables(getVariables())
                                                    .build();
     if (disableAssertion != null && disableAssertion.equals("true")) {
-      return ExecutionResponse.builder()
-          .executionStatus(SKIPPED)
-          .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped")
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(SKIPPED)
+              .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped")
+              .stateExecutionData(executionData));
     }
 
     setPipelineVariables(context);
@@ -224,11 +225,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       }
     }
     executionData.setAppId(app.getAppId());
-    if (approvalStateType == null) {
-      executionData.setApprovalStateType(USER_GROUP);
-      return executeUserGroupApproval(
-          userGroups, app.getAccountId(), placeholderValues, approvalId, executionData, app.getUuid(), context);
-    }
+    executionData.setApprovalStateType(approvalStateType);
+
     switch (approvalStateType) {
       case JIRA:
         return executeJiraApproval(context, executionData, approvalId);
@@ -353,19 +351,19 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
     try {
       approvalPolingService.save(approvalPollingJobEntity);
-      return ExecutionResponse.builder()
-          .async(true)
-          .executionStatus(PAUSED)
-          .errorMessage("Waiting for Approval")
-          .correlationIds(singletonList(approvalId))
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .async(true)
+              .executionStatus(PAUSED)
+              .errorMessage("Waiting for Approval")
+              .correlationIds(singletonList(approvalId))
+              .stateExecutionData(executionData));
     } catch (WingsException e) {
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage("Failed to schedule Approval" + e.getMessage())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Failed to schedule Approval" + e.getMessage())
+              .stateExecutionData(executionData));
     }
   }
 
@@ -375,11 +373,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     jiraApprovalParams.setIssueId(context.renderExpression(jiraApprovalParams.getIssueId()));
 
     if (ExpressionEvaluator.containsVariablePattern(jiraApprovalParams.getIssueId())) {
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage("Expression not rendered for Jira issue Id: " + jiraApprovalParams.getIssueId())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Expression not rendered for Jira issue Id: " + jiraApprovalParams.getIssueId())
+              .stateExecutionData(executionData));
     }
 
     Application app = context.getApp();
@@ -393,11 +391,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
 
     if (jiraExecutionData.getExecutionStatus() != null && FAILED.equals(jiraExecutionData.getExecutionStatus())) {
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage(jiraExecutionData.getErrorMessage())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage(jiraExecutionData.getErrorMessage())
+              .stateExecutionData(executionData));
     }
 
     executionData.setIssueUrl(jiraExecutionData.getIssueUrl());
@@ -405,20 +403,20 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     executionData.setCurrentStatus(jiraExecutionData.getCurrentStatus());
 
     if (jiraExecutionData.getCurrentStatus().equalsIgnoreCase(jiraApprovalParams.getApprovalValue())) {
-      return ExecutionResponse.builder()
-          .executionStatus(SUCCESS)
-          .errorMessage("Approval provided on ticket: " + jiraExecutionData.getIssueKey())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(SUCCESS)
+              .errorMessage("Approval provided on ticket: " + jiraExecutionData.getIssueKey())
+              .stateExecutionData(executionData));
     }
 
     if (jiraApprovalParams.getRejectionValue() != null
         && jiraExecutionData.getCurrentStatus().equalsIgnoreCase(jiraApprovalParams.getRejectionValue())) {
-      return ExecutionResponse.builder()
-          .executionStatus(REJECTED)
-          .errorMessage("Rejection provided on ticket: " + jiraExecutionData.getIssueKey())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(REJECTED)
+              .errorMessage("Rejection provided on ticket: " + jiraExecutionData.getIssueKey())
+              .stateExecutionData(executionData));
     }
 
     // Create a cron job which polls JIRA for approval status
@@ -440,19 +438,19 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .build();
     try {
       approvalPolingService.save(approvalPollingJobEntity);
-      return ExecutionResponse.builder()
-          .async(true)
-          .executionStatus(PAUSED)
-          .errorMessage(jiraExecutionData.getErrorMessage())
-          .correlationIds(asList(approvalId))
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .async(true)
+              .executionStatus(PAUSED)
+              .errorMessage(jiraExecutionData.getErrorMessage())
+              .correlationIds(asList(approvalId))
+              .stateExecutionData(executionData));
     } catch (WingsException e) {
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage("Failed to schedule Approval" + e.getMessage())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Failed to schedule Approval" + e.getMessage())
+              .stateExecutionData(executionData));
     }
   }
 
@@ -462,11 +460,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     servicenowApprovalParams.setIssueNumber(context.renderExpression(servicenowApprovalParams.getIssueNumber()));
 
     if (ExpressionEvaluator.containsVariablePattern(servicenowApprovalParams.getIssueNumber())) {
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage("Expression not rendered for issue Number: " + servicenowApprovalParams.getIssueNumber())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Expression not rendered for issue Number: " + servicenowApprovalParams.getIssueNumber())
+              .stateExecutionData(executionData));
     }
 
     executionData.setApprovalField(servicenowApprovalParams.getApprovalField());
@@ -485,28 +483,28 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       executionData.setTicketType(servicenowApprovalParams.getTicketType());
 
       if (serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getApprovalValue())) {
-        return ExecutionResponse.builder()
-            .executionStatus(SUCCESS)
-            .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
-            .stateExecutionData(executionData)
-            .build();
+        return respondWithStatus(context, executionData, null,
+            ExecutionResponse.builder()
+                .executionStatus(SUCCESS)
+                .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                .stateExecutionData(executionData));
       }
 
       if (servicenowApprovalParams.getRejectionValue() != null
           && serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getRejectionValue())) {
-        return ExecutionResponse.builder()
-            .executionStatus(REJECTED)
-            .errorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
-            .stateExecutionData(executionData)
-            .build();
+        return respondWithStatus(context, executionData, null,
+            ExecutionResponse.builder()
+                .executionStatus(REJECTED)
+                .errorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                .stateExecutionData(executionData));
       }
 
     } catch (WingsException we) {
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage(we.getParams().get("message").toString())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage(we.getParams().get("message").toString())
+              .stateExecutionData(executionData));
     }
 
     // Create a cron job which polls ServiceNow for approval status
@@ -530,19 +528,19 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
     try {
       approvalPolingService.save(approvalPollingJobEntity);
-      return ExecutionResponse.builder()
-          .async(true)
-          .executionStatus(PAUSED)
-          .errorMessage("Waiting for approval on Ticket " + servicenowApprovalParams.getIssueNumber())
-          .correlationIds(asList(approvalId))
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .async(true)
+              .executionStatus(PAUSED)
+              .errorMessage("Waiting for approval on Ticket " + servicenowApprovalParams.getIssueNumber())
+              .correlationIds(asList(approvalId))
+              .stateExecutionData(executionData));
     } catch (WingsException e) {
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage("Failed to schedule Approval" + e.getMessage())
-          .stateExecutionData(executionData)
-          .build();
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Failed to schedule Approval" + e.getMessage())
+              .stateExecutionData(executionData));
     }
   }
 
@@ -552,12 +550,13 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     executionData.setUserGroups(userGroups);
     updatePlaceholderValuesForSlackApproval(approvalId, accountId, placeholderValues, context);
     sendNotificationForUserGroupApproval(userGroups, appId, accountId, APPROVAL_NEEDED_NOTIFICATION, placeholderValues);
-    return ExecutionResponse.builder()
-        .async(true)
-        .executionStatus(PAUSED)
-        .correlationIds(asList(approvalId))
-        .stateExecutionData(executionData)
-        .build();
+
+    return respondWithStatus(context, executionData, null,
+        ExecutionResponse.builder()
+            .async(true)
+            .executionStatus(PAUSED)
+            .correlationIds(asList(approvalId))
+            .stateExecutionData(executionData));
   }
 
   private void updatePlaceholderValuesForSlackApproval(
@@ -696,8 +695,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
     executionData.setVariables(approvalNotifyResponse.getVariables());
 
-    fillSweepingOutput(context, executionData, approvalNotifyResponse);
-
     switch (approvalStateType) {
       case JIRA:
         return handleAsyncJira(context, executionData, approvalNotifyResponse);
@@ -729,34 +726,41 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                 expression.getValue(), StateExecutionContext.builder().stateExecutionData(executionData).build()));
       }
     }
+
     output.put(ApprovalStateExecutionDataKeys.variables, variableMap);
-    output.put(ApprovalStateExecutionDataKeys.approvedBy, executionData.getApprovedBy());
-    output.put(ApprovalStateExecutionDataKeys.approvedOn, executionData.getApprovedOn());
-    output.put(ApprovalStateExecutionDataKeys.comments, executionData.getComments());
-    output.put(ApprovalStateExecutionDataKeys.timeoutMillis, executionData.getTimeoutMillis());
     output.put(ApprovalStateExecutionDataKeys.approvalStateType, executionData.getApprovalStateType());
+    output.put(ApprovalStateExecutionDataKeys.timeoutMillis, executionData.getTimeoutMillis());
     output.put(APPROVAL_STATUS_KEY,
         approvalNotifyResponse != null ? StringUtils.capitalize(String.valueOf(approvalNotifyResponse.getStatus()))
                                        : null);
-
-    // User Group Approval
-    if (isNotEmpty(executionData.getUserGroups())) {
-      output.put(ApprovalStateExecutionDataKeys.userGroups,
-          userGroupService.fetchUserGroupNamesFromIds(executionData.getUserGroups()));
+    switch (executionData.getApprovalStateType()) {
+      case USER_GROUP:
+        output.put(ApprovalStateExecutionDataKeys.approvedBy, executionData.getApprovedBy());
+        output.put(ApprovalStateExecutionDataKeys.approvedOn, executionData.getApprovedOn());
+        output.put(ApprovalStateExecutionDataKeys.comments, executionData.getComments());
+        if (isNotEmpty(executionData.getUserGroups())) {
+          output.put(ApprovalStateExecutionDataKeys.userGroups,
+              userGroupService.fetchUserGroupNamesFromIds(executionData.getUserGroups()));
+        }
+        break;
+      case JIRA:
+        output.put(ApprovalStateExecutionDataKeys.issueUrl, executionData.getIssueUrl());
+        output.put(ApprovalStateExecutionDataKeys.issueKey, executionData.getIssueKey());
+        output.put(ApprovalStateExecutionDataKeys.currentStatus, executionData.getCurrentStatus());
+        output.put(ApprovalStateExecutionDataKeys.approvalField, executionData.getApprovalField());
+        output.put(ApprovalStateExecutionDataKeys.approvalValue, executionData.getApprovalValue());
+        output.put(ApprovalStateExecutionDataKeys.rejectionField, executionData.getRejectionField());
+        output.put(ApprovalStateExecutionDataKeys.rejectionValue, executionData.getRejectionValue());
+        break;
+      case SERVICENOW:
+        output.put(ApprovalStateExecutionDataKeys.ticketUrl, executionData.getTicketUrl());
+        output.put(ApprovalStateExecutionDataKeys.ticketType, executionData.getTicketType());
+        break;
+      case SHELL_SCRIPT:
+        break;
+      default:
+        logger.warn("Unsupported approval type ", executionData.getApprovalStateType());
     }
-
-    // Jira Approval
-    output.put(ApprovalStateExecutionDataKeys.issueUrl, executionData.getIssueUrl());
-    output.put(ApprovalStateExecutionDataKeys.issueKey, executionData.getIssueKey());
-    output.put(ApprovalStateExecutionDataKeys.currentStatus, executionData.getCurrentStatus());
-    output.put(ApprovalStateExecutionDataKeys.approvalField, executionData.getApprovalField());
-    output.put(ApprovalStateExecutionDataKeys.approvalValue, executionData.getApprovalValue());
-    output.put(ApprovalStateExecutionDataKeys.rejectionField, executionData.getRejectionField());
-    output.put(ApprovalStateExecutionDataKeys.rejectionValue, executionData.getRejectionValue());
-
-    // ServiceNow Approval
-    output.put(ApprovalStateExecutionDataKeys.ticketUrl, executionData.getTicketUrl());
-    output.put(ApprovalStateExecutionDataKeys.ticketType, executionData.getTicketType());
 
     // Slack Approval
     output.put(ApprovalStateExecutionDataKeys.approvalFromSlack, executionData.isApprovalFromSlack());
@@ -778,11 +782,20 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     setPipelineVariables(context);
     approvalPolingService.delete(executionData.getApprovalId());
 
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(approvalNotifyResponse.getStatus())
-        .errorMessage(errorMessage)
-        .build();
+    return respondWithStatus(context, executionData, approvalNotifyResponse,
+        ExecutionResponse.builder()
+            .stateExecutionData(executionData)
+            .executionStatus(approvalNotifyResponse.getStatus())
+            .errorMessage(errorMessage));
+  }
+
+  private ExecutionResponse respondWithStatus(ExecutionContext context, ApprovalStateExecutionData executionData,
+      ApprovalStateExecutionData approvalNotifyResponse, ExecutionResponseBuilder executionResponseBuilder) {
+    ExecutionResponse executionResponse = executionResponseBuilder.build();
+    if (ExecutionStatus.isFinalStatus(executionResponse.getExecutionStatus())) {
+      fillSweepingOutput(context, executionData, approvalNotifyResponse);
+    }
+    return executionResponse;
   }
 
   private ExecutionResponse handleAsyncJira(ExecutionContext context, ApprovalStateExecutionData executionData,
@@ -794,11 +807,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         executionData.getWorkflowId());
     approvalPolingService.delete(executionData.getApprovalId());
 
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(approvalNotifyResponse.getStatus())
-        .errorMessage(approvalNotifyResponse.getErrorMsg() + executionData.getIssueKey())
-        .build();
+    return respondWithStatus(context, executionData, approvalNotifyResponse,
+        ExecutionResponse.builder()
+            .stateExecutionData(executionData)
+            .executionStatus(approvalNotifyResponse.getStatus())
+            .errorMessage(approvalNotifyResponse.getErrorMsg() + executionData.getIssueKey()));
   }
 
   private ExecutionResponse handleAsyncServiceNow(ExecutionContext context, ApprovalStateExecutionData executionData,
@@ -811,11 +824,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     approvalPolingService.delete(executionData.getApprovalId());
 
     setPipelineVariables(context);
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(approvalNotifyResponse.getStatus())
-        .errorMessage(approvalNotifyResponse.getErrorMsg() + servicenowApprovalParams.getIssueNumber())
-        .build();
+    return respondWithStatus(context, executionData, approvalNotifyResponse,
+        ExecutionResponse.builder()
+            .stateExecutionData(executionData)
+            .executionStatus(approvalNotifyResponse.getStatus())
+            .errorMessage(approvalNotifyResponse.getErrorMsg() + servicenowApprovalParams.getIssueNumber()));
   }
 
   private ExecutionResponse handleAsyncUserGroup(List<String> userGroups, Map<String, String> placeholderValues,
@@ -827,10 +840,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           userGroups, app.getUuid(), app.getAccountId(), APPROVAL_STATE_CHANGE_NOTIFICATION, placeholderValues);
     }
 
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(approvalNotifyResponse.getStatus())
-        .build();
+    return respondWithStatus(context, executionData, approvalNotifyResponse,
+        ExecutionResponse.builder()
+            .stateExecutionData(executionData)
+            .executionStatus(approvalNotifyResponse.getStatus()));
   }
 
   @Override
