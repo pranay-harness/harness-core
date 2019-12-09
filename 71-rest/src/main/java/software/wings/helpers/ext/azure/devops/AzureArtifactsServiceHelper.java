@@ -66,6 +66,15 @@ public class AzureArtifactsServiceHelper {
     return retrofit.create(AzureArtifactsRestClient.class);
   }
 
+  static OkHttpClient getAzureArtifactsDownloadClient(String artifactDownloadUrl) {
+    return getOkHttpClientBuilder()
+        .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+        .proxy(Http.checkAndGetNonProxyIfApplicable(artifactDownloadUrl))
+        .retryOnConnectionFailure(true)
+        .followRedirects(true)
+        .build();
+  }
+
   public static String getAuthHeader(AzureArtifactsConfig azureArtifactsConfig) {
     if (!(azureArtifactsConfig instanceof AzureArtifactsPATConfig)) {
       return "";
@@ -101,6 +110,10 @@ public class AzureArtifactsServiceHelper {
   }
 
   public static void validateResponse(Response<?> response) {
+    validateRawResponse(response == null ? null : response.raw());
+  }
+
+  public static void validateRawResponse(okhttp3.Response response) {
     if (response == null) {
       throw new InvalidArtifactServerException("Null response found", USER);
     }

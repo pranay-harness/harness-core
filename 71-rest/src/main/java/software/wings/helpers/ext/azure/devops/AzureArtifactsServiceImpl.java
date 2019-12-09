@@ -1,9 +1,11 @@
 package software.wings.helpers.ext.azure.devops;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.execute;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getAuthHeader;
+import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getAzureArtifactsDownloadClient;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getAzureArtifactsRestClient;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getAzureDevopsRestClient;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getInputStreamSize;
@@ -11,19 +13,23 @@ import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelpe
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.getNuGetDownloadUrl;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.shouldDownloadFile;
 import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.validateAzureDevopsUrl;
+import static software.wings.helpers.ext.azure.devops.AzureArtifactsServiceHelper.validateRawResponse;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.waiter.ListNotifyResponseData;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -37,8 +43,6 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -191,6 +195,7 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
             getNuGetDownloadUrl(azureArtifactsConfig.getAzureDevopsUrl(), artifactStreamAttributes, version),
             getAuthHeader(azureArtifactsConfig));
         size = getInputStreamSize(inputStream);
+        inputStream.close();
       } catch (IOException e) {
         throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), e);
       }
@@ -329,14 +334,16 @@ public class AzureArtifactsServiceImpl implements AzureArtifactsService {
     }
   }
 
-  @SuppressFBWarnings(value = "URLCONNECTION_SSRF_FD",
-      justification = "artifactDownloadUrl was verified when creating the Azure Artifacts server.")
-  private InputStream
-  downloadArtifactByUrl(String artifactDownloadUrl, String authHeader) throws IOException {
-    URL url = new URL(artifactDownloadUrl);
-    URLConnection conn = url.openConnection();
-    conn.setRequestProperty("Authorization", authHeader);
-    return conn.getInputStream();
+  private InputStream downloadArtifactByUrl(String artifactDownloadUrl, String authHeader) throws IOException {
+    OkHttpClient okHttpClient = getAzureArtifactsDownloadClient(artifactDownloadUrl);
+    Request request = new Request.Builder().url(artifactDownloadUrl).addHeader("Authorization", authHeader).build();
+    Response response = okHttpClient.newCall(request).execute();
+    validateRawResponse(response);
+    ResponseBody responseBody = response.body();
+    if (responseBody == null) {
+      throw new InvalidArtifactServerException(format("Unable to download artifact: %s", artifactDownloadUrl));
+    }
+    return responseBody.byteStream();
   }
 
   private AzureArtifactsPackage getPackage(AzureArtifactsConfig azureArtifactsConfig,
