@@ -35,6 +35,7 @@ import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,6 @@ public class ArtifactCollectionTaskHelper {
     if (fileInfo == null) {
       throw new FileNotFoundException("Unable to get artifact for path " + artifactPath);
     }
-    InputStream in = fileInfo.getValue();
     logger.info("Uploading the file {} for artifact path {}", fileInfo.getKey(), artifactPath);
 
     DelegateFile delegateFile = aDelegateFile()
@@ -68,7 +68,12 @@ public class ArtifactCollectionTaskHelper {
                                     .withTaskId(taskId)
                                     .withAccountId(accountId)
                                     .build(); // TODO: more about delegate and task info
-    DelegateFile fileRes = delegateFileManager.upload(delegateFile, in);
+    DelegateFile fileRes = null;
+    try (InputStream in = fileInfo.getValue()) {
+      fileRes = delegateFileManager.upload(delegateFile, in);
+    } catch (IOException ignored) {
+    }
+
     if (fileRes == null || fileRes.getFileId() == null) {
       logger.error(
           "Failed to upload file name {} for artifactPath {} to manager. Artifact files will be uploaded during the deployment of Artifact Check Step",
