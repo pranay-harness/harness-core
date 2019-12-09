@@ -6,7 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -29,7 +31,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -47,6 +53,7 @@ import software.wings.beans.EcrConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -250,6 +257,46 @@ public class ArtifactCollectionUtils {
           imageDetails.getUsername(), imageDetails.getPassword()));
     }
     return "";
+  }
+
+  public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,
+      ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().async(true).appId(GLOBAL_APP_ID).waitId(waitId);
+    final TaskDataBuilder dataBuilder = TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name());
+
+    BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
+
+    BuildSourceParametersBuilder buildSourceParametersBuilder =
+        BuildSourceParameters.builder()
+            .accountId(artifactStreamAttributes.getAccountId())
+            .appId(artifactStream.fetchAppId())
+            .artifactStreamAttributes(artifactStreamAttributes)
+            .artifactStreamType(artifactStream.getArtifactStreamType())
+            .buildSourceRequestType(requestType)
+            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .isCollection(isCollection);
+
+    if (isCollection) {
+      buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));
+    }
+    List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
+    if (isNotEmpty(tags)) {
+      // To remove if any empty tags in case saved for custom artifact stream
+      tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
+    }
+
+    String accountId = artifactStreamAttributes.getAccountId();
+
+    // Set timeout. Labels are not fetched for CUSTOM artifact streams.
+    long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
+        ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
+        : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
+    dataBuilder.parameters(new Object[] {buildSourceParametersBuilder.build()}).timeout(timeout);
+    delegateTaskBuilder.tags(tags);
+    delegateTaskBuilder.accountId(accountId);
+    delegateTaskBuilder.data(dataBuilder.build());
+
+    return delegateTaskBuilder;
   }
 
   private ImageDetails getDockerImageDetailsInternal(ArtifactStream artifactStream, String workflowExecutionId) {

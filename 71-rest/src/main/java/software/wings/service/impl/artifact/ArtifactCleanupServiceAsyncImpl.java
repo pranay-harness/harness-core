@@ -4,11 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.artifact.ArtifactStreamType.AMI;
-import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceCleanupCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
@@ -58,9 +56,13 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
         TaskData.builder().taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().async(true).appId(GLOBAL_APP_ID).waitId(waitId);
 
-    if (DOCKER.name().equals(artifactStreamType) || AMI.name().equals(artifactStreamType)
-        || ARTIFACTORY.name().equals(artifactStreamType) || ECR.name().equals(artifactStreamType)
-        || GCR.name().equals(artifactStreamType)) {
+    if (CUSTOM.name().equals(artifactStreamType)) {
+      ArtifactStreamAttributes artifactStreamAttributes =
+          artifactCollectionUtils.renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
+      accountId = artifactStreamAttributes.getAccountId();
+      delegateTaskBuilder =
+          artifactCollectionUtils.fetchCustomDelegateTask(waitId, artifactStream, artifactStreamAttributes, false);
+    } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
         logger.warn("Artifact Server {} was deleted", artifactStream.getSettingId());
@@ -74,12 +76,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
       delegateTaskBuilder.accountId(accountId);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
-    } else {
-      // TODO: add handling for other artifact stream types
-      return;
+      delegateTaskBuilder.data(dataBuilder.build());
     }
-
-    delegateTaskBuilder.data(dataBuilder.build());
 
     waitNotifyEngine.waitForAllOn(GENERAL, new BuildSourceCleanupCallback(accountId, artifactStream.getUuid()), waitId);
     logger.info("Queuing delegate task for artifactStreamId {} with waitId {}", artifactStream.getUuid(), waitId);

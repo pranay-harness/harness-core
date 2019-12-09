@@ -1,12 +1,10 @@
 package software.wings.service.impl.artifact;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -26,7 +24,6 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.exception.InvalidRequestException;
@@ -43,7 +40,6 @@ import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
-import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.PermitServiceImpl;
 import software.wings.service.intfc.AlertService;
@@ -129,32 +125,8 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       ArtifactStreamAttributes artifactStreamAttributes =
           artifactCollectionUtils.renderCustomArtifactScriptString((CustomArtifactStream) artifactStream);
       accountId = artifactStreamAttributes.getAccountId();
-      BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
-
-      buildSourceRequest =
-          BuildSourceParameters.builder()
-              .accountId(artifactStreamAttributes.getAccountId())
-              .appId(artifactStream.fetchAppId())
-              .artifactStreamAttributes(artifactStreamAttributes)
-              .artifactStreamType(artifactStreamType)
-              .buildSourceRequestType(requestType)
-              .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
-              .isCollection(true)
-              .savedBuildDetailsKeys(artifactCollectionUtils.getArtifactsKeys(artifactStream, artifactStreamAttributes))
-              .build();
-
-      List<String> tags = ((CustomArtifactStream) artifactStream).getTags();
-      if (isNotEmpty(tags)) {
-        // To remove if any empty tags in case saved for custom artifact stream
-        tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
-      }
-
-      // Set timeout. Labels are not fetched for CUSTOM artifact streams.
-      long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
-          ? Long.parseLong(CustomArtifactStream.DEFAULT_SCRIPT_TIME_OUT)
-          : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout());
-      dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(timeout);
-      delegateTaskBuilder.tags(tags);
+      delegateTaskBuilder =
+          artifactCollectionUtils.fetchCustomDelegateTask(waitId, artifactStream, artifactStreamAttributes, true);
     } else {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       if (settingAttribute == null) {
@@ -191,10 +163,9 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
       // Set timeout.
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(DEFAULT_TIMEOUT);
       delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
+      delegateTaskBuilder.accountId(accountId);
+      delegateTaskBuilder.data(dataBuilder.build());
     }
-
-    delegateTaskBuilder.accountId(accountId);
-    delegateTaskBuilder.data(dataBuilder.build());
 
     waitNotifyEngine.waitForAllOn(GENERAL,
         new BuildSourceCallback(accountId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()), waitId);
