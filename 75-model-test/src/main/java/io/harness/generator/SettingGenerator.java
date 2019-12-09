@@ -4,6 +4,9 @@ import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROV
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
+import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_END_POINT;
+import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
+import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_USERNAME;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createTerraformCityGitRepoSetting;
@@ -36,6 +39,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
@@ -63,6 +67,7 @@ public class SettingGenerator {
   private static final String HARNESS_BAMBOO = "Harness Bamboo";
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   private static final String GCP_PLAYGROUND = "playground-gke-gcs-gcr";
+  private static final String PCF_CONNECTOR = "Harness PCF";
 
   private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
@@ -95,7 +100,8 @@ public class SettingGenerator {
     WINRM_TEST_CONNECTOR,
     PAID_EMAIL_SMTP_CONNECTOR,
     HELM_CHART_REPO_CONNECTOR,
-    HELM_SOURCE_REPO_CONNECTOR
+    HELM_SOURCE_REPO_CONNECTOR,
+    PCF_CONNECTOR
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -144,10 +150,30 @@ public class SettingGenerator {
         return ensureHelmChartRepoSetting(seed, owners);
       case HELM_SOURCE_REPO_CONNECTOR:
         return ensureHelmSourceRepoSetting(seed, owners);
+      case PCF_CONNECTOR:
+        return ensurePcfConnector(seed, owners);
       default:
         unhandled(predefined);
     }
     return null;
+  }
+
+  private SettingAttribute ensurePcfConnector(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName(PCF_CONNECTOR)
+            .withCategory(CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(PcfConfig.builder()
+                           .accountId(account.getUuid())
+                           .username(PCF_USERNAME)
+                           .endpointUrl(PCF_END_POINT)
+                           .password(scmSecret.decryptToCharArray(new SecretName(PCF_KEY)))
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
   private SettingAttribute ensureServiceNowConnector(Seed seed, Owners owners) {
