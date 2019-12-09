@@ -2656,8 +2656,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return null;
     }
 
-    Preconditions.checkState(
-        stateExecutionMap.size() == 1, "more than one entries in the stateExecutionMap for " + stateExecutionId);
+    Preconditions.checkState(stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName()),
+        "The details for the state are not in the stateExecutionMap for " + stateExecutionId);
 
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
