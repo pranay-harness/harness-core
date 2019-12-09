@@ -1,4 +1,4 @@
-package software.wings.yaml.handler.workflow;
+package software.wings.service.impl.yaml.handler.workflow;
 
 public class WorkflowYamlConstant {
   // START STRING CONSTANTS FOR BASIC WORKFLOW YAML TEST
