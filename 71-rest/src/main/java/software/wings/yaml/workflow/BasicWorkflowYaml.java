@@ -30,6 +30,7 @@ public class BasicWorkflowYaml extends WorkflowYaml {
       List<NotificationRule.Yaml> notificationRules, List<FailureStrategy.Yaml> failureStrategies,
       List<Variable.Yaml> userVariables, String concurrencyStrategy) {
     super(type, harnessApiVersion, description, templateExpressions, envName, templatized, preDeploymentSteps, phases,
-        rollbackPhases, postDeploymentSteps, notificationRules, failureStrategies, userVariables, concurrencyStrategy);
+        rollbackPhases, postDeploymentSteps, notificationRules, failureStrategies, userVariables, concurrencyStrategy,
+        null, null);
   }
 }

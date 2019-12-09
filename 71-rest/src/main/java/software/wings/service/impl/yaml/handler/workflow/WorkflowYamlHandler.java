@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -247,23 +250,14 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       }
 
       // Failure strategies
-      List<FailureStrategy> failureStrategies = Lists.newArrayList();
-      if (yaml.getFailureStrategies() != null) {
-        FailureStrategyYamlHandler failureStrategyYamlHandler =
-            yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
-        failureStrategies =
-            yaml.getFailureStrategies()
-                .stream()
-                .map(failureStrategy -> {
-                  try {
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, failureStrategy);
-                    return failureStrategyYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
-                  } catch (HarnessException e) {
-                    throw new WingsException(e);
-                  }
-                })
-                .collect(toList());
-      }
+      List<FailureStrategy> failureStrategies =
+          getFailureStrategiesFromYaml(changeContext, changeContextList, yaml.getFailureStrategies());
+      List<FailureStrategy> preDeploymentFailureStrategies =
+          getFailureStrategiesFromYaml(changeContext, changeContextList, yaml.getPreDeploymentFailureStrategy());
+      List<FailureStrategy> postDeploymentFailureStrategies =
+          getFailureStrategiesFromYaml(changeContext, changeContextList, yaml.getPostDeploymentFailureStrategy());
+      preDeploymentSteps.withFailureStrategies(preDeploymentFailureStrategies);
+      postDeploymentSteps.withFailureStrategies(postDeploymentFailureStrategies);
 
       // Notification rules
       List<NotificationRule> notificationRules = Lists.newArrayList();
@@ -308,6 +302,26 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     } catch (WingsException ex) {
       throw new HarnessException(ex);
     }
+  }
+
+  private List<FailureStrategy> getFailureStrategiesFromYaml(ChangeContext<Y> changeContext,
+      List<ChangeContext> changeContextList, List<FailureStrategy.Yaml> failureStrategyYaml) {
+    if (isEmpty(failureStrategyYaml)) {
+      return emptyList();
+    }
+    FailureStrategyYamlHandler failureStrategyYamlHandler =
+        yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
+    List<FailureStrategy> failureStrategies;
+    return failureStrategyYaml.stream()
+        .map(failureStrategy -> {
+          try {
+            ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, failureStrategy);
+            return failureStrategyYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+          } catch (HarnessException e) {
+            throw new WingsException(e);
+          }
+        })
+        .collect(toList());
   }
 
   private String getPreviousWorkflowPhaseId(String name, Workflow previous) {
@@ -405,6 +419,20 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
             .map(notificationRule -> notificationRuleYamlHandler.toYaml(notificationRule, appId))
             .collect(toList());
 
+    // Pre Deployment Failure Strategy
+    List<FailureStrategy.Yaml> preDeploymentFailureStrategyYaml =
+        emptyIfNull(orchestrationWorkflow.getPreDeploymentSteps().getFailureStrategies())
+            .stream()
+            .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
+            .collect(toList());
+
+    // Post Deployment Failure Strategy
+    List<FailureStrategy.Yaml> postDeploymentFailureStrategyYaml =
+        emptyIfNull(orchestrationWorkflow.getPostDeploymentSteps().getFailureStrategies())
+            .stream()
+            .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
+            .collect(toList());
+
     yaml.setDescription(workflow.getDescription());
     yaml.setEnvName(envName);
     yaml.setTemplateExpressions(templateExprYamlList);
@@ -421,6 +449,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     if (orchestrationWorkflow.getConcurrencyStrategy() != null) {
       yaml.setConcurrencyStrategy(orchestrationWorkflow.getConcurrencyStrategy().getUnitType().name());
     }
+    yaml.setPreDeploymentFailureStrategy(preDeploymentFailureStrategyYaml);
+    yaml.setPostDeploymentFailureStrategy(postDeploymentFailureStrategyYaml);
 
     updateYamlWithAdditionalInfo(workflow, appId, yaml);
   }
