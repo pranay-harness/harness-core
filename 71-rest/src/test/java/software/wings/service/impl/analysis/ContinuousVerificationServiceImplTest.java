@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VAIBHAV_TULSYAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -25,6 +26,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -55,6 +57,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.DataCollectionInfoService;
 import software.wings.sm.StateType;
@@ -76,6 +79,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -366,7 +370,12 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
                                                     .splunkConfig(mock(SplunkConfig.class))
                                                     .build();
     DelegateService delegateService = mock(DelegateService.class);
+    SecretManager secretManager = mock(SecretManager.class);
     FieldUtils.writeField(continuousVerificationService, "delegateService", delegateService, true);
+    FieldUtils.writeField(continuousVerificationService, "secretManager", secretManager, true);
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    encryptedDataDetails.add(mock(EncryptedDataDetail.class));
+    when(secretManager.getEncryptionDetails(any(), anyString(), anyString())).thenReturn(encryptedDataDetails);
     continuousVerificationService.collectCVData(cvTaskId, dataCollectionInfoV2);
     ArgumentCaptor<DelegateTask> argumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(argumentCaptor.capture());
@@ -377,6 +386,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     assertThat(params).isEqualTo(dataCollectionInfoV2);
     assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.SPLUNK_COLLECT_LOG_DATAV2.toString());
     assertThat(params.getCvTaskId()).isEqualTo(cvTaskId);
+    assertThat(params.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
   }
 
   @Test

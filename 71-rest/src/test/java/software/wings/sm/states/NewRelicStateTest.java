@@ -59,7 +59,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState.Metric;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -310,7 +309,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void shouldTestTriggered() throws IOException, IllegalAccessException {
+  public void shouldTestTriggered() throws IllegalAccessException {
     NewRelicConfig newRelicConfig = NewRelicConfig.builder()
                                         .accountId(accountId)
                                         .newRelicUrl("newrelic-url")
@@ -375,7 +374,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
         .when(workflowStandardParams)
         .getEnv();
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-
+    doReturn(false).when(spyNewRelicState).isCVTaskEnqueuingEnabled(anyString());
     ExecutionResponse executionResponse = spyNewRelicState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
     assertThat(executionResponse.getErrorMessage()).isEqualTo("Can not find application by name");

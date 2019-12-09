@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
@@ -10,9 +11,11 @@ import lombok.NoArgsConstructor;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollector;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +25,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class DataCollectionInfoV2 implements TaskParameters {
+public abstract class DataCollectionInfoV2 implements TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private String applicationId;
   private String envId;
@@ -35,6 +38,7 @@ public abstract class DataCollectionInfoV2 implements TaskParameters {
   private String workflowExecutionId;
   private String serviceId;
   private String cvTaskId;
+  private List<EncryptedDataDetail> encryptedDataDetails;
 
   public Set<String> getHosts() {
     // morphia converts empty objects to null while saving to database so making sure it's always returns empty set if
@@ -53,9 +57,15 @@ public abstract class DataCollectionInfoV2 implements TaskParameters {
   @JsonIgnore public abstract Optional<EncryptionConfig> getEncryptionConfig();
   @JsonIgnore public abstract Optional<EncryptableSetting> getEncryptableSetting();
 
-  public abstract List<EncryptedDataDetail> getEncryptedDataDetails();
   @JsonIgnore public abstract DataCollectionInfoV2 deepCopy();
 
+  // This method should go away once EncryptionConfig is serializable
+  public void setEncryptionDataDetails(SecretManager secretManager) {
+    if (getEncryptableSetting().isPresent()) {
+      this.encryptedDataDetails =
+          secretManager.getEncryptionDetails(getEncryptableSetting().get(), applicationId, workflowExecutionId);
+    }
+  }
   protected void copy(DataCollectionInfoV2 dataCollectionInfo) {
     dataCollectionInfo.setAccountId(this.accountId);
     dataCollectionInfo.setApplicationId(this.applicationId);
@@ -68,5 +78,8 @@ public abstract class DataCollectionInfoV2 implements TaskParameters {
     dataCollectionInfo.setWorkflowId(this.workflowId);
     dataCollectionInfo.setWorkflowExecutionId(this.workflowExecutionId);
     dataCollectionInfo.setServiceId(this.serviceId);
+    if (encryptedDataDetails != null) {
+      dataCollectionInfo.setEncryptedDataDetails(new ArrayList<>(encryptedDataDetails));
+    }
   }
 }

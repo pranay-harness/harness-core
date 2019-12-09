@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
+import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
@@ -90,6 +91,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
   private DataCollectionInfoV2 dataCollectionInfov2;
 
   private int retry;
+  private final Map<FeatureName, Boolean> featureFlags = new HashMap<>();
   @Indexed private Long timeSeriesAnalysisIteration;
   @Indexed private Long logAnalysisIteration;
 
@@ -195,5 +197,13 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public void setFeatureFlag(FeatureName featureFlag, Boolean enabled) {
+    featureFlags.put(featureFlag, enabled);
+  }
+
+  public boolean isFeatureFlagEnabled(FeatureName featureFlag) {
+    return featureFlags.getOrDefault(featureFlag, false);
   }
 }

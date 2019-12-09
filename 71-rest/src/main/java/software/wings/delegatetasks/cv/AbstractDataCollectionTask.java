@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.cv;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
@@ -16,6 +17,8 @@ import io.harness.delegate.task.TaskParameters;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import okhttp3.Request;
+import okio.Buffer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import retrofit2.Call;
@@ -194,7 +197,7 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
             }
           } catch (Exception e) {
             if (retryCount == MAX_RETRIES) {
-              logger.error("Request did not succeed after " + MAX_RETRIES + "  retries");
+              logger.error("Request did not succeed after " + MAX_RETRIES + "  retries", e);
               throw new DataCollectionException(e);
             }
           }
@@ -202,6 +205,16 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
         }
       }
 
+      private String bodyToString(final Request request) {
+        try {
+          final Request copy = request.newBuilder().build();
+          final Buffer buffer = new Buffer();
+          copy.body().writeTo(buffer);
+          return buffer.readUtf8();
+        } catch (final IOException e) {
+          throw new DataCollectionException(e);
+        }
+      }
       private <U> U executeRequest(String thirdPartyApiCallTitle, Call<U> request, int retryCount) {
         ThirdPartyApiCallLog apiCallLog = createApiCallLog();
         apiCallLog.setTitle(thirdPartyApiCallTitle);
@@ -218,6 +231,18 @@ public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2>
                                              .value(String.valueOf(retryCount))
                                              .type(FieldType.NUMBER)
                                              .build());
+          }
+          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                           .name("METHOD")
+                                           .value(request.request().method())
+                                           .type(FieldType.TEXT)
+                                           .build());
+          if (request.request().body() != null) {
+            String body = bodyToString(request.request());
+            if (isNotEmpty(body)) {
+              apiCallLog.addFieldToRequest(
+                  ThirdPartyApiCallField.builder().name("body").value(body).type(FieldType.JSON).build());
+            }
           }
           Response<U> response = request.clone().execute(); // TODO: add retry logic and rate limit exceeded logic here.
           apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());

@@ -36,6 +36,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -222,8 +223,6 @@ public class SplunkV2State extends AbstractLogAnalysisState {
         .query(getRenderedQuery())
         .hostnameField(getHostnameField())
         .hosts(hosts)
-        .encryptedDataDetails(
-            secretManager.getEncryptionDetails(splunkConfig, context.getAppId(), context.getWorkflowExecutionId()))
         .isAdvancedQuery(isAdvancedQuery)
         .build();
   }
@@ -250,7 +249,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   }
 
   @Override
-  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.SPLUNK_CV_TASK, accountId);
+  protected Optional<FeatureName> getCVTaskFeatureName() {
+    return Optional.of(FeatureName.SPLUNK_CV_TASK);
   }
 }

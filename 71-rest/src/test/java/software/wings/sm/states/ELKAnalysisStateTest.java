@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyLong;
@@ -45,6 +46,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -310,5 +312,55 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
                                                    .get("BASIC")
                                                    .get(0);
     assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateDataCollectionInfo() throws ParseException, IllegalAccessException {
+    ElkConfig elkConfig = ElkConfig.builder()
+                              .accountId(accountId)
+                              .elkConnector(ElkConnector.ELASTIC_SEARCH_SERVER)
+                              .elkUrl(UUID.randomUUID().toString())
+                              .username(UUID.randomUUID().toString())
+                              .password(UUID.randomUUID().toString().toCharArray())
+                              .validationType(ElkValidationType.PASSWORD)
+                              .kibanaVersion(String.valueOf(0))
+                              .build();
+
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId(accountId)
+                                            .withName("elk-config")
+                                            .withValue(elkConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    elkAnalysisState.setAnalysisServerConfigId(settingAttribute.getUuid());
+
+    String indices = UUID.randomUUID().toString();
+    elkAnalysisState.setIndices(indices);
+
+    String messageField = UUID.randomUUID().toString();
+    elkAnalysisState.setMessageField(messageField);
+
+    String timestampFieldFormat = UUID.randomUUID().toString();
+    elkAnalysisState.setTimestampFormat(timestampFieldFormat);
+
+    elkAnalysisState.setQueryType(ElkQueryType.MATCH.name());
+    elkAnalysisState.setTimestampField("@time");
+    elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
+    FieldUtils.writeField(elkAnalysisState, "renderedQuery", "rendered query", true);
+    ElkDataCollectionInfoV2 elkDataCollectionInfoV2 =
+        (ElkDataCollectionInfoV2) elkAnalysisState.createDataCollectionInfo(
+            executionContext, Sets.newHashSet("host1", "host2"));
+    assertThat(StateType.ELK).isEqualTo(elkDataCollectionInfoV2.getStateType());
+    assertThat(elkConfig).isEqualTo(elkDataCollectionInfoV2.getElkConfig());
+    assertThat(executionContext.getStateExecutionInstanceId()).isEqualTo(elkDataCollectionInfoV2.getStateExecutionId());
+    assertThat(elkAnalysisState.getMessageField()).isEqualTo(elkDataCollectionInfoV2.getMessageField());
+    assertThat(elkAnalysisState.getRenderedQuery()).isEqualTo(elkDataCollectionInfoV2.getQuery());
+    assertThat(elkAnalysisState.getTimestampField()).isEqualTo(elkDataCollectionInfoV2.getTimestampField());
+    assertThat(elkAnalysisState.getTimestampFormat()).isEqualTo(elkDataCollectionInfoV2.getTimestampFieldFormat());
+    assertThat(elkAnalysisState.getIndices()).isEqualTo(elkDataCollectionInfoV2.getIndices());
+    assertThat(elkAnalysisState.getQueryType()).isEqualTo(elkDataCollectionInfoV2.getQueryType());
+    assertThat(Sets.newHashSet("host1", "host2")).isEqualTo(elkDataCollectionInfoV2.getHosts());
   }
 }

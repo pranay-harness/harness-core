@@ -87,6 +87,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
+import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -635,6 +636,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       isEnabled = isFeatureFlagEnabled(FeatureName.SPLUNK_24_7_CV_TASK, cvConfiguration.getAccountId());
     } else if (cvConfiguration instanceof NewRelicCVServiceConfiguration) {
       isEnabled = isFeatureFlagEnabled(FeatureName.NEWRELIC_24_7_CV_TASK, cvConfiguration.getAccountId());
+    } else if (cvConfiguration instanceof ElkCVConfiguration) {
+      isEnabled = isFeatureFlagEnabled(FeatureName.ELK_24_7_CV_TASK, cvConfiguration.getAccountId());
     }
     // TODO: add here once new provider is added. This is only needed till we completely migrate to the new framework.
     return isEnabled;

@@ -1,7 +1,6 @@
 package software.wings.service.impl.splunk;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.Builder;
@@ -27,7 +26,7 @@ import java.util.Set;
 @NoArgsConstructor
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = false)
-public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 implements ExecutionCapabilityDemander {
+public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 {
   private SplunkConfig splunkConfig;
   private boolean isAdvancedQuery;
 
@@ -37,7 +36,7 @@ public class SplunkDataCollectionInfoV2 extends LogDataCollectionInfoV2 implemen
       String workflowExecutionId, String serviceId, String cvTaskId, String query, String hostnameField,
       List<EncryptedDataDetail> encryptedDataDetails, SplunkConfig splunkConfig, boolean isAdvancedQuery) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, query, hostnameField, encryptedDataDetails);
+        workflowExecutionId, serviceId, cvTaskId, encryptedDataDetails, query, hostnameField);
     this.splunkConfig = splunkConfig;
     this.isAdvancedQuery = isAdvancedQuery;
   }

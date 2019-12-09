@@ -23,6 +23,7 @@ import io.harness.entities.CVTask;
 import io.harness.entities.CVTask.CVTaskKeys;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.time.Timestamp;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +32,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -49,6 +51,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class CVTaskServiceTest extends VerificationBaseTest {
   @Inject CVTaskService cvTaskService;
@@ -319,6 +322,7 @@ public class CVTaskServiceTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testCreateCVTasks() {
     AnalysisContext analysisContext = AnalysisContext.builder().build();
+    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMillis(Timestamp.currentMinuteBoundary()));
     analysisContext.setAccountId(accountId);
     analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
     analysisContext.setTimeDuration(10);
@@ -333,6 +337,38 @@ public class CVTaskServiceTest extends VerificationBaseTest {
     }
     assertThat(cvTasks.get(cvTasks.size() - 1).getNextTaskId()).isNull();
     for (int i = 1; i < 10; i++) {
+      assertThat(cvTasks.get(i).getStatus()).isEqualTo(ExecutionStatus.WAITING);
+    }
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateCVTasks_forPredictive() {
+    AnalysisContext analysisContext = AnalysisContext.builder().build();
+    analysisContext.setStartDataCollectionMinute(TimeUnit.MILLISECONDS.toMillis(Timestamp.currentMinuteBoundary()));
+    analysisContext.setAccountId(accountId);
+    analysisContext.setDataCollectionInfov2(createDataCollectionInfo());
+    analysisContext.setTimeDuration(10);
+    analysisContext.setPredictiveHistoryMinutes(120);
+    analysisContext.setComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE);
+    analysisContext.setStateExecutionId(stateExecutionId);
+    cvTaskService.createCVTasks(analysisContext);
+    List<CVTask> cvTasks = getByStateExecutionId(stateExecutionId);
+    Collections.sort(cvTasks, Comparator.comparing(cvTask -> cvTask.getDataCollectionInfo().getStartTime()));
+    assertThat(cvTasks).hasSize(18);
+    assertThat(cvTasks.get(0).getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    for (int i = 0; i < 8; i++) {
+      assertThat(cvTasks.get(i).getDataCollectionInfo().getHosts()).isEmpty();
+    }
+    for (int i = 8; i < 18; i++) {
+      assertThat(cvTasks.get(i).getDataCollectionInfo().getHosts()).isNotEmpty();
+    }
+    for (int i = 0; i < 17; i++) {
+      assertThat(cvTasks.get(i + 1).getUuid()).isEqualTo(cvTasks.get(i).getNextTaskId());
+    }
+    assertThat(cvTasks.get(cvTasks.size() - 1).getNextTaskId()).isNull();
+    for (int i = 1; i < 18; i++) {
       assertThat(cvTasks.get(i).getStatus()).isEqualTo(ExecutionStatus.WAITING);
     }
   }

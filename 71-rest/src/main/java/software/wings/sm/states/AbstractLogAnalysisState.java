@@ -27,10 +27,8 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
-import org.intellij.lang.annotations.Language;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SumoConfig;
@@ -43,7 +41,6 @@ import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -220,8 +217,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       hostsToBeCollected.remove(null);
       getLogger().info("triggering data collection for {} state", getStateType());
 
-      DataCollectionInfoV2 dataCollectionInfoV2 = null;
-      if (isCVTaskEnqueuingEnabled(executionContext.getAccountId())) {
+      if (getCVTaskFeatureName().isPresent() && analysisContext.isFeatureFlagEnabled(getCVTaskFeatureName().get())) {
         getLogger().info("Data collection will be done with cv tasks.");
         analysisContext.setDataCollectionInfov2(createDataCollectionInfo(executionContext, hostsToBeCollected));
       } else if (isEligibleForPerMinuteTask(executionContext.getAccountId())) {
@@ -245,7 +241,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .errorMessage(responseMessage)
           .stateExecutionData(executionData)
           .delegateTaskId(delegateTaskId)
-
           .build();
     } catch (Exception ex) {
       getLogger().error("log analysis state failed ", ex);
@@ -427,6 +422,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(analysisContext);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);
     }
+    if (getCVTaskFeatureName().isPresent()) {
+      analysisContext.setFeatureFlag(
+          getCVTaskFeatureName().get(), isCVTaskEnqueuingEnabled(analysisContext.getAccountId()));
+    }
     return analysisContext;
   }
 
@@ -447,26 +446,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public DataCollectionInfo createDataCollectionInfo(AnalysisContext analysisContext) {
     StateType stateType = StateType.valueOf(getStateType());
     switch (stateType) {
-      case ELK:
-        ElkAnalysisState elkAnalysisState = (ElkAnalysisState) this;
-        ElkConfig elkConfig = (ElkConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
-        return ElkDataCollectionInfo.builder()
-            .elkConfig(elkConfig)
-            .accountId(analysisContext.getAccountId())
-            .applicationId(analysisContext.getAppId())
-            .stateExecutionId(analysisContext.getStateExecutionId())
-            .workflowId(analysisContext.getWorkflowId())
-            .workflowExecutionId(analysisContext.getWorkflowExecutionId())
-            .serviceId(analysisContext.getServiceId())
-            .query(elkAnalysisState.getRenderedQuery())
-            .indices(elkAnalysisState.getIndices())
-            .hostnameField(analysisContext.getHostNameField())
-            .messageField(elkAnalysisState.getMessageField())
-            .timestampField(elkAnalysisState.getTimestampField())
-            .timestampFieldFormat(elkAnalysisState.getTimestampFormat())
-            .queryType(elkAnalysisState.getQueryType())
-            .hosts(Sets.newHashSet(DUMMY_HOST_NAME))
-            .build();
       case SUMO:
         SumoLogicAnalysisState sumoLogicAnalysisState = (SumoLogicAnalysisState) this;
         SumoConfig sumoConfig = (SumoConfig) settingsService.get(getAnalysisServerConfigId()).getValue();
@@ -561,11 +540,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     super.generateDemoThirdPartyApiCallLogs(
         accountId, stateExecutionId, failedState, demoRequestBody(), demoLogResponse());
   }
-  @Language("JSON")
   private String demoRequestBody() {
     return DEMO_REQUEST_BODY;
   }
-  @Language("JSON")
   private String demoLogResponse() {
     return DEMO_RESPONSE_BODY;
   }
