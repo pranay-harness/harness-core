@@ -1,5 +1,6 @@
 package software.wings.verification;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -18,15 +19,20 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ElkConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
+import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.DataCollectionInfoService;
+import software.wings.sm.StateType;
+import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.SplunkCVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
@@ -88,6 +94,27 @@ public class DataCollectionInfoServiceTest extends WingsBaseTest {
     assertThat(dataCollectionInfo instanceof NewRelicDataCollectionInfoV2).isTrue();
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testElkDataCollectionInfoCreation() {
+    ElkCVConfiguration elkCVConfig = createElkCVConfiguration();
+    Instant startTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now();
+    ElkConfig elkConfig = ElkConfig.builder().elkUrl("test").build();
+    SettingAttribute settingAttribute = Mockito.mock(SettingAttribute.class);
+    when(settingAttribute.getValue()).thenReturn(elkConfig);
+    when(settingsService.get(elkCVConfig.getConnectorId())).thenReturn(settingAttribute);
+    DataCollectionInfoV2 dataCollectionInfo = dataCollectionInfoService.create(elkCVConfig, startTime, endTime);
+    assertThat(dataCollectionInfo.getAccountId()).isEqualTo(elkCVConfig.getAccountId());
+    assertThat(dataCollectionInfo.getCvConfigId()).isEqualTo(elkCVConfig.getUuid());
+    assertThat(dataCollectionInfo.getStateExecutionId())
+        .isEqualTo(CV_24x7_STATE_EXECUTION + "-" + elkCVConfig.getUuid());
+    assertThat(dataCollectionInfo.getStartTime()).isEqualTo(startTime);
+    assertThat(dataCollectionInfo.getEndTime()).isEqualTo(endTime);
+    assertThat(dataCollectionInfo instanceof ElkDataCollectionInfoV2).isTrue();
+  }
+
   private SplunkCVConfiguration createSplunkCVConfig() {
     SplunkCVConfiguration splunkCVConfiguration = new SplunkCVConfiguration();
     splunkCVConfiguration.setQuery("*exception*");
@@ -120,5 +147,27 @@ public class DataCollectionInfoServiceTest extends WingsBaseTest {
     newRelicCVServiceConfiguration.setAlertThreshold(0.1);
     newRelicCVServiceConfiguration.setStateType(NEW_RELIC);
     return newRelicCVServiceConfiguration;
+  }
+
+  private ElkCVConfiguration createElkCVConfiguration() {
+    ElkCVConfiguration elkCVConfiguration = new ElkCVConfiguration();
+    elkCVConfiguration.setName("Config 1");
+    elkCVConfiguration.setAppId(generateUuid());
+    elkCVConfiguration.setEnvId(generateUuid());
+    elkCVConfiguration.setServiceId(generateUuid());
+    elkCVConfiguration.setEnabled24x7(true);
+    elkCVConfiguration.setConnectorId(generateUuid());
+    elkCVConfiguration.setBaselineStartMinute(100);
+    elkCVConfiguration.setBaselineEndMinute(200);
+
+    elkCVConfiguration.setQuery("query1");
+    elkCVConfiguration.setQueryType(ElkQueryType.TERM);
+    elkCVConfiguration.setIndex("filebeat-*");
+    elkCVConfiguration.setHostnameField("host1");
+    elkCVConfiguration.setMessageField("message1");
+    elkCVConfiguration.setTimestampField("timestamp1");
+    elkCVConfiguration.setTimestampFormat("timestamp_format1");
+    elkCVConfiguration.setStateType(StateType.ELK);
+    return elkCVConfiguration;
   }
 }

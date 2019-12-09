@@ -27,6 +27,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response.Builder;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -45,6 +46,7 @@ import software.wings.delegatetasks.DelegateCVTaskService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -267,6 +269,44 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     assertThat(thirdPartyApiCallLog.getResponse().get(1).getValue()).isEqualTo(responseStr);
     assertThat(thirdPartyApiCallLog.getResponse().get(1).getType()).isEqualTo(FieldType.JSON);
     assertThat(thirdPartyApiCallLog.getResponse().get(1).getName()).isEqualTo("Response Body");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void executeRequest_CorrectBodyInTheThirdPartyAPILogs()
+      throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException,
+             IOException {
+    DataCollectionInfoV2 dataCollectionInfo = createDataCollectionInfo();
+    DataCollector<DataCollectionInfoV2> dataCollector = mock(DataCollector.class);
+    doReturn(dataCollector).when(dataCollectorFactory).newInstance(any());
+    abstractDataCollectionTask.run(dataCollectionInfo);
+    ArgumentCaptor<DataCollectionExecutionContext> executionContextArgumentCaptor =
+        ArgumentCaptor.forClass(DataCollectionExecutionContext.class);
+    verify(dataCollector).init(executionContextArgumentCaptor.capture(), any());
+    Request request = new Request.Builder()
+                          .url("http://example.com/test")
+                          .post(RequestBody.create(MediaType.parse("json"), "[{\"a\": \"b\"}]"))
+                          .build();
+    Call<String> call = mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(call.request()).thenReturn(request);
+    String responseStr = "This is test response";
+    Response<String> response = Response.success(responseStr);
+    when(call.execute()).thenReturn(response);
+    String returnedStr = executionContextArgumentCaptor.getValue().executeRequest("title", call);
+    assertThat(returnedStr).isEqualTo(responseStr);
+    ArgumentCaptor<ThirdPartyApiCallLog> thirdPartyApiCallLogArgumentCaptor =
+        ArgumentCaptor.forClass(ThirdPartyApiCallLog.class);
+    verify(delegateLogService)
+        .save(eq(dataCollectionInfo.getAccountId()), thirdPartyApiCallLogArgumentCaptor.capture());
+    ThirdPartyApiCallLog thirdPartyApiCallLog = thirdPartyApiCallLogArgumentCaptor.getValue();
+    assertThat(thirdPartyApiCallLog.getTitle()).isEqualTo("title");
+    ThirdPartyApiCallField thirdPartyApiCallField =
+        thirdPartyApiCallLog.getRequest().stream().filter(field -> field.getName().equals("body")).findFirst().get();
+    assertThat("[{\"a\": \"b\"}]").isEqualTo(thirdPartyApiCallField.getValue());
+    assertThat(FieldType.JSON).isEqualTo(thirdPartyApiCallField.getType());
+    assertThat("body").isEqualTo(thirdPartyApiCallField.getName());
   }
 
   @Test

@@ -603,6 +603,7 @@ import software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse;
 import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -1406,7 +1407,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaDetailsResponse.class, 7256);
     kryo.register(AwsLambdaDetails.class, 7257);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
-
     kryo.register(JiraIssueData.class, 7259);
     kryo.register(K8sSwapServiceElement.class, 7260);
     kryo.register(SlackMessage.class, 7261);
@@ -1433,5 +1433,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7280);
     kryo.register(DeploySweepingOutputPcf.class, 7281);
     kryo.register(InfraMappingSweepingOutput.class, 7282);
+    kryo.register(ElkDataCollectionInfoV2.class, 7283);
   }
 }

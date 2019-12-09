@@ -3,7 +3,6 @@ package software.wings.service.impl.newrelic;
 import static software.wings.beans.TaskType.NEWRELIC_COLLECT_METRIC_DATAV2;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import lombok.Builder;
@@ -20,7 +19,6 @@ import software.wings.service.impl.analysis.MetricsDataCollectionInfo;
 import software.wings.sm.StateType;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,24 +26,22 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo implements ExecutionCapabilityDemander {
+public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo {
   private NewRelicConfig newRelicConfig;
   private long newRelicAppId;
-  private List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return CapabilityHelper.generateDelegateCapabilities(newRelicConfig, encryptedDataDetails);
+    return CapabilityHelper.generateDelegateCapabilities(newRelicConfig, getEncryptedDataDetails());
   }
 
   @Builder
   public NewRelicDataCollectionInfoV2(String accountId, String applicationId, String envId, Instant startTime,
       Instant endTime, Set<String> hosts, String cvConfigId, String stateExecutionId, String workflowId,
-      String workflowExecutionId, String serviceId, String cvTaskId, NewRelicConfig newRelicConfig, long newRelicAppId,
-      List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> hostsToGroupNameMap) {
+      String workflowExecutionId, String serviceId, String cvTaskId, List<EncryptedDataDetail> encryptedDataDetails,
+      NewRelicConfig newRelicConfig, long newRelicAppId, Map<String, String> hostsToGroupNameMap) {
     super(accountId, applicationId, envId, startTime, endTime, hosts, cvConfigId, stateExecutionId, workflowId,
-        workflowExecutionId, serviceId, cvTaskId, hostsToGroupNameMap);
-    this.encryptedDataDetails = encryptedDataDetails;
+        workflowExecutionId, serviceId, cvTaskId, encryptedDataDetails, hostsToGroupNameMap);
     this.newRelicConfig = newRelicConfig;
     this.newRelicAppId = newRelicAppId;
   }
@@ -83,11 +79,7 @@ public class NewRelicDataCollectionInfoV2 extends MetricsDataCollectionInfo impl
   @Override
   public DataCollectionInfoV2 deepCopy() {
     NewRelicDataCollectionInfoV2 newRelicDataCollectionInfo =
-        NewRelicDataCollectionInfoV2.builder()
-            .newRelicConfig(this.newRelicConfig)
-            .newRelicAppId(newRelicAppId)
-            .encryptedDataDetails(new ArrayList<>(encryptedDataDetails))
-            .build();
+        NewRelicDataCollectionInfoV2.builder().newRelicConfig(this.newRelicConfig).newRelicAppId(newRelicAppId).build();
     super.copy(newRelicDataCollectionInfo);
     return newRelicDataCollectionInfo;
   }

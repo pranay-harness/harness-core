@@ -16,7 +16,6 @@ import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CUSTOM_LOG_COLLECTION_TASK;
-import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
 import static software.wings.beans.TaskType.STACKDRIVER_COLLECT_LOG_DATA;
 import static software.wings.beans.TaskType.SUMO_COLLECT_LOG_DATA;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
@@ -56,7 +55,6 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
-import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.time.Timestamp;
@@ -441,6 +439,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public boolean collectCVData(String cvTaskId, DataCollectionInfoV2 dataCollectionInfo) {
     dataCollectionInfo.setCvTaskId(cvTaskId);
+    // This method call should go away once EncryptionConfig is serializable
+    dataCollectionInfo.setEncryptionDataDetails(secretManager);
     DelegateTask delegateTask = createDelegateTask(dataCollectionInfo.getTaskType(), dataCollectionInfo.getAccountId(),
         dataCollectionInfo.getApplicationId(), null, new Object[] {dataCollectionInfo}, dataCollectionInfo.getEnvId(),
         dataCollectionInfo.getCvConfigId(), dataCollectionInfo.getStateExecutionId(),
@@ -1080,7 +1080,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           endDate = URLEncoder.encode(endDate, "UTF-8");
         } catch (UnsupportedEncodingException e) {
           logger.error("Unable to encode the time range : ", durationInMinutes);
-          throw new WingsException(e);
+          throw new IllegalStateException("UTF-8 is not supported", e);
         }
         String url = ((PrometheusConfig) connectorConfig).getUrl();
         return PROMETHEUS_DEEPLINK_FORMAT.replace("{baseUrl}", url)
@@ -1704,7 +1704,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .build();
       wingsPersistence.saveIgnoringDuplicateKeys(Lists.newArrayList(metricAnalysisRecord));
     } else {
-      throw new WingsException("Invalid state type :" + analysisContext.getStateType());
+      throw new IllegalArgumentException("Invalid state type :" + analysisContext.getStateType());
     }
     continuousVerificationService.setMetaDataExecutionStatus(stateExecutionId, status, true);
     try {
@@ -1837,7 +1837,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         context.getStateType(), context.getStateExecutionId(), collectionMinute);
     switch (context.getStateType()) {
       case SUMO:
-      case ELK:
       case DATA_DOG_LOG:
       case STACK_DRIVER_LOG:
         return createDataCollectionDelegateTask(context, collectionMinute);
@@ -2361,66 +2360,40 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         hostsToBeCollected.keySet().stream().map(Misc::replaceUnicodeWithDot).collect(Collectors.toList());
     switch (context.getStateType()) {
       case SUMO:
-        try {
-          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
-            final LogDataCollectionInfo dataCollectionInfo =
-                createLogDataCollectionInfo(context, collectionStartMinute, new HashSet<>(hostBatch));
-            delegateTasks.add(
-                createDelegateTaskAndNotify(dataCollectionInfo, SUMO_COLLECT_LOG_DATA, executionData, context, true));
-          }
-          for (DelegateTask task : delegateTasks) {
-            delegateService.queueTask(task);
-          }
-        } catch (Exception ex) {
-          throw new WingsException("log analysis state failed ", ex);
+        for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
+          final LogDataCollectionInfo dataCollectionInfo =
+              createLogDataCollectionInfo(context, collectionStartMinute, new HashSet<>(hostBatch));
+          delegateTasks.add(
+              createDelegateTaskAndNotify(dataCollectionInfo, SUMO_COLLECT_LOG_DATA, executionData, context, true));
         }
-        break;
-      case ELK:
-        try {
-          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
-            final LogDataCollectionInfo dataCollectionInfo =
-                createLogDataCollectionInfo(context, collectionStartMinute, new HashSet<>(hostBatch));
-            delegateTasks.add(
-                createDelegateTaskAndNotify(dataCollectionInfo, ELK_COLLECT_LOG_DATA, executionData, context, true));
-          }
-          for (DelegateTask task : delegateTasks) {
-            delegateService.queueTask(task);
-          }
-        } catch (Exception ex) {
-          throw new WingsException("log analysis state failed ", ex);
+        for (DelegateTask task : delegateTasks) {
+          delegateService.queueTask(task);
         }
         break;
       case DATA_DOG_LOG:
-        try {
-          DatadogConfig datadogConfig =
-              (DatadogConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
-          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
-            final CustomLogDataCollectionInfo dataCollectionInfo = createCustomLogDataCollectionInfo(
-                datadogConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
-            delegateTasks.add(createDelegateTaskAndNotify(
-                dataCollectionInfo, CUSTOM_LOG_COLLECTION_TASK, executionData, context, true));
-          }
-          for (DelegateTask task : delegateTasks) {
-            delegateService.queueTask(task);
-          }
-        } catch (Exception ex) {
-          throw new WingsException("log analysis state failed ", ex);
+        DatadogConfig datadogConfig =
+            (DatadogConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
+        for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
+          final CustomLogDataCollectionInfo dataCollectionInfo = createCustomLogDataCollectionInfo(
+              datadogConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
+          delegateTasks.add(createDelegateTaskAndNotify(
+              dataCollectionInfo, CUSTOM_LOG_COLLECTION_TASK, executionData, context, true));
         }
+        for (DelegateTask task : delegateTasks) {
+          delegateService.queueTask(task);
+        }
+
         break;
       case STACK_DRIVER_LOG:
-        try {
-          GcpConfig gcpConfig = (GcpConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
-          for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
-            final StackDriverLogDataCollectionInfo dataCollectionInfo = createStackDriverLogDataCollectionInfo(
-                gcpConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
-            delegateTasks.add(createDelegateTaskAndNotify(
-                dataCollectionInfo, STACKDRIVER_COLLECT_LOG_DATA, executionData, context, true));
-          }
-          for (DelegateTask task : delegateTasks) {
-            delegateService.queueTask(task);
-          }
-        } catch (Exception ex) {
-          throw new WingsException("log analysis state failed ", ex);
+        GcpConfig gcpConfig = (GcpConfig) settingsService.get(context.getAnalysisServerConfigId()).getValue();
+        for (List<String> hostBatch : Lists.partition(hostList, HOST_BATCH_SIZE)) {
+          final StackDriverLogDataCollectionInfo dataCollectionInfo = createStackDriverLogDataCollectionInfo(
+              gcpConfig, context, collectionStartMinute, new HashSet<>(hostBatch));
+          delegateTasks.add(createDelegateTaskAndNotify(
+              dataCollectionInfo, STACKDRIVER_COLLECT_LOG_DATA, executionData, context, true));
+        }
+        for (DelegateTask task : delegateTasks) {
+          delegateService.queueTask(task);
         }
         break;
       default:
@@ -2439,7 +2412,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // implemented for these data collectors.
     switch (context.getStateType()) {
       case SUMO:
-      case ELK:
       case DATA_DOG_LOG:
         LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
         startTime = logDataCollectionInfo.getStartTime();
@@ -2482,11 +2454,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     savedDataCollectionInfo.setEndTime(collectionStartMinute + 1);
     savedDataCollectionInfo.setCollectionTime(1);
     switch (savedDataCollectionInfo.getStateType()) {
-      case ELK:
-        savedDataCollectionInfo.setEncryptedDataDetails(
-            secretManager.getEncryptionDetails(((ElkDataCollectionInfo) savedDataCollectionInfo).getElkConfig(),
-                context.getAppId(), context.getWorkflowExecutionId()));
-        break;
       case SUMO:
         savedDataCollectionInfo.setEncryptedDataDetails(
             secretManager.getEncryptionDetails(((SumoDataCollectionInfo) savedDataCollectionInfo).getSumoConfig(),

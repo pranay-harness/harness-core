@@ -239,6 +239,8 @@ public enum TaskType {
   SPLUNK_COLLECT_LOG_DATA(TaskGroup.SPLUNK, SplunkDataCollectionTask.class, SplunkValidation.class),
   SPLUNK_COLLECT_LOG_DATAV2(
       TaskGroup.SPLUNK, software.wings.delegatetasks.cv.LogDataCollectionTask.class, DataCollectionValidator.class),
+  ELK_COLLECT_LOG_DATAV2(
+      TaskGroup.ELK, software.wings.delegatetasks.cv.LogDataCollectionTask.class, DataCollectionValidator.class),
   SPLUNK_COLLECT_24_7_LOG_DATA(TaskGroup.SPLUNK, SplunkDataCollectionTask.class, SplunkValidation.class),
   SUMO_COLLECT_LOG_DATA(TaskGroup.SUMO, SumoDataCollectionTask.class, SumoValidation.class),
   SUMO_VALIDATE_CONFIGURATION_TASK(TaskGroup.SUMO, ServiceImplDelegateTask.class, SumoValidation.class),

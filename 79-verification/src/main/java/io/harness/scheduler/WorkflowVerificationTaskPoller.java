@@ -37,11 +37,9 @@ import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.log.ElkCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
 import java.time.OffsetDateTime;
@@ -158,30 +156,31 @@ public class WorkflowVerificationTaskPoller {
 
   private void schedulePredictiveDataCollectionCronJob(AnalysisContext context) {
     if (context != null && PREDICTIVE.equals(context.getComparisonStrategy())) {
-      String cvConfigUuid = context.getPredictiveCvConfigId();
-      if (isNotEmpty(cvConfigUuid)) {
-        return;
+      if (context.getDataCollectionInfov2() != null) {
+        cvTaskService.createCVTasks(context);
+      } else {
+        String cvConfigUuid = context.getPredictiveCvConfigId();
+        if (isNotEmpty(cvConfigUuid)) {
+          return;
+        }
+        logger.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);
+        cvConfigUuid = generateUuid();
+        CVConfiguration cvConfiguration;
+        switch (context.getStateType()) {
+          case SUMO:
+          case DATA_DOG_LOG:
+            cvConfiguration = createLogCVConfiguration(context, cvConfigUuid);
+            break;
+          default:
+            throw new IllegalArgumentException("Invalid state: " + context.getStateType());
+        }
+        logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
+            cvConfiguration.getStateType(), cvConfiguration.getUuid(), context.getStateExecutionId());
+        context.setPredictiveCvConfigId(cvConfigUuid);
+        wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
+        wingsPersistence.updateField(
+            StateExecutionInstance.class, context.getStateExecutionId(), "lastUpdatedAt", System.currentTimeMillis());
       }
-      logger.info("Creating CV Configuration for PREDICTIVE Analysis with context : {}", context);
-      cvConfigUuid = generateUuid();
-      CVConfiguration cvConfiguration;
-      switch (context.getStateType()) {
-        case SUMO:
-        case DATA_DOG_LOG:
-          cvConfiguration = createLogCVConfiguration(context, cvConfigUuid);
-          break;
-        case ELK:
-          cvConfiguration = createELKCVConfiguration(context, cvConfigUuid);
-          break;
-        default:
-          throw new IllegalArgumentException("Invalid state: " + context.getStateType());
-      }
-      logger.info("Created Configuration for Type {}, cvConfigId {}, stateExecutionId {}",
-          cvConfiguration.getStateType(), cvConfiguration.getUuid(), context.getStateExecutionId());
-      context.setPredictiveCvConfigId(cvConfigUuid);
-      wingsPersistence.updateField(AnalysisContext.class, context.getUuid(), "predictiveCvConfigId", cvConfigUuid);
-      wingsPersistence.updateField(
-          StateExecutionInstance.class, context.getStateExecutionId(), "lastUpdatedAt", System.currentTimeMillis());
     }
   }
 
@@ -208,39 +207,6 @@ public class WorkflowVerificationTaskPoller {
         Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(logsCVConfiguration));
     return logsCVConfiguration;
-  }
-
-  private ElkCVConfiguration createELKCVConfiguration(AnalysisContext context, String cvConfigUuid) {
-    ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) context.getDataCollectionInfo();
-    ElkCVConfiguration elkCVConfiguration = new ElkCVConfiguration();
-
-    elkCVConfiguration.setAppId(context.getAppId());
-    elkCVConfiguration.setHostnameField(elkDataCollectionInfo.getHostnameField());
-    elkCVConfiguration.setTimestampField(elkDataCollectionInfo.getTimestampField());
-    elkCVConfiguration.setTimestampFormat(elkDataCollectionInfo.getTimestampFieldFormat());
-    elkCVConfiguration.setIndex(elkDataCollectionInfo.getIndices());
-    elkCVConfiguration.setQuery(context.getQuery());
-    elkCVConfiguration.setQueryType(elkDataCollectionInfo.getQueryType());
-    elkCVConfiguration.setMessageField(elkDataCollectionInfo.getMessageField());
-    elkCVConfiguration.setExactBaselineEndMinute(context.getStartDataCollectionMinute());
-    elkCVConfiguration.setExactBaselineStartMinute(
-        context.getStartDataCollectionMinute() - context.getPredictiveHistoryMinutes() + 1);
-    elkCVConfiguration.setUuid(cvConfigUuid);
-    elkCVConfiguration.setName(cvConfigUuid);
-    elkCVConfiguration.setAccountId(context.getAccountId());
-    elkCVConfiguration.setConnectorId(context.getAnalysisServerConfigId());
-    elkCVConfiguration.setEnvId(context.getEnvId());
-    elkCVConfiguration.setServiceId(context.getServiceId());
-    elkCVConfiguration.setStateType(context.getStateType());
-    elkCVConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
-    elkCVConfiguration.setEnabled24x7(true);
-    elkCVConfiguration.setComparisonStrategy(context.getComparisonStrategy());
-    elkCVConfiguration.setWorkflowConfig(true);
-    elkCVConfiguration.setContextId(context.getUuid());
-    elkCVConfiguration.setValidUntil(
-        Date.from(OffsetDateTime.now().plusDays(CV_CONFIGURATION_VALID_LIMIT_IN_DAYS).toInstant()));
-    wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(elkCVConfiguration));
-    return elkCVConfiguration;
   }
 
   private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {

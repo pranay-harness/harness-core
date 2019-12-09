@@ -12,15 +12,14 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -30,14 +29,15 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.elk.ElkQueryTypeProvider;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -213,8 +214,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       ExecutionContext context, VerificationStateAnalysisExecutionData executionData, Set<String> hosts) {
     final String timestampField = getTimestampField();
     final String accountId = appService.get(context.getAppId()).getAccountId();
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+    String envId = getEnvId(context);
 
     SettingAttribute settingAttribute = null;
     String finalAnalysisServerConfigId = analysisServerConfigId;
@@ -237,7 +237,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
       settingAttribute = settingsService.get(finalAnalysisServerConfigId);
     }
     if (settingAttribute == null) {
-      throw new WingsException("No elk setting with id: " + finalAnalysisServerConfigId + " found");
+      throw new IllegalStateException("No elk setting with id: " + finalAnalysisServerConfigId + " found");
     }
 
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
@@ -363,5 +363,34 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   private boolean configIdTemplatized() {
     return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
+  }
+
+  @Override
+  public DataCollectionInfoV2 createDataCollectionInfo(ExecutionContext context, Set<String> hosts) {
+    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    String envId = getEnvId(context);
+    final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
+    return ElkDataCollectionInfoV2.builder()
+        .elkConfig(elkConfig)
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .stateExecutionId(context.getStateExecutionInstanceId())
+        .workflowId(context.getWorkflowId())
+        .accountId(appService.get(context.getAppId()).getAccountId())
+        .envId(envId)
+        .applicationId(context.getAppId())
+        .query(getRenderedQuery())
+        .hostnameField(getHostnameField())
+        .hosts(hosts)
+        .indices(indices)
+        .messageField(messageField)
+        .timestampField(getTimestampField())
+        .timestampFieldFormat(getTimestampFormat())
+        .queryType(getQueryType())
+        .build();
+  }
+
+  @Override
+  protected Optional<FeatureName> getCVTaskFeatureName() {
+    return Optional.of(FeatureName.ELK_CV_TASK);
   }
 }

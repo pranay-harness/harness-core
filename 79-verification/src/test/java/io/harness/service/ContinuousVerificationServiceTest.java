@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.TaskType.ELK_COLLECT_LOG_DATA;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.DUMMY_HOST_NAME;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
@@ -37,7 +36,6 @@ import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_GET_24X7_LOG_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.ANALYSIS_STATE_SAVE_24X7_CLUSTERED_LOG_URL;
 import static software.wings.service.intfc.analysis.LogAnalysisResource.LOG_ANALYSIS;
-import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -77,7 +75,6 @@ import software.wings.alerts.AlertStatus;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.ElkConfig;
 import software.wings.beans.FeatureName;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
@@ -105,8 +102,6 @@ import software.wings.service.impl.analysis.LogMLAnalysisStatus;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
-import software.wings.service.impl.elk.ElkDataCollectionInfo;
-import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskKeys;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
@@ -183,7 +178,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private CVActivityLogService cvActivityLogService;
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
-  private ElkConfig elkConfig;
 
   @Before
   public void setUp() throws Exception {
@@ -211,8 +205,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                         .apiKey(generateUuid().toCharArray())
                         .applicationKey(generateUuid().toCharArray())
                         .build();
-    elkConfig = ElkConfig.builder().elkUrl(generateUuid()).build();
-
     long currentTime = System.currentTimeMillis();
 
     LogsCVConfiguration logsCVConfiguration = new LogsCVConfiguration();
@@ -1493,91 +1485,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
                                       .asList();
     assertThat(learningEngineAnalysisTasks).hasSize(1);
     assertThat(learningEngineAnalysisTasks.get(0).getAnalysis_minute()).isEqualTo(oldMinute);
-  }
-
-  @Test
-  @Owner(developers = PRANJAL)
-  @Category(UnitTests.class)
-  public void testELKLogsCollection() throws IOException {
-    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
-    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(elkConfig).build());
-
-    int startTime = 12345;
-    AnalysisContext analysisContext = createELKAnalysisContext(startTime);
-
-    wingsPersistence.save(analysisContext);
-
-    continuousVerificationService.triggerWorkflowDataCollection(analysisContext);
-
-    List<DelegateTask> delegateTasks =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertThat(delegateTasks).hasSize(1);
-    assertThat(ELK_COLLECT_LOG_DATA.name()).isEqualTo(delegateTasks.get(0).getData().getTaskType());
-
-    ElkDataCollectionInfo elkDataCollectionInfo =
-        (ElkDataCollectionInfo) delegateTasks.get(0).getData().getParameters()[0];
-    assertThat(startTime).isEqualTo(elkDataCollectionInfo.getStartTime());
-    assertThat(elkDataCollectionInfo.getHosts().contains("host1")).isTrue();
-  }
-
-  @Test
-  @Owner(developers = PRANJAL)
-  @Category(UnitTests.class)
-  public void testELKLogsCollectionFailedCase() throws IOException {
-    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
-    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
-    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
-    when(settingsService.get(connectorId)).thenReturn(aSettingAttribute().withValue(elkConfig).build());
-    AnalysisContext analysisContext = createELKAnalysisContext(12345);
-    wingsPersistence.save(analysisContext);
-
-    LogDataRecord logDataRecord = new LogDataRecord();
-    logDataRecord.setAppId(appId);
-    logDataRecord.setClusterLevel(ClusterLevel.H0);
-    logDataRecord.setStateType(StateType.ELK);
-    logDataRecord.setWorkflowId(workflowId);
-    logDataRecord.setLogCollectionMinute(12355);
-    logDataRecord.setQuery(query);
-    logDataRecord.setAppId(appId);
-    logDataRecord.setStateExecutionId(stateExecutionId);
-    wingsPersistence.save(logDataRecord);
-
-    // No Data Collection task will be created
-    assertThat(continuousVerificationService.triggerWorkflowDataCollection(analysisContext)).isFalse();
-
-    List<DelegateTask> delegateTasks =
-        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
-    assertThat(delegateTasks).isEmpty();
-  }
-
-  private AnalysisContext createELKAnalysisContext(int startMinute) {
-    String indices = UUID.randomUUID().toString();
-    String messageField = UUID.randomUUID().toString();
-    String timestampFieldFormat = UUID.randomUUID().toString();
-    ElkDataCollectionInfo dataCollectionInfo =
-        ElkDataCollectionInfo.builder()
-            .elkConfig(elkConfig)
-            .indices(indices)
-            .messageField(messageField)
-            .timestampField(DEFAULT_TIME_FIELD)
-            .timestampFieldFormat(timestampFieldFormat)
-            .queryType(ElkQueryType.MATCH)
-            .accountId(accountId)
-            .applicationId(appId)
-            .stateExecutionId(stateExecutionId)
-            .workflowId(workflowId)
-            .workflowExecutionId(workflowExecutionId)
-            .serviceId(serviceId)
-            .query(query)
-            .startMinute(startMinute)
-            .collectionTime(15)
-            .hosts(Sets.newHashSet("test", "control"))
-            .encryptedDataDetails(secretManager.getEncryptionDetails(elkConfig, null, null))
-            .build();
-
-    return createAnalysisContext(dataCollectionInfo, startMinute, StateType.ELK, connectorId);
   }
 
   private AnalysisContext createDatadogLogAnalysisContext(int startMinute) {

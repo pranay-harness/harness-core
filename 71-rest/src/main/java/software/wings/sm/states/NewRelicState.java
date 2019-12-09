@@ -55,6 +55,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -292,8 +293,6 @@ public class NewRelicState extends AbstractMetricAnalysisState {
         .envId(envId)
         .applicationId(context.getAppId())
         .hosts(hostsToCollect.keySet())
-        .encryptedDataDetails(
-            secretManager.getEncryptionDetails(newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
         .newRelicAppId(Long.parseLong(finalNewRelicApplicationIdTmp))
         .hostsToGroupNameMap(hostsToCollect)
         .serviceId(getPhaseServiceId(context))
@@ -376,8 +375,8 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   }
 
   @Override
-  protected boolean isCVTaskEnqueuingEnabled(String accountId) {
-    return featureFlagService.isEnabled(FeatureName.NEW_RELIC_CV_TASK, accountId);
+  protected Optional<FeatureName> getCVTaskFeatureName() {
+    return Optional.of(FeatureName.NEW_RELIC_CV_TASK);
   }
   @Data
   @Builder

@@ -227,7 +227,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info("triggering data collection for {} state", getStateType());
       hostsToCollect.remove(null);
       createAndSaveMetricGroups(context, hostsToCollect);
-      if (isCVTaskEnqueuingEnabled(context.getAccountId())) {
+      if (getCVTaskFeatureName().isPresent() && analysisContext.isFeatureFlagEnabled(getCVTaskFeatureName().get())) {
         getLogger().info("Data collection will be done with cv tasks.");
         analysisContext.setDataCollectionInfov2(createDataCollectionInfo(context, hostsToCollect));
       } else if (isEligibleForPerMinuteTask(context.getAccountId())) {
@@ -471,7 +471,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .parallelProcesses(PARALLEL_PROCESSES)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
             .build();
-
+    if (getCVTaskFeatureName().isPresent()) {
+      analysisContext.setFeatureFlag(
+          getCVTaskFeatureName().get(), isCVTaskEnqueuingEnabled(analysisContext.getAccountId()));
+    }
     if (isEligibleForPerMinuteTask(accountId)) {
       DataCollectionInfo dataCollectionInfo = createDataCollectionInfo(context);
       analysisContext.setDataCollectionInfo(dataCollectionInfo);

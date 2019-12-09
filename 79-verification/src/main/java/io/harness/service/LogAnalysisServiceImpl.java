@@ -37,7 +37,6 @@ import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.persistence.HIterator;
-import io.harness.rest.RestResponse;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -55,6 +54,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.analysis.CVFeedbackRecord;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataKeys;
@@ -980,7 +980,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public int getEndTimeForLogAnalysis(AnalysisContext context) {
-    if (isPerMinTaskWithAbsoluteTimestamp(context.getStateType(), context.getAccountId())) {
+    if (isPerMinTaskWithAbsoluteTimestamp(
+            context.getStateType(), context.getAccountId(), context.getStateExecutionId())) {
       return (int) context.getStartDataCollectionMinute() + context.getTimeDuration() - 1;
     } else {
       return context.getTimeDuration() - 1;
@@ -999,24 +1000,27 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   @Override
   public boolean isProcessingComplete(String query, String appId, String stateExecutionId, StateType type,
       int timeDurationMins, long collectionMinute, String accountId) {
-    if (isPerMinTaskWithAbsoluteTimestamp(type, accountId)) {
+    if (isPerMinTaskWithAbsoluteTimestamp(type, accountId, stateExecutionId)) {
       return getLastProcessedMinute(stateExecutionId) - collectionMinute >= timeDurationMins - 1;
     } else {
       return getLastProcessedMinute(stateExecutionId) >= timeDurationMins - 1;
     }
   }
 
-  private boolean isPerMinTaskWithAbsoluteTimestamp(StateType type, String accountId) {
+  private boolean isPerMinTaskWithAbsoluteTimestamp(StateType type, String accountId, String stateExecutionId) {
     return PER_MINUTE_CV_STATES.contains(type) || GA_PER_MINUTE_CV_STATES.contains(type)
-        || isCVTaskPerMinuteTaskEnabled(type, accountId);
+        || isCVTaskPerMinuteTaskEnabled(type, accountId, stateExecutionId);
   }
 
   // TODO: remove this once everything is moved to cvTask
-  private boolean isCVTaskPerMinuteTaskEnabled(StateType stateType, String accountId) {
-    if (StateType.SPLUNKV2.equals(stateType)) {
-      RestResponse<Boolean> restResponse = managerClientHelper.callManagerWithRetry(
-          managerClient.isFeatureEnabled(FeatureName.SPLUNK_CV_TASK, accountId));
-      return restResponse.getResource();
+  private boolean isCVTaskPerMinuteTaskEnabled(StateType stateType, String accountId, String stateExecutionId) {
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                          .get();
+    if (StateType.SPLUNKV2 == stateType) {
+      return analysisContext.isFeatureFlagEnabled(FeatureName.SPLUNK_CV_TASK);
+    } else if (StateType.ELK == stateType) {
+      return analysisContext.isFeatureFlagEnabled(FeatureName.ELK_CV_TASK);
     }
     return false;
   }

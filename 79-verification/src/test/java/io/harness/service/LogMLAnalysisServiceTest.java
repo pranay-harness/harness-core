@@ -1649,7 +1649,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                           .accountId(accountId)
                                           .build();
     Call<RestResponse<Boolean>> managerCall = mock(Call.class);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.SPLUNK_CV_TASK, accountId)).thenReturn(managerCall);
+    analysisContext.setFeatureFlag(FeatureName.SPLUNK_CV_TASK, true);
+    wingsPersistence.save(analysisContext);
     when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
     int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
     assertThat(minute + 10 - 1).isEqualTo(endTime);
@@ -1658,7 +1659,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGetEndTimeForLogAnalysisForCVTasksDisabled() throws IOException {
+  public void testGetEndTimeForLogAnalysisForCVTasksDisabled() {
     long minute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
     AnalysisContext analysisContext = AnalysisContext.builder()
                                           .timeDuration(10)
@@ -1666,9 +1667,8 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
                                           .stateType(SPLUNKV2)
                                           .accountId(accountId)
                                           .build();
-    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
-    when(verificationManagerClient.isFeatureEnabled(FeatureName.SPLUNK_CV_TASK, accountId)).thenReturn(managerCall);
-    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(false)));
+    analysisContext.setFeatureFlag(FeatureName.SPLUNK_CV_TASK, false);
+    wingsPersistence.save(analysisContext);
     int endTime = analysisService.getEndTimeForLogAnalysis(analysisContext);
     assertThat(9).isEqualTo(endTime);
   }

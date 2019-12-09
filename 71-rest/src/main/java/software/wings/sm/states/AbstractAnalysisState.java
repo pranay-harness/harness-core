@@ -918,7 +918,16 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected boolean isCVTaskEnqueuingEnabled(String accountId) {
-    return false;
+    Optional<FeatureName> cvTaskFeatureName = getCVTaskFeatureName();
+    if (cvTaskFeatureName.isPresent()) {
+      return featureFlagService.isEnabled(cvTaskFeatureName.get(), accountId);
+    } else {
+      return false;
+    }
+  }
+
+  protected Optional<FeatureName> getCVTaskFeatureName() {
+    return Optional.empty();
   }
 
   protected boolean hasExpression(List<TemplateExpression> templateExpressions, String fieldName) {

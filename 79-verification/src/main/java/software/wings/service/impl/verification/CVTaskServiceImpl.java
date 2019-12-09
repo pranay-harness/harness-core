@@ -2,6 +2,7 @@ package software.wings.service.impl.verification;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
+import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.PREDICTIVE;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -11,8 +12,8 @@ import io.harness.entities.CVTask;
 import io.harness.entities.CVTask.CVTaskKeys;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.persistence.HIterator;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.dl.WingsPersistence;
@@ -31,9 +32,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class CVTaskServiceImpl implements CVTaskService {
@@ -51,7 +54,10 @@ public class CVTaskServiceImpl implements CVTaskService {
   @Override
   public void createCVTasks(AnalysisContext context) {
     List<CVTask> cvTasks = new ArrayList<>();
-    long startTime = Timestamp.currentMinuteBoundary();
+    long startTime = TimeUnit.MINUTES.toMillis(context.getStartDataCollectionMinute());
+    if (context.getComparisonStrategy() == PREDICTIVE) {
+      cvTasks.addAll(createCVTasksForPredictiveComparisionStrategy(context, startTime));
+    }
     int timeDuration = context.getTimeDuration();
     for (int minute = 0; minute < timeDuration; minute++) {
       long startTimeMSForCurrentMinute = startTime + Duration.ofMinutes(minute).toMillis();
@@ -70,6 +76,32 @@ public class CVTaskServiceImpl implements CVTaskService {
       cvTasks.add(cvTask);
     }
     enqueueSequentialTasks(cvTasks);
+  }
+
+  private List<CVTask> createCVTasksForPredictiveComparisionStrategy(AnalysisContext context, long startTimeMillis) {
+    List<CVTask> cvTasks = new ArrayList<>();
+    DataCollectionInfoV2 predictiveDataCollectionInfo = context.getDataCollectionInfov2().deepCopy();
+
+    Instant endTime = Instant.ofEpochMilli(startTimeMillis);
+    Instant startTime = endTime.minus(Duration.ofMinutes(context.getPredictiveHistoryMinutes()));
+
+    predictiveDataCollectionInfo.setHosts(Collections.emptySet());
+    while (startTime.compareTo(endTime) < 0) {
+      DataCollectionInfoV2 copy = predictiveDataCollectionInfo.deepCopy();
+      copy.setStartTime(startTime);
+      Instant currentEndTime = ObjectUtils.min(startTime.plus(Duration.ofMinutes(15)), endTime);
+      copy.setEndTime(currentEndTime);
+      startTime = currentEndTime;
+      cvTasks.add(CVTask.builder()
+                      .accountId(context.getAccountId())
+                      .stateExecutionId(context.getStateExecutionId())
+                      .dataCollectionInfo(copy)
+                      .correlationId(context.getCorrelationId())
+                      .status(ExecutionStatus.WAITING)
+                      .build());
+    }
+
+    return cvTasks;
   }
 
   @Override

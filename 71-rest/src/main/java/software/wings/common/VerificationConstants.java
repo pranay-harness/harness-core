@@ -210,7 +210,7 @@ public class VerificationConstants {
   public static final int TIMESCALEDB_BOOLEAN_DATATYPE = 16;
 
   // Add to this list whenever we add more states to this type of collection
-  public static final List<StateType> PER_MINUTE_CV_STATES = Arrays.asList(StateType.SUMO, StateType.ELK);
+  public static final List<StateType> PER_MINUTE_CV_STATES = Arrays.asList(StateType.SUMO);
 
   public static final List<StateType> GA_PER_MINUTE_CV_STATES =
       Arrays.asList(StateType.DATA_DOG_LOG, StateType.STACK_DRIVER_LOG);
