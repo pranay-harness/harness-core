@@ -52,4 +52,12 @@ public interface InstanceStatService {
    * @return percentile over given time period
    */
   double percentile(String accountId, Instant from, Instant to, double p);
+
+  /**
+   * Calculate count of instance usage values
+   *
+   *
+   * @return count of current instance usage value
+   */
+  double currentCount(String accountId);
 }

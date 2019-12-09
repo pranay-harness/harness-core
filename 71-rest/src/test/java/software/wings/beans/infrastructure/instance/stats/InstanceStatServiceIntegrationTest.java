@@ -174,4 +174,20 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(lastTs.isAfter(before)).isTrue();
     assertThat(lastTs.isBefore(after)).isTrue();
   }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(IntegrationTests.class)
+  public void testGetCurrentCount() {
+    val stat = sampleSnapshot();
+
+    double count = statService.currentCount(stat.getAccountId());
+    assertThat(count).isZero();
+
+    val saved = statService.save(stat);
+    assertThat(saved).isTrue();
+
+    count = statService.currentCount(stat.getAccountId());
+    assertThat(count).isNotZero();
+  }
 }

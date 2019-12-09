@@ -185,4 +185,21 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     List<Integer> counts = dataPoints.stream().map(InstanceStatsSnapshot::getTotal).collect(Collectors.toList());
     return new SimplePercentile(counts).evaluate(p);
   }
+
+  @Override
+  public double currentCount(String accountId) {
+    FindOptions options = new FindOptions();
+    options.limit(1);
+
+    List<InstanceStatsSnapshot> snapshots = persistence.createQuery(InstanceStatsSnapshot.class)
+                                                .filter(InstanceStatsSnapshotKeys.accountId, accountId)
+                                                .order(Sort.descending("timestamp"))
+                                                .asList(options);
+
+    if (CollectionUtils.isEmpty(snapshots)) {
+      return 0;
+    }
+
+    return snapshots.get(0).getTotal();
+  }
 }
