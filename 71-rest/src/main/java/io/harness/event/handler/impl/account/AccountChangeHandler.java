@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -32,6 +33,7 @@ import software.wings.beans.User;
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
 import software.wings.service.impl.AuthServiceImpl.Keys;
 import software.wings.service.impl.event.AccountEntityEvent;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -50,6 +52,7 @@ public class AccountChangeHandler implements EventHandler {
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private UserService userService;
   @Inject private HPersistence hPersistence;
+  @Inject private AccountService accountService;
 
   public AccountChangeHandler(EventListener eventListener) {
     eventListener.registerEventHandler(this, Sets.newHashSet(EventType.ACCOUNT_ENTITY_CHANGE));
@@ -103,6 +106,9 @@ public class AccountChangeHandler implements EventHandler {
   }
 
   private void enqueueGroup(Account account) {
+    if (!accountService.getAccountStatus(account.getUuid()).equals(AccountStatus.ACTIVE)) {
+      return;
+    }
     String accountId = account.getUuid();
     DummySystemUser user = new DummySystemUser(accountId, account.getAccountName());
 
@@ -110,7 +116,6 @@ public class AccountChangeHandler implements EventHandler {
     String env = System.getenv("ENV");
     LicenseInfo licenseInfo = account.getLicenseInfo();
     String accountType = licenseInfo != null ? licenseInfo.getAccountType() : null;
-
     SecretManagerConfig defaultSecretManager = secretManagerConfigService.getDefaultSecretManager(accountId);
 
     boolean isGlobal = false;

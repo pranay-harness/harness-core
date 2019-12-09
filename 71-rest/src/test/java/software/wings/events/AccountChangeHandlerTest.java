@@ -33,6 +33,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -81,7 +82,10 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
     FieldUtils.writeField(accountChangeHandler, "instanceStatService", instanceStatService, true);
     FieldUtils.writeField(accountChangeHandler, "secretManagerConfigService", secretManagerConfigService, true);
     FieldUtils.writeField(accountChangeHandler, "hPersistence", hPersistence, true);
+    FieldUtils.writeField(accountChangeHandler, "accountService", accountService, true);
+
     when(accountService.get(anyString())).thenReturn(account);
+    when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
     when(mainConfiguration.getSegmentConfig()).thenReturn(segmentConfig);
     when(accountService.save(any(), eq(false))).thenReturn(account);
     account = eventTestHelper.createAccount();
@@ -119,6 +123,7 @@ public class AccountChangeHandlerTest extends WingsBaseTest {
       when(userService.getUserByEmail(anyString())).thenReturn(newUser);
       when(userService.update(any(User.class))).thenReturn(newUser);
       when(accountService.get(anyString())).thenReturn(account);
+      when(accountService.getAccountStatus(anyString())).thenReturn(AccountStatus.ACTIVE);
       when(instanceStatService.percentile(anyString(), any(Instant.class), any(Instant.class), anyDouble()))
           .thenReturn(50.0);
       SecretManagerConfig secretManagerConfig = KmsConfig.builder().build();
