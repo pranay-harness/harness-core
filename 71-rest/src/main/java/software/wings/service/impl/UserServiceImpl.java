@@ -304,6 +304,7 @@ public class UserServiceImpl implements UserService {
       userInvite.setCompleted(false);
       String hashed = hashpw(new String(userInvite.getPassword()), BCrypt.gensalt());
       userInvite.setPasswordHash(hashed);
+
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
       params.put("userInviteId", inviteId);
@@ -313,7 +314,8 @@ public class UserServiceImpl implements UserService {
       // Send an email invitation for the trial user to finish up the sign-up with additional information
       // such as password, account/company name information.
       sendVerificationEmail(userInvite, url, params);
-      eventPublishHelper.publishTrialUserSignupEvent(emailAddress, userInvite.getName(), inviteId);
+      eventPublishHelper.publishTrialUserSignupEvent(
+          userInvite.getUtmInfo(), emailAddress, userInvite.getName(), inviteId);
     } else if (userInviteInDB.isCompleted()) {
       if (spamChecker.isSpam(userInviteInDB)) {
         return false;
@@ -370,12 +372,6 @@ public class UserServiceImpl implements UserService {
     eventPublishHelper.publishJoinAccountEvent(emailAddress, accountJoinRequest.getName());
     return emailSent;
   }
-
-  //  @Override
-  //  public boolean postCustomEvent(String accountId, String event, String additionalInfo) {
-  //    eventPublishHelper.publishCustomEvent(accountId, event, additionalInfo);
-  //    return true;
-  //  }
 
   @Override
   public boolean postCustomEvent(String accountId, String event) {
@@ -558,7 +554,8 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
-  private UserInvite getUserInviteByEmailAndAccount(String email, String accountId) {
+  @Override
+  public UserInvite getUserInviteByEmailAndAccount(String email, String accountId) {
     UserInvite userInvite = null;
     if (isNotEmpty(email)) {
       userInvite = wingsPersistence.createQuery(UserInvite.class)
@@ -887,29 +884,21 @@ public class UserServiceImpl implements UserService {
     return model;
   }
 
-  private String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException {
-    return buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-        account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
-  }
-
   @Override
-  public String getUserInviteUrl(String email, Account account) throws URISyntaxException {
-    UserInvite userInvite = getUserInviteByEmailAndAccount(email, account.getUuid());
+  public String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException {
     if (userInvite == null) {
       return null;
     }
-
     return buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
         account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
   }
 
   @Override
-  public String getUserInviteUrl(String email) throws URISyntaxException {
-    UserInvite userInvite = signupService.getUserInviteByEmail(email);
-    if (userInvite != null) {
-      return buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
+  public String getUserInviteUrl(UserInvite userInvite) throws URISyntaxException {
+    if (userInvite == null) {
+      return null;
     }
-    return null;
+    return buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
   }
 
   private Map<String, String> getEmailVerificationTemplateModel(String email, String url) throws URISyntaxException {
@@ -1114,6 +1103,7 @@ public class UserServiceImpl implements UserService {
                     .withPasswordHash(userInvite.getPasswordHash())
                     .withAccountName(accountName)
                     .withCompanyName(companyName != null ? companyName : accountName)
+                    .withUtmInfo(userInvite.getUtmInfo())
                     .build();
 
     completeSignup(user, userInvite, getTrialLicense());
@@ -1325,8 +1315,6 @@ public class UserServiceImpl implements UserService {
     String accountId = account.getUuid();
     createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId);
 
-    //    eventPublishHelper.publishUserRegistrationCompletionEvent(accountId, user);
-
     // PL-2698: UI lead-update call will be called only if it's first login. Will need to
     // make sure the isFirstLogin is always derived from lastLogin value.
     boolean isFirstLogin = user.getLastLogin() == 0L;
@@ -1352,6 +1340,7 @@ public class UserServiceImpl implements UserService {
         .withCompanyName(companyName)
         .withEmailVerified(true)
         .withOauthProvider(oauthProvider)
+        .withUtmInfo(userInfo.getUtmInfo())
         .build();
   }
 

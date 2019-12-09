@@ -210,6 +210,8 @@ public interface UserService extends OwnedByAccount {
 
   User getUserByEmail(String email, String accountId);
 
+  UserInvite getUserInviteByEmailAndAccount(String email, String accountId);
+
   /**
    * Verify registered or allowed.
    *
@@ -257,9 +259,9 @@ public interface UserService extends OwnedByAccount {
    */
   UserInvite inviteUser(UserInvite userInvite);
 
-  String getUserInviteUrl(String email, Account account) throws URISyntaxException;
+  String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException;
 
-  String getUserInviteUrl(String email) throws URISyntaxException;
+  String getUserInviteUrl(UserInvite userInvite) throws URISyntaxException;
 
   void sendVerificationEmail(UserInvite userInvite, String url, Map<String, String> params);
 

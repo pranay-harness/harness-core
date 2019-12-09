@@ -21,6 +21,7 @@ import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.utm.UtmInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
@@ -105,6 +106,7 @@ public class User extends Base implements Principal {
   private String oauthProvider;
   @JsonIgnore private Set<String> reportedMarketoCampaigns = new HashSet<>();
   private Set<String> reportedSegmentTracks = new HashSet<>();
+  private UtmInfo utmInfo;
 
   /**
    * Return partial user object without sensitive information.
@@ -526,6 +528,14 @@ public class User extends Base implements Principal {
     this.oauthProvider = oauthProvider;
   }
 
+  public UtmInfo getUtmInfo() {
+    return utmInfo;
+  }
+
+  public void setUtmInfo(UtmInfo utmInfo) {
+    this.utmInfo = utmInfo;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -649,6 +659,7 @@ public class User extends Base implements Principal {
     private boolean passwordExpired;
     private boolean userLocked;
     private boolean imported;
+    private UtmInfo utmInfo;
 
     private Builder() {}
 
@@ -807,6 +818,11 @@ public class User extends Base implements Principal {
       return this;
     }
 
+    public Builder withUtmInfo(UtmInfo utmInfo) {
+      this.utmInfo = utmInfo;
+      return this;
+    }
+
     public Builder but() {
       return anUser()
           .withName(name)
@@ -837,6 +853,7 @@ public class User extends Base implements Principal {
           .withTwoFactorJwtToken(twoFactorJwtToken)
           .withPasswordExpired(passwordExpired)
           .withOauthProvider(oauthProvider)
+          .withUtmInfo(utmInfo)
           .withImported(imported);
     }
 
@@ -872,6 +889,7 @@ public class User extends Base implements Principal {
       user.setPasswordExpired(passwordExpired);
       user.setUserLocked(userLocked);
       user.setImported(imported);
+      user.setUtmInfo(utmInfo);
       return user;
     }
   }

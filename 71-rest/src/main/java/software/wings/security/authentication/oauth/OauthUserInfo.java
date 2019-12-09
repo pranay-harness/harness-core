@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.beans.utm.UtmInfo;
 
 @Data
 @Builder
@@ -15,4 +16,5 @@ public class OauthUserInfo {
   String email;
   String name;
   String login;
+  UtmInfo utmInfo;
 }

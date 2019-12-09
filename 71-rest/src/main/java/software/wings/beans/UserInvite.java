@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.utm.UtmInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,7 @@ public class UserInvite extends Base {
   private String marketPlaceToken;
 
   private boolean importedByScim;
+  private UtmInfo utmInfo;
 
   @Override
   public boolean equals(Object o) {
@@ -216,6 +218,14 @@ public class UserInvite extends Base {
     this.importedByScim = importedByScim;
   }
 
+  public UtmInfo getUtmInfo() {
+    return utmInfo;
+  }
+
+  public void setUtmInfo(UtmInfo utmInfo) {
+    this.utmInfo = utmInfo;
+  }
+
   public static final class UserInviteBuilder {
     private String accountId;
     private String email;
@@ -236,6 +246,7 @@ public class UserInvite extends Base {
     private String marketPlaceToken;
     private boolean importedByScim;
     private UserInviteSource source = UserInviteSource.builder().build();
+    private UtmInfo utmInfo;
 
     private UserInviteBuilder() {}
 
@@ -338,6 +349,11 @@ public class UserInvite extends Base {
       return this;
     }
 
+    public UserInviteBuilder withUtmInfo(UtmInfo utmInfo) {
+      this.utmInfo = utmInfo;
+      return this;
+    }
+
     public UserInvite build() {
       UserInvite userInvite = new UserInvite();
       userInvite.setAccountId(accountId);
@@ -359,6 +375,7 @@ public class UserInvite extends Base {
       userInvite.setCompanyName(companyName);
       userInvite.setMarketPlaceToken(marketPlaceToken);
       userInvite.setImportedByScim(importedByScim);
+      userInvite.setUtmInfo(utmInfo);
       return userInvite;
     }
   }

@@ -79,6 +79,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HintException;
@@ -121,9 +122,9 @@ import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
-import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.marketplace.MarketPlaceType;
+import software.wings.beans.utm.UtmInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
@@ -206,6 +207,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private UserServiceLimitChecker userServiceLimitChecker;
   @Mock private LoginSettingsService loginSettingsService;
   @Mock private BlackListedDomainChecker blackListedDomainChecker;
+  @Mock private EventPublishHelper eventPublishHelper;
   @Spy @InjectMocks private SignupServiceImpl signupService;
 
   /**
@@ -253,7 +255,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testMarketPlaceSignUp() {
     when(configuration.getPortal().getJwtMarketPlaceSecret()).thenReturn("TESTSECRET");
-    UserInvite testInvite = UserInviteBuilder.anUserInvite().withUuid(USER_INVITE_ID).withEmail(USER_EMAIL).build();
+    UserInvite testInvite = anUserInvite().withUuid(USER_INVITE_ID).withEmail(USER_EMAIL).build();
     testInvite.setPassword("TestPassword".toCharArray());
     MarketPlace marketPlace = MarketPlace.builder()
                                   .uuid("TESTUUID")
@@ -406,6 +408,33 @@ public class UserServiceTest extends WingsBaseTest {
     } catch (SignupException e) {
       // Exception is expected as temporary emails is not allowed.
     }
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testNewUserSignup() {
+    when(configuration.isTrialRegistrationAllowed()).thenReturn(true);
+    when(configuration.getPortal().getUrl()).thenReturn("https://qa.harness.io");
+    doNothing().when(signupService).validatePassword(any());
+
+    String inviteId = UUIDGenerator.generateUuid();
+    when(wingsPersistence.save(any(UserInvite.class))).thenReturn(inviteId);
+
+    String email = "testuser@account10.com";
+    String accountName = "ACCOUNT10";
+    String userName = "testuser";
+    UserInvite userInvite = anUserInvite()
+                                .withAccountName(accountName)
+                                .withCompanyName("COMPANY10")
+                                .withEmail(email)
+                                .withName(userName)
+                                .build();
+    userInvite.setPassword("password".toCharArray());
+    UtmInfo utmInfo = UtmInfo.builder().utmCampaign("campaign").utmContent("content").utmSource("source").build();
+    userInvite.setUtmInfo(utmInfo);
+    userService.trialSignup(userInvite);
+    verify(eventPublishHelper).publishTrialUserSignupEvent(utmInfo, email, userName, inviteId);
   }
 
   @Test
@@ -686,7 +715,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldInviteNewUser() {
-    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+    UserInvite userInvite = anUserInvite()
                                 .withAppId(GLOBAL_APP_ID)
                                 .withAccountId(ACCOUNT_ID)
                                 .withEmails(asList(USER_EMAIL))
@@ -736,7 +765,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldInviteNewUserMixedCaseEmail() throws EmailException, TemplateException, IOException {
     String mixedEmail = "UseR@wings.software ";
-    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+    UserInvite userInvite = anUserInvite()
                                 .withAppId(GLOBAL_APP_ID)
                                 .withAccountId(ACCOUNT_ID)
                                 .withEmails(asList(mixedEmail))
@@ -764,7 +793,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testInviteNewUser_invalidEmail_shouldFail() {
-    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+    UserInvite userInvite = anUserInvite()
                                 .withAppId(GLOBAL_APP_ID)
                                 .withAccountId(ACCOUNT_ID)
                                 .withEmails(asList(INVALID_USER_EMAIL))
@@ -798,7 +827,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldInviteExistingUser() {
-    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+    UserInvite userInvite = anUserInvite()
                                 .withAppId(GLOBAL_APP_ID)
                                 .withAccountId(ACCOUNT_ID)
                                 .withEmails(asList(USER_EMAIL))
@@ -1088,11 +1117,8 @@ public class UserServiceTest extends WingsBaseTest {
                     .withAccountName(ACCOUNT_NAME)
                     .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
                     .build();
-    UserInvite userInvite = UserInviteBuilder.anUserInvite()
-                                .withAppId(GLOBAL_APP_ID)
-                                .withAccountId(ACCOUNT_ID)
-                                .withEmail(USER_EMAIL)
-                                .build();
+    UserInvite userInvite =
+        anUserInvite().withAppId(GLOBAL_APP_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build();
     Account account = anAccount()
                           .withCompanyName(COMPANY_NAME)
                           .withUuid(ACCOUNT_ID)

@@ -4,6 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
 import static io.harness.event.handler.impl.Constants.EMAIL_ID;
 import static io.harness.event.handler.impl.Constants.USER_NAME;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CAMPAIGN;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CONTENT;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_MEDIUM;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_SOURCE;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_TERM;
 import static io.harness.event.model.EventType.COMMUNITY_TO_ESSENTIALS;
 import static io.harness.event.model.EventType.COMMUNITY_TO_PAID;
 import static io.harness.event.model.EventType.COMPLETE_USER_REGISTRATION;
@@ -53,6 +58,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.utm.UtmInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
@@ -75,6 +81,14 @@ public class MarketoHandler implements EventHandler {
   @Inject private MarketoHelper marketoHelper;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Utils utils;
+
+  public interface Constants {
+    String UTM_SOURCE = "utm_source";
+    String UTM_CONTENT = "utm_content";
+    String UTM_MEDIUM = "utm_medium";
+    String UTM_TERM = "utm_term";
+    String UTM_CAMPAIGN = "utm_campaign";
+  }
 
   private MarketoConfig marketoConfig;
 
@@ -188,7 +202,14 @@ public class MarketoHandler implements EventHandler {
           return;
         }
 
-        long marketoLeadId = reportLead(properties.get(USER_NAME), email, accessToken, true);
+        UtmInfo utmInfo = UtmInfo.builder()
+                              .utmCampaign(properties.get(UTM_CAMPAIGN))
+                              .utmContent(properties.get(UTM_CONTENT))
+                              .utmMedium(properties.get(UTM_MEDIUM))
+                              .utmSource(properties.get(UTM_SOURCE))
+                              .utmTerm(properties.get(UTM_TERM))
+                              .build();
+        long marketoLeadId = reportLead(properties.get(USER_NAME), email, accessToken, true, utmInfo);
         if (marketoLeadId > 0) {
           reportCampaignEvent(eventType, accessToken, Arrays.asList(Id.builder().id(marketoLeadId).build()));
         }
@@ -230,10 +251,10 @@ public class MarketoHandler implements EventHandler {
       switch (eventType) {
         case USER_INVITED_FROM_EXISTING_ACCOUNT:
         case COMPLETE_USER_REGISTRATION:
-          registerLeadAndReportCampaign(account, user, accessToken, event);
+          registerLeadAndReportCampaign(account, user, accessToken, event, user.getUtmInfo());
           break;
         default:
-          reportCampaignEvent(account, eventType, accessToken, user);
+          reportCampaignEvent(account, eventType, accessToken, user, user.getUtmInfo());
           break;
       }
 
@@ -263,28 +284,28 @@ public class MarketoHandler implements EventHandler {
 
     usersOfAccount.stream().filter(user -> user.getMarketoLeadId() != 0L).forEach(user -> {
       try {
-        reportLead(account, user, accessToken, false);
+        reportLead(account, user, accessToken, false, user.getUtmInfo());
       } catch (IOException | URISyntaxException e) {
         logger.error("Error while updating license to all users in marketo", e);
       }
     });
   }
 
-  private void registerLeadAndReportCampaign(Account account, User user, String accessToken, Event event)
-      throws IOException, URISyntaxException {
+  private void registerLeadAndReportCampaign(Account account, User user, String accessToken, Event event,
+      UtmInfo utmInfo) throws IOException, URISyntaxException {
     long marketoLeadId = user.getMarketoLeadId();
     if (marketoLeadId == 0L) {
-      reportLead(account, user, accessToken, true);
+      reportLead(account, user, accessToken, true, utmInfo);
     }
     // Getting the latest copy since we had a sleep of 10 seconds.
     user = userService.getUserFromCacheOrDB(user.getUuid());
-    reportCampaignEvent(account, event.getEventType(), accessToken, user);
+    reportCampaignEvent(account, event.getEventType(), accessToken, user, utmInfo);
   }
 
-  public long reportLead(Account account, User user, String accessToken, boolean wait)
+  public long reportLead(Account account, User user, String accessToken, boolean wait, UtmInfo utmInfo)
       throws IOException, URISyntaxException {
     long marketoLeadId = marketoHelper.createOrUpdateLead(
-        account, user.getName(), user.getEmail(), accessToken, user.getOauthProvider(), retrofit);
+        account, user.getName(), user.getEmail(), accessToken, user.getOauthProvider(), retrofit, utmInfo);
     if (marketoLeadId > 0) {
       if (marketoLeadId != user.getMarketoLeadId()) {
         updateUser(user, marketoLeadId);
@@ -303,9 +324,9 @@ public class MarketoHandler implements EventHandler {
     return marketoLeadId;
   }
 
-  public long reportLead(String userName, String email, String accessToken, boolean wait)
+  public long reportLead(String userName, String email, String accessToken, boolean wait, UtmInfo utmInfo)
       throws IOException, URISyntaxException {
-    long marketoLeadId = marketoHelper.createOrUpdateLead(null, userName, email, accessToken, null, retrofit);
+    long marketoLeadId = marketoHelper.createOrUpdateLead(null, userName, email, accessToken, null, retrofit, utmInfo);
 
     // Sleeping for 10 secs as a work around for marketo issue.
     // Marketo can't process trigger campaign with a lead just created.
@@ -384,12 +405,12 @@ public class MarketoHandler implements EventHandler {
     return true;
   }
 
-  private void reportCampaignEvent(Account account, EventType eventType, String accessToken, User user)
+  private void reportCampaignEvent(Account account, EventType eventType, String accessToken, User user, UtmInfo utmInfo)
       throws IOException, URISyntaxException {
     String userId = user.getUuid();
     long marketoLeadId = user.getMarketoLeadId();
     if (marketoLeadId == 0L) {
-      marketoLeadId = reportLead(account, user, accessToken, true);
+      marketoLeadId = reportLead(account, user, accessToken, true, utmInfo);
       if (marketoLeadId == 0L) {
         logger.error("Invalid lead id reported for user {}", userId);
         return;

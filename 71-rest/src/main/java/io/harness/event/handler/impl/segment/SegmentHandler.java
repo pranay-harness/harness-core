@@ -56,8 +56,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.logcontext.UserLogContext;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
@@ -78,6 +80,7 @@ public class SegmentHandler implements EventHandler {
   @Inject private SegmentHelper segmentHelper;
   @Inject private AccountService accountService;
   @Inject private UserService userService;
+  @Inject private SignupService signupService;
   @Inject private Utils utils;
   @Inject private PersistentLocker persistentLocker;
 
@@ -245,7 +248,14 @@ public class SegmentHandler implements EventHandler {
   }
 
   public String reportIdentity(Account account, User user, boolean wait) throws URISyntaxException {
-    String userInviteUrl = utils.getUserInviteUrl(user.getEmail(), account);
+    UserInvite userInvite;
+    if (account != null) {
+      userInvite = userService.getUserInviteByEmailAndAccount(user.getEmail(), account.getUuid());
+    } else {
+      userInvite = signupService.getUserInviteByEmail(user.getEmail());
+    }
+
+    String userInviteUrl = utils.getUserInviteUrl(userInvite, account);
     String identity = segmentHelper.createOrUpdateIdentity(
         user.getUuid(), user.getEmail(), user.getName(), account, userInviteUrl, user.getOauthProvider());
     if (!identity.equals(user.getSegmentIdentity())) {

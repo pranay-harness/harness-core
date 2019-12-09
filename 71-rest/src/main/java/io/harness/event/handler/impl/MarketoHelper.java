@@ -21,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import retrofit2.Retrofit;
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.UserInvite;
+import software.wings.beans.utm.UtmInfo;
+import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
@@ -35,10 +38,11 @@ import java.util.List;
 @Slf4j
 public class MarketoHelper {
   @Inject private UserService userService;
+  @Inject private SignupService signupService;
   @Inject private Utils utils;
 
   public long createOrUpdateLead(Account account, String userName, String email, String accessToken,
-      String oauthProvider, Retrofit retrofit) throws IOException, URISyntaxException {
+      String oauthProvider, Retrofit retrofit, UtmInfo utmInfo) throws IOException, URISyntaxException {
     notNullCheck("Email is null while registering the lead", email);
 
     int existingLeadId = 0;
@@ -53,6 +57,7 @@ public class MarketoHelper {
           Result result = resultList.get(0);
           existingLeadId = result.getId();
         }
+
       } else {
         logger.error("Marketo http response reported failure while looking up lead. {}",
             utils.getErrorMsg(existingLeadResponse.getErrors()));
@@ -61,27 +66,35 @@ public class MarketoHelper {
       logger.error("Marketo http response reported null while looking up lead");
     }
 
-    String userInviteUrl = utils.getUserInviteUrl(email, account);
+    UserInvite userInvite;
+    if (account != null) {
+      userInvite = userService.getUserInviteByEmailAndAccount(email, account.getUuid());
+    } else {
+      userInvite = signupService.getUserInviteByEmail(email);
+    }
+
+    String userInviteUrl = utils.getUserInviteUrl(userInvite, account);
+
     retrofit2.Response<Response> createOrUpdateResponse;
     if (existingLeadId > 0) {
       try {
-        createOrUpdateResponse =
-            updateLead(retrofit, existingLeadId, email, userName, account, userInviteUrl, accessToken, oauthProvider);
+        createOrUpdateResponse = updateLead(retrofit, existingLeadId, email, userName, account, userInviteUrl,
+            accessToken, oauthProvider, userInvite.getUtmInfo());
       } catch (Exception ex) {
         // Retrying with email if id was invalid, we have cases where the lead was manually deleted from marketo
         createOrUpdateResponse =
-            createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider);
+            createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider, utmInfo);
       }
     } else {
       createOrUpdateResponse =
-          createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider);
+          createLead(retrofit, email, userName, account, userInviteUrl, accessToken, oauthProvider, utmInfo);
     }
 
     return processLeadResponse(createOrUpdateResponse);
   }
 
   private retrofit2.Response<Response> createLead(Retrofit retrofit, String email, String userName, Account account,
-      String userInviteUrl, String accessToken, String oauthProvider) throws IOException {
+      String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo) throws IOException {
     logger.info("Creating lead with email: {} in marketo with oauth provider {}", email, oauthProvider);
     LeadRequestWithEmail.Lead.LeadBuilder leadBuilderWithEmail = LeadRequestWithEmail.Lead.builder();
     leadBuilderWithEmail.email(email)
@@ -110,6 +123,14 @@ public class MarketoHelper {
       leadBuilderWithEmail.SSO_Freemium_Type__c(oauthProvider);
     }
 
+    if (utmInfo != null) {
+      leadBuilderWithEmail.UTM_Source__c(utmInfo.getUtmSource());
+      leadBuilderWithEmail.UTM_Content__c(utmInfo.getUtmContent());
+      leadBuilderWithEmail.UTM_Medium__c(utmInfo.getUtmMedium());
+      leadBuilderWithEmail.UTM_Term__c(utmInfo.getUtmTerm());
+      leadBuilderWithEmail.UTM__c(utmInfo.getUtmCampaign());
+    }
+
     LeadRequestWithEmail leadRequestWithEmail = LeadRequestWithEmail.builder()
                                                     .action("createOrUpdate")
                                                     .lookupField("email")
@@ -123,7 +144,8 @@ public class MarketoHelper {
   }
 
   private retrofit2.Response<Response> updateLead(Retrofit retrofit, int existingLeadId, String email, String userName,
-      Account account, String userInviteUrl, String accessToken, String oauthProvider) throws IOException {
+      Account account, String userInviteUrl, String accessToken, String oauthProvider, UtmInfo utmInfo)
+      throws IOException {
     logger.info("Updating lead {} to marketo", existingLeadId);
 
     LeadBuilder leadBuilderWithId = Lead.builder();
@@ -152,6 +174,14 @@ public class MarketoHelper {
 
     if (isNotEmpty(oauthProvider)) {
       leadBuilderWithId.SSO_Freemium_Type__c(oauthProvider);
+    }
+
+    if (utmInfo != null) {
+      leadBuilderWithId.UTM_Source__c(utmInfo.getUtmSource());
+      leadBuilderWithId.UTM_Content__c(utmInfo.getUtmContent());
+      leadBuilderWithId.UTM_Medium__c(utmInfo.getUtmMedium());
+      leadBuilderWithId.UTM_Term__c(utmInfo.getUtmTerm());
+      leadBuilderWithId.UTM__c(utmInfo.getUtmCampaign());
     }
 
     LeadRequestWithId leadRequestWithId = LeadRequestWithId.builder()

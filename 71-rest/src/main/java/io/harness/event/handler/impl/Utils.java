@@ -10,6 +10,7 @@ import io.harness.event.model.marketo.Error;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
@@ -25,11 +26,11 @@ import java.util.Map;
 public class Utils {
   @Inject private UserService userService;
 
-  public String getUserInviteUrl(String email, Account account) throws URISyntaxException {
+  public String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException {
     if (account != null) {
-      return userService.getUserInviteUrl(email, account);
+      return userService.getUserInviteUrl(userInvite, account);
     } else {
-      return userService.getUserInviteUrl(email);
+      return userService.getUserInviteUrl(userInvite);
     }
   }
 
