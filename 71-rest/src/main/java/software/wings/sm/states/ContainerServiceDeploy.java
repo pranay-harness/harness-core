@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -137,6 +138,19 @@ public abstract class ContainerServiceDeploy extends State {
 
       if (isRollback()) {
         logger.info("Executing rollback");
+
+        // Deployment of a K8 V2 service with a V1 workflow is not allowed. So if we reach here there is nothing to
+        // rollback and hence we fail with an appropriate error message and exception
+        Service service = serviceResourceService.get(contextData.app.getUuid(), contextData.service.getUuid());
+        DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
+        if (deploymentType == DeploymentType.KUBERNETES) {
+          if (context.getOrchestrationWorkflowType() != null && context.getOrchestrationWorkflowType() == BASIC
+              && service.isK8sV2()) {
+            throw new InvalidRequestException(
+                "Kubernetes V2 service is not allowed to be deployed for 'Basic' workflow type, "
+                + "so nothing to rollback.");
+          }
+        }
         executionDataBuilder.withNewInstanceData(contextData.rollbackElement.getNewInstanceData());
         executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
       }
@@ -206,6 +220,8 @@ public abstract class ContainerServiceDeploy extends State {
       String serviceId = phaseElement.getServiceElement().getUuid();
       String appId = context.getAppId();
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      Preconditions.checkNotNull(workflowStandardParams);
+      Preconditions.checkNotNull(workflowStandardParams.getEnv());
       String envId = workflowStandardParams.getEnv().getUuid();
       executionData.setNewInstanceStatusSummaries(
           buildInstanceStatusSummaries(appId, serviceId, envId, serviceElement, response));
@@ -324,6 +340,7 @@ public abstract class ContainerServiceDeploy extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       app = workflowStandardParams.getApp();
       env = workflowStandardParams.getEnv();
+      Preconditions.checkNotNull(env);
       service = containerServiceDeploy.serviceResourceService.getWithDetails(appId, serviceId);
       command = containerServiceDeploy.serviceResourceService
                     .getCommandByName(appId, serviceId, env.getUuid(), containerServiceDeploy.getCommandName())
