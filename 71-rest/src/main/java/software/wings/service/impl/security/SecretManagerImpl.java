@@ -22,6 +22,7 @@ import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.CYBERARK;
+import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
@@ -92,6 +93,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SecretManagerConfig;
@@ -128,6 +130,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.GcpKmsService;
+import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -174,6 +178,8 @@ public class SecretManagerImpl implements SecretManager {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
+  @Inject private GcpSecretsManagerService gcpSecretsManagerService;
+  @Inject private GcpKmsService gcpKmsService;
   @Inject private VaultService vaultService;
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private AzureVaultService azureVaultService;
@@ -266,6 +272,13 @@ public class SecretManagerImpl implements SecretManager {
           rv = secretsManagerService.encrypt(
               secretName, toEncrypt, accountId, settingType, secretsManagerConfig, encryptedData);
           rv.setKmsId(secretsManagerConfig.getUuid());
+          break;
+
+        case GCP_KMS:
+          final GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) getSecretManager(accountId, kmsId, GCP_KMS);
+          encryptedData.setKmsId(gcpKmsConfig.getUuid());
+          rv = gcpKmsService.encrypt(toEncrypt, accountId, gcpKmsConfig, encryptedData);
+          rv.setKmsId(gcpKmsConfig.getUuid());
           break;
 
         case AZURE_VAULT:
@@ -940,6 +953,9 @@ public class SecretManagerImpl implements SecretManager {
       case KMS:
         decrypted = kmsService.decrypt(encryptedData, accountId, (KmsConfig) fromConfig);
         break;
+      case GCP_KMS:
+        decrypted = gcpKmsService.decrypt(encryptedData, accountId, (GcpKmsConfig) fromConfig);
+        break;
       case VAULT:
         decrypted = vaultService.decrypt(encryptedData, accountId, (VaultConfig) fromConfig);
         break;
@@ -966,6 +982,11 @@ public class SecretManagerImpl implements SecretManager {
         break;
       case KMS:
         encrypted = kmsService.encrypt(decrypted, accountId, (KmsConfig) toConfig);
+        break;
+      case GCP_KMS:
+        String decryptedString = decrypted == null ? null : String.valueOf(decrypted);
+        encrypted = gcpKmsService.encrypt(decryptedString, accountId, (GcpKmsConfig) toConfig,
+            EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;
       case VAULT:
         encrypted = vaultService.encrypt(encryptedData.getName(), secretValue, accountId, encryptedData.getType(),
@@ -1046,6 +1067,11 @@ public class SecretManagerImpl implements SecretManager {
             kmsService.encryptFile(accountId, (KmsConfig) toConfig, encryptedData.getName(), decryptedFileContent);
         break;
 
+      case GCP_KMS:
+        encryptedFileData = gcpKmsService.encryptFile(
+            accountId, (GcpKmsConfig) toConfig, encryptedData.getName(), decryptedFileContent, encryptedData);
+        break;
+
       case VAULT:
         encryptedFileData = vaultService.encryptFile(
             accountId, (VaultConfig) toConfig, encryptedData.getName(), decryptedFileContent, encryptedData);
@@ -1075,6 +1101,9 @@ public class SecretManagerImpl implements SecretManager {
         // Fall through so as the old file will be deleted just like in KMS case.
       case KMS:
         // Delete file from file service only if the source secret manager is of KMS type.
+        fileService.deleteFile(savedFileId, CONFIGS);
+        break;
+      case GCP_KMS:
         fileService.deleteFile(savedFileId, CONFIGS);
         break;
       case VAULT:
@@ -1264,6 +1293,13 @@ public class SecretManagerImpl implements SecretManager {
           if (!kmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID) && kmsConfig.isDefault()) {
             kmsConfig.setDefault(false);
             kmsService.saveKmsConfig(accountId, kmsConfig);
+          }
+          break;
+        case GCP_KMS:
+          GcpKmsConfig gcpKmsConfig = gcpSecretsManagerService.getGcpKmsConfig(accountId, config.getUuid());
+          if (!gcpKmsConfig.getAccountId().equals(GLOBAL_ACCOUNT_ID) && gcpKmsConfig.isDefault()) {
+            gcpKmsConfig.setDefault(false);
+            gcpSecretsManagerService.saveGcpKmsConfig(accountId, gcpKmsConfig);
           }
           break;
         case AWS_SECRETS_MANAGER:
@@ -1609,6 +1645,10 @@ public class SecretManagerImpl implements SecretManager {
         fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
         return kmsService.decryptFile(readInto, accountId, encryptedData);
 
+      case GCP_KMS:
+        fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
+        return gcpKmsService.decryptFile(readInto, accountId, encryptedData);
+
       case VAULT:
         return vaultService.decryptFile(readInto, accountId, encryptedData);
 
@@ -1643,12 +1683,21 @@ public class SecretManagerImpl implements SecretManager {
           localEncryptionService.decryptToStream(accountId, encryptedData, output);
           break;
 
-        case KMS:
+        case KMS: {
           file = new File(Files.createTempDir(), generateUuid());
           logger.info("Temp file path [{}]", file.getAbsolutePath());
           fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
           kmsService.decryptToStream(file, accountId, encryptedData, output);
           break;
+        }
+
+        case GCP_KMS: {
+          file = new File(Files.createTempDir(), generateUuid());
+          logger.info("Temp file path [{}]", file.getAbsolutePath());
+          fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
+          gcpKmsService.decryptToStream(file, accountId, encryptedData, output);
+          break;
+        }
 
         case VAULT:
           vaultService.decryptToStream(accountId, encryptedData, output);
@@ -1778,6 +1827,16 @@ public class SecretManagerImpl implements SecretManager {
           KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
           newEncryptedFile = kmsService.encryptFile(accountId, kmsConfig, name, inputBytes);
           newEncryptedFile.setKmsId(kmsConfig.getUuid());
+          if (update) {
+            fileService.deleteFile(savedFileId, CONFIGS);
+          }
+          break;
+
+        case GCP_KMS:
+          encryptionConfig = getSecretManager(accountId, kmsId, KMS);
+          GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) encryptionConfig;
+          newEncryptedFile = gcpKmsService.encryptFile(accountId, gcpKmsConfig, name, inputBytes, encryptedData);
+          newEncryptedFile.setKmsId(gcpKmsConfig.getUuid());
           if (update) {
             fileService.deleteFile(savedFileId, CONFIGS);
           }
@@ -1952,6 +2011,7 @@ public class SecretManagerImpl implements SecretManager {
     switch (encryptedData.getEncryptionType()) {
       case LOCAL:
       case KMS:
+      case GCP_KMS:
         fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
         break;
       case VAULT:
@@ -2351,8 +2411,11 @@ public class SecretManagerImpl implements SecretManager {
     if (kmsConfig != null) {
       try {
         kmsService.encrypt(UUID.randomUUID().toString().toCharArray(), GLOBAL_ACCOUNT_ID, kmsConfig);
+        logger.info("Successfully validated global secret manager {} of type {}", kmsConfig.getUuid(),
+            kmsConfig.getEncryptionType());
       } catch (Exception e) {
-        logger.error("Could not validate global secret manager with id {}", kmsConfig.getUuid(), e);
+        logger.error("Could not validate global secret manager with id {} of type {}", kmsConfig.getUuid(),
+            kmsConfig.getEncryptionType(), e);
       }
     }
   }

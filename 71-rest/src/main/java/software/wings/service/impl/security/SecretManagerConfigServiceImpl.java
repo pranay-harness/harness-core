@@ -19,6 +19,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
@@ -28,6 +29,7 @@ import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -45,6 +47,7 @@ import java.util.List;
 public class SecretManagerConfigServiceImpl implements SecretManagerConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
+  @Inject private GcpSecretsManagerService gcpSecretsManagerService;
   @Inject private VaultService vaultService;
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private LocalEncryptionService localEncryptionService;
@@ -106,6 +109,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     switch (encryptionType) {
       case KMS:
         encryptionConfig = kmsService.getKmsConfig(accountId, encryptionConfigId);
+        break;
+      case GCP_KMS:
+        encryptionConfig = gcpSecretsManagerService.getGcpKmsConfig(accountId, encryptionConfigId);
         break;
       case VAULT:
         encryptionConfig = vaultService.getVaultConfig(accountId, encryptionConfigId);
@@ -208,6 +214,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
             case KMS:
               kmsService.decryptKmsConfigSecrets(accountId, (KmsConfig) secretManagerConfig, maskSecret);
               break;
+            case GCP_KMS:
+              gcpSecretsManagerService.decryptGcpConfigSecrets((GcpKmsConfig) secretManagerConfig, maskSecret);
+              break;
             case VAULT:
               vaultService.decryptVaultConfigSecrets(accountId, (VaultConfig) secretManagerConfig, maskSecret);
               break;
@@ -218,7 +227,6 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
               cyberArkService.decryptCyberArkConfigSecrets(accountId, (CyberArkConfig) secretManagerConfig, maskSecret);
               break;
             default:
-              // Do nothing;
               break;
           }
         }

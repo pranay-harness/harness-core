@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.joining;
 import io.harness.eraro.Level;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.EnumSet;
 import java.util.stream.Stream;
 
 public class DuplicateFieldException extends WingsException {
@@ -18,6 +19,11 @@ public class DuplicateFieldException extends WingsException {
 
   public DuplicateFieldException(String message) {
     super(null, null, DUPLICATE_FIELD, Level.ERROR, null, null);
+    super.param(MESSAGE_ARG, message);
+  }
+
+  public DuplicateFieldException(String message, EnumSet<ReportTarget> reportTarget, Throwable e) {
+    super(null, e, DUPLICATE_FIELD, Level.ERROR, reportTarget, null);
     super.param(MESSAGE_ARG, message);
   }
 }

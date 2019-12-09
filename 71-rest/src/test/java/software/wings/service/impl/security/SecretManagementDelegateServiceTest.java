@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import software.wings.beans.CyberArkConfig;
+import software.wings.service.impl.security.gcpkms.GcpKmsEncryptDecryptClient;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
 
 /**
@@ -30,6 +31,7 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
   private SecretManagementDelegateServiceImpl secretManagementDelegateService;
   private TimeLimiter timeLimiter = new SimpleTimeLimiter();
   @Mock private KmsEncryptDecryptClient kmsEncryptDecryptClient;
+  @Mock private GcpKmsEncryptDecryptClient gcpKmsEncryptDecryptClient;
   private MockWebServer mockWebServer = new MockWebServer();
 
   @Before
@@ -38,7 +40,8 @@ public class SecretManagementDelegateServiceTest extends CategoryTest {
 
     mockWebServer.start();
 
-    secretManagementDelegateService = new SecretManagementDelegateServiceImpl(timeLimiter, kmsEncryptDecryptClient);
+    secretManagementDelegateService =
+        new SecretManagementDelegateServiceImpl(timeLimiter, kmsEncryptDecryptClient, gcpKmsEncryptDecryptClient);
   }
 
   @After

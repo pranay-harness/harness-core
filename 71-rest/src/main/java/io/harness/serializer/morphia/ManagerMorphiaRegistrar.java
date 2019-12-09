@@ -178,6 +178,7 @@ import software.wings.beans.ExternalServiceAuthToken;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GcsFileMetadata;
 import software.wings.beans.GitCommit;
@@ -796,6 +797,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(FailureNotification.class);
     set.add(FeatureFlag.class);
     set.add(GCPBillingJobEntity.class);
+    set.add(GcpKmsConfig.class);
     set.add(GcpKubernetesInfrastructureMapping.class);
     set.add(GcpMarketplaceEvent.class);
     set.add(GCPUsageReport.class);
@@ -1140,6 +1142,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.ElasticLoadBalancerConfig", ElasticLoadBalancerConfig.class);
     w.put("beans.ElkConfig", ElkConfig.class);
     w.put("beans.EntityVersion", EntityVersion.class);
+    w.put("beans.GcpKmsConfig", GcpKmsConfig.class);
     w.put("beans.GcpConfig", GcpConfig.class);
     w.put("beans.GitConfig", GitConfig.class);
     w.put("beans.HostConnectionAttributes", HostConnectionAttributes.class);
