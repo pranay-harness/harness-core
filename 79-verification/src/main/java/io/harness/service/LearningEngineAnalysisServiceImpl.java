@@ -8,7 +8,6 @@ import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTIO
 import static software.wings.common.VerificationConstants.VERIFICATION_TASK_TIMEOUT;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 import static software.wings.utils.Misc.generateSecretKey;
-import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -19,7 +18,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -59,9 +57,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -433,21 +429,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     AnalysisContext analysisContext =
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
     if (analysisContext != null) {
-      analysisContext.setControlNodes(getNodesReplaceUniCode(analysisContext.getControlNodes()));
-      analysisContext.setTestNodes(getNodesReplaceUniCode(analysisContext.getTestNodes()));
+      analysisContext.replaceUnicodeInControlNodesAndTestNodes();
       logger.info("Fetched analysis Context : {}", analysisContext);
     }
     return analysisContext;
-  }
-
-  private Map<String, String> getNodesReplaceUniCode(Map<String, String> nodes) {
-    if (isEmpty(nodes)) {
-      return Collections.emptyMap();
-    }
-
-    Map<String, String> rv = new HashMap<>();
-    nodes.forEach((host, groupName) -> rv.put(replaceUnicodeWithDot(host), groupName));
-    return rv;
   }
 
   @Override
@@ -508,7 +493,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .get();
 
     if (analysisContext == null) {
-      throw new WingsException("No context found for " + analysisTask.getState_execution_id());
+      throw new IllegalStateException("No context found for " + analysisTask.getState_execution_id());
     }
 
     if (!isStateValid(analysisContext.getAppId(), analysisContext.getStateExecutionId())) {

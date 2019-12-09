@@ -2,6 +2,7 @@ package io.harness.jobs;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -280,6 +281,25 @@ public class WorkflowAnalysisJobTest extends VerificationBaseTest {
                                                 .get();
     assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     verifyTimeSeriesQueuedTasks();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testTimeSeriesAnalysisJobHandleWhenControlNodesIsNull() throws IOException {
+    final Call<RestResponse<Boolean>> featureFlagRestMock = mock(Call.class);
+    when(featureFlagRestMock.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isFeatureEnabled(FeatureName.WORKFLOW_VERIFICATION_REMOVE_CRON, accountId))
+        .thenReturn(featureFlagRestMock);
+    timeSeriesAnalysisContext.setControlNodes(null);
+    workflowTimeSeriesAnalysisJob.handle(timeSeriesAnalysisContext);
+    final AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                                .filter(AnalysisContextKeys.stateType, StateType.APP_DYNAMICS)
+                                                .get();
+    assertThat(analysisContext.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    final List<LearningEngineAnalysisTask> analysisTasks =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class, excludeAuthority).asList();
+    assertThat(analysisTasks.size()).isEqualTo(metricGroups.size());
   }
 
   @Test

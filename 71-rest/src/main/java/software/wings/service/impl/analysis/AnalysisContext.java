@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.utils.Misc.replaceUnicodeWithDot;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
@@ -197,6 +199,31 @@ public class AnalysisContext extends Base implements PersistentRegularIterable {
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public Map<String, String> getControlNodes() {
+    if (controlNodes == null) {
+      return new HashMap<>();
+    }
+    return controlNodes;
+  }
+
+  public Map<String, String> getTestNodes() {
+    if (testNodes == null) {
+      return new HashMap<>();
+    }
+    return testNodes;
+  }
+
+  public void replaceUnicodeInControlNodesAndTestNodes() {
+    controlNodes = updateNodesReplaceUniCode(getControlNodes());
+    testNodes = updateNodesReplaceUniCode(getTestNodes());
+  }
+
+  private Map<String, String> updateNodesReplaceUniCode(Map<String, String> nodes) {
+    Map<String, String> updatedNodes = new HashMap<>();
+    nodes.forEach((host, groupName) -> updatedNodes.put(replaceUnicodeWithDot(host), groupName));
+    return updatedNodes;
   }
 
   public void setFeatureFlag(FeatureName featureFlag, Boolean enabled) {
