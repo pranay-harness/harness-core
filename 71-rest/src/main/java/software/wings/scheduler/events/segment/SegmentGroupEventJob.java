@@ -16,6 +16,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext.SegmentGroupEventJobContextKeys;
 import software.wings.service.intfc.AccountService;
 
@@ -57,8 +58,10 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
         continue;
       }
 
-      logger.info("publishing segment group event. accountId={}", account.getUuid());
-      accountChangeHandler.publishAccountEventToSegment(account);
+      if (accountService.getAccountStatus(account.getUuid()).equals(AccountStatus.ACTIVE)) {
+        logger.info("publishing segment group event. accountId={}", account.getUuid());
+        accountChangeHandler.publishAccountEventToSegment(account);
+      }
     }
   }
 }
